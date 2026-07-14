@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -22,6 +22,7 @@ export class GetEffectiveLanguageModelsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetEffectiveLanguageModelsQuery,
   ): Promise<EffectiveLanguageModelsResult> {
@@ -30,25 +31,13 @@ export class GetEffectiveLanguageModelsUseCase {
       orgId: query.orgId,
     });
 
-    try {
-      this.validateOrgAccess(query.orgId);
+    this.validateOrgAccess(query.orgId);
 
-      if (!query.userId) {
-        return this.buildOrgFallback(query.orgId);
-      }
-
-      return this.resolveForUser(query.userId, query.orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error resolving effective language models', {
-        userId: query.userId,
-        orgId: query.orgId,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
-      throw new UnexpectedModelError(error as Error);
+    if (!query.userId) {
+      return this.buildOrgFallback(query.orgId);
     }
+
+    return this.resolveForUser(query.userId, query.orgId);
   }
 
   private validateOrgAccess(queryOrgId: UUID): void {

@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import {
+  ThreadNotFoundError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -17,6 +21,7 @@ export class AddKnowledgeBaseToThreadUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: AddKnowledgeBaseToThreadCommand): Promise<void> {
     this.logger.log('execute', {
       threadId: command.threadId,

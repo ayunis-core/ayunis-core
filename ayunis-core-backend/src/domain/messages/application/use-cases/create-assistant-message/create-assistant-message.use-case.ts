@@ -1,5 +1,6 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateAssistantMessageCommand } from './create-assistant-message.command';
 import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
 import {
@@ -7,7 +8,10 @@ import {
   MessagesRepository,
 } from '../../ports/messages.repository';
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  UnexpectedMessageError,
+} from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
 import type { UUID } from 'crypto';
@@ -23,6 +27,7 @@ export class CreateAssistantMessageUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMessageError)
   async execute(
     command: CreateAssistantMessageCommand,
   ): Promise<AssistantMessage> {

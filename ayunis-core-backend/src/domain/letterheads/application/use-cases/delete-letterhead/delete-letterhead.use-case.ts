@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
@@ -21,48 +21,37 @@ export class DeleteLetterheadUseCase {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedLetterheadError)
   async execute(command: DeleteLetterheadCommand): Promise<void> {
     this.logger.log('Deleting letterhead', {
       letterheadId: command.letterheadId,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
+    }
 
-      const letterhead = await this.letterheadsRepository.findById(
-        orgId,
-        command.letterheadId,
-      );
-      if (!letterhead) {
-        throw new LetterheadNotFoundError(command.letterheadId);
-      }
+    const letterhead = await this.letterheadsRepository.findById(
+      orgId,
+      command.letterheadId,
+    );
+    if (!letterhead) {
+      throw new LetterheadNotFoundError(command.letterheadId);
+    }
 
-      // Delete DB record first — orphaned storage files are benign,
-      // but a DB record pointing to deleted storage paths causes runtime errors.
-      await this.letterheadsRepository.delete(orgId, command.letterheadId);
+    // Delete DB record first — orphaned storage files are benign,
+    // but a DB record pointing to deleted storage paths causes runtime errors.
+    await this.letterheadsRepository.delete(orgId, command.letterheadId);
 
+    await this.deleteObjectUseCase.execute(
+      new DeleteObjectCommand(letterhead.firstPageStoragePath),
+    );
+
+    if (letterhead.continuationPageStoragePath) {
       await this.deleteObjectUseCase.execute(
-        new DeleteObjectCommand(letterhead.firstPageStoragePath),
+        new DeleteObjectCommand(letterhead.continuationPageStoragePath),
       );
-
-      if (letterhead.continuationPageStoragePath) {
-        await this.deleteObjectUseCase.execute(
-          new DeleteObjectCommand(letterhead.continuationPageStoragePath),
-        );
-      }
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error deleting letterhead', {
-        error: error as Error,
-      });
-      throw new UnexpectedLetterheadError('Error deleting letterhead', {
-        error: error as Error,
-      });
     }
   }
 }

@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import {
+  ThreadNotFoundError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
@@ -18,6 +22,7 @@ export class AddMcpIntegrationToThreadUseCase {
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: AddMcpIntegrationToThreadCommand): Promise<void> {
     this.logger.log('execute', {
       threadId: command.threadId,

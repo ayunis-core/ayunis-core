@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { DeleteUserDefaultModelsByModelIdCommand } from './delete-user-default-models-by-model-id.command';
+import { UnexpectedModelError } from '../../models.errors';
 
 @Injectable()
 export class DeleteUserDefaultModelsByModelIdUseCase {
@@ -12,6 +14,7 @@ export class DeleteUserDefaultModelsByModelIdUseCase {
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     command: DeleteUserDefaultModelsByModelIdCommand,
   ): Promise<void> {

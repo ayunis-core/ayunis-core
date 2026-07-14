@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   FileSource,
   TextSource,
@@ -16,7 +17,6 @@ import {
   InvalidSourceTypeError,
   UnexpectedSourceError,
 } from '../../sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
@@ -54,44 +54,35 @@ export class CreateTextSourceUseCase {
     private readonly sourceRepository: SourceRepository,
   ) {}
 
-  async execute(command: CreateFileSourceCommand): Promise<FileSource>;
-  async execute(command: CreateUrlSourceCommand): Promise<UrlSource>;
+  // No overload signatures: the typed decorator cannot be applied to an
+  // overloaded method (TS1241 on the descriptor).
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: CreateTextSourceCommand): Promise<TextSource> {
     this.logger.debug('Creating text source');
     const orgId = this.contextService.get('orgId');
-    try {
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
-      let result: TextSourceWithContent;
-      if (command instanceof CreateFileSourceCommand) {
-        result = await this.createFileSource(command);
-      } else if (command instanceof CreateUrlSourceCommand) {
-        result = await this.createUrlSource(command, orgId);
-      } else {
-        throw new InvalidSourceTypeError(command.constructor.name);
-      }
-      this.logger.debug('Saving source', { sourceId: result.source.id });
-      const saved = await this.sourceRepository.saveTextSource(result.source, {
-        text: result.text,
-        chunks: result.chunks,
-      });
-      await this.indexSourceContentChunks({
-        sourceId: saved.id,
-        chunks: result.chunks,
-        orgId,
-      });
-      return saved;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating text source', {
-        error: error as Error,
-      });
-      throw new UnexpectedSourceError('Error creating text source', {
-        error: error as Error,
-      });
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
+    let result: TextSourceWithContent;
+    if (command instanceof CreateFileSourceCommand) {
+      result = await this.createFileSource(command);
+    } else if (command instanceof CreateUrlSourceCommand) {
+      result = await this.createUrlSource(command, orgId);
+    } else {
+      throw new InvalidSourceTypeError(command.constructor.name);
+    }
+    this.logger.debug('Saving source', { sourceId: result.source.id });
+    const saved = await this.sourceRepository.saveTextSource(result.source, {
+      text: result.text,
+      chunks: result.chunks,
+    });
+    await this.indexSourceContentChunks({
+      sourceId: saved.id,
+      chunks: result.chunks,
+      orgId,
+    });
+    return saved;
   }
 
   private async createFileSource(

@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ReplaceModelWithUserDefaultCommand } from './replace-model-with-user-default.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
-import { ModelReplacementError } from '../../threads.errors';
+import {
+  ModelReplacementError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
@@ -15,53 +19,44 @@ export class ReplaceModelWithUserDefaultUseCase {
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: ReplaceModelWithUserDefaultCommand): Promise<void> {
     this.logger.debug('execute', {
       command,
     });
-    try {
-      const threads: Thread[] = await this.threadsRepository.findAllByModel(
-        command.oldPermittedModelId,
-      );
-      this.logger.debug('Found threads', {
-        threads,
-      });
-      for (const thread of threads) {
-        const defaultModel = await this.getDefaultModelUseCase.execute(
-          new GetDefaultModelQuery({
-            orgId: command.orgId,
-            userId: thread.userId,
-            blacklistedModelIds: command.catalogModelId
-              ? [command.catalogModelId]
-              : [],
-          }),
-        );
-        this.logger.debug('Found default model', {
-          defaultModel,
-          oldPermittedModelId: command.oldPermittedModelId,
-        });
-        if (defaultModel.id === command.oldPermittedModelId) {
-          throw new ModelReplacementError(
-            thread.id,
-            command.oldPermittedModelId,
-          );
-        }
-
-        this.logger.debug('Updating thread', {
-          threadId: thread.id,
-          newModelId: defaultModel.id,
-        });
-        await this.threadsRepository.updateModel({
-          threadId: thread.id,
+    const threads: Thread[] = await this.threadsRepository.findAllByModel(
+      command.oldPermittedModelId,
+    );
+    this.logger.debug('Found threads', {
+      threads,
+    });
+    for (const thread of threads) {
+      const defaultModel = await this.getDefaultModelUseCase.execute(
+        new GetDefaultModelQuery({
+          orgId: command.orgId,
           userId: thread.userId,
-          permittedModelId: defaultModel.id,
-        });
-      }
-    } catch (error) {
-      this.logger.error('Error replacing model with user default', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+          blacklistedModelIds: command.catalogModelId
+            ? [command.catalogModelId]
+            : [],
+        }),
+      );
+      this.logger.debug('Found default model', {
+        defaultModel,
+        oldPermittedModelId: command.oldPermittedModelId,
       });
-      throw error;
+      if (defaultModel.id === command.oldPermittedModelId) {
+        throw new ModelReplacementError(thread.id, command.oldPermittedModelId);
+      }
+
+      this.logger.debug('Updating thread', {
+        threadId: thread.id,
+        newModelId: defaultModel.id,
+      });
+      await this.threadsRepository.updateModel({
+        threadId: thread.id,
+        userId: thread.userId,
+        permittedModelId: defaultModel.id,
+      });
     }
   }
 }

@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveMcpIntegrationFromThreadCommand } from './remove-mcp-integration-from-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ThreadNotFoundError } from '../../threads.errors';
+import {
+  ThreadNotFoundError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -16,6 +20,7 @@ export class RemoveMcpIntegrationFromThreadUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: RemoveMcpIntegrationFromThreadCommand): Promise<void> {
     this.logger.log('execute', {
       threadId: command.threadId,

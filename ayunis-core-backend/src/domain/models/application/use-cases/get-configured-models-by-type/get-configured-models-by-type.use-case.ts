@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Model } from 'src/domain/models/domain/model.entity';
@@ -9,6 +10,7 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { ModelsRepository } from '../../ports/models.repository';
 import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
 import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.query';
+import { UnexpectedModelError } from '../../models.errors';
 
 @Injectable()
 export class GetConfiguredModelsByTypeUseCase {
@@ -21,6 +23,7 @@ export class GetConfiguredModelsByTypeUseCase {
     private readonly modelProviderInfoRegistry: ModelProviderInfoRegistry,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetConfiguredModelsByTypeQuery): Promise<Model[]> {
     const orgRole = this.contextService.get('role');
     const systemRole = this.contextService.get('systemRole');

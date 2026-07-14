@@ -4,8 +4,9 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UUID } from 'crypto';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedShareError } from '../../shares.errors';
 import {
   RemainingShareScope,
   ShareDeletedEvent,
@@ -26,53 +27,50 @@ export class DeleteShareUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedShareError)
   async execute(id: UUID): Promise<void> {
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    this.logger.log('execute', { id });
 
-      const share = await this.repository.findById(id);
-      if (!share) {
-        throw new NotFoundException('Share not found');
-      }
-
-      if (share.ownerId !== userId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      await this.repository.delete(share);
-
-      const entityId = share.entityId;
-      const remainingShares = await this.repository.findByEntityIdAndType(
-        entityId,
-        share.entityType,
-      );
-      const remainingScopes = remainingShares.map((s) =>
-        this.toRemainingScope(s),
-      );
-
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      this.eventEmitter.emit(
-        ShareDeletedEvent.EVENT_NAME,
-        new ShareDeletedEvent(
-          share.entityType,
-          entityId,
-          share.ownerId,
-          orgId,
-          remainingScopes,
-        ),
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(error);
-      throw new Error('Unexpected error occurred');
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
     }
+
+    const share = await this.repository.findById(id);
+    if (!share) {
+      throw new NotFoundException('Share not found');
+    }
+
+    if (share.ownerId !== userId) {
+      throw new UnauthorizedAccessError();
+    }
+
+    await this.repository.delete(share);
+
+    const entityId = share.entityId;
+    const remainingShares = await this.repository.findByEntityIdAndType(
+      entityId,
+      share.entityType,
+    );
+    const remainingScopes = remainingShares.map((s) =>
+      this.toRemainingScope(s),
+    );
+
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
+    }
+
+    this.eventEmitter.emit(
+      ShareDeletedEvent.EVENT_NAME,
+      new ShareDeletedEvent(
+        share.entityType,
+        entityId,
+        share.ownerId,
+        orgId,
+        remainingScopes,
+      ),
+    );
   }
 
   private toRemainingScope(share: Share): RemainingShareScope {

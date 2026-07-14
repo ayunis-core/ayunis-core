@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveKnowledgeBaseAssignmentsByOriginSkillCommand } from './remove-knowledge-base-assignments-by-origin-skill.command';
+import { UnexpectedThreadError } from '../../threads.errors';
 
 @Injectable()
 export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
@@ -10,6 +12,7 @@ export class RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase {
 
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(
     command: RemoveKnowledgeBaseAssignmentsByOriginSkillCommand,
   ): Promise<void> {

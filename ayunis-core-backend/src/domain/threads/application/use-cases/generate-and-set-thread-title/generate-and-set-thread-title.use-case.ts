@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GenerateAndSetThreadTitleCommand } from './generate-and-set-thread-title.command';
 import { UpdateThreadTitleUseCase } from '../update-thread-title/update-thread-title.use-case';
 import { UpdateThreadTitleCommand } from '../update-thread-title/update-thread-title.command';
@@ -11,6 +13,7 @@ import {
   InvalidTitleResponseTypeError,
   TitleGenerationError,
 } from '../../thread-title.errors';
+import { UnexpectedThreadError } from '../../threads.errors';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 
 @Injectable()
@@ -22,60 +25,14 @@ export class GenerateAndSetThreadTitleUseCase {
     private readonly triggerInferenceUseCase: GetInferenceUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(
     command: GenerateAndSetThreadTitleCommand,
   ): Promise<string | null> {
     this.logger.log('generateAndSetTitle', { threadId: command.thread.id });
 
     try {
-      // Prompt for title generation
-      const prompt = `Based on the following user message, generate a short, concise title (maximum 50 characters):
-      
-      "${command.message}"
-      
-      Title:`;
-      const userMessage = new UserMessage({
-        threadId: command.thread.id,
-        content: [new TextMessageContent(prompt)],
-      });
-
-      const response = await this.triggerInferenceUseCase.execute(
-        new GetInferenceCommand({
-          model: command.model,
-          messages: [userMessage],
-          tools: [],
-          toolChoice: ModelToolChoice.AUTO,
-        }),
-      );
-
-      // Validate response content
-      if (!response.content.length) {
-        throw new EmptyTitleResponseError(command.thread.id);
-      }
-
-      const firstContent = response.content.find(
-        (content) => content instanceof TextMessageContent,
-      );
-      if (!firstContent) {
-        throw new InvalidTitleResponseTypeError(
-          command.thread.id,
-          response.content
-            .map((content) => content.constructor.name)
-            .join(', '),
-        );
-      }
-
-      // Remove extra spaces and <think>...</think> blocks
-      let title = firstContent.text
-        .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
-        .trim();
-
-      // Strip markdown formatting
-      title = this.stripMarkdownFormatting(title);
-
-      if (!title) {
-        throw new EmptyTitleResponseError(command.thread.id);
-      }
+      const title = await this.generateTitle(command);
 
       // Update thread with new title
       await this.updateThreadTitleUseCase.execute(
@@ -86,23 +43,79 @@ export class GenerateAndSetThreadTitleUseCase {
       );
       return title;
     } catch (error) {
-      // Log the error with appropriate context
-      let logError = error as Error;
-      if (
-        !(error instanceof EmptyTitleResponseError) &&
-        !(error instanceof InvalidTitleResponseTypeError)
-      ) {
-        logError = new TitleGenerationError(command.thread.id, error as Error);
-      }
-
-      this.logger.error('Failed to generate title', {
-        threadId: command.thread.id,
-        error: logError instanceof Error ? logError.message : 'Unknown error',
-      });
+      this.logTitleGenerationFailure(command.thread.id, error);
 
       // Don't throw error - just log it
       return null;
     }
+  }
+
+  private async generateTitle(
+    command: GenerateAndSetThreadTitleCommand,
+  ): Promise<string> {
+    // Prompt for title generation
+    const prompt = `Based on the following user message, generate a short, concise title (maximum 50 characters):
+
+      "${command.message}"
+
+      Title:`;
+    const userMessage = new UserMessage({
+      threadId: command.thread.id,
+      content: [new TextMessageContent(prompt)],
+    });
+
+    const response = await this.triggerInferenceUseCase.execute(
+      new GetInferenceCommand({
+        model: command.model,
+        messages: [userMessage],
+        tools: [],
+        toolChoice: ModelToolChoice.AUTO,
+      }),
+    );
+
+    // Validate response content
+    if (!response.content.length) {
+      throw new EmptyTitleResponseError(command.thread.id);
+    }
+
+    const firstContent = response.content.find(
+      (content) => content instanceof TextMessageContent,
+    );
+    if (!firstContent) {
+      throw new InvalidTitleResponseTypeError(
+        command.thread.id,
+        response.content.map((content) => content.constructor.name).join(', '),
+      );
+    }
+
+    // Remove extra spaces and <think>...</think> blocks
+    let title = firstContent.text
+      .replace(/<think(ing)?>([\s\S]*?)<\/think(ing)?>/g, '')
+      .trim();
+
+    // Strip markdown formatting
+    title = this.stripMarkdownFormatting(title);
+
+    if (!title) {
+      throw new EmptyTitleResponseError(command.thread.id);
+    }
+
+    return title;
+  }
+
+  private logTitleGenerationFailure(threadId: UUID, error: unknown): void {
+    let logError = error as Error;
+    if (
+      !(error instanceof EmptyTitleResponseError) &&
+      !(error instanceof InvalidTitleResponseTypeError)
+    ) {
+      logError = new TitleGenerationError(threadId, error as Error);
+    }
+
+    this.logger.error('Failed to generate title', {
+      threadId,
+      error: logError instanceof Error ? logError.message : 'Unknown error',
+    });
   }
 
   /**
@@ -125,9 +138,9 @@ export class GenerateAndSetThreadTitleUseCase {
         // Remove headers: # text
         .replace(/^#{1,6}\s+/gm, '')
         // Remove links: [text](url) -> text
-        .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+        .replace(/\[([^\]]{1,200})\]\([^)]{1,2000}\)/g, '$1')
         // Remove quotes
-        .replace(/["""]/g, '')
+        .replace(/"/g, '')
         // Clean up any extra whitespace
         .replace(/\s+/g, ' ')
         .trim()

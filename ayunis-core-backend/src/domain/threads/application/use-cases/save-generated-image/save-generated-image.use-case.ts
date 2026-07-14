@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -15,6 +16,7 @@ import { GeneratedImage } from '../../../domain/generated-image.entity';
 import {
   GeneratedImageSaveFailedError,
   UnsupportedImageContentTypeError,
+  UnexpectedThreadError,
 } from '../../threads.errors';
 import { SaveGeneratedImageCommand } from './save-generated-image.command';
 
@@ -28,6 +30,7 @@ export class SaveGeneratedImageUseCase {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: SaveGeneratedImageCommand): Promise<{ id: UUID }> {
     this.logger.log('execute', {
       orgId: command.orgId,
@@ -42,39 +45,7 @@ export class SaveGeneratedImageUseCase {
     }
 
     try {
-      const imageId = randomUUID();
-      const ext = contentTypeToExtension(command.contentType);
-      const storageKey = `generated-images/${command.orgId}/${command.threadId}/${imageId}${ext}`;
-
-      await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(storageKey, command.imageData, {
-          'content-type': command.contentType,
-        }),
-      );
-
-      const image = new GeneratedImage(
-        imageId,
-        command.orgId,
-        command.userId,
-        command.threadId,
-        command.contentType,
-        command.isAnonymous,
-        storageKey,
-      );
-
-      try {
-        await this.generatedImagesRepository.save(image);
-      } catch (dbError) {
-        await this.cleanupUploadedObject(storageKey);
-        throw dbError;
-      }
-
-      this.logger.log('Generated image saved', {
-        imageId,
-        storageKey,
-      });
-
-      return { id: imageId };
+      return await this.uploadAndPersist(command);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -88,6 +59,44 @@ export class SaveGeneratedImageUseCase {
         error instanceof Error ? error : new Error('Unknown error'),
       );
     }
+  }
+
+  private async uploadAndPersist(
+    command: SaveGeneratedImageCommand,
+  ): Promise<{ id: UUID }> {
+    const imageId = randomUUID();
+    const ext = contentTypeToExtension(command.contentType);
+    const storageKey = `generated-images/${command.orgId}/${command.threadId}/${imageId}${ext}`;
+
+    await this.uploadObjectUseCase.execute(
+      new UploadObjectCommand(storageKey, command.imageData, {
+        'content-type': command.contentType,
+      }),
+    );
+
+    const image = new GeneratedImage(
+      imageId,
+      command.orgId,
+      command.userId,
+      command.threadId,
+      command.contentType,
+      command.isAnonymous,
+      storageKey,
+    );
+
+    try {
+      await this.generatedImagesRepository.save(image);
+    } catch (dbError) {
+      await this.cleanupUploadedObject(storageKey);
+      throw dbError;
+    }
+
+    this.logger.log('Generated image saved', {
+      imageId,
+      storageKey,
+    });
+
+    return { id: imageId };
   }
 
   private async cleanupUploadedObject(storageKey: string): Promise<void> {

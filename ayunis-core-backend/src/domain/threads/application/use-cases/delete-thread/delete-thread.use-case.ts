@@ -5,8 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
+import { UnexpectedThreadError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   MessagesRepository,
@@ -32,6 +34,7 @@ export class DeleteThreadUseCase {
     private readonly generatedImagesRepository: GeneratedImagesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: DeleteThreadCommand): Promise<void> {
     this.logger.log('delete', { threadId: command.id });
 
@@ -46,43 +49,34 @@ export class DeleteThreadUseCase {
       throw new UnauthorizedException('Organization context required');
     }
 
-    try {
-      // First verify the thread exists and belongs to the user
-      const thread = await this.threadsRepository.findOne(command.id, userId);
+    // First verify the thread exists and belongs to the user
+    const thread = await this.threadsRepository.findOne(command.id, userId);
 
-      if (!thread) {
-        // Idempotent delete: treat already-deleted threads as success
-        this.logger.warn(
-          'Thread already deleted or not found, treating as success',
-          {
-            threadId: command.id,
-            userId,
-          },
-        );
-        return;
-      }
-
-      // Delete associated images before deleting the thread
-      await Promise.all([
-        this.deleteThreadImages(command.id, orgId),
-        this.deleteGeneratedImageBlobs(command.id),
-      ]);
-
-      // Delete the thread
-      await this.threadsRepository.delete(command.id, userId);
-
-      this.logger.log('Thread deleted successfully', {
-        threadId: command.id,
-        userId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete thread', {
-        threadId: command.id,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
+    if (!thread) {
+      // Idempotent delete: treat already-deleted threads as success
+      this.logger.warn(
+        'Thread already deleted or not found, treating as success',
+        {
+          threadId: command.id,
+          userId,
+        },
+      );
+      return;
     }
+
+    // Delete associated images before deleting the thread
+    await Promise.all([
+      this.deleteThreadImages(command.id, orgId),
+      this.deleteGeneratedImageBlobs(command.id),
+    ]);
+
+    // Delete the thread
+    await this.threadsRepository.delete(command.id, userId);
+
+    this.logger.log('Thread deleted successfully', {
+      threadId: command.id,
+      userId,
+    });
   }
 
   /**

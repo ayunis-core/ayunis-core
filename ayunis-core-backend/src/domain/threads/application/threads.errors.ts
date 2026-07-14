@@ -225,15 +225,11 @@ export class UnsupportedImageContentTypeError extends ThreadError {
   }
 }
 
-export class UnexpecteThreadError extends ThreadError {
-  constructor(_error: Error, metadata?: ErrorMetadata) {
-    super(
-      'Unexpected thread error',
-      ThreadErrorCode.UNEXPECTED_THREAD_ERROR,
-      500,
-      {
-        ...metadata,
-      },
-    );
+export class UnexpectedThreadError extends ThreadError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, ThreadErrorCode.UNEXPECTED_THREAD_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

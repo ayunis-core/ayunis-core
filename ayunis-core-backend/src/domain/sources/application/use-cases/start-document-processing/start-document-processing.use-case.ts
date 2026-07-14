@@ -1,7 +1,8 @@
 import * as path from 'path';
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.command';
@@ -29,82 +30,96 @@ export class StartDocumentProcessingUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: StartDocumentProcessingCommand): Promise<FileSource> {
     this.logger.log('Starting async document processing', {
       fileName: command.fileName,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new Error('orgId is required');
-      }
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new Error('userId is required');
-      }
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new Error('orgId is required');
+    }
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new Error('userId is required');
+    }
 
-      // 1. Create source with PROCESSING status
-      const savedSource = await this.createProcessingSourceUseCase.execute(
-        new CreateProcessingSourceCommand({
-          fileType: command.fileType,
+    // 1. Create source with PROCESSING status
+    const savedSource = await this.createProcessingSourceUseCase.execute(
+      new CreateProcessingSourceCommand({
+        fileType: command.fileType,
+        fileName: command.fileName,
+      }),
+    );
+
+    // 2. Upload file to MinIO (outside transaction)
+    const sanitizedFileName = path
+      .basename(command.fileName)
+      .replace(/[^a-zA-Z0-9._-]/g, '_');
+    const minioPath = `${orgId}/processing/${savedSource.id}/${sanitizedFileName}`;
+    await this.uploadFile(minioPath, command.fileData, savedSource);
+
+    // 3. Enqueue BullMQ job (outside transaction)
+    await this.enqueueProcessing({
+      command,
+      savedSource,
+      orgId,
+      userId,
+      minioPath,
+    });
+
+    return savedSource;
+  }
+
+  private async uploadFile(
+    minioPath: string,
+    fileData: Buffer,
+    savedSource: FileSource,
+  ): Promise<void> {
+    try {
+      await this.uploadObjectUseCase.execute(
+        new UploadObjectCommand(minioPath, fileData),
+      );
+    } catch (error) {
+      await this.tryMarkSourceFailed(
+        savedSource,
+        'Failed to upload file to storage',
+      );
+      throw error;
+    }
+  }
+
+  private async enqueueProcessing(params: {
+    command: StartDocumentProcessingCommand;
+    savedSource: FileSource;
+    orgId: UUID;
+    userId: UUID;
+    minioPath: string;
+  }): Promise<void> {
+    const { command, savedSource, orgId, userId, minioPath } = params;
+    try {
+      await this.enqueueDocumentProcessingUseCase.execute(
+        new EnqueueDocumentProcessingCommand({
+          sourceId: savedSource.id,
+          orgId,
+          userId,
+          minioPath,
           fileName: command.fileName,
+          fileType: command.fileType,
         }),
       );
-
-      // 2. Upload file to MinIO (outside transaction)
-      const sanitizedFileName = path
-        .basename(command.fileName)
-        .replace(/[^a-zA-Z0-9._-]/g, '_');
-      const minioPath = `${orgId}/processing/${savedSource.id}/${sanitizedFileName}`;
-      try {
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(minioPath, command.fileData),
-        );
-      } catch (error) {
-        await this.tryMarkSourceFailed(
-          savedSource,
-          'Failed to upload file to storage',
-        );
-        throw error;
-      }
-
-      // 3. Enqueue BullMQ job (outside transaction)
-      try {
-        await this.enqueueDocumentProcessingUseCase.execute(
-          new EnqueueDocumentProcessingCommand({
-            sourceId: savedSource.id,
-            orgId,
-            userId,
-            minioPath,
-            fileName: command.fileName,
-            fileType: command.fileType,
-          }),
-        );
-      } catch (error) {
-        this.logger.error('Failed to enqueue document processing job', {
-          sourceId: savedSource.id,
-          error: error as Error,
-        });
-        await this.tryMarkSourceFailed(
-          savedSource,
-          'Failed to enqueue processing job',
-        );
-        await this.cleanupMinioFile(minioPath);
-        throw error;
-      }
-
-      return savedSource;
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error starting document processing', {
+      this.logger.error('Failed to enqueue document processing job', {
+        sourceId: savedSource.id,
         error: error as Error,
       });
-      throw new UnexpectedSourceError('Error starting document processing', {
-        error: error as Error,
-      });
+      await this.tryMarkSourceFailed(
+        savedSource,
+        'Failed to enqueue processing job',
+      );
+      await this.cleanupMinioFile(minioPath);
+      throw error;
     }
   }
 

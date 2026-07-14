@@ -1,7 +1,12 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { UpdateThreadTitleCommand } from './update-thread-title.command';
-import { ThreadNotFoundError, ThreadUpdateError } from '../../threads.errors';
+import {
+  ThreadNotFoundError,
+  ThreadUpdateError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
@@ -13,6 +18,7 @@ export class UpdateThreadTitleUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: UpdateThreadTitleCommand): Promise<void> {
     this.logger.log('updateTitle', {
       threadId: command.threadId,

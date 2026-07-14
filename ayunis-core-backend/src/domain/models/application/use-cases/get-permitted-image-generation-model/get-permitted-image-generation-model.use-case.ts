@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -24,6 +24,7 @@ export class GetPermittedImageGenerationModelUseCase {
     private readonly modelPolicy: ModelPolicyService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetPermittedImageGenerationModelQuery,
   ): Promise<PermittedImageGenerationModel> {
@@ -31,29 +32,22 @@ export class GetPermittedImageGenerationModelUseCase {
       orgId: query.orgId,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const model = await this.permittedModelsRepository.findOneImageGeneration(
-        query.orgId,
-      );
-      if (!model || !(model instanceof PermittedImageGenerationModel)) {
-        throw new PermittedImageGenerationModelNotFoundForOrgError(query.orgId);
-      }
-
-      this.modelPolicy.assertSupported(model.model);
-      return model;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      throw new UnexpectedModelError(error as Error);
+    const orgId = this.contextService.get('orgId');
+    const systemRole = this.contextService.get('systemRole');
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isFromOrg = orgId === query.orgId;
+    if (!isFromOrg && !isSuperAdmin) {
+      throw new UnauthorizedAccessError();
     }
+
+    const model = await this.permittedModelsRepository.findOneImageGeneration(
+      query.orgId,
+    );
+    if (!model || !(model instanceof PermittedImageGenerationModel)) {
+      throw new PermittedImageGenerationModelNotFoundForOrgError(query.orgId);
+    }
+
+    this.modelPolicy.assertSupported(model.model);
+    return model;
   }
 }

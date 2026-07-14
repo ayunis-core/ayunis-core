@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
@@ -33,6 +33,7 @@ export class AnonymizeTextForThreadUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadPiiMasksError)
   async execute(
     command: AnonymizeTextForThreadCommand,
   ): Promise<ThreadAnonymizationResult> {
@@ -41,46 +42,30 @@ export class AnonymizeTextForThreadUseCase {
       threadId: command.threadId,
     });
 
-    try {
-      const entries = await this.getPiiWhitelistUseCase.execute(
-        new GetPiiWhitelistQuery(command.orgId),
-      );
-      const whitelist = entries.map(
-        (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
-      );
-      const existing = await this.repository.findByThreadId(command.threadId);
+    const entries = await this.getPiiWhitelistUseCase.execute(
+      new GetPiiWhitelistQuery(command.orgId),
+    );
+    const whitelist = entries.map(
+      (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
+    );
+    const existing = await this.repository.findByThreadId(command.threadId);
 
-      const result = await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(
-          command.text,
-          undefined,
-          whitelist,
-          existing.map((mask) => mask.toPiiMask()),
-        ),
-      );
+    const result = await this.anonymizeTextUseCase.execute(
+      new AnonymizeTextCommand(
+        command.text,
+        undefined,
+        whitelist,
+        existing.map((mask) => mask.toPiiMask()),
+      ),
+    );
 
-      const created = result.newMasks.map((mask) =>
-        ThreadPiiMask.fromPiiMask(command.threadId, mask),
-      );
-      if (created.length > 0) {
-        await this.repository.saveMany(created);
-      }
-
-      return { ...result, masks: [...existing, ...created] };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to anonymize text for thread', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        threadId: command.threadId,
-      });
-
-      throw new UnexpectedThreadPiiMasksError('anonymize', {
-        orgId: command.orgId,
-        threadId: command.threadId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
+    const created = result.newMasks.map((mask) =>
+      ThreadPiiMask.fromPiiMask(command.threadId, mask),
+    );
+    if (created.length > 0) {
+      await this.repository.saveMany(created);
     }
+
+    return { ...result, masks: [...existing, ...created] };
   }
 }

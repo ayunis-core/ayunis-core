@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
 import {
@@ -15,7 +16,6 @@ import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UpdateArtifactUseCase } from '../update-artifact/update-artifact.use-case';
 import { UpdateArtifactCommand } from '../update-artifact/update-artifact.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -28,6 +28,7 @@ export class ApplyEditsToArtifactUseCase {
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(
     command: ApplyEditsToArtifactCommand,
   ): Promise<ArtifactVersion> {
@@ -36,68 +37,54 @@ export class ApplyEditsToArtifactUseCase {
       editCount: command.edits.length,
     });
 
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
 
-      // Fetch artifact with versions to get current content
-      const artifact = await this.artifactsRepository.findByIdWithVersions(
+    // Fetch artifact with versions to get current content
+    const artifact = await this.artifactsRepository.findByIdWithVersions(
+      command.artifactId,
+      userId,
+    );
+    if (!artifact) {
+      throw new ArtifactNotFoundError(command.artifactId);
+    }
+
+    if (
+      command.expectedVersionNumber !== undefined &&
+      command.expectedVersionNumber !== artifact.currentVersionNumber
+    ) {
+      throw new ArtifactExpectedVersionMismatchError(
         command.artifactId,
-        userId,
-      );
-      if (!artifact) {
-        throw new ArtifactNotFoundError(command.artifactId);
-      }
-
-      if (
-        command.expectedVersionNumber !== undefined &&
-        command.expectedVersionNumber !== artifact.currentVersionNumber
-      ) {
-        throw new ArtifactExpectedVersionMismatchError(
-          command.artifactId,
-          command.expectedVersionNumber,
-          artifact.currentVersionNumber,
-        );
-      }
-
-      // Find current version content
-      const currentVersion = artifact.versions.find(
-        (v) => v.versionNumber === artifact.currentVersionNumber,
-      );
-      if (!currentVersion) {
-        throw new ArtifactVersionNotFoundError(
-          command.artifactId,
-          artifact.currentVersionNumber,
-        );
-      }
-
-      const content = this.applyEdits(currentVersion.content, command.edits);
-
-      // Sanitize and save using UpdateArtifactUseCase
-      const updateCommand = new UpdateArtifactCommand({
-        artifactId: command.artifactId,
-        content: content,
-        authorType: command.authorType,
-      });
-
-      const result = await this.updateArtifactUseCase.execute(updateCommand);
-      // Content is always provided here so result is always an ArtifactVersion
-      return result as ArtifactVersion;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error('applyEditsToArtifactUnexpectedError', {
-        artifactId: command.artifactId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedArtifactError(
-        error instanceof Error ? error.message : 'Unknown error',
+        command.expectedVersionNumber,
+        artifact.currentVersionNumber,
       );
     }
+
+    // Find current version content
+    const currentVersion = artifact.versions.find(
+      (v) => v.versionNumber === artifact.currentVersionNumber,
+    );
+    if (!currentVersion) {
+      throw new ArtifactVersionNotFoundError(
+        command.artifactId,
+        artifact.currentVersionNumber,
+      );
+    }
+
+    const content = this.applyEdits(currentVersion.content, command.edits);
+
+    // Sanitize and save using UpdateArtifactUseCase
+    const updateCommand = new UpdateArtifactCommand({
+      artifactId: command.artifactId,
+      content: content,
+      authorType: command.authorType,
+    });
+
+    const result = await this.updateArtifactUseCase.execute(updateCommand);
+    // Content is always provided here so result is always an ArtifactVersion
+    return result as ArtifactVersion;
   }
 
   private applyEdits(

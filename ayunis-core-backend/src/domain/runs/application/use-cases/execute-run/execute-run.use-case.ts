@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Message } from '../../../../messages/domain/message.entity';
 import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
 import { Thread } from '../../../../threads/domain/thread.entity';
@@ -13,6 +14,7 @@ import {
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
+  UnexpectedRunError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -63,6 +65,7 @@ export class ExecuteRunUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, void, void>> {

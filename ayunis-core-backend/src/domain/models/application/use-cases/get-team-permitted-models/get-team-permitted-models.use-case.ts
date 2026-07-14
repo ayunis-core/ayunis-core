@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { GetTeamPermittedModelsQuery } from './get-team-permitted-models.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedModelError } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
 
@@ -15,6 +15,7 @@ export class GetTeamPermittedModelsUseCase {
     private readonly validator: TeamPermittedModelValidator,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetTeamPermittedModelsQuery,
   ): Promise<PermittedLanguageModel[]> {
@@ -23,22 +24,12 @@ export class GetTeamPermittedModelsUseCase {
       orgId: query.orgId,
     });
 
-    try {
-      this.validator.validateAdminAccess(query.orgId);
-      await this.validator.validateTeamInOrg(query.teamId, query.orgId);
+    this.validator.validateAdminAccess(query.orgId);
+    await this.validator.validateTeamInOrg(query.teamId, query.orgId);
 
-      return await this.permittedModelsRepository.findManyLanguageByTeam(
-        query.teamId,
-        query.orgId,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error listing team permitted models', error);
-      throw new UnexpectedModelError(
-        error instanceof Error ? error : new Error('Unknown error'),
-      );
-    }
+    return await this.permittedModelsRepository.findManyLanguageByTeam(
+      query.teamId,
+      query.orgId,
+    );
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
 import { Letterhead } from '../../../domain/letterhead.entity';
@@ -19,37 +19,26 @@ export class FindLetterheadUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedLetterheadError)
   async execute(query: FindLetterheadQuery): Promise<Letterhead> {
     this.logger.log('Finding letterhead', {
       letterheadId: query.letterheadId,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const letterhead = await this.letterheadsRepository.findById(
-        orgId,
-        query.letterheadId,
-      );
-
-      if (!letterhead) {
-        throw new LetterheadNotFoundError(query.letterheadId);
-      }
-
-      return letterhead;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error finding letterhead', {
-        error: error as Error,
-      });
-      throw new UnexpectedLetterheadError('Error finding letterhead', {
-        error: error as Error,
-      });
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
     }
+
+    const letterhead = await this.letterheadsRepository.findById(
+      orgId,
+      query.letterheadId,
+    );
+
+    if (!letterhead) {
+      throw new LetterheadNotFoundError(query.letterheadId);
+    }
+
+    return letterhead;
   }
 }

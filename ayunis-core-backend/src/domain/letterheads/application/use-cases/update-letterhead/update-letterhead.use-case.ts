@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
@@ -27,99 +28,114 @@ export class UpdateLetterheadUseCase {
     private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedLetterheadError)
   async execute(command: UpdateLetterheadCommand): Promise<Letterhead> {
     this.logger.log('Updating letterhead', {
       letterheadId: command.letterheadId,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
+    }
 
-      const existing = await this.letterheadsRepository.findById(
-        orgId,
-        command.letterheadId,
+    const existing = await this.letterheadsRepository.findById(
+      orgId,
+      command.letterheadId,
+    );
+    if (!existing) {
+      throw new LetterheadNotFoundError(command.letterheadId);
+    }
+
+    const firstPageStoragePath = await this.resolveFirstPagePath(
+      orgId,
+      existing,
+      command,
+    );
+    const continuationPageStoragePath = await this.resolveContinuationPagePath(
+      orgId,
+      existing,
+      command,
+    );
+
+    const updated = new Letterhead({
+      id: existing.id,
+      orgId: existing.orgId,
+      name: command.name ?? existing.name,
+      description:
+        command.description !== undefined
+          ? command.description
+          : existing.description,
+      firstPageStoragePath,
+      continuationPageStoragePath,
+      firstPageMargins: command.firstPageMargins ?? existing.firstPageMargins,
+      continuationPageMargins:
+        command.continuationPageMargins ?? existing.continuationPageMargins,
+      createdAt: existing.createdAt,
+      updatedAt: new Date(),
+    });
+
+    return await this.letterheadsRepository.save(updated);
+  }
+
+  private async resolveFirstPagePath(
+    orgId: UUID,
+    existing: Letterhead,
+    command: UpdateLetterheadCommand,
+  ): Promise<string> {
+    if (!command.firstPagePdfBuffer) {
+      return existing.firstPageStoragePath;
+    }
+
+    await this.letterheadPdfService.validateSinglePagePdf(
+      command.firstPagePdfBuffer,
+      'first page',
+    );
+    const firstPageStoragePath = this.letterheadPdfService.buildStoragePath(
+      orgId,
+      existing.id,
+      'first-page.pdf',
+    );
+    await this.uploadObjectUseCase.execute(
+      new UploadObjectCommand(firstPageStoragePath, command.firstPagePdfBuffer),
+    );
+    return firstPageStoragePath;
+  }
+
+  private async resolveContinuationPagePath(
+    orgId: UUID,
+    existing: Letterhead,
+    command: UpdateLetterheadCommand,
+  ): Promise<string | null> {
+    if (command.continuationPagePdfBuffer) {
+      await this.letterheadPdfService.validateSinglePagePdf(
+        command.continuationPagePdfBuffer,
+        'continuation page',
       );
-      if (!existing) {
-        throw new LetterheadNotFoundError(command.letterheadId);
-      }
-
-      let firstPageStoragePath = existing.firstPageStoragePath;
-      if (command.firstPagePdfBuffer) {
-        await this.letterheadPdfService.validateSinglePagePdf(
-          command.firstPagePdfBuffer,
-          'first page',
-        );
-        firstPageStoragePath = this.letterheadPdfService.buildStoragePath(
+      const continuationPageStoragePath =
+        this.letterheadPdfService.buildStoragePath(
           orgId,
           existing.id,
-          'first-page.pdf',
+          'continuation.pdf',
         );
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(
-            firstPageStoragePath,
-            command.firstPagePdfBuffer,
-          ),
-        );
-      }
-
-      let continuationPageStoragePath = existing.continuationPageStoragePath;
-      if (command.continuationPagePdfBuffer) {
-        await this.letterheadPdfService.validateSinglePagePdf(
+      await this.uploadObjectUseCase.execute(
+        new UploadObjectCommand(
+          continuationPageStoragePath,
           command.continuationPagePdfBuffer,
-          'continuation page',
-        );
-        continuationPageStoragePath =
-          this.letterheadPdfService.buildStoragePath(
-            orgId,
-            existing.id,
-            'continuation.pdf',
-          );
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(
-            continuationPageStoragePath,
-            command.continuationPagePdfBuffer,
-          ),
-        );
-      } else if (command.removeContinuationPage) {
-        if (existing.continuationPageStoragePath) {
-          await this.deleteObjectUseCase.execute(
-            new DeleteObjectCommand(existing.continuationPageStoragePath),
-          );
-        }
-        continuationPageStoragePath = null;
-      }
-
-      const updated = new Letterhead({
-        id: existing.id,
-        orgId: existing.orgId,
-        name: command.name ?? existing.name,
-        description:
-          command.description !== undefined
-            ? command.description
-            : existing.description,
-        firstPageStoragePath,
-        continuationPageStoragePath,
-        firstPageMargins: command.firstPageMargins ?? existing.firstPageMargins,
-        continuationPageMargins:
-          command.continuationPageMargins ?? existing.continuationPageMargins,
-        createdAt: existing.createdAt,
-        updatedAt: new Date(),
-      });
-
-      return await this.letterheadsRepository.save(updated);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error updating letterhead', {
-        error: error as Error,
-      });
-      throw new UnexpectedLetterheadError('Error updating letterhead', {
-        error: error as Error,
-      });
+        ),
+      );
+      return continuationPageStoragePath;
     }
+
+    if (command.removeContinuationPage) {
+      if (existing.continuationPageStoragePath) {
+        await this.deleteObjectUseCase.execute(
+          new DeleteObjectCommand(existing.continuationPageStoragePath),
+        );
+      }
+      return null;
+    }
+
+    return existing.continuationPageStoragePath;
   }
 }

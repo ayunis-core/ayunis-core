@@ -10,6 +10,8 @@ import { FindShareByEntityQuery } from './find-share-by-entity.query';
 import { Share } from '../../../domain/share.entity';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedShareError } from '../../shares.errors';
 
 /**
  * Use case for finding a specific share by entity type and entity ID
@@ -32,6 +34,7 @@ export class FindShareByEntityUseCase {
    * @returns The share if found, null otherwise
    * @throws UnauthorizedException if user is not authenticated or has no organization
    */
+  @HandleUnexpectedErrors(UnexpectedShareError)
   async execute(query: FindShareByEntityQuery): Promise<Share | null> {
     this.logger.log('execute', {
       entityType: query.entityType,
