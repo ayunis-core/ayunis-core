@@ -15,6 +15,7 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 
 @Injectable()
 export class StreamInferenceUseCase {
@@ -28,7 +29,7 @@ export class StreamInferenceUseCase {
   ): Observable<StreamInferenceResponseChunk> {
     try {
       return this.getHandler(input.model)
-        .answer(input)
+        .answer(this.sanitizeReplayedMessages(input))
         .pipe(
           catchError((error: unknown) =>
             throwError(() => this.handleInferenceError(error, input)),
@@ -80,6 +81,23 @@ export class StreamInferenceUseCase {
       return new InferenceImageTooLargeError({ status });
     }
     return new InferenceFailedError('Provider inference failed', { status });
+  }
+
+  private sanitizeReplayedMessages(
+    input: StreamInferenceInput,
+  ): StreamInferenceInput {
+    const messages = stripReplayedToolNulls(input.messages, input.tools);
+    if (messages === input.messages) {
+      return input;
+    }
+    return new StreamInferenceInput({
+      model: input.model,
+      messages,
+      systemPrompt: input.systemPrompt,
+      tools: input.tools,
+      toolChoice: input.toolChoice,
+      orgId: input.orgId,
+    });
   }
 
   private getHandler(model: Model): StreamInferenceHandler {
