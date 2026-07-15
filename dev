@@ -82,6 +82,22 @@ dc() {
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" "$@"
 }
 
+# compose.dev.yml requires MINIO_ROOT_USER/MINIO_ROOT_PASSWORD/REDIS_PASSWORD
+# (`:?` interpolation), so every compose invocation needs them exported —
+# including down/ps/logs, where the actual values are irrelevant. Reuse the
+# persisted secrets from .env.dev; fall back to placeholders when the file
+# doesn't exist yet (cmd_up generates and exports real values itself).
+_export_infra_env() {
+  local env_dev="$REPO_DIR/ayunis-core-backend/.env.dev"
+  local minio_user minio_password redis_password
+  minio_user="$(_read_env_var "$env_dev" MINIO_ACCESS_KEY)"
+  minio_password="$(_read_env_var "$env_dev" MINIO_SECRET_KEY)"
+  redis_password="$(_read_env_var "$env_dev" REDIS_PASSWORD)"
+  export MINIO_ROOT_USER="${minio_user:-placeholder}"
+  export MINIO_ROOT_PASSWORD="${minio_password:-placeholder}"
+  export REDIS_PASSWORD="${redis_password:-placeholder}"
+}
+
 _tmux_session_alive() {
   local session="$1"
   command -v tmux >/dev/null 2>&1 || return 1
@@ -249,6 +265,7 @@ EOF
 
 cmd_down() {
   info "Stopping slot $SLOT …"
+  _export_infra_env
 
   # Stop native processes (pass ports to kill orphaned grandchild processes)
   _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT" "$FRONTEND_SESSION"
@@ -261,6 +278,7 @@ cmd_down() {
 }
 
 cmd_status() {
+  _export_infra_env
   echo "Slot $SLOT"
   echo ""
 
@@ -291,6 +309,7 @@ cmd_status() {
 }
 
 cmd_logs() {
+  _export_infra_env
   local tail_lines=80
   local target="all"
 
