@@ -5,6 +5,11 @@ import { ConfigService } from '@nestjs/config';
 import { Embedding } from '../../domain/embedding.entity';
 import { EmbeddingModel } from '../../domain/embedding-model.entity';
 
+// Embeddings are small, fast requests. The tight per-attempt timeout turns a
+// stalled connection into a quick SDK-level retry instead of hanging the run
+// until the SDK's 10-minute default (AYC-422).
+const EMBEDDINGS_TIMEOUT_MS = 30_000;
+
 @Injectable()
 export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
   private openai: OpenAI | null = null;
@@ -19,7 +24,7 @@ export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
       if (!apiKey) {
         throw new Error('OpenAI embeddings API key not configured');
       }
-      this.openai = new OpenAI({ apiKey });
+      this.openai = new OpenAI({ apiKey, timeout: EMBEDDINGS_TIMEOUT_MS });
     }
     return this.openai;
   }
@@ -37,7 +42,6 @@ export class OpenAIEmbeddingsHandler extends EmbeddingsHandler {
   }
 
   isAvailable(): boolean {
-    // TODO
     return !!this.configService.get('embeddings.openai.apiKey');
   }
 }

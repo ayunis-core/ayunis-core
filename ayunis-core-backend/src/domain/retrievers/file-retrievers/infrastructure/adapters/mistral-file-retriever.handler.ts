@@ -14,6 +14,7 @@ import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
+import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 import { File } from '../../domain/file.entity';
 import { ConfigService } from '@nestjs/config';
 
@@ -22,8 +23,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
-  // 5 minutes timeout for large document OCR processing
-  private readonly TIMEOUT_MS = 5 * 60 * 1000;
+  // Per-attempt timeout for the Mistral file APIs (upload, signed URL, OCR,
+  // delete). Healthy OCR p95 is ~27s; the slowest successful calls observed
+  // in production were ~115s, so 120s leaves headroom for large documents
+  // while a stalled connection fails fast and retries instead of eating a
+  // 5-minute slice per attempt (AYC-422).
+  private readonly TIMEOUT_MS = 120 * 1000;
 
   constructor(private readonly configService: ConfigService) {
     super();
@@ -43,82 +48,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       const blobPart: BlobPart = file.fileData as unknown as BlobPart;
       const fileBlob = new Blob([blobPart], { type: file.fileType });
 
-      const uploaded_pdf = await retryWithBackoff({
-        fn: () =>
-          this.client.files.upload({
-            file: fileBlob,
-            purpose: 'ocr',
-          }),
-        maxRetries: 3,
-        delay: 1000,
-      }).catch((error) => {
-        this.logger.debug('File upload to Mistral failed', {
-          error: error as Error,
-        });
-        this.logger.error('File upload to Mistral failed');
-        throw error;
-      });
+      const uploadedFileId = await this.uploadFile(fileBlob);
+      const ocrResponse = await this.runOcr(uploadedFileId);
+      await this.deleteFileBestEffort(uploadedFileId);
 
-      const signedUrl = await retryWithBackoff({
-        fn: () =>
-          this.client.files.getSignedUrl({
-            fileId: uploaded_pdf.id,
-          }),
-        maxRetries: 3,
-        delay: 1000,
-      }).catch(async (error) => {
-        this.logger.error(
-          `Mistral OCR signed URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          error instanceof Error ? error.stack : 'Unknown error',
-        );
-        await this.client.files
-          .delete({ fileId: uploaded_pdf.id })
-          .catch(() => undefined);
-        throw error;
-      });
-
-      this.logger.debug('signed URL', { signedUrl });
-      const ocrResponse = await retryWithBackoff({
-        fn: () =>
-          this.client.ocr.process({
-            model: this.MODEL_NAME,
-            document: {
-              type: 'document_url',
-              documentUrl: signedUrl.url,
-            },
-            includeImageBase64: true,
-          }),
-        maxRetries: 3,
-        delay: 1000,
-      }).catch(async (error) => {
-        this.logger.error(
-          `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          error instanceof Error ? error.stack : 'Unknown error',
-        );
-        await this.client.files
-          .delete({ fileId: uploaded_pdf.id })
-          .catch(() => undefined);
-        throw error;
-      });
-
-      // Best-effort cleanup — don't fail the operation if the file
-      // was already auto-deleted by Mistral (404) or is temporarily
-      // unreachable (5xx). The OCR result is already obtained.
-      await retryWithBackoff({
-        fn: () =>
-          this.client.files.delete({
-            fileId: uploaded_pdf.id,
-          }),
-        maxRetries: 3,
-        delay: 1000,
-      }).catch((error) => {
-        this.logger.warn('Failed to delete file from Mistral (best-effort)', {
-          fileId: uploaded_pdf.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-      });
-
-      // Parse the response
       return this.parseResponse(ocrResponse);
     } catch (error) {
       this.logger.error(
@@ -139,6 +72,83 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
       throw new FileRetrieverUnexpectedError(error as Error, metadata);
     }
+  }
+
+  private async uploadFile(fileBlob: Blob): Promise<string> {
+    const uploaded = await retryWithBackoff({
+      fn: () =>
+        this.client.files.upload({
+          file: fileBlob,
+          purpose: 'ocr',
+        }),
+      maxRetries: 3,
+      delay: 1000,
+      retryIfError: isTransientMistralError,
+    }).catch((error) => {
+      this.logger.debug('File upload to Mistral failed', {
+        error: error as Error,
+      });
+      this.logger.error('File upload to Mistral failed');
+      throw error;
+    });
+    return uploaded.id;
+  }
+
+  /** Fetches the signed URL and runs OCR; deletes the uploaded file on failure. */
+  private async runOcr(fileId: string): Promise<OCRResponse> {
+    const signedUrl = await retryWithBackoff({
+      fn: () => this.client.files.getSignedUrl({ fileId }),
+      maxRetries: 3,
+      delay: 1000,
+      retryIfError: isTransientMistralError,
+    }).catch(async (error) => {
+      this.logger.error(
+        `Mistral OCR signed URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : 'Unknown error',
+      );
+      await this.client.files.delete({ fileId }).catch(() => undefined);
+      throw error;
+    });
+
+    this.logger.debug('signed URL', { signedUrl });
+    return retryWithBackoff({
+      fn: () =>
+        this.client.ocr.process({
+          model: this.MODEL_NAME,
+          document: {
+            type: 'document_url',
+            documentUrl: signedUrl.url,
+          },
+          includeImageBase64: true,
+        }),
+      maxRetries: 3,
+      delay: 1000,
+      retryIfError: isTransientMistralError,
+    }).catch(async (error) => {
+      this.logger.error(
+        `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : 'Unknown error',
+      );
+      await this.client.files.delete({ fileId }).catch(() => undefined);
+      throw error;
+    });
+  }
+
+  // Best-effort cleanup — don't fail the operation if the file was already
+  // auto-deleted by Mistral (404) or is temporarily unreachable (5xx). The
+  // OCR result is already obtained.
+  private async deleteFileBestEffort(fileId: string): Promise<void> {
+    await retryWithBackoff({
+      fn: () => this.client.files.delete({ fileId }),
+      maxRetries: 3,
+      delay: 1000,
+      retryIfError: isTransientMistralError,
+    }).catch((error) => {
+      this.logger.warn('Failed to delete file from Mistral (best-effort)', {
+        fileId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    });
   }
 
   private parseResponse(response: OCRResponse): FileRetrieverResult {

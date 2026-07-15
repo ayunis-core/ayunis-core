@@ -16,6 +16,15 @@ import {
   convertToolChoice,
 } from './convert-request';
 
+// Hard ceiling on the WHOLE request, stream consumption included: the Mistral
+// SDK arms AbortSignal.timeout(timeoutMs) as the fetch signal, which stays
+// active while the body streams. Generous on purpose — long healthy chat
+// streams must fit — while still bounding a stalled connection, which
+// previously hung forever (the SDK has no default timeout). Note: the SDK
+// skips this when a per-request signal is supplied, so a host-provided
+// AbortSignal takes over the deadline entirely.
+export const DEFAULT_TIMEOUT_MS = 300_000;
+
 export interface MistralProviderOptions {
   apiKey: string;
   /** Mistral model id, e.g. 'mistral-large-latest'. */
@@ -23,6 +32,8 @@ export interface MistralProviderOptions {
   baseUrl?: string;
   /** SDK-level retry budget for transient failures. Default: SDK default. */
   maxRetries?: number;
+  /** Whole-request timeout in ms, stream included. Default: 300s. */
+  timeoutMs?: number;
 }
 
 /**
@@ -34,6 +45,7 @@ export interface MistralProviderOptions {
 export const mistral = (options: MistralProviderOptions): ModelProvider => {
   const client = new Mistral({
     apiKey: options.apiKey,
+    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     ...(options.baseUrl ? { serverURL: options.baseUrl } : {}),
     ...(options.maxRetries !== undefined
       ? { retryConfig: toRetryConfig(options.maxRetries) }

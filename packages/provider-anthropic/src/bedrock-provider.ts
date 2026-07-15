@@ -5,6 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import {
   createMessagesProvider,
   DEFAULT_MAX_TOKENS,
+  DEFAULT_TIMEOUT_MS,
 } from './anthropic-provider';
 
 const DEFAULT_AWS_REGION = 'eu-central-1';
@@ -21,6 +22,8 @@ export interface BedrockProviderOptions {
   maxTokens?: number;
   /** SDK-level retry count for transient failures. Default: 2. */
   maxRetries?: number;
+  /** Per-attempt timeout in ms until the response starts. Default: 120s. */
+  timeoutMs?: number;
 }
 
 /**
@@ -54,15 +57,19 @@ const createBedrockClient = (
   options: BedrockProviderOptions,
 ): AnthropicBedrock => {
   const awsRegion = resolveAwsRegion(options.awsRegion);
-  const maxRetries =
-    options.maxRetries !== undefined ? { maxRetries: options.maxRetries } : {};
+  const sharedOptions = {
+    awsRegion,
+    timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    ...(options.maxRetries !== undefined
+      ? { maxRetries: options.maxRetries }
+      : {}),
+  };
   if (options.awsAccessKey && options.awsSecretKey) {
     return new AnthropicBedrock({
-      awsRegion,
+      ...sharedOptions,
       awsAccessKey: options.awsAccessKey,
       awsSecretKey: options.awsSecretKey,
-      ...maxRetries,
     });
   }
-  return new AnthropicBedrock({ awsRegion, ...maxRetries });
+  return new AnthropicBedrock(sharedOptions);
 };

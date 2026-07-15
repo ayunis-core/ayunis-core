@@ -80,6 +80,17 @@ describe('MistralFileRetrieverHandler', () => {
     mockClient = (handler as unknown as { client: typeof mockClient }).client;
   });
 
+  describe('client construction', () => {
+    it('bounds each file-API attempt with a 120s timeout instead of 5 minutes', () => {
+      const { Mistral } = jest.requireMock<{ Mistral: jest.Mock }>(
+        '@mistralai/mistralai',
+      );
+      expect(Mistral).toHaveBeenCalledWith(
+        expect.objectContaining({ timeoutMs: 120_000 }),
+      );
+    });
+  });
+
   describe('transient upstream error handling', () => {
     beforeEach(() => {
       // Setup upload and signedUrl to succeed — error on OCR process
