@@ -40,61 +40,16 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
       query,
     });
     try {
-      const braveSearchUrl = this.configService.get<string>(
-        'internetSearch.brave.url',
-      );
-      const braveSearchApiKey = this.configService.get<string>(
-        'internetSearch.brave.apiKey',
-      );
-      if (!braveSearchUrl || !braveSearchApiKey) {
-        throw new Error('Brave search URL or API key is not configured');
-      }
-
-      const urlFriendlyQuery = encodeURI(query);
-      const url = `${braveSearchUrl}?q=${urlFriendlyQuery}`;
-      const headers = {
-        'x-subscription-token': braveSearchApiKey,
-        Accept: 'application/json',
-      };
-      const response = await fetch(url, { headers });
+      const response = await fetch(...this.buildRequest(query));
       const data = (await response.json()) as
-        | BraveSearchResult
-        | BraveSearchErrorResult;
+        BraveSearchResult | BraveSearchErrorResult;
       if ('error' in data) {
         this.logger.error('Brave search error', {
           error: data.error,
         });
         throw new Error(data.error.detail);
       }
-      const webResults =
-        data.web?.results.map((result) => {
-          if (result.title && result.url && result.description) {
-            return new InternetSearchResult({
-              type: InternetSearchResultType.WEB,
-              title: result.title,
-              url: result.url,
-              description: result.description,
-            });
-          }
-          return null;
-        }) ?? [];
-      const newsResults =
-        data.news?.results.map((result) => {
-          if (result.title && result.url && result.description) {
-            return new InternetSearchResult({
-              type: InternetSearchResultType.NEWS,
-              title: result.title,
-              url: result.url,
-              description: result.description,
-              pageAge: result.page_age,
-            });
-          }
-          return null;
-        }) ?? [];
-      const results = [
-        ...webResults.slice(0, 5),
-        ...newsResults.slice(0, 5),
-      ].filter((result) => result !== null);
+      const results = this.mapResults(data);
       this.logger.debug('Processed results', {
         results,
       });
@@ -105,5 +60,56 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
       });
       throw error;
     }
+  }
+
+  private buildRequest(query: string): [string, RequestInit] {
+    const braveSearchUrl = this.configService.get<string>(
+      'internetSearch.brave.url',
+    );
+    const braveSearchApiKey = this.configService.get<string>(
+      'internetSearch.brave.apiKey',
+    );
+    if (!braveSearchUrl || !braveSearchApiKey) {
+      throw new Error('Brave search URL or API key is not configured');
+    }
+
+    const urlFriendlyQuery = encodeURI(query);
+    const headers = {
+      'x-subscription-token': braveSearchApiKey,
+      Accept: 'application/json',
+    };
+    return [`${braveSearchUrl}?q=${urlFriendlyQuery}`, { headers }];
+  }
+
+  /** Top 5 web and top 5 news hits, skipping entries with missing fields. */
+  private mapResults(data: BraveSearchResult): InternetSearchResult[] {
+    const webResults =
+      data.web?.results.map((result) => {
+        if (result.title && result.url && result.description) {
+          return new InternetSearchResult({
+            type: InternetSearchResultType.WEB,
+            title: result.title,
+            url: result.url,
+            description: result.description,
+          });
+        }
+        return null;
+      }) ?? [];
+    const newsResults =
+      data.news?.results.map((result) => {
+        if (result.title && result.url && result.description) {
+          return new InternetSearchResult({
+            type: InternetSearchResultType.NEWS,
+            title: result.title,
+            url: result.url,
+            description: result.description,
+            pageAge: result.page_age,
+          });
+        }
+        return null;
+      }) ?? [];
+    return [...webResults.slice(0, 5), ...newsResults.slice(0, 5)].filter(
+      (result) => result !== null,
+    );
   }
 }
