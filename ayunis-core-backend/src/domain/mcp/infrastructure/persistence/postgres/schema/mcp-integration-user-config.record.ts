@@ -14,7 +14,7 @@ export class McpIntegrationUserConfigRecord extends BaseRecord {
   @JoinColumn({ name: 'integration_id' })
   integration: McpIntegrationRecord;
 
-  @Column({ name: 'user_id', type: 'uuid' })
+  @Column({ name: 'user_id', type: 'varchar' })
   userId: UUID;
 
   @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
