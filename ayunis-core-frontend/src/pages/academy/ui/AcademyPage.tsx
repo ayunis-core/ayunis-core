@@ -5,14 +5,18 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { EmptyState } from '@/widgets/empty-state';
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
+  ItemMedia,
   ItemTitle,
 } from '@/shared/ui/shadcn/item';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { CheckCircle2, Trophy } from 'lucide-react';
+import { Button } from '@/shared/ui/shadcn/button';
+import { CheckCircle2, Download, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
+import { useDownloadCertificate } from '@/features/academy';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useAcademyProgress } from '../api/useAcademyProgress';
 
@@ -23,6 +27,7 @@ interface AcademyPageProps {
 export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   const { t } = useTranslation('academy');
   const { progress } = useAcademyProgress();
+  const { downloadCertificate, isDownloading } = useDownloadCertificate();
 
   const passedChapterIds = new Set(
     (progress?.chapters ?? []).filter((c) => c.passed).map((c) => c.chapterId),
@@ -54,15 +59,26 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
         contentArea={
           <div className="space-y-3">
             {progress?.academyCompletedAt && (
-              <div className="flex items-start gap-2 rounded-lg border bg-muted p-3">
-                <Trophy className="h-5 w-5 shrink-0 text-amber-500" />
-                <div>
-                  <p className="font-medium">{t('progress.completed.title')}</p>
-                  <p className="text-sm text-muted-foreground">
+              <Item variant="muted">
+                <ItemMedia variant="icon" className="text-brand">
+                  <Trophy />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{t('progress.completed.title')}</ItemTitle>
+                  <ItemDescription>
                     {t('progress.completed.description')}
-                  </p>
-                </div>
-              </div>
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    onClick={() => void downloadCertificate()}
+                    disabled={isDownloading}
+                  >
+                    <Download className="h-4 w-4" />
+                    {t('certificate.download')}
+                  </Button>
+                </ItemActions>
+              </Item>
             )}
             {sortedChapters.map((chapter) => (
               <Item key={chapter.id} variant="outline">
