@@ -17,8 +17,10 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *    a direct consequence of the previous non-cascading delete behaviour) are
  *    purged before each constraint is added — otherwise the ADD CONSTRAINT
  *    would fail on production databases that already contain such rows.
- *    Deleting orphaned threads cascades to their messages, artifacts and
- *    generated-image rows via the pre-existing thread foreign keys.
+ *
+ * The `threads.userId` cascade is NOT handled here: it was already added on
+ * main by `AddOrgCascadeToConversationKbMcpData1782922618870` (AYC-383),
+ * which runs before this migration.
  */
 export class CascadeUserDeletionRelations1782922684949 implements MigrationInterface {
   name = 'CascadeUserDeletionRelations1782922684949';
@@ -36,9 +38,6 @@ export class CascadeUserDeletionRelations1782922684949 implements MigrationInter
     );
 
     // 2. Purge pre-existing orphaned rows so the new FKs can be validated.
-    await queryRunner.query(
-      `DELETE FROM "threads" WHERE "userId" NOT IN (SELECT "id" FROM "users")`,
-    );
     await queryRunner.query(
       `DELETE FROM "artifacts" WHERE "userId" NOT IN (SELECT "id" FROM "users")`,
     );
@@ -63,9 +62,6 @@ export class CascadeUserDeletionRelations1782922684949 implements MigrationInter
       `ALTER TABLE "user_default_models" ADD CONSTRAINT "FK_2068066be6ef39ebd1aba35256e" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "threads" ADD CONSTRAINT "FK_256dd2e4946d6768c5583caa072" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "mcp_integration_user_configs" ADD CONSTRAINT "FK_28fb10d1d2526fd490f83f156b9" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -85,9 +81,6 @@ export class CascadeUserDeletionRelations1782922684949 implements MigrationInter
     );
     await queryRunner.query(
       `ALTER TABLE "mcp_integration_user_configs" DROP CONSTRAINT "FK_28fb10d1d2526fd490f83f156b9"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "threads" DROP CONSTRAINT "FK_256dd2e4946d6768c5583caa072"`,
     );
     await queryRunner.query(
       `ALTER TABLE "user_default_models" DROP CONSTRAINT "FK_2068066be6ef39ebd1aba35256e"`,
