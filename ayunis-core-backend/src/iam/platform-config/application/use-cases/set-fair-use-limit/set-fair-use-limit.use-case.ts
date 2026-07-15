@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedPlatformConfigError } from 'src/iam/platform-config/application/platform-config.errors';
 import { Injectable } from '@nestjs/common';
 import { assertNever } from 'src/common/util/assert-never';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
@@ -58,6 +60,7 @@ export class SetFairUseLimitUseCase {
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedPlatformConfigError)
   async execute(command: SetFairUseLimitCommand): Promise<void> {
     // Validate the tier value is within the enum before doing anything else.
     // Non-HTTP callers (e.g., internal scripts) bypass DTO validation, so we

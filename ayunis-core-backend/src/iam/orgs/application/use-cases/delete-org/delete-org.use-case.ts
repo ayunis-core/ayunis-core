@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { DeleteOrgCommand } from './delete-org.command';
@@ -9,6 +11,7 @@ export class DeleteOrgUseCase {
 
   constructor(private readonly orgsRepository: OrgsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: DeleteOrgCommand): Promise<void> {
     this.logger.log('delete', { id: command.id });
 

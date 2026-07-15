@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedPlatformConfigError } from 'src/iam/platform-config/application/platform-config.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
@@ -40,6 +42,9 @@ export class GetFairUseLimitsUseCase {
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
+  // This use case resolves the complete tiered configuration in one read model.
+  // eslint-disable-next-line max-lines-per-function
+  @HandleUnexpectedErrors(UnexpectedPlatformConfigError)
   async execute(): Promise<FairUseLimitsByTier> {
     const [
       zeroLimit,

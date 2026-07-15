@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -30,6 +30,7 @@ export class ResetUserMfaUseCase {
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMfaError)
   async execute(command: ResetUserMfaCommand): Promise<void> {
     this.logger.log('resetUserMfa', { targetUserId: command.targetUserId });
 
@@ -39,26 +40,20 @@ export class ResetUserMfaUseCase {
       throw new UserUnauthorizedError('User not authenticated');
     }
 
-    try {
-      if (command.targetUserId === requesterId) {
-        throw new MfaSelfResetNotAllowedError();
-      }
-
-      const targetUser = await this.findUserByIdUseCase.execute(
-        new FindUserByIdQuery(command.targetUserId),
-      );
-
-      // Cross-org resets must look like a missing user, not a permission gap.
-      if (targetUser.orgId !== requesterOrgId) {
-        throw new UserNotFoundError(command.targetUserId);
-      }
-
-      await this.recoveryCodesRepository.deleteByUserId(command.targetUserId);
-      await this.userTotpsRepository.deleteByUserId(command.targetUserId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error resetting user MFA', { error: error as Error });
-      throw new UnexpectedMfaError(error);
+    if (command.targetUserId === requesterId) {
+      throw new MfaSelfResetNotAllowedError();
     }
+
+    const targetUser = await this.findUserByIdUseCase.execute(
+      new FindUserByIdQuery(command.targetUserId),
+    );
+
+    // Cross-org resets must look like a missing user, not a permission gap.
+    if (targetUser.orgId !== requesterOrgId) {
+      throw new UserNotFoundError(command.targetUserId);
+    }
+
+    await this.recoveryCodesRepository.deleteByUserId(command.targetUserId);
+    await this.userTotpsRepository.deleteByUserId(command.targetUserId);
   }
 }

@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
@@ -30,44 +30,39 @@ export class ConfirmTotpUseCase {
   ) {}
 
   /** Confirms a pending enrollment and returns the plaintext recovery codes. */
+  @HandleUnexpectedErrors(UnexpectedMfaError)
   async execute(command: ConfirmTotpCommand): Promise<string[]> {
     this.logger.log('confirmTotp', { userId: command.userId });
 
-    try {
-      const totp = await this.userTotpsRepository.findByUserId(command.userId);
-      if (!totp) {
-        throw new MfaNotEnabledError();
-      }
-      if (totp.isConfirmed()) {
-        throw new MfaAlreadyEnabledError();
-      }
-
-      const secret = await this.totpSecretEncryption.decrypt(
-        totp.encryptedSecret,
-      );
-      const counter = await this.totp.verifyCode(secret, command.code);
-      if (counter === null) {
-        throw new InvalidMfaCodeError();
-      }
-
-      // Codes are written before the totp is confirmed: codes without a
-      // confirmed totp are inert (verification requires confirmation), while
-      // a confirmed totp without codes would leave the user unable to ever
-      // retrieve recovery codes.
-      const codes = await this.issueRecoveryCodes(command.userId);
-
-      totp.confirmedAt = new Date();
-      totp.lastUsedCounter = counter;
-      totp.failedAttempts = 0;
-      totp.lockedUntil = null;
-      await this.userTotpsRepository.upsert(totp);
-
-      return codes;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error confirming TOTP', { error: error as Error });
-      throw new UnexpectedMfaError(error);
+    const totp = await this.userTotpsRepository.findByUserId(command.userId);
+    if (!totp) {
+      throw new MfaNotEnabledError();
     }
+    if (totp.isConfirmed()) {
+      throw new MfaAlreadyEnabledError();
+    }
+
+    const secret = await this.totpSecretEncryption.decrypt(
+      totp.encryptedSecret,
+    );
+    const counter = await this.totp.verifyCode(secret, command.code);
+    if (counter === null) {
+      throw new InvalidMfaCodeError();
+    }
+
+    // Codes are written before the totp is confirmed: codes without a
+    // confirmed totp are inert (verification requires confirmation), while
+    // a confirmed totp without codes would leave the user unable to ever
+    // retrieve recovery codes.
+    const codes = await this.issueRecoveryCodes(command.userId);
+
+    totp.confirmedAt = new Date();
+    totp.lastUsedCounter = counter;
+    totp.failedAttempts = 0;
+    totp.lockedUntil = null;
+    await this.userTotpsRepository.upsert(totp);
+
+    return codes;
   }
 
   private async issueRecoveryCodes(

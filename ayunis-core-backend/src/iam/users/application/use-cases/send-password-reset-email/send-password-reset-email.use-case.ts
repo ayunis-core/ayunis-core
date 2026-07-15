@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { SendPasswordResetEmailCommand } from './send-password-reset-email.command';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
@@ -19,6 +21,9 @@ export class SendPasswordResetEmailUseCase {
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
   ) {}
 
+  // Email generation combines user, template, and delivery context.
+  // eslint-disable-next-line max-lines-per-function
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: SendPasswordResetEmailCommand): Promise<void> {
     try {
       this.logger.log('execute', {

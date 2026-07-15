@@ -1,9 +1,9 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { IsUsageBasedSubscriptionQuery } from './is-usage-based-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { isActive } from '../../util/is-active';
 import { isUsageBased } from '../../../domain/subscription-type-guards';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSubscriptionError } from '../../subscription.errors';
 
 /**
@@ -19,18 +19,11 @@ export class IsUsageBasedSubscriptionUseCase {
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   async execute(query: IsUsageBasedSubscriptionQuery): Promise<boolean> {
-    try {
-      const subscriptions = await this.subscriptionRepository.findByOrgId(
-        query.orgId,
-      );
-      return subscriptions.filter(isActive).some(isUsageBased);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to determine subscription type', error);
-      throw new UnexpectedSubscriptionError((error as Error).message, {
-        orgId: query.orgId,
-      });
-    }
+    const subscriptions = await this.subscriptionRepository.findByOrgId(
+      query.orgId,
+    );
+    return subscriptions.filter(isActive).some(isUsageBased);
   }
 }

@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { User } from '../../../domain/user.entity';
@@ -10,17 +11,12 @@ export class FindSuperAdminsUseCase {
 
   constructor(private readonly usersRepository: UsersRepository) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(): Promise<User[]> {
     this.logger.log('execute');
-    try {
-      return await this.usersRepository.findManyBySystemRole(
-        SystemRole.SUPER_ADMIN,
-      );
-    } catch (error) {
-      this.logger.error('Error finding super admins', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UserUnexpectedError(error as Error);
-    }
+
+    return await this.usersRepository.findManyBySystemRole(
+      SystemRole.SUPER_ADMIN,
+    );
   }
 }

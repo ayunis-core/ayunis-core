@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedInviteError } from 'src/iam/invites/application/invites.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { SendInvitationEmailCommand } from './send-invitation-email.command';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
@@ -25,6 +27,9 @@ export class SendInvitationEmailUseCase {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
+  // Email generation combines organization, template, and delivery context.
+  // eslint-disable-next-line max-lines-per-function
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: SendInvitationEmailCommand): Promise<void> {
     try {
       this.logger.log('execute', {

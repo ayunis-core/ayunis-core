@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
@@ -19,6 +21,7 @@ export class UpdatePasswordUseCase {
     private readonly hashTextUseCase: HashTextUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UpdatePasswordCommand): Promise<void> {
     this.logger.log('updatePassword', { userId: command.userId });
 

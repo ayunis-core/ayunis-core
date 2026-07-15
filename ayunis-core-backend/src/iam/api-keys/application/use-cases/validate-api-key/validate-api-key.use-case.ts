@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
@@ -20,22 +20,13 @@ export class ValidateApiKeyUseCase {
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedApiKeyError)
   async execute(command: ValidateApiKeyCommand): Promise<ApiKey> {
     this.logger.log('execute');
 
-    try {
-      const apiKey = await this.lookupAndAuthenticate(command.token);
-      this.assertNotExpired(apiKey);
-      return apiKey;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to validate API key', {
-        error: error as Error,
-      });
-      throw new UnexpectedApiKeyError();
-    }
+    const apiKey = await this.lookupAndAuthenticate(command.token);
+    this.assertNotExpired(apiKey);
+    return apiKey;
   }
 
   // Unknown prefix, hash mismatch, and revoked keys collapse to a single

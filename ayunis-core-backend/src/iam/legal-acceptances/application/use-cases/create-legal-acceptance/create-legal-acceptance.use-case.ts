@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedLegalAcceptanceError } from 'src/iam/legal-acceptances/application/legal-acceptances.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   CreateLegalAcceptanceCommand,
@@ -19,6 +21,7 @@ export class CreateLegalAcceptanceUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedLegalAcceptanceError)
   async execute(command: CreateLegalAcceptanceCommand): Promise<void> {
     const { userId, orgId, type } = command;
     this.logger.log(

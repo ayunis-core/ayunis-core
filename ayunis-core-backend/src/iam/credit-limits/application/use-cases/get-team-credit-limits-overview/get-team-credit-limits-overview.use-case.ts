@@ -1,7 +1,7 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UUID } from 'crypto';
 import type { TeamCreditLimitOverviewItem } from './team-credit-limit.view';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams/list-teams.use-case';
@@ -23,6 +23,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
     private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedCreditLimitError)
   async execute(): Promise<TeamCreditLimitOverviewItem[]> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -31,16 +32,8 @@ export class GetTeamCreditLimitsOverviewUseCase {
 
     this.logger.log('Listing team credit limits', { orgId });
 
-    try {
-      const limits = await this.creditLimitRepository.findTeamLimits(orgId);
-      return await this.enrich(orgId, limits);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to list team credit limits', {
-        error: error as Error,
-      });
-      throw new UnexpectedCreditLimitError(error);
-    }
+    const limits = await this.creditLimitRepository.findTeamLimits(orgId);
+    return await this.enrich(orgId, limits);
   }
 
   private async enrich(

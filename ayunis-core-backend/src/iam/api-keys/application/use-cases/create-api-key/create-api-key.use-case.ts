@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { QueryFailedError } from 'typeorm';
@@ -10,7 +11,6 @@ import {
   ApiKeyInvalidInputError,
   UnexpectedApiKeyError,
 } from '../../api-keys.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
@@ -31,6 +31,7 @@ export class CreateApiKeyUseCase {
     private readonly hashTextUseCase: HashTextUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedApiKeyError)
   async execute(command: CreateApiKeyCommand): Promise<CreateApiKeyResult> {
     const orgId = this.contextService.get('orgId');
     const userId = this.contextService.get('userId');
@@ -51,20 +52,12 @@ export class CreateApiKeyUseCase {
       throw new ApiKeyExpirationInPastError();
     }
 
-    try {
-      return await this.persistWithCollisionRetry({
-        name: trimmedName,
-        expiresAt: command.expiresAt,
-        orgId,
-        userId,
-      });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to create API key', { error: error as Error });
-      throw new UnexpectedApiKeyError();
-    }
+    return await this.persistWithCollisionRetry({
+      name: trimmedName,
+      expiresAt: command.expiresAt,
+      orgId,
+      userId,
+    });
   }
 
   private async persistWithCollisionRetry(params: {

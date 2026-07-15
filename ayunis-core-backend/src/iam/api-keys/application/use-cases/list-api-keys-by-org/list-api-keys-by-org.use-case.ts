@@ -1,8 +1,8 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { ApiKey } from '../../../domain/api-key.entity';
 import { UnexpectedApiKeyError } from '../../api-keys.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
@@ -15,6 +15,7 @@ export class ListApiKeysByOrgUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedApiKeyError)
   async execute(): Promise<ApiKey[]> {
     const orgId = this.contextService.get('orgId');
 
@@ -24,14 +25,6 @@ export class ListApiKeysByOrgUseCase {
 
     this.logger.log('execute', { orgId });
 
-    try {
-      return await this.apiKeysRepository.findByOrgId(orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to list API keys', { error: error as Error });
-      throw new UnexpectedApiKeyError();
-    }
+    return await this.apiKeysRepository.findByOrgId(orgId);
   }
 }

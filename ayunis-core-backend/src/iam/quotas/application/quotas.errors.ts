@@ -4,6 +4,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 
 export enum QuotaErrorCode {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
+  QUOTA_UNEXPECTED_ERROR = 'QUOTA_UNEXPECTED_ERROR',
 }
 
 export abstract class QuotaError extends ApplicationError {
@@ -24,6 +25,17 @@ export abstract class QuotaError extends ApplicationError {
         ...(this.metadata && { metadata: this.metadata }),
       },
       this.statusCode,
+    );
+  }
+}
+
+export class UnexpectedQuotaError extends QuotaError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'An unexpected quota error occurred',
+      QuotaErrorCode.QUOTA_UNEXPECTED_ERROR,
+      500,
+      { ...metadata, error },
     );
   }
 }

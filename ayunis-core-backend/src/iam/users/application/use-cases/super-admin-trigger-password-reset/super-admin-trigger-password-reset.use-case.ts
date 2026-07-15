@@ -1,9 +1,9 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UsersRepository } from '../../ports/users.repository';
 import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
@@ -23,6 +23,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(
     command: SuperAdminTriggerPasswordResetCommand,
   ): Promise<SuperAdminTriggerPasswordResetResult> {
@@ -30,30 +31,19 @@ export class SuperAdminTriggerPasswordResetUseCase {
       userId: command.userId,
     });
 
-    try {
-      const user = await this.usersRepository.findOneById(command.userId);
-      if (!user) {
-        throw new UserNotFoundError(command.userId);
-      }
-
-      const resetUrl = await this.sendResetEmail(user);
-
-      this.logger.log('Email triggered for user', {
-        userId: command.userId,
-        email: user.email,
-      });
-
-      return new SuperAdminTriggerPasswordResetResult(resetUrl);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error triggering email as super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UserUnexpectedError(
-        error instanceof Error ? error : new Error('Unknown error'),
-        'super admin trigger password reset email',
-      );
+    const user = await this.usersRepository.findOneById(command.userId);
+    if (!user) {
+      throw new UserNotFoundError(command.userId);
     }
+
+    const resetUrl = await this.sendResetEmail(user);
+
+    this.logger.log('Email triggered for user', {
+      userId: command.userId,
+      email: user.email,
+    });
+
+    return new SuperAdminTriggerPasswordResetResult(resetUrl);
   }
 
   private async sendResetEmail(user: {

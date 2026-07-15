@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedInviteError } from 'src/iam/invites/application/invites.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { InvitesRepository } from '../../ports/invites.repository';
@@ -9,6 +11,7 @@ export class DeleteAllPendingInvitesUseCase {
 
   constructor(private readonly invitesRepository: InvitesRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(
     command: DeleteAllPendingInvitesCommand,
   ): Promise<{ deletedCount: number }> {

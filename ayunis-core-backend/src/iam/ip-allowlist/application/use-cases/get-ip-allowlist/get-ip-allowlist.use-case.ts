@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
 import type { GetIpAllowlistQuery } from './get-ip-allowlist.query';
@@ -11,23 +11,10 @@ export class GetIpAllowlistUseCase {
 
   constructor(private readonly repository: IpAllowlistRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedIpAllowlistError)
   async execute(query: GetIpAllowlistQuery): Promise<IpAllowlist | null> {
     this.logger.debug('Getting IP allowlist', { orgId: query.orgId });
 
-    try {
-      return await this.repository.findByOrgId(query.orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to get IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-      });
-
-      throw new UnexpectedIpAllowlistError('get', {
-        orgId: query.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
-    }
+    return await this.repository.findByOrgId(query.orgId);
   }
 }

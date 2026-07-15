@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
@@ -25,6 +27,7 @@ export class DeleteUserUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: DeleteUserCommand): Promise<void> {
     this.logger.log('deleteUser', { userId: command.userId });
     const requestingUserId = this.contextService.get('userId');

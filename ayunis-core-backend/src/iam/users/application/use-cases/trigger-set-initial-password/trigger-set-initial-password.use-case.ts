@@ -1,3 +1,4 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import { TriggerSetInitialPasswordCommand } from './trigger-set-initial-password.command';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -18,6 +19,7 @@ export class TriggerSetInitialPasswordUseCase {
     private readonly usersRepository: UsersRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: TriggerSetInitialPasswordCommand): Promise<void> {
     try {
       this.logger.log('execute', { email: command.email });

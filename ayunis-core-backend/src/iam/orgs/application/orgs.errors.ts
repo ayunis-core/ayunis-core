@@ -12,6 +12,7 @@ export enum OrgErrorCode {
   ORG_DELETION_FAILED = 'ORG_DELETION_FAILED',
   ORG_RETRIEVAL_FAILED = 'ORG_RETRIEVAL_FAILED',
   ORG_UNAUTHORIZED = 'ORG_UNAUTHORIZED',
+  ORG_UNEXPECTED_ERROR = 'ORG_UNEXPECTED_ERROR',
 }
 
 /**
@@ -25,6 +26,17 @@ export abstract class OrgError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+export class UnexpectedOrgError extends OrgError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'An unexpected organization error occurred',
+      OrgErrorCode.ORG_UNEXPECTED_ERROR,
+      500,
+      { ...metadata, error },
+    );
   }
 }
 

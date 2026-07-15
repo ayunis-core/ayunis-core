@@ -501,9 +501,10 @@ describe('CreateInviteUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedInviteError,
       );
-      expect(errorSpy).toHaveBeenCalledWith('Error creating invite', {
-        error: 'Database connection failed',
-      });
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Unexpected use-case error',
+        expect.stringContaining('Database connection failed'),
+      );
     });
 
     it('should parse different time formats correctly', async () => {

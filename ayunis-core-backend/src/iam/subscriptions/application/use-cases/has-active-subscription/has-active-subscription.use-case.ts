@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedSubscriptionError } from 'src/iam/subscriptions/application/subscription.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { HasActiveSubscriptionResult } from './has-active-subscription.result';
@@ -15,6 +17,7 @@ export class HasActiveSubscriptionUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSubscriptionError)
   async execute(
     query: HasActiveSubscriptionQuery,
   ): Promise<HasActiveSubscriptionResult> {

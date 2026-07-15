@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedTeamError } from 'src/iam/teams/application/teams.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { DeleteTeamCommand } from './delete-team.command';
@@ -16,6 +18,7 @@ export class DeleteTeamUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedTeamError)
   async execute(command: DeleteTeamCommand): Promise<void> {
     const orgId = this.contextService.get('orgId');
 

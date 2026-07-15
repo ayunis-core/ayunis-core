@@ -1,5 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
 import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
@@ -19,29 +19,24 @@ export class DisableMfaUseCase {
     private readonly verifyMfaCodeUseCase: VerifyMfaCodeUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMfaError)
   async execute(command: DisableMfaCommand): Promise<void> {
     this.logger.log('disableMfa', { userId: command.userId });
 
-    try {
-      // Checked before code verification so no recovery code is consumed on
-      // an attempt that is forbidden anyway.
-      const requirement = await this.orgMfaRequirementsRepository.findByOrgId(
-        command.orgId,
-      );
-      if (requirement?.required) {
-        throw new MfaRequiredByOrgError();
-      }
-
-      await this.verifyMfaCodeUseCase.execute(
-        new VerifyMfaCodeCommand(command.userId, command.code),
-      );
-
-      await this.recoveryCodesRepository.deleteByUserId(command.userId);
-      await this.userTotpsRepository.deleteByUserId(command.userId);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error disabling MFA', { error: error as Error });
-      throw new UnexpectedMfaError(error);
+    // Checked before code verification so no recovery code is consumed on
+    // an attempt that is forbidden anyway.
+    const requirement = await this.orgMfaRequirementsRepository.findByOrgId(
+      command.orgId,
+    );
+    if (requirement?.required) {
+      throw new MfaRequiredByOrgError();
     }
+
+    await this.verifyMfaCodeUseCase.execute(
+      new VerifyMfaCodeCommand(command.userId, command.code),
+    );
+
+    await this.recoveryCodesRepository.deleteByUserId(command.userId);
+    await this.userTotpsRepository.deleteByUserId(command.userId);
   }
 }

@@ -65,11 +65,14 @@ export class ApiKeyExpiredError extends ApiKeyError {
 }
 
 export class UnexpectedApiKeyError extends ApiKeyError {
-  constructor() {
+  constructor(error?: Error, metadata?: ErrorMetadata) {
     super(
-      'Unexpected error occurred',
+      error
+        ? `Unexpected API key error: ${error.message}`
+        : 'Unexpected error occurred',
       ApiKeyErrorCode.UNEXPECTED_API_KEY_ERROR,
       500,
+      { ...(error && { error }), ...metadata },
     );
   }
 }

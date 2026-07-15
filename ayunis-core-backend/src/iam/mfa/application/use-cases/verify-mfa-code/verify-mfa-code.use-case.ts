@@ -1,6 +1,6 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
@@ -40,31 +40,26 @@ export class VerifyMfaCodeUseCase {
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMfaError)
   async execute(command: VerifyMfaCodeCommand): Promise<void> {
     this.logger.log('verifyMfaCode', { userId: command.userId });
 
-    try {
-      const totp = await this.userTotpsRepository.findByUserId(command.userId);
-      if (!totp?.isConfirmed()) {
-        throw new MfaNotEnabledError();
-      }
+    const totp = await this.userTotpsRepository.findByUserId(command.userId);
+    if (!totp?.isConfirmed()) {
+      throw new MfaNotEnabledError();
+    }
 
-      const now = new Date();
-      if (totp.isLocked(now) && totp.lockedUntil) {
-        throw new MfaLockedError(totp.lockedUntil);
-      }
+    const now = new Date();
+    if (totp.isLocked(now) && totp.lockedUntil) {
+      throw new MfaLockedError(totp.lockedUntil);
+    }
 
-      const verified =
-        (await this.tryTotpCode(totp, command.code)) ||
-        (await this.tryRecoveryCode(command.userId, command.code, now));
+    const verified =
+      (await this.tryTotpCode(totp, command.code)) ||
+      (await this.tryRecoveryCode(command.userId, command.code, now));
 
-      if (!verified) {
-        await this.registerFailure(command.userId, now);
-      }
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error verifying MFA code', { error: error as Error });
-      throw new UnexpectedMfaError(error);
+    if (!verified) {
+      await this.registerFailure(command.userId, now);
     }
   }
 

@@ -6,12 +6,22 @@ export enum AddonErrorCode {
 }
 
 export class UnexpectedAddonError extends ApplicationError {
-  constructor(operation: string, metadata?: ErrorMetadata) {
+  constructor(error: Error, metadata?: ErrorMetadata);
+  constructor(operation: string, metadata?: ErrorMetadata);
+  constructor(errorOrOperation: Error | string, metadata?: ErrorMetadata) {
+    const isError = errorOrOperation instanceof Error;
     super(
-      `Unexpected addon error during ${operation}`,
+      isError
+        ? `Unexpected addon error: ${errorOrOperation.message}`
+        : `Unexpected addon error during ${errorOrOperation}`,
       AddonErrorCode.UNEXPECTED_ERROR,
       500,
-      { operation, ...metadata },
+      {
+        ...(isError
+          ? { error: errorOrOperation }
+          : { operation: errorOrOperation }),
+        ...metadata,
+      },
     );
   }
 }

@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedInviteError } from 'src/iam/invites/application/invites.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { GetInviteByTokenQuery } from './get-invite-by-token.query';
@@ -36,6 +38,7 @@ export class GetInviteByTokenUseCase {
     private readonly inviteJwtService: InviteJwtService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(query: GetInviteByTokenQuery): Promise<InviteWithOrgDetails> {
     this.logger.log('execute', { hasToken: !!query.token });
 

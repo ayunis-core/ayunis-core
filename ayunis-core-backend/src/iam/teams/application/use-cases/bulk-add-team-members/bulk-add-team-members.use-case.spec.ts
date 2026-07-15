@@ -4,7 +4,7 @@ import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
 import { TeamMember } from '../../../domain/team-member.entity';
-import { TeamNotFoundError } from '../../teams.errors';
+import { UnexpectedTeamError, TeamNotFoundError } from '../../teams.errors';
 import { UserAlreadyTeamMemberError } from '../../team-members.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -94,7 +94,7 @@ describe('BulkAddTeamMembersUseCase', () => {
     ).rejects.toBeInstanceOf(UnauthorizedAccessError);
   });
 
-  it('re-throws unexpected (non-ApplicationError) faults raw, without wrapping (no metadata leak)', async () => {
+  it('wraps unexpected (non-ApplicationError) faults', async () => {
     const fault = new Error('database is on fire');
     mockAddTeamMemberUseCase.execute.mockRejectedValueOnce(fault);
 
@@ -102,6 +102,6 @@ describe('BulkAddTeamMembersUseCase', () => {
       useCase.execute(
         new BulkAddTeamMembersCommand({ teamId, userIds: [userA] }),
       ),
-    ).rejects.toBe(fault);
+    ).rejects.toBeInstanceOf(UnexpectedTeamError);
   });
 });

@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedInviteError } from 'src/iam/invites/application/invites.errors';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { DeleteInviteByEmailCommand } from './delete-invite-by-email.command';
 import { Injectable, Logger } from '@nestjs/common';
@@ -8,6 +10,7 @@ export class DeleteInviteByEmailUseCase {
   private readonly logger = new Logger(DeleteInviteByEmailUseCase.name);
   constructor(private readonly invitesRepository: InvitesRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedInviteError)
   async execute(command: DeleteInviteByEmailCommand): Promise<void> {
     this.logger.log('execute', {
       email: command.email,

@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedPlatformConfigError } from 'src/iam/platform-config/application/platform-config.errors';
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
@@ -11,6 +13,7 @@ export class SetAppAlertUseCase {
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedPlatformConfigError)
   async execute(command: SetAppAlertCommand): Promise<void> {
     if (command.message.length > APP_ALERT_MESSAGE_MAX_LENGTH) {
       throw new PlatformConfigInvalidValueError(

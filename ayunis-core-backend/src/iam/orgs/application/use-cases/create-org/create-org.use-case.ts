@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrgsRepository } from '../../ports/orgs.repository';
@@ -16,6 +18,7 @@ export class CreateOrgUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: CreateOrgCommand): Promise<Org> {
     this.logger.log('create', { name: command.name });
 

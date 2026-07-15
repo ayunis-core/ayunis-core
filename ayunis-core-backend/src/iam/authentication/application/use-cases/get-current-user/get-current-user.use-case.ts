@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { GetCurrentUserCommand } from './get-current-user.command';
@@ -29,6 +31,7 @@ export class GetCurrentUserUseCase {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: GetCurrentUserCommand): Promise<ActiveUser> {
     this.logger.log('getCurrentUser');
 

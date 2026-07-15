@@ -1,3 +1,5 @@
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedOrgError } from 'src/iam/orgs/application/orgs.errors';
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
@@ -10,6 +12,7 @@ export class FindOrgByIdUseCase {
 
   constructor(private readonly orgsRepository: OrgsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(query: FindOrgByIdQuery): Promise<Org> {
     this.logger.log('findById', { id: query.id });
     try {
