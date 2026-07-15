@@ -9,6 +9,7 @@ export enum AcademyErrorCode {
   INVALID_QUIZ_QUESTION = 'INVALID_QUIZ_QUESTION',
   QUIZ_NOT_AVAILABLE = 'QUIZ_NOT_AVAILABLE',
   INVALID_QUIZ_SUBMISSION = 'INVALID_QUIZ_SUBMISSION',
+  COMPLETION_NOT_FOUND = 'COMPLETION_NOT_FOUND',
   UNEXPECTED_ACADEMY_ERROR = 'UNEXPECTED_ACADEMY_ERROR',
 }
 
@@ -87,6 +88,17 @@ export class QuizNotAvailableError extends AcademyError {
 export class InvalidQuizSubmissionError extends AcademyError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(reason, AcademyErrorCode.INVALID_QUIZ_SUBMISSION, 400, metadata);
+  }
+}
+
+export class AcademyCompletionNotFoundError extends AcademyError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The academy has not been completed yet',
+      AcademyErrorCode.COMPLETION_NOT_FOUND,
+      404,
+      metadata,
+    );
   }
 }
 

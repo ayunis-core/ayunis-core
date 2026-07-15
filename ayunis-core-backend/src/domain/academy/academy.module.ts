@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from 'src/iam/users/users.module';
 import { AcademyChapterRecord } from './infrastructure/persistence/local/schema/academy-chapter.record';
 import { AcademyChapterProgressRecord } from './infrastructure/persistence/local/schema/academy-chapter-progress.record';
 import { AcademyCompletionRecord } from './infrastructure/persistence/local/schema/academy-completion.record';
@@ -11,6 +12,8 @@ import { LocalAcademyChapterProgressRepository } from './infrastructure/persiste
 import { LocalAcademyCompletionRepository } from './infrastructure/persistence/local/local-academy-completion.repository';
 import { LocalAcademyCourseModuleRepository } from './infrastructure/persistence/local/local-academy-course-module.repository';
 import { LocalAcademyQuizQuestionRepository } from './infrastructure/persistence/local/local-academy-quiz-question.repository';
+import { PuppeteerCertificateRendererService } from './infrastructure/certificate/puppeteer-certificate-renderer.service';
+import { CertificateRendererPort } from './application/ports/certificate-renderer.port';
 import { AcademyChapterRepository } from './application/ports/academy-chapter.repository';
 import { AcademyChapterProgressRepository } from './application/ports/academy-chapter-progress.repository';
 import { AcademyCompletionRepository } from './application/ports/academy-completion.repository';
@@ -32,11 +35,13 @@ import { DeleteQuizQuestionUseCase } from './application/use-cases/delete-quiz-q
 import { GetChapterQuizUseCase } from './application/use-cases/get-chapter-quiz/get-chapter-quiz.use-case';
 import { SubmitChapterQuizUseCase } from './application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
 import { GetAcademyProgressUseCase } from './application/use-cases/get-academy-progress/get-academy-progress.use-case';
+import { GetAcademyCertificateUseCase } from './application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
 import { SuperAdminAcademyChaptersController } from './presenters/http/super-admin-academy-chapters.controller';
 import { SuperAdminAcademyCourseModulesController } from './presenters/http/super-admin-academy-course-modules.controller';
 import { SuperAdminAcademyQuizQuestionsController } from './presenters/http/super-admin-academy-quiz-questions.controller';
 import { AcademyChaptersController } from './presenters/http/academy-chapters.controller';
 import { AcademyQuizController } from './presenters/http/academy-quiz.controller';
+import { AcademyCertificateController } from './presenters/http/academy-certificate.controller';
 import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-response-dto.mapper';
 
 @Module({
@@ -48,10 +53,12 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
       AcademyChapterProgressRecord,
       AcademyCompletionRecord,
     ]),
+    UsersModule,
   ],
   controllers: [
     AcademyChaptersController,
     AcademyQuizController,
+    AcademyCertificateController,
     SuperAdminAcademyChaptersController,
     SuperAdminAcademyCourseModulesController,
     SuperAdminAcademyQuizQuestionsController,
@@ -84,6 +91,11 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
       provide: AcademyCompletionRepository,
       useExisting: LocalAcademyCompletionRepository,
     },
+    PuppeteerCertificateRendererService,
+    {
+      provide: CertificateRendererPort,
+      useExisting: PuppeteerCertificateRendererService,
+    },
     GetAcademyContentUseCase,
     GetAcademyManagementContentUseCase,
     CreateChapterUseCase,
@@ -100,6 +112,7 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     GetChapterQuizUseCase,
     SubmitChapterQuizUseCase,
     GetAcademyProgressUseCase,
+    GetAcademyCertificateUseCase,
   ],
   exports: [
     GetAcademyContentUseCase,

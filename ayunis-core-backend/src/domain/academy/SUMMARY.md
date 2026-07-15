@@ -37,6 +37,21 @@ the client:
 - `GetAcademyProgressUseCase` returns per-chapter pass state + the completion
   date. Unlimited retries; each retry re-draws.
 
+## Certificate
+
+`GetAcademyCertificateUseCase` renders the German "KI-Führerschein" completion
+certificate as a PDF **on demand** from the `AcademyCompletion` row (404 via
+`AcademyCompletionNotFoundError` when the academy is not completed). Nothing is
+stored: the PDF is derived from the user's current name
+(`FindUserByIdUseCase`) and `completedAt` — a rename changes a re-downloaded
+certificate by design. Rendering goes through `CertificateRendererPort`,
+implemented by `PuppeteerCertificateRendererService`
+(`infrastructure/certificate/`): an owned HTML template
+(`certificate-template.ts`, layout metrics measured from the official template
+PDF, user name HTML-escaped, assets + Source Sans 3 font embedded as data URIs
+in `certificate-assets.ts`) printed to A4 by a lazy headless-Chromium
+singleton (same pattern as the artifacts export service).
+
 ## Ordering
 
 Both chapters (globally) and courseModules (per chapter) carry a 0-based `position`
@@ -64,6 +79,9 @@ Authenticated users in an org with the academy add-on active
   (`GET chapters/:chapterId/quiz`), submit answers
   (`POST chapters/:chapterId/quiz/submit`), and read progress
   (`GET progress`: per-chapter pass state + `academyCompletedAt`).
+- `AcademyCertificateController` (`academy/certificate`) — download the
+  completion certificate PDF (`GET`, streamed with `Content-Disposition:
+  attachment`; 404 until the academy is completed).
 
 ## Management
 
