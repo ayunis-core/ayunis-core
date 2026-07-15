@@ -52,6 +52,7 @@ import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { InvitesModule } from '../invites/invites.module';
 import { OrgsModule } from '../orgs/orgs.module';
+import { SessionsModule } from '../sessions/sessions.module';
 import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
@@ -67,6 +68,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     TypeOrmModule.forFeature([UserRecord, PasswordSetTokenRecord]),
     InvitesModule,
     OrgsModule,
+    SessionsModule,
     HashingModule,
     EmailsModule,
     EmailTemplatesModule,

@@ -12,6 +12,8 @@ import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-v
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
 import { InvalidPasswordError } from '../../../../authentication/application/authentication.errors';
 import type { PasswordSetToken } from '../../../domain/password-set-token.entity';
+import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
+import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.command';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -23,6 +25,7 @@ export class ResetPasswordUseCase {
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly usersRepository: UsersRepository,
+    private readonly revokeAllSessionsForUserUseCase: RevokeAllSessionsForUserUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
@@ -56,6 +59,12 @@ export class ResetPasswordUseCase {
 
     user.passwordHash = newHashedPassword;
     await this.usersRepository.update(user);
+
+    // A reset happens while logged out (via an email link), so revoke every
+    // session — any that survive would be an attacker's.
+    await this.revokeAllSessionsForUserUseCase.execute(
+      new RevokeAllSessionsForUserCommand(user.id),
+    );
 
     this.logger.debug('Password reset successfully', { userId: user.id });
   }

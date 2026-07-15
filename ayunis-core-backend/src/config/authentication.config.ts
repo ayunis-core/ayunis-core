@@ -110,6 +110,14 @@ export const authenticationConfig = registerAs('auth', () => {
         10,
       ),
     },
+    session: {
+      // Reuse of a just-rotated refresh token within this window is treated as
+      // a benign concurrent-request race rather than token theft.
+      refreshTokenGraceSeconds: parseInt(
+        process.env.SESSION_REFRESH_GRACE_SECONDS || '60',
+        10,
+      ),
+    },
     emailProviderBlacklist,
   };
 });

@@ -6,7 +6,8 @@ import { Request, Response } from 'express';
 import { RefreshTokenUseCase } from '../use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from '../use-cases/refresh-token/refresh-token.command';
 import { ConfigService } from '@nestjs/config';
-import { setCookies } from 'src/common/util/cookie.util';
+import { setCookies, clearCookies } from 'src/common/util/cookie.util';
+import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -55,36 +56,40 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return false;
     }
 
+    return this.tryRefreshAndRetry(context, request, response, refreshToken);
+  }
+
+  private async tryRefreshAndRetry(
+    context: ExecutionContext,
+    request: Request,
+    response: Response,
+    refreshToken: string,
+  ): Promise<boolean> {
     try {
-      // Try to refresh the tokens
       const newTokens = await this.refreshTokenUseCase.execute(
         new RefreshTokenCommand(refreshToken),
       );
 
-      // Set new cookies with refreshed tokens
       setCookies(response, newTokens, this.configService, true);
 
-      // Manually set the new access token in the request for this request
+      // Inject the new access token so this request can re-validate.
       const accessTokenName = this.configService.get<string>(
         'auth.cookie.accessTokenName',
         'access_token',
       );
       request.cookies[accessTokenName] = newTokens.access_token;
 
-      // Try JWT validation again with the new token
-      const result = await super.canActivate(context);
-      if (result) {
-        return true;
-      }
+      return (await super.canActivate(context)) === true;
     } catch (error) {
+      if (error instanceof RefreshTokenReuseError) {
+        // Theft response: the family is already revoked; drop the cookies so the
+        // client stops presenting the compromised token.
+        clearCookies(response, this.configService);
+      }
       this.logger.debug('JwtAuthGuard canActivate: token refresh failed', {
         error: error instanceof Error ? error.message : String(error),
       });
+      return false;
     }
-
-    this.logger.debug(
-      'JwtAuthGuard canActivate: all authentication attempts failed',
-    );
-    return false;
   }
 }

@@ -3,8 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthenticationRepository } from '../../../application/ports/authentication.repository';
 import { ActiveUser } from '../../../domain/active-user.entity';
-import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { REFRESH_TOKEN_TYPE } from '../../../domain/token-type.constants';
 import type { StringValue } from 'ms';
 
 interface JwtConfig {
@@ -25,42 +23,40 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
     this.logger.log('constructor');
   }
 
-  generateTokens(user: ActiveUser): Promise<AuthTokens> {
-    this.logger.log('generateTokens', {
+  generateAccessToken(user: ActiveUser): Promise<string> {
+    this.logger.log('generateAccessToken', {
       userId: user.id,
       email: user.email,
       name: user.name,
     });
-    return Promise.resolve(this.createTokens(user));
+    try {
+      return Promise.resolve(this.signAccessToken(user));
+    } catch (error) {
+      return Promise.reject(
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    }
   }
 
-  private createTokens(user: ActiveUser): AuthTokens {
+  private signAccessToken(user: ActiveUser): string {
     const jwtConfig = this.configService.get<JwtConfig>('auth.jwt');
     if (!jwtConfig) {
       throw new Error('JWT configuration is missing');
     }
 
-    return {
-      access_token: this.jwtService.sign(
-        {
-          email: user.email,
-          emailVerified: user.emailVerified,
-          sub: user.id,
-          orgId: user.orgId,
-          role: user.role,
-          systemRole: user.systemRole,
-          name: user.name,
-        },
-        {
-          expiresIn: jwtConfig.expiresIn,
-        },
-      ),
-      refresh_token: this.jwtService.sign(
-        { sub: user.id, type: REFRESH_TOKEN_TYPE },
-        {
-          expiresIn: jwtConfig.refreshTokenExpiresIn,
-        },
-      ),
-    };
+    return this.jwtService.sign(
+      {
+        email: user.email,
+        emailVerified: user.emailVerified,
+        sub: user.id,
+        orgId: user.orgId,
+        role: user.role,
+        systemRole: user.systemRole,
+        name: user.name,
+      },
+      {
+        expiresIn: jwtConfig.expiresIn,
+      },
+    );
   }
 }

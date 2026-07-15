@@ -47,6 +47,8 @@ import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
+import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
 import { LoginCommand } from '../../application/use-cases/login/login.command';
 import { RefreshTokenCommand } from '../../application/use-cases/refresh-token/refresh-token.command';
 import { RegisterUserCommand } from '../../application/use-cases/register-user/register-user.command';
@@ -63,6 +65,7 @@ export class AuthenticationController {
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
+    private readonly revokeSessionFamilyUseCase: RevokeSessionFamilyUseCase,
     private readonly checkMfaLoginRequirementUseCase: CheckMfaLoginRequirementUseCase,
     private readonly mfaPendingJwtService: MfaPendingJwtService,
     private readonly configService: ConfigService,
@@ -187,6 +190,11 @@ export class AuthenticationController {
 
   @Public()
   @Post('refresh')
+  // Every rotation writes a refresh-token row, so an uncapped endpoint lets a
+  // token holder grow the table without bound. The limit is per IP and refresh
+  // fires automatically for every active session, so it must stay generous
+  // enough for many municipal users sharing one NAT address.
+  @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Refresh authentication tokens',
@@ -228,12 +236,29 @@ export class AuthenticationController {
       });
     }
 
-    const tokens = await this.refreshTokenUseCase.execute(
-      new RefreshTokenCommand(refreshToken),
-    );
-    setCookies(res, tokens, this.configService, true);
+    return this.performRefresh(res, refreshToken);
+  }
 
-    return res.json({ success: true });
+  private async performRefresh(
+    res: Response,
+    refreshToken: string,
+  ): Promise<Response> {
+    try {
+      const tokens = await this.refreshTokenUseCase.execute(
+        new RefreshTokenCommand(refreshToken),
+      );
+      setCookies(res, tokens, this.configService, true);
+      return res.json({ success: true });
+    } catch (error) {
+      // Any refresh failure (expired, reuse/theft, unknown) leaves the browser
+      // holding a useless refresh cookie — clear it so the client logs out
+      // cleanly instead of retrying a doomed token.
+      this.logger.warn('Refresh failed; clearing cookies', error);
+      clearCookies(res, this.configService);
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .json({ message: 'Invalid refresh token' });
+    }
   }
 
   @Get('me')
@@ -330,6 +355,8 @@ export class AuthenticationController {
       return res.json(this.meResponseDtoMapper.toDto(user));
     } catch (error) {
       this.logger.error('Token refresh failed during me request', error);
+      // Clear the now-useless refresh cookie so the client logs out cleanly.
+      clearCookies(res, this.configService);
       return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
         message: 'Not authenticated',
@@ -349,7 +376,22 @@ export class AuthenticationController {
     description: 'Logout successful. Authentication cookies are cleared.',
     type: SuccessResponseDto,
   })
-  logout(@Res() res: Response) {
+  async logout(@Req() req: Request, @Res() res: Response) {
+    const refreshTokenName = this.configService.get<string>(
+      'auth.cookie.refreshTokenName',
+      'refresh_token',
+    );
+    const cookies = req.cookies as Record<string, string>;
+    const refreshToken = cookies[refreshTokenName];
+
+    if (refreshToken) {
+      // Revoke the whole family so the session cannot be resurrected via a
+      // still-live refresh token on another device sharing this login.
+      await this.revokeSessionFamilyUseCase.execute(
+        new RevokeSessionFamilyCommand(refreshToken),
+      );
+    }
+
     clearCookies(res, this.configService);
     return res.json({ success: true });
   }

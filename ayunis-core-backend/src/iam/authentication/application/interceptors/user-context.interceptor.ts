@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 import * as Sentry from '@sentry/nestjs';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ActiveUser } from '../../domain/active-user.entity';
@@ -14,7 +15,10 @@ type RequestPrincipal = ActiveUser | ApiKeyPrincipal;
 
 @Injectable()
 export class UserContextInterceptor implements NestInterceptor {
-  constructor(private readonly contextService: ContextService) {}
+  constructor(
+    private readonly contextService: ContextService,
+    private readonly configService: ConfigService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const req = context.switchToHttp().getRequest<Request>();
@@ -25,6 +29,7 @@ export class UserContextInterceptor implements NestInterceptor {
       this.contextService.set('orgId', principal.orgId);
       this.contextService.set('role', principal.role);
       this.contextService.set('systemRole', principal.systemRole);
+      this.contextService.set('refreshToken', this.extractRefreshToken(req));
 
       Sentry.getCurrentScope().setUser({
         id: principal.id,
@@ -37,5 +42,14 @@ export class UserContextInterceptor implements NestInterceptor {
     }
 
     return next.handle();
+  }
+
+  private extractRefreshToken(req: Request): string | undefined {
+    const refreshTokenName = this.configService.get<string>(
+      'auth.cookie.refreshTokenName',
+      'refresh_token',
+    );
+    const cookies = req.cookies as Record<string, string> | undefined;
+    return cookies?.[refreshTokenName];
   }
 }

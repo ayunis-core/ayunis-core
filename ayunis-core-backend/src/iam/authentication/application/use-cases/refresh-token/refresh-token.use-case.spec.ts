@@ -8,141 +8,139 @@ import { JwtService } from '@nestjs/jwt';
 import { FindUserByIdUseCase } from '../../../../users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { User } from '../../../../users/domain/user.entity';
 import { UserRole } from '../../../../users/domain/value-objects/role.object';
-import { AuthTokens } from '../../../domain/auth-tokens.entity';
 import { InvalidTokenError } from '../../authentication.errors';
+import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
+import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
+import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.errors';
 import type { UUID } from 'crypto';
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
   let mockAuthRepository: Partial<AuthenticationRepository>;
-  let mockJwtService: Partial<JwtService>;
-  let mockFindUserByIdUseCase: Partial<FindUserByIdUseCase>;
+  let mockJwtService: { verify: jest.Mock };
+  let mockFindUserByIdUseCase: { execute: jest.Mock };
+  let mockRotateSessionUseCase: { execute: jest.Mock };
+  let mockCreateSessionUseCase: { execute: jest.Mock };
 
-  beforeAll(async () => {
-    mockAuthRepository = {
-      generateTokens: jest.fn(),
-    };
-    mockJwtService = {
-      verify: jest.fn(),
-    };
-    mockFindUserByIdUseCase = {
-      execute: jest.fn(),
-    };
+  const userId = 'user-id-123' as UUID;
+  const opaqueToken = 'opaque-refresh-token-no-dots';
+  const legacyJwt = 'header.payload.signature';
+
+  const buildUser = () =>
+    new User({
+      id: userId,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hash',
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'name',
+      hasAcceptedMarketing: false,
+    });
+
+  beforeEach(async () => {
+    mockAuthRepository = { generateAccessToken: jest.fn() };
+    mockJwtService = { verify: jest.fn() };
+    mockFindUserByIdUseCase = { execute: jest.fn() };
+    mockRotateSessionUseCase = { execute: jest.fn() };
+    mockCreateSessionUseCase = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefreshTokenUseCase,
-        {
-          provide: AUTHENTICATION_REPOSITORY,
-          useValue: mockAuthRepository,
-        },
+        { provide: AUTHENTICATION_REPOSITORY, useValue: mockAuthRepository },
         { provide: JwtService, useValue: mockJwtService },
         { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
+        { provide: RotateSessionUseCase, useValue: mockRotateSessionUseCase },
+        { provide: CreateSessionUseCase, useValue: mockCreateSessionUseCase },
       ],
     }).compile();
 
     useCase = module.get<RefreshTokenUseCase>(RefreshTokenUseCase);
-  });
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should be defined', () => {
-    expect(useCase).toBeDefined();
-  });
-
-  it('should refresh token successfully', async () => {
-    const command = new RefreshTokenCommand('valid-refresh-token');
-    const mockUser = new User({
-      id: 'user-id-123' as UUID,
-      email: 'test@example.com',
-      emailVerified: false,
-      passwordHash: 'hash',
-      role: UserRole.USER,
-      orgId: 'org-id' as UUID,
-      name: 'name',
-      hasAcceptedMarketing: false,
-    });
-    const mockTokens = new AuthTokens('new-access-token', 'new-refresh-token');
 
     jest
-      .spyOn(mockJwtService, 'verify')
-      .mockReturnValue({ sub: 'user-id-123' });
-    jest.spyOn(mockFindUserByIdUseCase, 'execute').mockResolvedValue(mockUser);
-    jest
-      .spyOn(mockAuthRepository, 'generateTokens')
-      .mockResolvedValue(mockTokens);
-
-    const result = await useCase.execute(command);
-
-    expect(result).toBe(mockTokens);
-    expect(mockJwtService.verify).toHaveBeenCalledWith('valid-refresh-token');
-    expect(mockFindUserByIdUseCase.execute).toHaveBeenCalled();
-    expect(mockAuthRepository.generateTokens).toHaveBeenCalled();
+      .spyOn(mockAuthRepository, 'generateAccessToken')
+      .mockResolvedValue('new-access-token');
+    mockFindUserByIdUseCase.execute.mockResolvedValue(buildUser());
   });
 
-  it('should throw InvalidTokenError for invalid token', async () => {
-    const command = new RefreshTokenCommand('invalid-token');
+  afterEach(() => jest.clearAllMocks());
 
-    jest.spyOn(mockJwtService, 'verify').mockImplementation(() => {
-      throw new Error('Invalid token');
+  it('should rotate an opaque token and return a new token pair', async () => {
+    mockRotateSessionUseCase.execute.mockResolvedValue({
+      userId,
+      refreshToken: 'rotated-refresh-token',
     });
 
-    await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
+    const result = await useCase.execute(new RefreshTokenCommand(opaqueToken));
+
+    expect(result.access_token).toBe('new-access-token');
+    expect(result.refresh_token).toBe('rotated-refresh-token');
+    expect(mockRotateSessionUseCase.execute).toHaveBeenCalled();
+    expect(mockJwtService.verify).not.toHaveBeenCalled();
   });
 
-  it('should reject typed special-purpose tokens with a valid sub (laundering)', async () => {
-    const command = new RefreshTokenCommand('mfa-pending-token');
+  it('should propagate a reuse error un-flattened (theft response)', async () => {
+    mockRotateSessionUseCase.execute.mockRejectedValue(
+      new RefreshTokenReuseError(),
+    );
 
-    jest
-      .spyOn(mockJwtService, 'verify')
-      .mockReturnValue({ sub: 'user-id-123', type: 'mfa_pending' });
-
-    await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
-    expect(mockFindUserByIdUseCase.execute).not.toHaveBeenCalled();
-    expect(mockAuthRepository.generateTokens).not.toHaveBeenCalled();
+    await expect(
+      useCase.execute(new RefreshTokenCommand(opaqueToken)),
+    ).rejects.toThrow(RefreshTokenReuseError);
   });
 
-  it('should accept a token explicitly typed as refresh', async () => {
-    const command = new RefreshTokenCommand('new-refresh-token');
-    const mockUser = new User({
-      id: 'user-id-123' as UUID,
-      email: 'test@example.com',
-      emailVerified: false,
-      passwordHash: 'hash',
-      role: UserRole.USER,
-      orgId: 'org-id' as UUID,
-      name: 'name',
-      hasAcceptedMarketing: false,
-    });
-    const mockTokens = new AuthTokens('new-access-token', 'new-refresh-token');
-
-    jest
-      .spyOn(mockJwtService, 'verify')
-      .mockReturnValue({ sub: 'user-id-123', type: 'refresh' });
-    jest.spyOn(mockFindUserByIdUseCase, 'execute').mockResolvedValue(mockUser);
-    jest
-      .spyOn(mockAuthRepository, 'generateTokens')
-      .mockResolvedValue(mockTokens);
-
-    await expect(useCase.execute(command)).resolves.toBe(mockTokens);
-    expect(mockAuthRepository.generateTokens).toHaveBeenCalled();
-  });
-
-  // Regression for V2: an access token (untyped, but carrying `email`) must not
-  // be exchangeable for a fresh token pair.
-  it('should reject an access-shaped token presented as a refresh token', async () => {
-    const command = new RefreshTokenCommand('access-token');
-
-    jest.spyOn(mockJwtService, 'verify').mockReturnValue({
-      sub: 'user-id-123',
-      email: 'test@example.com',
-      role: UserRole.USER,
-      orgId: 'org-id',
+  it('should migrate a valid legacy JWT refresh token to an opaque session', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId, type: 'refresh' });
+    mockCreateSessionUseCase.execute.mockResolvedValue({
+      refreshToken: 'migrated-refresh-token',
+      expiresAt: new Date(),
     });
 
-    await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
-    expect(mockFindUserByIdUseCase.execute).not.toHaveBeenCalled();
-    expect(mockAuthRepository.generateTokens).not.toHaveBeenCalled();
+    const result = await useCase.execute(new RefreshTokenCommand(legacyJwt));
+
+    expect(result.refresh_token).toBe('migrated-refresh-token');
+    expect(mockCreateSessionUseCase.execute).toHaveBeenCalled();
+    expect(mockRotateSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('should migrate a bare {sub} legacy refresh token', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId });
+    mockCreateSessionUseCase.execute.mockResolvedValue({
+      refreshToken: 'migrated',
+      expiresAt: new Date(),
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).resolves.toBeDefined();
+    expect(mockCreateSessionUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('should reject a legacy JWT that is access-shaped (carries email)', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId, email: 'x@y.z' });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).rejects.toThrow(InvalidTokenError);
+    expect(mockCreateSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('should reject a legacy JWT typed as a foreign token', async () => {
+    mockJwtService.verify.mockReturnValue({ sub: userId, type: 'mfa_pending' });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).rejects.toThrow(InvalidTokenError);
+  });
+
+  it('should wrap a malformed JWT verification failure as InvalidTokenError', async () => {
+    mockJwtService.verify.mockImplementation(() => {
+      throw new Error('jwt malformed');
+    });
+
+    await expect(
+      useCase.execute(new RefreshTokenCommand(legacyJwt)),
+    ).rejects.toThrow(InvalidTokenError);
   });
 });
