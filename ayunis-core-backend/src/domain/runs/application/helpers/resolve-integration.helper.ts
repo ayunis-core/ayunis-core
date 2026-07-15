@@ -26,9 +26,7 @@ export function resolveIntegration(
 }
 
 type AssistantContent =
-  | TextMessageContent
-  | ToolUseMessageContent
-  | ThinkingMessageContent;
+  TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
 
 /**
  * Enriches assistant message content blocks with integration metadata.

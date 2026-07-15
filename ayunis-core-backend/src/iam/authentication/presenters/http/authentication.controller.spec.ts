@@ -105,8 +105,7 @@ describe('AuthenticationController', () => {
 
     it('should rate limit the login endpoint to prevent credential brute-force', () => {
       const options = Reflect.getMetadata(RATE_LIMIT_KEY, controller.login) as
-        | RateLimitOptions
-        | undefined;
+        RateLimitOptions | undefined;
 
       expect(options).toBeDefined();
       expect(options?.limit).toBe(10);

@@ -26,9 +26,9 @@ export class FindUsersByOrgIdUseCase {
     });
     const systemRole = this.contextService.get('systemRole');
     const orgRole = this.contextService.get('role');
-    if (
-      !(systemRole === SystemRole.SUPER_ADMIN || orgRole === UserRole.ADMIN)
-    ) {
+    if (!(
+      systemRole === SystemRole.SUPER_ADMIN || orgRole === UserRole.ADMIN
+    )) {
       throw new UnauthorizedAccessError({ orgId: query.orgId });
     }
     return this.usersRepository.findManyByOrgId(

@@ -3,10 +3,7 @@ import safeRegex from 'safe-regex2';
 export const MAX_PATTERN_LENGTH = 200;
 
 export type PatternValidationError =
-  | 'empty'
-  | 'too_long'
-  | 'invalid_syntax'
-  | 'unsafe';
+  'empty' | 'too_long' | 'invalid_syntax' | 'unsafe';
 
 /**
  * Validates an admin-supplied whitelist regex at save time. Patterns are

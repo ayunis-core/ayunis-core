@@ -20,16 +20,13 @@ const parsePositiveIntWithDefault = (
   return Number.isFinite(parsed) && parsed > 0 ? parsed : defaultValue;
 };
 
-export const urlConfig = registerAs(
-  'url',
-  (): UrlConfig => ({
-    timeout: parsePositiveIntWithDefault(
-      process.env.URL_RETRIEVER_TIMEOUT_MS,
-      DEFAULT_TIMEOUT_MS,
-    ),
-    maxDownloadBytes: parsePositiveIntWithDefault(
-      process.env.URL_RETRIEVER_MAX_DOWNLOAD_BYTES,
-      DEFAULT_MAX_DOWNLOAD_BYTES,
-    ),
-  }),
-);
+export const urlConfig = registerAs('url', (): UrlConfig => ({
+  timeout: parsePositiveIntWithDefault(
+    process.env.URL_RETRIEVER_TIMEOUT_MS,
+    DEFAULT_TIMEOUT_MS,
+  ),
+  maxDownloadBytes: parsePositiveIntWithDefault(
+    process.env.URL_RETRIEVER_MAX_DOWNLOAD_BYTES,
+    DEFAULT_MAX_DOWNLOAD_BYTES,
+  ),
+}));

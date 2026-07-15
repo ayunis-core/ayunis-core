@@ -53,11 +53,7 @@ export type OpenAIChatCompletionContentPart =
   | OpenAIChatCompletionInputAudioPart;
 
 export type OpenAIChatCompletionRole =
-  | 'system'
-  | 'developer'
-  | 'user'
-  | 'assistant'
-  | 'tool';
+  'system' | 'developer' | 'user' | 'assistant' | 'tool';
 
 export interface OpenAIChatCompletionMessage {
   role: OpenAIChatCompletionRole;

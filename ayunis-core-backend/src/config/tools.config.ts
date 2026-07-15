@@ -15,15 +15,9 @@ const parseIntWithDefault = (
   return Number.isNaN(parsed) ? defaultValue : parsed;
 };
 
-export default registerAs(
-  'tools',
-  (): ToolsConfig => ({
-    sourceGetText: {
-      maxLines: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_LINES, 200),
-      maxChars: parseIntWithDefault(
-        process.env.SOURCE_GET_TEXT_MAX_CHARS,
-        5000,
-      ),
-    },
-  }),
-);
+export default registerAs('tools', (): ToolsConfig => ({
+  sourceGetText: {
+    maxLines: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_LINES, 200),
+    maxChars: parseIntWithDefault(process.env.SOURCE_GET_TEXT_MAX_CHARS, 5000),
+  },
+}));

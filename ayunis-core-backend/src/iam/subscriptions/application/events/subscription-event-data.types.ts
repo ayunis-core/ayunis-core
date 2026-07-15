@@ -26,8 +26,7 @@ export interface UsageBasedSubscriptionEventData extends SubscriptionEventDataBa
 }
 
 export type SubscriptionEventData =
-  | SeatBasedSubscriptionEventData
-  | UsageBasedSubscriptionEventData;
+  SeatBasedSubscriptionEventData | UsageBasedSubscriptionEventData;
 
 export interface BillingInfoEventData {
   companyName: string;
