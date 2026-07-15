@@ -28,6 +28,10 @@ export class LazyChromiumBrowser {
   }
 
   async close(): Promise<void> {
+    // Wait for an in-flight launch so a browser assigned mid-shutdown
+    // doesn't outlive the module (launch failures are already surfaced
+    // to the `get()` caller).
+    await this.launchPromise?.catch(() => undefined);
     if (this.browser) {
       await this.browser.close();
       this.browser = null;

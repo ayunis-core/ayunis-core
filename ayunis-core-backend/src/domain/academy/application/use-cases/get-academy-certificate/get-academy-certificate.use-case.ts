@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
@@ -36,39 +36,31 @@ export class GetAcademyCertificateUseCase {
     private readonly certificateRenderer: CertificateRendererPort,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   async execute(
     query: GetAcademyCertificateQuery,
   ): Promise<AcademyCertificateFile> {
     this.logger.log('Getting academy certificate', { userId: query.userId });
-    try {
-      const completion = await this.completionRepository.findByUser(
-        query.userId,
-      );
-      if (!completion) {
-        throw new AcademyCompletionNotFoundError({ userId: query.userId });
-      }
 
-      const user = await this.findUserByIdUseCase.execute(
-        new FindUserByIdQuery(query.userId),
-      );
-
-      const dateLine = `${CERTIFICATE_DATE_FORMAT.format(completion.completedAt)}, München`;
-      const buffer = await this.certificateRenderer.render({
-        userName: user.name,
-        dateLine,
-      });
-
-      return {
-        buffer,
-        fileName: CERTIFICATE_FILE_NAME,
-        mimeType: 'application/pdf',
-      };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting academy certificate', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
+    const completion = await this.completionRepository.findByUser(query.userId);
+    if (!completion) {
+      throw new AcademyCompletionNotFoundError({ userId: query.userId });
     }
+
+    const user = await this.findUserByIdUseCase.execute(
+      new FindUserByIdQuery(query.userId),
+    );
+
+    const dateLine = `${CERTIFICATE_DATE_FORMAT.format(completion.completedAt)}, München`;
+    const buffer = await this.certificateRenderer.render({
+      userName: user.name,
+      dateLine,
+    });
+
+    return {
+      buffer,
+      fileName: CERTIFICATE_FILE_NAME,
+      mimeType: 'application/pdf',
+    };
   }
 }

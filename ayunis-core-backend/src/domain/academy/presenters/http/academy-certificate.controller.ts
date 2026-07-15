@@ -18,6 +18,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RequireAddon } from 'src/iam/authorization/application/decorators/addon.decorator';
+import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import {
   CurrentUser,
@@ -38,6 +39,8 @@ export class AcademyCertificateController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  // Each download renders a PDF in headless Chromium — keep bursts cheap
+  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
   @ApiOperation({
     summary: 'Download the academy completion certificate',
     description:
