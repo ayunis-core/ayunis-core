@@ -5,7 +5,8 @@ import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-pas
 import { SuperAdminTriggerPasswordResetResult } from './super-admin-trigger-password-reset.result';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UsersRepository } from '../../ports/users.repository';
-import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
+import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
@@ -18,7 +19,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
 
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly passwordResetJwtService: PasswordResetJwtService,
+    private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
     private readonly configService: ConfigService,
   ) {}
@@ -61,9 +62,9 @@ export class SuperAdminTriggerPasswordResetUseCase {
     email: string;
     name: string;
   }): Promise<string> {
-    const resetToken = this.passwordResetJwtService.generatePasswordResetToken({
+    const resetToken = await this.passwordSetTokenService.issue({
       userId: user.id,
-      email: user.email,
+      purpose: PasswordSetTokenPurpose.RESET,
     });
 
     const resetUrl = this.buildResetUrl(resetToken);

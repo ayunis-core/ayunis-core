@@ -27,9 +27,9 @@ class JwtSecretModule {}
  * Single source of truth for the JWT signing/verification secret across the
  * IAM area. `auth.jwt.secret` is read in exactly one place (`JwtSecretModule`)
  * and exposed both to `@nestjs/jwt`'s `JwtModule` — used by every
- * token-issuing service (`EmailConfirmationJwtService`,
- * `PasswordResetJwtService`, `InviteJwtService`, `LocalAuthenticationRepository`)
- * — and via the `JWT_SECRET` token consumed by the passport `JwtStrategy`.
+ * token-issuing service (`EmailConfirmationJwtService`, `InviteJwtService`,
+ * `LocalAuthenticationRepository`) — and via the `JWT_SECRET` token consumed by
+ * the passport `JwtStrategy`.
  *
  * No module-level `signOptions.expiresIn` default is configured here: each
  * token-issuing service passes its own `expiresIn` per `sign()` call, so

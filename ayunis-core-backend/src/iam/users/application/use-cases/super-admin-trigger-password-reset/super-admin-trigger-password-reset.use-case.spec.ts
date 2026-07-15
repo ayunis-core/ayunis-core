@@ -4,7 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { SuperAdminTriggerPasswordResetUseCase } from './super-admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { UsersRepository } from '../../ports/users.repository';
-import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
+import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
@@ -14,7 +15,7 @@ import type { UUID } from 'crypto';
 describe('SuperAdminTriggerPasswordResetUseCase', () => {
   let useCase: SuperAdminTriggerPasswordResetUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
-  let mockPasswordResetJwtService: Partial<PasswordResetJwtService>;
+  let mockPasswordSetTokenService: Partial<PasswordSetTokenService>;
   let mockSendPasswordResetEmailUseCase: Partial<SendPasswordResetEmailUseCase>;
   let mockConfigService: Partial<ConfigService>;
 
@@ -22,7 +23,7 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   const userEmail = 'maria.mueller@gemeinde.de';
   const userName = 'Maria Müller';
   const orgId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
-  const resetToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-token';
+  const resetToken = 'opaque-reset-token-abc123';
   const frontendBaseUrl = 'http://localhost:3001';
   const passwordResetEndpoint = '/password/reset';
 
@@ -43,9 +44,8 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
       findOneById: jest.fn(),
     };
 
-    mockPasswordResetJwtService = {
-      generatePasswordResetToken: jest.fn(),
-      generateInitialPasswordToken: jest.fn(),
+    mockPasswordSetTokenService = {
+      issue: jest.fn(),
     };
 
     mockSendPasswordResetEmailUseCase = {
@@ -61,8 +61,8 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
         SuperAdminTriggerPasswordResetUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         {
-          provide: PasswordResetJwtService,
-          useValue: mockPasswordResetJwtService,
+          provide: PasswordSetTokenService,
+          useValue: mockPasswordSetTokenService,
         },
         {
           provide: SendPasswordResetEmailUseCase,
@@ -81,8 +81,8 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     jest.clearAllMocks();
 
     jest
-      .spyOn(mockPasswordResetJwtService, 'generatePasswordResetToken')
-      .mockReturnValue(resetToken);
+      .spyOn(mockPasswordSetTokenService, 'issue')
+      .mockResolvedValue(resetToken);
     jest
       .spyOn(mockSendPasswordResetEmailUseCase, 'execute')
       .mockResolvedValue(undefined);
@@ -105,9 +105,10 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     expect(result.resetUrl).toBe(
       `${frontendBaseUrl}${passwordResetEndpoint}?token=${resetToken}`,
     );
-    expect(
-      mockPasswordResetJwtService.generatePasswordResetToken,
-    ).toHaveBeenCalledWith({ userId, email: userEmail });
+    expect(mockPasswordSetTokenService.issue).toHaveBeenCalledWith({
+      userId,
+      purpose: PasswordSetTokenPurpose.RESET,
+    });
     expect(mockSendPasswordResetEmailUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         userEmail,

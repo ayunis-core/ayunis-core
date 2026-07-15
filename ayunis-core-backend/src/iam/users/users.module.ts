@@ -5,6 +5,7 @@ import { LocalUsersRepository } from './infrastructure/repositories/local/local-
 import { LocalAdminUsersExportRepository } from './infrastructure/repositories/local/local-admin-users-export.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
+import { PasswordSetTokenRecord } from './infrastructure/repositories/local/schema/password-set-token.record';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HashingModule } from '../hashing/hashing.module';
@@ -41,7 +42,10 @@ import { TriggerPasswordResetUseCase } from './application/use-cases/trigger-pas
 import { ResetPasswordUseCase } from './application/use-cases/reset-password/reset-password.use-case';
 import { ValidatePasswordResetTokenUseCase } from './application/use-cases/validate-password-reset-token/validate-password-reset-token.use-case';
 import { SendPasswordResetEmailUseCase } from './application/use-cases/send-password-reset-email/send-password-reset-email.use-case';
-import { PasswordResetJwtService } from './application/services/password-reset-jwt.service';
+import { PasswordSetTokenService } from './application/services/password-set-token.service';
+import { PasswordSetTokensRepository } from './application/ports/password-set-tokens.repository';
+import { LocalPasswordSetTokensRepository } from './infrastructure/repositories/local/local-password-set-tokens.repository';
+import { PasswordSetTokenCleanupTask } from './infrastructure/tasks/password-set-token-cleanup.task';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
@@ -60,7 +64,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserRecord]),
+    TypeOrmModule.forFeature([UserRecord, PasswordSetTokenRecord]),
     InvitesModule,
     OrgsModule,
     HashingModule,
@@ -107,7 +111,12 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     ResendEmailConfirmationUseCase,
     SendConfirmationEmailUseCase,
     TriggerPasswordResetUseCase,
-    PasswordResetJwtService,
+    PasswordSetTokenService,
+    {
+      provide: PasswordSetTokensRepository,
+      useClass: LocalPasswordSetTokensRepository,
+    },
+    PasswordSetTokenCleanupTask,
     SendPasswordResetEmailUseCase,
     ResetPasswordUseCase,
     ValidatePasswordResetTokenUseCase,
