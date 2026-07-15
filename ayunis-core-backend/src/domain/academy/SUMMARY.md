@@ -71,7 +71,7 @@ Quiz questions also carry an append-only `position` (no reorder surface).
 ## Learner surface
 
 Authenticated users in an org with the academy add-on active
-(`@RequireAddon(AYUNIS_CORE_ACADEMY)`), two controllers under `academy`:
+(`@RequireAddon(AYUNIS_CORE_ACADEMY)`), three controllers under `academy`:
 
 - `AcademyChaptersController` (`academy/chapters`) — list chapters with nested
   ordered courseModules (no quiz questions).
