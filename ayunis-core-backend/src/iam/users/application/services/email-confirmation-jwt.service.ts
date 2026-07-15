@@ -5,9 +5,18 @@ import { UUID } from 'crypto';
 import type { StringValue } from 'ms';
 import { InvalidEmailConfirmationTokenError } from '../users.errors';
 
+export const EMAIL_CONFIRMATION_TOKEN_TYPE = 'email_confirmation';
+
 export interface EmailConfirmationJwtPayload {
   userId: UUID;
   email: string;
+  /**
+   * Discriminates this token from every other JWT signed with the shared
+   * secret. Verification rejects any token that does not carry exactly this
+   * type, so an email-confirmation link can never be redeemed as a
+   * password-reset (or any other) token.
+   */
+  type: typeof EMAIL_CONFIRMATION_TOKEN_TYPE;
 }
 
 @Injectable()
@@ -31,6 +40,7 @@ export class EmailConfirmationJwtService {
     const payload: EmailConfirmationJwtPayload = {
       userId: params.userId,
       email: params.email,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
     };
 
     const expiresIn = this.configService.get<StringValue>(
@@ -46,14 +56,26 @@ export class EmailConfirmationJwtService {
 
     try {
       const payload =
-        this.jwtService.verify<EmailConfirmationJwtPayload>(token);
+        this.jwtService.verify<Partial<EmailConfirmationJwtPayload>>(token);
+
+      if (
+        payload.type !== EMAIL_CONFIRMATION_TOKEN_TYPE ||
+        !payload.userId ||
+        !payload.email
+      ) {
+        throw new InvalidEmailConfirmationTokenError('Invalid token payload');
+      }
 
       this.logger.debug('Email confirmation token verified successfully', {
         userId: payload.userId,
         email: payload.email,
       });
 
-      return payload;
+      return {
+        userId: payload.userId,
+        email: payload.email,
+        type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+      };
     } catch (error: unknown) {
       this.logger.error('Email confirmation token verification failed', {
         error,
@@ -77,21 +99,6 @@ export class EmailConfirmationJwtService {
       }
 
       throw new InvalidEmailConfirmationTokenError('Token verification failed');
-    }
-  }
-
-  decodeEmailConfirmationToken(
-    token: string,
-  ): EmailConfirmationJwtPayload | null {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decoded = this.jwtService.decode(token);
-      return decoded as EmailConfirmationJwtPayload;
-    } catch (error: unknown) {
-      this.logger.error('Failed to decode email confirmation token', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return null;
     }
   }
 }
