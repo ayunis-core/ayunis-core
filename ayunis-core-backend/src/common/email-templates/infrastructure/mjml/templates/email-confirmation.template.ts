@@ -1,4 +1,5 @@
 import mjml2html from 'mjml';
+import type { MJMLParseResults } from 'mjml-core';
 import type { EmailConfirmationTemplateContent } from '../../../domain/email-template.entity';
 
 export function emailConfirmationText(
@@ -22,7 +23,7 @@ export function emailConfirmationText(
 
 export function emailConfirmationHtml(
   template: EmailConfirmationTemplateContent,
-) {
+): MJMLParseResults {
   return mjml2html(`
 <mjml>
   <mj-head>

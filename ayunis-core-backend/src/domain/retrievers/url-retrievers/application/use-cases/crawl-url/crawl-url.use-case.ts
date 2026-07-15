@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import pLimit from 'p-limit';
 import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from '../retrieve-url/retrieve-url.command';
 import { UrlRetrieverResult } from '../../../domain/url-retriever-result.entity';
@@ -101,12 +102,10 @@ export class CrawlUrlUseCase {
     return nextFrontier;
   }
 
-  private async fetchConcurrently(
+  private fetchConcurrently(
     urls: string[],
     orgId: UUID,
   ): Promise<(UrlRetrieverResult | null)[]> {
-    // Dynamic import: p-limit is ESM-only and the codebase is CJS.
-    const { default: pLimit } = await import('p-limit');
     const limit = pLimit(UrlCrawlConstants.FETCH_CONCURRENCY);
     return Promise.all(
       urls.map((url) => limit(() => this.retrievePage(url, orgId))),

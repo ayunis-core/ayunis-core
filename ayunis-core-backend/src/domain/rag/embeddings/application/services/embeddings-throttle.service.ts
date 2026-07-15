@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import PQueue from 'p-queue';
 import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
 
 /**
  * Structural slice of p-queue's API that we depend on. Declaring it locally
- * keeps the service unit-testable (a fake can be substituted) and avoids a
- * type-level import of the ESM-only package.
+ * keeps the service unit-testable (a fake can be substituted).
  */
 export interface PriorityQueue {
   add<T>(
@@ -33,12 +33,12 @@ const INGESTION_PRIORITY = 0;
 @Injectable()
 export class EmbeddingsThrottleService {
   private readonly logger = new Logger(EmbeddingsThrottleService.name);
-  private queuePromise: Promise<PriorityQueue> | null = null;
+  private sharedQueue: PriorityQueue | null = null;
 
   constructor(private readonly configService: ConfigService) {}
 
-  async run<T>(priority: EmbeddingPriority, fn: () => Promise<T>): Promise<T> {
-    const queue = await this.getQueue();
+  run<T>(priority: EmbeddingPriority, fn: () => Promise<T>): Promise<T> {
+    const queue = this.getQueue();
     const queuePriority =
       priority === EmbeddingPriority.RETRIEVAL
         ? RETRIEVAL_PRIORITY
@@ -46,23 +46,17 @@ export class EmbeddingsThrottleService {
     return queue.add(fn, { priority: queuePriority }) as Promise<T>;
   }
 
-  private getQueue(): Promise<PriorityQueue> {
+  private getQueue(): PriorityQueue {
     // Memoize so every embedding call shares one queue (one concurrency budget).
-    this.queuePromise ??= this.createQueue();
-    return this.queuePromise;
+    this.sharedQueue ??= this.createQueue();
+    return this.sharedQueue;
   }
 
-  /**
-   * Builds the shared p-queue. `protected` so tests can substitute a fake —
-   * p-queue is ESM-only and the dynamic import cannot run under the repo's
-   * CommonJS jest config (it works at runtime under Node's require-of-ESM,
-   * the same pattern already used for p-limit elsewhere).
-   */
-  protected async createQueue(): Promise<PriorityQueue> {
+  /** Builds the shared p-queue. `protected` so tests can substitute a fake. */
+  protected createQueue(): PriorityQueue {
     const concurrency =
       this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
       DEFAULT_MAX_CONCURRENCY;
-    const { default: PQueue } = await import('p-queue');
     this.logger.log('Embeddings throttle initialized', { concurrency });
     return new PQueue({ concurrency });
   }

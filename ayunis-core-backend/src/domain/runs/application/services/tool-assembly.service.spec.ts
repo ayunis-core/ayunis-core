@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import { ToolAssemblyService } from './tool-assembly.service';
+import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 
 describe('ToolAssemblyService — image generation tool assembly', () => {
   const mockOrgId = randomUUID();
@@ -39,8 +41,6 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     discoverMcpExecute?: jest.Mock;
     mcpIntegrationsExecute?: jest.Mock;
   }) {
-    const mod = await import('./tool-assembly.service');
-
     const configService = {
       get: jest
         .fn()
@@ -83,13 +83,12 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
         jest.fn().mockResolvedValue({ internetSearchEnabled: true }),
     };
 
-    const mcpMod = await import('./mcp-tool-assembler.service');
-    const mcpToolAssembler = new (mcpMod.McpToolAssemblerService as any)(
+    const mcpToolAssembler = new (McpToolAssemblerService as any)(
       discoverMcpCapabilitiesUseCase,
       getMcpIntegrationsByIdsUseCase,
     );
 
-    const service = new (mod.ToolAssemblyService as any)(
+    const service = new (ToolAssemblyService as any)(
       configService,
       assembleToolsUseCase,
       mcpToolAssembler,

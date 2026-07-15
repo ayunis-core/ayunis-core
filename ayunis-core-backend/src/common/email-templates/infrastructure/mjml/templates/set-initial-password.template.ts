@@ -1,4 +1,5 @@
 import mjml2html from 'mjml';
+import type { MJMLParseResults } from 'mjml-core';
 import type { SetInitialPasswordTemplateContent } from '../../../domain/email-template.entity';
 import {
   cta,
@@ -32,7 +33,7 @@ Diese E-Mail wurde an ${template.userEmail} gesendet.
 
 export function setInitialPasswordHtml(
   template: SetInitialPasswordTemplateContent,
-) {
+): MJMLParseResults {
   const userName = escapeText(template.userName);
 
   const body = [
