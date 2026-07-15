@@ -3,7 +3,10 @@ import { Test } from '@nestjs/testing';
 import { AcceptInviteUseCase } from './accept-invite.use-case';
 import { AcceptInviteCommand } from './accept-invite.command';
 import { InvitesRepository } from '../../ports/invites.repository';
-import { InviteJwtService } from '../../services/invite-jwt.service';
+import {
+  InviteJwtService,
+  INVITE_TOKEN_TYPE,
+} from '../../services/invite-jwt.service';
 import { CreateRegularUserUseCase } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.use-case';
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
@@ -79,7 +82,7 @@ describe('AcceptInviteUseCase', () => {
 
     jest
       .spyOn(mockInviteJwtService, 'verifyInviteToken')
-      .mockReturnValue({ inviteId });
+      .mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
     jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
     jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
@@ -110,7 +113,7 @@ describe('AcceptInviteUseCase', () => {
 
     jest
       .spyOn(mockInviteJwtService, 'verifyInviteToken')
-      .mockReturnValue({ inviteId });
+      .mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
     jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
     jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);

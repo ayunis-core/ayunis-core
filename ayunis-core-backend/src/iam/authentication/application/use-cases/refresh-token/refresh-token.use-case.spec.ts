@@ -102,4 +102,47 @@ describe('RefreshTokenUseCase', () => {
     expect(mockFindUserByIdUseCase.execute).not.toHaveBeenCalled();
     expect(mockAuthRepository.generateTokens).not.toHaveBeenCalled();
   });
+
+  it('should accept a token explicitly typed as refresh', async () => {
+    const command = new RefreshTokenCommand('new-refresh-token');
+    const mockUser = new User({
+      id: 'user-id-123' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hash',
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'name',
+      hasAcceptedMarketing: false,
+    });
+    const mockTokens = new AuthTokens('new-access-token', 'new-refresh-token');
+
+    jest
+      .spyOn(mockJwtService, 'verify')
+      .mockReturnValue({ sub: 'user-id-123', type: 'refresh' });
+    jest.spyOn(mockFindUserByIdUseCase, 'execute').mockResolvedValue(mockUser);
+    jest
+      .spyOn(mockAuthRepository, 'generateTokens')
+      .mockResolvedValue(mockTokens);
+
+    await expect(useCase.execute(command)).resolves.toBe(mockTokens);
+    expect(mockAuthRepository.generateTokens).toHaveBeenCalled();
+  });
+
+  // Regression for V2: an access token (untyped, but carrying `email`) must not
+  // be exchangeable for a fresh token pair.
+  it('should reject an access-shaped token presented as a refresh token', async () => {
+    const command = new RefreshTokenCommand('access-token');
+
+    jest.spyOn(mockJwtService, 'verify').mockReturnValue({
+      sub: 'user-id-123',
+      email: 'test@example.com',
+      role: UserRole.USER,
+      orgId: 'org-id',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(InvalidTokenError);
+    expect(mockFindUserByIdUseCase.execute).not.toHaveBeenCalled();
+    expect(mockAuthRepository.generateTokens).not.toHaveBeenCalled();
+  });
 });

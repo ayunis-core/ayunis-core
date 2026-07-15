@@ -4,7 +4,11 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { EmailConfirmationJwtService } from './email-confirmation-jwt.service';
+import {
+  EmailConfirmationJwtService,
+  EMAIL_CONFIRMATION_TOKEN_TYPE,
+} from './email-confirmation-jwt.service';
+import { InvalidEmailConfirmationTokenError } from '../users.errors';
 
 describe('EmailConfirmationJwtService', () => {
   let service: EmailConfirmationJwtService;
@@ -37,7 +41,7 @@ describe('EmailConfirmationJwtService', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should sign the confirmation token with the configured email confirmation expiry', () => {
+  it('should sign the confirmation token with a type claim and the configured expiry', () => {
     configService.get.mockReturnValue('24h');
     jwtService.sign.mockReturnValue('signed-confirmation-token');
 
@@ -48,9 +52,39 @@ describe('EmailConfirmationJwtService', () => {
       '24h',
     );
     expect(jwtService.sign).toHaveBeenCalledWith(
-      { userId, email },
+      { userId, email, type: EMAIL_CONFIRMATION_TOKEN_TYPE },
       { expiresIn: '24h' },
     );
     expect(token).toBe('signed-confirmation-token');
+  });
+
+  it('should verify a properly typed confirmation token', () => {
+    jwtService.verify.mockReturnValue({
+      userId,
+      email,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
+
+    expect(service.verifyEmailConfirmationToken('token')).toEqual({
+      userId,
+      email,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
+  });
+
+  it('should reject a legacy untyped confirmation token', () => {
+    jwtService.verify.mockReturnValue({ userId, email });
+
+    expect(() => service.verifyEmailConfirmationToken('legacy')).toThrow(
+      InvalidEmailConfirmationTokenError,
+    );
+  });
+
+  it('should reject a token typed as something other than email confirmation', () => {
+    jwtService.verify.mockReturnValue({ userId, email, type: 'invite' });
+
+    expect(() => service.verifyEmailConfirmationToken('foreign')).toThrow(
+      InvalidEmailConfirmationTokenError,
+    );
   });
 });

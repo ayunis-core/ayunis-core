@@ -56,6 +56,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       return null;
     }
 
+    // A legacy refresh token is a bare `{sub}` payload with no `email`. Without
+    // this guard it would authenticate as a session with undefined role/orgId.
+    if (!payload.email) {
+      this.logger.warn(
+        'Rejected token without email presented as access token',
+      );
+      return null;
+    }
+
     return new ActiveUser({
       id: payload.sub,
       email: payload.email,

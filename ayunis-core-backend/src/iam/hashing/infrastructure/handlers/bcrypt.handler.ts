@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { HashingHandler } from '../../application/ports/hashing.handler';
 import {
@@ -10,10 +11,14 @@ import {
 @Injectable()
 export class BcryptHandler implements HashingHandler {
   private readonly logger = new Logger(BcryptHandler.name);
-  private readonly saltRounds = 10;
+  private readonly saltRounds: number;
 
-  constructor() {
-    this.logger.log('constructor');
+  constructor(private readonly configService: ConfigService) {
+    this.saltRounds = this.configService.get<number>(
+      'auth.local.passwordHashRounds',
+      10,
+    );
+    this.logger.log('constructor', { saltRounds: this.saltRounds });
   }
 
   async hash(plainText: string): Promise<string> {
