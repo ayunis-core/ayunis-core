@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
 import { DeleteThreadCommand } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.command';
 import {
@@ -10,6 +11,7 @@ import {
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { FindExpiredThreadRefsByOrgQuery } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.query';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
+import { UnexpectedRetentionPolicyError } from '../../retention-policies.errors';
 import type { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
 import type {
   EnforceRetentionResult,
@@ -40,6 +42,7 @@ export class EnforceRetentionUseCase {
     private readonly configService: ConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedRetentionPolicyError)
   async execute(): Promise<EnforceRetentionResult> {
     const dryRun = this.configService.get<boolean>('retention.dryRun') ?? false;
     const policies = await this.retentionPoliciesRepository.findAllEnabled();

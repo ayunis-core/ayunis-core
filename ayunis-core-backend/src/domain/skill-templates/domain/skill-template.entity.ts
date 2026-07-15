@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import { ApplicationError } from '../../../common/errors/base.error';
 import type { DistributionMode } from './distribution-mode.enum';
 
 /**
@@ -10,14 +11,16 @@ import type { DistributionMode } from './distribution-mode.enum';
 const CONSECUTIVE_SPACES = / {2}/;
 const CONTROL_CHARS = /\p{Cc}/u;
 
-export class InvalidSkillTemplateNameError extends Error {
+export class InvalidSkillTemplateNameError extends ApplicationError {
   constructor(name: string) {
     super(
       `Invalid skill template name "${name}". Names must not be empty, ` +
         `must not start or end with whitespace, must not contain consecutive spaces, ` +
         `and must not contain control characters.`,
+      'INVALID_SKILL_TEMPLATE_NAME',
+      400,
+      { name },
     );
-    this.name = 'InvalidSkillTemplateNameError';
   }
 }
 

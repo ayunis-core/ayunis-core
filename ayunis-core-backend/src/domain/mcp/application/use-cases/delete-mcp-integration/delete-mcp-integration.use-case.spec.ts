@@ -219,8 +219,8 @@ describe('DeleteMcpIntegrationUseCase', () => {
         UnexpectedMcpError,
       );
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error deleting integration',
-        { error: unexpectedError },
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
 

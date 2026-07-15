@@ -10,6 +10,8 @@ import {
 import { UrlCrawlConstants } from '../../../domain/url-crawl.constants';
 import { CrawlUrlCommand } from './crawl-url.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedUrlRetrieverError } from '../../url-retriever.errors';
 
 /**
  * Crawls a root URL breadth-first, following same-site links up to a bounded
@@ -22,6 +24,7 @@ export class CrawlUrlUseCase {
 
   constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {}
 
+  @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: CrawlUrlCommand): Promise<UrlCrawlResult> {
     const maxDepth = this.clampDepth(command.maxDepth);
     this.logger.debug(`Crawling ${command.url} to depth ${maxDepth}`);

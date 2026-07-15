@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import type {
   SearchInput,
   SearchMultiInput,
@@ -22,6 +24,7 @@ export class SearchContentUseCase {
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedIndexError)
   async execute(input: SearchInput): Promise<IndexEntry[]> {
     const queryVector = await this.embedQuery(input.orgId, input.query);
     const parentChunks = await this.parentChildIndexerRepository.find(
@@ -32,6 +35,7 @@ export class SearchContentUseCase {
     return this.toIndexEntries(parentChunks);
   }
 
+  @HandleUnexpectedErrors(UnexpectedIndexError)
   async executeMulti(input: SearchMultiInput): Promise<IndexEntry[]> {
     if (input.documentIds.length === 0) {
       return [];

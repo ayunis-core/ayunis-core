@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
@@ -16,33 +16,21 @@ export class ListKnowledgeBaseDocumentsUseCase {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: ListKnowledgeBaseDocumentsQuery): Promise<Source[]> {
     this.logger.log('Listing knowledge base documents', {
       knowledgeBaseId: query.knowledgeBaseId,
     });
 
-    try {
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
-        query.knowledgeBaseId,
-      );
-      if (!knowledgeBase) {
-        throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
-      }
-
-      return await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(
-        query.knowledgeBaseId,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error listing knowledge base documents', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError(
-        'Error listing knowledge base documents',
-        { error: error as Error },
-      );
+    const knowledgeBase = await this.knowledgeBaseRepository.findById(
+      query.knowledgeBaseId,
+    );
+    if (!knowledgeBase) {
+      throw new KnowledgeBaseNotFoundError(query.knowledgeBaseId);
     }
+
+    return await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseId(
+      query.knowledgeBaseId,
+    );
   }
 }

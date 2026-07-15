@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 
 @Injectable()
@@ -16,6 +16,7 @@ export class RetrieveMcpResourceUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     command: RetrieveMcpResourceCommand,
   ): Promise<{ content: unknown; mimeType: string }> {
@@ -24,34 +25,20 @@ export class RetrieveMcpResourceUseCase {
       resourceUri: command.resourceUri,
       parameters: command.parameters,
     });
-    try {
-      const integration = await this.validateIntegrationAccess.validate(
-        command.integrationId,
-      );
 
-      // Retrieve resource content with parameters (for URI template substitution)
-      const userId = this.contextService.get('userId');
-      const { content, mimeType } = await this.mcpClientService.readResource(
-        integration,
-        command.resourceUri,
-        command.parameters,
-        userId,
-      );
+    const integration = await this.validateIntegrationAccess.validate(
+      command.integrationId,
+    );
 
-      return { content, mimeType };
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+    // Retrieve resource content with parameters (for URI template substitution)
+    const userId = this.contextService.get('userId');
+    const { content, mimeType } = await this.mcpClientService.readResource(
+      integration,
+      command.resourceUri,
+      command.parameters,
+      userId,
+    );
 
-      this.logger.error('retrieveMcpResourceFailed', {
-        integrationId: command.integrationId,
-        resourceUri: command.resourceUri,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedMcpError(
-        error instanceof Error ? error.message : 'Unknown error',
-      );
-    }
+    return { content, mimeType };
   }
 }

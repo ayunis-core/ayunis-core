@@ -1,5 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
 import { UserMcpConfigResult } from '../get-user-mcp-config/get-user-mcp-config.use-case';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -16,6 +17,7 @@ import {
   McpNotMarketplaceIntegrationError,
   McpNoUserFieldsError,
   McpInvalidConfigKeysError,
+  UnexpectedMcpError,
 } from '../../mcp.errors';
 
 @Injectable()
@@ -29,20 +31,13 @@ export class SetUserMcpConfigUseCase {
     private readonly marketplaceConfigService: MarketplaceConfigService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     command: SetUserMcpConfigCommand,
   ): Promise<UserMcpConfigResult> {
     this.logger.log('execute', { integrationId: command.integrationId });
 
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
+    const { userId, orgId } = this.getAuthContext();
 
     const integration = await this.integrationRepository.findById(
       command.integrationId,
@@ -63,7 +58,7 @@ export class SetUserMcpConfigUseCase {
     const marketplaceIntegration = integration as MarketplaceMcpIntegration;
     const { userFields } = marketplaceIntegration.configSchema;
 
-    if (!userFields || userFields.length === 0) {
+    if (userFields.length === 0) {
       throw new McpNoUserFieldsError(command.integrationId);
     }
 
@@ -95,6 +90,20 @@ export class SetUserMcpConfigUseCase {
     return this.maskResult(saved.configValues, userFields);
   }
 
+  private getAuthContext(): { userId: UUID; orgId: UUID } {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
+    return { userId, orgId };
+  }
+
   private validateConfigKeys(
     userFields: ConfigField[],
     values: Record<string, string>,
@@ -124,18 +133,18 @@ export class SetUserMcpConfigUseCase {
       const provided = providedValues[field.key];
       const existing = existingValues[field.key];
 
-      if (provided === SECRET_MASK && existing !== undefined) {
+      if (provided === SECRET_MASK && field.key in existingValues) {
         merged[field.key] = existing;
       } else if (provided === SECRET_MASK) {
         // SECRET_MASK with no existing value — skip, don't store the mask literal
-      } else if (provided !== undefined) {
+      } else if (field.key in providedValues) {
         merged[field.key] =
           field.type === 'secret'
             ? await this.marketplaceConfigService
                 .encryptSecretFields([field], { [field.key]: provided })
                 .then((r) => r[field.key])
             : provided;
-      } else if (existing !== undefined) {
+      } else if (field.key in existingValues) {
         merged[field.key] = existing;
       }
     }

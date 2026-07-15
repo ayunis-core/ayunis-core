@@ -186,8 +186,8 @@ describe('GetMcpIntegrationUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(UnexpectedMcpError);
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error getting integration',
-        { error: unexpectedError },
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
 

@@ -1,9 +1,14 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
 import storageConfig from '../../../../../config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+  UnexpectedStorageError,
+} from '../../storage.errors';
 import { StorageUrl } from '../../../domain/storage-url.entity';
 import { PresignedUrl } from '../../../domain/presigned-url.entity';
 
@@ -17,6 +22,7 @@ export class GetPresignedUrlUseCase {
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedStorageError)
   async execute(command: GetPresignedUrlCommand): Promise<PresignedUrl> {
     this.logger.debug(
       `Generating presigned URL for object: ${command.objectName}`,

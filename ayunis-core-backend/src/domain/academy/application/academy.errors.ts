@@ -91,12 +91,10 @@ export class InvalidQuizSubmissionError extends AcademyError {
 }
 
 export class UnexpectedAcademyError extends AcademyError {
-  constructor(error: unknown) {
-    super(
-      'Unexpected error occurred',
-      AcademyErrorCode.UNEXPECTED_ACADEMY_ERROR,
-      500,
-      { error },
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, AcademyErrorCode.UNEXPECTED_ACADEMY_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

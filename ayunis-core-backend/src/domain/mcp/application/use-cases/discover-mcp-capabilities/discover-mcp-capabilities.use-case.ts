@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import {
@@ -14,7 +15,6 @@ import {
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { McpTool } from '../../../domain/mcp-tool.entity';
 import {
   McpResource,
@@ -47,99 +47,96 @@ export class DiscoverMcpCapabilitiesUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     query: DiscoverMcpCapabilitiesQuery,
   ): Promise<CapabilitiesResult> {
     this.logger.log('discoverMcpCapabilities', { id: query.integrationId });
 
-    try {
-      // Get current user's organization
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+    // Get current user's organization
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
 
-      // Fetch integration
-      const integration = await this.repository.findById(query.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(query.integrationId);
-      }
+    // Fetch integration
+    const integration = await this.repository.findById(query.integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(query.integrationId);
+    }
 
-      // Verify organization access
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(
-          query.integrationId,
-          integration.name,
-        );
-      }
-
-      // Verify integration is enabled
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(
-          query.integrationId,
-          integration.name,
-        );
-      }
-
-      // Discover capabilities from MCP server
-      const userId = this.contextService.get('userId');
-      const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-        this.mcpClientService.listTools(integration, userId),
-        this.mcpClientService.listResources(integration, userId),
-        this.mcpClientService.listResourceTemplates(integration, userId),
-        this.mcpClientService.listPrompts(integration, userId),
-      ]);
-
-      // Map to domain entities
-      const mcpTools = tools.map((tool) =>
-        this.mapToMcpTool(tool, query.integrationId),
-      );
-      const mcpResources = resources.map((resource) =>
-        this.mapToMcpResource(resource, query.integrationId),
-      );
-      const mcpResourceTemplates = resourceTemplates.map((resourceTemplate) =>
-        this.mapToMcpResource(resourceTemplate, query.integrationId),
-      );
-      const mcpPrompts = prompts.map((prompt) =>
-        this.mapToMcpPrompt(prompt, query.integrationId),
-      );
-
-      this.logger.log('discoverMcpCapabilitiesSucceeded', {
-        id: query.integrationId,
-        name: integration.name,
-        tools: mcpTools.length,
-        resources: mcpResources.length + mcpResourceTemplates.length,
-        prompts: mcpPrompts.length,
-      });
-
-      return {
-        tools: mcpTools,
-        resources: mcpResources.concat(mcpResourceTemplates),
-        prompts: mcpPrompts,
-        returnsPii: integration.returnsPii,
-      };
-    } catch (error) {
-      // Re-throw expected errors
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        this.logger.warn('discoverMcpCapabilitiesFailed', {
-          id: query.integrationId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        throw error;
-      }
-
-      // Wrap unexpected errors
-      this.logger.error('discoverMcpCapabilitiesUnexpectedError', {
-        id: query.integrationId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedMcpError(
-        error instanceof Error ? error.message : 'Unknown error',
+    // Verify organization access
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(
+        query.integrationId,
+        integration.name,
       );
     }
+
+    // Verify integration is enabled
+    if (!integration.enabled) {
+      throw new McpIntegrationDisabledError(
+        query.integrationId,
+        integration.name,
+      );
+    }
+
+    // Discover capabilities from MCP server
+    const userId = this.contextService.get('userId');
+    const [tools, resources, resourceTemplates, prompts] = await Promise.all([
+      this.mcpClientService.listTools(integration, userId),
+      this.mcpClientService.listResources(integration, userId),
+      this.mcpClientService.listResourceTemplates(integration, userId),
+      this.mcpClientService.listPrompts(integration, userId),
+    ]);
+
+    return this.buildCapabilitiesResult(query.integrationId, integration, {
+      tools,
+      resources,
+      resourceTemplates,
+      prompts,
+    });
+  }
+
+  private buildCapabilitiesResult(
+    integrationId: UUID,
+    integration: { name: string; returnsPii: boolean },
+    discovered: {
+      tools: McpToolDto[];
+      resources: McpResourceDto[];
+      resourceTemplates: McpResourceDto[];
+      prompts: McpPromptDto[];
+    },
+  ): CapabilitiesResult {
+    // Map to domain entities
+    const mcpTools = discovered.tools.map((tool) =>
+      this.mapToMcpTool(tool, integrationId),
+    );
+    const mcpResources = discovered.resources.map((resource) =>
+      this.mapToMcpResource(resource, integrationId),
+    );
+    const mcpResourceTemplates = discovered.resourceTemplates.map(
+      (resourceTemplate) =>
+        this.mapToMcpResource(resourceTemplate, integrationId),
+    );
+    const mcpPrompts = discovered.prompts.map((prompt) =>
+      this.mapToMcpPrompt(prompt, integrationId),
+    );
+
+    this.logger.log('discoverMcpCapabilitiesSucceeded', {
+      id: integrationId,
+      name: integration.name,
+      tools: mcpTools.length,
+      resources: mcpResources.length + mcpResourceTemplates.length,
+      prompts: mcpPrompts.length,
+    });
+
+    return {
+      tools: mcpTools,
+      resources: mcpResources.concat(mcpResourceTemplates),
+      prompts: mcpPrompts,
+      returnsPii: integration.returnsPii,
+    };
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { StorageObject } from '../../../domain/storage-object.entity';
 import { UploadObjectCommand } from './upload-object.command';
@@ -8,6 +9,7 @@ import {
   BucketNotFoundError,
   InvalidObjectNameError,
   StoragePermissionDeniedError,
+  UnexpectedStorageError,
   UploadFailedError,
 } from '../../storage.errors';
 import { StorageObjectUpload } from '../../../domain/storage-object-upload.entity';
@@ -22,25 +24,14 @@ export class UploadObjectUseCase {
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedStorageError)
   async execute(command: UploadObjectCommand): Promise<StorageObject> {
     this.logger.debug(`Uploading object: ${command.objectName}`, {
       bucket: command.bucket,
     });
 
     try {
-      if (!this.isValidObjectName(command.objectName)) {
-        throw new InvalidObjectNameError({ objectName: command.objectName });
-      }
-
-      const bucketName = command.bucket || this.getDefaultBucket();
-
-      // Check if bucket exists before uploading
-      if (bucketName !== this.getDefaultBucket()) {
-        const bucketExists = this.bucketExists(bucketName);
-        if (!bucketExists) {
-          throw new BucketNotFoundError({ bucket: bucketName });
-        }
-      }
+      const bucketName = this.validateAndResolveBucket(command);
 
       const result = await this.objectStorage.upload(
         new StorageObjectUpload(
@@ -84,6 +75,24 @@ export class UploadObjectUseCase {
         metadata: { originalError: error as Error },
       });
     }
+  }
+
+  private validateAndResolveBucket(command: UploadObjectCommand): string {
+    if (!this.isValidObjectName(command.objectName)) {
+      throw new InvalidObjectNameError({ objectName: command.objectName });
+    }
+
+    const bucketName = command.bucket || this.getDefaultBucket();
+
+    // Check if bucket exists before uploading
+    if (bucketName !== this.getDefaultBucket()) {
+      const bucketExists = this.bucketExists(bucketName);
+      if (!bucketExists) {
+        throw new BucketNotFoundError({ bucket: bucketName });
+      }
+    }
+
+    return bucketName;
   }
 
   private getDefaultBucket(): string {

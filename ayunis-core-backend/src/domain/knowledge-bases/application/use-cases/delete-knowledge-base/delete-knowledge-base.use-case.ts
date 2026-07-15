@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
@@ -10,7 +11,6 @@ import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteKnowledgeBaseUseCase {
@@ -23,39 +23,28 @@ export class DeleteKnowledgeBaseUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(command: DeleteKnowledgeBaseCommand): Promise<void> {
     this.logger.log('Deleting knowledge base', {
       knowledgeBaseId: command.knowledgeBaseId,
       userId: command.userId,
     });
 
-    try {
-      const existing = await this.knowledgeBaseRepository.findById(
-        command.knowledgeBaseId,
-      );
-      if (existing?.userId !== command.userId) {
-        throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-      }
-
-      const sources = await this.getSourcesByKnowledgeBaseIdUseCase.execute(
-        new GetSourcesByKnowledgeBaseIdQuery(command.knowledgeBaseId),
-      );
-      const sourceIds = sources.map((s) => s.id);
-      await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sourceIds),
-      );
-
-      await this.knowledgeBaseRepository.delete(existing);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error deleting knowledge base', {
-        error: error as Error,
-      });
-      throw new UnexpectedKnowledgeBaseError('Error deleting knowledge base', {
-        error: error as Error,
-      });
+    const existing = await this.knowledgeBaseRepository.findById(
+      command.knowledgeBaseId,
+    );
+    if (existing?.userId !== command.userId) {
+      throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
+
+    const sources = await this.getSourcesByKnowledgeBaseIdUseCase.execute(
+      new GetSourcesByKnowledgeBaseIdQuery(command.knowledgeBaseId),
+    );
+    const sourceIds = sources.map((s) => s.id);
+    await this.deleteSourcesUseCase.execute(
+      new DeleteSourcesCommand(sourceIds),
+    );
+
+    await this.knowledgeBaseRepository.delete(existing);
   }
 }

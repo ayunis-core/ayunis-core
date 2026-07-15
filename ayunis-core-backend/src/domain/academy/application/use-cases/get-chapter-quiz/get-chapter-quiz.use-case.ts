@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
 import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
@@ -20,30 +20,23 @@ export class GetChapterQuizUseCase {
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   async execute(query: GetChapterQuizQuery): Promise<AcademyQuizQuestion[]> {
     this.logger.log('Getting chapter quiz', { chapterId: query.chapterId });
-    try {
-      const chapter = await this.chapterRepository.findOne(query.chapterId);
-      if (!chapter) {
-        throw new ChapterNotFoundError(query.chapterId);
-      }
-      if (!chapter.quizEnabled) {
-        throw new QuizNotAvailableError(query.chapterId);
-      }
-      const pool = await this.quizQuestionRepository.findAllByChapter(
-        query.chapterId,
-      );
-      if (pool.length === 0) {
-        throw new QuizNotAvailableError(query.chapterId);
-      }
-      return this.drawRandom(pool, DRAWN_QUESTION_COUNT);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting chapter quiz', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
+    const chapter = await this.chapterRepository.findOne(query.chapterId);
+    if (!chapter) {
+      throw new ChapterNotFoundError(query.chapterId);
     }
+    if (!chapter.quizEnabled) {
+      throw new QuizNotAvailableError(query.chapterId);
+    }
+    const pool = await this.quizQuestionRepository.findAllByChapter(
+      query.chapterId,
+    );
+    if (pool.length === 0) {
+      throw new QuizNotAvailableError(query.chapterId);
+    }
+    return this.drawRandom(pool, DRAWN_QUESTION_COUNT);
   }
 
   // Fisher–Yates shuffle over a copy, returning the first `count` items (or the

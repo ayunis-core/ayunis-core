@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
@@ -41,32 +41,25 @@ export class SubmitChapterQuizUseCase {
     private readonly completionRepository: AcademyCompletionRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAcademyError)
   async execute(command: SubmitChapterQuizCommand): Promise<QuizAttemptResult> {
     this.logger.log('Submitting chapter quiz', {
       userId: command.userId,
       chapterId: command.chapterId,
     });
-    try {
-      const chapter = await this.loadQuizChapter(command.chapterId);
-      const pool = await this.quizQuestionRepository.findAllByChapter(
-        command.chapterId,
-      );
-      if (pool.length === 0) {
-        throw new QuizNotAvailableError(command.chapterId);
-      }
-      const grade = this.grade(pool, command.answers, chapter.passThreshold);
-      await this.persistProgress(command, grade);
-      const academyCompleted = grade.passed
-        ? await this.recomputeCompletion(command.userId)
-        : false;
-      return { ...grade, academyCompleted };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error submitting chapter quiz', {
-        error: error as Error,
-      });
-      throw new UnexpectedAcademyError(error);
+    const chapter = await this.loadQuizChapter(command.chapterId);
+    const pool = await this.quizQuestionRepository.findAllByChapter(
+      command.chapterId,
+    );
+    if (pool.length === 0) {
+      throw new QuizNotAvailableError(command.chapterId);
     }
+    const grade = this.grade(pool, command.answers, chapter.passThreshold);
+    await this.persistProgress(command, grade);
+    const academyCompleted = grade.passed
+      ? await this.recomputeCompletion(command.userId)
+      : false;
+    return { ...grade, academyCompleted };
   }
 
   private async loadQuizChapter(chapterId: UUID): Promise<AcademyChapter> {

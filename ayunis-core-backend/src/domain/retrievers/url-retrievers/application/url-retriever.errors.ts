@@ -20,6 +20,7 @@ export enum UrlRetrieverErrorCode {
   UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
   TOO_MANY_REDIRECTS = 'TOO_MANY_REDIRECTS',
   CONTENT_TOO_LARGE = 'CONTENT_TOO_LARGE',
+  UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
 }
 
 /**
@@ -71,6 +72,16 @@ export abstract class UrlRetrieverError extends ApplicationError {
           ...(this.metadata && { metadata: this.metadata }),
         });
     }
+  }
+}
+
+export class UnexpectedUrlRetrieverError extends UrlRetrieverError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, UrlRetrieverErrorCode.UNEXPECTED_ERROR, 500, {
+      ...metadata,
+      error,
+    });
+    this.name = 'UnexpectedUrlRetrieverError';
   }
 }
 

@@ -20,12 +20,10 @@ export class InvalidRetentionPeriodError extends ApplicationError {
 }
 
 export class UnexpectedRetentionPolicyError extends ApplicationError {
-  constructor(operation: string, metadata?: ErrorMetadata) {
-    super(
-      `Unexpected retention policy error during ${operation}`,
-      RetentionPolicyErrorCode.UNEXPECTED_ERROR,
-      500,
-      { operation, ...metadata },
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, RetentionPolicyErrorCode.UNEXPECTED_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

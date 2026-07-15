@@ -1,4 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreatePredefinedMcpIntegrationCommand } from './create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -18,11 +19,13 @@ import {
   DuplicateMcpIntegrationError,
   McpValidationFailedError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UUID } from 'crypto';
 import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
 import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
+import {
+  CredentialFieldType,
+  PredefinedMcpIntegrationConfig,
+} from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { McpIntegrationAuth } from 'src/domain/mcp/domain';
 
 @Injectable()
@@ -47,11 +50,11 @@ export class CreateMcpIntegrationUseCase {
     command: CreateCustomMcpIntegrationCommand,
   ): Promise<CustomMcpIntegration>;
 
-  // Implementation
+  // Implementation. TS1241 forbids decorating an overloaded method, so the
+  // error boundary sits on the two async delegates below instead.
   async execute(
     command:
-      | CreatePredefinedMcpIntegrationCommand
-      | CreateCustomMcpIntegrationCommand,
+      CreatePredefinedMcpIntegrationCommand | CreateCustomMcpIntegrationCommand,
   ): Promise<PredefinedMcpIntegration | CustomMcpIntegration> {
     // Get orgId from context first (common for both types)
     const orgId = this.contextService.get('orgId');
@@ -67,136 +70,136 @@ export class CreateMcpIntegrationUseCase {
     }
   }
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   private async createPredefinedIntegration(
     command: CreatePredefinedMcpIntegrationCommand,
     orgId: UUID,
   ): Promise<PredefinedMcpIntegration> {
     this.logger.log('createPredefinedIntegration', { slug: command.slug });
 
-    try {
-      // Validate slug exists in registry
-      if (!this.registryService.isValidSlug(command.slug)) {
-        throw new InvalidPredefinedSlugError(command.slug);
+    // Validate slug exists in registry
+    if (!this.registryService.isValidSlug(command.slug)) {
+      throw new InvalidPredefinedSlugError(command.slug);
+    }
+
+    // Get configuration from registry
+    const config = this.registryService.getConfig(command.slug);
+
+    // Check for duplicates
+    const existing = await this.repository.findByOrgIdAndSlug(
+      orgId,
+      command.slug,
+    );
+    if (existing) {
+      throw new DuplicateMcpIntegrationError(command.slug);
+    }
+
+    const integrationAuth = await this.buildPredefinedAuth(config, command);
+
+    const integration = this.factory.createIntegration({
+      kind: McpIntegrationKind.PREDEFINED,
+      orgId,
+      slug: config.slug,
+      name: config.displayName,
+      serverUrl: config.serverUrl,
+      auth: integrationAuth,
+      returnsPii: command.returnsPii,
+    });
+
+    // Save integration first to get ID
+    const savedIntegration = await this.repository.save(integration);
+
+    // Validate connection (don't throw on failure)
+    await this.connectionValidationService.validateAndUpdateStatus(
+      savedIntegration,
+    );
+
+    // Return the updated integration
+    return savedIntegration;
+  }
+
+  private async buildPredefinedAuth(
+    config: PredefinedMcpIntegrationConfig,
+    command: CreatePredefinedMcpIntegrationCommand,
+  ): Promise<McpIntegrationAuth> {
+    switch (config.authType) {
+      case McpAuthMethod.NO_AUTH:
+        return this.authFactory.createAuth({
+          method: McpAuthMethod.NO_AUTH,
+        });
+      case McpAuthMethod.BEARER_TOKEN:
+        return this.buildPredefinedBearerAuth(config, command);
+      case McpAuthMethod.OAUTH:
+        return this.authFactory.createAuth({
+          method: McpAuthMethod.OAUTH,
+          clientId:
+            command.credentialFields.find(
+              (field) => field.name === CredentialFieldType.CLIENT_ID,
+            )?.value ?? '',
+          clientSecret:
+            command.credentialFields.find(
+              (field) => field.name === CredentialFieldType.CLIENT_SECRET,
+            )?.value ?? '',
+        });
+      case McpAuthMethod.CUSTOM_HEADER:
+        return this.buildPredefinedCustomHeaderAuth(config, command);
+      default: {
+        const exhaustiveCheck: never = config.authType;
+        throw new Error(`Unknown MCP auth type: ${String(exhaustiveCheck)}`);
       }
-
-      // Get configuration from registry
-      const config = this.registryService.getConfig(command.slug);
-
-      // Check for duplicates
-      const existing = await this.repository.findByOrgIdAndSlug(
-        orgId,
-        command.slug,
-      );
-      if (existing) {
-        throw new DuplicateMcpIntegrationError(command.slug);
-      }
-
-      let integrationAuth: McpIntegrationAuth;
-      switch (config.authType) {
-        case McpAuthMethod.NO_AUTH:
-          integrationAuth = this.authFactory.createAuth({
-            method: McpAuthMethod.NO_AUTH,
-          });
-          break;
-        case McpAuthMethod.BEARER_TOKEN: {
-          const tokenField = command.credentialFields.find(
-            (field) => field.name === CredentialFieldType.TOKEN,
-          );
-          const rawToken = tokenField?.value.trim();
-
-          if (!rawToken) {
-            throw new McpValidationFailedError(
-              '',
-              config.displayName,
-              'Bearer token credentials are required',
-              CredentialFieldType.TOKEN,
-            );
-          }
-
-          integrationAuth = this.authFactory.createAuth({
-            method: McpAuthMethod.BEARER_TOKEN,
-            authToken: await this.credentialEncryption.encrypt(rawToken),
-          });
-          break;
-        }
-        case McpAuthMethod.OAUTH:
-          integrationAuth = this.authFactory.createAuth({
-            method: McpAuthMethod.OAUTH,
-            clientId:
-              command.credentialFields.find(
-                (field) => field.name === CredentialFieldType.CLIENT_ID,
-              )?.value ?? '',
-            clientSecret:
-              command.credentialFields.find(
-                (field) => field.name === CredentialFieldType.CLIENT_SECRET,
-              )?.value ?? '',
-          });
-          break;
-        case McpAuthMethod.CUSTOM_HEADER: {
-          const secretField = command.credentialFields.find(
-            (field) => field.name === CredentialFieldType.TOKEN,
-          );
-          const rawSecret = secretField?.value.trim();
-
-          if (!rawSecret) {
-            throw new McpValidationFailedError(
-              '',
-              config.displayName,
-              'Custom header secret is required',
-              CredentialFieldType.TOKEN,
-            );
-          }
-
-          integrationAuth = this.authFactory.createAuth({
-            method: McpAuthMethod.CUSTOM_HEADER,
-            secret: await this.credentialEncryption.encrypt(rawSecret),
-            headerName: config.authHeaderName ?? 'X-API-Key',
-          });
-          break;
-        }
-        default: {
-          const exhaustiveCheck: never = config.authType;
-          throw new Error(`Unknown MCP auth type: ${String(exhaustiveCheck)}`);
-        }
-      }
-
-      const integration = this.factory.createIntegration({
-        kind: McpIntegrationKind.PREDEFINED,
-        orgId,
-        slug: config.slug,
-        name: config.displayName,
-        serverUrl: config.serverUrl,
-        auth: integrationAuth,
-        returnsPii: command.returnsPii,
-      });
-
-      // Save integration first to get ID
-      const savedIntegration = await this.repository.save(integration);
-
-      // Validate connection (don't throw on failure)
-      await this.connectionValidationService.validateAndUpdateStatus(
-        savedIntegration,
-      );
-
-      // Return the updated integration
-      return savedIntegration;
-    } catch (error) {
-      // Re-throw application errors and auth errors
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-
-      // Log and wrap unexpected errors
-      this.logger.error('Unexpected error creating predefined integration', {
-        error: error as Error,
-      });
-      throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }
 
+  private async buildPredefinedBearerAuth(
+    config: PredefinedMcpIntegrationConfig,
+    command: CreatePredefinedMcpIntegrationCommand,
+  ): Promise<McpIntegrationAuth> {
+    const tokenField = command.credentialFields.find(
+      (field) => field.name === CredentialFieldType.TOKEN,
+    );
+    const rawToken = tokenField?.value.trim();
+
+    if (!rawToken) {
+      throw new McpValidationFailedError(
+        '',
+        config.displayName,
+        'Bearer token credentials are required',
+        CredentialFieldType.TOKEN,
+      );
+    }
+
+    return this.authFactory.createAuth({
+      method: McpAuthMethod.BEARER_TOKEN,
+      authToken: await this.credentialEncryption.encrypt(rawToken),
+    });
+  }
+
+  private async buildPredefinedCustomHeaderAuth(
+    config: PredefinedMcpIntegrationConfig,
+    command: CreatePredefinedMcpIntegrationCommand,
+  ): Promise<McpIntegrationAuth> {
+    const secretField = command.credentialFields.find(
+      (field) => field.name === CredentialFieldType.TOKEN,
+    );
+    const rawSecret = secretField?.value.trim();
+
+    if (!rawSecret) {
+      throw new McpValidationFailedError(
+        '',
+        config.displayName,
+        'Custom header secret is required',
+        CredentialFieldType.TOKEN,
+      );
+    }
+
+    return this.authFactory.createAuth({
+      method: McpAuthMethod.CUSTOM_HEADER,
+      secret: await this.credentialEncryption.encrypt(rawSecret),
+      headerName: config.authHeaderName ?? 'X-API-Key',
+    });
+  }
+
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   private async createCustomIntegration(
     command: CreateCustomMcpIntegrationCommand,
     orgId: UUID,
@@ -205,117 +208,89 @@ export class CreateMcpIntegrationUseCase {
       serverUrl: command.serverUrl,
     });
 
-    try {
-      // Validate URL format
-      if (!this.isValidUrl(command.serverUrl)) {
-        throw new InvalidServerUrlError(command.serverUrl);
-      }
+    // Validate URL format
+    if (!this.isValidUrl(command.serverUrl)) {
+      throw new InvalidServerUrlError(command.serverUrl);
+    }
 
-      // Determine auth type (default to NO_AUTH if not provided)
-      const authType = command.authMethod ?? McpAuthMethod.NO_AUTH;
+    // Determine auth type (default to NO_AUTH if not provided)
+    const authType = command.authMethod ?? McpAuthMethod.NO_AUTH;
 
-      // Handle OAUTH - not implemented yet
-      if (authType === McpAuthMethod.OAUTH) {
-        throw new McpAuthNotImplementedError(McpAuthMethod.OAUTH);
-      }
+    // Handle OAUTH - not implemented yet
+    if (authType === McpAuthMethod.OAUTH) {
+      throw new McpAuthNotImplementedError(McpAuthMethod.OAUTH);
+    }
 
-      // Create integration using factory and handle credentials based on auth type
-      let integration: CustomMcpIntegration;
+    const auth = await this.buildCustomAuth(authType, command);
 
-      if (authType === McpAuthMethod.BEARER_TOKEN) {
-        if (!command.credentials) {
-          throw new McpValidationFailedError(
-            '',
-            command.name,
-            'Bearer token credentials are required',
-          );
-        }
+    const integration = this.factory.createIntegration({
+      kind: McpIntegrationKind.CUSTOM,
+      orgId,
+      name: command.name,
+      serverUrl: command.serverUrl,
+      auth,
+      returnsPii: command.returnsPii,
+    });
 
-        const encryptedToken = await this.credentialEncryption.encrypt(
-          command.credentials,
+    // Save integration first to get ID
+    const savedIntegration = await this.repository.save(integration);
+
+    // Validate connection (don't throw on failure)
+    await this.connectionValidationService.validateAndUpdateStatus(
+      savedIntegration,
+    );
+
+    // Return the updated integration
+    return savedIntegration;
+  }
+
+  private async buildCustomAuth(
+    authType: McpAuthMethod,
+    command: CreateCustomMcpIntegrationCommand,
+  ): Promise<McpIntegrationAuth> {
+    if (authType === McpAuthMethod.BEARER_TOKEN) {
+      if (!command.credentials) {
+        throw new McpValidationFailedError(
+          '',
+          command.name,
+          'Bearer token credentials are required',
         );
-
-        const auth = this.authFactory.createAuth({
-          method: McpAuthMethod.BEARER_TOKEN,
-          authToken: encryptedToken,
-        });
-
-        integration = this.factory.createIntegration({
-          kind: McpIntegrationKind.CUSTOM,
-          orgId,
-          name: command.name,
-          serverUrl: command.serverUrl,
-          auth,
-          returnsPii: command.returnsPii,
-        });
-      } else if (authType === McpAuthMethod.CUSTOM_HEADER) {
-        if (!command.credentials) {
-          throw new McpValidationFailedError(
-            '',
-            command.name,
-            'Header credentials are required',
-          );
-        }
-
-        const encryptedKey = await this.credentialEncryption.encrypt(
-          command.credentials,
-        );
-
-        const headerName = command.authHeaderName ?? 'X-API-Key';
-        const auth = this.authFactory.createAuth({
-          method: McpAuthMethod.CUSTOM_HEADER,
-          secret: encryptedKey,
-          headerName,
-        });
-
-        integration = this.factory.createIntegration({
-          kind: McpIntegrationKind.CUSTOM,
-          orgId,
-          name: command.name,
-          serverUrl: command.serverUrl,
-          auth,
-          returnsPii: command.returnsPii,
-        });
-      } else {
-        // NO_AUTH doesn't need any credentials
-        const auth = this.authFactory.createAuth({
-          method: McpAuthMethod.NO_AUTH,
-        });
-        integration = this.factory.createIntegration({
-          kind: McpIntegrationKind.CUSTOM,
-          orgId,
-          name: command.name,
-          serverUrl: command.serverUrl,
-          auth,
-          returnsPii: command.returnsPii,
-        });
       }
 
-      // Save integration first to get ID
-      const savedIntegration = await this.repository.save(integration);
-
-      // Validate connection (don't throw on failure)
-      await this.connectionValidationService.validateAndUpdateStatus(
-        savedIntegration,
+      const encryptedToken = await this.credentialEncryption.encrypt(
+        command.credentials,
       );
 
-      // Return the updated integration
-      return savedIntegration;
-    } catch (error) {
-      // Re-throw application errors and auth errors
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.BEARER_TOKEN,
+        authToken: encryptedToken,
+      });
+    }
+
+    if (authType === McpAuthMethod.CUSTOM_HEADER) {
+      if (!command.credentials) {
+        throw new McpValidationFailedError(
+          '',
+          command.name,
+          'Header credentials are required',
+        );
       }
 
-      // Log and wrap unexpected errors
-      this.logger.error('Unexpected error creating custom integration', {
-        error: error as Error,
+      const encryptedKey = await this.credentialEncryption.encrypt(
+        command.credentials,
+      );
+
+      return this.authFactory.createAuth({
+        method: McpAuthMethod.CUSTOM_HEADER,
+        secret: encryptedKey,
+        headerName: command.authHeaderName ?? 'X-API-Key',
       });
-      throw new UnexpectedMcpError('Unexpected error occurred');
     }
+
+    // NO_AUTH doesn't need any credentials
+    return this.authFactory.createAuth({
+      method: McpAuthMethod.NO_AUTH,
+    });
   }
 
   private isValidUrl(url: string): boolean {

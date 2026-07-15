@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';
 import { InternetSearchResult } from '../../../domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedInternetSearchError } from '../../internet-search.errors';
 
 @Injectable()
@@ -11,20 +11,10 @@ export class SearchWebUseCase {
 
   constructor(private readonly internetSearchHandler: InternetSearchHandler) {}
 
+  @HandleUnexpectedErrors(UnexpectedInternetSearchError)
   async execute(command: SearchWebCommand): Promise<InternetSearchResult[]> {
-    try {
-      this.logger.debug(`Searching web for: ${command.query}`);
+    this.logger.debug(`Searching web for: ${command.query}`);
 
-      return this.internetSearchHandler.search(command.query);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        `Unexpected error searching web for: ${command.query}`,
-        error,
-      );
-      throw new UnexpectedInternetSearchError(error as Error);
-    }
+    return this.internetSearchHandler.search(command.query);
   }
 }

@@ -1,5 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
@@ -49,7 +51,6 @@ import {
   DuplicateMarketplaceMcpIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class InstallMarketplaceIntegrationUseCase {
@@ -68,6 +69,7 @@ export class InstallMarketplaceIntegrationUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     command: InstallMarketplaceIntegrationCommand,
   ): Promise<MarketplaceMcpIntegration> {
@@ -79,102 +81,109 @@ export class InstallMarketplaceIntegrationUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    try {
-      const marketplaceIntegration =
-        await this.getMarketplaceIntegrationUseCase.execute(
-          new GetMarketplaceIntegrationQuery(command.identifier),
-        );
-
-      const existing =
-        await this.repository.findByOrgIdAndMarketplaceIdentifier(
-          orgId,
-          command.identifier,
-        );
-
-      if (existing) {
-        throw new DuplicateMarketplaceMcpIntegrationError(command.identifier);
-      }
-
-      const configSchema = this.parseConfigSchema(
-        marketplaceIntegration.configSchema,
+    const marketplaceIntegration =
+      await this.getMarketplaceIntegrationUseCase.execute(
+        new GetMarketplaceIntegrationQuery(command.identifier),
       );
 
-      if (configSchema.authType === (McpAuthMethod.OAUTH as string)) {
-        throw new McpOAuthNotSupportedError();
-      }
+    const existing = await this.repository.findByOrgIdAndMarketplaceIdentifier(
+      orgId,
+      command.identifier,
+    );
 
-      const mergedValues = this.marketplaceConfigService.mergeFixedValues(
-        command.orgConfigValues,
-        configSchema.orgFields,
-      );
+    if (existing) {
+      throw new DuplicateMarketplaceMcpIntegrationError(command.identifier);
+    }
 
-      this.marketplaceConfigService.validateRequiredFields(
+    const configSchema = this.parseConfigSchema(
+      marketplaceIntegration.configSchema,
+    );
+
+    if (configSchema.authType === (McpAuthMethod.OAUTH as string)) {
+      throw new McpOAuthNotSupportedError();
+    }
+
+    const integration = await this.buildIntegration(
+      command,
+      marketplaceIntegration,
+      configSchema,
+      orgId,
+    );
+
+    const saved = await this.repository.save(integration);
+
+    const validated =
+      await this.connectionValidationService.validateAndUpdateStatus(saved);
+
+    this.emitInstalledEvent(userId, orgId, marketplaceIntegration.identifier);
+
+    return validated as MarketplaceMcpIntegration;
+  }
+
+  private async buildIntegration(
+    command: InstallMarketplaceIntegrationCommand,
+    marketplaceIntegration: {
+      name: string;
+      serverUrl: string;
+      logoUrl?: string | null;
+    },
+    configSchema: IntegrationConfigSchema,
+    orgId: UUID,
+  ) {
+    const mergedValues = this.marketplaceConfigService.mergeFixedValues(
+      command.orgConfigValues,
+      configSchema.orgFields,
+    );
+
+    this.marketplaceConfigService.validateRequiredFields(
+      configSchema.orgFields,
+      mergedValues,
+    );
+
+    const encryptedValues =
+      await this.marketplaceConfigService.encryptSecretFields(
         configSchema.orgFields,
         mergedValues,
       );
 
-      const encryptedValues =
-        await this.marketplaceConfigService.encryptSecretFields(
-          configSchema.orgFields,
-          mergedValues,
-        );
+    const auth = this.authFactory.createAuth({
+      method: McpAuthMethod.NO_AUTH,
+    });
 
-      const auth = this.authFactory.createAuth({
-        method: McpAuthMethod.NO_AUTH,
-      });
+    return this.factory.createIntegration({
+      kind: McpIntegrationKind.MARKETPLACE,
+      orgId,
+      name: marketplaceIntegration.name,
+      serverUrl: marketplaceIntegration.serverUrl,
+      auth,
+      marketplaceIdentifier: command.identifier,
+      configSchema,
+      orgConfigValues: encryptedValues,
+      returnsPii: command.returnsPii,
+      logoUrl: marketplaceIntegration.logoUrl ?? null,
+    });
+  }
 
-      const integration = this.factory.createIntegration({
-        kind: McpIntegrationKind.MARKETPLACE,
-        orgId,
-        name: marketplaceIntegration.name,
-        serverUrl: marketplaceIntegration.serverUrl,
-        auth,
-        marketplaceIdentifier: command.identifier,
-        configSchema,
-        orgConfigValues: encryptedValues,
-        returnsPii: command.returnsPii,
-        logoUrl: marketplaceIntegration.logoUrl ?? null,
-      });
-
-      const saved = await this.repository.save(integration);
-
-      const validated =
-        await this.connectionValidationService.validateAndUpdateStatus(saved);
-
-      this.eventEmitter
-        .emitAsync(
-          MarketplaceIntegrationInstalledEvent.EVENT_NAME,
-          new MarketplaceIntegrationInstalledEvent(
-            userId,
+  private emitInstalledEvent(
+    userId: UUID,
+    orgId: UUID,
+    identifier: string,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        MarketplaceIntegrationInstalledEvent.EVENT_NAME,
+        new MarketplaceIntegrationInstalledEvent(userId, orgId, identifier),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          'Failed to emit MarketplaceIntegrationInstalledEvent',
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            identifier,
             orgId,
-            marketplaceIntegration.identifier,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error(
-            'Failed to emit MarketplaceIntegrationInstalledEvent',
-            {
-              error: err instanceof Error ? err.message : 'Unknown error',
-              identifier: marketplaceIntegration.identifier,
-              orgId,
-            },
-          );
-        });
-
-      return validated as MarketplaceMcpIntegration;
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-      this.logger.error('Unexpected error installing marketplace integration', {
-        identifier: command.identifier,
-        error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        );
       });
-      throw new UnexpectedMcpError('Unexpected error occurred');
-    }
   }
 
   private parseConfigSchema(

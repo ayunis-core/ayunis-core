@@ -242,8 +242,8 @@ describe('EnableMcpIntegrationUseCase', () => {
         UnexpectedMcpError,
       );
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error enabling integration',
-        { error: unexpectedError },
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
 

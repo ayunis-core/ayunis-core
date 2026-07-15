@@ -41,12 +41,12 @@ export class DuplicateSkillTemplateNameError extends SkillTemplateError {
 }
 
 export class UnexpectedSkillTemplateError extends SkillTemplateError {
-  constructor(error: unknown) {
+  constructor(error: Error, metadata?: ErrorMetadata) {
     super(
-      'Unexpected error occurred',
+      error.message,
       SkillTemplateErrorCode.UNEXPECTED_SKILL_TEMPLATE_ERROR,
       500,
-      { error },
+      { ...metadata, error },
     );
   }
 }

@@ -1,10 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { StorageObject } from '../../../domain/storage-object.entity';
 import { GetObjectInfoCommand } from './get-object-info.command';
 import storageConfig from '../../../../../config/storage.config';
-import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
+import {
+  DownloadFailedError,
+  ObjectNotFoundError,
+  UnexpectedStorageError,
+} from '../../storage.errors';
 import { StorageUrl } from '../../../domain/storage-url.entity';
 
 @Injectable()
@@ -17,6 +22,7 @@ export class GetObjectInfoUseCase {
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedStorageError)
   async execute(command: GetObjectInfoCommand): Promise<StorageObject> {
     this.logger.debug(`Getting info for object: ${command.objectName}`, {
       bucket: command.bucket,

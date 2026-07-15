@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetMonthlyCreditUsageForTeamQuery } from './get-monthly-credit-usage-for-team.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.query';
@@ -19,6 +19,7 @@ export class GetMonthlyCreditUsageForTeamUseCase {
     private readonly findAllUserIdsByTeamIdUseCase: FindAllUserIdsByTeamIdUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(
     query: GetMonthlyCreditUsageForTeamQuery,
   ): Promise<{ creditsUsed: number }> {
@@ -29,25 +30,17 @@ export class GetMonthlyCreditUsageForTeamUseCase {
       effectiveStart: effectiveStart.toISOString(),
     });
 
-    try {
-      const memberIds = await this.findAllUserIdsByTeamIdUseCase.execute(
-        new FindAllUserIdsByTeamIdQuery(query.teamId),
+    const memberIds = await this.findAllUserIdsByTeamIdUseCase.execute(
+      new FindAllUserIdsByTeamIdQuery(query.teamId),
+    );
+
+    const creditsUsed =
+      await this.usageRepository.getTotalMonthlyCreditUsageForUsers(
+        query.organizationId,
+        memberIds,
+        effectiveStart,
       );
 
-      const creditsUsed =
-        await this.usageRepository.getTotalMonthlyCreditUsageForUsers(
-          query.organizationId,
-          memberIds,
-          effectiveStart,
-        );
-
-      return { creditsUsed };
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit usage for team', error);
-      throw new UnexpectedUsageError(error as Error, {
-        teamId: query.teamId,
-      });
-    }
+    return { creditsUsed };
   }
 }

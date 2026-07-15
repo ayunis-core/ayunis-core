@@ -31,12 +31,10 @@ export class DuplicateCategoryError extends ApplicationError {
 }
 
 export class UnexpectedAnonymizationSettingsError extends ApplicationError {
-  constructor(operation: string, metadata?: ErrorMetadata) {
-    super(
-      `Unexpected anonymization settings error during ${operation}`,
-      AnonymizationSettingsErrorCode.UNEXPECTED_ERROR,
-      500,
-      { operation, ...metadata },
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, AnonymizationSettingsErrorCode.UNEXPECTED_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

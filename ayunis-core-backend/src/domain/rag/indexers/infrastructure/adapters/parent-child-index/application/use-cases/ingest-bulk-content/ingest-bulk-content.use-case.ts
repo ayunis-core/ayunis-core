@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
 import { ParentChunk } from '../../../domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
@@ -37,6 +39,7 @@ export class IngestBulkContentUseCase {
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedIndexError)
   async execute(command: IngestBulkContentCommand): Promise<void> {
     if (command.entries.length === 0) return;
 

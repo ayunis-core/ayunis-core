@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { MarketplaceClient } from '../../ports/marketplace-client.port';
 import { GetMarketplaceSkillQuery } from './get-marketplace-skill.query';
 import { SkillResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
@@ -6,6 +7,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import {
   MarketplaceSkillNotFoundError,
   MarketplaceUnavailableError,
+  UnexpectedMarketplaceError,
 } from '../../marketplace.errors';
 
 @Injectable()
@@ -14,6 +16,7 @@ export class GetMarketplaceSkillUseCase {
 
   constructor(private readonly marketplaceClient: MarketplaceClient) {}
 
+  @HandleUnexpectedErrors(UnexpectedMarketplaceError)
   async execute(query: GetMarketplaceSkillQuery): Promise<SkillResponseDto> {
     this.logger.log('execute', { identifier: query.identifier });
 

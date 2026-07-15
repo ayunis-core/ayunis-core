@@ -1,8 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
 import { Skill } from '../../../domain/skill.entity';
-import { SkillNameResolutionError } from '../../skills.errors';
+import {
+  SkillNameResolutionError,
+  UnexpectedSkillError,
+} from '../../skills.errors';
 import type { UUID } from 'crypto';
 
 const MAX_NAME_RESOLUTION_ATTEMPTS = 100;
@@ -16,6 +20,7 @@ export class CreateSkillWithUniqueNameUseCase {
     private readonly skillRepository: SkillRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: CreateSkillWithUniqueNameCommand): Promise<Skill> {
     this.logger.log('Creating skill with unique name resolution', {
       baseName: command.name,

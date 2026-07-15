@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
@@ -22,32 +22,19 @@ export class AnonymizeTextForOrgUseCase {
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedAnonymizationSettingsError)
   async execute(
     command: AnonymizeTextForOrgCommand,
   ): Promise<AnonymizationResult> {
     this.logger.debug('Anonymizing text for org', { orgId: command.orgId });
 
-    try {
-      const entries = await this.repository.findByOrgId(command.orgId);
-      const whitelist = entries.map(
-        (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
-      );
+    const entries = await this.repository.findByOrgId(command.orgId);
+    const whitelist = entries.map(
+      (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
+    );
 
-      return await this.anonymizeTextUseCase.execute(
-        new AnonymizeTextCommand(command.text, undefined, whitelist),
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to anonymize text for org', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
-
-      throw new UnexpectedAnonymizationSettingsError('anonymize', {
-        orgId: command.orgId,
-        ...(error instanceof Error && { originalError: error.message }),
-      });
-    }
+    return this.anonymizeTextUseCase.execute(
+      new AnonymizeTextCommand(command.text, undefined, whitelist),
+    );
   }
 }

@@ -25,8 +25,9 @@ export class OpenAIModelNotFoundError extends ApplicationError {
 }
 
 export class OpenAIUnexpectedError extends ApplicationError {
-  constructor(error: unknown) {
-    super('Unexpected error occurred', OpenAICompatErrorCode.UNEXPECTED, 500, {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, OpenAICompatErrorCode.UNEXPECTED, 500, {
+      ...metadata,
       error,
     });
   }

@@ -1,7 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { PreflightCheckCommand } from './preflight-check.command';
-import { DocumentTooLargeForChatError } from '../../file-retriever.errors';
+import {
+  DocumentTooLargeForChatError,
+  FileRetrieverUnexpectedError,
+} from '../../file-retriever.errors';
 import { detectFileType } from 'src/common/util/file-type';
 import retrievalConfig from 'src/config/retrieval.config';
 import PdfParse from 'pdf-parse';
@@ -15,6 +19,7 @@ export class PreflightCheckUseCase {
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(FileRetrieverUnexpectedError)
   async execute(command: PreflightCheckCommand): Promise<void> {
     const fileType = detectFileType(command.fileType, command.fileName);
 

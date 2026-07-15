@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetMonthlyCreditUsageForUsersQuery } from './get-monthly-credit-usage-for-users.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
 import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
 
 @Injectable()
@@ -14,6 +14,7 @@ export class GetMonthlyCreditUsageForUsersUseCase {
 
   constructor(private readonly usageRepository: UsageRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedUsageError)
   async execute(
     query: GetMonthlyCreditUsageForUsersQuery,
   ): Promise<Map<UUID, number>> {
@@ -24,18 +25,10 @@ export class GetMonthlyCreditUsageForUsersUseCase {
       effectiveStart: effectiveStart.toISOString(),
     });
 
-    try {
-      return await this.usageRepository.getMonthlyCreditUsagePerUser(
-        query.organizationId,
-        query.userIds,
-        effectiveStart,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit usage for users', error);
-      throw new UnexpectedUsageError(error as Error, {
-        userCount: query.userIds.length,
-      });
-    }
+    return await this.usageRepository.getMonthlyCreditUsagePerUser(
+      query.organizationId,
+      query.userIds,
+      effectiveStart,
+    );
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillCommand } from './create-skill.command';
 import { Skill } from '../../../domain/skill.entity';
@@ -6,9 +7,9 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   DuplicateSkillNameError,
+  SkillInvalidInputError,
   UnexpectedSkillError,
 } from '../../skills.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { InvalidSkillNameError } from '../../../domain/skill.entity';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class CreateSkillUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: CreateSkillCommand): Promise<Skill> {
     this.logger.log('Creating skill', { name: command.name });
     try {
@@ -52,13 +54,12 @@ export class CreateSkillUseCase {
 
       return created;
     } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof InvalidSkillNameError
-      )
-        throw error;
-      this.logger.error('Error creating skill', { error: error as Error });
-      throw new UnexpectedSkillError(error);
+      // InvalidSkillNameError is a plain Error; translate it so the decorator
+      // does not wrap it into a 500.
+      if (error instanceof InvalidSkillNameError) {
+        throw new SkillInvalidInputError(error.message);
+      }
+      throw error;
     }
   }
 }

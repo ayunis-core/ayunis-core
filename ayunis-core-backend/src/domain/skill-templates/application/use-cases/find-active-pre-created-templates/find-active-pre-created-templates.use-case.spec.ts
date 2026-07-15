@@ -4,6 +4,7 @@ import type { SkillTemplateRepository } from '../../ports/skill-template.reposit
 import type { SkillTemplate } from '../../../domain/skill-template.entity';
 import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
 import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
 import { randomUUID } from 'crypto';
 
 describe('FindActivePreCreatedTemplatesUseCase', () => {
@@ -63,6 +64,6 @@ describe('FindActivePreCreatedTemplatesUseCase', () => {
 
     await expect(
       useCase.execute(new FindActivePreCreatedTemplatesQuery()),
-    ).rejects.toThrow('Unexpected error occurred');
+    ).rejects.toThrow(UnexpectedSkillTemplateError);
   });
 });

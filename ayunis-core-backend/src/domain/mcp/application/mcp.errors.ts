@@ -86,8 +86,11 @@ export class McpIntegrationAccessDeniedError extends McpError {
 }
 
 export class UnexpectedMcpError extends McpError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, McpErrorCode.UNEXPECTED_MCP_ERROR, 500, metadata);
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, McpErrorCode.UNEXPECTED_MCP_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }
 

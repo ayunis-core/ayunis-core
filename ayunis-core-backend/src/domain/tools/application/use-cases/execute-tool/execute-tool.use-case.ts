@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ToolHandlerRegistry } from '../../tool-handler.registry';
-import { ToolExecutionFailedError } from '../../tools.errors';
+import {
+  ToolExecutionFailedError,
+  UnexpectedToolError,
+} from '../../tools.errors';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 
@@ -10,6 +14,7 @@ export class ExecuteToolUseCase {
 
   constructor(private readonly toolHandlerRegistry: ToolHandlerRegistry) {}
 
+  @HandleUnexpectedErrors(UnexpectedToolError)
   async execute(command: ExecuteToolCommand): Promise<string> {
     this.logger.log('execute', {
       toolName: command.tool.name,
