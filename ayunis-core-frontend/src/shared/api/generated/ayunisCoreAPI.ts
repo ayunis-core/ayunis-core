@@ -17935,6 +17935,101 @@ export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<t
 
 
 /**
+ * Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.
+ * @summary Download the academy completion certificate
+ */
+export const academyCertificateControllerGetCertificate = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<Blob>(
+      {url: `/academy/certificate`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyCertificateControllerGetCertificateQueryKey = () => {
+    return [
+    `/academy/certificate`
+    ] as const;
+    }
+
+    
+export const getAcademyCertificateControllerGetCertificateQueryOptions = <TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyCertificateControllerGetCertificateQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>> = ({ signal }) => academyCertificateControllerGetCertificate(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyCertificateControllerGetCertificateQueryResult = NonNullable<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>>
+export type AcademyCertificateControllerGetCertificateQueryError = void
+
+
+export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>,
+          TError,
+          Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the academy completion certificate
+ */
+
+export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyCertificateControllerGetCertificateQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.
  * @summary Get all academy chapters with their modules
  */

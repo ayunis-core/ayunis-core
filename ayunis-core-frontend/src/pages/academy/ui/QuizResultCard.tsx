@@ -1,5 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, RotateCcw, Trophy, XCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  Download,
+  RotateCcw,
+  Trophy,
+  XCircle,
+} from 'lucide-react';
+import { useDownloadCertificate } from '@/features/academy';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
   Card,
@@ -22,6 +29,7 @@ export default function QuizResultCard({
   onBackToAcademy,
 }: Readonly<QuizResultCardProps>) {
   const { t } = useTranslation('academy');
+  const { downloadCertificate, isDownloading } = useDownloadCertificate();
 
   return (
     <Card className="mx-auto max-w-[600px]">
@@ -57,8 +65,22 @@ export default function QuizResultCard({
           </div>
         )}
         <div className="flex flex-wrap gap-3">
+          {result.academyCompleted && (
+            <Button
+              onClick={() => void downloadCertificate()}
+              disabled={isDownloading}
+            >
+              <Download className="h-4 w-4" />
+              {t('quiz.completed.downloadCertificate')}
+            </Button>
+          )}
           {result.passed ? (
-            <Button onClick={onBackToAcademy}>{t('quiz.backToAcademy')}</Button>
+            <Button
+              variant={result.academyCompleted ? 'outline' : 'default'}
+              onClick={onBackToAcademy}
+            >
+              {t('quiz.backToAcademy')}
+            </Button>
           ) : (
             <Button onClick={onRetry}>
               <RotateCcw className="h-4 w-4" />

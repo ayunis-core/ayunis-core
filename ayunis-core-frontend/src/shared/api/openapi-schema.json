@@ -8647,6 +8647,37 @@
         "tags": ["Academy"]
       }
     },
+    "/academy/certificate": {
+      "get": {
+        "description": "Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.",
+        "operationId": "AcademyCertificateController_getCertificate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The certificate PDF",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or academy add-on not active"
+          },
+          "404": {
+            "description": "The academy has not been completed"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Download the academy completion certificate",
+        "tags": ["Academy"]
+      }
+    },
     "/super-admin/academy/chapters": {
       "get": {
         "description": "Retrieve all chapters with nested modules, ordered by position. Only accessible to super admins.",
