@@ -9,15 +9,21 @@ import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
-import { DiagramArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  Artifact,
+  DiagramArtifact,
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
 
 /**
- * Assembles artifact-related always-on tools (document + diagram) for a
- * thread. Lives outside ToolAssemblyService to keep that file under the
- * 500-line cap and to keep artifact-specific logic in one place.
+ * Assembles artifact-related always-on tools (document + diagram +
+ * spreadsheet) for a thread. Lives outside ToolAssemblyService to keep that
+ * file under the 500-line cap and to keep artifact-specific logic in one
+ * place.
  */
 @Injectable()
 export class ArtifactToolAssemblerService {
@@ -30,45 +36,61 @@ export class ArtifactToolAssemblerService {
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
   ) {}
 
-  async assembleDocumentAndDiagramTools(thread: Thread): Promise<Tool[]> {
+  async assembleArtifactTools(thread: Thread): Promise<Tool[]> {
     const letterheads = await this.fetchLetterheadsSafe();
     const letterheadSuffix = buildLetterheadSuffix(letterheads);
-
-    const tools: Tool[] = [];
-
-    const createDocTool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: ToolType.CREATE_DOCUMENT }),
-    );
-    if (letterheadSuffix) {
-      createDocTool.descriptionLong = `${createDocTool.descriptionLong ?? createDocTool.description}${letterheadSuffix}`;
-    }
-    tools.push(createDocTool);
-
-    tools.push(
-      ...(await this.assembleDocumentEditTools(thread, letterheadSuffix)),
-    );
-
-    tools.push(
-      await this.assembleToolsUseCase.execute(
-        new AssembleToolCommand({ type: ToolType.CREATE_DIAGRAM }),
-      ),
-    );
-
-    tools.push(...(await this.assembleDiagramEditTools(thread)));
-
-    return tools;
-  }
-
-  private async assembleDocumentEditTools(
-    thread: Thread,
-    letterheadSuffix: string,
-  ): Promise<Tool[]> {
     const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
       new FindArtifactsByThreadQuery({ threadId: thread.id }),
     );
 
+    return [
+      await this.assembleCreateDocumentTool(letterheadSuffix),
+      ...(await this.assembleDocumentEditTools(
+        threadArtifacts,
+        letterheadSuffix,
+      )),
+      await this.assembleCreateTool(ToolType.CREATE_DIAGRAM),
+      ...(await this.assembleUpdateToolForType(
+        threadArtifacts.filter((a) => a instanceof DiagramArtifact),
+        ToolType.UPDATE_DIAGRAM,
+        'diagrams',
+        (a) => `- ${a.id}: "${a.title}"`,
+      )),
+      await this.assembleCreateTool(ToolType.CREATE_SPREADSHEET),
+      ...(await this.assembleUpdateToolForType(
+        threadArtifacts.filter((a) => a instanceof SpreadsheetArtifact),
+        ToolType.UPDATE_SPREADSHEET,
+        'spreadsheets',
+        (a) =>
+          `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})`,
+      )),
+    ];
+  }
+
+  private async assembleCreateTool(type: ToolType): Promise<Tool> {
+    return this.assembleToolsUseCase.execute(new AssembleToolCommand({ type }));
+  }
+
+  private async assembleCreateDocumentTool(
+    letterheadSuffix: string,
+  ): Promise<Tool> {
+    const tool = await this.assembleCreateTool(ToolType.CREATE_DOCUMENT);
+    if (letterheadSuffix) {
+      tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${letterheadSuffix}`;
+    }
+    return tool;
+  }
+
+  private async assembleDocumentEditTools(
+    threadArtifacts: Artifact[],
+    letterheadSuffix: string,
+  ): Promise<Tool[]> {
+    const documents = threadArtifacts.filter(
+      (a) => a instanceof DocumentArtifact,
+    );
+
     const artifactLines: string[] = [];
-    for (const a of threadArtifacts) {
+    for (const a of documents) {
       const full = await this.findArtifactWithVersionsUseCase.execute(
         new FindArtifactWithVersionsQuery({ artifactId: a.id }),
       );
@@ -109,23 +131,22 @@ export class ArtifactToolAssemblerService {
     return tools;
   }
 
-  private async assembleDiagramEditTools(thread: Thread): Promise<Tool[]> {
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
-
-    const diagrams = threadArtifacts.filter(
-      (a) => a instanceof DiagramArtifact,
-    );
-    if (diagrams.length === 0) {
+  private async assembleUpdateToolForType(
+    artifacts: Artifact[],
+    toolType: ToolType,
+    label: string,
+    formatLine: (artifact: Artifact) => string,
+  ): Promise<Tool[]> {
+    if (artifacts.length === 0) {
       return [];
     }
 
-    const artifactLines = diagrams.map((a) => `- ${a.id}: "${a.title}"`);
-    const suffix = `\n\nAvailable diagrams in this conversation:\n${artifactLines.join('\n')}`;
+    const suffix = `\n\nAvailable ${label} in this conversation:\n${artifacts
+      .map(formatLine)
+      .join('\n')}`;
 
     const tool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: ToolType.UPDATE_DIAGRAM }),
+      new AssembleToolCommand({ type: toolType }),
     );
     tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
     return [tool];
