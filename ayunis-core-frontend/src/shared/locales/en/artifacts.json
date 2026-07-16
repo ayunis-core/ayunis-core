@@ -38,6 +38,33 @@
     "revertTo": "Revert to v{{version}}",
     "revert": "Revert"
   },
+  "spreadsheet": {
+    "empty": "This spreadsheet has no columns yet. Add a column to get started.",
+    "invalidContent": "This spreadsheet's content could not be read. Saving will overwrite it.",
+    "viewingHistory": "Viewing version {{version}} (read-only). Select the current version to continue editing.",
+    "unsavedChanges": {
+      "title": "Unsaved changes",
+      "description": "This spreadsheet has unsaved changes. Save them before closing?",
+      "saveAndClose": "Save & close",
+      "keepEditing": "Keep editing"
+    },
+    "toolbar": {
+      "addColumn": "Add column",
+      "columns": "Columns",
+      "newColumnLabel": "Column {{number}}",
+      "renameColumn": "Rename column {{number}}",
+      "deleteColumn": "Delete column",
+      "deleteColumnTitle": "Delete column?",
+      "deleteColumnDescription": "The column “{{label}}” contains data that will be lost.",
+      "deleteColumnConfirm": "Delete",
+      "deleteColumnCancel": "Cancel",
+      "noColumns": "No columns"
+    },
+    "export": {
+      "xlsx": "Excel",
+      "csv": "CSV"
+    }
+  },
   "diagram": {
     "export": {
       "svg": "SVG",
