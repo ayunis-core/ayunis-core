@@ -1,8 +1,9 @@
-import type { JsonSchema, MutableSchema } from '@ayunis/inference';
+import type { JsonSchema, JsonValue, MutableSchema } from '@ayunis/inference';
 import {
   CombinatorFlattener,
   SchemaWalker,
   convertDraft04ExclusiveBoundsNode,
+  isRecord,
 } from '@ayunis/inference';
 
 // Hand-maintained — the SDK doesn't type them.
@@ -44,12 +45,76 @@ function normalizeObjectType(schema: MutableSchema): void {
   // Strict mode requires additionalProperties:false on every object — force it
   // even when the source schema set it to `true`, which OpenAI rejects.
   schema.additionalProperties = false;
-  if (schema.properties && typeof schema.properties === 'object') {
+  if (isRecord(schema.properties)) {
+    schema.properties = withNullableOptionals(
+      schema.properties,
+      schema.required,
+    );
     schema.required = Object.keys(schema.properties);
   } else {
     schema.properties = {};
     schema.required = [];
   }
+}
+
+// Strict mode also forces every property into `required`. Originally-optional
+// properties get a null escape hatch instead (OpenAI's documented optionality
+// pattern) — otherwise the model must fabricate a value for fields the user
+// never asked about.
+function withNullableOptionals(
+  properties: MutableSchema,
+  required: JsonValue | undefined,
+): MutableSchema {
+  const originallyRequired = new Set(Array.isArray(required) ? required : []);
+  return Object.fromEntries(
+    Object.entries(properties).map(([key, child]) => [
+      key,
+      isRecord(child) && !originallyRequired.has(key)
+        ? withNullAllowed(child)
+        : child,
+    ]),
+  );
+}
+
+function withNullAllowed(child: MutableSchema): MutableSchema {
+  if (allowsNull(child)) {
+    return child;
+  }
+  const copy = { ...child };
+  let changed = false;
+  if (typeof copy.type === 'string') {
+    copy.type = [copy.type, 'null'];
+    changed = true;
+  } else if (Array.isArray(copy.type)) {
+    copy.type = [...copy.type, 'null'];
+    changed = true;
+  }
+  if (Array.isArray(copy.enum)) {
+    copy.enum = [...copy.enum, null];
+    changed = true;
+  }
+  if (!changed && Array.isArray(copy.anyOf)) {
+    copy.anyOf = [...copy.anyOf, { type: 'null' }];
+    changed = true;
+  }
+  return changed ? copy : child;
+}
+
+function allowsNull(schema: MutableSchema): boolean {
+  if (schema.type === 'null') {
+    return true;
+  }
+  if (Array.isArray(schema.type) && schema.type.includes('null')) {
+    return true;
+  }
+  if (Array.isArray(schema.enum) && schema.enum.includes(null)) {
+    return true;
+  }
+  const branches = schema.anyOf;
+  return (
+    Array.isArray(branches) &&
+    branches.some((b) => isRecord(b) && allowsNull(b))
+  );
 }
 
 export function normalizeSchemaForOpenAI(schema: JsonSchema): JsonSchema {

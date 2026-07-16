@@ -220,6 +220,37 @@ describe('ExecuteToolUseCase', () => {
       });
     });
 
+    it('strips schema-disallowed null params before invoking the handler', async () => {
+      // Arrange — strict-mode providers emit explicit nulls for optional
+      // fields the model wants to omit; those must not reach the handler.
+      const mockTool = new MockTool('search_customers', {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          customfieldChurnDate: { type: 'string', format: 'date' },
+          note: { type: ['string', 'null'] },
+        },
+      });
+      const input = {
+        name: 'Stadt Ladenburg',
+        customfieldChurnDate: null,
+        note: null,
+      };
+      const command = new ExecuteToolCommand(mockTool, input, mockContext);
+
+      mockHandler.execute.mockResolvedValue('result');
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert — the disallowed null is dropped, the schema-allowed one kept
+      expect(mockHandler.execute).toHaveBeenCalledWith({
+        tool: mockTool,
+        input: { name: 'Stadt Ladenburg', note: null },
+        context: mockContext,
+      });
+    });
+
     it('should handle complex parameter validation', async () => {
       // Arrange
       const mockTool = new MockTool('Test Tool', {
