@@ -2,9 +2,11 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ArtifactsController } from './presenters/http/artifacts.controller';
 import { ArtifactsRepository } from './application/ports/artifacts-repository.port';
 import { DocumentExportPort } from './application/ports/document-export.port';
+import { SpreadsheetExportPort } from './application/ports/spreadsheet-export.port';
 import { LocalArtifactsRepositoryModule } from './infrastructure/persistence/local/local-artifacts-repository.module';
 import { LocalArtifactsRepository } from './infrastructure/persistence/local/local-artifacts.repository';
 import { HtmlDocumentExportService } from './infrastructure/export/html-document-export.service';
+import { XlsxSpreadsheetExportService } from './infrastructure/export/xlsx-spreadsheet-export.service';
 import { PdfLetterheadCompositor } from './infrastructure/export/pdf-letterhead-compositor';
 import { ArtifactDtoMapper } from './presenters/http/mappers/artifact-dto.mapper';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
@@ -38,6 +40,10 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
     {
       provide: DocumentExportPort,
       useClass: HtmlDocumentExportService,
+    },
+    {
+      provide: SpreadsheetExportPort,
+      useClass: XlsxSpreadsheetExportService,
     },
     // Use cases
     CreateArtifactUseCase,

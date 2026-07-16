@@ -8,8 +8,16 @@ import { ExportArtifactUseCase } from './export-artifact.use-case';
 import { ExportArtifactCommand } from './export-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { DocumentExportPort } from '../../ports/document-export.port';
-import { ArtifactNotFoundError } from '../../artifacts.errors';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
+import { SpreadsheetExportPort } from '../../ports/spreadsheet-export.port';
+import {
+  ArtifactNotFoundError,
+  ArtifactNotExportableError,
+} from '../../artifacts.errors';
+import {
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from '../../../domain/artifact.entity';
+import { SPREADSHEET_CONTENT_FORMAT } from '../../helpers/spreadsheet-content';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -33,6 +41,7 @@ describe('ExportArtifactUseCase', () => {
   let useCase: ExportArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let documentExportPort: jest.Mocked<DocumentExportPort>;
+  let spreadsheetExportPort: jest.Mocked<SpreadsheetExportPort>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let downloadObjectUseCase: jest.Mocked<DownloadObjectUseCase>;
   let getThreadPiiMasksUseCase: jest.Mocked<GetThreadPiiMasksUseCase>;
@@ -57,6 +66,11 @@ describe('ExportArtifactUseCase', () => {
     const mockExportPort = {
       exportToDocx: jest.fn(),
       exportToPdf: jest.fn(),
+    };
+
+    const mockSpreadsheetExportPort = {
+      exportToXlsx: jest.fn(),
+      exportToCsv: jest.fn(),
     };
 
     const mockContextService = {
@@ -84,6 +98,7 @@ describe('ExportArtifactUseCase', () => {
         ExportArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: DocumentExportPort, useValue: mockExportPort },
+        { provide: SpreadsheetExportPort, useValue: mockSpreadsheetExportPort },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: mockFindLetterhead },
         { provide: DownloadObjectUseCase, useValue: mockDownloadObject },
@@ -94,6 +109,7 @@ describe('ExportArtifactUseCase', () => {
     useCase = module.get<ExportArtifactUseCase>(ExportArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
     documentExportPort = module.get(DocumentExportPort);
+    spreadsheetExportPort = module.get(SpreadsheetExportPort);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
     downloadObjectUseCase = module.get(DownloadObjectUseCase);
     getThreadPiiMasksUseCase = module.get(GetThreadPiiMasksUseCase);
@@ -383,6 +399,7 @@ describe('ExportArtifactUseCase', () => {
         ExportArtifactUseCase,
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: DocumentExportPort, useValue: documentExportPort },
+        { provide: SpreadsheetExportPort, useValue: spreadsheetExportPort },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: findLetterheadUseCase },
         { provide: DownloadObjectUseCase, useValue: downloadObjectUseCase },
@@ -505,5 +522,155 @@ describe('ExportArtifactUseCase', () => {
         continuationPagePdf: undefined,
       }),
     );
+  });
+
+  describe('spreadsheet export', () => {
+    function createSpreadsheetArtifact(content?: string): SpreadsheetArtifact {
+      return new SpreadsheetArtifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Budget 2026',
+        currentVersionNumber: 1,
+        versions: [
+          new ArtifactVersion({
+            artifactId: mockArtifactId,
+            versionNumber: 1,
+            content:
+              content ??
+              JSON.stringify({
+                format: SPREADSHEET_CONTENT_FORMAT,
+                columns: ['Item', 'Amount'],
+                rows: [['Rent', 1200]],
+              }),
+            authorType: AuthorType.ASSISTANT,
+          }),
+        ],
+      });
+    }
+
+    it('should export a spreadsheet as XLSX with parsed data and correct mime type', async () => {
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createSpreadsheetArtifact(),
+      );
+      spreadsheetExportPort.exportToXlsx.mockResolvedValue(
+        Buffer.from('xlsx-content'),
+      );
+
+      const result = await useCase.execute(
+        new ExportArtifactCommand({
+          artifactId: mockArtifactId,
+          format: 'xlsx',
+        }),
+      );
+
+      expect(spreadsheetExportPort.exportToXlsx).toHaveBeenCalledWith(
+        expect.objectContaining({
+          columns: ['Item', 'Amount'],
+          rows: [['Rent', 1200]],
+        }),
+      );
+      expect(result.fileName).toBe('Budget 2026.xlsx');
+      expect(result.mimeType).toBe(
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    });
+
+    it('should export a spreadsheet as CSV with correct mime type', async () => {
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createSpreadsheetArtifact(),
+      );
+      spreadsheetExportPort.exportToCsv.mockResolvedValue(
+        'Item,Amount\nRent,1200',
+      );
+
+      const result = await useCase.execute(
+        new ExportArtifactCommand({
+          artifactId: mockArtifactId,
+          format: 'csv',
+        }),
+      );
+
+      expect(result.fileName).toBe('Budget 2026.csv');
+      expect(result.mimeType).toBe('text/csv');
+      expect(result.buffer.toString('utf8')).toBe('Item,Amount\nRent,1200');
+    });
+
+    it('should reject xlsx export of a document artifact', async () => {
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createArtifact(),
+      );
+
+      await expect(
+        useCase.execute(
+          new ExportArtifactCommand({
+            artifactId: mockArtifactId,
+            format: 'xlsx',
+          }),
+        ),
+      ).rejects.toThrow(ArtifactNotExportableError);
+      expect(spreadsheetExportPort.exportToXlsx).not.toHaveBeenCalled();
+    });
+
+    it('should reject pdf export of a spreadsheet artifact', async () => {
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createSpreadsheetArtifact(),
+      );
+
+      await expect(
+        useCase.execute(
+          new ExportArtifactCommand({
+            artifactId: mockArtifactId,
+            format: 'pdf',
+          }),
+        ),
+      ).rejects.toThrow(ArtifactNotExportableError);
+      expect(documentExportPort.exportToPdf).not.toHaveBeenCalled();
+    });
+
+    it('should de-anonymize PII per cell, preserving numbers and JSON validity for quote-containing values', async () => {
+      const content = JSON.stringify({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Kontakt {{pii:PERSON_NAME_1}}', 'Betrag'],
+        rows: [
+          ['{{pii:PERSON_NAME_1}}', 1200],
+          ['{{pii:EMAIL_ADDRESS_1}}', null],
+        ],
+      });
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createSpreadsheetArtifact(content),
+      );
+      spreadsheetExportPort.exportToXlsx.mockResolvedValue(Buffer.from('x'));
+      getThreadPiiMasksUseCase.execute.mockResolvedValue([
+        new ThreadPiiMask({
+          threadId: mockThreadId,
+          category: PiiCategory.PERSON_NAME,
+          maskIndex: 1,
+          value: 'Mustermann, "Max"',
+        }),
+        new ThreadPiiMask({
+          threadId: mockThreadId,
+          category: PiiCategory.EMAIL_ADDRESS,
+          maskIndex: 1,
+          value: 'max@example.de',
+        }),
+      ]);
+
+      await useCase.execute(
+        new ExportArtifactCommand({
+          artifactId: mockArtifactId,
+          format: 'xlsx',
+        }),
+      );
+
+      expect(spreadsheetExportPort.exportToXlsx).toHaveBeenCalledWith({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Kontakt Mustermann, "Max"', 'Betrag'],
+        rows: [
+          ['Mustermann, "Max"', 1200],
+          ['max@example.de', null],
+        ],
+      });
+    });
   });
 });
