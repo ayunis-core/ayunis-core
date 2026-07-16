@@ -474,6 +474,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.11
         version: 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@revolist/react-datagrid':
+        specifier: ^4.23.22
+        version: 4.25.0
       '@tailwindcss/typography':
         specifier: ^0.5.20
         version: 0.5.20(tailwindcss@4.3.2)
@@ -4445,6 +4448,12 @@ packages:
 
   '@radix-ui/rect@1.1.2':
     resolution: {integrity: sha512-xnXE7wG13PI+cxieVssYXlQJuYVRhH9NBoxt3KNwzghDIA69GMm7d4wXRouHIYjE+KvS6U/MsMO73NdS2MH9ZA==}
+
+  '@revolist/react-datagrid@4.25.0':
+    resolution: {integrity: sha512-7iim5q085b2rRMdp+eIOkdU/UmkFocYEFlLgn3E0DAj3yIEnMaSkWU100jhj3QRyuHpS8rPniXdFJz0Bbr7CHg==}
+
+  '@revolist/revogrid@4.25.0':
+    resolution: {integrity: sha512-qxl9OAYVIv7Iwc1hFMdIDdYB4FS7JzAuhyjNmgGgkPreDIHJurX7R/ip+gsE5SAT7qHirNUTl3c9LlNU8j2wzg==}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -16678,6 +16687,12 @@ snapshots:
       '@types/react-dom': 19.2.3(@types/react@19.2.17)
 
   '@radix-ui/rect@1.1.2': {}
+
+  '@revolist/react-datagrid@4.25.0':
+    dependencies:
+      '@revolist/revogrid': 4.25.0
+
+  '@revolist/revogrid@4.25.0': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 

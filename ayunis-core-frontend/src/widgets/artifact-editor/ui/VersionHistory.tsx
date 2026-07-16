@@ -1,7 +1,7 @@
 import type { ArtifactVersionResponseDto } from '@/shared/api';
 import { Button } from '@/shared/ui/shadcn/button';
 import { ChevronDown, ChevronRight, History, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/shared/lib/shadcn/utils';
 
@@ -14,11 +14,18 @@ interface VersionHistoryProps {
    */
   readonly onRevert?: (versionNumber: number) => void;
   /**
-   * When provided, each row is clickable and calls this with the selected
-   * version number (used by the diagram viewer for navigation). The row
-   * matching `currentVersionNumber` is highlighted.
+   * When provided, each version's details are clickable and call this with the
+   * selected version number (used by the diagram viewer for navigation). The
+   * row matching `selectedVersionNumber` (falling back to
+   * `currentVersionNumber`) is highlighted.
    */
   readonly onSelect?: (versionNumber: number) => void;
+  /**
+   * The version currently displayed when it can differ from the artifact's
+   * current version (history browsing). Only affects the row highlight; the
+   * "(current)" label and Revert visibility follow `currentVersionNumber`.
+   */
+  readonly selectedVersionNumber?: number;
 }
 
 function formatTimestamp(iso: string): string {
@@ -34,14 +41,16 @@ function formatTimestamp(iso: string): string {
 export function VersionHistory({
   versions,
   currentVersionNumber,
+  selectedVersionNumber,
   onRevert,
   onSelect,
 }: VersionHistoryProps) {
   const { t } = useTranslation('artifacts');
   const [isOpen, setIsOpen] = useState(false);
 
-  const sortedVersions = [...versions].sort(
-    (a, b) => b.versionNumber - a.versionNumber,
+  const sortedVersions = useMemo(
+    () => [...versions].sort((a, b) => b.versionNumber - a.versionNumber),
+    [versions],
   );
 
   return (
@@ -64,63 +73,59 @@ export function VersionHistory({
         <div className="max-h-48 overflow-y-auto px-3 pb-2">
           {sortedVersions.map((version) => {
             const isCurrent = version.versionNumber === currentVersionNumber;
-            const rowBody = (
-              <>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium">
-                    v{version.versionNumber}
-                    {isCurrent && (
-                      <span className="text-muted-foreground ml-1">
-                        {t('versionHistory.current')}
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {version.authorType} · {formatTimestamp(version.createdAt)}
-                  </span>
-                </div>
-                {onRevert && !isCurrent && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRevert(version.versionNumber);
-                    }}
-                    title={t('versionHistory.revertTo', {
-                      version: version.versionNumber,
-                    })}
-                  >
-                    <RotateCcw className="mr-1 size-3" />
-                    {t('versionHistory.revert')}
-                  </Button>
-                )}
-              </>
-            );
-
-            if (onSelect) {
-              return (
-                <button
-                  key={version.id}
-                  type="button"
-                  className={cn(
-                    'hover:bg-muted flex w-full items-center justify-between rounded px-2 py-1.5 text-sm',
-                    isCurrent && 'bg-muted',
+            const isSelected =
+              version.versionNumber ===
+              (selectedVersionNumber ?? currentVersionNumber);
+            const versionDetails = (
+              <span className="flex min-w-0 flex-1 flex-col items-start">
+                <span className="text-sm font-medium">
+                  v{version.versionNumber}
+                  {isCurrent && (
+                    <span className="text-muted-foreground ml-1">
+                      {t('versionHistory.current')}
+                    </span>
                   )}
-                  onClick={() => onSelect(version.versionNumber)}
-                >
-                  {rowBody}
-                </button>
-              );
-            }
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {version.authorType} · {formatTimestamp(version.createdAt)}
+                </span>
+              </span>
+            );
+            const revertButton = onRevert && !isCurrent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2"
+                onClick={() => onRevert(version.versionNumber)}
+                title={t('versionHistory.revertTo', {
+                  version: version.versionNumber,
+                })}
+              >
+                <RotateCcw className="mr-1 size-3" />
+                {t('versionHistory.revert')}
+              </Button>
+            );
 
             return (
               <div
                 key={version.id}
-                className="flex items-center justify-between rounded px-2 py-1.5 text-sm"
+                className={cn(
+                  'flex items-center justify-between rounded px-2 py-1.5 text-sm',
+                  isSelected && 'bg-muted',
+                )}
               >
-                {rowBody}
+                {onSelect ? (
+                  <button
+                    type="button"
+                    className="hover:bg-muted min-w-0 flex-1 text-left"
+                    onClick={() => onSelect(version.versionNumber)}
+                  >
+                    {versionDetails}
+                  </button>
+                ) : (
+                  versionDetails
+                )}
+                {revertButton}
               </div>
             );
           })}
