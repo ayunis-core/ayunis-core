@@ -11,6 +11,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 import { UserDeletedEvent } from '../../events/user-deleted.event';
+import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
 import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
@@ -55,6 +56,14 @@ export class DeleteUserUseCase {
         'You are not allowed to delete this user',
       );
     }
+
+    // Purge dependent data that database cascades cannot reach (MinIO assets,
+    // RAG index entries) while the owning rows still exist. Awaited so it runs
+    // inside the deletion transaction and before the cascading row delete.
+    await this.eventEmitter.emitAsync(
+      UserDeletionRequestedEvent.EVENT_NAME,
+      new UserDeletionRequestedEvent(userToDelete.id, userToDelete.orgId),
+    );
 
     await this.usersRepository.delete(command.userId);
     await this.deleteInviteByEmailUseCase

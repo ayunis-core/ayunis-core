@@ -2,6 +2,7 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   TableInheritance,
@@ -11,6 +12,7 @@ import { BaseRecord } from '../../../../../../common/db/base-record';
 import { ArtifactVersionRecord } from './artifact-version.record';
 import { ThreadRecord } from '../../../../../threads/infrastructure/persistence/local/schema/thread.record';
 import { ArtifactType } from '../../../../domain/value-objects/artifact-type.enum';
+import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'artifacts' })
 @TableInheritance({
@@ -27,6 +29,10 @@ export abstract class ArtifactRecord extends BaseRecord {
   @Column()
   @Index()
   userId: UUID;
+
+  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: UserRecord;
 
   @Column()
   title: string;

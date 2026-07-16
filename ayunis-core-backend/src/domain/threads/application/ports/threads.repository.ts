@@ -89,6 +89,7 @@ export abstract class ThreadsRepository {
     originSkillId?: UUID;
   }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
+  abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   /**
    * Returns a page of expired thread references (id + owner) for an org,
