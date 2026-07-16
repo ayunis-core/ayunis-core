@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-import { ChapterDetailPage } from '@/pages/academy';
+import { ChapterDetailPage } from '@/pages/academy-chapter';
 import { isAcademyAddonActive } from '@/features/academy';
 import {
   addonsControllerList,
