@@ -200,7 +200,9 @@ export class ArtifactsController {
   }
 
   @Get(':id/export')
-  @ApiOperation({ summary: 'Export an artifact as DOCX or PDF' })
+  @ApiOperation({
+    summary: 'Export an artifact as DOCX, PDF, XLSX, or CSV',
+  })
   @ApiParam({
     name: 'id',
     description: 'The UUID of the artifact',
@@ -210,7 +212,7 @@ export class ArtifactsController {
   @ApiQuery({
     name: 'format',
     description: 'Export format',
-    enum: ['docx', 'pdf'],
+    enum: ['docx', 'pdf', 'xlsx', 'csv'],
   })
   @ApiResponse({
     status: 200,

@@ -4,6 +4,8 @@ import { IsEnum } from 'class-validator';
 export enum ExportFormatDto {
   DOCX = 'docx',
   PDF = 'pdf',
+  XLSX = 'xlsx',
+  CSV = 'csv',
 }
 
 export class ExportArtifactQueryDto {
