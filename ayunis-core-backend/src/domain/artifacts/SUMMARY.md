@@ -33,7 +33,8 @@ artifacts/
 │   │   └── sanitize-html-content.ts
 │   ├── ports/
 │   │   ├── artifacts-repository.port.ts
-│   │   └── document-export.port.ts
+│   │   ├── document-export.port.ts
+│   │   └── spreadsheet-export.port.ts
 │   └── use-cases/
 │       ├── apply-edits-to-artifact/
 │       ├── create-artifact/
@@ -53,7 +54,8 @@ artifacts/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
 │       ├── docx-document-config.ts
-│       └── pdf-letterhead-compositor.ts
+│       ├── pdf-letterhead-compositor.ts
+│       └── xlsx-spreadsheet-export.service.ts
 ├── presenters/http/
 │   ├── artifacts.controller.ts
 │   ├── dtos/
@@ -71,6 +73,7 @@ artifacts/
 
 - **ArtifactsRepository** — CRUD for artifacts and versions
 - **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins
+- **SpreadsheetExportPort** — Converts validated spreadsheet content to XLSX or CSV buffers
 
 ## Key Behaviors
 
@@ -83,6 +86,7 @@ artifacts/
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
 - Export delegates to `DocumentExportPort` for format conversion
+- Spreadsheet export delegates to `SpreadsheetExportPort` for XLSX/CSV conversion, preserves original formula-cell provenance through PII de-anonymization, and neutralizes formula-like values in CSV output
 - Document HTML sanitization (XSS prevention) before storage and export
 - Spreadsheet content uses the versioned `spreadsheet-v1` JSON format with shape, size, and formula validation plus row canonicalization
 - Diagram content is stored without document HTML or spreadsheet normalization

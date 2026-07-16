@@ -5,14 +5,31 @@ import {
   DocumentExportPort,
   LetterheadConfig,
 } from '../../ports/document-export.port';
-import { ExportArtifactCommand } from './export-artifact.command';
+import {
+  SpreadsheetExportPort,
+  type SpreadsheetExportInput,
+} from '../../ports/spreadsheet-export.port';
+import {
+  ExportArtifactCommand,
+  type ExportFormat,
+} from './export-artifact.command';
 import {
   ArtifactNotFoundError,
   ArtifactNotExportableError,
   ArtifactVersionNotFoundError,
   UnexpectedArtifactError,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  Artifact,
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  isFormulaCell,
+  mapSpreadsheetStrings,
+  parseSpreadsheetContent,
+  type SpreadsheetContentV1,
+} from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -38,6 +55,7 @@ export class ExportArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
+    private readonly spreadsheetExportPort: SpreadsheetExportPort,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
@@ -59,12 +77,24 @@ export class ExportArtifactUseCase {
     const artifact = await this.loadExportableArtifact(
       command.artifactId,
       userId,
+      command.format,
     );
-    const currentVersion = this.requireCurrentVersion(artifact);
+    const version = this.requireVersion(artifact, command.versionNumber);
     const safeTitle = this.buildSafeTitle(artifact.title);
+
+    if (artifact instanceof SpreadsheetArtifact) {
+      const data = await this.prepareSpreadsheetExportData(
+        artifact.threadId,
+        version.content,
+      );
+      return command.format === 'xlsx'
+        ? await this.exportXlsx(data, safeTitle)
+        : await this.exportCsv(data, safeTitle);
+    }
+
     const content = await this.deanonymizeContent(
       artifact.threadId,
-      currentVersion.content,
+      version.content,
     );
 
     if (command.format === 'docx') {
@@ -77,7 +107,8 @@ export class ExportArtifactUseCase {
   private async loadExportableArtifact(
     artifactId: UUID,
     userId: UUID,
-  ): Promise<DocumentArtifact> {
+    format: ExportFormat,
+  ): Promise<DocumentArtifact | SpreadsheetArtifact> {
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       artifactId,
       userId,
@@ -85,23 +116,34 @@ export class ExportArtifactUseCase {
     if (!artifact) {
       throw new ArtifactNotFoundError(artifactId);
     }
+
+    const isSpreadsheetFormat = format === 'xlsx' || format === 'csv';
+    if (isSpreadsheetFormat) {
+      if (!(artifact instanceof SpreadsheetArtifact)) {
+        throw new ArtifactNotExportableError(artifact.type, { format });
+      }
+      return artifact;
+    }
+
     if (!(artifact instanceof DocumentArtifact)) {
-      throw new ArtifactNotExportableError(artifact.type);
+      throw new ArtifactNotExportableError(artifact.type, { format });
     }
     return artifact;
   }
 
-  private requireCurrentVersion(artifact: DocumentArtifact) {
-    const currentVersion = artifact.versions.find(
-      (v) => v.versionNumber === artifact.currentVersionNumber,
+  private requireVersion(artifact: Artifact, versionNumber?: number) {
+    const requestedVersionNumber =
+      versionNumber ?? artifact.currentVersionNumber;
+    const version = artifact.versions.find(
+      (candidate) => candidate.versionNumber === requestedVersionNumber,
     );
-    if (!currentVersion) {
+    if (!version) {
       throw new ArtifactVersionNotFoundError(
         artifact.id,
-        artifact.currentVersionNumber,
+        requestedVersionNumber,
       );
     }
-    return currentVersion;
+    return version;
   }
 
   /**
@@ -113,14 +155,43 @@ export class ExportArtifactUseCase {
     threadId: UUID,
     content: string,
   ): Promise<string> {
+    const tokenToValue = await this.resolveTokenMap(threadId);
+    return tokenToValue ? deanonymizeText(content, tokenToValue) : content;
+  }
+
+  /**
+   * Spreadsheet content is JSON — token replacement must happen per header and
+   * per string cell after parsing, never on the raw JSON string, because PII
+   * values containing quotes or backslashes would corrupt it.
+   */
+  private async prepareSpreadsheetExportData(
+    threadId: UUID,
+    content: string,
+  ): Promise<SpreadsheetExportInput> {
+    const storedData = parseSpreadsheetContent(content);
+    const tokenToValue = await this.resolveTokenMap(threadId);
+    const grid: SpreadsheetContentV1 = tokenToValue
+      ? mapSpreadsheetStrings(storedData, (value) =>
+          deanonymizeText(value, tokenToValue),
+        )
+      : storedData;
+
+    return {
+      grid,
+      formulaCells: storedData.rows.map((row) => row.map(isFormulaCell)),
+    };
+  }
+
+  private async resolveTokenMap(
+    threadId: UUID,
+  ): Promise<Map<string, string> | null> {
     const masks = await this.getThreadPiiMasksUseCase.execute(
       new GetThreadPiiMasksQuery(threadId),
     );
     if (masks.length === 0) {
-      return content;
+      return null;
     }
-    const tokenToValue = new Map(masks.map((mask) => [mask.token, mask.value]));
-    return deanonymizeText(content, tokenToValue);
+    return new Map(masks.map((mask) => [mask.token, mask.value]));
   }
 
   private buildSafeTitle(title: string): string {
@@ -137,6 +208,31 @@ export class ExportArtifactUseCase {
       fileName: `${safeTitle}.docx`,
       mimeType:
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+  }
+
+  private async exportXlsx(
+    data: SpreadsheetExportInput,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const buffer = await this.spreadsheetExportPort.exportToXlsx(data);
+    return {
+      buffer,
+      fileName: `${safeTitle}.xlsx`,
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    };
+  }
+
+  private async exportCsv(
+    data: SpreadsheetExportInput,
+    safeTitle: string,
+  ): Promise<ExportResult> {
+    const csv = await this.spreadsheetExportPort.exportToCsv(data);
+    return {
+      buffer: Buffer.from(csv, 'utf8'),
+      fileName: `${safeTitle}.csv`,
+      mimeType: 'text/csv',
     };
   }
 
