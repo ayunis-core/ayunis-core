@@ -155,7 +155,7 @@ describe('ArtifactToolAssemblerService', () => {
     expect(names).not.toContain(ToolType.UPDATE_DIAGRAM);
   });
 
-  it('should list spreadsheet artifacts with their current version in the tool description', async () => {
+  it('should list spreadsheet artifacts in the tool description (without exposing current version)', async () => {
     const spreadsheet = makeArtifact('spreadsheet', {
       title: 'Budget 2026',
       currentVersionNumber: 3,
@@ -167,7 +167,7 @@ describe('ArtifactToolAssemblerService', () => {
     const updateTool = findTool(tools, ToolType.UPDATE_SPREADSHEET);
     expect(updateTool?.descriptionLong).toContain(spreadsheet.id);
     expect(updateTool?.descriptionLong).toContain('"Budget 2026"');
-    expect(updateTool?.descriptionLong).toContain('(current version 3)');
+    expect(updateTool?.descriptionLong).not.toContain('(current version');
   });
 
   it('should only list document artifacts in the document tool descriptions', async () => {

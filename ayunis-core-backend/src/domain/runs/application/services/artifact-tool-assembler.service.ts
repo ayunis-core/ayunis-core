@@ -61,8 +61,7 @@ export class ArtifactToolAssemblerService {
         threadArtifacts.filter((a) => a instanceof SpreadsheetArtifact),
         ToolType.UPDATE_SPREADSHEET,
         'spreadsheets',
-        (a) =>
-          `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})`,
+        (a) => `- ${a.id}: "${a.title}"`,
       )),
     ];
   }
