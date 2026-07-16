@@ -4,6 +4,7 @@ import { ApplicationError } from '../../../common/errors/base.error';
 export enum ShareErrorCode {
   SHARE_NOT_FOUND = 'SHARE_NOT_FOUND',
   SHARE_ALREADY_EXISTS = 'SHARE_ALREADY_EXISTS',
+  UNEXPECTED_SHARE_ERROR = 'UNEXPECTED_SHARE_ERROR',
 }
 
 export abstract class ShareError extends ApplicationError {
@@ -36,5 +37,14 @@ export class ShareAlreadyExistsError extends ShareError {
       409,
       { entityId, scopeType, ...metadata },
     );
+  }
+}
+
+export class UnexpectedShareError extends ShareError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, ShareErrorCode.UNEXPECTED_SHARE_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

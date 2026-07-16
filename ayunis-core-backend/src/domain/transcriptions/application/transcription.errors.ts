@@ -8,6 +8,7 @@ export enum TranscriptionErrorCode {
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
   INVALID_AUDIO_FILE = 'INVALID_AUDIO_FILE',
   TRANSCRIPTION_SERVICE_UNAVAILABLE = 'TRANSCRIPTION_SERVICE_UNAVAILABLE',
+  UNEXPECTED_TRANSCRIPTION_ERROR = 'UNEXPECTED_TRANSCRIPTION_ERROR',
 }
 
 /**
@@ -21,6 +22,17 @@ export abstract class TranscriptionError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+export class UnexpectedTranscriptionError extends TranscriptionError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      error.message,
+      TranscriptionErrorCode.UNEXPECTED_TRANSCRIPTION_ERROR,
+      500,
+      { ...metadata, error },
+    );
   }
 }
 

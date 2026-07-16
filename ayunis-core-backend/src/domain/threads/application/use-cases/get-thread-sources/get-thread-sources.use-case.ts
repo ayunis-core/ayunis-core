@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Source } from '../../../../sources/domain/source.entity';
 import { FindThreadSourcesQuery } from './get-thread-sources.query';
 import { FindThreadUseCase } from '../find-thread/find-thread.use-case';
 import { FindThreadQuery } from '../find-thread/find-thread.query';
-import { ThreadNotFoundError } from '../../threads.errors';
+import {
+  ThreadNotFoundError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -12,6 +16,7 @@ export class GetThreadSourcesUseCase {
 
   constructor(private readonly findThreadUseCase: FindThreadUseCase) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(query: FindThreadSourcesQuery): Promise<Source[]> {
     this.logger.log('getThreadSources', {
       threadId: query.threadId,
@@ -22,7 +27,7 @@ export class GetThreadSourcesUseCase {
         new FindThreadQuery(query.threadId),
       );
       return (
-        thread.sourceAssignments?.map((assignment) => assignment.source) || []
+        thread.sourceAssignments?.map((assignment) => assignment.source) ?? []
       );
     } catch (error) {
       if (error instanceof ApplicationError) {

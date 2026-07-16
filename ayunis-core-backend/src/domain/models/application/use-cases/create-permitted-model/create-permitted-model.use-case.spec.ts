@@ -180,9 +180,10 @@ describe('CreatePermittedModelUseCase', () => {
       );
 
       expect(permittedModelsRepository.create).toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledWith('Error creating permitted model', {
-        error: repositoryError,
-      });
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Unexpected use-case error',
+        repositoryError.stack,
+      );
     });
 
     it('should reject non-Azure image-generation models explicitly', async () => {

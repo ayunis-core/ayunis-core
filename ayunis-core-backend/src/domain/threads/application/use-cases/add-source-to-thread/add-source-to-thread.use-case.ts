@@ -1,8 +1,12 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
-import { SourceAdditionError } from '../../threads.errors';
+import {
+  SourceAdditionError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -22,6 +26,7 @@ export class AddSourceToThreadUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: AddSourceCommand): Promise<void> {
     this.logger.log('addSource', {
       threadId: command.thread.id,

@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { FindUnreferencedSourceIdsUseCase } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { FindUnreferencedSourceIdsQuery } from 'src/domain/sources/application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.query';
 import { CleanupStaleThreadSourcesResult } from './cleanup-stale-thread-sources.result';
+import { UnexpectedThreadError } from '../../threads.errors';
 
 const STALE_THREAD_SOURCE_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -19,6 +21,7 @@ export class CleanupStaleThreadSourcesUseCase {
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(): Promise<CleanupStaleThreadSourcesResult> {
     const cutoff = new Date(Date.now() - STALE_THREAD_SOURCE_DAYS * MS_PER_DAY);
     this.logger.log('execute', {

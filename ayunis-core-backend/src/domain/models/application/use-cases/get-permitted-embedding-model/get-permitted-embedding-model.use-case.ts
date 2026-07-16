@@ -5,8 +5,8 @@ import {
   PermittedEmbeddingModelNotFoundForOrgError,
   UnexpectedModelError,
 } from '../../models.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -20,6 +20,7 @@ export class GetPermittedEmbeddingModelUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetPermittedEmbeddingModelQuery,
   ): Promise<PermittedEmbeddingModel> {
@@ -27,26 +28,19 @@ export class GetPermittedEmbeddingModelUseCase {
       orgId: query.orgId,
     });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      const systemRole = this.contextService.get('systemRole');
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      const isFromOrg = orgId === query.orgId;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
-      const model = await this.permittedModelsRepository.findOneEmbedding(
-        query.orgId,
-      );
-      if (!model || !(model instanceof PermittedEmbeddingModel)) {
-        throw new PermittedEmbeddingModelNotFoundForOrgError(query.orgId);
-      }
-      return model;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      throw new UnexpectedModelError(error as Error);
+    const orgId = this.contextService.get('orgId');
+    const systemRole = this.contextService.get('systemRole');
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isFromOrg = orgId === query.orgId;
+    if (!isFromOrg && !isSuperAdmin) {
+      throw new UnauthorizedAccessError();
     }
+    const model = await this.permittedModelsRepository.findOneEmbedding(
+      query.orgId,
+    );
+    if (!model || !(model instanceof PermittedEmbeddingModel)) {
+      throw new PermittedEmbeddingModelNotFoundForOrgError(query.orgId);
+    }
+    return model;
   }
 }

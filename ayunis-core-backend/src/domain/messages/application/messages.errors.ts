@@ -7,6 +7,7 @@ import { ApplicationError } from '../../../common/errors/base.error';
 export enum MessageErrorCode {
   MESSAGE_CONTENT_INVALID = 'MESSAGE_CONTENT_INVALID',
   MESSAGE_TOO_LONG = 'MESSAGE_TOO_LONG',
+  UNEXPECTED_MESSAGE_ERROR = 'UNEXPECTED_MESSAGE_ERROR',
 }
 
 /**
@@ -48,6 +49,15 @@ export class MessageTooLongError extends MessageError {
       400,
       metadata,
     );
+  }
+}
+
+export class UnexpectedMessageError extends MessageError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, MessageErrorCode.UNEXPECTED_MESSAGE_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }
 

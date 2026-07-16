@@ -1,5 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DeleteMessageCommand } from './delete-message.command';
+import { UnexpectedMessageError } from '../../messages.errors';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
@@ -14,22 +16,15 @@ export class DeleteMessageUseCase {
     private readonly messagesRepository: MessagesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMessageError)
   async execute(command: DeleteMessageCommand): Promise<void> {
     this.logger.log('Deleting message', {
       messageId: command.messageId,
     });
 
-    try {
-      await this.messagesRepository.delete(command.messageId);
-      this.logger.log('Message deleted successfully', {
-        messageId: command.messageId,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete message', {
-        messageId: command.messageId,
-        error: error as Error,
-      });
-      throw error;
-    }
+    await this.messagesRepository.delete(command.messageId);
+    this.logger.log('Message deleted successfully', {
+      messageId: command.messageId,
+    });
   }
 }

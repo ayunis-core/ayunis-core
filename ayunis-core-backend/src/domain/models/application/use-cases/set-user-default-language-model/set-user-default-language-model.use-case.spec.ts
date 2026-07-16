@@ -8,7 +8,10 @@ import { UserDefaultModelsRepository } from '../../ports/user-default-models.rep
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { PermittedModelNotFoundError } from '../../models.errors';
+import {
+  PermittedModelNotFoundError,
+  UnexpectedModelError,
+} from '../../models.errors';
 import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-model.command';
 import { SetUserDefaultLanguageModelUseCase } from './set-user-default-language-model.use-case';
 
@@ -145,7 +148,7 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
     expect(userDefaultModelsRepository.setAsDefault).not.toHaveBeenCalled();
   });
 
-  it('re-throws unexpected repository failures', async () => {
+  it('wraps unexpected repository failures in UnexpectedModelError', async () => {
     const permittedModel = buildPermittedLanguageModel();
     permittedModelsRepository.findOneLanguage.mockResolvedValue(permittedModel);
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
@@ -156,6 +159,6 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
       useCase.execute(
         new SetUserDefaultLanguageModelCommand(userId, permittedModelId, orgId),
       ),
-    ).rejects.toBe(repositoryError);
+    ).rejects.toBeInstanceOf(UnexpectedModelError);
   });
 });

@@ -147,12 +147,10 @@ export class ArtifactNotExportableError extends ArtifactError {
 }
 
 export class UnexpectedArtifactError extends ArtifactError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(
-      `Unexpected artifact error: ${message}`,
-      ArtifactErrorCode.ARTIFACT_UNEXPECTED,
-      500,
-      metadata,
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, ArtifactErrorCode.ARTIFACT_UNEXPECTED, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

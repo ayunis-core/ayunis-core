@@ -1,5 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedMessageError } from '../../messages.errors';
 import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
@@ -25,6 +27,7 @@ export class CleanupOrphanedImagesUseCase {
     private readonly messagesRepository: MessagesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMessageError)
   async execute(): Promise<CleanupResult> {
     this.logger.log('Starting orphaned images cleanup');
 
@@ -36,85 +39,96 @@ export class CleanupOrphanedImagesUseCase {
       errors: [],
     };
 
-    try {
-      // List all objects in storage
-      const allObjects = await this.objectStoragePort.listObjects();
-      result.scannedCount = allObjects.length;
+    // List all objects in storage
+    const allObjects = await this.objectStoragePort.listObjects();
+    result.scannedCount = allObjects.length;
 
-      this.logger.log(`Scanning ${allObjects.length} objects for orphans`);
+    this.logger.log(`Scanning ${allObjects.length} objects for orphans`);
 
-      // Group objects by messageId to batch check existence
-      const messageIdToObjects = this.groupObjectsByMessageId(allObjects);
-      const uniqueMessageIds = Array.from(messageIdToObjects.keys());
+    // Group objects by messageId to batch check existence
+    const messageIdToObjects = this.groupObjectsByMessageId(allObjects);
+    const uniqueMessageIds = Array.from(messageIdToObjects.keys());
 
-      this.logger.debug(
-        `Found ${uniqueMessageIds.length} unique message IDs to check`,
-      );
+    this.logger.debug(
+      `Found ${uniqueMessageIds.length} unique message IDs to check`,
+    );
 
-      // Check each message existence and collect orphaned paths
-      const orphanedPaths: string[] = [];
+    const orphanedPaths = await this.collectOrphanedPaths(
+      uniqueMessageIds,
+      messageIdToObjects,
+    );
 
-      for (const messageId of uniqueMessageIds) {
-        try {
-          const message = await this.messagesRepository.findById(
-            messageId as UUID,
+    this.logger.log(`Found ${orphanedPaths.length} orphaned images to delete`);
+
+    await this.deleteOrphanedImages(orphanedPaths, result);
+
+    this.logger.log('Orphaned images cleanup completed', {
+      scanned: result.scannedCount,
+      deleted: result.deletedCount,
+      failed: result.failedCount,
+    });
+
+    return result;
+  }
+
+  /**
+   * Checks each message existence and collects orphaned image paths.
+   */
+  private async collectOrphanedPaths(
+    uniqueMessageIds: string[],
+    messageIdToObjects: Map<string, string[]>,
+  ): Promise<string[]> {
+    const orphanedPaths: string[] = [];
+
+    for (const messageId of uniqueMessageIds) {
+      try {
+        const message = await this.messagesRepository.findById(
+          messageId as UUID,
+        );
+
+        if (!message) {
+          // Message doesn't exist, all its images are orphaned
+          const paths = messageIdToObjects.get(messageId) ?? [];
+          orphanedPaths.push(...paths);
+          this.logger.debug(
+            `Message ${messageId} not found, marking ${paths.length} images as orphaned`,
           );
-
-          if (!message) {
-            // Message doesn't exist, all its images are orphaned
-            const paths = messageIdToObjects.get(messageId) || [];
-            orphanedPaths.push(...paths);
-            this.logger.debug(
-              `Message ${messageId} not found, marking ${paths.length} images as orphaned`,
-            );
-          }
-        } catch (error) {
-          this.logger.warn(`Failed to check message ${messageId}`, {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
         }
+      } catch (error) {
+        this.logger.warn(`Failed to check message ${messageId}`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
+    }
 
-      this.logger.log(
-        `Found ${orphanedPaths.length} orphaned images to delete`,
-      );
+    return orphanedPaths;
+  }
 
-      // Delete orphaned images
-      for (const path of orphanedPaths) {
-        try {
-          await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
-          result.deletedCount++;
-          result.deletedPaths.push(path);
-          this.logger.debug(`Deleted orphaned image: ${path}`);
-        } catch (error) {
-          // If object doesn't exist, it's already cleaned up - don't count as failure
-          if (error instanceof ObjectNotFoundError) {
-            this.logger.debug(`Orphaned image already deleted: ${path}`);
-            continue;
-          }
-
-          result.failedCount++;
-          const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
-          result.errors.push({ path, error: errorMessage });
-          this.logger.warn(`Failed to delete orphaned image: ${path}`, {
-            error: errorMessage,
-          });
+  private async deleteOrphanedImages(
+    orphanedPaths: string[],
+    result: CleanupResult,
+  ): Promise<void> {
+    for (const path of orphanedPaths) {
+      try {
+        await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
+        result.deletedCount++;
+        result.deletedPaths.push(path);
+        this.logger.debug(`Deleted orphaned image: ${path}`);
+      } catch (error) {
+        // If object doesn't exist, it's already cleaned up - don't count as failure
+        if (error instanceof ObjectNotFoundError) {
+          this.logger.debug(`Orphaned image already deleted: ${path}`);
+          continue;
         }
+
+        result.failedCount++;
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        result.errors.push({ path, error: errorMessage });
+        this.logger.warn(`Failed to delete orphaned image: ${path}`, {
+          error: errorMessage,
+        });
       }
-
-      this.logger.log('Orphaned images cleanup completed', {
-        scanned: result.scannedCount,
-        deleted: result.deletedCount,
-        failed: result.failedCount,
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error('Orphaned images cleanup failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw error;
     }
   }
 
@@ -130,7 +144,7 @@ export class CleanupOrphanedImagesUseCase {
     for (const path of objectPaths) {
       const messageId = this.extractMessageIdFromPath(path);
       if (messageId) {
-        const existing = map.get(messageId) || [];
+        const existing = map.get(messageId) ?? [];
         existing.push(path);
         map.set(messageId, existing);
       }

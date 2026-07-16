@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateUserMessageCommand } from './create-user-message.command';
 import { UserMessage } from '../../../domain/messages/user-message.entity';
 import {
@@ -12,7 +13,10 @@ import {
   MessagesRepository,
 } from '../../ports/messages.repository';
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  UnexpectedMessageError,
+} from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
@@ -37,6 +41,7 @@ export class CreateUserMessageUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMessageError)
   async execute(command: CreateUserMessageCommand): Promise<UserMessage> {
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -53,81 +58,20 @@ export class CreateUserMessageUseCase {
     const uploadedPaths: string[] = [];
 
     try {
-      // Build content array
-      const content: (TextMessageContent | ImageMessageContent)[] = [];
-
-      // Prepend skill instructions if provided (marked as isSkillInstruction)
-      if (command.skillInstructions?.trim()) {
-        content.push(
-          new TextMessageContent(command.skillInstructions, null, true),
-        );
-      }
-
-      // Add text content if provided
-      if (command.text?.trim()) {
-        content.push(new TextMessageContent(command.text));
-      }
-
-      // Create ImageMessageContent objects with index and contentType
-      const imageContents = command.pendingImages.map(
-        (img, index) =>
-          new ImageMessageContent(index, img.contentType, img.altText),
-      );
-      content.push(...imageContents);
-
       // Create the message to get its ID (UUID generated in constructor)
       const userMessage = new UserMessage({
         threadId: command.threadId,
-        content,
+        content: this.buildContent(command),
       });
 
-      // Upload images to MinIO with deterministic paths
-      for (let i = 0; i < command.pendingImages.length; i++) {
-        const pendingImage = command.pendingImages[i];
-        const storagePath = getImageStoragePath({
-          orgId,
-          threadId: command.threadId,
-          messageId: userMessage.id,
-          index: i,
-          contentType: pendingImage.contentType,
-        });
-
-        this.logger.debug('Uploading image to storage', {
-          storagePath,
-          contentType: pendingImage.contentType,
-          size: pendingImage.buffer.length,
-        });
-
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(storagePath, pendingImage.buffer, {
-            contentType: pendingImage.contentType,
-          }),
-        );
-        uploadedPaths.push(storagePath);
-      }
+      await this.uploadImages(orgId, command, userMessage.id, uploadedPaths);
 
       // Save message to database
       const savedMessage = (await this.messagesRepository.create(
         userMessage,
       )) as UserMessage;
 
-      const userId = this.contextService.get('userId');
-      this.eventEmitter
-        .emitAsync(
-          UserMessageCreatedEvent.EVENT_NAME,
-          new UserMessageCreatedEvent(
-            userId ?? ('unknown' as UUID),
-            orgId,
-            command.threadId,
-            savedMessage.id,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit UserMessageCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            messageId: savedMessage.id,
-          });
-        });
+      this.emitCreatedEvent(orgId, command.threadId, savedMessage.id);
 
       this.logger.log('User message created successfully', {
         messageId: savedMessage.id,
@@ -153,6 +97,87 @@ export class CreateUserMessageUseCase {
             new Error('Unknown error'),
           );
     }
+  }
+
+  private buildContent(
+    command: CreateUserMessageCommand,
+  ): (TextMessageContent | ImageMessageContent)[] {
+    const content: (TextMessageContent | ImageMessageContent)[] = [];
+
+    // Prepend skill instructions if provided (marked as isSkillInstruction)
+    if (command.skillInstructions?.trim()) {
+      content.push(
+        new TextMessageContent(command.skillInstructions, null, true),
+      );
+    }
+
+    // Add text content if provided
+    if (command.text?.trim()) {
+      content.push(new TextMessageContent(command.text));
+    }
+
+    // Create ImageMessageContent objects with index and contentType
+    const imageContents = command.pendingImages.map(
+      (img, index) =>
+        new ImageMessageContent(index, img.contentType, img.altText),
+    );
+    content.push(...imageContents);
+
+    return content;
+  }
+
+  /**
+   * Uploads images to MinIO with deterministic paths.
+   */
+  private async uploadImages(
+    orgId: UUID,
+    command: CreateUserMessageCommand,
+    messageId: UUID,
+    uploadedPaths: string[],
+  ): Promise<void> {
+    for (let i = 0; i < command.pendingImages.length; i++) {
+      const pendingImage = command.pendingImages[i];
+      const storagePath = getImageStoragePath({
+        orgId,
+        threadId: command.threadId,
+        messageId,
+        index: i,
+        contentType: pendingImage.contentType,
+      });
+
+      this.logger.debug('Uploading image to storage', {
+        storagePath,
+        contentType: pendingImage.contentType,
+        size: pendingImage.buffer.length,
+      });
+
+      await this.uploadObjectUseCase.execute(
+        new UploadObjectCommand(storagePath, pendingImage.buffer, {
+          contentType: pendingImage.contentType,
+        }),
+      );
+      uploadedPaths.push(storagePath);
+    }
+  }
+
+  private emitCreatedEvent(orgId: UUID, threadId: UUID, messageId: UUID): void {
+    const userId = this.contextService.get('userId');
+    this.eventEmitter
+      .emitAsync(
+        UserMessageCreatedEvent.EVENT_NAME,
+        new UserMessageCreatedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId,
+          threadId,
+          messageId,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit UserMessageCreatedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          messageId,
+        });
+      });
   }
 
   private async cleanupUploadedImages(paths: string[]): Promise<void> {

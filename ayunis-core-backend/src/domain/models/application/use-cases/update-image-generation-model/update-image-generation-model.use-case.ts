@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import {
   ModelNotFoundByIdError,
@@ -18,41 +18,36 @@ export class UpdateImageGenerationModelUseCase {
     private readonly modelPolicy: ModelPolicyService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     command: UpdateImageGenerationModelCommand,
   ): Promise<ImageGenerationModel> {
-    try {
-      this.modelPolicy.assertSupportedImageGenerationProvider(command.provider);
+    this.logger.log('execute', {
+      id: command.id,
+    });
 
-      const existingModel = await this.modelsRepository.findOneImageGeneration(
-        command.id,
-      );
+    this.modelPolicy.assertSupportedImageGenerationProvider(command.provider);
 
-      if (!existingModel) {
-        throw new ModelNotFoundByIdError(command.id);
-      }
+    const existingModel = await this.modelsRepository.findOneImageGeneration(
+      command.id,
+    );
 
-      const model = new ImageGenerationModel({
-        id: command.id,
-        name: command.name,
-        provider: command.provider,
-        displayName: command.displayName,
-        isArchived: command.isArchived,
-        createdAt: existingModel.createdAt,
-        inputTokenCost: command.inputTokenCost,
-        outputTokenCost: command.outputTokenCost,
-      });
-      await this.modelsRepository.save(model);
-
-      return model;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Unexpected error updating image-generation model', {
-        error: error as Error,
-      });
-      throw new UnexpectedModelError(error as Error);
+    if (!existingModel) {
+      throw new ModelNotFoundByIdError(command.id);
     }
+
+    const model = new ImageGenerationModel({
+      id: command.id,
+      name: command.name,
+      provider: command.provider,
+      displayName: command.displayName,
+      isArchived: command.isArchived,
+      createdAt: existingModel.createdAt,
+      inputTokenCost: command.inputTokenCost,
+      outputTokenCost: command.outputTokenCost,
+    });
+    await this.modelsRepository.save(model);
+
+    return model;
   }
 }

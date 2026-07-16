@@ -12,6 +12,7 @@ export enum RunErrorCode {
   RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
+  UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
 }
 
 /**
@@ -25,6 +26,18 @@ export abstract class RunError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+/**
+ * Error thrown when an unexpected error occurs
+ */
+export class UnexpectedRunError extends RunError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, RunErrorCode.UNEXPECTED_RUN_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }
 

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   detectFileType,
@@ -48,46 +48,34 @@ export class CreateSourcesFromFileUseCase {
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: CreateSourcesFromFileCommand): Promise<Source[]> {
     this.logger.log('Creating sources from file', {
       fileName: command.originalName,
     });
 
-    try {
-      const detectedType = detectFileType(
-        command.mimeType,
-        command.originalName,
-      );
+    const detectedType = detectFileType(command.mimeType, command.originalName);
 
-      if (
-        isDocumentFile(detectedType) ||
-        isPlainTextFile(detectedType) ||
-        isAudioFile(detectedType)
-      ) {
-        return [await this.createDocumentSource(command, detectedType)];
-      }
-
-      if (isCSVFile(detectedType)) {
-        return [await this.createCSVSource(command)];
-      }
-
-      if (isSpreadsheetFile(detectedType)) {
-        return this.createSpreadsheetSources(command);
-      }
-
-      throw new UnsupportedFileTypeError(
-        detectedType === 'unknown' ? command.originalName : detectedType,
-        SUPPORTED_FILE_TYPES,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating sources from file', {
-        error: error as Error,
-      });
-      throw new UnexpectedSourceError('Error creating sources from file', {
-        error: error as Error,
-      });
+    if (
+      isDocumentFile(detectedType) ||
+      isPlainTextFile(detectedType) ||
+      isAudioFile(detectedType)
+    ) {
+      return [await this.createDocumentSource(command, detectedType)];
     }
+
+    if (isCSVFile(detectedType)) {
+      return [await this.createCSVSource(command)];
+    }
+
+    if (isSpreadsheetFile(detectedType)) {
+      return this.createSpreadsheetSources(command);
+    }
+
+    throw new UnsupportedFileTypeError(
+      detectedType === 'unknown' ? command.originalName : detectedType,
+      SUPPORTED_FILE_TYPES,
+    );
   }
 
   private async createDocumentSource(

@@ -1,4 +1,5 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { CreateSystemMessageCommand } from './create-system-message.command';
 import { SystemMessage } from '../../../domain/messages/system-message.entity';
 import {
@@ -6,7 +7,10 @@ import {
   MessagesRepository,
 } from '../../ports/messages.repository';
 import { MessageRole } from '../../../domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  UnexpectedMessageError,
+} from '../../messages.errors';
 
 @Injectable()
 export class CreateSystemMessageUseCase {
@@ -17,6 +21,7 @@ export class CreateSystemMessageUseCase {
     private readonly messagesRepository: MessagesRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMessageError)
   async execute(command: CreateSystemMessageCommand): Promise<SystemMessage> {
     this.logger.log('Creating system message', { threadId: command.threadId });
 

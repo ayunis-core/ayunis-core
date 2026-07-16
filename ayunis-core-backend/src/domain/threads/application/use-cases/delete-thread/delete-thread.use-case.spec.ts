@@ -9,6 +9,7 @@ import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messa
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
 import { GeneratedImage } from '../../../domain/generated-image.entity';
+import { UnexpectedThreadError } from '../../threads.errors';
 
 describe('DeleteThreadUseCase', () => {
   let useCase: DeleteThreadUseCase;
@@ -179,21 +180,13 @@ describe('DeleteThreadUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       threadsRepository.delete.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Database connection failed',
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UnexpectedThreadError,
       );
 
       expect(threadsRepository.findOne).toHaveBeenCalled();
       expect(threadsRepository.delete).toHaveBeenCalled();
-
-      expect(errorSpy).toHaveBeenCalledWith('Failed to delete thread', {
-        threadId: mockThreadId,
-        userId: mockUserId,
-        error: 'Database connection failed',
-      });
     });
 
     it('should handle unknown error types during deletion', async () => {
@@ -211,16 +204,10 @@ describe('DeleteThreadUseCase', () => {
       threadsRepository.findOne.mockResolvedValue(mockThread as any);
       threadsRepository.delete.mockRejectedValue('string error');
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
-      await expect(useCase.execute(command)).rejects.toBeDefined();
-
-      expect(errorSpy).toHaveBeenCalledWith('Failed to delete thread', {
-        threadId: mockThreadId,
-        userId: mockUserId,
-        error: 'Unknown error',
-      });
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        UnexpectedThreadError,
+      );
     });
 
     it('should log initial delete request', async () => {

@@ -19,7 +19,7 @@ import {
   PermittedLanguageModel,
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { FindAllThreadsByOrgWithSourcesQuery } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.query';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
@@ -45,67 +45,62 @@ export class DeletePermittedModelUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: DeletePermittedModelCommand): Promise<void> {
     this.logger.log('execute', {
       modelId: command.permittedModelId,
       orgId: command.orgId,
     });
-    try {
-      const orgId = this.contextService.get('orgId');
-      const orgRole = this.contextService.get('role');
-      const systemRole = this.contextService.get('systemRole');
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isOrgAdmin && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
-      const model = await this.permittedModelsRepository.findOne({
-        id: command.permittedModelId,
+    this.assertAuthorized(command.orgId);
+    const model = await this.permittedModelsRepository.findOne({
+      id: command.permittedModelId,
+    });
+    if (!model) {
+      this.logger.error('Model not found', {
+        modelId: command.permittedModelId,
+        orgId: command.orgId,
       });
-      if (!model) {
-        this.logger.error('Model not found', {
+      throw new PermittedModelDeletionFailedError('Model not found', {
+        modelId: command.permittedModelId,
+      });
+    }
+
+    // Verify the model belongs to the specified org
+    if (model.orgId !== command.orgId) {
+      throw new UnauthorizedAccessError();
+    }
+
+    if (model instanceof PermittedLanguageModel) {
+      return this.deletePermittedLanguageModel(command.orgId, model);
+    } else if (model instanceof PermittedEmbeddingModel) {
+      return this.deletePermittedEmbeddingModel(command.orgId, model);
+    } else if (model instanceof PermittedImageGenerationModel) {
+      return this.deletePermittedImageGenerationModel(command.orgId, model);
+    } else {
+      this.logger.error(
+        'Model is not a language, embedding, or image-generation model',
+        {
           modelId: command.permittedModelId,
           orgId: command.orgId,
-        });
-        throw new PermittedModelDeletionFailedError('Model not found', {
-          modelId: command.permittedModelId,
-        });
-      }
-
-      // Verify the model belongs to the specified org
-      if (model.orgId !== command.orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      if (model instanceof PermittedLanguageModel) {
-        return this.deletePermittedLanguageModel(command.orgId, model);
-      } else if (model instanceof PermittedEmbeddingModel) {
-        return this.deletePermittedEmbeddingModel(command.orgId, model);
-      } else if (model instanceof PermittedImageGenerationModel) {
-        return this.deletePermittedImageGenerationModel(command.orgId, model);
-      } else {
-        this.logger.error(
-          'Model is not a language, embedding, or image-generation model',
-          {
-            modelId: command.permittedModelId,
-            orgId: command.orgId,
-          },
-        );
-        throw new PermittedModelDeletionFailedError(
-          'Model is not a language, embedding, or image-generation model',
-          {
-            modelId: command.permittedModelId,
-          },
-        );
-      }
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error deleting permitted model', error);
-      throw new UnexpectedModelError(
-        error instanceof Error ? error : new Error('Unknown error'),
+        },
       );
+      throw new PermittedModelDeletionFailedError(
+        'Model is not a language, embedding, or image-generation model',
+        {
+          modelId: command.permittedModelId,
+        },
+      );
+    }
+  }
+
+  private assertAuthorized(commandOrgId: UUID): void {
+    const orgId = this.contextService.get('orgId');
+    const orgRole = this.contextService.get('role');
+    const systemRole = this.contextService.get('systemRole');
+    const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === commandOrgId;
+    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    if (!isOrgAdmin && !isSuperAdmin) {
+      throw new UnauthorizedAccessError();
     }
   }
 

@@ -5,7 +5,7 @@ import {
   SourceNotFoundError,
   UnexpectedSourceError,
 } from '../../sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
 
 @Injectable()
@@ -14,29 +14,20 @@ export class MarkSourceFailedUseCase {
 
   constructor(private readonly sourceRepository: SourceRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: MarkSourceFailedCommand): Promise<void> {
-    try {
-      const source = await this.sourceRepository.findById(command.sourceId);
-      if (!source) {
-        throw new SourceNotFoundError(command.sourceId);
-      }
-
-      source.status = SourceStatus.FAILED;
-      source.processingError = command.errorMessage;
-      await this.sourceRepository.save(source);
-
-      this.logger.warn('Source marked as failed', {
-        sourceId: command.sourceId,
-        errorMessage: command.errorMessage,
-      });
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error marking source as failed', {
-        error: error as Error,
-      });
-      throw new UnexpectedSourceError('Error marking source as failed', {
-        error: error as Error,
-      });
+    const source = await this.sourceRepository.findById(command.sourceId);
+    if (!source) {
+      throw new SourceNotFoundError(command.sourceId);
     }
+
+    source.status = SourceStatus.FAILED;
+    source.processingError = command.errorMessage;
+    await this.sourceRepository.save(source);
+
+    this.logger.warn('Source marked as failed', {
+      sourceId: command.sourceId,
+      errorMessage: command.errorMessage,
+    });
   }
 }

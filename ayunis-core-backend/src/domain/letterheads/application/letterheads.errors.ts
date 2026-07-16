@@ -55,12 +55,10 @@ export class LetterheadOrgMismatchError extends LetterheadError {
 }
 
 export class UnexpectedLetterheadError extends LetterheadError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(
-      message,
-      LetterheadErrorCode.UNEXPECTED_LETTERHEAD_ERROR,
-      500,
-      metadata,
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, LetterheadErrorCode.UNEXPECTED_LETTERHEAD_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

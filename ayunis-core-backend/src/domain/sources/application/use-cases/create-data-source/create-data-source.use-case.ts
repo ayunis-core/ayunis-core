@@ -8,19 +8,20 @@ import {
   CreateCSVDataSourceCommand,
 } from './create-data-source.command';
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   InvalidSourceTypeError,
   UnexpectedSourceError,
 } from '../../sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateDataSourceUseCase {
   private readonly logger = new Logger(CreateDataSourceUseCase.name);
   constructor(private readonly sourceRepository: SourceRepository) {}
 
-  async execute(command: CreateCSVDataSourceCommand): Promise<CSVDataSource>;
-  async execute(command: CreateDataSourceCommand): Promise<DataSource>;
+  // No overload signatures: the typed decorator cannot be applied to an
+  // overloaded method (TS1241 on the descriptor).
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(command: CreateDataSourceCommand): Promise<DataSource> {
     this.logger.log('execute', {
       name:
@@ -32,25 +33,15 @@ export class CreateDataSourceUseCase {
           ? command.data.rows.length
           : undefined,
     });
-    try {
-      if (command instanceof CreateCSVDataSourceCommand) {
-        const dataSource = new CSVDataSource({
-          name: command.name,
-          data: command.data,
-          createdBy: command.createdBy,
-        });
-        await this.sourceRepository.save(dataSource);
-        return dataSource;
-      }
-      throw new InvalidSourceTypeError(command.constructor.name);
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating data source', {
-        error: error as Error,
+    if (command instanceof CreateCSVDataSourceCommand) {
+      const dataSource = new CSVDataSource({
+        name: command.name,
+        data: command.data,
+        createdBy: command.createdBy,
       });
-      throw new UnexpectedSourceError('Error creating data source', {
-        error: error as Error,
-      });
+      await this.sourceRepository.save(dataSource);
+      return dataSource;
     }
+    throw new InvalidSourceTypeError(command.constructor.name);
   }
 }

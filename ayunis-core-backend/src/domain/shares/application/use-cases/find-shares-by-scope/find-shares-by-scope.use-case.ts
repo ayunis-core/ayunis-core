@@ -10,6 +10,8 @@ import { FindSharesByScopeQuery } from './find-shares-by-scope.query';
 import { Share } from '../../../domain/share.entity';
 import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedShareError } from '../../shares.errors';
 
 /**
  * Use case for finding shares by scope
@@ -33,6 +35,7 @@ export class FindSharesByScopeUseCase {
    * @returns Array of shares for the current user's organization and teams (deduplicated by entity)
    * @throws UnauthorizedException if user is not authenticated or has no organization
    */
+  @HandleUnexpectedErrors(UnexpectedShareError)
   async execute(query: FindSharesByScopeQuery): Promise<Share[]> {
     this.logger.log('execute', {
       entityType: query.entityType,

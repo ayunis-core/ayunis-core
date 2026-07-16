@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveSkillSourcesFromThreadsCommand } from './remove-skill-sources-from-threads.command';
+import { UnexpectedThreadError } from '../../threads.errors';
 
 @Injectable()
 export class RemoveSkillSourcesFromThreadsUseCase {
@@ -10,6 +12,7 @@ export class RemoveSkillSourcesFromThreadsUseCase {
 
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: RemoveSkillSourcesFromThreadsCommand): Promise<void> {
     this.logger.log('execute', {
       skillId: command.skillId,

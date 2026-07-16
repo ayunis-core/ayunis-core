@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
@@ -8,7 +9,10 @@ import { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upse
 import { UpsertUserSystemPromptCommand } from '../upsert-user-system-prompt/upsert-user-system-prompt.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
+import {
+  PersonalizedSystemPromptGenerationError,
+  UnexpectedChatSettingsError,
+} from '../../chat-settings.errors';
 import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
@@ -42,6 +46,7 @@ export class GeneratePersonalizedSystemPromptUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedChatSettingsError)
   async execute(
     command: GeneratePersonalizedSystemPromptCommand,
   ): Promise<GeneratePersonalizedSystemPromptResult> {

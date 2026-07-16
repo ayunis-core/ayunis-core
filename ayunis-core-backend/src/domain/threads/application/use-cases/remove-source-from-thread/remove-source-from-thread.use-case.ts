@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveSourceCommand } from './remove-source.command';
-import { SourceRemovalError, SourceNotFoundError } from '../../threads.errors';
+import {
+  SourceRemovalError,
+  SourceNotFoundError,
+  UnexpectedThreadError,
+} from '../../threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
@@ -15,6 +20,7 @@ export class RemoveSourceFromThreadUseCase {
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: RemoveSourceCommand): Promise<void> {
     this.logger.log('removeSource', {
       threadId: command.thread.id,

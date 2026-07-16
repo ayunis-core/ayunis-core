@@ -44,8 +44,11 @@ export class SourceNotFoundError extends SourceError {
 }
 
 export class UnexpectedSourceError extends SourceError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, SourceErrorCode.UNEXPECTED_SOURCE_ERROR, 500, metadata);
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, SourceErrorCode.UNEXPECTED_SOURCE_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }
 

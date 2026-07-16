@@ -10,6 +10,8 @@ import { ShareAuthorizationFactory } from '../../factories/share-authorization.f
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetSharesQuery } from './get-shares.query';
 import { Share } from '../../../domain/share.entity';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnexpectedShareError } from '../../shares.errors';
 
 /**
  * Use case for getting shares for any entity type
@@ -33,6 +35,7 @@ export class GetSharesUseCase {
    * @throws UnauthorizedException if user is not authenticated
    * @throws ForbiddenException if user cannot view shares for the entity
    */
+  @HandleUnexpectedErrors(UnexpectedShareError)
   async execute(query: GetSharesQuery): Promise<Share[]> {
     this.logger.log('execute', {
       entityId: query.entityId,

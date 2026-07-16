@@ -27,7 +27,11 @@ import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-
 import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import { CheckUserTeamMembershipQuery } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.query';
-import { ShareAlreadyExistsError } from '../../shares.errors';
+import {
+  ShareAlreadyExistsError,
+  UnexpectedShareError,
+} from '../../shares.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 interface ShareCommandConfig {
   entityType: SharedEntityType;
@@ -45,6 +49,7 @@ export class CreateShareUseCase {
     private readonly checkUserTeamMembershipUseCase: CheckUserTeamMembershipUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedShareError)
   async execute(command: CreateShareCommand): Promise<Share> {
     const { userId, orgId } = this.getAuthenticatedContext();
     const config = this.resolveCommandConfig(command);

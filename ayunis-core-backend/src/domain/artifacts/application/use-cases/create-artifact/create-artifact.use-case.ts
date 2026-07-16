@@ -1,5 +1,7 @@
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { CreateArtifactCommand } from './create-artifact.command';
 import {
@@ -21,7 +23,6 @@ import {
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
@@ -36,103 +37,101 @@ export class CreateArtifactUseCase {
   ) {}
 
   @Transactional()
+  @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
     this.logger.log('Creating artifact', {
       title: command.title,
       type: command.type,
     });
 
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
 
-      if (command.content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
-        throw new ArtifactContentTooLargeError(
-          command.content.length,
-          ARTIFACT_MAX_CONTENT_LENGTH,
-        );
-      }
-
-      await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId),
+    if (command.content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+      throw new ArtifactContentTooLargeError(
+        command.content.length,
+        ARTIFACT_MAX_CONTENT_LENGTH,
       );
+    }
 
-      const isDocument = command.type === ArtifactType.DOCUMENT;
+    await this.findThreadUseCase.execute(new FindThreadQuery(command.threadId));
 
-      if (isDocument && command.letterheadId) {
-        await this.findLetterheadUseCase.execute(
-          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
-        );
-      }
+    const isDocument = command.type === ArtifactType.DOCUMENT;
 
-      const artifact: Artifact = isDocument
-        ? new DocumentArtifact({
-            threadId: command.threadId,
-            userId,
-            title: command.title,
-            letterheadId: command.letterheadId ?? null,
-            currentVersionNumber: 1,
-          })
-        : new DiagramArtifact({
-            threadId: command.threadId,
-            userId,
-            title: command.title,
-            currentVersionNumber: 1,
-          });
+    if (isDocument && command.letterheadId) {
+      await this.findLetterheadUseCase.execute(
+        new FindLetterheadQuery({ letterheadId: command.letterheadId }),
+      );
+    }
 
-      const createdArtifact = await this.artifactsRepository.create(artifact);
+    const artifact = this.buildArtifact(command, userId);
+    const createdArtifact = await this.artifactsRepository.create(artifact);
 
-      const content = isDocument
-        ? sanitizeHtmlContent(command.content)
-        : command.content;
+    const content = isDocument
+      ? sanitizeHtmlContent(command.content)
+      : command.content;
 
-      const version = new ArtifactVersion({
-        artifactId: createdArtifact.id,
-        versionNumber: 1,
-        content,
-        authorType: command.authorType,
-        authorId: command.authorType === AuthorType.USER ? userId : null,
-      });
+    const version = new ArtifactVersion({
+      artifactId: createdArtifact.id,
+      versionNumber: 1,
+      content,
+      authorType: command.authorType,
+      authorId: command.authorType === AuthorType.USER ? userId : null,
+    });
 
-      await this.artifactsRepository.addVersion(version);
+    await this.artifactsRepository.addVersion(version);
 
-      if (createdArtifact instanceof DocumentArtifact) {
-        return new DocumentArtifact({
-          id: createdArtifact.id,
-          threadId: createdArtifact.threadId,
-          userId: createdArtifact.userId,
-          title: createdArtifact.title,
-          letterheadId: createdArtifact.letterheadId,
-          currentVersionNumber: createdArtifact.currentVersionNumber,
-          versions: [version],
-          createdAt: createdArtifact.createdAt,
-          updatedAt: createdArtifact.updatedAt,
+    return this.withVersion(createdArtifact, version);
+  }
+
+  private buildArtifact(
+    command: CreateArtifactCommand,
+    userId: UUID,
+  ): Artifact {
+    return command.type === ArtifactType.DOCUMENT
+      ? new DocumentArtifact({
+          threadId: command.threadId,
+          userId,
+          title: command.title,
+          letterheadId: command.letterheadId ?? null,
+          currentVersionNumber: 1,
+        })
+      : new DiagramArtifact({
+          threadId: command.threadId,
+          userId,
+          title: command.title,
+          currentVersionNumber: 1,
         });
-      }
-      return new DiagramArtifact({
+  }
+
+  private withVersion(
+    createdArtifact: Artifact,
+    version: ArtifactVersion,
+  ): Artifact {
+    if (createdArtifact instanceof DocumentArtifact) {
+      return new DocumentArtifact({
         id: createdArtifact.id,
         threadId: createdArtifact.threadId,
         userId: createdArtifact.userId,
         title: createdArtifact.title,
+        letterheadId: createdArtifact.letterheadId,
         currentVersionNumber: createdArtifact.currentVersionNumber,
         versions: [version],
         createdAt: createdArtifact.createdAt,
         updatedAt: createdArtifact.updatedAt,
       });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error('createArtifactUnexpectedError', {
-        title: command.title,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedArtifactError(
-        error instanceof Error ? error.message : 'Unknown error',
-      );
     }
+    return new DiagramArtifact({
+      id: createdArtifact.id,
+      threadId: createdArtifact.threadId,
+      userId: createdArtifact.userId,
+      title: createdArtifact.title,
+      currentVersionNumber: createdArtifact.currentVersionNumber,
+      versions: [version],
+      createdAt: createdArtifact.createdAt,
+      updatedAt: createdArtifact.updatedAt,
+    });
   }
 }

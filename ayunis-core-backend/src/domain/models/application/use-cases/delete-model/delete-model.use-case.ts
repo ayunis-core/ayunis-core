@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ModelsRepository } from '../../ports/models.repository';
 import { DeleteModelCommand } from './delete-model.command';
 import {
   ModelNotFoundByIdError,
   ModelDeletionFailedError,
+  UnexpectedModelError,
 } from '../../models.errors';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
@@ -22,6 +24,7 @@ export class DeleteModelUseCase {
     private readonly deletePermittedModelUseCase: DeletePermittedModelUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: DeleteModelCommand): Promise<void> {
     this.logger.log('execute', {
       id: command.id,

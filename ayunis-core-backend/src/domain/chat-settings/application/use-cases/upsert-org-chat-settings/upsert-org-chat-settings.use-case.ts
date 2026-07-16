@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command';
 import { OrgChatSettings } from '../../../domain/org-chat-settings.entity';
 import { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpsertOrgChatSettingsUseCase {
@@ -16,6 +16,7 @@ export class UpsertOrgChatSettingsUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedChatSettingsError)
   async execute(
     command: UpsertOrgChatSettingsCommand,
   ): Promise<OrgChatSettings> {
@@ -25,27 +26,18 @@ export class UpsertOrgChatSettingsUseCase {
     }
     this.logger.log('execute', { orgId });
 
-    try {
-      const orgChatSettings = new OrgChatSettings({
-        orgId,
-        internetSearchEnabled: command.internetSearchEnabled,
-      });
+    const orgChatSettings = new OrgChatSettings({
+      orgId,
+      internetSearchEnabled: command.internetSearchEnabled,
+    });
 
-      const result =
-        await this.orgChatSettingsRepository.upsert(orgChatSettings);
+    const result = await this.orgChatSettingsRepository.upsert(orgChatSettings);
 
-      this.logger.debug('Org chat settings upserted', {
-        orgId,
-        id: result.id,
-      });
+    this.logger.debug('Org chat settings upserted', {
+      orgId,
+      id: result.id,
+    });
 
-      return result;
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to upsert org chat settings', {
-        error: error as Error,
-      });
-      throw new UnexpectedChatSettingsError(error as Error);
-    }
+    return result;
   }
 }

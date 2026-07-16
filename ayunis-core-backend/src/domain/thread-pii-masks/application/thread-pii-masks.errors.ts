@@ -6,12 +6,10 @@ export enum ThreadPiiMasksErrorCode {
 }
 
 export class UnexpectedThreadPiiMasksError extends ApplicationError {
-  constructor(operation: string, metadata?: ErrorMetadata) {
-    super(
-      `Unexpected thread PII masks error during ${operation}`,
-      ThreadPiiMasksErrorCode.UNEXPECTED_ERROR,
-      500,
-      { operation, ...metadata },
-    );
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(error.message, ThreadPiiMasksErrorCode.UNEXPECTED_ERROR, 500, {
+      ...metadata,
+      error,
+    });
   }
 }

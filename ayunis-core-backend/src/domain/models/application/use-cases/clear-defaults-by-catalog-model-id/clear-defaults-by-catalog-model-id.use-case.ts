@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
+import { UnexpectedModelError } from '../../models.errors';
 
 @Injectable()
 export class ClearDefaultsByCatalogModelIdUseCase {
@@ -14,6 +16,7 @@ export class ClearDefaultsByCatalogModelIdUseCase {
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: ClearDefaultsByCatalogModelIdCommand): Promise<void> {
     this.logger.log('Clearing defaults for archived catalog model', {
       catalogModelId: command.catalogModelId,

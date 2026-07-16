@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
 import {
   ImageGenerationInput,
   ImageGenerationResult,
 } from '../../ports/image-generation.handler';
-import { ImageGenerationFailedError } from '../../models.errors';
+import {
+  ImageGenerationFailedError,
+  UnexpectedModelError,
+} from '../../models.errors';
 import { GenerateImageCommand } from './generate-image.command';
 
 @Injectable()
@@ -16,6 +20,7 @@ export class GenerateImageUseCase {
     private readonly imageGenerationHandlerRegistry: ImageGenerationHandlerRegistry,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: GenerateImageCommand): Promise<ImageGenerationResult> {
     this.logger.log('execute', {
       model: command.model.name,

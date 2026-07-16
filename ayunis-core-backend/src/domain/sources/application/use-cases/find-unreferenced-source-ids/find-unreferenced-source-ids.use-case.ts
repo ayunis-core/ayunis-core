@@ -3,7 +3,7 @@ import type { UUID } from 'crypto';
 import { SourceRepository } from '../../ports/source.repository';
 import { FindUnreferencedSourceIdsQuery } from './find-unreferenced-source-ids.query';
 import { UnexpectedSourceError } from '../../sources.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 // Centralises cross-module reachability in the sources domain: callers pass
 // candidate IDs (e.g. from a threads-side stale query) and get back the subset
@@ -15,6 +15,7 @@ export class FindUnreferencedSourceIdsUseCase {
 
   constructor(private readonly sourceRepository: SourceRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(query: FindUnreferencedSourceIdsQuery): Promise<UUID[]> {
     this.logger.log('execute', {
       candidateCount: query.candidateIds.length,
@@ -25,19 +26,9 @@ export class FindUnreferencedSourceIdsUseCase {
       return [];
     }
 
-    try {
-      return await this.sourceRepository.findUnreferencedIds(
-        query.candidateIds,
-        query.olderThan,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding unreferenced source IDs', {
-        error: error as Error,
-      });
-      throw new UnexpectedSourceError(
-        error instanceof Error ? error.message : 'Unknown error',
-      );
-    }
+    return await this.sourceRepository.findUnreferencedIds(
+      query.candidateIds,
+      query.olderThan,
+    );
   }
 }

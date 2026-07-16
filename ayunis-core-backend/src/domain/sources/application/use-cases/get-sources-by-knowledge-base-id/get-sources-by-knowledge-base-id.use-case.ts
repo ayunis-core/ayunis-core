@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { Source } from '../../../domain/source.entity';
 import { SourceRepository } from '../../ports/source.repository';
 import { UnexpectedSourceError } from '../../sources.errors';
@@ -11,23 +11,14 @@ export class GetSourcesByKnowledgeBaseIdUseCase {
 
   constructor(private readonly sourceRepository: SourceRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(query: GetSourcesByKnowledgeBaseIdQuery): Promise<Source[]> {
     this.logger.log('Finding sources by knowledge base ID', {
       knowledgeBaseId: query.knowledgeBaseId,
     });
 
-    try {
-      return await this.sourceRepository.findByKnowledgeBaseId(
-        query.knowledgeBaseId,
-      );
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding sources by knowledge base ID', {
-        error: error as Error,
-      });
-      throw new UnexpectedSourceError(
-        error instanceof Error ? error.message : 'Unknown error',
-      );
-    }
+    return await this.sourceRepository.findByKnowledgeBaseId(
+      query.knowledgeBaseId,
+    );
   }
 }

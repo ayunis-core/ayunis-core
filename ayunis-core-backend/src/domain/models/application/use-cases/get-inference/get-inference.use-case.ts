@@ -5,7 +5,11 @@ import {
   InferenceInput,
   InferenceResponse,
 } from '../../ports/inference.handler';
-import { InferenceFailedError } from '../../models.errors';
+import {
+  InferenceFailedError,
+  UnexpectedModelError,
+} from '../../models.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
@@ -19,6 +23,7 @@ export class GetInferenceUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
     this.logger.log('triggerInference', {
       model: command.model.name,

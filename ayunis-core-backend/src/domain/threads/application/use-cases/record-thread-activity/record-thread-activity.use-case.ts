@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RecordThreadActivityCommand } from './record-thread-activity.command';
+import { UnexpectedThreadError } from '../../threads.errors';
 
 /**
  * Bumps a thread's `lastActivityAt` to the time a message was added. Drives
@@ -15,6 +17,7 @@ export class RecordThreadActivityUseCase {
 
   constructor(private readonly threadsRepository: ThreadsRepository) {}
 
+  @HandleUnexpectedErrors(UnexpectedThreadError)
   async execute(command: RecordThreadActivityCommand): Promise<void> {
     try {
       await this.threadsRepository.updateLastActivityAt({

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { randomUUID, UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
@@ -22,76 +22,83 @@ export class CreateLetterheadUseCase {
     private readonly letterheadPdfService: LetterheadPdfService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedLetterheadError)
   async execute(command: CreateLetterheadCommand): Promise<Letterhead> {
     this.logger.log('Creating letterhead', { name: command.name });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
+    }
 
+    await this.validatePdfs(command);
+
+    const letterheadId = randomUUID();
+
+    const { firstPagePath, continuationPagePath } = await this.uploadPdfs(
+      orgId,
+      letterheadId,
+      command,
+    );
+
+    const letterhead = new Letterhead({
+      id: letterheadId,
+      orgId,
+      name: command.name,
+      description: command.description,
+      firstPageStoragePath: firstPagePath,
+      continuationPageStoragePath: continuationPagePath,
+      firstPageMargins: command.firstPageMargins,
+      continuationPageMargins: command.continuationPageMargins,
+    });
+
+    return await this.letterheadsRepository.save(letterhead);
+  }
+
+  private async validatePdfs(command: CreateLetterheadCommand): Promise<void> {
+    await this.letterheadPdfService.validateSinglePagePdf(
+      command.firstPagePdfBuffer,
+      'first page',
+    );
+
+    if (command.continuationPagePdfBuffer) {
       await this.letterheadPdfService.validateSinglePagePdf(
-        command.firstPagePdfBuffer,
-        'first page',
+        command.continuationPagePdfBuffer,
+        'continuation page',
       );
+    }
+  }
 
-      if (command.continuationPagePdfBuffer) {
-        await this.letterheadPdfService.validateSinglePagePdf(
-          command.continuationPagePdfBuffer,
-          'continuation page',
-        );
-      }
+  private async uploadPdfs(
+    orgId: UUID,
+    letterheadId: UUID,
+    command: CreateLetterheadCommand,
+  ): Promise<{ firstPagePath: string; continuationPagePath: string | null }> {
+    const firstPagePath = this.letterheadPdfService.buildStoragePath(
+      orgId,
+      letterheadId,
+      'first-page.pdf',
+    );
 
-      const letterheadId = randomUUID();
+    await this.uploadObjectUseCase.execute(
+      new UploadObjectCommand(firstPagePath, command.firstPagePdfBuffer),
+    );
 
-      const firstPagePath = this.letterheadPdfService.buildStoragePath(
+    let continuationPagePath: string | null = null;
+    if (command.continuationPagePdfBuffer) {
+      continuationPagePath = this.letterheadPdfService.buildStoragePath(
         orgId,
         letterheadId,
-        'first-page.pdf',
+        'continuation.pdf',
       );
-
       await this.uploadObjectUseCase.execute(
-        new UploadObjectCommand(firstPagePath, command.firstPagePdfBuffer),
+        new UploadObjectCommand(
+          continuationPagePath,
+          command.continuationPagePdfBuffer,
+        ),
       );
-
-      let continuationPagePath: string | null = null;
-      if (command.continuationPagePdfBuffer) {
-        continuationPagePath = this.letterheadPdfService.buildStoragePath(
-          orgId,
-          letterheadId,
-          'continuation.pdf',
-        );
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(
-            continuationPagePath,
-            command.continuationPagePdfBuffer,
-          ),
-        );
-      }
-
-      const letterhead = new Letterhead({
-        id: letterheadId,
-        orgId,
-        name: command.name,
-        description: command.description,
-        firstPageStoragePath: firstPagePath,
-        continuationPageStoragePath: continuationPagePath,
-        firstPageMargins: command.firstPageMargins,
-        continuationPageMargins: command.continuationPageMargins,
-      });
-
-      return await this.letterheadsRepository.save(letterhead);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating letterhead', {
-        error: error as Error,
-      });
-      throw new UnexpectedLetterheadError('Error creating letterhead', {
-        error: error as Error,
-      });
     }
+
+    return { firstPagePath, continuationPagePath };
   }
 }

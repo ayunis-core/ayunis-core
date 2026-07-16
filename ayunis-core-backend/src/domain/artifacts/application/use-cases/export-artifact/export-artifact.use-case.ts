@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import {
   DocumentExportPort,
@@ -14,7 +15,6 @@ import {
 } from '../../artifacts.errors';
 import { DocumentArtifact } from '../../../domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
@@ -44,47 +44,34 @@ export class ExportArtifactUseCase {
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
     this.logger.log('Exporting artifact', {
       artifactId: command.artifactId,
       format: command.format,
     });
 
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const artifact = await this.loadExportableArtifact(
-        command.artifactId,
-        userId,
-      );
-      const currentVersion = this.requireCurrentVersion(artifact);
-      const safeTitle = this.buildSafeTitle(artifact.title);
-      const content = await this.deanonymizeContent(
-        artifact.threadId,
-        currentVersion.content,
-      );
-
-      if (command.format === 'docx') {
-        return await this.exportDocx(content, safeTitle);
-      }
-
-      return await this.exportPdf(artifact, content, safeTitle);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error('exportArtifactUnexpectedError', {
-        artifactId: command.artifactId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedArtifactError(
-        error instanceof Error ? error.message : 'Unknown error',
-      );
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
     }
+
+    const artifact = await this.loadExportableArtifact(
+      command.artifactId,
+      userId,
+    );
+    const currentVersion = this.requireCurrentVersion(artifact);
+    const safeTitle = this.buildSafeTitle(artifact.title);
+    const content = await this.deanonymizeContent(
+      artifact.threadId,
+      currentVersion.content,
+    );
+
+    if (command.format === 'docx') {
+      return this.exportDocx(content, safeTitle);
+    }
+
+    return this.exportPdf(artifact, content, safeTitle);
   }
 
   private async loadExportableArtifact(

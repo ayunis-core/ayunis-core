@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnexpectedChatSettingsError } from '../../chat-settings.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteUserSystemPromptUseCase {
@@ -14,6 +14,7 @@ export class DeleteUserSystemPromptUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedChatSettingsError)
   async execute(): Promise<void> {
     const userId = this.contextService.get('userId');
     if (!userId) {
@@ -21,14 +22,8 @@ export class DeleteUserSystemPromptUseCase {
     }
     this.logger.log('execute', { userId });
 
-    try {
-      await this.userSystemPromptsRepository.deleteByUserId(userId);
+    await this.userSystemPromptsRepository.deleteByUserId(userId);
 
-      this.logger.debug('User system prompt deleted', { userId });
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to delete user system prompt', error);
-      throw new UnexpectedChatSettingsError(error as Error);
-    }
+    this.logger.debug('User system prompt deleted', { userId });
   }
 }
