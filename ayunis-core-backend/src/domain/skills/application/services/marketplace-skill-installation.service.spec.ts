@@ -56,7 +56,7 @@ describe('MarketplaceSkillInstallationService', () => {
   it('should fetch marketplace skill and delegate creation to CreateSkillWithUniqueNameUseCase', async () => {
     const createdSkill = new Skill({
       name: 'Meeting Summarizer',
-      shortDescription: 'Summarize meetings and extract action items',
+      shortDescription: 'AI description for meeting summarizer',
       instructions:
         'You are a meeting summarization assistant. Analyze meeting notes.',
       marketplaceIdentifier: 'meeting-summarizer',
@@ -73,7 +73,7 @@ describe('MarketplaceSkillInstallationService', () => {
 
     expect(result.name).toBe('Meeting Summarizer');
     expect(result.shortDescription).toBe(
-      'Summarize meetings and extract action items',
+      'AI description for meeting summarizer',
     );
     expect(result.instructions).toBe(
       'You are a meeting summarization assistant. Analyze meeting notes.',
@@ -83,7 +83,9 @@ describe('MarketplaceSkillInstallationService', () => {
     expect(createSkillWithUniqueNameUseCase.execute).toHaveBeenCalledWith(
       new CreateSkillWithUniqueNameCommand({
         name: 'Meeting Summarizer',
-        shortDescription: 'Summarize meetings and extract action items',
+        // The installed skill's trigger must come from the marketplace
+        // aiDescription (shown to the LLM), not the marketing shortDescription
+        shortDescription: 'AI description for meeting summarizer',
         instructions:
           'You are a meeting summarization assistant. Analyze meeting notes.',
         marketplaceIdentifier: 'meeting-summarizer',

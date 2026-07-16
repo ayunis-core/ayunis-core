@@ -75,7 +75,9 @@ export class MarketplaceSkillInstallationService {
     return this.createSkillWithUniqueNameUseCase.execute(
       new CreateSkillWithUniqueNameCommand({
         name: marketplaceSkill.name,
-        shortDescription: marketplaceSkill.shortDescription,
+        // aiDescription is the activation trigger shown to the LLM;
+        // shortDescription is marketing copy for marketplace cards
+        shortDescription: marketplaceSkill.aiDescription,
         instructions: marketplaceSkill.instructions,
         marketplaceIdentifier: marketplaceSkill.identifier,
         userId,
