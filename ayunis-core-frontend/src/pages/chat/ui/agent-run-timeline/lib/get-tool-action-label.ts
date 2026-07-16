@@ -61,6 +61,16 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.update_diagram'),
         target: asString(params.title),
       };
+    case 'create_spreadsheet':
+      return {
+        verb: t('chat.timeline.actions.create_spreadsheet'),
+        target: asString(params.title),
+      };
+    case 'update_spreadsheet':
+      return {
+        verb: t('chat.timeline.actions.update_spreadsheet'),
+        target: asString(params.title),
+      };
     case 'bar_chart':
     case 'line_chart':
     case 'pie_chart':

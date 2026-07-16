@@ -4,6 +4,7 @@ import { useArtifact } from '../api/useArtifact';
 import { useUpdateArtifact } from '../api/useUpdateArtifact';
 import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
+import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
@@ -51,7 +52,7 @@ export function useArtifactActions(threadId: string) {
   );
 
   const handleExportArtifact = useCallback(
-    (format: 'docx' | 'pdf', unsavedContent?: string) => {
+    (format: ArtifactsControllerExportFormat, unsavedContent?: string) => {
       const doExport = async () => {
         if (unsavedContent) {
           await saveArtifactAsync({

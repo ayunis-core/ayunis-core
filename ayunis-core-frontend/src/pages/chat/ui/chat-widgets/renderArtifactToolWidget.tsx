@@ -6,6 +6,8 @@ import UpdateDocumentWidget from './UpdateDocumentWidget';
 import EditDocumentWidget from './EditDocumentWidget';
 import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
+import CreateSpreadsheetWidget from './CreateSpreadsheetWidget';
+import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
 
 /**
  * Renders the chat widget for any document- or diagram-related tool call.
@@ -72,6 +74,25 @@ export function renderArtifactToolWidget(params: {
       return (
         <UpdateDiagramWidget
           key={`update-diagram-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'create_spreadsheet':
+      return (
+        <CreateSpreadsheetWidget
+          key={`create-spreadsheet-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          threadId={threadId}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'update_spreadsheet':
+      return (
+        <UpdateSpreadsheetWidget
+          key={`update-spreadsheet-${keySuffix}`}
           content={content}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
@@ -44,18 +44,7 @@ import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
-
-const LazyArtifactEditor = lazy(() =>
-  import('@/widgets/artifact-editor').then((m) => ({
-    default: m.ArtifactEditor,
-  })),
-);
-
-const LazyDiagramViewer = lazy(() =>
-  import('@/widgets/diagram-viewer').then((m) => ({
-    default: m.DiagramViewer,
-  })),
-);
+import { ArtifactSidePanel } from './ArtifactSidePanel';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -441,24 +430,15 @@ export default function ChatPage({
           resetKey={thread.id}
           sidePanel={
             openArtifact ? (
-              <Suspense fallback={null}>
-                {openArtifact.type === 'diagram' ? (
-                  <LazyDiagramViewer
-                    artifact={openArtifact}
-                    onClose={handleCloseArtifact}
-                  />
-                ) : (
-                  <LazyArtifactEditor
-                    artifact={openArtifact}
-                    onSave={handleSaveArtifact}
-                    onRevert={handleRevertArtifact}
-                    onExport={handleExportArtifact}
-                    onClose={handleCloseArtifact}
-                    onLetterheadChange={handleLetterheadChange}
-                    isExporting={isExporting}
-                  />
-                )}
-              </Suspense>
+              <ArtifactSidePanel
+                artifact={openArtifact}
+                onSave={handleSaveArtifact}
+                onRevert={handleRevertArtifact}
+                onExport={handleExportArtifact}
+                onClose={handleCloseArtifact}
+                onLetterheadChange={handleLetterheadChange}
+                isExporting={isExporting}
+              />
             ) : undefined
           }
         />
