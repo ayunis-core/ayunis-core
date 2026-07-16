@@ -17,10 +17,13 @@ export function useExportArtifact({
   const [isExporting, setIsExporting] = useState(false);
 
   const exportArtifact = useCallback(
-    async (format: ArtifactsControllerExportFormat) => {
+    async (format: ArtifactsControllerExportFormat, versionNumber?: number) => {
       setIsExporting(true);
       try {
-        const data = await artifactsControllerExport(artifactId, { format });
+        const data = await artifactsControllerExport(artifactId, {
+          format,
+          versionNumber,
+        });
 
         // The response is a file blob — trigger download
         const blob = data instanceof Blob ? data : new Blob([data]);

@@ -6,6 +6,8 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'edit_document',
   'create_diagram',
   'update_diagram',
+  'create_spreadsheet',
+  'update_spreadsheet',
   'bar_chart',
   'line_chart',
   'pie_chart',
@@ -20,14 +22,14 @@ export function isRichTool(toolName: string): boolean {
   return RICH_TOOL_NAMES.has(toolName);
 }
 
-const ARTIFACT_MUTATION_TOOLS: ReadonlyMap<string, 'document' | 'diagram'> =
-  new Map([
-    ['edit_document', 'document'],
-    ['update_document', 'document'],
-    ['update_diagram', 'diagram'],
-  ]);
+const ARTIFACT_MUTATION_TOOLS: ReadonlyMap<string, ArtifactFamily> = new Map([
+  ['edit_document', 'document'],
+  ['update_document', 'document'],
+  ['update_diagram', 'diagram'],
+  ['update_spreadsheet', 'spreadsheet'],
+]);
 
-export type ArtifactFamily = 'document' | 'diagram';
+export type ArtifactFamily = 'document' | 'diagram' | 'spreadsheet';
 
 export interface ArtifactToolTarget {
   family: ArtifactFamily;

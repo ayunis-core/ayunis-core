@@ -864,6 +864,72 @@ describe('groupMessagesIntoRuns', () => {
       expect(richTool.steps).toHaveLength(2);
     });
 
+    it('merges repeated update_spreadsheet calls on the same artifact', () => {
+      const messages = [
+        userMessage('add a column'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 's1',
+            name: 'update_spreadsheet',
+            params: { artifact_id: 'art-1' },
+          },
+        ]),
+        toolResultMessage('s1', 'ok'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 's2',
+            name: 'update_spreadsheet',
+            params: { artifact_id: 'art-1' },
+          },
+        ]),
+        toolResultMessage('s2', 'ok'),
+      ];
+
+      const units = groupMessagesIntoRuns(messages, { isStreaming: false });
+
+      const run = units[1];
+      if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+      expect(run.blocks.map((block) => block.kind)).toEqual(['rich-tool']);
+      const richTool = run.blocks[0];
+      if (richTool.kind !== 'rich-tool') throw new Error('expected rich tool');
+      expect(richTool.steps).toHaveLength(2);
+    });
+
+    it('splits update_spreadsheet calls that target different artifacts', () => {
+      const messages = [
+        userMessage('update both sheets'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 's1',
+            name: 'update_spreadsheet',
+            params: { artifact_id: 'art-1' },
+          },
+        ]),
+        toolResultMessage('s1', 'ok'),
+        assistantMessage([
+          {
+            type: 'tool_use',
+            id: 's2',
+            name: 'update_spreadsheet',
+            params: { artifact_id: 'art-2' },
+          },
+        ]),
+        toolResultMessage('s2', 'ok'),
+      ];
+
+      const units = groupMessagesIntoRuns(messages, { isStreaming: false });
+
+      const run = units[1];
+      if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+      expect(run.blocks.map((block) => block.kind)).toEqual([
+        'rich-tool',
+        'rich-tool',
+      ]);
+    });
+
     it('merges a follow-up edit into the previous widget while its arguments still stream', () => {
       const messages = [
         userMessage('refine'),
