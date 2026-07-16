@@ -36,7 +36,8 @@
     "title": "Version History ({{count}})",
     "current": "(current)",
     "revertTo": "Revert to v{{version}}",
-    "revert": "Revert"
+    "revert": "Revert",
+    "viewVersion": "View version v{{version}}"
   },
   "spreadsheet": {
     "empty": "This spreadsheet has no columns yet. Add a column to get started.",
@@ -54,6 +55,7 @@
       "addRowsCount": "Number of rows",
       "addRowsConfirm": "Add",
       "maxRowsReached": "Maximum of {{count}} rows reached",
+      "deleteLastRow": "Delete last row",
       "addColumn": "Add column",
       "maxColumnsReached": "Maximum of {{count}} columns reached",
       "columns": "Edit columns",

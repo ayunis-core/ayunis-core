@@ -117,15 +117,18 @@ export function SpreadsheetEditor({
       </div>
 
       {editor.isViewingHistory ? (
-        <div className="bg-muted text-muted-foreground border-b px-3 py-1.5 text-xs">
-          {t('spreadsheet.viewingHistory', {
-            version: editor.displayedVersionNumber,
-          })}
+        <div className="flex items-center min-h-[41px] bg-muted text-muted-foreground border-b px-3 py-1.5 text-xs">
+          <p>
+            {t('spreadsheet.viewingHistory', {
+              version: editor.displayedVersionNumber,
+            })}
+          </p>
         </div>
       ) : (
         <SpreadsheetToolbar
           gridState={editor.displayedGridState}
           onAddRows={editor.addRows}
+          onDeleteLastRow={editor.deleteLastRow}
           onAddColumn={editor.addColumn}
           onRenameColumn={editor.renameColumn}
           onDeleteColumn={editor.deleteColumn}
@@ -143,8 +146,9 @@ export function SpreadsheetEditor({
         <SpreadsheetGrid
           columns={editor.displayedGridState.columns}
           rows={editor.displayedGridState.rows}
-          onMoveColumn={editor.moveColumn}
+          displayValues={editor.displayValues}
           onRowsChange={editor.setRows}
+          onMoveColumn={editor.moveColumn}
           readOnly={editor.isViewingHistory}
         />
       </div>
@@ -154,8 +158,9 @@ export function SpreadsheetEditor({
           versions={artifact.versions}
           currentVersionNumber={artifact.currentVersionNumber}
           selectedVersionNumber={editor.displayedVersionNumber}
-          onSelect={editor.isDirty ? undefined : editor.selectVersion}
-          onRevert={editor.isDirty ? undefined : onRevert}
+          onSelect={editor.selectVersion}
+          onRevert={onRevert}
+          disabled={editor.isDirty}
         />
       )}
     </div>

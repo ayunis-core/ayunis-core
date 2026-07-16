@@ -2,3 +2,14 @@
 .rv-spreadsheet {
   font-size: 0.875rem;
 }
+
+.rv-cell-formula {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+.rv-cell-formula-error {
+  color: var(--destructive);
+  font-style: normal;
+}

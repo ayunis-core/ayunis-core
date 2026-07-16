@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   onSave: vi.fn(),
   editor: {
     displayedGridState: { columns: [''], rows: [] },
+    displayValues: [],
     displayedVersionNumber: 1,
     getDisplayedSerializedContent: vi.fn(),
     getSerializedContent: vi.fn(() =>
@@ -20,10 +21,12 @@ const mocks = vi.hoisted(() => ({
     isValid: true,
     isViewingHistory: false,
     addColumn: vi.fn(),
+    addRows: vi.fn(),
     deleteColumn: vi.fn(),
     renameColumn: vi.fn(),
     selectVersion: vi.fn(),
     setRows: vi.fn(),
+    moveColumn: vi.fn(),
   },
 }));
 

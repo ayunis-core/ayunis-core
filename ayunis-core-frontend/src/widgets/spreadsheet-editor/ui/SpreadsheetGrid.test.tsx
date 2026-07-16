@@ -18,6 +18,7 @@ vi.mock('@revolist/react-datagrid', () => ({
     gridMock.props = props;
     return <div data-testid="revo-grid" />;
   },
+  Template: (template: unknown) => template,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -36,12 +37,14 @@ describe('SpreadsheetGrid', () => {
       <SpreadsheetGrid
         columns={['Value']}
         rows={currentRows}
+        displayValues={[['before']]}
         onRowsChange={(update) => {
           currentRows = update(currentRows);
           rendered.rerender(
             <SpreadsheetGrid
               columns={['Value']}
               rows={currentRows}
+              displayValues={[['after']]}
               onRowsChange={(nextUpdate) => {
                 currentRows = nextUpdate(currentRows);
               }}
@@ -71,6 +74,7 @@ describe('SpreadsheetGrid', () => {
       <SpreadsheetGrid
         columns={['Value']}
         rows={historyRows}
+        displayValues={[['history']]}
         onRowsChange={vi.fn()}
         onMoveColumn={vi.fn()}
         readOnly
@@ -87,11 +91,14 @@ describe('SpreadsheetGrid', () => {
       <SpreadsheetGrid
         columns={['Value']}
         rows={currentRows}
+        displayValues={[['current']]}
         onRowsChange={vi.fn()}
         onMoveColumn={vi.fn()}
       />,
     );
 
-    expect(gridMock.props?.source).toEqual(currentRows);
+    expect(gridMock.props?.source).toEqual([
+      expect.objectContaining(currentRows[0]),
+    ]);
   });
 });

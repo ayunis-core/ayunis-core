@@ -26,6 +26,11 @@ interface VersionHistoryProps {
    * "(current)" label and Revert visibility follow `currentVersionNumber`.
    */
   readonly selectedVersionNumber?: number;
+  /**
+   * Suspends selection and revert and greys out the version rows (e.g. while
+   * the editor has unsaved changes).
+   */
+  readonly disabled?: boolean;
 }
 
 function formatTimestamp(iso: string): string {
@@ -44,6 +49,7 @@ export function VersionHistory({
   selectedVersionNumber,
   onRevert,
   onSelect,
+  disabled,
 }: VersionHistoryProps) {
   const { t } = useTranslation('artifacts');
   const [isOpen, setIsOpen] = useState(false);
@@ -91,11 +97,13 @@ export function VersionHistory({
                 </span>
               </span>
             );
-            const revertButton = onRevert && !isCurrent && (
+            // `relative` lifts the button above the row-filling select
+            // overlay so clicking Revert reverts instead of selecting.
+            const revertButton = onRevert && !isCurrent && !disabled && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="h-7 px-2"
+                className="relative h-7 px-2"
                 onClick={() => onRevert(version.versionNumber)}
                 title={t('versionHistory.revertTo', {
                   version: version.versionNumber,
@@ -106,25 +114,32 @@ export function VersionHistory({
               </Button>
             );
 
+            const isSelectable = !!onSelect && !disabled;
+
             return (
               <div
                 key={version.id}
                 className={cn(
-                  'flex items-center justify-between rounded px-2 py-1.5 text-sm',
-                  isSelected && 'bg-muted',
+                  'relative my-1 flex items-center justify-between rounded px-2 py-1.5 text-sm',
+                  // Half-strength so the ghost Revert button's own hover
+                  // (full-strength accent, the same colour as muted) still
+                  // reads as a distinct surface on top of the row.
+                  isSelected && 'bg-muted/50',
+                  isSelectable && 'hover:bg-muted/50',
+                  disabled && 'opacity-50',
                 )}
               >
-                {onSelect ? (
+                {isSelectable && (
                   <button
                     type="button"
-                    className="hover:bg-muted min-w-0 flex-1 text-left"
+                    className="absolute inset-0 rounded"
+                    aria-label={t('versionHistory.viewVersion', {
+                      version: version.versionNumber,
+                    })}
                     onClick={() => onSelect(version.versionNumber)}
-                  >
-                    {versionDetails}
-                  </button>
-                ) : (
-                  versionDetails
+                  />
                 )}
+                {versionDetails}
                 {revertButton}
               </div>
             );
