@@ -26,4 +26,6 @@ export enum ToolType {
   GENERATE_IMAGE = 'generate_image',
   CREATE_DIAGRAM = 'create_diagram',
   UPDATE_DIAGRAM = 'update_diagram',
+  CREATE_SPREADSHEET = 'create_spreadsheet',
+  UPDATE_SPREADSHEET = 'update_spreadsheet',
 }
