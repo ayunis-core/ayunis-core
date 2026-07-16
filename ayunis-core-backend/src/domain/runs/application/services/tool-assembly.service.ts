@@ -208,12 +208,10 @@ export class ToolAssemblyService {
     );
 
     // Artifact-related always-on tools (document create/update/edit/read +
-    // diagram create/update). Handles letterhead suffix + artifact context
-    // injection internally.
+    // diagram and spreadsheet create/update). Handles letterhead suffix +
+    // artifact context injection internally.
     tools.push(
-      ...(await this.artifactToolAssembler.assembleDocumentAndDiagramTools(
-        thread,
-      )),
+      ...(await this.artifactToolAssembler.assembleArtifactTools(thread)),
     );
 
     tools.push(...(await this.assembleSkillManagementTools(slugMap)));

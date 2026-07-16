@@ -75,7 +75,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       execute: overrides.imageModelExecute ?? jest.fn().mockResolvedValue({}),
     };
     const artifactToolAssembler = {
-      assembleDocumentAndDiagramTools: jest.fn().mockResolvedValue([]),
+      assembleArtifactTools: jest.fn().mockResolvedValue([]),
     };
     const getOrgChatSettingsUseCase = {
       execute:

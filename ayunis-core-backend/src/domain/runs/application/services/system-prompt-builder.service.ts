@@ -151,6 +151,12 @@ Use create_diagram when the user asks for a visual — a flowchart, sequence dia
 Prefer create_diagram over inline mermaid code blocks when the user explicitly asks for a diagram they want to view, iterate on, or export. For a quick sketch in the middle of a conversation, an inline mermaid code block is fine.
 </diagram_usage>
 
+<spreadsheet_usage>
+Use create_spreadsheet when the user asks for tabular data they intend to edit, extend, or export to Excel/CSV — for example a budget, inventory list, schedule, or dataset. For a quick illustrative table inside an answer, prefer an inline markdown table; the user can always ask to turn it into a spreadsheet.
+
+Provide typed values: numbers as JSON numbers (not strings) so exported cells are numeric, and null for empty cells. Updates via update_spreadsheet replace the entire spreadsheet — always pass the complete columns and rows along with expected_version from your last tool result.
+</spreadsheet_usage>
+
 ${toolSpecificSections}
 
 </tool_usage>`;
