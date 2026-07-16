@@ -44,13 +44,11 @@ export class DeleteThreadUseCase {
         return;
       }
 
-      // Delete associated storage assets before deleting the thread
       await this.threadStorageCleanupService.cleanupThreadStorage(
         command.id,
         orgId,
       );
 
-      // Delete the thread
       await this.threadsRepository.delete(command.id, userId);
 
       this.logger.log('Thread deleted successfully', {

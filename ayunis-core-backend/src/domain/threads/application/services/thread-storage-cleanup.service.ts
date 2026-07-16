@@ -11,15 +11,6 @@ import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/de
 import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import { GeneratedImagesRepository } from '../ports/generated-images.repository';
 
-/**
- * Removes all object-storage (MinIO) assets that belong to a thread: image
- * attachments referenced by its messages and any generated-image blobs.
- *
- * Shared by thread deletion and user deletion. Storage errors are logged and
- * swallowed so a transient failure never blocks the surrounding delete — the
- * database rows are removed regardless, and an orphaned-object sweep backstops
- * anything that slips through.
- */
 @Injectable()
 export class ThreadStorageCleanupService {
   private readonly logger = new Logger(ThreadStorageCleanupService.name);
