@@ -11,9 +11,15 @@ import {
   ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
+  InvalidSpreadsheetContentError,
+  UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
+import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -261,6 +267,15 @@ describe('UpdateArtifactUseCase', () => {
   it('should reject content exceeding the maximum allowed length', async () => {
     const oversizedContent =
       '<p>' + 'A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH) + '</p>';
+    artifactsRepository.findById.mockResolvedValue(
+      new DocumentArtifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Oversized Document',
+        currentVersionNumber: 1,
+      }),
+    );
 
     const command = new UpdateArtifactCommand({
       artifactId: mockArtifactId,
@@ -271,7 +286,9 @@ describe('UpdateArtifactUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       ArtifactContentTooLargeError,
     );
-    expect(artifactsRepository.findById).not.toHaveBeenCalled();
+    expect(
+      artifactsRepository.addVersionAndUpdateArtifact,
+    ).not.toHaveBeenCalled();
   });
 
   it('should accept content at exactly the maximum allowed length', async () => {
@@ -714,15 +731,116 @@ describe('UpdateArtifactUseCase', () => {
         authorType: AuthorType.USER,
       });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Connection refused',
+      const error = await useCase
+        .execute(command)
+        .catch((caughtError: unknown) => caughtError);
+
+      expect(error).toBeInstanceOf(UnexpectedArtifactError);
+      expect((error as UnexpectedArtifactError).message).toBe(
+        'Unexpected artifact error',
       );
+      expect((error as UnexpectedArtifactError).metadata).toBeUndefined();
 
       // 1 ownership check + 1 buildVersion attempt
       expect(artifactsRepository.findById).toHaveBeenCalledTimes(2);
       expect(
         artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('spreadsheet artifacts', () => {
+    const spreadsheetArtifact = () =>
+      new SpreadsheetArtifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Budget Sheet',
+        currentVersionNumber: 1,
+      });
+
+    beforeEach(() => {
+      artifactsRepository.findById.mockResolvedValue(spreadsheetArtifact());
+      artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+        async ({ version }) => version,
+      );
+    });
+
+    it('should canonicalize spreadsheet content on user save', async () => {
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: JSON.stringify({
+          format: SPREADSHEET_CONTENT_FORMAT,
+          columns: ['A', 'B'],
+          rows: [['x'], ['y', 1, 'extra']],
+        }),
+        authorType: AuthorType.USER,
+      });
+
+      const result = (await useCase.execute(command)) as ArtifactVersion;
+
+      expect(JSON.parse(result.content)).toEqual({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['A', 'B'],
+        rows: [
+          ['x', null],
+          ['y', 1],
+        ],
+      });
+    });
+
+    it('should measure the canonical spreadsheet content for the size limit', async () => {
+      const compactContent = JSON.stringify({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Value'],
+        rows: [['A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH - 120)]],
+      });
+      const paddedContent = compactContent.replace(
+        '{',
+        `{${' '.repeat(ARTIFACT_MAX_CONTENT_LENGTH - compactContent.length + 1)}`,
+      );
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: paddedContent,
+        authorType: AuthorType.USER,
+      });
+
+      const result = (await useCase.execute(command)) as ArtifactVersion;
+
+      expect(result.content).toBe(compactContent);
+    });
+
+    it('should reject invalid spreadsheet content without saving a version', async () => {
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '{"format":"wrong-format","columns":["A"],"rows":[]}',
+        authorType: AuthorType.USER,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidSpreadsheetContentError,
+      );
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should not sanitize spreadsheet content as HTML', async () => {
+      const contentWithAngleBrackets = JSON.stringify({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Comparison'],
+        rows: [['a < b > c']],
+      });
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: contentWithAngleBrackets,
+        authorType: AuthorType.USER,
+      });
+
+      const result = (await useCase.execute(command)) as ArtifactVersion;
+
+      expect(JSON.parse(result.content).rows).toEqual([['a < b > c']]);
     });
   });
 });

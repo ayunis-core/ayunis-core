@@ -3595,6 +3595,7 @@ export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeo
 export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
 } as const;
 
 export interface ArtifactResponseDto {

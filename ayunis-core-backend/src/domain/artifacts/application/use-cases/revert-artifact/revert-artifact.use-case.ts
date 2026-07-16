@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { RevertArtifactCommand } from './revert-artifact.command';
@@ -8,10 +9,9 @@ import {
 } from '../../artifacts.errors';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
-import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
+import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
 
@@ -24,70 +24,65 @@ export class RevertArtifactUseCase {
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: RevertArtifactCommand): Promise<ArtifactVersion> {
     this.logger.log('Reverting artifact', {
       artifactId: command.artifactId,
       targetVersion: command.versionNumber,
     });
 
-    try {
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new UnauthorizedAccessError();
-      }
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
 
-      return await addVersionWithRetry({
-        repository: this.artifactsRepository,
-        logger: this.logger,
-        artifactId: command.artifactId,
-        buildVersion: async () => {
-          const artifact = await this.artifactsRepository.findByIdWithVersions(
-            command.artifactId,
-            userId,
-          );
-          if (!artifact) {
-            throw new ArtifactNotFoundError(command.artifactId);
-          }
+    return await addVersionWithRetry({
+      repository: this.artifactsRepository,
+      logger: this.logger,
+      artifactId: command.artifactId,
+      buildVersion: () => this.buildRevertVersion(command, userId),
+    });
+  }
 
-          const targetVersion = artifact.versions.find(
-            (v) => v.versionNumber === command.versionNumber,
-          );
-          if (!targetVersion) {
-            throw new ArtifactVersionNotFoundError(
-              command.artifactId,
-              command.versionNumber,
-            );
-          }
+  private async buildRevertVersion(
+    command: RevertArtifactCommand,
+    userId: UUID,
+  ): Promise<{
+    expectedCurrentVersionNumber: number;
+    version: ArtifactVersion;
+  }> {
+    const artifact = await this.artifactsRepository.findByIdWithVersions(
+      command.artifactId,
+      userId,
+    );
+    if (!artifact) {
+      throw new ArtifactNotFoundError(command.artifactId);
+    }
 
-          const content =
-            artifact instanceof DocumentArtifact
-              ? sanitizeHtmlContent(targetVersion.content)
-              : targetVersion.content;
-
-          return {
-            expectedCurrentVersionNumber: artifact.currentVersionNumber,
-            version: new ArtifactVersion({
-              artifactId: artifact.id,
-              versionNumber: artifact.currentVersionNumber + 1,
-              content,
-              authorType: AuthorType.USER,
-              authorId: userId,
-            }),
-          };
-        },
-      });
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error('revertArtifactUnexpectedError', {
-        artifactId: command.artifactId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedArtifactError(
-        error instanceof Error ? error.message : 'Unknown error',
+    const targetVersion = artifact.versions.find(
+      (v) => v.versionNumber === command.versionNumber,
+    );
+    if (!targetVersion) {
+      throw new ArtifactVersionNotFoundError(
+        command.artifactId,
+        command.versionNumber,
       );
     }
+
+    const content = prepareContentForWrite(
+      artifact.type,
+      targetVersion.content,
+    );
+
+    return {
+      expectedCurrentVersionNumber: artifact.currentVersionNumber,
+      version: new ArtifactVersion({
+        artifactId: artifact.id,
+        versionNumber: artifact.currentVersionNumber + 1,
+        content,
+        authorType: AuthorType.USER,
+        authorId: userId,
+      }),
+    };
   }
 }

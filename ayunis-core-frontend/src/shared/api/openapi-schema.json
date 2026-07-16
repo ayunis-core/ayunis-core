@@ -15484,7 +15484,7 @@
           "type": {
             "type": "string",
             "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram"],
+            "enum": ["document", "diagram", "spreadsheet"],
             "example": "document"
           },
           "threadId": {

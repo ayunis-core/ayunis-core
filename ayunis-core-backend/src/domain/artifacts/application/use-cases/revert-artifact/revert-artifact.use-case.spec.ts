@@ -10,6 +10,7 @@ import {
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
   ArtifactVersionNotFoundError,
+  UnexpectedArtifactError,
 } from '../../artifacts.errors';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
@@ -395,9 +396,15 @@ describe('RevertArtifactUseCase', () => {
         versionNumber: 1,
       });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Connection refused',
+      const error = await useCase
+        .execute(command)
+        .catch((caughtError: unknown) => caughtError);
+
+      expect(error).toBeInstanceOf(UnexpectedArtifactError);
+      expect((error as UnexpectedArtifactError).message).toBe(
+        'Unexpected artifact error',
       );
+      expect((error as UnexpectedArtifactError).metadata).toBeUndefined();
 
       expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledTimes(1);
       expect(

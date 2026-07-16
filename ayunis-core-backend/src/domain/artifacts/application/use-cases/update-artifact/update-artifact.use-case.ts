@@ -17,8 +17,8 @@ import {
   DocumentArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
@@ -34,50 +34,38 @@ export class UpdateArtifactUseCase {
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(
     command: UpdateArtifactCommand,
   ): Promise<ArtifactVersion | void> {
     this.logger.log('Updating artifact', { artifactId: command.artifactId });
 
-    try {
-      const userId = this.resolveUserId();
-      this.validateContentLength(command.content);
+    const userId = this.resolveUserId();
 
-      if (command.letterheadId) {
-        await this.findLetterheadUseCase.execute(
-          new FindLetterheadQuery({ letterheadId: command.letterheadId }),
-        );
-      }
-
-      const artifact = await this.artifactsRepository.findById(
-        command.artifactId,
-        userId,
-      );
-      if (!artifact) {
-        throw new ArtifactNotFoundError(command.artifactId);
-      }
-
-      const isDocument = artifact instanceof DocumentArtifact;
-      this.assertLetterheadAllowed(command, artifact, isDocument);
-
-      if (command.content === undefined) {
-        return await this.updateLetterheadOnly(command);
-      }
-
-      return await this.addContentVersion(command, userId, isDocument);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-
-      this.logger.error('updateArtifactUnexpectedError', {
-        artifactId: command.artifactId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedArtifactError(
-        error instanceof Error ? error.message : 'Unknown error',
+    if (command.letterheadId) {
+      await this.findLetterheadUseCase.execute(
+        new FindLetterheadQuery({ letterheadId: command.letterheadId }),
       );
     }
+
+    const artifact = await this.artifactsRepository.findById(
+      command.artifactId,
+      userId,
+    );
+    if (!artifact) {
+      throw new ArtifactNotFoundError(command.artifactId);
+    }
+
+    const isDocument = artifact instanceof DocumentArtifact;
+    this.assertLetterheadAllowed(command, artifact, isDocument);
+
+    if (command.content === undefined) {
+      return await this.updateLetterheadOnly(command);
+    }
+
+    const content = prepareContentForWrite(artifact.type, command.content);
+    this.validateContentLength(content);
+    return await this.addContentVersion(command, userId, content);
   }
 
   private resolveUserId(): UUID {
@@ -88,8 +76,8 @@ export class UpdateArtifactUseCase {
     return userId;
   }
 
-  private validateContentLength(content: string | undefined): void {
-    if (content !== undefined && content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
+  private validateContentLength(content: string): void {
+    if (content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
       throw new ArtifactContentTooLargeError(
         content.length,
         ARTIFACT_MAX_CONTENT_LENGTH,
@@ -121,11 +109,8 @@ export class UpdateArtifactUseCase {
   private async addContentVersion(
     command: UpdateArtifactCommand,
     userId: UUID,
-    isDocument: boolean,
+    content: string,
   ): Promise<ArtifactVersion> {
-    const content = isDocument
-      ? sanitizeHtmlContent(command.content!)
-      : command.content!;
     const authorType = command.authorType ?? AuthorType.USER;
 
     return addVersionWithRetry({
