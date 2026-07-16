@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ArtifactResponseDto } from '@/shared/api';
-import type { GridRow, GridState } from './spreadsheet-content';
+import type { GridRow, GridState, RowOperation } from './spreadsheet-content';
 import {
   addColumn,
   deleteColumn,
   fromGridState,
   parseSpreadsheetContent,
   renameColumn,
+  rewriteFormulasForRowOperations,
   serializeSpreadsheetContent,
   toGridState,
 } from './spreadsheet-content';
+import { computeDisplayValues } from './formula-engine';
 
 function loadGridState(content: string | undefined): {
   state: GridState;
@@ -61,6 +63,11 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
 
   const displayedGridState = historicalGridState ?? gridState;
 
+  const displayValues = useMemo(
+    () => computeDisplayValues(displayedGridState),
+    [displayedGridState],
+  );
+
   const edit = (updater: (state: GridState) => GridState) => {
     setGridState(updater);
     setIsDirty(true);
@@ -68,6 +75,7 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
 
   return {
     displayedGridState,
+    displayValues,
     isDirty,
     isValid: loaded.isValid,
     isViewingHistory,
@@ -76,7 +84,11 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
       setUserSelectedVersion(
         versionNumber === artifact.currentVersionNumber ? null : versionNumber,
       ),
-    setRows: (rows: GridRow[]) => edit((state) => ({ ...state, rows })),
+    setRows: (rows: GridRow[], operations: RowOperation[]) =>
+      edit((state) => ({
+        ...state,
+        rows: rewriteFormulasForRowOperations(rows, operations),
+      })),
     addColumn: (label: string) => edit((state) => addColumn(state, label)),
     renameColumn: (index: number, label: string) =>
       edit((state) => renameColumn(state, index, label)),

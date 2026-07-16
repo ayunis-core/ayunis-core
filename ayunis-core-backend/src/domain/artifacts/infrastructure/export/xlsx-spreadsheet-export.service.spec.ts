@@ -67,7 +67,7 @@ describe('XlsxSpreadsheetExportService', () => {
       return workbook.getWorksheet(1)?.getCell(address).formula;
     }
 
-    it('should write formula cells as real Excel formulas', async () => {
+    it('should write formula cells as real Excel formulas with cached results', async () => {
       const buffer = await service.exportToXlsx({
         columns: ['Item', 'Amount'],
         rows: [
@@ -78,6 +78,11 @@ describe('XlsxSpreadsheetExportService', () => {
       });
 
       expect(await readCellFormula(buffer, 'B4')).toBe('SUM(B2:B3)');
+
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      expect(sheet.B4.v).toBe(1650.5);
+      expect(sheet.B4.t).toBe('n');
     });
 
     it('should prefix post-2007 function names with _xlfn', async () => {
@@ -156,13 +161,26 @@ describe('XlsxSpreadsheetExportService', () => {
       expect(csv.trim().split('\n')[1]).toBe('x,,z');
     });
 
-    it('should render formula cells as their raw text', async () => {
+    it('should render formula cells as their computed values', async () => {
       const csv = await service.exportToCsv({
         columns: ['Item', 'Amount'],
-        rows: [['Total', '=SUM(B2:B4)']],
+        rows: [
+          ['Rent', 1200],
+          ['Food', 450.5],
+          ['Total', '=SUM(B2:B3)'],
+        ],
       });
 
-      expect(csv.trim().split('\n')[1]).toBe('Total,=SUM(B2:B4)');
+      expect(csv.trim().split('\n')[3]).toBe('Total,1650.5');
+    });
+
+    it('should render failing formulas as their error code', async () => {
+      const csv = await service.exportToCsv({
+        columns: ['A'],
+        rows: [['=1/0']],
+      });
+
+      expect(csv.trim().split('\n')[1]).toBe('#DIV/0!');
     });
   });
 });

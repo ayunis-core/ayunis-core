@@ -115,6 +115,7 @@ export function SpreadsheetEditor({
         <SpreadsheetGrid
           columns={editor.displayedGridState.columns}
           rows={editor.displayedGridState.rows}
+          displayValues={editor.displayValues}
           onRowsChange={editor.setRows}
           readOnly={editor.isViewingHistory}
         />

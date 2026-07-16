@@ -1,3 +1,6 @@
+import type { ReferenceAdjustment } from './formula-references';
+import { adjustFormulaReferences } from './formula-references';
+
 export const SPREADSHEET_CONTENT_FORMAT = 'spreadsheet-v1';
 
 export type SpreadsheetCell = string | number | null;
@@ -152,11 +155,32 @@ export function renameColumn(
   };
 }
 
+function mapFormulaCells(
+  rows: GridRow[],
+  adjustment: ReferenceAdjustment,
+): GridRow[] {
+  return rows.map((row) =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [
+        key,
+        isFormulaValue(value)
+          ? adjustFormulaReferences(value as string, adjustment)
+          : value,
+      ]),
+    ),
+  );
+}
+
 export function deleteColumn(state: GridState, index: number): GridState {
+  const rewritten = mapFormulaCells(state.rows, {
+    axis: 'column',
+    index,
+    delta: -1,
+  });
   const columns = state.columns.filter((_, i) => i !== index);
   return {
     columns,
-    rows: state.rows.map((row) =>
+    rows: rewritten.map((row) =>
       Object.fromEntries(
         columns.map((_, i) => [
           columnKey(i),
@@ -165,6 +189,39 @@ export function deleteColumn(state: GridState, index: number): GridState {
       ),
     ),
   };
+}
+
+export interface RowOperation {
+  type: 'CREATE' | 'UPDATE' | 'DELETE';
+  fromRowIndex: number;
+  toRowIndex: number;
+}
+
+/**
+ * Rewrites formula references after grid row insertions/deletions. Applied to
+ * the post-operation rows; each inserted/deleted row shifts references one
+ * step, so multi-row operations are applied iteratively.
+ */
+export function rewriteFormulasForRowOperations(
+  rows: GridRow[],
+  operations: RowOperation[],
+): GridRow[] {
+  let result = rows;
+  for (const operation of operations) {
+    if (operation.type === 'UPDATE') {
+      continue;
+    }
+    const count = operation.toRowIndex - operation.fromRowIndex;
+    const delta = operation.type === 'CREATE' ? 1 : -1;
+    for (let i = 0; i < count; i++) {
+      result = mapFormulaCells(result, {
+        axis: 'row',
+        index: operation.fromRowIndex,
+        delta,
+      });
+    }
+  }
+  return result;
 }
 
 export function columnHasData(state: GridState, index: number): boolean {

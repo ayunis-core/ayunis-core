@@ -7,6 +7,7 @@ import {
   fromGridState,
   isFormulaValue,
   parseSpreadsheetContent,
+  rewriteFormulasForRowOperations,
   renameColumn,
   serializeSpreadsheetContent,
   toGridState,
@@ -183,6 +184,18 @@ describe('column operations', () => {
     expect(next.rows).toEqual([{ c0: 'a', c1: 'c' }]);
   });
 
+  it('deleteColumn rewrites formula references', () => {
+    const withFormulas = {
+      columns: ['A', 'B', 'C'],
+      rows: [{ c0: '=B2*2', c1: '10', c2: '=C2+A2' }],
+    };
+
+    const next = deleteColumn(withFormulas, 1);
+
+    expect(next.columns).toEqual(['A', 'C']);
+    expect(next.rows).toEqual([{ c0: '=#REF!*2', c1: '=B2+A2' }]);
+  });
+
   it('columnHasData detects non-empty cells', () => {
     const sparse = {
       columns: ['A', 'B'],
@@ -194,5 +207,48 @@ describe('column operations', () => {
 
     expect(columnHasData(sparse, 0)).toBe(true);
     expect(columnHasData(sparse, 1)).toBe(false);
+  });
+});
+
+describe('rewriteFormulasForRowOperations', () => {
+  it('rewrites references after a row deletion', () => {
+    // rows after deleting data row 0 (sheet row 2)
+    const rows = [{ c0: '10', c1: '=B4' }];
+
+    const result = rewriteFormulasForRowOperations(rows, [
+      { type: 'DELETE', fromRowIndex: 0, toRowIndex: 1 },
+    ]);
+
+    expect(result).toEqual([{ c0: '10', c1: '=B3' }]);
+  });
+
+  it('breaks references to a deleted row', () => {
+    const rows = [{ c0: '=B2' }];
+
+    const result = rewriteFormulasForRowOperations(rows, [
+      { type: 'DELETE', fromRowIndex: 0, toRowIndex: 1 },
+    ]);
+
+    expect(result).toEqual([{ c0: '=#REF!' }]);
+  });
+
+  it('shifts references after a multi-row insertion', () => {
+    const rows = [{ c0: '=B5' }];
+
+    const result = rewriteFormulasForRowOperations(rows, [
+      { type: 'CREATE', fromRowIndex: 1, toRowIndex: 3 },
+    ]);
+
+    expect(result).toEqual([{ c0: '=B7' }]);
+  });
+
+  it('ignores UPDATE operations', () => {
+    const rows = [{ c0: '=B5' }];
+
+    const result = rewriteFormulasForRowOperations(rows, [
+      { type: 'UPDATE', fromRowIndex: 0, toRowIndex: 1 },
+    ]);
+
+    expect(result).toEqual(rows);
   });
 });

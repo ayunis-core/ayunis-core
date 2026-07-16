@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { SpreadsheetExportPort } from '../../application/ports/spreadsheet-export.port';
 import type {
@@ -6,6 +6,8 @@ import type {
   SpreadsheetData,
 } from '../../application/helpers/spreadsheet-content';
 import { isFormulaCell } from '../../application/helpers/spreadsheet-content';
+import type { EvaluatedCell } from '../../application/helpers/evaluate-spreadsheet';
+import { SpreadsheetEvaluator } from '../../application/helpers/evaluate-spreadsheet';
 
 /**
  * Functions introduced after Excel 2007 are stored in the file format with an
@@ -60,40 +62,85 @@ function prefixModernFunctions(formula: string): string {
     .join('');
 }
 
-const toExcelValue = (cell: SpreadsheetCell): ExcelJS.CellValue =>
-  isFormulaCell(cell)
-    ? { formula: prefixModernFunctions(cell.slice(1)) }
-    : cell;
+const buildFormulaValue = (
+  cell: string,
+  computed: EvaluatedCell,
+): ExcelJS.CellFormulaValue => {
+  const formula = prefixModernFunctions(cell.slice(1));
+  const hasCachedResult =
+    computed !== null &&
+    !(typeof computed === 'string' && computed.startsWith('#'));
+  return hasCachedResult
+    ? { formula, result: computed }
+    : { formula, result: undefined };
+};
 
-function toCsvField(cell: SpreadsheetCell): string {
+const toExcelValue = (
+  cell: SpreadsheetCell,
+  computed: EvaluatedCell,
+): ExcelJS.CellValue =>
+  isFormulaCell(cell) ? buildFormulaValue(cell, computed) : cell;
+
+function csvText(cell: NonNullable<EvaluatedCell>): string {
+  if (typeof cell === 'boolean') {
+    return cell ? 'TRUE' : 'FALSE';
+  }
+  return String(cell);
+}
+
+function toCsvField(cell: EvaluatedCell): string {
   if (cell === null) {
     return '';
   }
-  const text = String(cell);
+  const text = csvText(cell);
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 @Injectable()
 export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
+  private readonly logger = new Logger(XlsxSpreadsheetExportService.name);
+
   async exportToXlsx(data: SpreadsheetData): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
     workbook.calcProperties.fullCalcOnLoad = true;
+    const evaluated = this.evaluateSafe(data);
 
     const sheet = workbook.addWorksheet('Sheet1');
     sheet.addRow(data.columns);
-    for (const row of data.rows) {
-      sheet.addRow(row.map(toExcelValue));
-    }
+    data.rows.forEach((row, rowIndex) => {
+      sheet.addRow(
+        row.map((cell, colIndex) =>
+          toExcelValue(cell, evaluated[rowIndex]?.[colIndex] ?? null),
+        ),
+      );
+    });
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
 
   async exportToCsv(data: SpreadsheetData): Promise<string> {
+    const evaluated = this.evaluateSafe(data);
     return Promise.resolve(
-      [data.columns, ...data.rows]
+      [data.columns, ...evaluated]
         .map((row) => row.map(toCsvField).join(','))
         .join('\n'),
     );
+  }
+
+  /**
+   * Formula evaluation must never break an export: on unexpected engine
+   * failure, fall back to the raw cell values (xlsx cells then recalculate
+   * on open via fullCalcOnLoad; csv shows the formula text).
+   */
+  private evaluateSafe(data: SpreadsheetData): EvaluatedCell[][] {
+    try {
+      return new SpreadsheetEvaluator(data).evaluate();
+    } catch (error) {
+      this.logger.warn('Spreadsheet evaluation failed, exporting raw values', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return data.rows;
+    }
   }
 }
