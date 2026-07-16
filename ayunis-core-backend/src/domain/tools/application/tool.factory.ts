@@ -36,6 +36,8 @@ import { ReadDocumentTool } from '../domain/tools/read-document-tool.entity';
 import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
 import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
+import { CreateSpreadsheetTool } from '../domain/tools/create-spreadsheet-tool.entity';
+import { UpdateSpreadsheetTool } from '../domain/tools/update-spreadsheet-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -55,6 +57,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.GENERATE_IMAGE]: () => new GenerateImageTool(),
   [ToolType.CREATE_DIAGRAM]: () => new CreateDiagramTool(),
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
+  [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
+  [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
 };
 
 @Injectable()
