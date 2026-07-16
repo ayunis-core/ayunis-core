@@ -3422,6 +3422,7 @@ export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeo
 export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
 } as const;
 
 export interface ArtifactResponseDto {
@@ -4936,6 +4937,8 @@ export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFo
 export const ArtifactsControllerExportFormat = {
   docx: 'docx',
   pdf: 'pdf',
+  xlsx: 'xlsx',
+  csv: 'csv',
 } as const;
 
 export type UsageControllerGetUserUsageParams = {
