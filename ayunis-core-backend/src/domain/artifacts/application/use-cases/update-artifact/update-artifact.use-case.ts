@@ -16,8 +16,9 @@ import {
   Artifact,
   DocumentArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
+import type { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
+import { prepareContentForWrite } from '../../helpers/prepare-content-for-write';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
@@ -64,7 +65,7 @@ export class UpdateArtifactUseCase {
         return await this.updateLetterheadOnly(command);
       }
 
-      return await this.addContentVersion(command, userId, isDocument);
+      return await this.addContentVersion(command, userId, artifact.type);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -121,11 +122,9 @@ export class UpdateArtifactUseCase {
   private async addContentVersion(
     command: UpdateArtifactCommand,
     userId: UUID,
-    isDocument: boolean,
+    artifactType: ArtifactType,
   ): Promise<ArtifactVersion> {
-    const content = isDocument
-      ? sanitizeHtmlContent(command.content!)
-      : command.content!;
+    const content = prepareContentForWrite(artifactType, command.content!);
     const authorType = command.authorType ?? AuthorType.USER;
 
     return addVersionWithRetry({
