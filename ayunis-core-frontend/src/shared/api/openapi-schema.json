@@ -6684,7 +6684,7 @@
             "in": "query",
             "description": "Export format",
             "schema": {
-              "enum": ["docx", "pdf"],
+              "enum": ["docx", "pdf", "xlsx", "csv"],
               "type": "string"
             }
           }
@@ -6705,7 +6705,7 @@
             "description": "Artifact not found"
           }
         },
-        "summary": "Export an artifact as DOCX or PDF",
+        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
         "tags": ["artifacts"]
       }
     },
@@ -14962,7 +14962,7 @@
           "type": {
             "type": "string",
             "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram"],
+            "enum": ["document", "diagram", "spreadsheet"],
             "example": "document"
           },
           "threadId": {
