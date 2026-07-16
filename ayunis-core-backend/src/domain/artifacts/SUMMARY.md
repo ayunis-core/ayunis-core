@@ -28,6 +28,7 @@ artifacts/
 │   ├── artifacts.errors.ts
 │   ├── helpers/
 │   │   ├── add-version-with-retry.ts
+│   │   ├── evaluate-spreadsheet.ts
 │   │   ├── prepare-content-for-write.ts
 │   │   ├── spreadsheet-content-format.ts
 │   │   └── sanitize-html-content.ts
@@ -86,9 +87,9 @@ artifacts/
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
 - Export delegates to `DocumentExportPort` for format conversion
-- Spreadsheet export delegates to `SpreadsheetExportPort` for XLSX/CSV conversion, preserves original formula-cell provenance through PII de-anonymization, and neutralizes formula-like values in CSV output
+- Spreadsheet export delegates to `SpreadsheetExportPort`; XLSX preserves original formula-cell provenance through PII de-anonymization and emits live formulas only after successful local evaluation and dependency validation, while unsupported formulas remain text and CSV formula-like values are neutralized
 - Document HTML sanitization (XSS prevention) before storage and export
-- Spreadsheet content uses the versioned `spreadsheet-v1` JSON format with shape, size, and formula validation plus row canonicalization
+- Spreadsheet content uses the versioned `spreadsheet-v1` JSON format with shape, size, and formula-length validation plus row canonicalization; formulas remain inert until export
 - Diagram content is stored without document HTML or spreadsheet normalization
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts

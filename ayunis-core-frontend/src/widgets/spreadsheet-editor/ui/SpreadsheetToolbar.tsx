@@ -1,4 +1,4 @@
-import { ListPlus } from 'lucide-react';
+import { ListMinus, ListPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
@@ -17,6 +17,7 @@ import { SpreadsheetColumnManager } from './SpreadsheetColumnManager';
 interface SpreadsheetToolbarProps {
   readonly gridState: GridState;
   readonly onAddRows: (count: number) => void;
+  readonly onDeleteLastRow: () => void;
   readonly onAddColumn: (label: string) => void;
   readonly onRenameColumn: (index: number, label: string) => void;
   readonly onDeleteColumn: (index: number) => void;
@@ -26,6 +27,7 @@ interface SpreadsheetToolbarProps {
 export function SpreadsheetToolbar({
   gridState,
   onAddRows,
+  onDeleteLastRow,
   onAddColumn,
   onRenameColumn,
   onDeleteColumn,
@@ -106,6 +108,16 @@ export function SpreadsheetToolbar({
           </div>
         </PopoverContent>
       </Popover>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 text-xs"
+        disabled={gridState.rows.length === 0}
+        onClick={onDeleteLastRow}
+      >
+        <ListMinus className="mr-1 size-3.5" />
+        {t('spreadsheet.toolbar.deleteLastRow')}
+      </Button>
       <SpreadsheetColumnManager
         gridState={gridState}
         onAddColumn={onAddColumn}

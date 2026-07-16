@@ -36,7 +36,8 @@
     "title": "Versionshistorie ({{count}})",
     "current": "(aktuell)",
     "revertTo": "Zurücksetzen auf v{{version}}",
-    "revert": "Zurücksetzen"
+    "revert": "Zurücksetzen",
+    "viewVersion": "Version v{{version}} anzeigen"
   },
   "spreadsheet": {
     "empty": "Diese Tabelle hat noch keine Spalten. Fügen Sie eine Spalte hinzu, um zu beginnen.",
@@ -54,6 +55,7 @@
       "addRowsCount": "Anzahl der Zeilen",
       "addRowsConfirm": "Hinzufügen",
       "maxRowsReached": "Maximal {{count}} Zeilen erreicht",
+      "deleteLastRow": "Letzte Zeile löschen",
       "addColumn": "Spalte hinzufügen",
       "maxColumnsReached": "Maximal {{count}} Spalten erreicht",
       "columns": "Spalten bearbeiten",

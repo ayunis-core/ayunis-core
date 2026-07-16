@@ -95,7 +95,7 @@ describe('XlsxSpreadsheetExportService', () => {
       return workbook.getWorksheet(1)?.getCell(address).formula;
     }
 
-    it('should write formula cells as real Excel formulas', async () => {
+    it('should write formula cells as real Excel formulas with cached results', async () => {
       const buffer = await exportXlsx({
         columns: ['Item', 'Amount'],
         rows: [
@@ -106,37 +106,61 @@ describe('XlsxSpreadsheetExportService', () => {
       });
 
       expect(await readCellFormula(buffer, 'B4')).toBe('SUM(B2:B3)');
+
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      expect(sheet.B4.v).toBe(1650.5);
+      expect(sheet.B4.t).toBe('n');
     });
 
-    it('should prefix post-2007 function names with _xlfn', async () => {
+    it('should keep formulas unsupported by the evaluator as text', async () => {
       const buffer = await exportXlsx({
         columns: ['A', 'B'],
         rows: [['x', '=XLOOKUP(A2, A2:A5, B2:B5)']],
       });
 
-      expect(await readCellFormula(buffer, 'B2')).toBe(
-        '_xlfn.XLOOKUP(A2, A2:A5, B2:B5)',
-      );
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      expect(await readCellFormula(buffer, 'B2')).toBeUndefined();
+      expect(sheet.B2.v).toBe('=XLOOKUP(A2, A2:A5, B2:B5)');
     });
 
     it.each([
-      [
-        'FILTER',
-        '=FILTER(A2:A10,B2:B10>0)',
-        '_xlfn._xlws.FILTER(A2:A10,B2:B10>0)',
-      ],
-      ['SORT', '=SORT(A2:A10)', '_xlfn._xlws.SORT(A2:A10)'],
+      ['FILTER', '=FILTER(A2:A10,B2:B10>0)'],
+      ['SORT', '=SORT(A2:A10)'],
     ])(
-      'should use the _xlws prefix for %s dynamic array formulas',
-      async (_functionName, formula, expectedFormula) => {
+      'should keep unsupported %s formulas as text',
+      async (_functionName, formula) => {
         const buffer = await exportXlsx({
           columns: ['A'],
           rows: [[formula]],
         });
 
-        expect(await readCellFormula(buffer, 'A2')).toBe(expectedFormula);
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        expect(await readCellFormula(buffer, 'A2')).toBeUndefined();
+        expect(sheet.A2.v).toBe(formula);
       },
     );
+
+    it.each([
+      '=HYPERLINK("https://example.com","Open")',
+      '=WEBSERVICE("https://example.com")',
+      '=SUM(OtherSheet!A1:A2)',
+    ])('should keep unsafe formulas as text: %s', async (formula) => {
+      const buffer = await exportXlsx({
+        columns: ['Value'],
+        rows: [[formula]],
+      });
+
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      expect(sheet.A2.f).toBeUndefined();
+      expect(sheet.A2.v).toBe(formula);
+    });
 
     it('should not rewrite function names inside string literals', async () => {
       const buffer = await exportXlsx({
@@ -191,6 +215,18 @@ describe('XlsxSpreadsheetExportService', () => {
       expect(await readCellFormula(buffer, 'A2')).toBeUndefined();
       expect(sheet.A2.v).toBe('=SUM(9,9)');
     });
+
+    it('should cache hash-prefixed formula text instead of treating it as an error', async () => {
+      const buffer = await exportXlsx({
+        columns: ['Value'],
+        rows: [['="#1 seller"']],
+      });
+
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      expect(sheet.A2.v).toBe('#1 seller');
+    });
   });
 
   describe('exportToCsv', () => {
@@ -234,10 +270,41 @@ describe('XlsxSpreadsheetExportService', () => {
     it('should neutralize formula-like cells in CSV output', async () => {
       const csv = await exportCsv({
         columns: ['Value'],
-        rows: [['=1+1']],
+        rows: [['@cmd']],
       });
 
-      expect(csv.trim().split('\n')[1]).toBe("'=1+1");
+      expect(csv.trim().split('\n')[1]).toBe("'@cmd");
+    });
+
+    it('should render formula cells as their computed values', async () => {
+      const csv = await exportCsv({
+        columns: ['Item', 'Amount'],
+        rows: [
+          ['Rent', 1200],
+          ['Food', 450.5],
+          ['Total', '=SUM(B2:B3)'],
+        ],
+      });
+
+      expect(csv.trim().split('\n')[3]).toBe('Total,1650.5');
+    });
+
+    it('should render failing formulas as their error code', async () => {
+      const csv = await exportCsv({
+        columns: ['A'],
+        rows: [['=1/0']],
+      });
+
+      expect(csv.trim().split('\n')[1]).toBe('#DIV/0!');
+    });
+
+    it('should normalize formula floating-point noise like the editor', async () => {
+      const csv = await exportCsv({
+        columns: ['A', 'B', 'Total'],
+        rows: [['0.1', '0.2', '=A2+B2']],
+      });
+
+      expect(csv.trim().split('\n')[1]).toBe('0.1,0.2,0.3');
     });
   });
 });
