@@ -4,6 +4,10 @@ import { ApplicationError } from '../../../common/errors/base.error';
 /** Maximum allowed artifact content length in characters (~500 KB). */
 export const ARTIFACT_MAX_CONTENT_LENGTH = 512_000;
 
+export const MAX_SPREADSHEET_COLUMNS = 100;
+export const MAX_SPREADSHEET_ROWS = 5000;
+export const MAX_SPREADSHEET_FORMULA_LENGTH = 500;
+
 export enum ArtifactErrorCode {
   ARTIFACT_NOT_FOUND = 'ARTIFACT_NOT_FOUND',
   ARTIFACT_VERSION_NOT_FOUND = 'ARTIFACT_VERSION_NOT_FOUND',
@@ -14,6 +18,7 @@ export enum ArtifactErrorCode {
   ARTIFACT_EDIT_AMBIGUOUS = 'ARTIFACT_EDIT_AMBIGUOUS',
   ARTIFACT_LETTERHEAD_NOT_SUPPORTED = 'ARTIFACT_LETTERHEAD_NOT_SUPPORTED',
   ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
+  ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
@@ -142,6 +147,17 @@ export class ArtifactNotExportableError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_NOT_EXPORTABLE,
       400,
       { artifactType, ...metadata },
+    );
+  }
+}
+
+export class InvalidSpreadsheetContentError extends ArtifactError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid spreadsheet content: ${reason}`,
+      ArtifactErrorCode.ARTIFACT_INVALID_SPREADSHEET_CONTENT,
+      400,
+      metadata,
     );
   }
 }

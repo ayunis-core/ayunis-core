@@ -11,9 +11,14 @@ import {
   ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
   ArtifactVersionConflictError,
+  InvalidSpreadsheetContentError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
+import {
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from '../../../domain/artifact.entity';
+import { SPREADSHEET_CONTENT_FORMAT } from '../../helpers/spreadsheet-content';
 import type { ArtifactVersion } from '../../../domain/artifact-version.entity';
 import { AuthorType } from '../../../domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -723,6 +728,80 @@ describe('UpdateArtifactUseCase', () => {
       expect(
         artifactsRepository.addVersionAndUpdateArtifact,
       ).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('spreadsheet artifacts', () => {
+    const spreadsheetArtifact = () =>
+      new SpreadsheetArtifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Budget Sheet',
+        currentVersionNumber: 1,
+      });
+
+    beforeEach(() => {
+      artifactsRepository.findById.mockResolvedValue(spreadsheetArtifact());
+      artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+        async ({ version }) => version,
+      );
+    });
+
+    it('should canonicalize spreadsheet content on user save', async () => {
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: JSON.stringify({
+          format: SPREADSHEET_CONTENT_FORMAT,
+          columns: ['A', 'B'],
+          rows: [['x'], ['y', 1, 'extra']],
+        }),
+        authorType: AuthorType.USER,
+      });
+
+      const result = (await useCase.execute(command)) as ArtifactVersion;
+
+      expect(JSON.parse(result.content)).toEqual({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['A', 'B'],
+        rows: [
+          ['x', null],
+          ['y', 1],
+        ],
+      });
+    });
+
+    it('should reject invalid spreadsheet content without saving a version', async () => {
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: '{"format":"wrong-format","columns":["A"],"rows":[]}',
+        authorType: AuthorType.USER,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidSpreadsheetContentError,
+      );
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should not sanitize spreadsheet content as HTML', async () => {
+      const contentWithAngleBrackets = JSON.stringify({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Comparison'],
+        rows: [['a < b > c']],
+      });
+
+      const command = new UpdateArtifactCommand({
+        artifactId: mockArtifactId,
+        content: contentWithAngleBrackets,
+        authorType: AuthorType.USER,
+      });
+
+      const result = (await useCase.execute(command)) as ArtifactVersion;
+
+      expect(JSON.parse(result.content).rows).toEqual([['a < b > c']]);
     });
   });
 });
