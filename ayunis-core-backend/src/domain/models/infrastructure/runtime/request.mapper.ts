@@ -8,7 +8,7 @@ import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ModelToolChoice } from '../../domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from '../../domain/value-objects/tool-schema';
-import { toInferenceMessages } from './message.mapper';
+import { toInferenceMessages } from '../../application/mappers/message.mapper';
 
 /**
  * The subset of `InferenceInput` / `StreamInferenceInput` needed to build a
