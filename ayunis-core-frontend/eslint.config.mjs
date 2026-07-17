@@ -149,4 +149,12 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  // TanStack Router file routes must export the Route constant alongside a
+  // local RouteComponent, so fast-refresh purity cannot hold in these files.
+  {
+    files: ['src/app/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 );
