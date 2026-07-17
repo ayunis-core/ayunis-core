@@ -13,6 +13,11 @@
   color: var(--muted-foreground);
 }
 
+.dsg-cell-formula-error {
+  color: var(--destructive);
+  font-style: normal;
+}
+
 .dark .dsg-container {
   --dsg-border-color: var(--border);
   --dsg-cell-background-color: var(--background);

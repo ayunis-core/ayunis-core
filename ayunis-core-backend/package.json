@@ -86,6 +86,7 @@
     "docx": "^9.6.1",
     "dotenv": "^17.3.1",
     "exceljs": "^4.4.0",
+    "fast-formula-parser": "1.0.19",
     "form-data": "^4.0.6",
     "helmet": "^8.1.0",
     "ioredis": "^5.11.1",
