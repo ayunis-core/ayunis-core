@@ -47,6 +47,7 @@ export class CreatePermittedModelUseCase {
         orgId: command.orgId,
         anonymousOnly: command.anonymousOnly,
       });
+      await this.modelPolicy.assertSingleModelPerOrg(permittedModel);
       const created =
         await this.permittedModelsRepository.create(permittedModel);
       return created;

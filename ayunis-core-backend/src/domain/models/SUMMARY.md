@@ -18,7 +18,7 @@ The models module is the central registry for AI model configuration. The abstra
 
 ## Application Services
 
-- **ModelPolicyService** (`application/services/model-policy.service.ts`): Enforces provider constraints on models. Currently validates that image-generation models only use supported providers (Azure).
+- **ModelPolicyService** (`application/services/model-policy.service.ts`): Enforces permitted-model policy invariants. Validates that image-generation models only use supported providers (Azure), and enforces at most one org-scoped permitted embedding model and one org-scoped image-generation model per org via `assertSingleModelPerOrg` (invoked by `CreatePermittedModelUseCase` before persisting; team-scoped grants are exempt).
 - **TeamPermittedModelValidatorService** (`application/services/team-permitted-model-validator.service.ts`): Validates team ownership and org-scoping for team-scoped permitted model operations.
 
 ## Domain Value Objects

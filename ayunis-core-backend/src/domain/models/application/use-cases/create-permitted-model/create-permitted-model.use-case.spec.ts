@@ -5,13 +5,21 @@ import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelsRepository } from '../../ports/models.repository';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import {
+  PermittedEmbeddingModel,
+  PermittedImageGenerationModel,
+  PermittedModel,
+} from 'src/domain/models/domain/permitted-model.entity';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ImageGenerationModelProviderNotSupportedError,
   ModelNotFoundError,
+  MultipleEmbeddingModelsNotAllowedError,
+  MultipleImageGenerationModelsNotAllowedError,
   UnexpectedModelError,
 } from '../../models.errors';
 import { ModelPolicyService } from '../../services/model-policy.service';
@@ -27,6 +35,8 @@ describe('CreatePermittedModelUseCase', () => {
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
+  const existingPermittedModelId =
+    '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeAll(async () => {
     const mockPermittedModelsRepository = {
@@ -34,6 +44,8 @@ describe('CreatePermittedModelUseCase', () => {
       findAll: jest.fn(),
       delete: jest.fn(),
       findOne: jest.fn(),
+      findOneEmbedding: jest.fn(),
+      findOneImageGeneration: jest.fn(),
     };
 
     const mockModelsRepository = {
@@ -231,6 +243,59 @@ describe('CreatePermittedModelUseCase', () => {
         }),
       );
       expect(result).toBe(mockPermittedModel);
+    });
+
+    it('rejects creating a second embedding model for the org', async () => {
+      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
+
+      const mockModel = new EmbeddingModel({
+        id: mockModelId,
+        name: 'text-embedding-3',
+        displayName: 'Text Embedding 3',
+        provider: ModelProvider.OPENAI,
+        isArchived: false,
+        dimensions: EmbeddingDimensions.DIMENSION_1536,
+      });
+      const existing = new PermittedEmbeddingModel({
+        id: existingPermittedModelId,
+        model: mockModel,
+        orgId: mockOrgId,
+      });
+
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+      permittedModelsRepository.findOneEmbedding.mockResolvedValue(existing);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        MultipleEmbeddingModelsNotAllowedError,
+      );
+      expect(permittedModelsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects creating a second org-scoped image-generation model', async () => {
+      const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);
+
+      const mockModel = new ImageGenerationModel({
+        id: mockModelId,
+        name: 'gpt-image-1',
+        displayName: 'GPT Image 1',
+        provider: ModelProvider.AZURE,
+        isArchived: false,
+      });
+      const existing = new PermittedImageGenerationModel({
+        id: existingPermittedModelId,
+        model: mockModel,
+        orgId: mockOrgId,
+      });
+
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+      permittedModelsRepository.findOneImageGeneration.mockResolvedValue(
+        existing,
+      );
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        MultipleImageGenerationModelsNotAllowedError,
+      );
+      expect(permittedModelsRepository.create).not.toHaveBeenCalled();
     });
 
     it('should re-throw ModelNotFoundError without logging', async () => {

@@ -24,7 +24,6 @@ import {
   PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
 import { PermittedModelQueryService } from './permitted-model-query.service';
-import { assertSingleModelPerOrg } from './single-permitted-model-per-org.assertion';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -227,11 +226,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
-    await assertSingleModelPerOrg(
-      { queryService: this.queryService, logger: this.logger },
-      permittedModel,
-    );
-
     const permittedModelEntity =
       this.permittedModelMapper.toRecord(permittedModel);
     const savedPermittedModel =
