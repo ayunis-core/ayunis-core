@@ -21,6 +21,7 @@
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",
     "errorToolNotFound": "Tool nicht gefunden",
     "errorAnonymizationUnavailable": "Die Anonymisierung ist derzeit nicht verfügbar. Ihre Nachricht wurde nicht gesendet, um Ihre Daten zu schützen.",
+    "errorContextBudgetExceeded": "Die letzte Konversationsrunde ist zu groß für das Kontextfenster des Modells.",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorRestoreFailedSubmission": "Ihre vorherige Nachricht und Anhänge konnten nicht wiederhergestellt werden, da die Eingabe bereits einen Entwurf enthält.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",

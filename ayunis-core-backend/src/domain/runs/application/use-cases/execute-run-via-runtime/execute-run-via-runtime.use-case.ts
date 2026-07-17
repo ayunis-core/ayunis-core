@@ -60,12 +60,14 @@ import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-ho
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
 const RUNTIME_MAX_ITERATIONS = 20;
+const MAX_CONTEXT_TOKENS = 80000;
 
 interface PreparedRuntimeTools {
   tools: RuntimeTool[];
@@ -127,6 +129,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly eventEmitter: EventEmitter2,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
+    private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
@@ -327,6 +330,9 @@ export class ExecuteRunViaRuntimeUseCase {
         isAnonymous: prepared.isAnonymous,
         integrations: prepared.toolIntegrations,
         activatedSkillName: prepared.activatedSkillName,
+      }),
+      this.contextBudgetHookFactory.create({
+        maxTokens: MAX_CONTEXT_TOKENS,
       }),
     ];
   }

@@ -27,6 +27,9 @@ export function useRunErrorHandler(_threadId: string) {
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
           showError(t('chat.errorAnonymizationUnavailable'));
           break;
+        case 'RUN_CONTEXT_BUDGET_EXCEEDED':
+          showError(t('chat.errorContextBudgetExceeded'));
+          break;
         case 'QUOTA_EXCEEDED': {
           const retryMinutes = error.details?.retryAfterSeconds
             ? Math.ceil(Number(error.details.retryAfterSeconds) / 60)

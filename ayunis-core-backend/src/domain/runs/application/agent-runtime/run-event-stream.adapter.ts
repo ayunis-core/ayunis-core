@@ -13,6 +13,7 @@ import {
 } from '../../domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
+  RunContextBudgetExceededError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
@@ -227,6 +228,9 @@ function mapRunError(
   }
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     return new RunAnonymizationUnavailableError();
+  }
+  if (event.code === 'CONTEXT_BUDGET_EXCEEDED') {
+    return new RunContextBudgetExceededError();
   }
   return new RunExecutionFailedError(event.message);
 }

@@ -10,6 +10,7 @@ import {
 } from '../../domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
+  RunContextBudgetExceededError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
@@ -306,5 +307,20 @@ describe('adaptRunEventsToStream', () => {
         ]),
       ),
     ).rejects.toBeInstanceOf(RunAnonymizationUnavailableError);
+  });
+
+  it('maps an oversized latest turn to a context-budget error', async () => {
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'CONTEXT_BUDGET_EXCEEDED',
+            message: 'The latest turn exceeds the context budget',
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
   });
 });

@@ -1,6 +1,5 @@
 import type { RunContext } from '../context/run-context';
-import { HookFailedError } from '../contracts/errors';
-import type { AgentRuntimeError } from '../contracts/errors';
+import { AgentRuntimeError, HookFailedError } from '../contracts/errors';
 import type { RunStatus, ToolCallSummary } from '../contracts/event';
 import type {
   AfterModelCallContext,
@@ -123,6 +122,9 @@ export class HookRunner {
     try {
       await call();
     } catch (error) {
+      if (error instanceof AgentRuntimeError) {
+        throw error;
+      }
       throw new HookFailedError({ hookName: hook.name, phase, cause: error });
     }
   }

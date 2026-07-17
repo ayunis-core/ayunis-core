@@ -13,6 +13,7 @@ export enum RunErrorCode {
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
   UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
+  RUN_CONTEXT_BUDGET_EXCEEDED = 'RUN_CONTEXT_BUDGET_EXCEEDED',
 }
 
 /**
@@ -132,6 +133,17 @@ export class RunAnonymizationUnavailableError extends RunError {
       'Anonymization is currently unavailable. Your message was not sent to protect your data.',
       RunErrorCode.RUN_ANONYMIZATION_UNAVAILABLE,
       503,
+      metadata,
+    );
+  }
+}
+
+export class RunContextBudgetExceededError extends RunError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The latest conversation turn is too large for the model context window.',
+      RunErrorCode.RUN_CONTEXT_BUDGET_EXCEEDED,
+      400,
       metadata,
     );
   }
