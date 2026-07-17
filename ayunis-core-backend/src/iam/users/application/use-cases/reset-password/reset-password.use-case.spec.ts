@@ -9,6 +9,7 @@ import { PasswordSetTokenService } from '../../services/password-set-token.servi
 import { PasswordSetTokensRepository } from '../../ports/password-set-tokens.repository';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { IsValidPasswordUseCase } from '../is-valid-password/is-valid-password.use-case';
+import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import {
   InvalidPasswordError,
   InvalidTokenError,
@@ -31,6 +32,7 @@ describe('ResetPasswordUseCase', () => {
   };
   let mockHashTextUseCase: { execute: jest.Mock };
   let mockIsValidPasswordUseCase: { execute: jest.Mock };
+  let mockRevokeAllSessionsForUserUseCase: { execute: jest.Mock };
 
   const orgId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -52,6 +54,9 @@ describe('ResetPasswordUseCase', () => {
     mockUsersRepository = { findOneById: jest.fn(), update: jest.fn() };
     mockHashTextUseCase = { execute: jest.fn().mockResolvedValue('new-hash') };
     mockIsValidPasswordUseCase = { execute: jest.fn().mockResolvedValue(true) };
+    mockRevokeAllSessionsForUserUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,6 +72,10 @@ describe('ResetPasswordUseCase', () => {
           useValue: mockIsValidPasswordUseCase,
         },
         { provide: UsersRepository, useValue: mockUsersRepository },
+        {
+          provide: RevokeAllSessionsForUserUseCase,
+          useValue: mockRevokeAllSessionsForUserUseCase,
+        },
       ],
     }).compile();
 
@@ -93,6 +102,19 @@ describe('ResetPasswordUseCase', () => {
     expect(user.passwordHash).toBe('new-hash');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(user);
     expect(mockTokensRepository.consume).toHaveBeenCalledTimes(1);
+    // A reset revokes every session (the user was logged out via an email link).
+    expect(mockRevokeAllSessionsForUserUseCase.execute).toHaveBeenCalledTimes(
+      1,
+    );
+  });
+
+  it('should not revoke sessions when the reset fails', async () => {
+    mockTokenService.findValid.mockResolvedValue(aPasswordSetToken());
+    mockUsersRepository.findOneById.mockResolvedValue(buildUser());
+    mockTokensRepository.consume.mockResolvedValue(false);
+
+    await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
+    expect(mockRevokeAllSessionsForUserUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should reject and not write the password when the token is already consumed', async () => {

@@ -10,6 +10,7 @@ export interface MyClsStore extends ClsStore {
   orgId?: UUID;
   systemRole?: SystemRole;
   role?: UserRole;
+  refreshToken?: string;
 }
 
 export class ContextService extends ClsService<MyClsStore> {}

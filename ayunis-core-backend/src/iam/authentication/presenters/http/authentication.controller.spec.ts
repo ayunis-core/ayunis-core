@@ -19,6 +19,7 @@ import { RATE_LIMIT_KEY } from 'src/common/decorators/rate-limit.decorator';
 import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
 import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
 import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
+import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -28,6 +29,7 @@ describe('AuthenticationController', () => {
   let mockGetCurrentUserUseCase: Partial<GetCurrentUserUseCase>;
   let mockCheckMfaLoginRequirementUseCase: { execute: jest.Mock };
   let mockMfaPendingJwtService: { generate: jest.Mock };
+  let mockRevokeSessionFamilyUseCase: { execute: jest.Mock };
   let mockConfigService: Partial<ConfigService>;
   let mockJwtService: Partial<JwtService>;
 
@@ -50,6 +52,9 @@ describe('AuthenticationController', () => {
     mockMfaPendingJwtService = {
       generate: jest.fn(),
     };
+    mockRevokeSessionFamilyUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
     mockConfigService = {
       get: jest.fn(),
     };
@@ -71,6 +76,10 @@ describe('AuthenticationController', () => {
         {
           provide: MfaPendingJwtService,
           useValue: mockMfaPendingJwtService,
+        },
+        {
+          provide: RevokeSessionFamilyUseCase,
+          useValue: mockRevokeSessionFamilyUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: JwtService, useValue: mockJwtService },

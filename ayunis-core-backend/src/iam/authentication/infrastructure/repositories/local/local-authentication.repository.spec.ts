@@ -43,38 +43,30 @@ describe('LocalAuthenticationRepository', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should sign access and refresh tokens with their configured expiries', async () => {
+  it('should sign an access token with its configured expiry', async () => {
     configService.get.mockReturnValue({
       secret: 'super-secret',
       expiresIn: '1h',
       refreshTokenExpiresIn: '7d',
     });
-    jwtService.sign
-      .mockReturnValueOnce('signed-access-token')
-      .mockReturnValueOnce('signed-refresh-token');
+    jwtService.sign.mockReturnValueOnce('signed-access-token');
 
-    const tokens = await repository.generateTokens(user);
+    const accessToken = await repository.generateAccessToken(user);
 
-    expect(jwtService.sign).toHaveBeenNthCalledWith(
-      1,
+    // Access token stays untyped (JwtStrategy rejects typed tokens) and no
+    // refresh token is signed here — refresh is now an opaque stored session.
+    expect(jwtService.sign).toHaveBeenCalledTimes(1);
+    expect(jwtService.sign).toHaveBeenCalledWith(
       expect.objectContaining({ sub: user.id, email: user.email }),
       { expiresIn: '1h' },
     );
-    expect(jwtService.sign).toHaveBeenNthCalledWith(
-      2,
-      { sub: user.id, type: 'refresh' },
-      { expiresIn: '7d' },
-    );
-    expect(tokens).toEqual({
-      access_token: 'signed-access-token',
-      refresh_token: 'signed-refresh-token',
-    });
+    expect(accessToken).toBe('signed-access-token');
   });
 
-  it('should throw when the JWT configuration is missing', () => {
+  it('should throw when the JWT configuration is missing', async () => {
     configService.get.mockReturnValue(undefined);
 
-    expect(() => repository.generateTokens(user)).toThrow(
+    await expect(repository.generateAccessToken(user)).rejects.toThrow(
       'JWT configuration is missing',
     );
   });

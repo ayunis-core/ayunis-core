@@ -30,6 +30,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { ApiKeysModule } from '../api-keys/api-keys.module';
 import { MfaModule } from '../mfa/mfa.module';
+import { SessionsModule } from '../sessions/sessions.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 import { MfaLoginController } from './presenters/http/mfa-login.controller';
@@ -50,6 +51,7 @@ const AUTHENTICATION_IMPORTS = [
   TrialsModule,
   ApiKeysModule,
   MfaModule,
+  SessionsModule,
   JwtConfigModule,
   ClsModule.forFeature(),
 ];

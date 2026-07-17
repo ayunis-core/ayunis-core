@@ -5,14 +5,23 @@ import { UserRole } from '../../../users/domain/value-objects/role.object';
 import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
 import { UserContextInterceptor } from './user-context.interceptor';
 import type { ContextService } from 'src/common/context/services/context.service';
+import type { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 
 describe('UserContextInterceptor', () => {
-  const createExecutionContext = (user?: unknown): ExecutionContext =>
+  const configService = {
+    get: jest.fn((_key: string, defaultValue?: unknown) => defaultValue),
+  } as unknown as ConfigService;
+
+  const createExecutionContext = (
+    user?: unknown,
+    cookies?: Record<string, string>,
+  ): ExecutionContext =>
     ({
       switchToHttp: () => ({
         getRequest: () => ({
           user,
+          cookies,
         }),
       }),
     }) as unknown as ExecutionContext;
@@ -24,7 +33,10 @@ describe('UserContextInterceptor', () => {
   it('sets user identifiers into the context store when an ActiveUser is present', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
-    const interceptor = new UserContextInterceptor(contextService);
+    const interceptor = new UserContextInterceptor(
+      contextService,
+      configService,
+    );
     const activeUser: ActiveUser = new ActiveUser({
       id: 'user-id' as UUID,
       email: 'super.admin@example.com',
@@ -37,13 +49,17 @@ describe('UserContextInterceptor', () => {
     const callHandler = createCallHandler();
 
     await lastValueFrom(
-      interceptor.intercept(createExecutionContext(activeUser), callHandler),
+      interceptor.intercept(
+        createExecutionContext(activeUser, { refresh_token: 'the-refresh' }),
+        callHandler,
+      ),
     );
 
     expect(setMock).toHaveBeenCalledWith('userId', activeUser.id);
     expect(setMock).toHaveBeenCalledWith('orgId', activeUser.orgId);
     expect(setMock).toHaveBeenCalledWith('role', activeUser.role);
     expect(setMock).toHaveBeenCalledWith('systemRole', activeUser.systemRole);
+    expect(setMock).toHaveBeenCalledWith('refreshToken', 'the-refresh');
     expect(setMock).not.toHaveBeenCalledWith('apiKeyId', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
   });
@@ -51,7 +67,10 @@ describe('UserContextInterceptor', () => {
   it('sets apiKeyId and orgId only when the principal is an api-key shape', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
-    const interceptor = new UserContextInterceptor(contextService);
+    const interceptor = new UserContextInterceptor(
+      contextService,
+      configService,
+    );
     const apiKeyPrincipal = {
       apiKeyId: 'api-key-id' as UUID,
       orgId: 'org-id' as UUID,
@@ -76,7 +95,10 @@ describe('UserContextInterceptor', () => {
   it('skips setting context when user is undefined', async () => {
     const setMock = jest.fn();
     const contextService = { set: setMock } as unknown as ContextService;
-    const interceptor = new UserContextInterceptor(contextService);
+    const interceptor = new UserContextInterceptor(
+      contextService,
+      configService,
+    );
     const callHandler = createCallHandler();
 
     await lastValueFrom(

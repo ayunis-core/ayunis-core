@@ -11,12 +11,17 @@ import { InvalidPasswordError } from 'src/iam/authentication/application/authent
 import { AuthenticationErrorCode } from 'src/iam/authentication/application/authentication.errors';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
+import { RevokeOtherSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.use-case';
+import { RevokeOtherSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.command';
+import { ContextService } from 'src/common/context/services/context.service';
 
 describe('UpdatePasswordUseCase', () => {
   let useCase: UpdatePasswordUseCase;
   let mockUsersRepository: Partial<UsersRepository>;
   let mockHashTextUseCase: { execute: jest.Mock };
   let mockValidateUserUseCase: { execute: jest.Mock };
+  let mockRevokeOtherSessionsForUserUseCase: { execute: jest.Mock };
+  let mockContextService: { get: jest.Mock };
 
   const userId = 'user-id' as UUID;
   const buildUser = () =>
@@ -39,6 +44,12 @@ describe('UpdatePasswordUseCase', () => {
     };
     mockHashTextUseCase = { execute: jest.fn() };
     mockValidateUserUseCase = { execute: jest.fn() };
+    mockRevokeOtherSessionsForUserUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
+    mockContextService = {
+      get: jest.fn().mockReturnValue('actor-refresh-token'),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,6 +57,11 @@ describe('UpdatePasswordUseCase', () => {
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: HashTextUseCase, useValue: mockHashTextUseCase },
         { provide: ValidateUserUseCase, useValue: mockValidateUserUseCase },
+        {
+          provide: RevokeOtherSessionsForUserUseCase,
+          useValue: mockRevokeOtherSessionsForUserUseCase,
+        },
+        { provide: ContextService, useValue: mockContextService },
       ],
     }).compile();
 
@@ -83,6 +99,16 @@ describe('UpdatePasswordUseCase', () => {
     );
     expect(user.passwordHash).toBe('new-hash');
     expect(mockUsersRepository.update).toHaveBeenCalledWith(user);
+    // All other sessions are revoked; the actor's own device stays logged in.
+    // The actor's refresh token is resolved from request context and forwarded
+    // so its session family is preserved.
+    expect(mockContextService.get).toHaveBeenCalledWith('refreshToken');
+    expect(mockRevokeOtherSessionsForUserUseCase.execute).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(mockRevokeOtherSessionsForUserUseCase.execute).toHaveBeenCalledWith(
+      new RevokeOtherSessionsForUserCommand(userId, 'actor-refresh-token'),
+    );
   });
 
   it('throws INVALID_PASSWORD when the new password violates the policy', async () => {
