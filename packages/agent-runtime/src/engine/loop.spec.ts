@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { RunEvent } from '../contracts/event';
 import {
@@ -197,6 +197,47 @@ describe('the agent loop', () => {
       message: 'connection refused',
     });
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('rejects a provider response without assistant content', async () => {
+    const model = new MockProvider([[]]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(eventTypes(events)).toEqual(['run_start', 'error', 'run_end']);
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_FAILED',
+      message: 'Model provider returned an empty response',
+    });
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('preserves reported usage when rejecting metadata-only output', async () => {
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([
+      [
+        {
+          finishReason: 'stop',
+          usage: { inputTokens: 12, outputTokens: 0 },
+        },
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'usage-observer', afterModelCall }],
+      }),
+    );
+
+    expect(afterModelCall).toHaveBeenCalledTimes(1);
+    expect(afterModelCall).toHaveBeenCalledWith(
+      expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
+    );
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+      usage: { inputTokens: 12, outputTokens: 0 },
+    });
   });
 
   it('stamps every event with the run envelope', async () => {

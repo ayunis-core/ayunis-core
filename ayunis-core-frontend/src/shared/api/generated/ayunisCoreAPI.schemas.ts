@@ -19,6 +19,8 @@ export interface FeatureTogglesResponseDto {
   letterheadsEnabled: boolean;
   /** Whether the skills feature is enabled */
   skillsEnabled: boolean;
+  /** Whether runs use the independent agent runtime */
+  agentRuntimeEnabled: boolean;
 }
 
 /**

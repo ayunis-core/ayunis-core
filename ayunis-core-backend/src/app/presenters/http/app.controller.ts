@@ -88,6 +88,7 @@ export class AppController {
       knowledgeBasesEnabled: this.features.knowledgeBasesEnabled,
       letterheadsEnabled: this.features.letterheadsEnabled,
       skillsEnabled: this.features.skillsEnabled,
+      agentRuntimeEnabled: this.features.agentRuntimeEnabled,
     };
   }
 }

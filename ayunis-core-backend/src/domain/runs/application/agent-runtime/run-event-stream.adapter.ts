@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import type { RunEvent } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
@@ -15,6 +14,7 @@ import {
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
+import { assistantMessageId } from './assistant-message-id';
 import {
   toBackendAssistantMessage,
   toBackendToolResultMessage,
@@ -72,34 +72,42 @@ export async function* adaptRunEventsToStream(
 /** Maps the assistant-turn events (deltas + the authoritative message). */
 class AssistantTurnAccumulator {
   private turn: StreamingTurn | null = null;
+  private turnIndex = 0;
 
   constructor(private readonly threadId: UUID) {}
 
   consume(event: RunEvent): AssistantMessage | null {
     if (event.type === 'thinking_delta') {
-      const turn = this.ensureTurn();
+      const turn = this.ensureTurn(event.runId);
       turn.thinking += event.delta;
       return buildStreamingMessage(turn, this.threadId);
     }
     if (event.type === 'text_delta') {
-      const turn = this.ensureTurn();
+      const turn = this.ensureTurn(event.runId);
       turn.text += event.delta;
       return buildStreamingMessage(turn, this.threadId);
     }
     if (event.type === 'assistant_message') {
+      const id =
+        this.turn?.id ?? assistantMessageId(event.runId, this.turnIndex);
       const message = toBackendAssistantMessage(
         event.message,
         this.threadId,
-        this.turn?.id ?? randomUUID(),
+        id,
       );
       this.turn = null;
+      this.turnIndex++;
       return message;
     }
     return null;
   }
 
-  private ensureTurn(): StreamingTurn {
-    this.turn ??= { id: randomUUID(), text: '', thinking: '' };
+  private ensureTurn(runId: string): StreamingTurn {
+    this.turn ??= {
+      id: assistantMessageId(runId, this.turnIndex),
+      text: '',
+      thinking: '',
+    };
     return this.turn;
   }
 }

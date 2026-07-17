@@ -52,6 +52,28 @@ describe('hook lifecycle', () => {
     ]);
   });
 
+  it('completes afterModelCall before exposing the authoritative assistant message', async () => {
+    const phases: string[] = [];
+    const persistence: Hook = {
+      name: 'persistence',
+      afterModelCall: async () => {
+        await Promise.resolve();
+        phases.push('afterModelCall');
+      },
+    };
+    const model = new MockProvider([textTurn('Final answer')]);
+    const { run } = await import('./run');
+
+    for await (const event of run(baseInput(model, { hooks: [persistence] }))) {
+      if (event.type === 'assistant_message') {
+        phases.push('assistant_message');
+        break;
+      }
+    }
+
+    expect(phases).toEqual(['afterModelCall', 'assistant_message']);
+  });
+
   it('fires multiple hooks in registration order within a phase', async () => {
     const order: string[] = [];
     const hook = (name: string): Hook => ({
