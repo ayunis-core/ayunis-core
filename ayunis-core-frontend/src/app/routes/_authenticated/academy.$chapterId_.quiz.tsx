@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { ChapterQuizPage } from '@/pages/academy';
+import { ChapterQuizPage } from '@/pages/academy-chapter-quiz';
 import { isAcademyAddonActive } from '@/features/academy';
 import {
   addonsControllerList,
