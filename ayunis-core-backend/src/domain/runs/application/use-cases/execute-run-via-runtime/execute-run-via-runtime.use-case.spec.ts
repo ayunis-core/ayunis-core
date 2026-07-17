@@ -15,6 +15,7 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
+import type { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -50,12 +51,14 @@ interface Harness {
   anonymize: jest.Mock;
   activateOnThread: jest.Mock;
   createUser: jest.Mock;
+  trim: jest.Mock;
 }
 
 interface HarnessOptions {
   anonymous?: boolean;
   turns?: readonly (readonly ProviderChunk[])[];
   runtimeTools?: RuntimeTool[];
+  providerRejects?: boolean;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -141,12 +144,18 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
+  const trim = jest.fn((cmd: { messages: unknown[] }) => cmd.messages);
+  const trimMessagesForContextUseCase = {
+    execute: trim,
+  } as unknown as TrimMessagesForContextUseCase;
   const resolveModelProviderUseCase = {
-    execute: jest
-      .fn()
-      .mockResolvedValue(
-        new MockProvider(overrides.turns ?? [textTurn('Hello')]),
-      ),
+    execute: overrides.providerRejects
+      ? jest.fn().mockRejectedValue(new Error('provider down'))
+      : jest
+          .fn()
+          .mockResolvedValue(
+            new MockProvider(overrides.turns ?? [textTurn('Hello')]),
+          ),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
@@ -177,6 +186,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     createToolResultMessageUseCase,
     addMessageToThreadUseCase,
     mapMessagesToInferenceUseCase,
+    trimMessagesForContextUseCase,
     resolveModelProviderUseCase,
     messageCleanupService,
     persistenceHookFactory,
@@ -194,6 +204,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     anonymize,
     activateOnThread,
     createUser,
+    trim,
   };
 }
 
@@ -278,6 +289,21 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     };
     expect(streamedToolResult).toBeDefined();
     expect(persistedCommand.id).toBe(streamedToolResult!.id);
+  });
+
+  it('trims history to the context budget before inference', async () => {
+    const { useCase, trim } = buildHarness();
+    await drain(await useCase.execute(userCommand()));
+    expect(trim).toHaveBeenCalledWith(
+      expect.objectContaining({ maxTokens: 80000 }),
+    );
+  });
+
+  it('cleans up trailing non-assistant messages when the run fails', async () => {
+    const { useCase, cleanup } = buildHarness({ providerRejects: true });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
+    expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 
   it('rejects a tool-result input with no pending tool call', async () => {
