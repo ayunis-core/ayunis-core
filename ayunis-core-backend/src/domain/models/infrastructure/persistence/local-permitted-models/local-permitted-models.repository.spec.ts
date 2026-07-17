@@ -9,7 +9,7 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { PermittedModelQueryService } from './permitted-model-query.service';
+import { PermittedModelFinder } from './permitted-model-finder';
 import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
@@ -17,7 +17,7 @@ describe('LocalPermittedModelsRepository', () => {
   let repository: LocalPermittedModelsRepository;
   let permittedModelRepository: jest.Mocked<Repository<PermittedModelRecord>>;
   let permittedModelMapper: jest.Mocked<PermittedModelMapper>;
-  let queryService: PermittedModelQueryService;
+  let finder: PermittedModelFinder;
 
   const orgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const catalogModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -39,7 +39,7 @@ describe('LocalPermittedModelsRepository', () => {
       toRecord: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelMapper>;
 
-    queryService = new PermittedModelQueryService(
+    finder = new PermittedModelFinder(
       permittedModelRepository,
       permittedModelMapper,
     );
@@ -47,7 +47,7 @@ describe('LocalPermittedModelsRepository', () => {
     repository = new LocalPermittedModelsRepository(
       permittedModelRepository,
       permittedModelMapper,
-      queryService,
+      finder,
     );
   });
 

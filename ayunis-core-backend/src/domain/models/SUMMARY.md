@@ -70,7 +70,7 @@ The models module is the central registry for AI model configuration. The abstra
 
 ## Infrastructure Services
 
-- **PermittedModelQueryService** (`infrastructure/persistence/local-permitted-models/permitted-model-query.service.ts`): Centralizes permitted model queries with type-safe filtering by model type (language, embedding, image-generation) and scope (org, team). Handles both org-scoped and team-scoped lookups.
+- **PermittedModelFinder** (`infrastructure/persistence/local-permitted-models/permitted-model-finder.ts`): Read-only collaborator of `LocalPermittedModelsRepository` that centralizes permitted-model lookups with type-safe filtering by model type (language, embedding, image-generation) and scope (org, team). Handles both org-scoped and team-scoped reads.
 
 ## Image Generation
 

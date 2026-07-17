@@ -18,8 +18,8 @@ import { PermittedModelRecord } from './schema/permitted-model.record';
 import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 
 @Injectable()
-export class PermittedModelQueryService {
-  private readonly logger = new Logger(PermittedModelQueryService.name);
+export class PermittedModelFinder {
+  private readonly logger = new Logger(PermittedModelFinder.name);
 
   constructor(
     @InjectRepository(PermittedModelRecord)
