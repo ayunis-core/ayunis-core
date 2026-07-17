@@ -38,6 +38,33 @@
     "revertTo": "Zurücksetzen auf v{{version}}",
     "revert": "Zurücksetzen"
   },
+  "spreadsheet": {
+    "empty": "Diese Tabelle hat noch keine Spalten. Fügen Sie eine Spalte hinzu, um zu beginnen.",
+    "invalidContent": "Der Inhalt dieser Tabelle konnte nicht gelesen werden. Beim Speichern wird er überschrieben.",
+    "viewingHistory": "Version {{version}} wird angezeigt (schreibgeschützt). Wählen Sie die aktuelle Version, um weiter zu bearbeiten.",
+    "unsavedChanges": {
+      "title": "Ungespeicherte Änderungen",
+      "description": "Diese Tabelle enthält ungespeicherte Änderungen. Vor dem Schließen speichern?",
+      "saveAndClose": "Speichern & schließen",
+      "keepEditing": "Weiter bearbeiten"
+    },
+    "toolbar": {
+      "addColumn": "Spalte hinzufügen",
+      "columns": "Spalten",
+      "newColumnLabel": "Spalte {{number}}",
+      "renameColumn": "Spalte {{number}} umbenennen",
+      "deleteColumn": "Spalte löschen",
+      "deleteColumnTitle": "Spalte löschen?",
+      "deleteColumnDescription": "Die Spalte „{{label}}“ enthält Daten, die verloren gehen.",
+      "deleteColumnConfirm": "Löschen",
+      "deleteColumnCancel": "Abbrechen",
+      "noColumns": "Keine Spalten"
+    },
+    "export": {
+      "xlsx": "Excel",
+      "csv": "CSV"
+    }
+  },
   "diagram": {
     "export": {
       "svg": "SVG",

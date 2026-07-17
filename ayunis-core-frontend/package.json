@@ -73,6 +73,7 @@
     "pdfjs-dist": "^5.5.207",
     "radix-ui": "^1.6.1",
     "react": "^19.2.7",
+    "react-datasheet-grid": "4.11.6",
     "react-day-picker": "^9.13.2",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",

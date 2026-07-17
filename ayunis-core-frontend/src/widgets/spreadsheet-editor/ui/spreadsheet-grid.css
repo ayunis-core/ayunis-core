@@ -1,0 +1,46 @@
+/* Map react-datasheet-grid's theme variables onto the app theme tokens from
+   src/styles/themes/core.css. The light defaults shipped by the library work
+   for light mode; dark mode needs every surface remapped. */
+
+.dsg-container {
+  --dsg-selection-border-color: var(--primary);
+  font-size: 0.875rem;
+}
+
+.dsg-cell-formula {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+.dark .dsg-container {
+  --dsg-border-color: var(--border);
+  --dsg-cell-background-color: var(--background);
+  --dsg-cell-disabled-background-color: var(--muted);
+  --dsg-header-text-color: var(--muted-foreground);
+  --dsg-header-active-text-color: var(--foreground);
+  --dsg-selection-background-color: color-mix(
+    in oklab,
+    var(--primary) 12%,
+    transparent
+  );
+  --dsg-selection-disabled-background-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 8%,
+    transparent
+  );
+  --dsg-selection-disabled-border-color: var(--muted-foreground);
+  --dsg-scroll-shadow-color: rgba(0, 0, 0, 0.5);
+  color: var(--foreground);
+}
+
+.dark .dsg-input {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.dark .dsg-add-row {
+  background: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
+}
