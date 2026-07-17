@@ -41,7 +41,7 @@ import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
  * routes where no principal is available yet.
  *
  * Exception handling uses TWO registrations of `OpenAIExceptionFilter`:
- * - `@UseFilters` (here): wins over the global `UnauthorizedExceptionFilter`
+ * - `@UseFilters` (here): wins over the global `ApplicationErrorFilter`
  *   for runtime errors thrown DURING dispatch (auth, validation, domain
  *   errors) — controller-scoped filters beat global ones in NestJS.
  * - APP_FILTER (in OpenAICompatModule): catches errors raised BEFORE
