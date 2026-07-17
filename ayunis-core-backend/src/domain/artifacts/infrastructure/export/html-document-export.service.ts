@@ -5,8 +5,7 @@ import {
 } from '../../application/ports/document-export.port';
 import { convertHtmlToDocx } from './html-to-docx-converter';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
-import puppeteer, { Browser } from 'puppeteer-core';
-import { existsSync } from 'fs';
+import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
 import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
 
 /** CSS for PDF export (Puppeteer supports full <style> blocks). */
@@ -51,15 +50,14 @@ export class HtmlDocumentExportService
   implements DocumentExportPort, OnModuleDestroy
 {
   private readonly logger = new Logger(HtmlDocumentExportService.name);
-  private browser: Browser | null = null;
-  private launchPromise: Promise<void> | null = null;
+  private readonly chromium = new LazyChromiumBrowser();
 
   constructor(
     private readonly pdfLetterheadCompositor: PdfLetterheadCompositor,
   ) {}
 
   async onModuleDestroy(): Promise<void> {
-    await this.closeBrowser();
+    await this.chromium.close();
   }
 
   async exportToDocx(html: string): Promise<Buffer> {
@@ -76,7 +74,7 @@ export class HtmlDocumentExportService
     this.logger.log('Exporting HTML to PDF');
 
     const wrappedHtml = this.wrapHtmlForPdf(html, letterhead);
-    const browser = await this.getBrowser();
+    const browser = await this.chromium.get();
     const page = await browser.newPage();
 
     try {
@@ -123,62 +121,6 @@ export class HtmlDocumentExportService
       preferCSSPageSize: true,
       printBackground: true,
     };
-  }
-
-  private async getBrowser(): Promise<Browser> {
-    if (this.browser?.connected) {
-      return this.browser;
-    }
-
-    if (!this.launchPromise) {
-      this.logger.log('Launching Puppeteer browser (lazy init)');
-      this.launchPromise = this.launchBrowser().finally(() => {
-        this.launchPromise = null;
-      });
-    }
-    await this.launchPromise;
-    return this.browser!;
-  }
-
-  private async launchBrowser(): Promise<void> {
-    const executablePath = this.resolveChromePath();
-    this.browser = await puppeteer.launch({
-      headless: true,
-      executablePath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-    this.logger.log(`Puppeteer browser launched (${executablePath})`);
-  }
-
-  private resolveChromePath(): string {
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-      return process.env.PUPPETEER_EXECUTABLE_PATH;
-    }
-
-    const candidates = [
-      '/usr/bin/chromium-browser',
-      '/usr/bin/chromium',
-      '/usr/bin/google-chrome',
-      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    ];
-
-    for (const candidate of candidates) {
-      if (existsSync(candidate)) {
-        return candidate;
-      }
-    }
-
-    throw new Error(
-      'No Chrome/Chromium executable found. Set PUPPETEER_EXECUTABLE_PATH.',
-    );
-  }
-
-  private async closeBrowser(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      this.logger.log('Puppeteer browser closed');
-    }
   }
 
   private wrapHtmlForPdf(
