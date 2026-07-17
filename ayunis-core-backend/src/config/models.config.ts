@@ -7,7 +7,7 @@ const mistralConfig = () => ({
   // Default must be a model with the audio_transcription capability —
   // voxtral-small only supports audio chat, not /v1/audio/transcriptions.
   transcriptionModel:
-    process.env.MISTRAL_TRANSCRIPTION_MODEL ?? 'voxtral-mini-latest',
+    process.env.MISTRAL_TRANSCRIPTION_MODEL?.trim() || 'voxtral-mini-latest',
 });
 
 export const modelsConfig = registerAs('models', () => ({
