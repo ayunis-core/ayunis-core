@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export type ExportFormat = 'docx' | 'pdf';
+export type ExportFormat = 'docx' | 'pdf' | 'xlsx' | 'csv';
 
 export class ExportArtifactCommand {
   readonly artifactId: UUID;
