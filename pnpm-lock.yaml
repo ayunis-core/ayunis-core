@@ -29,6 +29,9 @@ importers:
 
   ayunis-core-backend:
     dependencies:
+      '@ayunis/agent-runtime':
+        specifier: workspace:*
+        version: link:../packages/agent-runtime
       '@ayunis/inference':
         specifier: workspace:*
         version: link:../packages/inference
