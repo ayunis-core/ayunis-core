@@ -55,7 +55,7 @@ import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from '../../domain/value-objects/role.object';
 import { Public } from 'src/common/guards/public.guard';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -116,17 +116,24 @@ export class UserController {
     this.logger.log('getUsersInOrganization', { orgId, ...queryParams });
 
     const users = await this.findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery({
-        orgId,
-        search: queryParams.search,
-        pagination: {
-          limit: queryParams.limit,
-          offset: queryParams.offset,
-        },
-      }),
+      this.buildFindUsersQuery(orgId, queryParams),
     );
 
     return this.userResponseDtoMapper.toPaginatedDto(users);
+  }
+
+  private buildFindUsersQuery(
+    orgId: UUID,
+    queryParams: GetUsersQueryParamsDto,
+  ): FindUsersByOrgIdQuery {
+    return new FindUsersByOrgIdQuery({
+      orgId,
+      search: queryParams.search,
+      pagination: {
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+    });
   }
 
   @Roles(UserRole.ADMIN)
@@ -168,17 +175,15 @@ export class UserController {
     @Body() updateUserRoleDto: UpdateUserRoleDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
-    this.logger.log('updateUserRole', {
-      userId,
-      newRole: updateUserRoleDto.role,
-    });
+    const newRole = updateUserRoleDto.role;
+    this.logger.log('updateUserRole', { userId, newRole });
 
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot update your own role');
     }
 
     const updatedUser = await this.updateUserRoleUseCase.execute(
-      new UpdateUserRoleCommand(userId, updateUserRoleDto.role),
+      new UpdateUserRoleCommand(userId, newRole),
     );
 
     return this.userResponseDtoMapper.toDto(updatedUser);

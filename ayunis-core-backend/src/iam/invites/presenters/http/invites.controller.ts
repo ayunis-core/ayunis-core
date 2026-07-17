@@ -59,7 +59,7 @@ import { ResendExpiredInviteCommand } from '../../application/use-cases/resend-e
 // Import Mappers
 import { InviteResponseMapper } from './mappers/invite-response.mapper';
 import { Public } from 'src/common/guards/public.guard';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SendInvitationEmailCommand } from '../../application/use-cases/send-invitation-email/send-invitation-email.command';

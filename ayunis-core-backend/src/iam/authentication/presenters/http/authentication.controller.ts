@@ -52,7 +52,7 @@ import { RefreshTokenCommand } from '../../application/use-cases/refresh-token/r
 import { RegisterUserCommand } from '../../application/use-cases/register-user/register-user.command';
 import { GetCurrentUserCommand } from '../../application/use-cases/get-current-user/get-current-user.command';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')

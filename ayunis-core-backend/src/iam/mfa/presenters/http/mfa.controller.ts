@@ -18,7 +18,7 @@ import {
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetMfaStatusUseCase } from '../../application/use-cases/get-mfa-status/get-mfa-status.use-case';
 import { GetMfaStatusQuery } from '../../application/use-cases/get-mfa-status/get-mfa-status.query';

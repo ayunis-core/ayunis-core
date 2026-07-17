@@ -11,8 +11,8 @@ import {
   RATE_LIMIT_KEY,
   RateLimitOptions,
 } from '../decorators/rate-limit.decorator';
-import { RateLimitExceededError } from '../authorization.errors';
-import { getClientIp } from '../../../../common/util/ip.util';
+import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
+import { getClientIp } from '../util/ip.util';
 
 interface RateLimitRecord {
   count: number;
@@ -23,6 +23,7 @@ interface RateLimitRecord {
 export class RateLimitGuard implements CanActivate {
   private readonly logger = new Logger(RateLimitGuard.name);
   private readonly store = new Map<string, RateLimitRecord>();
+  private cleanupCounter = 0;
 
   constructor(
     private readonly reflector: Reflector,
@@ -36,10 +37,9 @@ export class RateLimitGuard implements CanActivate {
       return true;
     }
 
-    const rateLimitOptions = this.reflector.getAllAndOverride<RateLimitOptions>(
-      RATE_LIMIT_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const rateLimitOptions = this.reflector.getAllAndOverride<
+      RateLimitOptions | undefined
+    >(RATE_LIMIT_KEY, [context.getHandler(), context.getClass()]);
 
     if (!rateLimitOptions) {
       return true;
@@ -59,6 +59,19 @@ export class RateLimitGuard implements CanActivate {
     // Clean up expired entries periodically
     this.cleanupExpiredEntries(now);
 
+    return this.consumeQuota(key, clientIp, rateLimitOptions, now);
+  }
+
+  /**
+   * Track the request against its window record; throws once the limit
+   * within the window is exhausted.
+   */
+  private consumeQuota(
+    key: string,
+    clientIp: string,
+    rateLimitOptions: RateLimitOptions,
+    now: number,
+  ): boolean {
     let record = this.store.get(key);
 
     if (!record || now > record.resetTime) {
@@ -84,26 +97,7 @@ export class RateLimitGuard implements CanActivate {
     record.count++;
 
     if (record.count > rateLimitOptions.limit) {
-      const timeToReset = record.resetTime - now;
-
-      this.logger.warn('Rate limit exceeded', {
-        clientIp,
-        key,
-        count: record.count,
-        limit: rateLimitOptions.limit,
-        timeToResetMs: timeToReset,
-      });
-
-      throw new RateLimitExceededError(
-        rateLimitOptions.message ||
-          `Rate limit exceeded. Try again in ${Math.ceil(timeToReset / 1000)} seconds.`,
-        {
-          clientIp,
-          limit: rateLimitOptions.limit,
-          windowMs: rateLimitOptions.windowMs,
-          retryAfter: Math.ceil(timeToReset / 1000),
-        },
-      );
+      this.throwLimitExceeded(key, clientIp, rateLimitOptions, record, now);
     }
 
     this.logger.debug('Rate limit: request allowed', {
@@ -117,12 +111,42 @@ export class RateLimitGuard implements CanActivate {
     return true;
   }
 
+  private throwLimitExceeded(
+    key: string,
+    clientIp: string,
+    rateLimitOptions: RateLimitOptions,
+    record: RateLimitRecord,
+    now: number,
+  ): never {
+    const timeToReset = record.resetTime - now;
+
+    this.logger.warn('Rate limit exceeded', {
+      clientIp,
+      key,
+      count: record.count,
+      limit: rateLimitOptions.limit,
+      timeToResetMs: timeToReset,
+    });
+
+    throw new RateLimitExceededError(
+      rateLimitOptions.message ||
+        `Rate limit exceeded. Try again in ${Math.ceil(timeToReset / 1000)} seconds.`,
+      {
+        clientIp,
+        limit: rateLimitOptions.limit,
+        windowMs: rateLimitOptions.windowMs,
+        retryAfter: Math.ceil(timeToReset / 1000),
+      },
+    );
+  }
+
   /**
    * Clean up expired entries to prevent memory leaks
    */
   private cleanupExpiredEntries(now: number): void {
     // Only cleanup every 1000 requests to avoid performance impact
-    if (Math.random() < 0.001) {
+    this.cleanupCounter = (this.cleanupCounter + 1) % 1000;
+    if (this.cleanupCounter === 0) {
       const expiredKeys: string[] = [];
 
       for (const [key, record] of this.store.entries()) {

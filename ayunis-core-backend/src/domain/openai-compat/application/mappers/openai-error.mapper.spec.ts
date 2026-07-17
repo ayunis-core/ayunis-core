@@ -2,7 +2,7 @@ import { OpenAIErrorMapper } from './openai-error.mapper';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';
-import { RateLimitExceededError } from 'src/iam/authorization/application/authorization.errors';
+import { RateLimitExceededError } from 'src/common/errors/rate-limit-exceeded.error';
 import {
   BadRequestException,
   ForbiddenException,

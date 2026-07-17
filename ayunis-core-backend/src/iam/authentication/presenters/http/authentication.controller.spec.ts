@@ -15,8 +15,8 @@ import { ActiveUser } from '../../domain/active-user.entity';
 import { AuthTokens } from '../../domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { RATE_LIMIT_KEY } from '../../../authorization/application/decorators/rate-limit.decorator';
-import type { RateLimitOptions } from '../../../authorization/application/decorators/rate-limit.decorator';
+import { RATE_LIMIT_KEY } from 'src/common/decorators/rate-limit.decorator';
+import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
 import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
 import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
 

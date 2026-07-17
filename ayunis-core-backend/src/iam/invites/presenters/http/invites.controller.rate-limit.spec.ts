@@ -3,7 +3,7 @@ import { InvitesController } from './invites.controller';
 import {
   RATE_LIMIT_KEY,
   type RateLimitOptions,
-} from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+} from 'src/common/decorators/rate-limit.decorator';
 
 describe('InvitesController rate limits', () => {
   const reflector = new Reflector();

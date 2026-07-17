@@ -2,7 +2,7 @@ import { Controller, Get, Param, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { SubscriptionGuard } from 'src/iam/authorization/application/guards/subscription.guard';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
