@@ -144,20 +144,34 @@ function getStepView(
   }
 
   const action = getToolActionLabel(step.toolUse, t);
-  const label = action.target
-    ? `${action.verb}: ${action.target}`
-    : action.verb;
+  let label = action.target ? `${action.verb}: ${action.target}` : action.verb;
+  if (step.toolUse.name.length === 0) {
+    label = t('chat.timeline.preparingToolCall');
+  }
+  if (step.status === 'error') {
+    label = t('chat.timeline.invalidToolCall');
+  }
   const params = step.toolUse.params as Record<string, unknown> | undefined;
   const hasParams = params !== undefined && Object.keys(params).length > 0;
+  const streamedArguments = step.toolUse.stream?.argumentsJson;
+  const hasStreamedArguments =
+    streamedArguments !== undefined && streamedArguments.length > 0;
   const hasResult = typeof step.result === 'string' && step.result.length > 0;
-  const hasDetails = hasParams || hasResult;
+  const hasDetails = hasStreamedArguments || hasParams || hasResult;
   return {
     label,
     hasDetails,
     expandable: hasDetails,
     details: (
       <>
-        {hasParams && (
+        {hasStreamedArguments && (
+          <div className="max-h-32 overflow-y-auto">
+            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+              {streamedArguments}
+            </pre>
+          </div>
+        )}
+        {!hasStreamedArguments && hasParams && (
           <div className="max-h-32 overflow-y-auto">
             <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
               {JSON.stringify(step.toolUse.params, null, 2)}

@@ -1854,6 +1854,25 @@ export interface ToolUseIntegrationDto {
 }
 
 /**
+ * Transient lifecycle state of a streamed tool call
+ */
+export type ToolUseStreamDtoStatus = typeof ToolUseStreamDtoStatus[keyof typeof ToolUseStreamDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToolUseStreamDtoStatus = {
+  streaming: 'streaming',
+  invalid: 'invalid',
+} as const;
+
+export interface ToolUseStreamDto {
+  /** Transient lifecycle state of a streamed tool call */
+  status: ToolUseStreamDtoStatus;
+  /** Accumulated raw JSON arguments received from the model */
+  argumentsJson: string;
+}
+
+/**
  * Type of the message content
  */
 export type ToolUseMessageContentResponseDtoType = typeof ToolUseMessageContentResponseDtoType[keyof typeof ToolUseMessageContentResponseDtoType];
@@ -1884,6 +1903,8 @@ export interface ToolUseMessageContentResponseDto {
   params: ToolUseMessageContentResponseDtoParams;
   /** Integration metadata if this tool belongs to a marketplace integration */
   integration?: ToolUseIntegrationDto;
+  /** Presentation-only stream state; absent from finalized valid tool calls */
+  stream?: ToolUseStreamDto;
 }
 
 /**

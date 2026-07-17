@@ -11,9 +11,12 @@ import { TextMessageContent } from 'src/domain/messages/domain/message-contents/
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 
 type BackendAssistantContent =
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
+
+const EMPTY_TOOL_INTEGRATIONS = new RuntimeToolIntegrationRegistry([]);
 
 /**
  * Reverse of `models`' `toInferenceMessages`: rebuilds the backend's domain
@@ -25,15 +28,17 @@ export function toBackendAssistantMessage(
   message: InferenceAssistantMessage,
   threadId: UUID,
   id: UUID = randomUUID(),
+  integrations: RuntimeToolIntegrationRegistry = EMPTY_TOOL_INTEGRATIONS,
 ): AssistantMessage {
   const content = message.content
-    .map(toBackendAssistantContent)
+    .map((item) => toBackendAssistantContent(item, integrations))
     .filter((c): c is BackendAssistantContent => c !== null);
   return new AssistantMessage({ id, threadId, content });
 }
 
 function toBackendAssistantContent(
   content: InferenceMessageContent,
+  integrations: RuntimeToolIntegrationRegistry,
 ): BackendAssistantContent | null {
   switch (content.type) {
     case 'text':
@@ -53,6 +58,7 @@ function toBackendAssistantContent(
         content.name,
         content.input,
         content.providerMetadata ?? null,
+        integrations.get(content.name),
       );
     case 'tool_result':
     case 'image':

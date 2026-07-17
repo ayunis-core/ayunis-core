@@ -131,6 +131,7 @@ export class HookRunner {
     toolCall: ToolCallSummary;
     result: string;
     isError: boolean;
+    isLastToolCall: boolean;
   }): Promise<void> {
     const ctx: AfterToolCallContext = { ...this.api(), ...info };
     for (const hook of this.deps.hooks) {

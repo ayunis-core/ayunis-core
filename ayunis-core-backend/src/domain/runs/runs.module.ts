@@ -11,8 +11,10 @@ import { SendMessageUseCase } from './application/use-cases/send-message/send-me
 import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
 import { RunSsePresenter } from './presenters/http/sse/run-sse.presenter';
 import { SendMessageRequestValidator } from './presenters/http/validation/send-message-request.validator';
+import { BackendToolAdapter } from './application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -66,8 +68,10 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
   providers: [
     ExecuteRunUseCase,
     ExecuteRunViaRuntimeUseCase,
+    BackendToolAdapter,
     PersistenceHookFactory,
     UsageHookFactory,
+    ToolUsageHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

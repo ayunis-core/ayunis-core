@@ -1,27 +1,38 @@
-import {
-  MockProvider,
-  textTurn,
-  type ModelProvider,
-} from '@ayunis/agent-runtime';
+import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
+import type { Tool as RuntimeTool } from '@ayunis/agent-runtime';
+import type { ProviderChunk } from '@ayunis/inference';
 import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
+import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
+import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
+import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
+import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
+import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
+import { ToolUsedEvent } from '../../events/tool-used.event';
+import { RunMaxIterationsReachedError } from '../../runs.errors';
 import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
@@ -33,6 +44,7 @@ import { ExecuteRunViaRuntimeUseCase } from './execute-run-via-runtime.use-case'
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
+const integrationId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
 
 interface Harness {
   useCase: ExecuteRunViaRuntimeUseCase;
@@ -40,15 +52,26 @@ interface Harness {
   save: jest.Mock;
   collectUsage: jest.Mock;
   cleanup: jest.Mock;
+  createToolResult: jest.Mock;
+  createSeedToolResult: jest.Mock;
+  emitAsync: jest.Mock;
 }
 
-function buildHarness(
-  overrides: { anonymous?: boolean; provider?: ModelProvider } = {},
-): Harness {
+interface HarnessOptions {
+  anonymous?: boolean;
+  turns?: readonly (readonly ProviderChunk[])[];
+  runtimeTools?: RuntimeTool[];
+  backendTools?: BackendTool[];
+  lastMessage?: Message;
+  toolResultCollector?: ToolResultCollectorService;
+}
+
+function buildHarness(overrides: HarnessOptions = {}): Harness {
   const model = {
     name: 'claude',
     provider: 'anthropic',
     canVision: false,
+    canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
   } as unknown as LanguageModel;
   const permitted = {
     model,
@@ -59,6 +82,7 @@ function buildHarness(
     model: permitted,
     messages: [],
     isAnonymous: overrides.anonymous ?? false,
+    getLastMessage: () => overrides.lastMessage,
   } as unknown as Thread;
 
   const contextService = {
@@ -68,6 +92,10 @@ function buildHarness(
       return undefined;
     }),
   } as unknown as ContextService;
+  const eventEmitter = {
+    emitAsync: jest.fn().mockResolvedValue([]),
+  } as unknown as EventEmitter2;
+  const emitAsync = eventEmitter.emitAsync as jest.Mock;
 
   const findThread = jest.fn().mockResolvedValue({ thread });
   const findThreadUseCase = {
@@ -78,17 +106,38 @@ function buildHarness(
     collectUsage: jest.fn(),
   } as unknown as jest.Mocked<InferenceUsageGuard>;
   const toolAssemblyService = {
-    buildRunContext: jest
-      .fn()
-      .mockResolvedValue({ tools: [], instructions: 'system prompt' }),
+    buildRunContext: jest.fn().mockResolvedValue({
+      tools: overrides.backendTools ?? [],
+      instructions: 'system prompt',
+    }),
   } as unknown as ToolAssemblyService;
-  const userMessage = { id: 'user-msg', threadId } as unknown as UserMessage;
+  const backendToolAdapter = {
+    toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
+  } as unknown as BackendToolAdapter;
+  const createToolResult = jest.fn().mockImplementation((command) =>
+    Promise.resolve(
+      new ToolResultMessage({
+        id: command.id,
+        threadId: command.threadId,
+        content: command.content,
+      }),
+    ),
+  );
+  const createToolResultMessageUseCase = {
+    execute: createToolResult,
+  } as unknown as CreateToolResultMessageUseCase;
+  const userMessage = new UserMessage({
+    id: 'user-msg' as UUID,
+    threadId,
+    content: [],
+  });
   const createUserMessageUseCase = {
     execute: jest.fn().mockResolvedValue(userMessage),
   } as unknown as CreateUserMessageUseCase;
-  const addMessageToThreadUseCase = {
-    execute: jest.fn(),
-  } as unknown as AddMessageToThreadUseCase;
+  const addMessageToThreadUseCase = new AddMessageToThreadUseCase(
+    contextService,
+    eventEmitter,
+  );
   const mapMessagesToInferenceUseCase = {
     execute: jest
       .fn()
@@ -100,30 +149,47 @@ function buildHarness(
     execute: jest
       .fn()
       .mockResolvedValue(
-        overrides.provider ?? new MockProvider([textTurn('Hello')]),
+        new MockProvider(overrides.turns ?? [textTurn('Hello')]),
       ),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
     cleanupTrailingNonAssistantMessages: cleanup,
   } as unknown as MessageCleanupService;
-  const eventEmitter = {
-    emitAsync: jest.fn().mockResolvedValue([]),
-  } as unknown as EventEmitter2;
-
-  const save = jest.fn().mockResolvedValue(undefined);
-  const persistenceHookFactory = new PersistenceHookFactory({
-    execute: save,
-  } as never);
+  const save = jest
+    .fn()
+    .mockImplementation((command) => Promise.resolve(command.message));
+  const flushToolResult = jest.fn().mockImplementation((command) =>
+    Promise.resolve(
+      new ToolResultMessage({
+        id: command.id,
+        threadId: command.threadId,
+        content: command.content,
+      }),
+    ),
+  );
+  const persistenceHookFactory = new PersistenceHookFactory(
+    { execute: save } as never,
+    { execute: flushToolResult } as never,
+    addMessageToThreadUseCase,
+  );
   const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
+  const toolUsageHookFactory = new ToolUsageHookFactory(eventEmitter);
+  const toolResultCollector = overrides.toolResultCollector ?? {
+    collectToolResults: jest
+      .fn()
+      .mockResolvedValue({ contents: [], piiMasks: null }),
+  };
 
   const useCase = new ExecuteRunViaRuntimeUseCase(
     contextService,
     findThreadUseCase,
     inferenceUsageGuard,
     toolAssemblyService,
+    backendToolAdapter,
     createUserMessageUseCase,
+    createToolResultMessageUseCase,
     addMessageToThreadUseCase,
     mapMessagesToInferenceUseCase,
     resolveModelProviderUseCase,
@@ -131,9 +197,20 @@ function buildHarness(
     persistenceHookFactory,
     usageHookFactory,
     eventEmitter,
+    toolResultCollector as ToolResultCollectorService,
+    toolUsageHookFactory,
   );
 
-  return { useCase, findThread, save, collectUsage, cleanup };
+  return {
+    useCase,
+    findThread,
+    save,
+    collectUsage,
+    cleanup,
+    createToolResult: flushToolResult,
+    createSeedToolResult: createToolResult,
+    emitAsync,
+  };
 }
 
 async function drain(
@@ -191,14 +268,14 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
 
   it('fails and cleans up when the provider returns no assistant content', async () => {
     const { useCase, save, collectUsage, cleanup } = buildHarness({
-      provider: new MockProvider([
+      turns: [
         [
           {
             finishReason: 'stop',
             usage: { inputTokens: 17, outputTokens: 0 },
           },
         ],
-      ]),
+      ],
     });
 
     await expect(
@@ -220,9 +297,9 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
 
   it('collects usage once before surfacing assistant persistence failure', async () => {
     const { useCase, save, collectUsage } = buildHarness({
-      provider: new MockProvider([
+      turns: [
         textTurn('Billable response', { inputTokens: 23, outputTokens: 5 }),
-      ]),
+      ],
     });
     save.mockRejectedValueOnce(new Error('database unavailable'));
 
@@ -238,14 +315,276 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     );
   });
 
-  it('rejects tool-result inputs (not yet supported on the runtime path)', async () => {
+  it('executes a tool in-loop and persists the grouped tool result', async () => {
+    const execute = jest.fn().mockResolvedValue('sunny in Berlin');
+    const searchTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, save, createToolResult } = buildHarness({
+      runtimeTools: [searchTool],
+      turns: [
+        toolCallTurn({
+          id: 'c1',
+          name: 'get_weather',
+          input: { city: 'Berlin' },
+        }),
+        textTurn('It is sunny.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    // the tool ran in-loop
+    expect(execute).toHaveBeenCalledTimes(1);
+    // two assistant turns persisted (tool call + final text), grouped tool result once
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    const finalText = items
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .map((m) => (m.content[0] as TextMessageContent)?.text)
+      .filter(Boolean)
+      .pop();
+    expect(finalText).toBe('It is sunny.');
+
+    // the streamed and persisted tool-result copies share a deterministic id
+    const streamedToolResult = items.find(
+      (i): i is ToolResultMessage => i instanceof ToolResultMessage,
+    );
+    const persistedCommand = createToolResult.mock.calls[0][0] as {
+      id?: string;
+    };
+    expect(streamedToolResult).toBeDefined();
+    expect(persistedCommand.id).toBe(streamedToolResult!.id);
+  });
+
+  it('emits the legacy message-added sequence exactly once for a runtime tool loop', async () => {
+    const runtimeTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('sunny'),
+    };
+    const { useCase, emitAsync } = buildHarness({
+      runtimeTools: [runtimeTool],
+      turns: [
+        toolCallTurn({ id: 'c1', name: runtimeTool.name, input: {} }),
+        textTurn('It is sunny.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    const additions = emitAsync.mock.calls.filter(
+      ([eventName]) => eventName === ThreadMessageAddedEvent.EVENT_NAME,
+    );
+    expect(additions).toEqual(
+      [1, 2, 3, 4].map((messageCount) => [
+        ThreadMessageAddedEvent.EVENT_NAME,
+        new ThreadMessageAddedEvent(userId, orgId, threadId, messageCount),
+      ]),
+    );
+  });
+
+  it('does not stream a grouped tool result when its persistence fails', async () => {
+    const execute = jest.fn().mockResolvedValue('classified record');
+    const lookupTool = {
+      name: 'lookup_record',
+      description: 'Look up a municipal record',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, createToolResult } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({ id: 'record-1', name: lookupTool.name, input: {} }),
+      ],
+    });
+    createToolResult.mockRejectedValue(new Error('database unavailable'));
+    const items: RunStreamItem[] = [];
+
+    await expect(async () => {
+      for await (const item of await useCase.execute(userCommand())) {
+        items.push(item);
+      }
+    }).rejects.toBeDefined();
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(items).not.toContainEqual(expect.any(ToolResultMessage));
+  });
+
+  it('retains completed tool results when the runtime reaches its iteration cap', async () => {
+    const execute = jest.fn().mockResolvedValue('municipal record found');
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const turns = Array.from({ length: 20 }, (_, iteration) =>
+      toolCallTurn({
+        id: `records-${iteration}`,
+        name: lookupTool.name,
+        input: { query: `budget amendment ${iteration + 1}` },
+      }),
+    );
+    const { useCase, createToolResult, cleanup } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns,
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+
+    expect(execute).toHaveBeenCalledTimes(20);
+    expect(createToolResult).toHaveBeenCalledTimes(20);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('includes MCP integration metadata in streamed and persisted tool calls', async () => {
+    const toolName = 'search_municipal_records';
+    const integration = {
+      id: integrationId,
+      name: 'Municipal Records',
+      logoUrl: 'https://example.com/municipal-records.svg',
+    };
+    const backendTool = new McpIntegrationTool(
+      new McpTool(
+        toolName,
+        'Search municipal records',
+        { type: 'object' },
+        integrationId,
+      ),
+      false,
+      integration.name,
+      integration.logoUrl,
+    );
+    const runtimeTool = {
+      name: toolName,
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Record found'),
+    };
+    const { useCase, save } = buildHarness({
+      backendTools: [backendTool],
+      runtimeTools: [runtimeTool],
+      turns: [
+        toolCallTurn({ id: 'records-1', name: toolName, input: {} }),
+        textTurn('I found the record.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    const streamedToolUse = items
+      .filter(
+        (item): item is AssistantMessage => item instanceof AssistantMessage,
+      )
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent,
+      );
+    const persistedToolUse = (
+      save.mock.calls[0][0].message as AssistantMessage
+    ).content.find(
+      (content): content is ToolUseMessageContent =>
+        content instanceof ToolUseMessageContent,
+    );
+    expect([
+      streamedToolUse?.integration,
+      persistedToolUse?.integration,
+    ]).toEqual([integration, integration]);
+  });
+
+  it('executes an executable sibling when continuing a display-only tool call', async () => {
+    const displayTool = { name: 'bar_chart' } as unknown as BackendTool;
+    const searchTool = { name: 'internet_search' } as unknown as BackendTool;
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+        new ToolUseMessageContent('search-1', 'internet_search', {
+          query: 'Berlin budget 2026',
+        }),
+      ],
+    } as unknown as Message;
+    const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
+    const checkCapabilities = jest.fn(({ tool }: { tool: BackendTool }) => ({
+      isDisplayable: tool.name === 'bar_chart',
+      isExecutable: tool.name === 'internet_search',
+    }));
+    const collector = new ToolResultCollectorService(
+      { execute: executeTool } as never,
+      { execute: checkCapabilities } as never,
+      { execute: jest.fn() } as never,
+      { get: jest.fn().mockReturnValue(userId) } as never,
+      { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+    );
+    const { useCase, createSeedToolResult } = buildHarness({
+      backendTools: [displayTool, searchTool],
+      lastMessage,
+      toolResultCollector: collector,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    await drain(await useCase.execute(command));
+
+    const persisted = createSeedToolResult.mock.calls[0][0] as {
+      content: Array<{ toolId: string; result: string }>;
+    };
+    expect(persisted.content).toEqual([
+      expect.objectContaining({ toolId: 'chart-1', result: 'Chart displayed' }),
+      expect.objectContaining({
+        toolId: 'search-1',
+        result: 'Berlin budget results',
+      }),
+    ]);
+    expect(executeTool).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits tool usage for an executable tool invocation', async () => {
+    const executableTool = {
+      name: 'internet_search',
+      description: 'search',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Berlin budget results'),
+    };
+    const { useCase, emitAsync } = buildHarness({
+      runtimeTools: [executableTool],
+      turns: [
+        toolCallTurn({
+          id: 'search-1',
+          name: 'internet_search',
+          input: { query: 'Berlin budget 2026' },
+        }),
+        textTurn('The budget results are ready.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      ToolUsedEvent.EVENT_NAME,
+      new ToolUsedEvent(userId, orgId, 'internet_search'),
+    );
+  });
+
+  it('rejects a tool-result input with no pending tool call', async () => {
     const { useCase } = buildHarness();
     const command = new ExecuteRunCommand({
       threadId,
       input: new RunToolResultInput('t1', 'search', 'result'),
     });
-    await expect(useCase.execute(command)).rejects.toThrow(
-      /does not yet support tool-result/i,
+    // the (empty) thread has no assistant tool_use to attach the result to;
+    // the error surfaces when the stream is drained
+    await expect(drain(await useCase.execute(command))).rejects.toThrow(
+      /No pending tool call/i,
     );
   });
 

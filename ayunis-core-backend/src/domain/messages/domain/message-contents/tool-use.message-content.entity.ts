@@ -9,12 +9,18 @@ export interface ToolUseIntegration {
   logoUrl: string | null;
 }
 
+export interface ToolUseStream {
+  status: 'streaming' | 'invalid';
+  argumentsJson: string;
+}
+
 export class ToolUseMessageContent extends MessageContent {
   public id: string;
   public name: string;
   public params: Record<string, unknown>;
   public readonly providerMetadata: ProviderMetadata;
   public readonly integration?: ToolUseIntegration;
+  public readonly stream?: ToolUseStream;
 
   constructor(
     id: string,
@@ -22,6 +28,7 @@ export class ToolUseMessageContent extends MessageContent {
     params: Record<string, unknown>,
     providerMetadata: ProviderMetadata = null,
     integration?: ToolUseIntegration,
+    stream?: ToolUseStream,
   ) {
     super(MessageContentType.TOOL_USE);
     this.id = id;
@@ -30,5 +37,6 @@ export class ToolUseMessageContent extends MessageContent {
     this.params = sanitizeObject(params);
     this.providerMetadata = providerMetadata;
     this.integration = integration;
+    this.stream = stream;
   }
 }

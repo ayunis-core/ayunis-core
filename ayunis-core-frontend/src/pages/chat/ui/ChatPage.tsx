@@ -51,6 +51,7 @@ import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
+import { reconcileMessages } from '../lib/reconcile-thread-messages';
 
 const LazyArtifactEditor = lazy(() =>
   import('@/widgets/artifact-editor').then((m) => ({
@@ -131,7 +132,7 @@ export default function ChatPage({
   const [reconciledThread, setReconciledThread] = useState(thread);
   if (thread !== reconciledThread) {
     setReconciledThread(thread);
-    setMessages(thread.messages);
+    setMessages(reconcileMessages(messages, reconciledThread, thread));
     setThreadTitle(thread.title);
     setPiiMasks(thread.piiMasks);
   }

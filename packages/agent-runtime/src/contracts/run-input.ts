@@ -22,7 +22,7 @@ export interface RunInput {
   /** Omit for a fresh root context. */
   context?: RunContext;
   signal?: AbortSignal;
-  /** Default: 20. */
+  /** Maximum complete model-and-tool iterations. Default: 20. */
   maxIterations?: number;
   toolChoice?: ToolChoice;
 }

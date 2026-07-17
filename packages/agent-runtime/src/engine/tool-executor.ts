@@ -1,6 +1,10 @@
 import type { RunEventPayload, ToolCallSummary } from '../contracts/event';
 import type { ToolResultContent, ToolUseContent } from '../contracts/message';
-import type { Tool, ToolExecutionContext } from '../contracts/tool';
+import type {
+  Tool,
+  ToolExecutionContext,
+  ToolExecutionOutput,
+} from '../contracts/tool';
 import { drainEmits } from './event-queue';
 import type { RunState } from './run-state';
 import { isAborted } from './run-state';
@@ -28,7 +32,7 @@ export async function* executeToolCalls(
   calls: readonly ToolUseContent[],
 ): AsyncGenerator<RunEventPayload, ToolResultContent[]> {
   const results: ToolResultContent[] = [];
-  for (const call of calls) {
+  for (const [callIndex, call] of calls.entries()) {
     const requested: ToolCallSummary = {
       id: call.id,
       name: call.name,
@@ -54,25 +58,26 @@ export async function* executeToolCalls(
       toolCall,
       result: outcome.result,
       isError: outcome.isError,
+      isLastToolCall: callIndex === calls.length - 1,
     });
     yield* drainEmits(state);
-    results.push({
-      type: 'tool_result',
-      toolCallId: toolCall.id,
-      toolName: toolCall.name,
-      result: outcome.result,
-      isError: outcome.isError,
-    });
-    yield {
-      type: 'tool_result',
-      toolCallId: toolCall.id,
-      toolName: toolCall.name,
-      result: outcome.result,
-      isError: outcome.isError,
-    };
+    const result = buildToolResult(toolCall, outcome);
+    results.push(result);
+    yield result;
   }
   return results;
 }
+
+const buildToolResult = (
+  toolCall: ToolCallSummary,
+  outcome: ToolOutcome,
+): Extract<RunEventPayload, { type: 'tool_result' }> => ({
+  type: 'tool_result',
+  toolCallId: toolCall.id,
+  toolName: toolCall.name,
+  result: outcome.result,
+  isError: outcome.isError,
+});
 
 const abortedOutcome = (): ToolOutcome => ({
   result: 'The run was aborted before this tool call was executed.',
@@ -105,12 +110,19 @@ const runTool = async (
       call.input,
       buildToolContext(state, call.id),
     );
-    return { result: clampResult(value), isError: false };
+    return normalizeToolOutput(value);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Tool execution failed';
     return { result: message, isError: true };
   }
+};
+
+const normalizeToolOutput = (output: ToolExecutionOutput): ToolOutcome => {
+  if (typeof output === 'string') {
+    return { result: clampResult(output), isError: false };
+  }
+  return { result: clampResult(output.result), isError: output.isError };
 };
 
 const buildToolContext = (

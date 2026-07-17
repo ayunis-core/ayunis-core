@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -71,6 +72,150 @@ describe('adaptRunEventsToStream', () => {
     expect(tick1.id).toBe(tick2.id);
     expect(final.id).toBe(tick1.id);
     expect((final.content[0] as TextMessageContent).text).toBe('Hello');
+  });
+
+  it('streams growing tool-only messages while split arguments arrive', async () => {
+    const items = await collect(
+      eventsFrom([
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 0,
+            id: 'c1',
+            name: 'search',
+            argumentsJson: '{"query":',
+            input: null,
+            status: 'streaming',
+          },
+        },
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 0,
+            id: 'c1',
+            name: 'search',
+            argumentsJson: '{"query":"budget"}',
+            input: { query: 'budget' },
+            status: 'streaming',
+          },
+        },
+        {
+          type: 'assistant_message',
+          message: {
+            role: 'assistant',
+            content: [
+              {
+                type: 'tool_use',
+                id: 'c1',
+                name: 'search',
+                input: { query: 'budget' },
+              },
+            ],
+          },
+        },
+      ]),
+    );
+
+    const [partial, complete, final] = items as AssistantMessage[];
+    expect(items).toHaveLength(3);
+    expect(partial.id).toBe(complete.id);
+    expect(final.id).toBe(partial.id);
+    expect((partial.content[0] as ToolUseMessageContent).params).toEqual({});
+    expect((partial.content[0] as ToolUseMessageContent).stream).toEqual({
+      status: 'streaming',
+      argumentsJson: '{"query":',
+    });
+    expect((complete.content[0] as ToolUseMessageContent).params).toEqual({
+      query: 'budget',
+    });
+    expect((final.content[0] as ToolUseMessageContent).params).toEqual({
+      query: 'budget',
+    });
+    expect((final.content[0] as ToolUseMessageContent).stream).toBeUndefined();
+  });
+
+  it('keeps an invalid terminal tool call visible beside finalized text', async () => {
+    const items = await collect(
+      eventsFrom([
+        { type: 'text_delta', delta: 'I will search for that.' },
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 0,
+            id: 'c1',
+            name: 'internet_search',
+            argumentsJson: '{"query":',
+            input: null,
+            status: 'streaming',
+          },
+        },
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 0,
+            id: 'c1',
+            name: 'internet_search',
+            argumentsJson: '{"query":',
+            input: null,
+            status: 'invalid',
+          },
+        },
+        {
+          type: 'assistant_message',
+          message: {
+            role: 'assistant',
+            content: [{ type: 'text', text: 'I will search for that.' }],
+          },
+        },
+        { type: 'run_end', status: 'completed', usage: {} },
+      ]),
+    );
+
+    const final = items.at(-1) as AssistantMessage;
+    const invalidCall = final.content.find(
+      (content) => content instanceof ToolUseMessageContent,
+    ) as ToolUseMessageContent;
+    expect(invalidCall.stream).toEqual({
+      status: 'invalid',
+      argumentsJson: '{"query":',
+    });
+  });
+
+  it('accumulates concurrent tool calls independently in index order', async () => {
+    const items = await collect(
+      eventsFrom([
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 1,
+            id: 'c2',
+            name: 'lookup',
+            argumentsJson: '{"id":2}',
+            input: { id: 2 },
+            status: 'streaming',
+          },
+        },
+        {
+          type: 'tool_call_snapshot',
+          toolCall: {
+            index: 0,
+            id: 'c1',
+            name: 'search',
+            argumentsJson: '{"query":"one"}',
+            input: { query: 'one' },
+            status: 'streaming',
+          },
+        },
+      ]),
+    );
+
+    const latest = items.at(-1) as AssistantMessage;
+    const calls = latest.content as ToolUseMessageContent[];
+    expect(calls.map((call) => call.id)).toEqual(['c1', 'c2']);
+    expect(calls.map((call) => call.params)).toEqual([
+      { query: 'one' },
+      { id: 2 },
+    ]);
   });
 
   it('maps a tool_result_message to a backend ToolResultMessage', async () => {

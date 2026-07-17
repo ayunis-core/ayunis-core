@@ -49,6 +49,9 @@ describe('the agent loop', () => {
 
     expect(eventTypes(events)).toEqual([
       'run_start',
+      'tool_call_snapshot',
+      'tool_call_snapshot',
+      'tool_call_snapshot',
       'tool_call',
       'assistant_message',
       'tool_result',
@@ -66,6 +69,85 @@ describe('the agent loop', () => {
       isError: false,
     });
     expect(model.requests).toHaveLength(2);
+  });
+
+  it('emits progressive tool-call snapshots before the finalized call', async () => {
+    const model = new MockProvider([
+      toolCallTurn({
+        id: 'call-1',
+        name: 'echo',
+        input: { value: 'progressive' },
+      }),
+      textTurn('Done'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()] }),
+    );
+
+    expect(
+      events.filter((event) => event.type === 'tool_call_snapshot'),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          toolCall: expect.objectContaining({
+            index: 0,
+            id: 'call-1',
+            name: 'echo',
+            status: 'streaming',
+          }),
+        }),
+        expect.objectContaining({
+          toolCall: expect.objectContaining({
+            index: 0,
+            argumentsJson: expect.any(String),
+            status: 'streaming',
+          }),
+        }),
+      ]),
+    );
+    expect(eventTypes(events).indexOf('tool_call_snapshot')).toBeLessThan(
+      eventTypes(events).indexOf('tool_call'),
+    );
+  });
+
+  it('emits an invalid terminal snapshot when streamed tool input never becomes valid', async () => {
+    const model = new MockProvider([
+      [
+        {
+          textDelta: 'I will search for that.',
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'call-1',
+              name: 'internet_search',
+              argumentsDelta: '{"query":',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+    const snapshots = events.filter(
+      (event) => event.type === 'tool_call_snapshot',
+    );
+
+    expect(snapshots).toEqual([
+      expect.objectContaining({
+        toolCall: expect.objectContaining({
+          argumentsJson: '{"query":',
+          status: 'streaming',
+        }),
+      }),
+      expect.objectContaining({
+        toolCall: expect.objectContaining({
+          argumentsJson: '{"query":',
+          status: 'invalid',
+        }),
+      }),
+    ]);
   });
 
   it('sends the tool result back to the model on the next iteration', async () => {
@@ -128,6 +210,39 @@ describe('the agent loop', () => {
     expect(model.requests).toHaveLength(2);
   });
 
+  it.each([
+    {
+      label: 'missing provider id',
+      delta: { index: 0, name: 'echo', argumentsDelta: '{"value":"x"}' },
+    },
+    {
+      label: 'blank tool name',
+      delta: { index: 0, id: 'call-1', name: ' ', argumentsDelta: '{}' },
+    },
+    {
+      label: 'unrecoverable arguments',
+      delta: {
+        index: 0,
+        id: 'call-1',
+        name: 'echo',
+        argumentsDelta: '{"value":',
+      },
+    },
+  ])('does not execute a tool call with $label', async ({ delta }) => {
+    const model = new MockProvider([
+      [{ toolCallDeltas: [delta] }, { finishReason: 'tool_calls' }],
+    ]);
+    const execute = vi.fn(() => 'side effect completed');
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool({ execute })] }),
+    );
+
+    expect(execute).not.toHaveBeenCalled();
+    expect(eventTypes(events)).not.toContain('tool_call');
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
   it('turns tool execution failures into error results without throwing', async () => {
     const failing = echoTool({
       name: 'broken',
@@ -149,12 +264,83 @@ describe('the agent loop', () => {
     });
   });
 
-  it('stops at the iteration cap with an error event', async () => {
+  it('preserves an explicit error status returned by a tool', async () => {
+    const reportedFailure = echoTool({
+      name: 'records_lookup',
+      execute: () => ({
+        result: 'The record service is temporarily unavailable',
+        isError: true,
+      }),
+    });
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'records_lookup', input: {} }),
+      textTurn('I could not retrieve the record.'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [reportedFailure] }),
+    );
+
+    expect(events.find((event) => event.type === 'tool_result')).toMatchObject({
+      result: 'The record service is temporarily unavailable',
+      isError: true,
+    });
+  });
+
+  it('withholds the grouped tool-result message until the final tool hook succeeds', async () => {
+    const finalCallFlags: boolean[] = [];
+    const persistence = {
+      name: 'persistence',
+      afterToolCall: (ctx: { isLastToolCall: boolean }) => {
+        finalCallFlags.push(ctx.isLastToolCall);
+        if (ctx.isLastToolCall) {
+          throw new Error('tool-result persistence failed');
+        }
+      },
+    };
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'call-1',
+              name: 'echo',
+              argumentsDelta: '{"value":"one"}',
+            },
+            {
+              index: 1,
+              id: 'call-2',
+              name: 'echo',
+              argumentsDelta: '{"value":"two"}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [persistence] }),
+    );
+
+    expect(finalCallFlags).toEqual([false, true]);
+    expect(eventTypes(events)).not.toContain('tool_result_message');
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('executes complete tool phases up to the iteration cap', async () => {
     const callTurn = (): ReturnType<typeof toolCallTurn> =>
       toolCallTurn({ id: 'call', name: 'echo', input: { value: 'again' } });
     const model = new MockProvider([callTurn(), callTurn(), callTurn()]);
+    const execute = vi.fn(
+      (input: Record<string, unknown>) => `echo: ${String(input.value)}`,
+    );
     const events = await collectEvents(
-      baseInput(model, { tools: [echoTool()], maxIterations: 2 }),
+      baseInput(model, {
+        tools: [echoTool({ execute })],
+        maxIterations: 2,
+      }),
     );
 
     const error = events.find((e) => e.type === 'error');
@@ -164,6 +350,10 @@ describe('the agent loop', () => {
       status: 'max_iterations',
     });
     expect(model.requests).toHaveLength(2);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(events.filter((event) => event.type === 'tool_result')).toHaveLength(
+      2,
+    );
   });
 
   it('aggregates usage across iterations into run_end', async () => {

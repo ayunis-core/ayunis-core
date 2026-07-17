@@ -9,6 +9,10 @@ interface AssistantContentBlock {
   id?: string;
   name?: string;
   params?: Record<string, unknown>;
+  stream?: {
+    status: 'streaming' | 'invalid';
+    argumentsJson: string;
+  };
 }
 
 let idCounter = 0;
@@ -36,6 +40,7 @@ function assistantMessage(blocks: AssistantContentBlock[]): Message {
         id: block.id,
         name: block.name,
         params: block.params ?? {},
+        stream: block.stream,
       };
     }),
     createdAt: new Date().toISOString(),
@@ -133,6 +138,33 @@ describe('groupMessagesIntoRuns', () => {
     expect(run.steps[0].kind).toBe('tool');
     expect(run.steps[0].status).toBe('in_progress');
     expect(run.isStreaming).toBe(true);
+  });
+
+  it('marks invalid tool calls as errors and does not create rich cards', () => {
+    const messages = [
+      userMessage('chart it'),
+      assistantMessage([
+        {
+          type: 'tool_use',
+          id: 't1',
+          name: 'bar_chart',
+          stream: {
+            status: 'invalid',
+            argumentsJson: '{"title":',
+          },
+        },
+      ]),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: false,
+      toolResultsByToolId: {},
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    expect(run.steps[0].status).toBe('error');
+    expect(run.richCards).toHaveLength(0);
   });
 
   it('promotes streaming text without tool_use to finalText (so it renders outside the timeline)', () => {
