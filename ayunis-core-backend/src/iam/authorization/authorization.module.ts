@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RolesGuard } from './application/guards/roles.guard';
 import { SubscriptionGuard } from './application/guards/subscription.guard';
-import { RateLimitGuard } from './application/guards/rate-limit.guard';
+import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { AddonsModule } from '../addons/addons.module';

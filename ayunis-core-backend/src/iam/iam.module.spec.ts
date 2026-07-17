@@ -7,7 +7,7 @@ import { EmailConfirmGuard } from './authorization/application/guards/email-conf
 import { RolesGuard } from './authorization/application/guards/roles.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
-import { RateLimitGuard } from './authorization/application/guards/rate-limit.guard';
+import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 

@@ -13,7 +13,7 @@ import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { Public } from 'src/common/guards/public.guard';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { setCookies, clearMfaPendingCookie } from 'src/common/util/cookie.util';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { LoginUseCase } from '../../application/use-cases/login/login.use-case';

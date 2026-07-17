@@ -18,7 +18,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RequireAddon } from 'src/iam/authorization/application/decorators/addon.decorator';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import {
   CurrentUser,

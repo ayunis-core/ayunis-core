@@ -3,7 +3,7 @@ import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { ConfigService } from '@nestjs/config';
 import { RateLimitGuard } from './rate-limit.guard';
-import { RateLimitExceededError } from '../authorization.errors';
+import { RateLimitExceededError } from '../errors/rate-limit-exceeded.error';
 import type { RateLimitOptions } from '../decorators/rate-limit.decorator';
 
 describe('RateLimitGuard', () => {

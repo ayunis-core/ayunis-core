@@ -13,7 +13,7 @@ import type { Response } from 'express';
 import type { Subscription } from 'rxjs';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import {
   SubscriptionGuard,

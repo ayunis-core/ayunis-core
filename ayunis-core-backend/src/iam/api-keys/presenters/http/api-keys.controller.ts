@@ -27,7 +27,7 @@ import { CreateApiKeyDto } from './dtos/create-api-key.dto';
 import { ApiKeyResponseDto } from './dtos/api-key-response.dto';
 import { CreateApiKeyResponseDto } from './dtos/create-api-key-response.dto';
 import { ApiKeyDtoMapper } from './mappers/api-key-dto.mapper';
-import { RateLimit } from 'src/iam/authorization/application/decorators/rate-limit.decorator';
+import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
