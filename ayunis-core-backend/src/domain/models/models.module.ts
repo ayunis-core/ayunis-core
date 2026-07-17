@@ -30,6 +30,7 @@ import { DeletePermittedModelUseCase } from './application/use-cases/delete-perm
 import { UpdatePermittedModelUseCase } from './application/use-cases/update-permitted-model/update-permitted-model.use-case';
 import { StreamInferenceUseCase } from './application/use-cases/stream-inference/stream-inference.use-case';
 import { ResolveModelProviderUseCase } from './application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
+import { MapMessagesToInferenceUseCase } from './application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import { StreamInferenceHandlerRegistry } from './application/registry/stream-inference-handler.registry';
 import { AnthropicStreamInferenceHandler } from './infrastructure/stream-inference/anthropic.stream-inference';
 import { OpenAIStreamInferenceHandler } from './infrastructure/stream-inference/openai.stream-inference';
@@ -306,6 +307,7 @@ import { MessagesModule } from '../messages/messages.module';
     GenerateImageUseCase,
     StreamInferenceUseCase,
     ResolveModelProviderUseCase,
+    MapMessagesToInferenceUseCase,
     GetConfiguredModelsByTypeUseCase,
     GetModelProviderInfoUseCase,
     GetPermittedLanguageModelsUseCase,
@@ -351,6 +353,7 @@ import { MessagesModule } from '../messages/messages.module';
     GenerateImageUseCase,
     StreamInferenceUseCase,
     ResolveModelProviderUseCase,
+    MapMessagesToInferenceUseCase,
     GetConfiguredModelsByTypeUseCase,
     IsEmbeddingModelEnabledUseCase,
     // User Default Model Use Cases
