@@ -15,6 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from '@/shared/ui/shadcn/item';
 import type { QuizResultResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface QuizResultCardProps {
@@ -54,15 +61,17 @@ export default function QuizResultCard({
       </CardHeader>
       <CardContent className="space-y-4">
         {result.academyCompleted && (
-          <div className="flex items-start gap-2 rounded-lg border bg-muted p-3">
-            <Trophy className="h-5 w-5 shrink-0 text-amber-500" />
-            <div>
-              <p className="font-medium">{t('quiz.completed.title')}</p>
-              <p className="text-sm text-muted-foreground">
+          <Item variant="muted">
+            <ItemMedia variant="icon" className="text-brand">
+              <Trophy />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>{t('quiz.completed.title')}</ItemTitle>
+              <ItemDescription>
                 {t('quiz.completed.description')}
-              </p>
-            </div>
-          </div>
+              </ItemDescription>
+            </ItemContent>
+          </Item>
         )}
         <div className="flex flex-wrap gap-3">
           {result.academyCompleted && (
@@ -71,7 +80,7 @@ export default function QuizResultCard({
               disabled={isDownloading}
             >
               <Download className="h-4 w-4" />
-              {t('quiz.completed.downloadCertificate')}
+              {t('certificate.download')}
             </Button>
           )}
           {result.passed ? (
