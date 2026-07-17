@@ -5,7 +5,10 @@ import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
+import { ExecuteRunViaRuntimeUseCase } from './application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -58,6 +61,9 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
   controllers: [RunsController],
   providers: [
     ExecuteRunUseCase,
+    ExecuteRunViaRuntimeUseCase,
+    PersistenceHookFactory,
+    UsageHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SystemPromptBuilderService,
     ToolAssemblyService,
