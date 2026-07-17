@@ -43,6 +43,7 @@ export class HookRunner {
       removeTools: (...names) => mutations.removeTools(...names),
       setTools: (tools) => mutations.setTools(tools),
       addInstructions: (text) => mutations.addInstructions(text),
+      setInstructions: (text) => mutations.setInstructions(text),
       abort: (reason) => abortState.abort(reason),
       emit: (event) => emits.push(event),
     };

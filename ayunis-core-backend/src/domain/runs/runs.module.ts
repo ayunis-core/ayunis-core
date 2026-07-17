@@ -15,6 +15,7 @@ import { BackendToolAdapter } from './application/agent-runtime/backend-tool.ada
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
+import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -72,6 +73,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     PersistenceHookFactory,
     UsageHookFactory,
     ToolUsageHookFactory,
+    SkillActivationHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

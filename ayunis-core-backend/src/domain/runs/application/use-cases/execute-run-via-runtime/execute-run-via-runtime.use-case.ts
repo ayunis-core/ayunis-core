@@ -16,7 +16,8 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
@@ -58,8 +59,10 @@ import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
+import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
+import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
 const RUNTIME_MAX_ITERATIONS = 20;
@@ -77,6 +80,10 @@ interface PreparedRuntimeRun extends PreparedRuntimeTools {
   userId: UUID;
   isAnonymous: boolean;
   instructions: string;
+  activeSkills: Skill[];
+  canUseTools: boolean;
+  skillInstructions?: string;
+  activatedSkillName?: string;
 }
 
 interface SeededInput {
@@ -93,8 +100,8 @@ interface PreparedToolResultInput {
  * Runs a thread through the extracted `@ayunis/agent-runtime` loop instead of
  * the legacy in-module loop. Gated behind the `agentRuntimeEnabled` toggle in
  * `ExecuteRunUseCase`. Covers plain chat, tool loops (executable, hybrid and
- * display-only tools) and anonymized threads (user input + PII tool output).
- * Skill activation is a later slice, so that path fails fast.
+ * display-only tools), anonymized threads (user input + PII tool output) and
+ * skill activation (quick-action skillId + mid-loop `activate_skill`).
  */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
@@ -106,6 +113,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
+    private readonly skillActivationService: SkillActivationService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
@@ -115,6 +123,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly messageCleanupService: MessageCleanupService,
     private readonly persistenceHookFactory: PersistenceHookFactory,
     private readonly usageHookFactory: UsageHookFactory,
+    private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly eventEmitter: EventEmitter2,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
@@ -126,7 +135,6 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
     this.logger.log('executeRunViaRuntime', { threadId: command.threadId });
     const prepared = await this.prepareRun(command);
-    this.requireSupported(command.input);
     return this.streamRun(prepared, command.input);
   }
 
@@ -140,61 +148,87 @@ export class ExecuteRunViaRuntimeUseCase {
     }
     this.emitRunExecuted(userId, orgId);
 
-    const { thread } = await this.findThreadUseCase.execute(
+    const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const permittedModel = thread.model;
+    const permittedModel = found.thread.model;
     if (!permittedModel) {
-      throw new RunNoModelFoundError({ threadId: thread.id });
+      throw new RunNoModelFoundError({ threadId: found.thread.id });
     }
     await this.inferenceUsageGuard.preflight(
       { userId, orgId },
       permittedModel.model,
     );
 
-    const isAnonymous = thread.isAnonymous || permittedModel.anonymousOnly;
+    const isAnonymous =
+      found.thread.isAnonymous || permittedModel.anonymousOnly;
+    const activeSkills = await this.toolAssemblyService.findActiveSkills();
+    const canUseTools = permittedModel.model.canUseTools;
+    const activated = await this.activateSkillIfRequested(
+      command,
+      found.thread,
+    );
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
-        thread,
-        [],
-        permittedModel.model.canUseTools,
+        activated.thread,
+        activeSkills,
+        canUseTools,
         isAnonymous,
       );
-    // Skill activation is a later slice; drop the signal tool for now.
-    const activateSkill = ToolType.ACTIVATE_SKILL as string;
-    const runtimeTools = this.backendToolAdapter.toRuntimeTools(
-      tools.filter((tool) => tool.name !== activateSkill),
-    );
 
     return {
-      thread,
+      thread: activated.thread,
       model: permittedModel.model,
       orgId,
       userId,
       isAnonymous,
-      instructions,
-      ...this.prepareTools(tools, runtimeTools),
+      instructions: appendSkillActivatedNote(instructions, activated.skillName),
+      ...this.prepareTools(tools),
+      activeSkills,
+      canUseTools,
+      skillInstructions: activated.skillInstructions,
+      activatedSkillName: activated.skillName,
     };
   }
 
-  private prepareTools(
-    backendTools: BackendTool[],
-    runtimeTools: RuntimeTool[],
-  ): PreparedRuntimeTools {
+  private prepareTools(backendTools: BackendTool[]): PreparedRuntimeTools {
     return {
-      tools: runtimeTools,
+      tools: this.backendToolAdapter.toRuntimeTools(backendTools),
       backendTools,
       toolIntegrations: new RuntimeToolIntegrationRegistry(backendTools),
     };
   }
 
-  /** Fails fast on inputs this slice does not yet route through the runtime. */
-  private requireSupported(input: RunInput): void {
-    if (input instanceof RunUserInput && input.skillId) {
-      throw new RunInvalidInputError(
-        'The agent runtime path does not yet support skill activation',
-      );
+  /**
+   * Activates the requested skill on the thread before tool assembly, so the
+   * skill's sources, integrations and knowledge bases are reflected in the
+   * assembled tools. Returns the refreshed thread and the skill's instructions
+   * (folded into the user message, as the legacy loop does).
+   */
+  private async activateSkillIfRequested(
+    command: ExecuteRunCommand,
+    thread: Thread,
+  ): Promise<{
+    thread: Thread;
+    skillInstructions?: string;
+    skillName?: string;
+  }> {
+    const input = command.input;
+    if (!(input instanceof RunUserInput) || !input.skillId) {
+      return { thread };
     }
+    const activation = await this.skillActivationService.activateOnThread(
+      input.skillId,
+      thread,
+    );
+    const refreshed = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
+    return {
+      thread: refreshed.thread,
+      skillInstructions: activation.instructions,
+      skillName: activation.skillName,
+    };
   }
 
   private async *streamRun(
@@ -286,6 +320,14 @@ export class ExecuteRunViaRuntimeUseCase {
         userId: prepared.userId,
         orgId: prepared.orgId,
       }),
+      this.skillActivationHookFactory.create({
+        threadId: prepared.thread.id,
+        activeSkills: prepared.activeSkills,
+        canUseTools: prepared.canUseTools,
+        isAnonymous: prepared.isAnonymous,
+        integrations: prepared.toolIntegrations,
+        activatedSkillName: prepared.activatedSkillName,
+      }),
     ];
   }
 
@@ -295,9 +337,10 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<SeededInput> {
     const hasText = !!input.text && input.text.trim().length > 0;
     const hasImages = input.pendingImages.length > 0;
-    if (!hasText && !hasImages) {
+    const hasSkillInstructions = !!prepared.skillInstructions?.trim();
+    if (!hasText && !hasImages && !hasSkillInstructions) {
       throw new RunInvalidInputError(
-        'Message must contain non-empty text or at least one image',
+        'Message must contain non-empty text, at least one image, or skill instructions',
       );
     }
     if (hasImages && !prepared.model.canVision) {
@@ -317,6 +360,7 @@ export class ExecuteRunViaRuntimeUseCase {
         prepared.thread.id,
         text,
         input.pendingImages,
+        prepared.skillInstructions,
       ),
     );
     this.addMessageToThreadUseCase.execute(
