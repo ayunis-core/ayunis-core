@@ -4,7 +4,8 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedAuthenticationError } from '../../../../authentication/application/authentication.errors';
 import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { SendSetInitialPasswordEmailCommand } from '../send-set-initial-password-email/send-set-initial-password-email.command';
-import { PasswordResetJwtService } from '../../services/password-reset-jwt.service';
+import { PasswordSetTokenService } from '../../services/password-set-token.service';
+import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
 import { UserNotFoundError } from '../../users.errors';
 import { UsersRepository } from '../../ports/users.repository';
 
@@ -14,7 +15,7 @@ export class TriggerSetInitialPasswordUseCase {
 
   constructor(
     private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
-    private readonly passwordResetJwtService: PasswordResetJwtService,
+    private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly usersRepository: UsersRepository,
   ) {}
 
@@ -28,11 +29,10 @@ export class TriggerSetInitialPasswordUseCase {
         return;
       }
 
-      const resetToken =
-        this.passwordResetJwtService.generateInitialPasswordToken({
-          userId: user.id,
-          email: user.email,
-        });
+      const resetToken = await this.passwordSetTokenService.issue({
+        userId: user.id,
+        purpose: PasswordSetTokenPurpose.INITIAL,
+      });
 
       await this.sendSetInitialPasswordEmailUseCase.execute(
         new SendSetInitialPasswordEmailCommand(
