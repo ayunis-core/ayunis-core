@@ -4,6 +4,8 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'edit_document',
   'create_diagram',
   'update_diagram',
+  'create_spreadsheet',
+  'update_spreadsheet',
   'bar_chart',
   'line_chart',
   'pie_chart',

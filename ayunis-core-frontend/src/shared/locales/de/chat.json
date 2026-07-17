@@ -50,6 +50,8 @@
         "read_document": "Dokument gelesen",
         "create_diagram": "Diagramm erstellt",
         "update_diagram": "Diagramm aktualisiert",
+        "create_spreadsheet": "Tabelle erstellt",
+        "update_spreadsheet": "Tabelle aktualisiert",
         "chart": "Diagramm erstellt",
         "generate_image": "Bild generiert",
         "send_email": "E-Mail entworfen",
@@ -149,6 +151,20 @@
         "updating": "Diagramm wird aktualisiert…",
         "generating": "Aktualisierung wird generiert…",
         "openInEditor": "Diagramm öffnen"
+      },
+      "create_spreadsheet": {
+        "title": "Tabelle",
+        "created": "Tabelle erstellt",
+        "creating": "Tabelle wird erstellt…",
+        "generating": "Tabelle wird generiert…",
+        "openInEditor": "Tabelle öffnen"
+      },
+      "update_spreadsheet": {
+        "title": "Tabelle aktualisiert",
+        "updated": "Tabelle aktualisiert",
+        "updating": "Tabelle wird aktualisiert…",
+        "generating": "Aktualisierung wird generiert…",
+        "openInEditor": "Tabelle öffnen"
       },
       "create_calendar_event": {
         "title": "Titel",
