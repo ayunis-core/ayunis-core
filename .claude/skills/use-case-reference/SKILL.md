@@ -13,7 +13,8 @@ The structural rules (error-boundary decorator, error wrapping, single `execute(
 
 ```typescript
 import { Injectable, Logger } from '@nestjs/common';
-import { HandleUnexpectedErrors } from 'src/common/use-case/handle-unexpected-errors.decorator';
+// Error-boundary decorator — exact import path varies by project
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 // Module-specific errors
 import { EntityNotFoundError, UnexpectedEntityError } from '../../entity.errors';
 // Repository class — the type doubles as the DI token (no @Inject() needed)
@@ -66,7 +67,7 @@ export class DoSomethingUseCase {
 async execute(command: DoSomethingCommand): Promise<Entity> {
 ```
 
-The decorator (from `src/common/use-case/handle-unexpected-errors.decorator.ts`) is the use case's error boundary:
+The decorator (from `src/common/decorators/handle-unexpected-errors.decorator.ts` — exact path varies by project) is the use case's error boundary:
 
 - **Re-throws `ApplicationError`** subclasses as-is — these are domain errors with proper status codes
 - **Logs unexpected errors** under the use-case class name — no extra context needed, the class name already describes the operation
@@ -192,4 +193,4 @@ When creating or modifying a use case, verify:
 - [ ] Preconditions checked before mutations (entity exists, permissions valid)
 - [ ] Repositories injected via DI token (interface), not concrete class
 - [ ] Module has an `Unexpected*Error` class in its errors file
-- [ ] Logger uses class name, logs entry point and errors
+- [ ] Logger uses class name, logs entry point (error logging is the decorator's job)
