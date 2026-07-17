@@ -37,7 +37,8 @@
     },
     "completed": {
       "title": "Academy abgeschlossen!",
-      "description": "Du hast jedes Kapitel bestanden. Glückwunsch!"
+      "description": "Du hast jedes Kapitel bestanden. Glückwunsch!",
+      "downloadCertificate": "Zertifikat herunterladen"
     },
     "errors": {
       "loadFailed": "Das Quiz konnte nicht geladen werden.",
@@ -54,5 +55,8 @@
       "title": "Academy abgeschlossen!",
       "description": "Du hast jedes Kapitel bestanden."
     }
+  },
+  "certificate": {
+    "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuche es erneut."
   }
 }
