@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { PasswordResetJwtService } from './password-reset-jwt.service';
+import { InvalidTokenError } from '../../../authentication/application/authentication.errors';
 
 describe('PasswordResetJwtService', () => {
   let service: PasswordResetJwtService;
@@ -69,5 +70,37 @@ describe('PasswordResetJwtService', () => {
       { expiresIn: '7d' },
     );
     expect(token).toBe('signed-initial-token');
+  });
+
+  it('should verify a valid untyped reset token', () => {
+    jwtService.verify.mockReturnValue({ userId, email });
+
+    expect(service.verifyPasswordResetToken('token')).toEqual({
+      userId,
+      email,
+    });
+  });
+
+  // Regression for V1: an email-confirmation token carries the same
+  // `{userId, email}` shape and the same signing secret. It must never be
+  // redeemable here as a password reset. Type discrimination closes the hole.
+  it('should reject a token carrying a type claim (e.g. email confirmation)', () => {
+    jwtService.verify.mockReturnValue({
+      userId,
+      email,
+      type: 'email_confirmation',
+    });
+
+    expect(() =>
+      service.verifyPasswordResetToken('confirmation-token'),
+    ).toThrow(InvalidTokenError);
+  });
+
+  it('should reject a token missing userId or email', () => {
+    jwtService.verify.mockReturnValue({ email });
+
+    expect(() => service.verifyPasswordResetToken('partial-token')).toThrow(
+      InvalidTokenError,
+    );
   });
 });

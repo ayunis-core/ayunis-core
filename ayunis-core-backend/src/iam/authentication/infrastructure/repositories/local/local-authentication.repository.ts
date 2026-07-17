@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthenticationRepository } from '../../../application/ports/authentication.repository';
 import { ActiveUser } from '../../../domain/active-user.entity';
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
+import { REFRESH_TOKEN_TYPE } from '../../../domain/token-type.constants';
 import type { StringValue } from 'ms';
 
 interface JwtConfig {
@@ -55,7 +56,7 @@ export class LocalAuthenticationRepository extends AuthenticationRepository {
         },
       ),
       refresh_token: this.jwtService.sign(
-        { sub: user.id },
+        { sub: user.id, type: REFRESH_TOKEN_TYPE },
         {
           expiresIn: jwtConfig.refreshTokenExpiresIn,
         },

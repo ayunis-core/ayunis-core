@@ -4,7 +4,10 @@ import { ConfirmEmailUseCase } from './confirm-email.use-case';
 import { ConfirmEmailCommand } from './confirm-email.command';
 import { UserUpdatedEvent } from '../../events/user-updated.event';
 import { UsersRepository } from '../../ports/users.repository';
-import { EmailConfirmationJwtService } from '../../services/email-confirmation-jwt.service';
+import {
+  EmailConfirmationJwtService,
+  EMAIL_CONFIRMATION_TOKEN_TYPE,
+} from '../../services/email-confirmation-jwt.service';
 import { User } from '../../../domain/user.entity';
 import { UserRole } from '../../../domain/value-objects/role.object';
 import {
@@ -73,9 +76,11 @@ describe('ConfirmEmailUseCase', () => {
     const command = new ConfirmEmailCommand('valid-token');
     const mockUser = makeUser();
 
-    jest
-      .spyOn(mockJwtService, 'verifyEmailConfirmationToken')
-      .mockReturnValue({ userId: USER_ID, email: EMAIL });
+    jest.spyOn(mockJwtService, 'verifyEmailConfirmationToken').mockReturnValue({
+      userId: USER_ID,
+      email: EMAIL,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'update').mockResolvedValue(mockUser);
 
@@ -89,9 +94,11 @@ describe('ConfirmEmailUseCase', () => {
     const command = new ConfirmEmailCommand('valid-token');
     const mockUser = makeUser();
 
-    jest
-      .spyOn(mockJwtService, 'verifyEmailConfirmationToken')
-      .mockReturnValue({ userId: USER_ID, email: EMAIL });
+    jest.spyOn(mockJwtService, 'verifyEmailConfirmationToken').mockReturnValue({
+      userId: USER_ID,
+      email: EMAIL,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest.spyOn(mockUsersRepository, 'update').mockResolvedValue(mockUser);
 
@@ -126,9 +133,11 @@ describe('ConfirmEmailUseCase', () => {
   it('should throw UserNotFoundError when user does not exist', async () => {
     const command = new ConfirmEmailCommand('valid-token');
 
-    jest
-      .spyOn(mockJwtService, 'verifyEmailConfirmationToken')
-      .mockReturnValue({ userId: USER_ID, email: EMAIL });
+    jest.spyOn(mockJwtService, 'verifyEmailConfirmationToken').mockReturnValue({
+      userId: USER_ID,
+      email: EMAIL,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(null);
 
     await expect(useCase.execute(command)).rejects.toThrow(UserNotFoundError);
@@ -140,9 +149,11 @@ describe('ConfirmEmailUseCase', () => {
     const command = new ConfirmEmailCommand('valid-token');
     const mockUser = makeUser();
 
-    jest
-      .spyOn(mockJwtService, 'verifyEmailConfirmationToken')
-      .mockReturnValue({ userId: USER_ID, email: 'other@example.com' });
+    jest.spyOn(mockJwtService, 'verifyEmailConfirmationToken').mockReturnValue({
+      userId: USER_ID,
+      email: 'other@example.com',
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
 
     await expect(useCase.execute(command)).rejects.toThrow(
@@ -156,9 +167,11 @@ describe('ConfirmEmailUseCase', () => {
     const command = new ConfirmEmailCommand('valid-token');
     const mockUser = makeUser();
 
-    jest
-      .spyOn(mockJwtService, 'verifyEmailConfirmationToken')
-      .mockReturnValue({ userId: USER_ID, email: EMAIL });
+    jest.spyOn(mockJwtService, 'verifyEmailConfirmationToken').mockReturnValue({
+      userId: USER_ID,
+      email: EMAIL,
+      type: EMAIL_CONFIRMATION_TOKEN_TYPE,
+    });
     jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
     jest
       .spyOn(mockUsersRepository, 'update')

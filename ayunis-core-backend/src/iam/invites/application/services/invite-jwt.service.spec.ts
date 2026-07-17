@@ -4,7 +4,8 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { InviteJwtService } from './invite-jwt.service';
+import { InviteJwtService, INVITE_TOKEN_TYPE } from './invite-jwt.service';
+import { InvalidInviteTokenError } from '../invites.errors';
 
 describe('InviteJwtService', () => {
   let service: InviteJwtService;
@@ -32,11 +33,12 @@ describe('InviteJwtService', () => {
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should sign the invite token with the configured invite expiry', () => {
+  it('should sign the invite token with a type claim and the configured expiry', () => {
     configService.get.mockReturnValue('7d');
     jwtService.sign.mockReturnValue('signed-invite-token');
 
@@ -47,9 +49,46 @@ describe('InviteJwtService', () => {
       '2d',
     );
     expect(jwtService.sign).toHaveBeenCalledWith(
-      { inviteId },
+      { inviteId, type: INVITE_TOKEN_TYPE },
       { expiresIn: '7d' },
     );
     expect(token).toBe('signed-invite-token');
+  });
+
+  it('should verify a properly typed invite token', () => {
+    jwtService.verify.mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
+
+    expect(service.verifyInviteToken('token')).toEqual({
+      inviteId,
+      type: INVITE_TOKEN_TYPE,
+    });
+  });
+
+  it('should accept a legacy untyped invite token during the grace window', () => {
+    jwtService.verify.mockReturnValue({ inviteId });
+
+    expect(service.verifyInviteToken('legacy-token')).toEqual({
+      inviteId,
+      type: INVITE_TOKEN_TYPE,
+    });
+  });
+
+  it('should reject a token typed as something other than invite', () => {
+    jwtService.verify.mockReturnValue({ inviteId, type: 'password_reset' });
+
+    expect(() => service.verifyInviteToken('foreign-token')).toThrow(
+      InvalidInviteTokenError,
+    );
+  });
+
+  it('should reject a token without an inviteId', () => {
+    jwtService.verify.mockReturnValue({
+      userId: inviteId,
+      email: 'user@example.com',
+    });
+
+    expect(() => service.verifyInviteToken('reset-shaped-token')).toThrow(
+      InvalidInviteTokenError,
+    );
   });
 });

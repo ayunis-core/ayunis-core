@@ -59,14 +59,26 @@ export class PasswordResetJwtService {
     this.logger.log('verifyPasswordResetToken');
 
     try {
-      const payload = this.jwtService.verify<PasswordResetJwtPayload>(token);
+      const payload = this.jwtService.verify<
+        Partial<PasswordResetJwtPayload> & {
+          type?: string;
+        }
+      >(token);
+
+      // Reject any token carrying a `type` claim: reset tokens are untyped, so
+      // a typed token (e.g. an email-confirmation token, which shares the
+      // `{userId, email}` shape and the signing secret) must never be redeemed
+      // here as a password reset.
+      if (payload.type !== undefined || !payload.userId || !payload.email) {
+        throw new InvalidTokenError('Invalid token payload');
+      }
 
       this.logger.debug('Password reset token verified successfully', {
         userId: payload.userId,
         email: payload.email,
       });
 
-      return payload;
+      return { userId: payload.userId, email: payload.email };
     } catch (error: unknown) {
       this.logger.error('Password reset token verification failed', {
         error,

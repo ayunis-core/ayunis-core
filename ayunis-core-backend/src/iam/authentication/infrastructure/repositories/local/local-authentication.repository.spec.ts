@@ -62,7 +62,7 @@ describe('LocalAuthenticationRepository', () => {
     );
     expect(jwtService.sign).toHaveBeenNthCalledWith(
       2,
-      { sub: user.id },
+      { sub: user.id, type: 'refresh' },
       { expiresIn: '7d' },
     );
     expect(tokens).toEqual({

@@ -60,9 +60,9 @@ import { ApplicationErrorFilter } from 'src/common/filters/application-error.fil
     //
     // Controller-scoped > global APP_FILTER in NestJS resolution, so
     // runtime exceptions (e.g. UnauthorizedException from the api-key
-    // guard, which AuthenticationModule's UnauthorizedExceptionFilter
-    // would otherwise hijack with a more specific @Catch) flow through
-    // the @UseFilters binding first.
+    // guard, which the global ApplicationErrorFilter would otherwise
+    // handle with Nest's default body) flow through the @UseFilters
+    // binding first.
     {
       provide: APP_FILTER,
       useExisting: OpenAIExceptionFilter,
