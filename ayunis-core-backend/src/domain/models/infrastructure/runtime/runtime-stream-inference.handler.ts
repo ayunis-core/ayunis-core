@@ -11,6 +11,7 @@ import type { Model } from '../../domain/model.entity';
 import { toProviderRequest } from './request.mapper';
 import { toStreamChunk } from './chunk.mapper';
 import type { ChunkTransform } from './chunk-transform';
+import { applyChunkTransform } from './chunk-transform';
 
 /**
  * Streaming inference handler backed by a `@ayunis` ModelProvider. Concrete
@@ -50,6 +51,24 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     const created = this.createProvider(model);
     this.providerCache.set(model.name, created);
     return created;
+  }
+
+  /**
+   * Wraps the credentialed provider so its chunk stream is fed through this
+   * handler's per-request transform — the same one `answer()` applies — before
+   * the agent runtime accumulates it. A fresh transform is created per
+   * `stream()` call because it may be stateful across a single turn.
+   */
+  resolveProvider(model: Model): ModelProvider {
+    const provider = this.getProvider(model);
+    return {
+      name: provider.name,
+      stream: (request) =>
+        applyChunkTransform(
+          provider.stream(request),
+          this.createChunkTransform(),
+        ),
+    };
   }
 
   answer(
