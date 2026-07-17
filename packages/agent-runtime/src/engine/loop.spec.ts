@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RunEvent } from '../contracts/event';
+import { AgentRuntimeError } from '../contracts/errors';
 import {
   MockProvider,
   textTurn,
@@ -327,6 +328,88 @@ describe('the agent loop', () => {
     expect(finalCallFlags).toEqual([false, true]);
     expect(eventTypes(events)).not.toContain('tool_result_message');
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('stops the run when a tool throws a fatal runtime error', async () => {
+    const failing = echoTool({
+      name: 'pii_lookup',
+      execute: () => {
+        throw new AgentRuntimeError(
+          'ANONYMIZATION_UNAVAILABLE',
+          'Anonymization is unavailable',
+        );
+      },
+    });
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'pii_lookup', input: {} }),
+      textTurn('This turn must not run'),
+    ]);
+
+    const events = await collectEvents(baseInput(model, { tools: [failing] }));
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'ANONYMIZATION_UNAVAILABLE',
+    });
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+    expect(model.requests).toHaveLength(1);
+  });
+
+  it('pairs every tool call before surfacing a fatal runtime error', async () => {
+    const firstExecute = vi.fn(() => 'first result');
+    const failingExecute = vi.fn(() => {
+      throw new AgentRuntimeError(
+        'ANONYMIZATION_UNAVAILABLE',
+        'Anonymization is unavailable',
+      );
+    });
+    const skippedExecute = vi.fn(() => 'must not run');
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            { index: 0, id: 'call-1', name: 'first', argumentsDelta: '{}' },
+            { index: 1, id: 'call-2', name: 'failing', argumentsDelta: '{}' },
+            { index: 2, id: 'call-3', name: 'skipped', argumentsDelta: '{}' },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+      textTurn('This turn must not run'),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({ name: 'first', execute: firstExecute }),
+          echoTool({ name: 'failing', execute: failingExecute }),
+          echoTool({ name: 'skipped', execute: skippedExecute }),
+        ],
+      }),
+    );
+
+    const resultMessage = events.find(
+      (event) => event.type === 'tool_result_message',
+    );
+    expect(resultMessage).toMatchObject({
+      message: {
+        role: 'tool_result',
+        content: [
+          { toolCallId: 'call-1', isError: false },
+          { toolCallId: 'call-2', isError: true },
+          { toolCallId: 'call-3', isError: true },
+        ],
+      },
+    });
+    expect(firstExecute).toHaveBeenCalledOnce();
+    expect(failingExecute).toHaveBeenCalledOnce();
+    expect(skippedExecute).not.toHaveBeenCalled();
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'ANONYMIZATION_UNAVAILABLE',
+    });
+    expect(eventTypes(events).indexOf('tool_result_message')).toBeLessThan(
+      eventTypes(events).indexOf('error'),
+    );
+    expect(model.requests).toHaveLength(1);
   });
 
   it('executes complete tool phases up to the iteration cap', async () => {

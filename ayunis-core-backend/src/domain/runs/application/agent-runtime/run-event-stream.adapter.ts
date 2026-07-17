@@ -12,6 +12,7 @@ import {
   type RunStreamItem,
 } from '../../domain/run-pii-masks-update.entity';
 import {
+  RunAnonymizationUnavailableError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
@@ -223,6 +224,9 @@ function mapRunError(
     return new RunMaxIterationsReachedError(
       typeof max === 'number' ? max : DEFAULT_MAX_ITERATIONS,
     );
+  }
+  if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
+    return new RunAnonymizationUnavailableError();
   }
   return new RunExecutionFailedError(event.message);
 }

@@ -14,8 +14,12 @@ import { ContextService } from 'src/common/context/services/context.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -33,8 +37,12 @@ import {
   RunToolResultInput,
 } from '../../../domain/run-input.entity';
 import type { RunInput } from '../../../domain/run-input.entity';
-import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
 import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from '../../../domain/run-pii-masks-update.entity';
+import {
+  RunAnonymizationUnavailableError,
   RunExecutionFailedError,
   RunInvalidInputError,
   RunMaxIterationsReachedError,
@@ -71,12 +79,22 @@ interface PreparedRuntimeRun extends PreparedRuntimeTools {
   instructions: string;
 }
 
+interface SeededInput {
+  message: Message;
+  masks: ThreadPiiMask[] | null;
+}
+
+interface PreparedToolResultInput {
+  input: RunToolResultInput;
+  masks: ThreadPiiMask[] | null;
+}
+
 /**
  * Runs a thread through the extracted `@ayunis/agent-runtime` loop instead of
  * the legacy in-module loop. Gated behind the `agentRuntimeEnabled` toggle in
- * `ExecuteRunUseCase`. Covers plain chat and tool loops (executable, hybrid and
- * display-only tools); anonymization and skill activation are added in later
- * slices, so those paths fail fast rather than silently degrading.
+ * `ExecuteRunUseCase`. Covers plain chat, tool loops (executable, hybrid and
+ * display-only tools) and anonymized threads (user input + PII tool output).
+ * Skill activation is a later slice, so that path fails fast.
  */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
@@ -88,6 +106,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
@@ -107,7 +126,7 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
     this.logger.log('executeRunViaRuntime', { threadId: command.threadId });
     const prepared = await this.prepareRun(command);
-    this.requireSupported(command.input, prepared);
+    this.requireSupported(command.input);
     return this.streamRun(prepared, command.input);
   }
 
@@ -170,15 +189,7 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   /** Fails fast on inputs this slice does not yet route through the runtime. */
-  private requireSupported(
-    input: RunInput,
-    prepared: PreparedRuntimeRun,
-  ): void {
-    if (prepared.isAnonymous) {
-      throw new RunInvalidInputError(
-        'The agent runtime path does not yet support anonymous threads',
-      );
-    }
+  private requireSupported(input: RunInput): void {
     if (input instanceof RunUserInput && input.skillId) {
       throw new RunInvalidInputError(
         'The agent runtime path does not yet support skill activation',
@@ -192,8 +203,12 @@ export class ExecuteRunViaRuntimeUseCase {
   ): AsyncGenerator<RunStreamItem, void, void> {
     let cleanupRequired = true;
     try {
-      const seedMessage = await this.seedInput(prepared, input);
-      yield seedMessage;
+      const seeded = await this.seedInput(prepared, input);
+      // Masks first, so the client can resolve {{pii:…}} tokens in the message.
+      if (seeded.masks) {
+        yield new RunPiiMasksUpdate(seeded.masks);
+      }
+      yield seeded.message;
       yield* adaptRunEventsToStream(
         await this.startRun(prepared),
         prepared.thread.id,
@@ -222,7 +237,7 @@ export class ExecuteRunViaRuntimeUseCase {
   private async seedInput(
     prepared: PreparedRuntimeRun,
     input: RunInput,
-  ): Promise<Message> {
+  ): Promise<SeededInput> {
     if (input instanceof RunUserInput) {
       return this.persistUserMessage(prepared, input);
     }
@@ -277,7 +292,7 @@ export class ExecuteRunViaRuntimeUseCase {
   private async persistUserMessage(
     prepared: PreparedRuntimeRun,
     input: RunUserInput,
-  ): Promise<Message> {
+  ): Promise<SeededInput> {
     const hasText = !!input.text && input.text.trim().length > 0;
     const hasImages = input.pendingImages.length > 0;
     if (!hasText && !hasImages) {
@@ -290,17 +305,44 @@ export class ExecuteRunViaRuntimeUseCase {
         'The selected model does not support image inputs',
       );
     }
+    let text = input.text;
+    let masks: ThreadPiiMask[] | null = null;
+    if (hasText && prepared.isAnonymous) {
+      const anonymized = await this.anonymizeUserText(prepared, input.text);
+      text = anonymized.anonymizedText;
+      masks = anonymized.masks;
+    }
     const message = await this.createUserMessageUseCase.execute(
       new CreateUserMessageCommand(
         prepared.thread.id,
-        input.text,
+        text,
         input.pendingImages,
       ),
     );
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(prepared.thread, message),
     );
-    return message;
+    return { message, masks };
+  }
+
+  private async anonymizeUserText(
+    prepared: PreparedRuntimeRun,
+    text: string,
+  ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
+    try {
+      const result = await this.anonymizeTextForThreadUseCase.execute(
+        new AnonymizeTextForThreadCommand(
+          text,
+          prepared.orgId,
+          prepared.thread.id,
+        ),
+      );
+      return { anonymizedText: result.anonymizedText, masks: result.masks };
+    } catch (error) {
+      throw new RunAnonymizationUnavailableError({
+        originalError: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   /**
@@ -310,12 +352,13 @@ export class ExecuteRunViaRuntimeUseCase {
   private async persistToolResultSeed(
     prepared: PreparedRuntimeRun,
     input: RunToolResultInput,
-  ): Promise<Message> {
-    const { contents } =
+  ): Promise<SeededInput> {
+    const safeInput = await this.prepareToolResultInput(prepared, input);
+    const { contents, piiMasks } =
       await this.toolResultCollectorService.collectToolResults({
         thread: prepared.thread,
         tools: prepared.backendTools,
-        input,
+        input: safeInput.input,
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
       });
@@ -330,7 +373,40 @@ export class ExecuteRunViaRuntimeUseCase {
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(prepared.thread, message),
     );
-    return message;
+    return { message, masks: piiMasks ?? safeInput.masks };
+  }
+
+  private async prepareToolResultInput(
+    prepared: PreparedRuntimeRun,
+    input: RunToolResultInput,
+  ): Promise<PreparedToolResultInput> {
+    const pending = prepared.thread
+      .getLastMessage()
+      ?.content.find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent &&
+          content.id === input.toolId,
+      );
+    if (!pending) {
+      throw new RunInvalidInputError(
+        'No pending tool call to attach this result to',
+      );
+    }
+    if (!prepared.isAnonymous) {
+      return {
+        input: new RunToolResultInput(pending.id, pending.name, input.result),
+        masks: null,
+      };
+    }
+    const anonymized = await this.anonymizeUserText(prepared, input.result);
+    return {
+      input: new RunToolResultInput(
+        pending.id,
+        pending.name,
+        anonymized.anonymizedText,
+      ),
+      masks: anonymized.masks,
+    };
   }
 
   private emitRunExecuted(userId: UUID, orgId: UUID): void {

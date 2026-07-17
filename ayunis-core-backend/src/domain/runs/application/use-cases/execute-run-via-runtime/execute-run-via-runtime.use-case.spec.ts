@@ -13,6 +13,7 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
@@ -23,6 +24,7 @@ import type { CreateUserMessageUseCase } from 'src/domain/messages/application/u
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
@@ -33,7 +35,10 @@ import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
 import { ToolUsedEvent } from '../../events/tool-used.event';
 import { RunMaxIterationsReachedError } from '../../runs.errors';
-import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
+import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from '../../../domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
   RunToolResultInput,
@@ -55,6 +60,7 @@ interface Harness {
   createToolResult: jest.Mock;
   createSeedToolResult: jest.Mock;
   emitAsync: jest.Mock;
+  anonymize: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -114,6 +120,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const backendToolAdapter = {
     toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
   } as unknown as BackendToolAdapter;
+  const anonymize = jest.fn().mockResolvedValue({
+    anonymizedText: 'Hi {{pii:PERSON_1}}',
+    masks: [{ token: '{{pii:PERSON_1}}' }],
+  });
+  const anonymizeTextForThreadUseCase = {
+    execute: anonymize,
+  } as unknown as AnonymizeTextForThreadUseCase;
   const createToolResult = jest.fn().mockImplementation((command) =>
     Promise.resolve(
       new ToolResultMessage({
@@ -188,6 +201,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     inferenceUsageGuard,
     toolAssemblyService,
     backendToolAdapter,
+    anonymizeTextForThreadUseCase,
     createUserMessageUseCase,
     createToolResultMessageUseCase,
     addMessageToThreadUseCase,
@@ -210,6 +224,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     createToolResult: flushToolResult,
     createSeedToolResult: createToolResult,
     emitAsync,
+    anonymize,
   };
 }
 
@@ -588,11 +603,61 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     );
   });
 
-  it('rejects anonymous threads (not yet supported on the runtime path)', async () => {
-    const { useCase } = buildHarness({ anonymous: true });
-    await expect(useCase.execute(userCommand())).rejects.toThrow(
-      /does not yet support anonymous/i,
+  it('anonymizes a display result and uses the pending tool name before persistence', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collectToolResults = jest.fn(
+      ({ input }: { input: RunToolResultInput }) => ({
+        contents: [
+          new ToolResultMessageContent(
+            input.toolId,
+            input.toolName,
+            input.result,
+          ),
+        ],
+        piiMasks: null,
+      }),
     );
+    const { useCase, createSeedToolResult } = buildHarness({
+      anonymous: true,
+      lastMessage,
+      toolResultCollector: { collectToolResults } as never,
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput(
+        'chart-1',
+        'forged_tool_name',
+        'Chart for Jane Doe',
+      ),
+    });
+
+    const items = await drain(await useCase.execute(command));
+
+    expect(collectToolResults.mock.calls[0][0].input).toMatchObject({
+      toolId: 'chart-1',
+      toolName: 'bar_chart',
+      result: 'Hi {{pii:PERSON_1}}',
+    });
+    expect(createSeedToolResult.mock.calls[0][0].content[0]).toMatchObject({
+      toolName: 'bar_chart',
+      result: 'Hi {{pii:PERSON_1}}',
+    });
+    expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
+  });
+
+  it('anonymizes the user message and streams the mask dictionary first', async () => {
+    const { useCase, anonymize } = buildHarness({ anonymous: true });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    expect(anonymize).toHaveBeenCalledTimes(1);
+    // masks are streamed before the (redacted) user message
+    expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
+    expect(items[1]).toMatchObject({ id: 'user-msg' });
   });
 
   it('rejects skill activation (not yet supported on the runtime path)', async () => {

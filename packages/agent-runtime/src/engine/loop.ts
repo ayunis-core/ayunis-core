@@ -94,13 +94,20 @@ async function* runToolPhase(
   iteration: number,
   toolCalls: readonly ToolUseContent[],
 ): AsyncGenerator<RunEventPayload> {
-  const results = yield* executeToolCalls(state, iteration, toolCalls);
+  const { results, fatalError } = yield* executeToolCalls(
+    state,
+    iteration,
+    toolCalls,
+  );
   const toolResultMessage: Message = {
     role: 'tool_result',
     content: results,
   };
   state.messages.push(toolResultMessage);
   yield { type: 'tool_result_message', message: toolResultMessage };
+  if (fatalError) {
+    throw fatalError;
+  }
 }
 
 const applyPendingMutations = (state: RunState): void => {
