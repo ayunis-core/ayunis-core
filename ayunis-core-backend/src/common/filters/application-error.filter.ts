@@ -1,4 +1,4 @@
-import { Catch, ArgumentsHost, UnauthorizedException } from '@nestjs/common';
+import { Catch, ArgumentsHost } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { SentryExceptionCaptured } from '@sentry/nestjs';
 import { Request, Response } from 'express';
@@ -9,22 +9,14 @@ import { ApplicationError } from '../errors/base.error';
  * 1. Converts domain-specific ApplicationErrors to proper HTTP responses
  * 2. Delegates all other exceptions to NestJS's BaseExceptionFilter
  * 3. Reports unexpected errors to Sentry via @SentryExceptionCaptured()
+ *    (HttpExceptions count as expected and are not captured)
  *
  * Must be registered via APP_FILTER (DI-based) so that BaseExceptionFilter
  * receives the HTTP adapter reference it needs.
- *
- * Note: UnauthorizedException is explicitly re-thrown to allow
- * UnauthorizedExceptionFilter to handle it with token-refresh logic.
  */
 @Catch()
 export class ApplicationErrorFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    // UnauthorizedException must be handled by UnauthorizedExceptionFilter
-    // which contains token-refresh business logic. Re-throw to bypass this filter.
-    if (exception instanceof UnauthorizedException) {
-      throw exception;
-    }
-
     this.handleWithSentry(exception, host);
   }
 
