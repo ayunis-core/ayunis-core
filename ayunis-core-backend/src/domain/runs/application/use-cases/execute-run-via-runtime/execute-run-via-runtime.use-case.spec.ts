@@ -17,13 +17,17 @@ import type { CreateUserMessageUseCase } from 'src/domain/messages/application/u
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
 import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
-import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
+import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from '../../../domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
   RunToolResultInput,
@@ -41,6 +45,7 @@ interface Harness {
   collectUsage: jest.Mock;
   cleanup: jest.Mock;
   createToolResult: jest.Mock;
+  anonymize: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -91,6 +96,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const backendToolAdapter = {
     toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
   } as unknown as BackendToolAdapter;
+  const anonymize = jest.fn().mockResolvedValue({
+    anonymizedText: 'Hi {{pii:PERSON_1}}',
+    masks: [{ token: '{{pii:PERSON_1}}' }],
+  });
+  const anonymizeTextForThreadUseCase = {
+    execute: anonymize,
+  } as unknown as AnonymizeTextForThreadUseCase;
   const createToolResult = jest
     .fn()
     .mockResolvedValue({ id: 'tool-result-msg' });
@@ -141,6 +153,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     inferenceUsageGuard,
     toolAssemblyService,
     backendToolAdapter,
+    anonymizeTextForThreadUseCase,
     createUserMessageUseCase,
     createToolResultMessageUseCase,
     addMessageToThreadUseCase,
@@ -158,6 +171,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     collectUsage,
     cleanup,
     createToolResult: flushToolResult,
+    anonymize,
   };
 }
 
@@ -257,11 +271,15 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     );
   });
 
-  it('rejects anonymous threads (not yet supported on the runtime path)', async () => {
-    const { useCase } = buildHarness({ anonymous: true });
-    await expect(useCase.execute(userCommand())).rejects.toThrow(
-      /does not yet support anonymous/i,
-    );
+  it('anonymizes the user message and streams the mask dictionary first', async () => {
+    const { useCase, anonymize } = buildHarness({ anonymous: true });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    expect(anonymize).toHaveBeenCalledTimes(1);
+    // masks are streamed before the (redacted) user message
+    expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
+    expect(items[1]).toMatchObject({ id: 'user-msg' });
   });
 
   it('rejects skill activation (not yet supported on the runtime path)', async () => {
