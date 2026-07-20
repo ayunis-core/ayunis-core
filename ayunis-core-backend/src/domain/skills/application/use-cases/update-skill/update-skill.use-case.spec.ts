@@ -12,7 +12,7 @@ import { Logger } from '@nestjs/common';
 import { UpdateSkillUseCase } from './update-skill.use-case';
 import { UpdateSkillCommand } from './update-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import {

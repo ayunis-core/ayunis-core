@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ModelDistribution } from '../../../domain/model-distribution.entity';
+import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import {
   ModelDistributionDto,
   ModelDistributionResponseDto,

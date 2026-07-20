@@ -7,11 +7,11 @@ import {
   ChildEntity,
 } from 'typeorm';
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
-import { TeamRecord } from '../../../../../teams/infrastructure/repositories/local/schema/team.record';
-import { CreditLimitScope } from '../../../../domain/value-objects/credit-limit-scope.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { CreditLimitScope } from 'src/iam/credit-limits/domain/value-objects/credit-limit-scope.enum';
 
 const decimalTransformer = {
   to: (value: number) => value,

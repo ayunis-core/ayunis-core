@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import type { ModelProvider } from '../domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 

@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
 import { TokenCounterType } from 'src/common/token-counter/application/ports/token-counter.handler.port';
-import { Message } from '../../../domain/message.entity';
-import { MessageRole } from '../../../domain/value-objects/message-role.object';
+import { Message } from 'src/domain/messages/domain/message.entity';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { TrimMessagesForContextCommand } from './trim-messages-for-context.command';
 import { extractTextFromMessage } from '../../utils/message-text-extractor.util';
 

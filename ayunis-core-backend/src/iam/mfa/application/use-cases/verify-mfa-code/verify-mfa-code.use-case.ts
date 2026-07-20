@@ -7,12 +7,12 @@ import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
 import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
 import { TotpPort } from '../../ports/totp.port';
-import type { UserTotp } from '../../../domain/user-totp.entity';
+import type { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import {
   LOCK_DURATION_MS,
   MAX_FAILED_ATTEMPTS,
-} from '../../../domain/mfa.constants';
-import { RECOVERY_CODE_PATTERN } from '../../../domain/recovery-code.generator';
+} from 'src/iam/mfa/domain/mfa.constants';
+import { RECOVERY_CODE_PATTERN } from 'src/iam/mfa/domain/recovery-code.generator';
 import {
   InvalidMfaCodeError,
   MfaLockedError,

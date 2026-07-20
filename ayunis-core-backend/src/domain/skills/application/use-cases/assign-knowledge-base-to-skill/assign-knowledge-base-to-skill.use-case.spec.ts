@@ -13,7 +13,7 @@ import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-sk
 import { SkillRepository } from '../../ports/skill.repository';
 import { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   SkillNotFoundError,

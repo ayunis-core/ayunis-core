@@ -9,7 +9,7 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import { ContextService } from 'src/common/context/services/context.service';
 import { GetSharesQuery } from './get-shares.query';
-import { Share } from '../../../domain/share.entity';
+import { Share } from 'src/domain/shares/domain/share.entity';
 
 /**
  * Use case for getting shares for any entity type

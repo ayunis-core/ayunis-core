@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { PlatformConfigRepositoryPort } from '../../../application/ports/platform-config.repository';
-import type { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
-import { PlatformConfig } from '../../../domain/platform-config.entity';
+import { PlatformConfigRepositoryPort } from 'src/iam/platform-config/application/ports/platform-config.repository';
+import type { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
+import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
 import { PlatformConfigRecord } from './schema/platform-config.record';
 
 @Injectable()

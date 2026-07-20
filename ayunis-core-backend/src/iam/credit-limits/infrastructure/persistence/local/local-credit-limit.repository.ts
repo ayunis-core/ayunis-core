@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { CreditLimitRepository } from '../../../application/ports/credit-limit.repository';
-import { CreditLimit } from '../../../domain/credit-limit.entity';
-import type { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
-import type { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import { CreditLimitRepository } from 'src/iam/credit-limits/application/ports/credit-limit.repository';
+import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import {
   CreditLimitRecord,
   UserCreditLimitRecord,

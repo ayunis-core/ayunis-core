@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
-import type { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
-import type { UserCreditLimitOverviewItem } from '../../../application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
-import type { TeamCreditLimitOverviewItem } from '../../../application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
+import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
+import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
 import {
   UserCreditLimitResponseDto,
   TeamCreditLimitResponseDto,

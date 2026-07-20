@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { JwtStrategy } from './jwt.strategy';
 import { JWT_SECRET } from '../tokens/jwt-secret.token';
-import { UserRole } from '../../../users/domain/value-objects/role.object';
-import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;

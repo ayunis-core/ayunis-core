@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum TeamErrorCode {
   TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',

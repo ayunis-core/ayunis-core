@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserRoleCommand } from './update-user-role.command';
-import { User } from '../../../domain/user.entity';
+import { User } from 'src/iam/users/domain/user.entity';
 import {
   UserNotFoundError,
   UserUnauthorizedError,

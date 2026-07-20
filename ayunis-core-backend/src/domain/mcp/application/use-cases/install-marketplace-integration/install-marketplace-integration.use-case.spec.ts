@@ -11,9 +11,9 @@ import { ConnectionValidationService } from '../../services/connection-validatio
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { MarketplaceIntegrationInstalledEvent } from '../../events/marketplace-integration-installed.event';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import {
   McpOAuthNotSupportedError,
   McpMissingRequiredConfigError,

@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { FindUserByIdUseCase } from './find-user-by-id.use-case';
 import { FindUserByIdQuery } from './find-user-by-id.query';
 import { UsersRepository } from '../../ports/users.repository';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 
 describe('FindUserByIdUseCase', () => {

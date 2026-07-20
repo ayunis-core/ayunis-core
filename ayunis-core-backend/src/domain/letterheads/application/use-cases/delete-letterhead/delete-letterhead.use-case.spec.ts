@@ -9,7 +9,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadNotFoundError } from '../../letterheads.errors';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 describe('DeleteLetterheadUseCase', () => {
   let useCase: DeleteLetterheadUseCase;

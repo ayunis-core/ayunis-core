@@ -6,7 +6,7 @@ import { FindAllLetterheadsUseCase } from './find-all-letterheads.use-case';
 import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 describe('FindAllLetterheadsUseCase', () => {
   let useCase: FindAllLetterheadsUseCase;

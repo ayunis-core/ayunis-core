@@ -1,6 +1,6 @@
 import { ChildEntity, Column } from 'typeorm';
 import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
-import { McpAuthMethod } from '../../../../domain';
+import { McpAuthMethod } from 'src/domain/mcp/domain';
 
 @ChildEntity(McpAuthMethod.CUSTOM_HEADER)
 export class CustomHeaderMcpIntegrationAuthRecord extends McpIntegrationAuthRecord {

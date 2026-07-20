@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DeleteContentsCommand } from './delete-contents.command';
-import { ParentChildIndexerRepository } from '../../../parent-child-index.repository';
+import { ParentChildIndexerRepository } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/parent-child-index.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 

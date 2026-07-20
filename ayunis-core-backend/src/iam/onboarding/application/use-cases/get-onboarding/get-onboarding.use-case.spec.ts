@@ -4,7 +4,7 @@ import type { UUID } from 'crypto';
 import { GetOnboardingUseCase } from './get-onboarding.use-case';
 import { GetOnboardingQuery } from './get-onboarding.query';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
-import { Onboarding } from '../../../domain/onboarding.entity';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 
 describe('GetOnboardingUseCase', () => {
   let useCase: GetOnboardingUseCase;

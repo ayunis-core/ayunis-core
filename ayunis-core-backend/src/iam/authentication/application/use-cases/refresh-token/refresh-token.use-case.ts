@@ -3,16 +3,16 @@ import { AuthenticationRepository } from '../../ports/authentication.repository'
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
 import type { UUID } from 'crypto';
-import { FindUserByIdUseCase } from '../../../../users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
-import { FindUserByIdQuery } from '../../../../users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { RefreshTokenCommand } from './refresh-token.command';
-import { AuthTokens } from '../../../domain/auth-tokens.entity';
-import { ActiveUser } from '../../../domain/active-user.entity';
+import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   InvalidTokenError,
   UnexpectedAuthenticationError,
 } from '../../authentication.errors';
-import { REFRESH_TOKEN_TYPE } from '../../../domain/token-type.constants';
+import { REFRESH_TOKEN_TYPE } from 'src/iam/authentication/domain/token-type.constants';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
 import { RotateSessionCommand } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.command';

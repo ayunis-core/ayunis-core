@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TriggerSetInitialPasswordCommand } from './trigger-set-initial-password.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedAuthenticationError } from '../../../../authentication/application/authentication.errors';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { SendSetInitialPasswordEmailUseCase } from '../send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { SendSetInitialPasswordEmailCommand } from '../send-set-initial-password-email/send-set-initial-password-email.command';
 import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { UserNotFoundError } from '../../users.errors';
 import { UsersRepository } from '../../ports/users.repository';
 

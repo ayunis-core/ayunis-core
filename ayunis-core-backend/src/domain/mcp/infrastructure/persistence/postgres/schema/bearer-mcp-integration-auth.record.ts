@@ -1,6 +1,6 @@
 import { ChildEntity, Column } from 'typeorm';
 import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
-import { McpAuthMethod } from '../../../../domain';
+import { McpAuthMethod } from 'src/domain/mcp/domain';
 
 @ChildEntity(McpAuthMethod.BEARER_TOKEN)
 export class BearerMcpIntegrationAuthRecord extends McpIntegrationAuthRecord {

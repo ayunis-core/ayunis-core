@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { UnexpectedAcademyError } from '../../academy.errors';
 import { GetAcademyContentQuery } from './get-academy-content.query';
 

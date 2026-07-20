@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FileSource } from '../../../domain/sources/text-source.entity';
-import { FileType, TextType } from '../../../domain/source-type.enum';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { MIME_TYPES } from 'src/common/util/file-type';
 import { SourceRepository } from '../../ports/source.repository';
 import {

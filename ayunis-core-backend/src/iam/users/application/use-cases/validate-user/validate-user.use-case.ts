@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { ValidateUserQuery } from './validate-user.query';
-import { User } from '../../../domain/user.entity';
-import { CompareHashUseCase } from '../../../../hashing/application/use-cases/compare-hash/compare-hash.use-case';
-import { CompareHashCommand } from '../../../../hashing/application/use-cases/compare-hash/compare-hash.command';
+import { User } from 'src/iam/users/domain/user.entity';
+import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
+import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
 import {
   UserNotFoundError,
   UserAuthenticationFailedError,

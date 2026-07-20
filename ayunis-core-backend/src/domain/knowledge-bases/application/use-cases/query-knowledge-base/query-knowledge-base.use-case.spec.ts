@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { QueryKnowledgeBaseUseCase } from './query-knowledge-base.use-case';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,

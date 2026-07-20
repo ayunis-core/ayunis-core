@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 /**
  * Error codes specific to the Runs domain
@@ -123,4 +123,4 @@ export class RunAnonymizationUnavailableError extends RunError {
 }
 
 // CreditBudgetExceededError moved to iam/subscriptions — re-export for backward compatibility
-export { CreditBudgetExceededError } from '../../../iam/subscriptions/application/subscription.errors';
+export { CreditBudgetExceededError } from 'src/iam/subscriptions/application/subscription.errors';

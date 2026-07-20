@@ -23,7 +23,7 @@ import { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { GetLatestSubscriptionUseCase } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.use-case';
 import { GetLatestSubscriptionQuery } from '../../application/use-cases/get-latest-subscription/get-latest-subscription.query';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription/create-subscription.use-case';

@@ -3,7 +3,7 @@ import { GetIpAllowlistUseCase } from './get-ip-allowlist.use-case';
 import { GetIpAllowlistQuery } from './get-ip-allowlist.query';
 import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
-import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import type { UUID } from 'crypto';
 
 describe('GetIpAllowlistUseCase', () => {

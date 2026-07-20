@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { CrawlDomainGrant } from '../../../domain/crawl-domain-grant.entity';
-import { normalizeHost } from '../../../domain/crawl-domain.util';
-import { InvalidCrawlDomainError } from '../../../domain/crawl-domain.errors';
+import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
+import { normalizeHost } from 'src/domain/crawl-domain-grants/domain/crawl-domain.util';
+import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/crawl-domain.errors';
 import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
 import {
   CrawlDomainAlreadyAssignedError,

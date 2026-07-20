@@ -1,11 +1,11 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
-import { ToolResultMessage } from '../../../domain/messages/tool-result-message.entity';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
 } from '../../ports/messages.repository';
-import { MessageRole } from '../../../domain/value-objects/message-role.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 
 @Injectable()

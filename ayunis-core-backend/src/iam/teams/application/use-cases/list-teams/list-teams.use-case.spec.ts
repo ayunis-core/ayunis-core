@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { ListTeamsUseCase } from './list-teams.use-case';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
-import { Team } from '../../../domain/team.entity';
+import { Team } from 'src/iam/teams/domain/team.entity';
 import { UnexpectedTeamError } from '../../teams.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';

@@ -1,11 +1,11 @@
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { Org } from '../../../../../../iam/orgs/domain/org.entity';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { Org } from 'src/iam/orgs/domain/org.entity';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { ModelRecord } from '../../local-models/schema/model.record';
-import { TeamRecord } from '../../../../../../iam/teams/infrastructure/repositories/local/schema/team.record';
-import { PermittedModelScope } from '../../../../domain/value-objects/permitted-model-scope.enum';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 
 @Entity({ name: 'permitted_models' })
 @Index(['orgId', 'modelId'], { unique: true, where: `"scope" = 'org'` })

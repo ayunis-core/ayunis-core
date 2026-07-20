@@ -2,10 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { SourceStatus } from '../../../domain/source-status.enum';
-import { TextSource } from '../../../domain/sources/text-source.entity';
-import { DataSource } from '../../../domain/sources/data-source.entity';
-import { SourceRepository } from '../../../application/ports/source.repository';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceMapper } from './mappers/source.mapper';
 import { TextSourceDetailsRecord } from './schema/text-source-details.record';
 import {

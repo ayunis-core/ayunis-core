@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyChapterRepository } from '../../../application/ports/academy-chapter.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
+import { AcademyChapterRepository } from 'src/domain/academy/application/ports/academy-chapter.repository';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyChapterRecord } from './schema/academy-chapter.record';
 import { AcademyMapper } from './mappers/academy.mapper';
-import { ChapterNotFoundError } from '../../../application/academy.errors';
+import { ChapterNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 @Injectable()
 export class LocalAcademyChapterRepository implements AcademyChapterRepository {

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Model } from '../../../../domain/model.entity';
-import { LanguageModel } from '../../../../domain/models/language.model';
-import { EmbeddingModel } from '../../../../domain/models/embedding.model';
-import { ImageGenerationModel } from '../../../../domain/models/image-generation.model';
-import { ModelTier } from '../../../../domain/value-objects/model-tier.enum';
+import { Model } from 'src/domain/models/domain/model.entity';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import {
   ModelRecord,
   LanguageModelRecord,

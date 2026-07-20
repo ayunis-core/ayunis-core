@@ -9,8 +9,8 @@ import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text
 import { ValidateUserUseCase } from '../validate-user/validate-user.use-case';
 import { InvalidPasswordError } from 'src/iam/authentication/application/authentication.errors';
 import { AuthenticationErrorCode } from 'src/iam/authentication/application/authentication.errors';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { RevokeOtherSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.use-case';
 import { RevokeOtherSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.command';
 import { ContextService } from 'src/common/context/services/context.service';

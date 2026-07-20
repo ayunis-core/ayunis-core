@@ -1,7 +1,7 @@
 import { GetAppAlertUseCase } from './get-app-alert.use-case';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfig } from '../../../domain/platform-config.entity';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 describe('GetAppAlertUseCase', () => {
   let useCase: GetAppAlertUseCase;

@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindSuperAdminsUseCase } from './find-super-admins.use-case';
 import { UsersRepository } from '../../ports/users.repository';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
-import { SystemRole } from '../../../domain/value-objects/system-role.enum';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UUID } from 'crypto';
 import { UserUnexpectedError } from '../../users.errors';
 

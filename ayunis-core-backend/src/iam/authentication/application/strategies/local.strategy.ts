@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ValidateUserUseCase } from '../../../users/application/use-cases/validate-user/validate-user.use-case';
-import { ValidateUserQuery } from '../../../users/application/use-cases/validate-user/validate-user.query';
+import { ValidateUserUseCase } from 'src/iam/users/application/use-cases/validate-user/validate-user.use-case';
+import { ValidateUserQuery } from 'src/iam/users/application/use-cases/validate-user/validate-user.query';
 import { Strategy } from 'passport-local';
 import { ActiveUser } from '../../domain/active-user.entity';
 import {

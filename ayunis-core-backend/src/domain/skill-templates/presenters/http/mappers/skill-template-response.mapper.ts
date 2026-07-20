@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { SkillTemplate } from '../../../domain/skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
+import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { SkillTemplateResponseDto } from '../dto/skill-template-response.dto';
 
 @Injectable()

@@ -7,13 +7,13 @@ import type { SkillTemplateRecord } from './schema/skill-template.record';
 import { AlwaysOnSkillTemplateRecord } from './schema/always-on-skill-template.record';
 import { PreCreatedCopySkillTemplateRecord } from './schema/pre-created-copy-skill-template.record';
 import { SkillTemplateMapper } from './mappers/skill-template.mapper';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
-} from '../../../application/skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 
 function buildAlwaysOnTemplate(
   overrides?: Partial<{

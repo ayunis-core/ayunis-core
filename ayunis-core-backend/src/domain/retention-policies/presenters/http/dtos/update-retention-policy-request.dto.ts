@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn } from 'class-validator';
-import { ALLOWED_RETENTION_DAYS } from '../../../domain/retention-period';
+import { ALLOWED_RETENTION_DAYS } from 'src/domain/retention-policies/domain/retention-period';
 
 export class UpdateRetentionPolicyRequestDto {
   @ApiProperty({

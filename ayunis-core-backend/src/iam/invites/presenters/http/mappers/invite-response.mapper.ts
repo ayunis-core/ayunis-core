@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Invite } from '../../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import {
   InviteResponseDto,
   InviteStatus,
@@ -7,7 +7,7 @@ import {
   AcceptInviteResponseDto,
   PaginatedInvitesListResponseDto,
 } from '../dtos/invite-response.dto';
-import { InviteWithOrgDetails } from '../../../application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
+import { InviteWithOrgDetails } from 'src/iam/invites/application/use-cases/get-invite-by-token/get-invite-by-token.use-case';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()

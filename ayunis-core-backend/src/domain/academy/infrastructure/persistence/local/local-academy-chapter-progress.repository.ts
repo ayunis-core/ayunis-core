@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyChapterProgressRepository } from '../../../application/ports/academy-chapter-progress.repository';
-import { AcademyChapterProgress } from '../../../domain/academy-chapter-progress.entity';
+import { AcademyChapterProgressRepository } from 'src/domain/academy/application/ports/academy-chapter-progress.repository';
+import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
 import { AcademyChapterProgressRecord } from './schema/academy-chapter-progress.record';
 import { AcademyMapper } from './mappers/academy.mapper';
 

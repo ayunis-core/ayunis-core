@@ -6,7 +6,7 @@ import { sha256Hex } from 'src/common/util/sha256.util';
 import { RotateSessionCommand } from './rotate-session.command';
 import { RefreshTokensRepository } from '../../ports/refresh-tokens.repository';
 import { RefreshTokenFactory } from '../../services/refresh-token.factory';
-import { RefreshToken } from '../../../domain/refresh-token.entity';
+import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import {
   RefreshTokenExpiredError,
   RefreshTokenNotFoundError,

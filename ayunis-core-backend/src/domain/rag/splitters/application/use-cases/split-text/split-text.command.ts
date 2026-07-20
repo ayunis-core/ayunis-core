@@ -1,4 +1,4 @@
-import type { SplitterType } from '../../../domain/splitter-type.enum';
+import type { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import type { SplitterMetadata } from '../../ports/splitter.handler';
 
 export class SplitTextCommand {

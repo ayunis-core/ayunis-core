@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import {
   SkillResponseDto,
   SkillSourceResponseDto,
 } from '../dto/skill-response.dto';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { SkillUserContext } from '../../../application/services/skill-access.service';
+import { SkillUserContext } from 'src/domain/skills/application/services/skill-access.service';
 
 @Injectable()
 export class SkillDtoMapper {

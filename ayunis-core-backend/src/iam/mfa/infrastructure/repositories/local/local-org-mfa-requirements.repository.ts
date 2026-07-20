@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { OrgMfaRequirementsRepository } from '../../../application/ports/org-mfa-requirements.repository';
-import { OrgMfaRequirement } from '../../../domain/org-mfa-requirement.entity';
+import { OrgMfaRequirementsRepository } from 'src/iam/mfa/application/ports/org-mfa-requirements.repository';
+import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
 import { OrgMfaRequirementRecord } from './schema/org-mfa-requirement.record';
 import { OrgMfaRequirementMapper } from './mappers/org-mfa-requirement.mapper';
 

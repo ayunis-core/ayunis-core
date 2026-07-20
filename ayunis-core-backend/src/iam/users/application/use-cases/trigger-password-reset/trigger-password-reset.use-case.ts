@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TriggerPasswordResetCommand } from './trigger-password-reset.command';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedAuthenticationError } from '../../../../authentication/application/authentication.errors';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
 import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import { UsersRepository } from '../../ports/users.repository';
-import type { User } from '../../../domain/user.entity';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class TriggerPasswordResetUseCase {

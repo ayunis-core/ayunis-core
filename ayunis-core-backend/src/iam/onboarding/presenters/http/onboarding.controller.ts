@@ -20,7 +20,7 @@ import { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { GetOnboardingUseCase } from '../../application/use-cases/get-onboarding/get-onboarding.use-case';
 import { GetOnboardingQuery } from '../../application/use-cases/get-onboarding/get-onboarding.query';
 import { UpdateOnboardingUseCase } from '../../application/use-cases/update-onboarding/update-onboarding.use-case';

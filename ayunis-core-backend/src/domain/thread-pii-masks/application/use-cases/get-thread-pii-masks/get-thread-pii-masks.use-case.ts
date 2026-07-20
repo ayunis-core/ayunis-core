@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
 import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
-import type { ThreadPiiMask } from '../../../domain/thread-pii-mask.entity';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import type { GetThreadPiiMasksQuery } from './get-thread-pii-masks.query';
 
 @Injectable()

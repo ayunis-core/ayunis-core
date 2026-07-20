@@ -6,9 +6,9 @@ import {
   OneToOne,
   TableInheritance,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UUID } from 'crypto';
 
 @Entity('mcp_integrations')

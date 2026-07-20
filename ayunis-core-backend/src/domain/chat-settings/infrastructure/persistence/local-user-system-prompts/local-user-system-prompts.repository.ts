@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { UserSystemPromptsRepository } from '../../../application/ports/user-system-prompts.repository';
-import { UserSystemPrompt } from '../../../domain/user-system-prompt.entity';
+import { UserSystemPromptsRepository } from 'src/domain/chat-settings/application/ports/user-system-prompts.repository';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { UserSystemPromptRecord } from './schema/user-system-prompt.record';
 import { UserSystemPromptMapper } from './mappers/user-system-prompt.mapper';
 

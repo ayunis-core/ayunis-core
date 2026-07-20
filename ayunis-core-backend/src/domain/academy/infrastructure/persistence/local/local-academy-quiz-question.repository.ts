@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyQuizQuestionRepository } from '../../../application/ports/academy-quiz-question.repository';
-import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
+import { AcademyQuizQuestionRepository } from 'src/domain/academy/application/ports/academy-quiz-question.repository';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import { AcademyQuizQuestionRecord } from './schema/academy-quiz-question.record';
 import { AcademyMapper } from './mappers/academy.mapper';
-import { QuizQuestionNotFoundError } from '../../../application/academy.errors';
+import { QuizQuestionNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 @Injectable()
 export class LocalAcademyQuizQuestionRepository implements AcademyQuizQuestionRepository {

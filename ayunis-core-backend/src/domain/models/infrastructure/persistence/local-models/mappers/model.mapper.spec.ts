@@ -4,10 +4,10 @@ import {
   ImageGenerationModelRecord,
   LanguageModelRecord,
 } from '../schema/model.record';
-import { ImageGenerationModel } from '../../../../domain/models/image-generation.model';
-import { LanguageModel } from '../../../../domain/models/language.model';
-import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
-import { ModelTier } from '../../../../domain/value-objects/model-tier.enum';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import type { UUID } from 'crypto';
 
 describe('ModelMapper', () => {

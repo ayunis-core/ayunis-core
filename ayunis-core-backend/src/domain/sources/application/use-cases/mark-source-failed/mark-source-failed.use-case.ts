@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceRepository } from '../../ports/source.repository';
 import {
   SourceNotFoundError,

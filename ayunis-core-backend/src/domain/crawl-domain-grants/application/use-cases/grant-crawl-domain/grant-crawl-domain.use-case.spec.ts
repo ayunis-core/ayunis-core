@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import { GrantCrawlDomainUseCase } from './grant-crawl-domain.use-case';
 import { GrantCrawlDomainCommand } from './grant-crawl-domain.command';
 import type { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
-import { CrawlDomainGrant } from '../../../domain/crawl-domain-grant.entity';
+import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
 import {
   CrawlDomainAlreadyAssignedError,
   InvalidCrawlDomainApplicationError,

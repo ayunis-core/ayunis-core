@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';
-import { InternetSearchResult } from '../../../domain/internet-search-result.entity';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedInternetSearchError } from '../../internet-search.errors';

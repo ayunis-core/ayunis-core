@@ -4,9 +4,9 @@ import { Logger } from '@nestjs/common';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from './list-predefined-mcp-integration-configs.use-case';
 import { PredefinedMcpIntegrationRegistry } from '../../registries/predefined-mcp-integration-registry.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { PredefinedMcpIntegrationConfig } from '../../../domain/predefined-mcp-integration-config';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { PredefinedMcpIntegrationConfig } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 describe('ListPredefinedMcpIntegrationConfigsUseCase', () => {
   let useCase: ListPredefinedMcpIntegrationConfigsUseCase;

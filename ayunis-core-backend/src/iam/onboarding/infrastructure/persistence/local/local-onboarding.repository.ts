@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { OnboardingRepository } from '../../../application/ports/onboarding.repository';
-import { Onboarding } from '../../../domain/onboarding.entity';
+import { OnboardingRepository } from 'src/iam/onboarding/application/ports/onboarding.repository';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { OnboardingRecord } from './schema/onboarding.record';
 import { OnboardingMapper } from './mappers/onboarding.mapper';
 

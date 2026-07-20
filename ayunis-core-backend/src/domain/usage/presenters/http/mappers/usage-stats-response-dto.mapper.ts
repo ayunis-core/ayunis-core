@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsageStats } from '../../../domain/usage-stats.entity';
+import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { UsageStatsResponseDto } from '../dto/usage-stats-response.dto';
 
 @Injectable()

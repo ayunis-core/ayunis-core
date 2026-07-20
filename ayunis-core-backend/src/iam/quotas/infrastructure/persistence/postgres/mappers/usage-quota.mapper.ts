@@ -1,4 +1,4 @@
-import { UsageQuota } from '../../../../domain/usage-quota.entity';
+import { UsageQuota } from 'src/iam/quotas/domain/usage-quota.entity';
 import { UsageQuotaRecord } from '../schema/usage-quota.record';
 
 export class UsageQuotaMapper {

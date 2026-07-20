@@ -10,8 +10,8 @@ import type {
   UpdatePiiWhitelistCommand,
   UpdatePiiWhitelistEntryInput,
 } from './update-pii-whitelist.command';
-import { AnonymizationWhitelistEntry } from '../../../domain/anonymization-whitelist-entry.entity';
-import { validatePattern } from '../../../domain/validate-pattern';
+import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
+import { validatePattern } from 'src/domain/anonymization-settings/domain/validate-pattern';
 import type { UUID } from 'crypto';
 
 @Injectable()

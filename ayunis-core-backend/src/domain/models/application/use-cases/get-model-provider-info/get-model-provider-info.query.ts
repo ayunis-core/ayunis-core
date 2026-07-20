@@ -1,4 +1,4 @@
-import type { ModelProvider } from '../../../domain/value-objects/model-provider.enum';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export class GetModelProviderInfoQuery {
   constructor(public readonly provider: ModelProvider) {}

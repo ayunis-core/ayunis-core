@@ -13,9 +13,9 @@ import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/us
 import {
   InvalidPasswordError,
   InvalidTokenError,
-} from '../../../../authentication/application/authentication.errors';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+} from 'src/iam/authentication/application/authentication.errors';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   aPasswordSetToken,
   createMockPasswordSetTokensRepository,

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import {
   KnowledgeBaseNotFoundError,

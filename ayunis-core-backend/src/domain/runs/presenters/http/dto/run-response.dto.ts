@@ -8,7 +8,7 @@ import {
   AssistantMessageResponseDto,
   ToolResultMessageResponseDto,
   SystemMessageResponseDto,
-} from '../../../../threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
+} from 'src/domain/threads/presenters/http/dto/get-thread-response.dto/message-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 
 export class RunSessionResponseDto {

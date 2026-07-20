@@ -11,7 +11,7 @@ import { CreateRegularUserUseCase } from 'src/iam/users/application/use-cases/cr
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
-import { Invite } from '../../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 

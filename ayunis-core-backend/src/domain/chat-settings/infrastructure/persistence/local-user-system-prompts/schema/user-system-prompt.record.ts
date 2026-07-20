@@ -1,7 +1,7 @@
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'user_system_prompts' })
 export class UserSystemPromptRecord extends BaseRecord {

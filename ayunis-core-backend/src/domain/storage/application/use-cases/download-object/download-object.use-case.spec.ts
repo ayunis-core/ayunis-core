@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DownloadObjectUseCase } from './download-object.use-case';
 import { DownloadObjectCommand } from './download-object.command';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
 import { Readable } from 'stream';
 

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { RefreshTokensRepository } from '../../../application/ports/refresh-tokens.repository';
-import { RefreshToken } from '../../../domain/refresh-token.entity';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
+import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { RefreshTokenRecord } from './schema/refresh-token.record';
 import { RefreshTokenMapper } from './mappers/refresh-token.mapper';
 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
-import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
+import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import {
   ChapterNotFoundError,
   UnexpectedAcademyError,

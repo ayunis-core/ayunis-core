@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateRegularUserCommand } from './create-regular-user.command';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { CreateUserUseCase } from '../create-user/create-user.use-case';
 import { CreateUserCommand } from '../create-user/create-user.command';
 

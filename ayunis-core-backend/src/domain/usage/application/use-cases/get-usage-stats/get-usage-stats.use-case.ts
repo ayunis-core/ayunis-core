@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetUsageStatsQuery } from './get-usage-stats.query';
 import { UsageRepository } from '../../ports/usage.repository';
-import { UsageStats } from '../../../domain/usage-stats.entity';
+import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { validateOptionalDateRange } from '../../usage.utils';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUsageStatsUseCase {

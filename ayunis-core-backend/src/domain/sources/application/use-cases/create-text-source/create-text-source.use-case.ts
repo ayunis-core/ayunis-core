@@ -4,7 +4,7 @@ import {
   FileSource,
   TextSource,
   UrlSource,
-} from '../../../domain/sources/text-source.entity';
+} from 'src/domain/sources/domain/sources/text-source.entity';
 import {
   CreateTextSourceCommand,
   CreateFileSourceCommand,

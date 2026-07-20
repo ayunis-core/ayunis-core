@@ -1,4 +1,4 @@
-import type { PageMargins } from '../../../domain/value-objects/page-margins';
+import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
 export class CreateLetterheadCommand {
   readonly name: string;

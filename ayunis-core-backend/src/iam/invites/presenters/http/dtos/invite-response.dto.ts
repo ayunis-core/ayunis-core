@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
 import { InviteStatus } from 'src/iam/invites/domain/invite-status.enum';
 

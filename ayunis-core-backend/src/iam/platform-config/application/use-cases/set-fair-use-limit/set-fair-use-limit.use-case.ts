@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { assertNever } from 'src/common/util/assert-never';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 import { PlatformConfigInvalidValueError } from '../../platform-config.errors';
 import { SetFairUseLimitCommand } from './set-fair-use-limit.command';
 

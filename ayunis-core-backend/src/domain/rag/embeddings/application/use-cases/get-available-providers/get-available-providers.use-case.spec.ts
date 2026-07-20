@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { GetAvailableProvidersUseCase } from './get-available-providers.use-case';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';
-import { EmbeddingsProvider } from '../../../domain/embeddings-provider.enum';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
 describe('GetAvailableProvidersUseCase', () => {
   let useCase: GetAvailableProvidersUseCase;

@@ -8,11 +8,11 @@ import { ConfigType } from '@nestjs/config';
 import {
   FileRetrieverPage,
   FileRetrieverResult,
-} from '../../../domain/file-retriever-result.entity';
+} from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
-import { File } from '../../../domain/file.entity';
-import { FileRetrieverType } from '../../../domain/value-objects/file-retriever-type.enum';
+import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
+import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,

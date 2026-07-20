@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { GetThreadsResponseDtoItem } from '../dto/get-threads-response-item.dto';
 import { GetThreadsResponseDto } from '../dto/get-threads-response.dto';
 import { Paginated } from 'src/common/pagination/paginated.entity';

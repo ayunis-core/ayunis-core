@@ -8,7 +8,7 @@ import { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
 import type { UUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';

@@ -1,5 +1,5 @@
 import { MeResponseDto } from '../dtos/auth-response.dto';
-import { ActiveUser } from '../../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

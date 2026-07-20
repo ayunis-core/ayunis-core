@@ -2,8 +2,8 @@ import type { UUID } from 'crypto';
 import { ListOrgAddonsUseCase } from './list-org-addons.use-case';
 import { ListOrgAddonsQuery } from './list-org-addons.query';
 import type { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { OrgAddon } from '../../../domain/org-addon.entity';
-import { AddonType } from '../../../domain/value-objects/addon-type.enum';
+import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { UnexpectedAddonError } from '../../addons.errors';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111' as UUID;

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetUserDefaultModelQuery } from './get-user-default-model.query';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
 import { ModelError } from '../../models.errors';
 

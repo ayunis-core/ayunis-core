@@ -5,13 +5,13 @@ import type { UUID } from 'crypto';
 import { AddUrlToKnowledgeBaseUseCase } from './add-url-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
-import { KnowledgeBasesConstants } from '../../../domain/knowledge-bases.constants';
+import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';

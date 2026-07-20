@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Onboarding } from '../../../domain/onboarding.entity';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { OnboardingResponseDto } from '../dtos/onboarding-response.dto';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { IpAllowlist } from '../../../../domain/ip-allowlist.entity';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import { IpAllowlistRecord } from '../schema/ip-allowlist.record';
 
 export class IpAllowlistMapper {

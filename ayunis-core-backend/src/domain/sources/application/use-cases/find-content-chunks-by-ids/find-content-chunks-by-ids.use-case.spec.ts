@@ -4,7 +4,7 @@ import { FindContentChunksByIdsUseCase } from './find-content-chunks-by-ids.use-
 import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query';
 import { SourceRepository } from '../../ports/source.repository';
 import { randomUUID } from 'crypto';
-import { TextSourceContentChunk } from '../../../domain/source-content-chunk.entity';
+import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { UnexpectedSourceError } from '../../sources.errors';
 import type { UUID } from 'crypto';
 

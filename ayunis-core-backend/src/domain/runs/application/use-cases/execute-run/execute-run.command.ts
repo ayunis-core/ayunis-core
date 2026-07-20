@@ -1,4 +1,4 @@
-import type { RunInput } from '../../../domain/run-input.entity';
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import type { UUID } from 'crypto';
 
 export class ExecuteRunCommand {

@@ -7,7 +7,7 @@ import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';

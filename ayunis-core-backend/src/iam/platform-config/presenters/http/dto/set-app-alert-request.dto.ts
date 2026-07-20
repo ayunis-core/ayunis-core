@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsString, MaxLength } from 'class-validator';
-import { APP_ALERT_MESSAGE_MAX_LENGTH } from '../../../domain/app-alert';
+import { APP_ALERT_MESSAGE_MAX_LENGTH } from 'src/iam/platform-config/domain/app-alert';
 
 export class SetAppAlertRequestDto {
   @ApiProperty({

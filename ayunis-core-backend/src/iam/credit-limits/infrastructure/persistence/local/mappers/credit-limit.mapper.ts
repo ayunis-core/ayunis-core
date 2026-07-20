@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import { CreditLimit } from '../../../../domain/credit-limit.entity';
-import { UserCreditLimit } from '../../../../domain/user-credit-limit.entity';
-import { TeamCreditLimit } from '../../../../domain/team-credit-limit.entity';
+import { CreditLimit } from 'src/iam/credit-limits/domain/credit-limit.entity';
+import { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
+import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import {
   CreditLimitRecord,
   UserCreditLimitRecord,

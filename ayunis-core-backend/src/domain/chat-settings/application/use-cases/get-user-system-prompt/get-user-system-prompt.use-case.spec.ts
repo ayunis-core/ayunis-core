@@ -1,6 +1,6 @@
 import { GetUserSystemPromptUseCase } from './get-user-system-prompt.use-case';
 import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
-import { UserSystemPrompt } from '../../../domain/user-system-prompt.entity';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 

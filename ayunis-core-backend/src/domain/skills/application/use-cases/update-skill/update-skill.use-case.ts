@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { UpdateSkillCommand } from './update-skill.command';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
@@ -11,7 +11,7 @@ import {
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { InvalidSkillNameError } from '../../../domain/skill.entity';
+import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class UpdateSkillUseCase {

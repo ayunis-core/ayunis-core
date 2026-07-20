@@ -1,5 +1,5 @@
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {

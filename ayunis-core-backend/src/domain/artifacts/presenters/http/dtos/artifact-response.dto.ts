@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { ArtifactType } from '../../../domain/value-objects/artifact-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
 export class ArtifactVersionResponseDto {
   @ApiProperty({

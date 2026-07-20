@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { UserDefaultModelsRepository } from '../../../application/ports/user-default-models.repository';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { UserDefaultModelRecord } from './schema/user-default-model.record';
 import { UserDefaultModelMapper } from './mappers/user-default-model.mapper';
 

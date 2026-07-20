@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { ArtifactType } from '../../../domain/value-objects/artifact-type.enum';
+import type { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
 export class CreateArtifactCommand {
   readonly threadId: UUID;

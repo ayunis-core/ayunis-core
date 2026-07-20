@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { CrawlDomainGrant } from '../../../domain/crawl-domain-grant.entity';
+import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
 import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
 import { UnexpectedCrawlDomainGrantError } from '../../crawl-domain-grants.errors';
 import { ListOrgCrawlDomainsQuery } from './list-org-crawl-domains.query';

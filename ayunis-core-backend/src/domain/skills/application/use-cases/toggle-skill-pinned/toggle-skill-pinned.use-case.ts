@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ToggleSkillPinnedCommand } from './toggle-skill-pinned.command';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SkillNotActiveError, UnexpectedSkillError } from '../../skills.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

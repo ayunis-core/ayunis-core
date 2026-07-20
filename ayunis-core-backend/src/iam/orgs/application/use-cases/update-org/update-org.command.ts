@@ -1,4 +1,4 @@
-import type { Org } from '../../../domain/org.entity';
+import type { Org } from 'src/iam/orgs/domain/org.entity';
 
 export class UpdateOrgCommand {
   constructor(public readonly org: Org) {}

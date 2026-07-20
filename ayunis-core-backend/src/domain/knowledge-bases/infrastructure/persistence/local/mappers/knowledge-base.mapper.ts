@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { KnowledgeBase } from '../../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseRecord } from '../schema/knowledge-base.record';
 
 @Injectable()

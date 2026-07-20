@@ -6,7 +6,7 @@ import { ValidateApiKeyUseCase } from './validate-api-key.use-case';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ApiKeyExpiredError, ApiKeyNotFoundError } from '../../api-keys.errors';
 
 describe('ValidateApiKeyUseCase', () => {

@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { FindAllSkillsUseCase } from './find-all-skills.use-case';
 import { FindAllSkillsQuery } from './find-all-skills.query';
 import { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';

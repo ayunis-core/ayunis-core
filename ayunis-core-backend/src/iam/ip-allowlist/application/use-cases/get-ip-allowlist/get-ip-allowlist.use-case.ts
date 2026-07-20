@@ -3,7 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
 import type { GetIpAllowlistQuery } from './get-ip-allowlist.query';
-import type { IpAllowlist } from '../../../domain/ip-allowlist.entity';
+import type { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 
 @Injectable()
 export class GetIpAllowlistUseCase {

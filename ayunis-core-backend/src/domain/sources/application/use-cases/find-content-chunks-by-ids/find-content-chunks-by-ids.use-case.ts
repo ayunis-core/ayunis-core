@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { TextSourceContentChunk } from '../../../domain/source-content-chunk.entity';
+import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceRepository } from '../../ports/source.repository';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { FindContentChunksByIdsQuery } from './find-content-chunks-by-ids.query';

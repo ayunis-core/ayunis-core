@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyCompletionRepository } from '../../../application/ports/academy-completion.repository';
-import { AcademyCompletion } from '../../../domain/academy-completion.entity';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { AcademyCompletionRecord } from './schema/academy-completion.record';
 import { AcademyMapper } from './mappers/academy.mapper';
 

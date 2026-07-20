@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
-import type { OldSubscriptionDisposition } from '../../../domain/value-objects/old-subscription-disposition.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
+import type { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
 
 /**
  * Replace an organization's current subscription with a new one. The current

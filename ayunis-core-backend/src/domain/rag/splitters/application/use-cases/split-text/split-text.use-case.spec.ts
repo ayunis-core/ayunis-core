@@ -3,8 +3,11 @@ import { Test } from '@nestjs/testing';
 import { SplitTextUseCase } from './split-text.use-case';
 import { SplitTextCommand } from './split-text.command';
 import { SplitterHandlerRegistry } from '../../splitter-handler.registry';
-import { SplitterType } from '../../../domain/splitter-type.enum';
-import { SplitResult, TextChunk } from '../../../domain/split-result.entity';
+import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
+import {
+  SplitResult,
+  TextChunk,
+} from 'src/domain/rag/splitters/domain/split-result.entity';
 
 describe('ProcessTextUseCase', () => {
   let useCase: SplitTextUseCase;

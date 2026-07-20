@@ -24,7 +24,7 @@ import { Invite } from '../../domain/invite.entity';
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 // Import DTOs
 import { CreateInviteDto } from './dtos/create-invite.dto';

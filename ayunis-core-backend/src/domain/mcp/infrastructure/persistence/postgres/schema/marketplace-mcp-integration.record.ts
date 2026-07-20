@@ -1,7 +1,7 @@
 import { ChildEntity, Column, Index } from 'typeorm';
 import { McpIntegrationRecord } from './mcp-integration.record';
-import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
-import { IntegrationConfigSchema } from '../../../../domain/value-objects/integration-config-schema';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 @ChildEntity(McpIntegrationKind.MARKETPLACE)
 @Index(['orgId', 'marketplaceIdentifier'], {

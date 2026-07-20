@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto';
 import { LetterheadMapper } from './letterhead.mapper';
-import { Letterhead } from '../../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadRecord } from '../schema/letterhead.record';
-import type { PageMargins } from '../../../../domain/value-objects/page-margins';
+import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
 describe('LetterheadMapper', () => {
   let mapper: LetterheadMapper;

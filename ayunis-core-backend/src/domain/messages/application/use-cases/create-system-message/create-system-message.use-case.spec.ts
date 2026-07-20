@@ -4,8 +4,8 @@ import { CreateSystemMessageUseCase } from './create-system-message.use-case';
 import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { CreateSystemMessageCommand } from './create-system-message.command';
-import { SystemMessage } from '../../../domain/messages/system-message.entity';
-import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
+import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 

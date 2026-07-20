@@ -8,7 +8,7 @@ import { ListTeamsUseCase } from 'src/iam/teams/application/use-cases/list-teams
 import { GetMonthlyCreditUsageForTeamUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetMonthlyCreditUsageForTeamQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.query';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import type { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import { selectTeamCreditLimits } from '../../utils/select-team-credit-limits';
 import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
 

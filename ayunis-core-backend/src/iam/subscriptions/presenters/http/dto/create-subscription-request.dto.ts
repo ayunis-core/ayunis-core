@@ -9,7 +9,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { BillingInfoFieldsDto } from './billing-info-fields.dto';
-import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 export class CreateSubscriptionRequestDto extends BillingInfoFieldsDto {
   @ApiPropertyOptional({

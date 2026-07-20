@@ -4,8 +4,8 @@ import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.comman
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import type { McpClientService } from '../../services/mcp-client.service';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('ValidateMcpIntegrationUseCase', () => {
   let useCase: ValidateMcpIntegrationUseCase;

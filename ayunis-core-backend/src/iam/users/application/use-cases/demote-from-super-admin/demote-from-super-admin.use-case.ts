@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from '../../ports/users.repository';
 import { DemoteFromSuperAdminCommand } from './demote-from-super-admin.command';
-import { SystemRole } from '../../../domain/value-objects/system-role.enum';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import {
   UserNotFoundError,
   UserNotSuperAdminError,

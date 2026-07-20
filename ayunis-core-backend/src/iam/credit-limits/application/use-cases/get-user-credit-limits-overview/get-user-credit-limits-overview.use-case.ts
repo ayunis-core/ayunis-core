@@ -10,7 +10,7 @@ import { FindUsersByIdsQuery } from 'src/iam/users/application/use-cases/find-us
 import { GetMonthlyCreditUsageForUsersUseCase } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
 import { GetMonthlyCreditUsageForUsersQuery } from 'src/domain/usage/application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.query';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import type { UserCreditLimit } from '../../../domain/user-credit-limit.entity';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import { selectUserCreditLimits } from '../../utils/select-user-credit-limits';
 import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
 

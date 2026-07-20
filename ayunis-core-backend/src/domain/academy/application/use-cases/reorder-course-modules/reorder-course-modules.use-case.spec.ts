@@ -6,7 +6,7 @@ import { ReorderCourseModulesUseCase } from './reorder-course-modules.use-case';
 import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import {
   ChapterNotFoundError,
   InvalidReorderError,

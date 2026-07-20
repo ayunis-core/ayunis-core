@@ -5,9 +5,9 @@ import { MarkSourceFailedUseCase } from './mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
 import { SourceRepository } from '../../ports/source.repository';
 import { SourceNotFoundError } from '../../sources.errors';
-import { SourceStatus } from '../../../domain/source-status.enum';
-import { FileSource } from '../../../domain/sources/text-source.entity';
-import { FileType, TextType } from '../../../domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 
 describe('MarkSourceFailedUseCase', () => {
   let useCase: MarkSourceFailedUseCase;

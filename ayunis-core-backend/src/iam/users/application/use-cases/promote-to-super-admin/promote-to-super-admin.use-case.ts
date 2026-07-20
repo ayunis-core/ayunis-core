@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from '../../ports/users.repository';
 import { PromoteToSuperAdminCommand } from './promote-to-super-admin.command';
-import { User } from '../../../domain/user.entity';
-import { SystemRole } from '../../../domain/value-objects/system-role.enum';
+import { User } from 'src/iam/users/domain/user.entity';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 

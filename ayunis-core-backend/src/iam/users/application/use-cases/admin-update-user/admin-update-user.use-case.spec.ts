@@ -6,8 +6,8 @@ import { AdminUpdateUserUseCase } from './admin-update-user.use-case';
 import { AdminUpdateUserCommand } from './admin-update-user.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UsersRepository } from '../../ports/users.repository';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UserUpdatedEvent } from '../../events/user-updated.event';
 import { SendConfirmationEmailUseCase } from '../send-confirmation-email/send-confirmation-email.use-case';
 import {

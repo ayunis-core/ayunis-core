@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { AddonType } from '../../../domain/value-objects/addon-type.enum';
+import type { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 
 export class DeactivateAddonCommand {
   constructor(

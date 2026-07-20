@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgChatSettings } from '../../../domain/org-chat-settings.entity';
+import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

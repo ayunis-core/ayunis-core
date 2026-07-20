@@ -7,9 +7,9 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
-import { FileType, TextType } from '../../../../domain/source-type.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceContentChunkRecord } from './source-content-chunk.record';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { TextSourceRecord } from './source.record';
 
 @Entity()

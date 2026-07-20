@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
-import { MAX_PATTERN_LENGTH } from '../../../domain/validate-pattern';
+import { MAX_PATTERN_LENGTH } from 'src/domain/anonymization-settings/domain/validate-pattern';
 
 export class PiiWhitelistEntryDto {
   @ApiProperty({

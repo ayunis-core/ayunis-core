@@ -24,8 +24,8 @@ import {
   ApiBadRequestResponse,
   ApiQuery,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../../../authentication/application/decorators/current-user.decorator';
-import { UserProperty } from '../../../authentication/application/decorators/current-user.decorator';
+import { CurrentUser } from 'src/iam/authentication/application/decorators/current-user.decorator';
+import { UserProperty } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { UUID } from 'crypto';
 import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
 import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';

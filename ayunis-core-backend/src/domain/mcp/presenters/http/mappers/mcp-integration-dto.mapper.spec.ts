@@ -1,14 +1,14 @@
 import { randomUUID } from 'crypto';
 import { McpIntegrationDtoMapper } from './mcp-integration-dto.mapper';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
-import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 
 describe('McpIntegrationDtoMapper', () => {
   const mapper = new McpIntegrationDtoMapper();

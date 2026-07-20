@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { TeamsRepository } from '../../ports/teams.repository';
-import { Team } from '../../../domain/team.entity';
+import { Team } from 'src/iam/teams/domain/team.entity';
 import { FindTeamsByUserIdQuery } from './find-teams-by-user-id.query';
 import { UnexpectedTeamError } from '../../teams.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

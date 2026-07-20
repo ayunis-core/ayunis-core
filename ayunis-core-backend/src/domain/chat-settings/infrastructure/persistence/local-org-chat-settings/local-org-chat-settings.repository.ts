@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { OrgChatSettingsRepository } from '../../../application/ports/org-chat-settings.repository';
-import { OrgChatSettings } from '../../../domain/org-chat-settings.entity';
+import { OrgChatSettingsRepository } from 'src/domain/chat-settings/application/ports/org-chat-settings.repository';
+import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { OrgChatSettingsRecord } from './schema/org-chat-settings.record';
 import { OrgChatSettingsMapper } from './mappers/org-chat-settings.mapper';
 

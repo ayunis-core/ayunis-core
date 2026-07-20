@@ -6,10 +6,10 @@ import {
   Column,
   JoinColumn,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../common/db/base-record';
-import { ShareScopeType } from '../../../../../domain/shares/domain/value-objects/share-scope-type.enum';
-import { OrgRecord } from '../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { TeamRecord } from '../../../../../iam/teams/infrastructure/repositories/local/schema/team.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
 import { UUID } from 'crypto';
 
 @Entity('share_scopes')

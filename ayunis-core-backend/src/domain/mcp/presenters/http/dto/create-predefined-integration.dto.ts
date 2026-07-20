@@ -9,8 +9,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { CredentialFieldType } from '../../../domain/predefined-mcp-integration-config';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 
 /**
  * DTO for a single config value (credential field value).

@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { IpAllowlistRepository } from '../../../application/ports/ip-allowlist.repository';
-import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
+import { IpAllowlistRepository } from 'src/iam/ip-allowlist/application/ports/ip-allowlist.repository';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import { IpAllowlistRecord } from './schema/ip-allowlist.record';
 import { IpAllowlistMapper } from './mappers/ip-allowlist.mapper';
 

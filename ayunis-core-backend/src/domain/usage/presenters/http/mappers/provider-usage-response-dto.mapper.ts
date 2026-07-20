@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ProviderUsage } from '../../../domain/provider-usage.entity';
-import { TimeSeriesPoint } from '../../../domain/time-series-point.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
+import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
 import {
   ProviderUsageResponseDto,
   ProviderUsageDto,

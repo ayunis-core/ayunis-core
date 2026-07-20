@@ -4,9 +4,9 @@ import { GetProviderUsageUseCase } from './get-provider-usage.use-case';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { InvalidDateRangeError } from '../../usage.errors';
-import { ProviderUsage } from '../../../domain/provider-usage.entity';
-import { TimeSeriesPoint } from '../../../domain/time-series-point.entity';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
+import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 
 describe('GetProviderUsageUseCase', () => {

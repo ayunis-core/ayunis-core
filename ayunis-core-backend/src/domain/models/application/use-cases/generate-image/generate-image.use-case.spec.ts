@@ -11,8 +11,8 @@ import {
   ImageGenerationResult,
 } from '../../ports/image-generation.handler';
 import type { ImageGenerationHandler } from '../../ports/image-generation.handler';
-import { ImageGenerationModel } from '../../../domain/models/image-generation.model';
-import { ModelProvider } from '../../../domain/value-objects/model-provider.enum';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 describe('GenerateImageUseCase', () => {
   let useCase: GenerateImageUseCase;

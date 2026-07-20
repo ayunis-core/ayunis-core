@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { UploadObjectUseCase } from './upload-object.use-case';
 import { UploadObjectCommand } from './upload-object.command';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
-import { StorageObject } from '../../../domain/storage-object.entity';
-import storageConfig from '../../../../../config/storage.config';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
+import storageConfig from 'src/config/storage.config';
 import {
   BucketNotFoundError,
   InvalidObjectNameError,

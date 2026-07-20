@@ -15,9 +15,9 @@ import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
 import { SourceRepository } from '../../ports/source.repository';
-import { SourceStatus } from '../../../domain/source-status.enum';
-import { TextType, FileType } from '../../../domain/source-type.enum';
-import { FileSource } from '../../../domain/sources/text-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { UnexpectedSourceError } from '../../sources.errors';
 
 function makeProcessingSource(id: UUID): FileSource {

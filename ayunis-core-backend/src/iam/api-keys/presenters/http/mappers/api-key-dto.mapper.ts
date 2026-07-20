@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ApiKeyResponseDto } from '../dtos/api-key-response.dto';
 import { CreateApiKeyResponseDto } from '../dtos/create-api-key-response.dto';
 

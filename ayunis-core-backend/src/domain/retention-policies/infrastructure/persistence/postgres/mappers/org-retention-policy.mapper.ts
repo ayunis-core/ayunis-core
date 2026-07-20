@@ -1,4 +1,4 @@
-import { OrgRetentionPolicy } from '../../../../domain/org-retention-policy.entity';
+import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { OrgRetentionPolicyRecord } from '../schema/org-retention-policy.record';
 
 export class OrgRetentionPolicyMapper {

@@ -2,7 +2,7 @@
 import { UpdateIpAllowlistUseCase } from './update-ip-allowlist.use-case';
 import { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
 import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
-import { IpAllowlist } from '../../../domain/ip-allowlist.entity';
+import { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entity';
 import {
   AdminLockoutError,
   InvalidCidrApplicationError,

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
-import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 class SubscriptionBillingInfoResponseDto {
   @ApiProperty({

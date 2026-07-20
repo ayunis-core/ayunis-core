@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EmbedTextCommand } from './embed-text.command';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
 import { EmbeddingsThrottleService } from '../../services/embeddings-throttle.service';
-import { Embedding } from '../../../domain/embedding.entity';
+import { Embedding } from 'src/domain/rag/embeddings/domain/embedding.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AcademyChapter } from '../../../../domain/academy-chapter.entity';
-import { AcademyChapterProgress } from '../../../../domain/academy-chapter-progress.entity';
-import { AcademyCompletion } from '../../../../domain/academy-completion.entity';
-import { AcademyCourseModule } from '../../../../domain/academy-course-module.entity';
-import { AcademyQuizQuestion } from '../../../../domain/academy-quiz-question.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
+import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
+import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import { AcademyChapterRecord } from '../schema/academy-chapter.record';
 import { AcademyChapterProgressRecord } from '../schema/academy-chapter-progress.record';
 import { AcademyCompletionRecord } from '../schema/academy-completion.record';

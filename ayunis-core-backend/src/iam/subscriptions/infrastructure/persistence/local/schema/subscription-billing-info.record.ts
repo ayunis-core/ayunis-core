@@ -1,4 +1,4 @@
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { Entity, Column, JoinColumn, OneToOne } from 'typeorm';
 import { SubscriptionRecord } from './subscription.record';
 import { UUID } from 'crypto';

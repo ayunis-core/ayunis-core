@@ -3,11 +3,11 @@ import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import {
   McpIntegrationNotFoundError,

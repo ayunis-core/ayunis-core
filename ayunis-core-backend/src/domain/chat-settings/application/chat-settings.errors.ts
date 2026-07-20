@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum ChatSettingsErrorCode {
   USER_SYSTEM_PROMPT_NOT_FOUND = 'USER_SYSTEM_PROMPT_NOT_FOUND',

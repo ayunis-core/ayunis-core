@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 
 export class SkillTemplateResponseDto {
   @ApiProperty({

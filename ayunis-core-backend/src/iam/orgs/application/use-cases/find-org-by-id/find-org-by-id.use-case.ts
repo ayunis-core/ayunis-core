@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgError, OrgNotFoundError } from '../../orgs.errors';
 
 @Injectable()

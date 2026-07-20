@@ -3,7 +3,7 @@ import {
   SearchMultiContentQuery,
   SearchContentQuery,
 } from './search-content.query';
-import { IndexType } from '../../../domain/value-objects/index-type.enum';
+import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 
 describe('SearchMultiContentQuery', () => {
   const orgId = '11111111-1111-1111-1111-111111111111' as UUID;

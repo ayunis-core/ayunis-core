@@ -6,8 +6,8 @@ import {
   OneToOne,
   TableInheritance,
 } from 'typeorm';
-import { DataType } from '../../../../domain/source-type.enum';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { DataType } from 'src/domain/sources/domain/source-type.enum';
+import { BaseRecord } from 'src/common/db/base-record';
 import { DataSourceRecord } from './source.record';
 
 @Entity()

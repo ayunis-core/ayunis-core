@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { SkillTemplate } from '../../../../domain/skill-template.entity';
-import { AlwaysOnSkillTemplate } from '../../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../../domain/pre-created-copy-skill-template.entity';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 import { SkillTemplateRecord } from '../schema/skill-template.record';
 import { AlwaysOnSkillTemplateRecord } from '../schema/always-on-skill-template.record';
 import { PreCreatedCopySkillTemplateRecord } from '../schema/pre-created-copy-skill-template.record';

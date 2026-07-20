@@ -1,5 +1,5 @@
 import { UserSystemPromptMapper } from './user-system-prompt.mapper';
-import { UserSystemPrompt } from '../../../../domain/user-system-prompt.entity';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { UserSystemPromptRecord } from '../schema/user-system-prompt.record';
 import { randomUUID } from 'crypto';
 

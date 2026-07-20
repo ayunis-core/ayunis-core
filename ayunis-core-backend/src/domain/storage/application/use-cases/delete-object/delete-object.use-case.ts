@@ -2,9 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { DeleteObjectCommand } from './delete-object.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import { DeleteFailedError, ObjectNotFoundError } from '../../storage.errors';
-import { StorageUrl } from '../../../domain/storage-url.entity';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
 export class DeleteObjectUseCase {

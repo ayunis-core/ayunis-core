@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditUsageForTeamQuery } from './get-monthly-credit-usage-for-team.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
 import { FindAllUserIdsByTeamIdUseCase } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.use-case';
 import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases/find-all-user-ids-by-team-id/find-all-user-ids-by-team-id.query';

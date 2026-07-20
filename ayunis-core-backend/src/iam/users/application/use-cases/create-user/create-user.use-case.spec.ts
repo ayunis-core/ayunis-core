@@ -1,14 +1,14 @@
 import { CreateUserUseCase } from './create-user.use-case';
 import { CreateUserCommand } from './create-user.command';
 import { UserCreatedEvent } from '../../events/user-created.event';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   UserAlreadyExistsError,
   UserEmailProviderBlacklistedError,
 } from '../../users.errors';
 import type { UsersRepository } from '../../ports/users.repository';
-import type { HashTextUseCase } from '../../../../hashing/application/use-cases/hash-text/hash-text.use-case';
+import type { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';

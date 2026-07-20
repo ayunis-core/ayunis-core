@@ -5,8 +5,8 @@ import {
   InvalidInviteTokenError,
   InviteNotFoundError,
 } from '../../invites.errors';
-import { FindOrgByIdUseCase } from '../../../../orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
-import { FindOrgByIdQuery } from '../../../../orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { UUID } from 'crypto';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { InviteStatus } from 'src/iam/invites/domain/invite-status.enum';

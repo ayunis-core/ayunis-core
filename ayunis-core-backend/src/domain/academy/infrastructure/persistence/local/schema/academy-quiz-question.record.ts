@@ -1,8 +1,8 @@
 import { UUID } from 'crypto';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { AcademyChapterRecord } from './academy-chapter.record';
-import type { QuizAnswerOption } from '../../../../domain/academy-quiz-question.entity';
+import type { QuizAnswerOption } from 'src/domain/academy/domain/academy-quiz-question.entity';
 
 @Entity({ name: 'academy_quiz_questions' })
 export class AcademyQuizQuestionRecord extends BaseRecord {

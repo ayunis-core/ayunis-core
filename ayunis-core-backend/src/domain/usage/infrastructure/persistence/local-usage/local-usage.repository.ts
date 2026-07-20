@@ -2,20 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { Usage } from '../../../domain/usage.entity';
+import { Usage } from 'src/domain/usage/domain/usage.entity';
 import {
   UsageRepository,
   ProviderUsage,
   ModelDistribution,
   type UserUsageResult,
-} from '../../../application/ports/usage.repository';
-import { GetProviderUsageQuery } from '../../../application/use-cases/get-provider-usage/get-provider-usage.query';
-import { GetModelDistributionQuery } from '../../../application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetUserUsageQuery } from '../../../application/use-cases/get-user-usage/get-user-usage.query';
-import { GetUsageStatsQuery } from '../../../application/use-cases/get-usage-stats/get-usage-stats.query';
+} from 'src/domain/usage/application/ports/usage.repository';
+import { GetProviderUsageQuery } from 'src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.query';
+import { GetModelDistributionQuery } from 'src/domain/usage/application/use-cases/get-model-distribution/get-model-distribution.query';
+import { GetUserUsageQuery } from 'src/domain/usage/application/use-cases/get-user-usage/get-user-usage.query';
+import { GetUsageStatsQuery } from 'src/domain/usage/application/use-cases/get-usage-stats/get-usage-stats.query';
 import { Paginated } from 'src/common/pagination';
-import { UsageStats } from '../../../domain/usage-stats.entity';
-import { UserUsageItem } from '../../../domain/user-usage-item.entity';
+import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
+import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
 import { UsageRecord } from './schema/usage.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UsageMapper } from './mappers/usage.mapper';

@@ -11,7 +11,7 @@ import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-pr
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import type { UUID } from 'crypto';
-import type { ParentChunk } from '../../../domain/parent-chunk.entity';
+import type { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 
 @Injectable()
 export class SearchContentUseCase {

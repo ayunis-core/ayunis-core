@@ -5,7 +5,7 @@ import { GetSourcesByKnowledgeBaseIdQuery } from './get-sources-by-knowledge-bas
 import { SourceRepository } from '../../ports/source.repository';
 import { randomUUID } from 'crypto';
 import { UnexpectedSourceError } from '../../sources.errors';
-import type { Source } from '../../../domain/source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 describe('GetSourcesByKnowledgeBaseIdUseCase', () => {
   let useCase: GetSourcesByKnowledgeBaseIdUseCase;

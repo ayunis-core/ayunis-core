@@ -12,7 +12,7 @@ import { Logger } from '@nestjs/common';
 import { DeleteSkillUseCase } from './delete-skill.use-case';
 import { DeleteSkillCommand } from './delete-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import { SkillNotFoundError } from '../../skills.errors';

@@ -5,7 +5,7 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 import type {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
+} from 'src/domain/runs/domain/run-input.entity';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 
 export interface RunParams {

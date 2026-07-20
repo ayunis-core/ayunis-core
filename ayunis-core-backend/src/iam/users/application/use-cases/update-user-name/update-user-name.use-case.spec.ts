@@ -4,8 +4,8 @@ import { UpdateUserNameUseCase } from './update-user-name.use-case';
 import { UpdateUserNameCommand } from './update-user-name.command';
 import { UserUpdatedEvent } from '../../events/user-updated.event';
 import { UsersRepository } from '../../ports/users.repository';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 

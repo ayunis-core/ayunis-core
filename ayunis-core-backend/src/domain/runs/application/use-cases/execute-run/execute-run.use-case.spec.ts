@@ -13,7 +13,7 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
-import { RunUserInput } from '../../../domain/run-input.entity';
+import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
 import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
 import type { CreditLimitGuardService } from '../../services/credit-limit-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';

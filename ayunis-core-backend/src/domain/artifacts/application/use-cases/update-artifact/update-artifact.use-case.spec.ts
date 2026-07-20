@@ -13,9 +13,9 @@ import {
   ArtifactVersionConflictError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
-import type { ArtifactVersion } from '../../../domain/artifact-version.entity';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';

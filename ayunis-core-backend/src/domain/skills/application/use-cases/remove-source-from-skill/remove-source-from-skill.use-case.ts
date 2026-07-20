@@ -4,7 +4,7 @@ import { SkillRepository } from '../../ports/skill.repository';
 import { RemoveSourceFromSkillCommand } from './remove-source-from-skill.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';

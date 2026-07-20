@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
 import { UpdateOnboardingCommand } from './update-onboarding.command';
-import { Onboarding } from '../../../domain/onboarding.entity';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { OnboardingUnexpectedError } from '../../onboarding.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 

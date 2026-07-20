@@ -5,7 +5,7 @@ import type { UUID } from 'crypto';
 import { FindArtifactsByThreadUseCase } from './find-artifacts-by-thread.use-case';
 import { FindArtifactsByThreadQuery } from './find-artifacts-by-thread.query';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('FindArtifactsByThreadUseCase', () => {

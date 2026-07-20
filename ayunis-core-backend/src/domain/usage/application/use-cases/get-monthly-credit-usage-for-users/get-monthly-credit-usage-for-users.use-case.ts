@@ -3,7 +3,7 @@ import type { UUID } from 'crypto';
 import { GetMonthlyCreditUsageForUsersQuery } from './get-monthly-credit-usage-for-users.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { getEffectiveMonthStart } from '../../util/get-effective-month-start';
 
 @Injectable()

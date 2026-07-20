@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { QueryFailedError } from 'typeorm';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { CreateApiKeyCommand } from './create-api-key.command';
 import { CreateApiKeyResult } from './create-api-key.result';
 import {

@@ -4,9 +4,9 @@ import { LoginUseCase } from './login.use-case';
 import { LoginCommand } from './login.command';
 import type { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
-import { ActiveUser } from '../../../domain/active-user.entity';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
-import { SystemRole } from '../../../../users/domain/value-objects/system-role.enum';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import type { UUID } from 'crypto';
 

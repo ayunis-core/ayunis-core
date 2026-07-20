@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 import { PlatformConfigInvalidValueError } from '../../platform-config.errors';
 import { SetImageFairUseLimitCommand } from './set-image-fair-use-limit.command';
 

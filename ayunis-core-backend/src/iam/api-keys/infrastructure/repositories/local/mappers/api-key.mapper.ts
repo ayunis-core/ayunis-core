@@ -1,4 +1,4 @@
-import { ApiKey } from '../../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ApiKeyRecord } from '../schema/api-key.record';
 
 export class ApiKeyMapper {

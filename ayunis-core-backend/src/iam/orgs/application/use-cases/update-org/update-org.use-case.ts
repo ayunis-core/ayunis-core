@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { UpdateOrgCommand } from './update-org.command';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgError, OrgUpdateFailedError } from '../../orgs.errors';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Booking } from '../../../domain/booking.entity';
+import { Booking } from 'src/common/clients/locaboo/domain/booking.entity';
 import { GetBookingsResponse } from '../schema/getBookingsResponse';
 
 @Injectable()

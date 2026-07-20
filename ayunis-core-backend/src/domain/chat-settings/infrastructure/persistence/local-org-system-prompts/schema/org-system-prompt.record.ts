@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 

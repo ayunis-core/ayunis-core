@@ -3,17 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { SkillTemplateRepository } from '../../../application/ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { SkillTemplateRepository } from 'src/domain/skill-templates/application/ports/skill-template.repository';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { SkillTemplateRecord } from './schema/skill-template.record';
 import { AlwaysOnSkillTemplateRecord } from './schema/always-on-skill-template.record';
 import { PreCreatedCopySkillTemplateRecord } from './schema/pre-created-copy-skill-template.record';
 import { SkillTemplateMapper } from './mappers/skill-template.mapper';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,
-} from '../../../application/skill-templates.errors';
+} from 'src/domain/skill-templates/application/skill-templates.errors';
 
 const PG_UNIQUE_VIOLATION = '23505';
 

@@ -5,10 +5,10 @@ import { SuperAdminTriggerPasswordResetUseCase } from './super-admin-trigger-pas
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
 import { UsersRepository } from '../../ports/users.repository';
 import { PasswordSetTokenService } from '../../services/password-set-token.service';
-import { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UserNotFoundError } from '../../users.errors';
 import type { UUID } from 'crypto';
 

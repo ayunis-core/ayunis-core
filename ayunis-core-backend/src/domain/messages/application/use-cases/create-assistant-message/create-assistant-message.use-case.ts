@@ -1,12 +1,12 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateAssistantMessageCommand } from './create-assistant-message.command';
-import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
 } from '../../ports/messages.repository';
-import { MessageRole } from '../../../domain/value-objects/message-role.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';

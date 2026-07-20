@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { FindAllSkillTemplatesQuery } from './find-all-skill-templates.query';
 import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

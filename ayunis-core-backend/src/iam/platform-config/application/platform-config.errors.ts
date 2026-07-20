@@ -1,4 +1,4 @@
-import { ApplicationError } from '../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import type { PlatformConfigKey } from '../domain/platform-config-keys.enum';
 
 export enum PlatformConfigErrorCode {

@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { DistributionMode } from '../../../domain/distribution-mode.enum';
+import type { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 
 export class UpdateSkillTemplateCommand {
   public readonly skillTemplateId: UUID;

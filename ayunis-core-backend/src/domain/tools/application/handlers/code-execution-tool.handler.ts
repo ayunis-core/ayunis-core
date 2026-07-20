@@ -5,11 +5,11 @@ import {
 } from '../ports/execution.handler';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
-import { getAyunisCodeExecutionService } from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService';
+import { getAyunisCodeExecutionService } from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService';
 import type {
   ExecutionRequest,
   ExecutionResponse,
-} from '../../../../common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
+} from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';

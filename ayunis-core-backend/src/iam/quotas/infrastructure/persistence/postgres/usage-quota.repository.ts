@@ -5,9 +5,9 @@ import { randomUUID, UUID } from 'crypto';
 import {
   UsageQuotaRepositoryPort,
   CheckAndIncrementResult,
-} from '../../../application/ports/usage-quota.repository.port';
-import { UsageQuota } from '../../../domain/usage-quota.entity';
-import { QuotaType } from '../../../domain/quota-type.enum';
+} from 'src/iam/quotas/application/ports/usage-quota.repository.port';
+import { UsageQuota } from 'src/iam/quotas/domain/usage-quota.entity';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { UsageQuotaRecord } from './schema/usage-quota.record';
 import { UsageQuotaMapper } from './mappers/usage-quota.mapper';
 

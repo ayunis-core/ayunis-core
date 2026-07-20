@@ -2,8 +2,8 @@ import { SetAppAlertUseCase } from './set-app-alert.use-case';
 import { SetAppAlertCommand } from './set-app-alert.command';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigInvalidValueError } from '../../platform-config.errors';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
-import { APP_ALERT_MESSAGE_MAX_LENGTH } from '../../../domain/app-alert';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
+import { APP_ALERT_MESSAGE_MAX_LENGTH } from 'src/iam/platform-config/domain/app-alert';
 
 describe('SetAppAlertUseCase', () => {
   let useCase: SetAppAlertUseCase;

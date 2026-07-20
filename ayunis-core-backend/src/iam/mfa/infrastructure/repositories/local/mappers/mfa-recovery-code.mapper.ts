@@ -1,4 +1,4 @@
-import { MfaRecoveryCode } from '../../../../domain/mfa-recovery-code.entity';
+import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
 import { MfaRecoveryCodeRecord } from '../schema/mfa-recovery-code.record';
 
 export class MfaRecoveryCodeMapper {

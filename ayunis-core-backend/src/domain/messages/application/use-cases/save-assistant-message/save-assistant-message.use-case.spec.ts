@@ -4,7 +4,7 @@ import { SaveAssistantMessageUseCase } from './save-assistant-message.use-case';
 import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
-import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';

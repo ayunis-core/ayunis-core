@@ -3,7 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
 import { TotpPort } from '../../ports/totp.port';
-import { UserTotp } from '../../../domain/user-totp.entity';
+import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import { MfaAlreadyEnabledError, UnexpectedMfaError } from '../../mfa.errors';
 import { SetupTotpCommand } from './setup-totp.command';
 

@@ -1,12 +1,12 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Message } from '../../../../messages/domain/message.entity';
-import { AddMessageCommand } from '../../../../threads/application/use-cases/add-message-to-thread/add-message.command';
-import { Thread } from '../../../../threads/domain/thread.entity';
-import { CreateUserMessageUseCase } from '../../../../messages/application/use-cases/create-user-message/create-user-message.use-case';
-import { CreateUserMessageCommand } from '../../../../messages/application/use-cases/create-user-message/create-user-message.command';
-import { CreateToolResultMessageUseCase } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
-import { CreateToolResultMessageCommand } from '../../../../messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
+import { Message } from 'src/domain/messages/domain/message.entity';
+import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
+import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
+import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -17,9 +17,9 @@ import {
 import {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
-import { ApplicationError } from '../../../../../common/errors/base.error';
-import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
+} from 'src/domain/runs/domain/run-input.entity';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -33,7 +33,7 @@ import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pi
 import {
   RunPiiMasksUpdate,
   RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';

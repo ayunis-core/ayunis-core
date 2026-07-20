@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UrlRetrieverResult } from '../../../domain/url-retriever-result.entity';
+import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
   RawUrlResponse,

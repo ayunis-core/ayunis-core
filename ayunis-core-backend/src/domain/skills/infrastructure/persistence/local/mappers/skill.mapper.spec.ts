@@ -1,4 +1,4 @@
-import { Skill } from '../../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillRecord } from '../schema/skill.record';
 import { SkillMapper } from './skill.mapper';
 import type { UUID } from 'crypto';

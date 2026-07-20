@@ -6,12 +6,12 @@ import {
   JoinTable,
   Unique,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
-import { SourceRecord } from '../../../../../sources/infrastructure/persistence/local/schema/source.record';
-import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity({ name: 'skills' })
 @Unique('UQ_skill_name_userId', ['name', 'userId'])

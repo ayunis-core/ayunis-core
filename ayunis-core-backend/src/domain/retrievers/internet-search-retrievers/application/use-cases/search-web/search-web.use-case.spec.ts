@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { SearchWebUseCase } from './search-web.use-case';
 import { SearchWebCommand } from './search-web.command';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';
-import { InternetSearchResult } from '../../../domain/internet-search-result.entity';
-import { InternetSearchResultType } from '../../../domain/value-objects/internet-search-result-type.enum';
+import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
+import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
 
 describe('SearchWebUseCase', () => {
   let useCase: SearchWebUseCase;

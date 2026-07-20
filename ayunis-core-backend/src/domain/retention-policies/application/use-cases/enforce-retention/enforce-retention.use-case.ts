@@ -10,7 +10,7 @@ import {
 } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { FindExpiredThreadRefsByOrgQuery } from 'src/domain/threads/application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.query';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
-import type { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
+import type { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import type {
   EnforceRetentionResult,
   OrgRetentionResult,

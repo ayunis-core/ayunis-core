@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import {
   TextSource,

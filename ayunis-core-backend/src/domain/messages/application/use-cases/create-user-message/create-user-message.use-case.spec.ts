@@ -5,7 +5,7 @@ import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import type { ImageUploadData } from './create-user-message.command';
 import { CreateUserMessageCommand } from './create-user-message.command';
-import { UserMessage } from '../../../domain/messages/user-message.entity';
+import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';

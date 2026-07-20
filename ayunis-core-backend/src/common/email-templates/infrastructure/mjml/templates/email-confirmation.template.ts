@@ -1,6 +1,6 @@
 import mjml2html from 'mjml';
 import type { MJMLParseResults } from 'mjml-core';
-import type { EmailConfirmationTemplateContent } from '../../../domain/email-template.entity';
+import type { EmailConfirmationTemplateContent } from 'src/common/email-templates/domain/email-template.entity';
 
 export function emailConfirmationText(
   template: EmailConfirmationTemplateContent,

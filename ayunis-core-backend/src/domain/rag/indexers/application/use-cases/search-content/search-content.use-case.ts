@@ -4,7 +4,7 @@ import {
   SearchContentQuery,
   SearchMultiContentQuery,
 } from './search-content.query';
-import type { IndexEntry } from '../../../domain/index-entry.entity';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { UnexpectedIndexError } from '../../indexer.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 
 /**
  * Base DTO for creating shares

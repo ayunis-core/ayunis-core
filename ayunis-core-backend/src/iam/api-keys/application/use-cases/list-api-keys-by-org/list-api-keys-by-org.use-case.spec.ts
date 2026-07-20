@@ -5,7 +5,7 @@ import type { UUID } from 'crypto';
 import { ListApiKeysByOrgUseCase } from './list-api-keys-by-org.use-case';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { UnexpectedApiKeyError } from '../../api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 

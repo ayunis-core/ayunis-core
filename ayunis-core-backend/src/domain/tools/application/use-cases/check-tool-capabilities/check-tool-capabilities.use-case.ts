@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
-import { Tool } from '../../../domain/tool.entity';
-import { DisplayableTool } from '../../../domain/displayable-tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { DisplayableTool } from 'src/domain/tools/domain/displayable-tool.entity';
 
 export interface ToolCapabilities {
   isDisplayable: boolean;

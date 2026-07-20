@@ -1,5 +1,5 @@
 import { OrgSystemPromptMapper } from './org-system-prompt.mapper';
-import { OrgSystemPrompt } from '../../../../domain/org-system-prompt.entity';
+import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
 import { OrgSystemPromptRecord } from '../schema/org-system-prompt.record';
 import { randomUUID } from 'crypto';
 

@@ -1,5 +1,5 @@
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { Column, Entity, ManyToOne, TableInheritance } from 'typeorm';
 import { UUID } from 'crypto';
 

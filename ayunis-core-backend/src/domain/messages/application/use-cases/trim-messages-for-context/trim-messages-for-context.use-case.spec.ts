@@ -5,10 +5,10 @@ import { randomUUID } from 'crypto';
 import { TrimMessagesForContextUseCase } from './trim-messages-for-context.use-case';
 import { TrimMessagesForContextCommand } from './trim-messages-for-context.command';
 import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
-import { UserMessage } from '../../../domain/messages/user-message.entity';
-import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
-import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
-import type { Message } from '../../../domain/message.entity';
+import { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
 
 describe('TrimMessagesForContextUseCase', () => {
   let useCase: TrimMessagesForContextUseCase;

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { MfaRecoveryCodesRepository } from '../../../application/ports/mfa-recovery-codes.repository';
-import { MfaRecoveryCode } from '../../../domain/mfa-recovery-code.entity';
+import { MfaRecoveryCodesRepository } from 'src/iam/mfa/application/ports/mfa-recovery-codes.repository';
+import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
 import { MfaRecoveryCodeRecord } from './schema/mfa-recovery-code.record';
 import { MfaRecoveryCodeMapper } from './mappers/mfa-recovery-code.mapper';
 

@@ -3,14 +3,14 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
 import { SourceAdditionError } from '../../threads.errors';
-import { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
+import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   SourceAlreadyAssignedError,
   ThreadSourceLimitExceededError,
 } from '../../threads.errors';
-import { ThreadsConstants } from '../../../domain/threads.constants';
+import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 @Injectable()
 export class AddSourceToThreadUseCase {

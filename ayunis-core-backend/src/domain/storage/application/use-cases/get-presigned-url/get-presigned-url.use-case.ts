@@ -2,10 +2,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
-import { StorageUrl } from '../../../domain/storage-url.entity';
-import { PresignedUrl } from '../../../domain/presigned-url.entity';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
 
 @Injectable()
 export class GetPresignedUrlUseCase {

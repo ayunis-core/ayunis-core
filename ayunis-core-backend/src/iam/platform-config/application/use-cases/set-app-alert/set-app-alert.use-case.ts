@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 import { PlatformConfigInvalidValueError } from '../../platform-config.errors';
-import { APP_ALERT_MESSAGE_MAX_LENGTH } from '../../../domain/app-alert';
+import { APP_ALERT_MESSAGE_MAX_LENGTH } from 'src/iam/platform-config/domain/app-alert';
 import { SetAppAlertCommand } from './set-app-alert.command';
 
 @Injectable()

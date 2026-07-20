@@ -4,8 +4,8 @@ import { CreateToolResultMessageUseCase } from './create-tool-result-message.use
 import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
-import { ToolResultMessage } from '../../../domain/messages/tool-result-message.entity';
-import { ToolResultMessageContent } from '../../../domain/message-contents/tool-result.message-content.entity';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 

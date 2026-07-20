@@ -7,7 +7,7 @@ import { GetAcademyCertificateQuery } from './get-academy-certificate.query';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
 import { CertificateRendererPort } from '../../ports/certificate-renderer.port';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
-import { AcademyCompletion } from '../../../domain/academy-completion.entity';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {

@@ -8,7 +8,7 @@ import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadNotFoundError } from '../../letterheads.errors';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 describe('FindLetterheadUseCase', () => {
   let useCase: FindLetterheadUseCase;

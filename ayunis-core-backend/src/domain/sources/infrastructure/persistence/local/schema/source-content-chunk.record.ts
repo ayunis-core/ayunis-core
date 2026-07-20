@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { TextSourceDetailsRecord } from './text-source-details.record';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 
 @Entity({ name: 'source_content_chunks' })
 export class SourceContentChunkRecord extends BaseRecord {

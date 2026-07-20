@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgCreationFailedError } from '../../orgs.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { OrgCreatedEvent } from '../../events/org-created.event';

@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto';
 import { ArtifactMapper } from './artifact.mapper';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
-import { DocumentArtifact } from '../../../../domain/artifact.entity';
-import { ArtifactVersion } from '../../../../domain/artifact-version.entity';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { DocumentArtifactRecord } from '../schema/document-artifact.record';
 import { ArtifactVersionRecord } from '../schema/artifact-version.record';
-import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 
 describe('ArtifactMapper', () => {
   let mapper: ArtifactMapper;

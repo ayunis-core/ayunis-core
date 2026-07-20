@@ -5,7 +5,7 @@ import type { UUID } from 'crypto';
 import { DeleteSkillTemplateUseCase } from './delete-skill-template.use-case';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
 import { SkillTemplateNotFoundError } from '../../skill-templates.errors';
 
 describe('DeleteSkillTemplateUseCase', () => {

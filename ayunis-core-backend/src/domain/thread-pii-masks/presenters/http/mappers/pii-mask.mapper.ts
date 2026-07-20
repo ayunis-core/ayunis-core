@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ThreadPiiMask } from '../../../domain/thread-pii-mask.entity';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { PiiMaskResponseDto } from '../dtos/pii-mask-response.dto';
 
 @Injectable()

@@ -1,8 +1,8 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { UUID } from 'crypto';
 import { ThreadRecord } from './thread.record';
-import { SourceRecord } from '../../../../../sources/infrastructure/persistence/local/schema/source.record';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { BaseRecord } from 'src/common/db/base-record';
 
 @Entity({ name: 'thread_source_assignments' })
 export class ThreadSourceAssignmentRecord extends BaseRecord {

@@ -15,12 +15,12 @@ import {
   McpUnauthenticatedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 
 const mockOrgId = randomUUID();
 const mockUserId = randomUUID();

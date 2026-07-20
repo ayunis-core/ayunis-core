@@ -3,8 +3,8 @@ import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ActivateAddonUseCase } from './activate-addon.use-case';
 import { ActivateAddonCommand } from './activate-addon.command';
 import type { OrgAddonRepository } from '../../ports/org-addon.repository';
-import { OrgAddon } from '../../../domain/org-addon.entity';
-import { AddonType } from '../../../domain/value-objects/addon-type.enum';
+import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { AddonActivatedEvent } from '../../events/addon-activated.event';
 import { UnexpectedAddonError } from '../../addons.errors';
 

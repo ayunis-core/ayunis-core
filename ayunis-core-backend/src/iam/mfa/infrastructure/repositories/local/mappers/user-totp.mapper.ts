@@ -1,4 +1,4 @@
-import { UserTotp } from '../../../../domain/user-totp.entity';
+import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import { UserTotpRecord } from '../schema/user-totp.record';
 
 export class UserTotpMapper {

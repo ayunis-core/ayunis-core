@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import { AssertCrawlDomainAccessUseCase } from './assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
 import type { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
-import { CrawlDomainGrant } from '../../../domain/crawl-domain-grant.entity';
+import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
 import { CrawlDomainAccessDeniedError } from '../../crawl-domain-grants.errors';
 
 const ORG_A = '11111111-1111-1111-1111-111111111111' as UUID;

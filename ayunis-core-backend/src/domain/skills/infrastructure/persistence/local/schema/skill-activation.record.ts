@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { UUID } from 'crypto';
 import { SkillRecord } from './skill.record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'skill_activations' })
 @Unique('UQ_skill_activation_skillId_userId', ['skillId', 'userId'])

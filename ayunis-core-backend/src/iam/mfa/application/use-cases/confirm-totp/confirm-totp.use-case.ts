@@ -6,9 +6,9 @@ import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
 import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
 import { TotpPort } from '../../ports/totp.port';
-import { MfaRecoveryCode } from '../../../domain/mfa-recovery-code.entity';
-import { RECOVERY_CODE_COUNT } from '../../../domain/mfa.constants';
-import { generateRecoveryCode } from '../../../domain/recovery-code.generator';
+import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
+import { RECOVERY_CODE_COUNT } from 'src/iam/mfa/domain/mfa.constants';
+import { generateRecoveryCode } from 'src/iam/mfa/domain/recovery-code.generator';
 import {
   InvalidMfaCodeError,
   MfaAlreadyEnabledError,

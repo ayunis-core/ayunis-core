@@ -8,7 +8,7 @@ import {
   InvalidPatternError,
 } from '../../anonymization-settings.errors';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
-import type { AnonymizationWhitelistEntry } from '../../../domain/anonymization-whitelist-entry.entity';
+import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
 describe('UpdatePiiWhitelistUseCase', () => {
   const orgId = '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c' as UUID;

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import type { GeneratedImage } from '../../../domain/generated-image.entity';
+import type { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 import { GeneratedImageRecord } from './schema/generated-image.record';
-import { GeneratedImagesRepository } from '../../../application/ports/generated-images.repository';
+import { GeneratedImagesRepository } from 'src/domain/threads/application/ports/generated-images.repository';
 import { GeneratedImageMapper } from './mappers/generated-image.mapper';
 
 @Injectable()

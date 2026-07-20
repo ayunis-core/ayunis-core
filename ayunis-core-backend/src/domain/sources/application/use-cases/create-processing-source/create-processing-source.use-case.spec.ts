@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { CreateProcessingSourceUseCase } from './create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
 import { SourceRepository } from '../../ports/source.repository';
-import { SourceStatus } from '../../../domain/source-status.enum';
-import { FileType, TextType } from '../../../domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { UnsupportedSourceFileTypeError } from '../../sources.errors';
 
 describe('CreateProcessingSourceUseCase', () => {

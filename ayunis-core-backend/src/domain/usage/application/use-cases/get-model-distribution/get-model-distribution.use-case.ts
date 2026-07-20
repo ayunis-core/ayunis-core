@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetModelDistributionQuery } from './get-model-distribution.query';
 import { UsageRepository } from '../../ports/usage.repository';
-import { ModelDistribution } from '../../../domain/model-distribution.entity';
+import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import {
   InvalidDateRangeError,
   UnexpectedUsageError,
@@ -10,7 +10,7 @@ import {
   validateOptionalDateRange,
   processModelDistribution,
 } from '../../usage.utils';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetModelDistributionUseCase {

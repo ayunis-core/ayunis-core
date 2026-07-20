@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Source } from '../../../domain/source.entity';
+import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceRepository } from '../../ports/source.repository';
 import { GetSourceByIdQuery } from './get-source-by-id.query';
 import { SourceNotFoundError } from '../../sources.errors';

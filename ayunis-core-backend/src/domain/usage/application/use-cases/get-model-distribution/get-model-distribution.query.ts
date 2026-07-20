@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 
 export class GetModelDistributionQuery {
   public readonly organizationId: UUID;

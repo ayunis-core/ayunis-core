@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { QuizAnswerOption } from '../../../domain/academy-quiz-question.entity';
+import type { QuizAnswerOption } from 'src/domain/academy/domain/academy-quiz-question.entity';
 
 export class CreateQuizQuestionCommand {
   public readonly chapterId: UUID;

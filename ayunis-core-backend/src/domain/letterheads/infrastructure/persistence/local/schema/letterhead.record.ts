@@ -1,8 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import type { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import type { PageMargins } from '../../../../domain/value-objects/page-margins';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
 @Entity({ name: 'letterheads' })
 export class LetterheadRecord extends BaseRecord {

@@ -5,7 +5,7 @@ import {
   OneToOne,
   TableInheritance,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { McpIntegrationRecord } from './mcp-integration.record';
 import { UUID } from 'crypto';
 

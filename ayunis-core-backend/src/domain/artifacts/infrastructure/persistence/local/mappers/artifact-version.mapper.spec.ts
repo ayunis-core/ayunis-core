@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
-import { ArtifactVersion } from '../../../../domain/artifact-version.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { ArtifactVersionRecord } from '../schema/artifact-version.record';
-import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 
 describe('ArtifactVersionMapper', () => {
   let mapper: ArtifactVersionMapper;

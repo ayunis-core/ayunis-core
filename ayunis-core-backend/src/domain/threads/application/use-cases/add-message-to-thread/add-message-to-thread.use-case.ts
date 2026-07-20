@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageCommand } from './add-message.command';
 import { MessageAdditionError } from '../../threads.errors';
 import { ContextService } from 'src/common/context/services/context.service';
