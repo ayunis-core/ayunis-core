@@ -25,26 +25,7 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
   async search(query: string): Promise<InternetSearchResult[]> {
     this.logger.debug('Using Staan internet search handler', { query });
 
-    const apiKey = this.configService.get<string>(
-      'internetSearch.staan.apiKey',
-    );
-    if (!apiKey) {
-      throw new Error('Staan search API key is not configured');
-    }
-    
-    const market =
-      this.configService.get<string>('internetSearch.staan.market') || 'de-de';
-    const baseUrl =
-      this.configService.get<string>('internetSearch.staan.url') ||
-      'https://api.staan.ai/v2/search/web';
-
-    const url = `${baseUrl}?q=${encodeURIComponent(query)}&market=${market}`;
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: 'application/json',
-      },
-    });
+    const response = await fetch(...this.buildRequest(query));
 
     // fetch does not throw on HTTP error status — check explicitly.
     if (!response.ok) {
@@ -58,6 +39,27 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
 
     const data = (await response.json()) as StaanSearchResult;
     return this.mapResults(data);
+  }
+
+  private buildRequest(query: string): [string, RequestInit] {
+    const apiKey = this.configService.get<string>(
+      'internetSearch.staan.apiKey',
+    );
+    if (!apiKey) {
+      throw new Error('Staan search API key is not configured');
+    }
+    const market =
+      this.configService.get<string>('internetSearch.staan.market') || 'de-de';
+    const baseUrl =
+      this.configService.get<string>('internetSearch.staan.url') ||
+      'https://api.staan.ai/v2/search/web';
+
+    const url = `${baseUrl}?q=${encodeURIComponent(query)}&market=${market}`;
+    const headers = {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/json',
+    };
+    return [url, { headers }];
   }
 
   private mapResults(data: StaanSearchResult): InternetSearchResult[] {
