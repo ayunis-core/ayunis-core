@@ -18,7 +18,7 @@ function frontendConfig() {
 }
 
 export const appConfig = registerAs('app', () => {
-  // Treat unset/blank NODE_ENV like development (matches logger, Sentry, seed scripts).
+  // Treat unset/blank NODE_ENV like development (matches logger, AppSignal, seed scripts).
   const nodeEnv = (process.env.NODE_ENV ?? '').trim() || 'development';
 
   return {

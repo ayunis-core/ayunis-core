@@ -293,7 +293,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     // (CrawlDomainAccessDeniedError, 404) — both extend ApplicationError and
     // must keep their own status rather than being rewritten to a 422. These
     // are expected outcomes (404/408/413/422), so they are NOT logged at error
-    // level here — doing so would flood Sentry on every crawl.
+    // level here — doing so would flood AppSignal on every crawl.
     if (error instanceof ApplicationError) {
       throw error;
     }

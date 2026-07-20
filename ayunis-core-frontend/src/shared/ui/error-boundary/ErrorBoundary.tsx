@@ -1,6 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { ErrorFallback } from './ErrorFallback';
-import { Sentry } from '@/shared/lib/sentry';
+import { reportError } from '@/shared/lib/appsignal';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import { attemptChunkReload } from '@/shared/lib/chunk-reload-guard';
 
@@ -31,9 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    Sentry.captureException(error, {
-      extra: { componentStack: errorInfo.componentStack },
-    });
+    reportError(error, { componentStack: errorInfo.componentStack });
   }
 
   handleReset = () => {

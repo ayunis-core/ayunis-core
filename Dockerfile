@@ -72,6 +72,8 @@ COPY --from=build /prod/backend/node_modules ./node_modules
 COPY --from=build /prod/backend/package.json ./package.json
 COPY --from=build /usr/src/app/ayunis-core-backend/dist ./dist
 COPY --from=build /usr/src/app/ayunis-core-backend/frontend ./dist/frontend
+# AppSignal bootstrap, loaded before the app via --require in CMD
+COPY --from=build /usr/src/app/ayunis-core-backend/appsignal.cjs ./appsignal.cjs
 
 # Uploads dir (resolved relative to cwd = /app at runtime; matches the
 # app-uploads:/app/uploads compose mount)
@@ -87,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application (cwd /app → dist/frontend served, ./uploads = /app/uploads)
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "--require", "./appsignal.cjs", "dist/src/main.js"]

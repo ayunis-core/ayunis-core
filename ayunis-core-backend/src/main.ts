@@ -1,7 +1,8 @@
 // Load environment variables first (.env.dev overrides .env when present)
+// AppSignal is initialized even earlier, via --require ./appsignal.cjs (see
+// the start scripts / Dockerfile CMD), so its OpenTelemetry instrumentation
+// patches core modules before anything below is imported.
 import './config/env';
-// Sentry - !! Initialize Sentry before any other imports
-import './common/sentry/instrument';
 // Utils
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';

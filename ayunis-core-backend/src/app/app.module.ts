@@ -38,7 +38,6 @@ import { rootConfigs } from '../config/root-configs';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
-import { SentryContextMiddleware } from '../common/middleware/sentry-context.middleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import type { RedisConfig } from '../config/redis.config';
@@ -49,7 +48,6 @@ import { ClsModule } from 'nestjs-cls';
 import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
-import { SentryModule } from '@sentry/nestjs/setup';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from '../integrations/integrations.module';
@@ -110,7 +108,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       },
     }),
     EventEmitterModule.forRoot(),
-    SentryModule.forRoot(),
     IntegrationsModule,
     ContextModule, // Global
     ModelsModule,
@@ -150,8 +147,8 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     // ApplicationErrorFilter is the single catch-all filter.
     // - ApplicationErrors → proper HTTP status via toHttpException()
     // - Everything else   → NestJS BaseExceptionFilter defaults
-    // @SentryExceptionCaptured() on catch() reports unexpected errors to Sentry.
-    // 4xx errors are dropped by the beforeSend hook in instrument.ts.
+    // Unexpected (5xx) errors are reported to AppSignal inside catch();
+    // 4xx errors are expected client errors and are never reported.
     {
       provide: APP_FILTER,
       useClass: PayloadTooLargeExceptionFilter,
@@ -163,7 +160,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     Logger,
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
-    SentryContextMiddleware,
     IsCloudUseCase,
     IsRegistrationDisabledUseCase,
   ],
@@ -171,11 +167,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(
-        CookieParserMiddleware,
-        SecurityHeadersMiddleware,
-        SentryContextMiddleware,
-      )
+      .apply(CookieParserMiddleware, SecurityHeadersMiddleware)
       .forRoutes('*');
   }
 }

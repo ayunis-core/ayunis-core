@@ -123,7 +123,7 @@ export class CrawlUrlUseCase {
     } catch (error) {
       // Both the URL and a downstream error message can carry signed query
       // tokens; log a redacted URL and a stable error code only, never the raw
-      // URL query or error text, so secrets never reach centralized logs/Sentry.
+      // URL query or error text, so secrets never reach centralized logs/AppSignal.
       this.logger.warn(
         `Skipping page during crawl: ${this.redactUrl(url)} (${this.describeError(error)})`,
       );
