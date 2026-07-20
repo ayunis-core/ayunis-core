@@ -4,8 +4,6 @@ import { InternetSearchHandler } from '../../application/ports/internet-search.h
 import { InternetSearchResult } from '../../domain/internet-search-result.entity';
 import { InternetSearchResultType } from '../../domain/value-objects/internet-search-result-type.enum';
 
-// Parity with the Brave adapter's context budget (up to 5 web + 5 news = 10 items
-// fed into the chat tool). Staan is web-only, so cap the web hits at the same total.
 const MAX_RESULTS = 10;
 
 type StaanSearchResult = {
