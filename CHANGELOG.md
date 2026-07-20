@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.15.0](https://github.com/ayunis-core/ayunis-core/compare/v2.14.0...v2.15.0) (2026-07-20)
+
+
+### Features
+
+* **academy:** certificate archive in user settings (AYC-247) ([#1039](https://github.com/ayunis-core/ayunis-core/issues/1039)) ([aaff506](https://github.com/ayunis-core/ayunis-core/commit/aaff506e056cff788e707cf9a5242568dcf870a1))
+* **academy:** download ki-fuehrerschein certificate after completing the academy (AYC-246) ([#1038](https://github.com/ayunis-core/ayunis-core/issues/1038)) ([f930dfd](https://github.com/ayunis-core/ayunis-core/commit/f930dfd826e5bc5d8caa7ae66a66a924068c56f2))
+* **auth:** add server-side sessions with refresh rotation and revocation (AYC-452) ([#1047](https://github.com/ayunis-core/ayunis-core/issues/1047)) ([2beb676](https://github.com/ayunis-core/ayunis-core/commit/2beb6760ef514c43f16485ff988c2d5ab7da514a))
+* **models:** make image-generation models team-restrictable (AYC-325) ([9e355af](https://github.com/ayunis-core/ayunis-core/commit/9e355afcb9bc4eeb365f69aad8ffb7c3f607b49c))
+* **models:** make image-generation models team-restrictable (AYC-325) ([2523935](https://github.com/ayunis-core/ayunis-core/commit/2523935b3e98e48f77a0ff19fee17954ab809719))
+* **transcriptions:** make mistral transcription model configurable (AYC-000) ([#955](https://github.com/ayunis-core/ayunis-core/issues/955)) ([6445961](https://github.com/ayunis-core/ayunis-core/commit/644596144715600575ff051c37f956a83ffc57db))
+* **users:** cascade user deletion to all dependent data (AYC-382) ([#929](https://github.com/ayunis-core/ayunis-core/issues/929)) ([295ba27](https://github.com/ayunis-core/ayunis-core/commit/295ba2768fab2bdd893b0ab1b8255fbc9e6da660))
+
+
+### Bug Fixes
+
+* **auth:** discriminate JWT types and stop forged-cookie session minting (AYC-451) ([#1045](https://github.com/ayunis-core/ayunis-core/issues/1045)) ([069834e](https://github.com/ayunis-core/ayunis-core/commit/069834ef152149566a89acc23b7d8a9c7115c25b))
+* **auth:** make password reset tokens single-use and hashed at rest (AYC-350) ([#1046](https://github.com/ayunis-core/ayunis-core/issues/1046)) ([8a8b9da](https://github.com/ayunis-core/ayunis-core/commit/8a8b9da56cc94bd8877ce4703797cd4159d8a741))
+* **dev:** export infra secrets before compose in down, status, and logs (AYC-000) ([#1023](https://github.com/ayunis-core/ayunis-core/issues/1023)) ([f33f18e](https://github.com/ayunis-core/ayunis-core/commit/f33f18e386ccab6918cb4f8525f6ed004de29a00))
+* **models:** bound all llm, embeddings and file-api clients with explicit timeouts (AYC-422) ([#1004](https://github.com/ayunis-core/ayunis-core/issues/1004)) ([bad851a](https://github.com/ayunis-core/ayunis-core/commit/bad851a1e6ce4345e852f0b0dbcddaaef3e7fe7d))
+* **models:** cascade team-scoped image permits on org model delete (AYC-325) ([342680f](https://github.com/ayunis-core/ayunis-core/commit/342680fea4e6bcd0837a5b3d5523373370af44c6))
+* **models:** surface load error on team image-generation models (AYC-325) ([1ad689d](https://github.com/ayunis-core/ayunis-core/commit/1ad689d5394134c8f3f6400b7f2c8c9a84c10e58))
+* **skills:** install marketplace ai description as skill trigger (AYC-456) ([#1048](https://github.com/ayunis-core/ayunis-core/issues/1048)) ([cc9f356](https://github.com/ayunis-core/ayunis-core/commit/cc9f3565a28e80c0ab17da0c48d37a01b4ef8289))
+
+
+### Code Refactoring
+
+* **academy:** split academy page into per-route slices (AYC-000) ([#1057](https://github.com/ayunis-core/ayunis-core/issues/1057)) ([23cd831](https://github.com/ayunis-core/ayunis-core/commit/23cd83112681ec313b8678605ba5803fee3f41db))
+* **backend:** split oversized mcp-create and brave-search methods (AYC-000) ([#1035](https://github.com/ayunis-core/ayunis-core/issues/1035)) ([5225b8f](https://github.com/ayunis-core/ayunis-core/commit/5225b8fba9988620c4e4c18df6a8a3303a797c1b))
+* **common:** move rate limiting from iam authorization to the shared kernel (AYC-000) ([#1060](https://github.com/ayunis-core/ayunis-core/issues/1060)) ([5aa4068](https://github.com/ayunis-core/ayunis-core/commit/5aa4068de1c98a05926797698e373a9ec7a71536))
+* **models:** move single-per-org invariant to application layer (AYC-325) ([778aa46](https://github.com/ayunis-core/ayunis-core/commit/778aa460ea6733d3210cf28995df40308b492183))
+
+
+### Documentation
+
+* **architecture:** add SVG of architecture and run workflow (AYC-000) ([#953](https://github.com/ayunis-core/ayunis-core/issues/953)) ([c17f85f](https://github.com/ayunis-core/ayunis-core/commit/c17f85f25c4772208cbea78ba3d468028505f0d3))
+* **skills:** sync skill updates from agentfiles store (AYC-000) ([#1058](https://github.com/ayunis-core/ayunis-core/issues/1058)) ([7d7d2db](https://github.com/ayunis-core/ayunis-core/commit/7d7d2db86175708ce5f12eb68b7e3c79ea8e7874))
+
+
+### Miscellaneous
+
+* **ci:** add sirolad and pavellnk to codeowners (AYC-000) ([c6d27b7](https://github.com/ayunis-core/ayunis-core/commit/c6d27b7faa9c8d273f56b27a6024eff05cd20544))
+* **ci:** add sirolad and pavellnk to codeowners (AYC-000) ([#1032](https://github.com/ayunis-core/ayunis-core/issues/1032)) ([3822670](https://github.com/ayunis-core/ayunis-core/commit/3822670d17a7c51f50e55c6f433f975da08f024c))
+* **deps:** ignore node major bumps in docker updates (AYC-423) ([#1024](https://github.com/ayunis-core/ayunis-core/issues/1024)) ([63794f7](https://github.com/ayunis-core/ayunis-core/commit/63794f73d784ed98f8736d5339e4b1fa737e1de3))
+* **deps:** upgrade workspace to typescript 6 (AYC-450) ([#1034](https://github.com/ayunis-core/ayunis-core/issues/1034)) ([e51b367](https://github.com/ayunis-core/ayunis-core/commit/e51b3675f3830ad6f82e6df4bc899d9a14dc1737))
+* **lint:** apply prettier backlog fixes across backend (AYC-000) ([#1036](https://github.com/ayunis-core/ayunis-core/issues/1036)) ([483b2cf](https://github.com/ayunis-core/ayunis-core/commit/483b2cfa3751643e37e014006686fff7b0bf7aef))
+* **lint:** exempt tanstack route files from react-refresh purity rule (AYC-000) ([#1056](https://github.com/ayunis-core/ayunis-core/issues/1056)) ([ff9943f](https://github.com/ayunis-core/ayunis-core/commit/ff9943fd1e03d92c1bfb29c4336134f44e1801a7))
+
+
+### CI/CD
+
+* split schema drift check into DB and API jobs (AYC-173) ([#1040](https://github.com/ayunis-core/ayunis-core/issues/1040)) ([0359205](https://github.com/ayunis-core/ayunis-core/commit/035920505f6c5cd3ca5a31e4059a87b67ebef177))
+
 ## [2.14.0](https://github.com/ayunis-core/ayunis-core/compare/v2.13.0...v2.14.0) (2026-07-13)
 
 
