@@ -71,8 +71,10 @@ export class AgentRecord extends BaseRecord {
 The dev stack must be running (`./dev status`).
 
 ```bash
-pnpm run migration:generate:dev -- src/db/migrations/DescriptiveMigrationName
+pnpm run migration:generate:dev src/db/migrations/DescriptiveMigrationName
 ```
+
+> **No `--` before the path.** pnpm forwards the trailing path straight to the script. Adding a `--` separator makes pnpm swallow the path, so TypeORM sees zero arguments and aborts with `Nicht genügend Argumente ohne Optionen: 0 vorhanden, mindestens 1 benötigt` (`ELIFECYCLE Command failed with exit code 1`). Pass the path with no `--`.
 
 ### 3. Review the Generated Migration
 
@@ -91,7 +93,7 @@ pnpm run migration:run:dev
 ### 5. Verify Zero Drift
 
 ```bash
-pnpm run migration:generate:dev -- src/db/migrations/VerifyNoDrift
+pnpm run migration:generate:dev src/db/migrations/VerifyNoDrift
 ```
 
 This **must** print `No changes in database schema were found`. If it generates a file, entities and migrations are still out of sync — investigate before committing.
@@ -152,7 +154,7 @@ Verify zero drift before making further changes:
 
 ```bash
 cd ayunis-core-backend
-pnpm run migration:generate:dev -- src/db/migrations/VerifyNoDrift
+pnpm run migration:generate:dev src/db/migrations/VerifyNoDrift
 # Must print: "No changes in database schema were found"
 ```
 
