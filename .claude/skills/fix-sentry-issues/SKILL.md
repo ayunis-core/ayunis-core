@@ -93,3 +93,10 @@ Don't resolve the Sentry issue from the CLI — let it auto-resolve on the next 
 - `sentry issue view <ID> -w` opens it in the browser if the user wants to share a link
 - Use `sentry event list <SHORT_ID>` to see multiple events for the same issue if you need to spot variations in user/request shape
 - If auto-detection picks the wrong project, always pass `locaboo/ayunis-core-backend` or `locaboo/ayunis-core-frontend` explicitly
+- For data the `sentry issue` subcommands don't expose — performance/transaction metrics, raw events, org/project discovery — drop to `sentry api <path>`. **It prints a non-JSON preamble line before the JSON body, so piping straight to `jq` fails** (`jq: error … Cannot index string with string "data"`). Strip the preamble first:
+
+  ```bash
+  sentry api "/api/0/organizations/locaboo/events/?field=transaction&query=…&per_page=100" \
+    | sed -n '/^{/,$p' | jq -r '.data[] | …'
+  # `tail -n +2` also works if it's always exactly one preamble line
+  ```
