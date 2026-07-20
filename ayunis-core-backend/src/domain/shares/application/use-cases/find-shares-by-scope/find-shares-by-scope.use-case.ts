@@ -7,8 +7,8 @@ import {
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindSharesByScopeQuery } from './find-shares-by-scope.query';
-import { Share } from '../../../domain/share.entity';
-import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
+import { Share } from 'src/domain/shares/domain/share.entity';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 import { ListMyTeamsUseCase } from 'src/iam/teams/application/use-cases/list-my-teams/list-my-teams.use-case';
 
 /**

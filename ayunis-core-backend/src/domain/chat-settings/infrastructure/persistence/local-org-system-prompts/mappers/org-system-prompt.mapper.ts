@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrgSystemPromptRecord } from '../schema/org-system-prompt.record';
-import { OrgSystemPrompt } from '../../../../domain/org-system-prompt.entity';
+import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
 
 @Injectable()
 export class OrgSystemPromptMapper {

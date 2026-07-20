@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';

@@ -1,9 +1,9 @@
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
-import { UserRole } from '../../../../../users/domain/value-objects/role.object';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 
 @Entity({ name: 'invites' })
 export class InviteRecord extends BaseRecord {

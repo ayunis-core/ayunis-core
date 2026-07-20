@@ -7,7 +7,7 @@ import {
   MarketplaceUnavailableError,
 } from 'src/domain/marketplace/application/marketplace.errors';
 import { MarketplaceInstallFailedError } from '../../skills.errors';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
 import type { MarketplaceSkillInstallationService } from '../../services/marketplace-skill-installation.service';
 import { MarketplaceSkillInstalledEvent } from '../../events/marketplace-skill-installed.event';

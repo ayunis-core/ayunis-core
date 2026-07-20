@@ -1,11 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
-import { StorageObject } from '../../../domain/storage-object.entity';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { GetObjectInfoCommand } from './get-object-info.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
-import { StorageUrl } from '../../../domain/storage-url.entity';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
 export class GetObjectInfoUseCase {

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ResetPasswordCommand } from './reset-password.command';
-import { InvalidTokenError } from '../../../../authentication/application/authentication.errors';
+import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { PasswordSetTokenService } from '../../services/password-set-token.service';
@@ -10,8 +10,8 @@ import { UserUnexpectedError } from '../../users.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
-import { InvalidPasswordError } from '../../../../authentication/application/authentication.errors';
-import type { PasswordSetToken } from '../../../domain/password-set-token.entity';
+import { InvalidPasswordError } from 'src/iam/authentication/application/authentication.errors';
+import type { PasswordSetToken } from 'src/iam/users/domain/password-set-token.entity';
 import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.command';
 

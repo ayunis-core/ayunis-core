@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { FindArtifactsByThreadQuery } from './find-artifacts-by-thread.query';
-import { Artifact } from '../../../domain/artifact.entity';
+import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedArtifactError } from '../../artifacts.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

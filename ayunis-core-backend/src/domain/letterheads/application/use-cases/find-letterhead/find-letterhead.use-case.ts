@@ -3,7 +3,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import {
   LetterheadNotFoundError,
   UnexpectedLetterheadError,

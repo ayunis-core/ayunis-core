@@ -8,18 +8,18 @@ import {
   TableInheritance,
 } from 'typeorm';
 import type { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import {
   DataType,
   FileType,
   SourceType,
   TextType,
-} from '../../../../domain/source-type.enum';
-import { SourceCreator } from '../../../../domain/source-creator.enum';
-import { SourceStatus } from '../../../../domain/source-status.enum';
+} from 'src/domain/sources/domain/source-type.enum';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
-import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })

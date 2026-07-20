@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import { FindActiveAlwaysOnTemplatesQuery } from './find-active-always-on-templates.query';
 import { UnexpectedSkillTemplateError } from '../../skill-templates.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

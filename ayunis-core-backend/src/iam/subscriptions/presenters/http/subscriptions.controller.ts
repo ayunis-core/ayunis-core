@@ -9,7 +9,7 @@ import {
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { ActiveSubscriptionResponseDto } from './dto/active-subscription-response.dto';
 import { HasActiveSubscriptionUseCase } from '../../application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from '../../application/use-cases/has-active-subscription/has-active-subscription.query';

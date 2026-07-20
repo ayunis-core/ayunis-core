@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { GetInvitesByOrgQuery } from './get-invites-by-org.query';
-import { Invite } from '../../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { UnauthorizedInviteAccessError } from '../../invites.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThanOrEqual, Not, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { PasswordSetTokensRepository } from '../../../application/ports/password-set-tokens.repository';
-import { PasswordSetToken } from '../../../domain/password-set-token.entity';
-import type { PasswordSetTokenPurpose } from '../../../domain/value-objects/password-set-token-purpose.enum';
+import { PasswordSetTokensRepository } from 'src/iam/users/application/ports/password-set-tokens.repository';
+import { PasswordSetToken } from 'src/iam/users/domain/password-set-token.entity';
+import type { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { PasswordSetTokenRecord } from './schema/password-set-token.record';
 import { PasswordSetTokenMapper } from './mappers/password-set-token.mapper';
 

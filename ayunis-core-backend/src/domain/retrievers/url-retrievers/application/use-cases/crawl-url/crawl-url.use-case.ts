@@ -3,12 +3,12 @@ import type { UUID } from 'crypto';
 import pLimit from 'p-limit';
 import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from '../retrieve-url/retrieve-url.command';
-import { UrlRetrieverResult } from '../../../domain/url-retriever-result.entity';
+import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import {
   UrlCrawlPage,
   UrlCrawlResult,
-} from '../../../domain/url-crawl-result.entity';
-import { UrlCrawlConstants } from '../../../domain/url-crawl.constants';
+} from 'src/domain/retrievers/url-retrievers/domain/url-crawl-result.entity';
+import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
 import { CrawlUrlCommand } from './crawl-url.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 

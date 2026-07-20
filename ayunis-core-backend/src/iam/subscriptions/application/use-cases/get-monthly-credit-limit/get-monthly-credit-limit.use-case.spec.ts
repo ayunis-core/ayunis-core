@@ -3,11 +3,11 @@ import { Test } from '@nestjs/testing';
 import { GetMonthlyCreditLimitUseCase } from './get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
-import { UsageBasedSubscription } from '../../../domain/usage-based-subscription.entity';
-import { SeatBasedSubscription } from '../../../domain/seat-based-subscription.entity';
-import { SubscriptionBillingInfo } from '../../../domain/subscription-billing-info.entity';
+import { UsageBasedSubscription } from 'src/iam/subscriptions/domain/usage-based-subscription.entity';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
+import { SubscriptionBillingInfo } from 'src/iam/subscriptions/domain/subscription-billing-info.entity';
 import type { UUID } from 'crypto';
-import { RenewalCycle } from '../../../domain/value-objects/renewal-cycle.enum';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
 
 function createBillingInfo(): SubscriptionBillingInfo {
   return new SubscriptionBillingInfo({

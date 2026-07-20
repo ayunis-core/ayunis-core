@@ -3,7 +3,7 @@ import {
   Artifact,
   DiagramArtifact,
   DocumentArtifact,
-} from '../../../../domain/artifact.entity';
+} from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactRecord } from '../schema/artifact.record';
 import { DocumentArtifactRecord } from '../schema/document-artifact.record';
 import { DiagramArtifactRecord } from '../schema/diagram-artifact.record';

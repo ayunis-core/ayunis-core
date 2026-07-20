@@ -5,10 +5,10 @@ import type { UUID } from 'crypto';
 import { UpdateSkillTemplateUseCase } from './update-skill-template.use-case';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
-import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
+import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import {
   DuplicateSkillTemplateNameError,
   SkillTemplateNotFoundError,

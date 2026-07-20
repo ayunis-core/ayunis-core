@@ -4,7 +4,7 @@ import {
   UsersListResponseDto,
   PaginatedUsersListResponseDto,
 } from '../dtos/user-response.dto';
-import { User } from '../../../domain/user.entity';
+import { User } from 'src/iam/users/domain/user.entity';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()

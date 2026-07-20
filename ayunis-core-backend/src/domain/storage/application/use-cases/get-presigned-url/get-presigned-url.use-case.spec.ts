@@ -4,9 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { GetPresignedUrlUseCase } from './get-presigned-url.use-case';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
-import { PresignedUrl } from '../../../domain/presigned-url.entity';
-import { StorageUrl } from '../../../domain/storage-url.entity';
-import storageConfig from '../../../../../config/storage.config';
+import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
+import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
+import storageConfig from 'src/config/storage.config';
 import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
 
 describe('GetPresignedUrlUseCase', () => {

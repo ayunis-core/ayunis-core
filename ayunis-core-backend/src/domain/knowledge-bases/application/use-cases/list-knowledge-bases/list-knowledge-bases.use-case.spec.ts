@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { ListKnowledgeBasesUseCase } from './list-knowledge-bases.use-case';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
 import type { UUID } from 'crypto';
 

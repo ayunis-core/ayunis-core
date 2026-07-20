@@ -1,5 +1,5 @@
 import { UUID } from 'crypto';
-import { MessageRecord } from '../../../../../messages/infrastructure/persistence/local/schema/message.record';
+import { MessageRecord } from 'src/domain/messages/infrastructure/persistence/local/schema/message.record';
 import {
   Column,
   Entity,
@@ -10,12 +10,12 @@ import {
   JoinColumn,
   JoinTable,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { PermittedModelRecord } from '../../../../../models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record';
 import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
-import { McpIntegrationRecord } from '../../../../../mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {

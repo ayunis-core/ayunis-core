@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrgChatSettingsRecord } from '../schema/org-chat-settings.record';
-import { OrgChatSettings } from '../../../../domain/org-chat-settings.entity';
+import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 
 @Injectable()
 export class OrgChatSettingsMapper {

@@ -1,4 +1,4 @@
-import { OrgMfaRequirement } from '../../../../domain/org-mfa-requirement.entity';
+import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
 import { OrgMfaRequirementRecord } from '../schema/org-mfa-requirement.record';
 
 export class OrgMfaRequirementMapper {

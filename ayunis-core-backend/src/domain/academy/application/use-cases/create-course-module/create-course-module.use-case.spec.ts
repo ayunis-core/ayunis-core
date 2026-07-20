@@ -6,8 +6,8 @@ import { CreateCourseModuleUseCase } from './create-course-module.use-case';
 import { CreateCourseModuleCommand } from './create-course-module.command';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
+import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import { ChapterNotFoundError } from '../../academy.errors';
 
 describe('CreateCourseModuleUseCase', () => {

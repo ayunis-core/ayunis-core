@@ -4,9 +4,9 @@ import { CreateAssistantMessageUseCase } from './create-assistant-message.use-ca
 import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { CreateAssistantMessageCommand } from './create-assistant-message.command';
-import { AssistantMessage } from '../../../domain/messages/assistant-message.entity';
-import { TextMessageContent } from '../../../domain/message-contents/text-message-content.entity';
-import { ToolUseMessageContent } from '../../../domain/message-contents/tool-use.message-content.entity';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { MessageCreationError } from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';

@@ -1,4 +1,4 @@
-import { BaseRecord } from '../../../../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import {
   Column,
   Entity,

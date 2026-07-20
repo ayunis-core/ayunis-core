@@ -12,7 +12,7 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,

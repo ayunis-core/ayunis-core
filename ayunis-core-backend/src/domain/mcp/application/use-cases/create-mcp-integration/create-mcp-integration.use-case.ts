@@ -8,8 +8,8 @@ import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain';
+import { McpIntegrationKind } from 'src/domain/mcp/domain';
 import {
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
@@ -20,8 +20,8 @@ import {
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UUID } from 'crypto';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain';
 import {
   CredentialFieldType,
   PredefinedMcpIntegrationConfig,

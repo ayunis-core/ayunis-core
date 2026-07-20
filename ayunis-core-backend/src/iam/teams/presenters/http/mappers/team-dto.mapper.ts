@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { TeamWithMemberCount } from '../../../application/use-cases/list-teams/team-with-member-count.view';
+import { TeamWithMemberCount } from 'src/iam/teams/application/use-cases/list-teams/team-with-member-count.view';
 import { TeamResponseDto } from '../dtos/team-response.dto';
 
 @Injectable()

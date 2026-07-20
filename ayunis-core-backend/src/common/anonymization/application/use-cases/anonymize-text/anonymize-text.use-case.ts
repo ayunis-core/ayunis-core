@@ -4,11 +4,11 @@ import {
   AnonymizationResult,
 } from '../../ports/anonymization.port';
 import { AnonymizeTextCommand } from './anonymize-text.command';
-import { filterWhitelistedDetections } from '../../../domain/whitelist-filter';
-import { applyReplacements } from '../../../domain/apply-replacements';
-import { applyMaskReplacements } from '../../../domain/apply-mask-replacements';
-import { PiiDetection } from '../../../domain/pii-detection';
-import { PiiMask } from '../../../domain/pii-mask';
+import { filterWhitelistedDetections } from 'src/common/anonymization/domain/whitelist-filter';
+import { applyReplacements } from 'src/common/anonymization/domain/apply-replacements';
+import { applyMaskReplacements } from 'src/common/anonymization/domain/apply-mask-replacements';
+import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
+import { PiiMask } from 'src/common/anonymization/domain/pii-mask';
 
 @Injectable()
 export class AnonymizeTextUseCase {

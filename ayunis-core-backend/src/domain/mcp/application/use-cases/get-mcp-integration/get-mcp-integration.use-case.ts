@@ -2,7 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { GetMcpIntegrationQuery } from './get-mcp-integration.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,

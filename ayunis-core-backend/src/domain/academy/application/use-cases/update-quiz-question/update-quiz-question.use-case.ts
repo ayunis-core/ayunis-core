@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
-import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   QuizQuestionNotFoundError,
   UnexpectedAcademyError,

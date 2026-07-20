@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { UpdateCourseModuleUseCase } from './update-course-module.use-case';
 import { UpdateCourseModuleCommand } from './update-course-module.command';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
-import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
+import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import { CourseModuleNotFoundError } from '../../academy.errors';
 
 describe('UpdateCourseModuleUseCase', () => {

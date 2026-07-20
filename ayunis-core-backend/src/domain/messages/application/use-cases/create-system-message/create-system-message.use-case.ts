@@ -1,11 +1,11 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CreateSystemMessageCommand } from './create-system-message.command';
-import { SystemMessage } from '../../../domain/messages/system-message.entity';
+import { SystemMessage } from 'src/domain/messages/domain/messages/system-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
 } from '../../ports/messages.repository';
-import { MessageRole } from '../../../domain/value-objects/message-role.object';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import { MessageCreationError } from '../../messages.errors';
 
 @Injectable()

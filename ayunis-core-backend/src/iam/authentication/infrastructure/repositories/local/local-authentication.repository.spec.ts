@@ -4,9 +4,9 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LocalAuthenticationRepository } from './local-authentication.repository';
-import { ActiveUser } from '../../../domain/active-user.entity';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
-import { SystemRole } from '../../../../users/domain/value-objects/system-role.enum';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 describe('LocalAuthenticationRepository', () => {
   let repository: LocalAuthenticationRepository;

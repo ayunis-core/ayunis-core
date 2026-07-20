@@ -12,9 +12,9 @@ import {
   McpIntegrationAccessDeniedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('DeleteMcpIntegrationUseCase', () => {
   let useCase: DeleteMcpIntegrationUseCase;

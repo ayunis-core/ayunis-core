@@ -5,7 +5,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { AddDocumentToKnowledgeBaseUseCase } from './add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';

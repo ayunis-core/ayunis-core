@@ -1,7 +1,7 @@
 import { ThreadSourceAssignmentRecord } from '../schema/thread-source-assignment.record';
 import { Injectable } from '@nestjs/common';
-import { SourceAssignment } from '../../../../domain/thread-source-assignment.entity';
-import { SourceMapper } from '../../../../../sources/infrastructure/persistence/local/mappers/source.mapper';
+import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { UUID } from 'crypto';
 
 @Injectable()

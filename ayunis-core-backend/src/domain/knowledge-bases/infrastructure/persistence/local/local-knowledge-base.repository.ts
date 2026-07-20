@@ -2,13 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { KnowledgeBaseRepository } from '../../../application/ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
-import { SourceRecord } from '../../../../sources/infrastructure/persistence/local/schema/source.record';
-import type { Source } from '../../../../sources/domain/source.entity';
-import { SourceMapper } from '../../../../sources/infrastructure/persistence/local/mappers/source.mapper';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 
 @Injectable()
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {

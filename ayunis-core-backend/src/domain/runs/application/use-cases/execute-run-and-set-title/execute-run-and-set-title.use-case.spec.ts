@@ -14,7 +14,7 @@ import type {
   RunMasksEvent,
   RunMessageEvent,
 } from '../../run-events';
-import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import { RunPiiMasksUpdate } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';

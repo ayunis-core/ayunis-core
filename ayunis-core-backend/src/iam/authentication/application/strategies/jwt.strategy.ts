@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { ActiveUser } from '../../domain/active-user.entity';
 import { Request } from 'express';
 import { UUID } from 'crypto';
-import { UserRole } from '../../../users/domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { JWT_SECRET } from '../tokens/jwt-secret.token';
 

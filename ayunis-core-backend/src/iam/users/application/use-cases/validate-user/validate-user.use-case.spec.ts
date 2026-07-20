@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { ValidateUserUseCase } from './validate-user.use-case';
 import { ValidateUserQuery } from './validate-user.query';
 import { UsersRepository } from '../../ports/users.repository';
-import { CompareHashUseCase } from '../../../../hashing/application/use-cases/compare-hash/compare-hash.use-case';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   UserNotFoundError,
   UserAuthenticationFailedError,

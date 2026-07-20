@@ -5,7 +5,7 @@ import { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
 import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
-import { AnonymizationWhitelistEntry } from '../../../domain/anonymization-whitelist-entry.entity';
+import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 
 describe('AnonymizeTextForOrgUseCase', () => {

@@ -5,7 +5,7 @@ import {
   ArtifactNotFoundError,
   UnexpectedArtifactError,
 } from '../../artifacts.errors';
-import { Artifact } from '../../../domain/artifact.entity';
+import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

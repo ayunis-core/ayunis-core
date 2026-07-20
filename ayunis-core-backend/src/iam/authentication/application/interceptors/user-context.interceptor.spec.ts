@@ -1,8 +1,8 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
 import { ActiveUser } from '../../domain/active-user.entity';
-import { UserRole } from '../../../users/domain/value-objects/role.object';
-import { SystemRole } from '../../../users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserContextInterceptor } from './user-context.interceptor';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { ConfigService } from '@nestjs/config';

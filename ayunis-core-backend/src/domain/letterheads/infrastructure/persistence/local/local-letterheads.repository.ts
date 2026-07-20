@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { LetterheadsRepository } from '../../../application/ports/letterheads-repository.port';
-import { LetterheadNotFoundError } from '../../../application/letterheads.errors';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadRecord } from './schema/letterhead.record';
 import { LetterheadMapper } from './mappers/letterhead.mapper';
 

@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { FindAlwaysOnTemplateByNameUseCase } from './find-always-on-template-by-name.use-case';
 import { FindAlwaysOnTemplateByNameQuery } from './find-always-on-template-by-name.query';
 import { FindActiveAlwaysOnTemplatesUseCase } from '../find-active-always-on-templates/find-active-always-on-templates.use-case';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
 
 describe('FindAlwaysOnTemplateByNameUseCase', () => {
   let useCase: FindAlwaysOnTemplateByNameUseCase;

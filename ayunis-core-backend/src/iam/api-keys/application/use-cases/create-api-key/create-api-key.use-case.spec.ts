@@ -8,7 +8,7 @@ import { CreateApiKeyCommand } from './create-api-key.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import {
   ApiKeyExpirationInPastError,
   ApiKeyInvalidInputError,

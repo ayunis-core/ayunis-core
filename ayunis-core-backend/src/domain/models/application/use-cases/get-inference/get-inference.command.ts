@@ -1,7 +1,7 @@
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import type { ModelToolChoice } from '../../../domain/value-objects/model-tool-choice.enum';
+import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Message } from 'src/domain/messages/domain/message.entity';
-import type { ToolSchema } from '../../../domain/value-objects/tool-schema';
+import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 
 export class GetInferenceCommand {
   model: LanguageModel;

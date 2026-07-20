@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { KnowledgeBaseAssignment } from '../../../../domain/thread-knowledge-base-assignment.entity';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 import { ThreadKnowledgeBaseAssignmentRecord } from '../schema/thread-knowledge-base-assignment.record';
 import type { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 

@@ -5,8 +5,8 @@ import { RemoveKnowledgeBaseFromThreadUseCase } from './remove-knowledge-base-fr
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Thread } from '../../../domain/thread.entity';
-import { KnowledgeBaseAssignment } from '../../../domain/thread-knowledge-base-assignment.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';

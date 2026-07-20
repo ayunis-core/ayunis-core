@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { AddonStatus } from '../../../domain/addon-status';
-import { AddonType } from '../../../domain/value-objects/addon-type.enum';
+import { AddonStatus } from 'src/iam/addons/domain/addon-status';
+import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
 import { OrgAddonRepository } from '../../ports/org-addon.repository';
 import { UnexpectedAddonError } from '../../addons.errors';
 import { ListOrgAddonsQuery } from './list-org-addons.query';

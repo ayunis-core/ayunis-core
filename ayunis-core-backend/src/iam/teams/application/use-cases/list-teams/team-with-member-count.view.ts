@@ -1,4 +1,4 @@
-import type { Team } from '../../../domain/team.entity';
+import type { Team } from 'src/iam/teams/domain/team.entity';
 
 export interface TeamWithMemberCount {
   team: Team;

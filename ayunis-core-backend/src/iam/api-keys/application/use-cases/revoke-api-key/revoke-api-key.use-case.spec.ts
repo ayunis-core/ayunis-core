@@ -6,7 +6,7 @@ import { RevokeApiKeyUseCase } from './revoke-api-key.use-case';
 import { RevokeApiKeyCommand } from './revoke-api-key.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ApiKeyNotFoundError } from '../../api-keys.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 

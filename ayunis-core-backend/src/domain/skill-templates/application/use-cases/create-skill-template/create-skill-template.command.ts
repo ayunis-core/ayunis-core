@@ -1,4 +1,4 @@
-import type { DistributionMode } from '../../../domain/distribution-mode.enum';
+import type { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 
 export class CreateSkillTemplateCommand {
   public readonly name: string;

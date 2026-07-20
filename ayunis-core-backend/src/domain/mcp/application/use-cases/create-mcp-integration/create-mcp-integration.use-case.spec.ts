@@ -13,22 +13,22 @@ import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
+} from 'src/domain/mcp/domain/mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
 import type {
   CredentialFieldValue,
   PredefinedMcpIntegrationConfig,
-} from '../../../domain/predefined-mcp-integration-config';
-import { CredentialFieldType } from '../../../domain/predefined-mcp-integration-config';
+} from 'src/domain/mcp/domain/predefined-mcp-integration-config';
+import { CredentialFieldType } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import {
   DuplicateMcpIntegrationError,
   InvalidPredefinedSlugError,

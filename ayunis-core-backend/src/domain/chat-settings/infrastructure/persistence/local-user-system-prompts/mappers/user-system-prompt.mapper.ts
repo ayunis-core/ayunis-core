@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserSystemPromptRecord } from '../schema/user-system-prompt.record';
-import { UserSystemPrompt } from '../../../../domain/user-system-prompt.entity';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 
 @Injectable()
 export class UserSystemPromptMapper {

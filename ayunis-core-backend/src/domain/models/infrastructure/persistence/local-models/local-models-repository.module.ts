@@ -7,7 +7,7 @@ import {
   ImageGenerationModelRecord,
 } from './schema/model.record';
 import { LocalModelsRepository } from './local-models.repository';
-import { ModelsRepository } from '../../../application/ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { ModelMapper } from './mappers/model.mapper';
 
 @Module({

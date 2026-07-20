@@ -1,5 +1,5 @@
-import type { PiiMask } from '../../../domain/pii-mask';
-import type { PiiWhitelistEntry } from '../../../domain/pii-whitelist-entry';
+import type { PiiMask } from 'src/common/anonymization/domain/pii-mask';
+import type { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 
 export class AnonymizeTextCommand {
   constructor(

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,

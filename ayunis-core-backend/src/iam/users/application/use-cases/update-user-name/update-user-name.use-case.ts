@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
-import { User } from '../../../domain/user.entity';
+import { User } from 'src/iam/users/domain/user.entity';
 import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserUpdatedEvent } from '../../events/user-updated.event';

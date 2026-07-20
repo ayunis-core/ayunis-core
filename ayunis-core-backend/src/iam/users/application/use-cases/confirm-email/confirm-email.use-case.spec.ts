@@ -8,8 +8,8 @@ import {
   EmailConfirmationJwtService,
   EMAIL_CONFIRMATION_TOKEN_TYPE,
 } from '../../services/email-confirmation-jwt.service';
-import { User } from '../../../domain/user.entity';
-import { UserRole } from '../../../domain/value-objects/role.object';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   InvalidEmailConfirmationTokenError,
   UserNotFoundError,

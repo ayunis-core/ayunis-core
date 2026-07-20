@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request, Response } from 'express';
-import { OpenAIErrorMapper } from '../../../application/mappers/openai-error.mapper';
+import { OpenAIErrorMapper } from 'src/domain/openai-compat/application/mappers/openai-error.mapper';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 
 /**

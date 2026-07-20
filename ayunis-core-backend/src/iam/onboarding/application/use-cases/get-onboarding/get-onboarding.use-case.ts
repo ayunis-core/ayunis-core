@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
 import { GetOnboardingQuery } from './get-onboarding.query';
-import { Onboarding } from '../../../domain/onboarding.entity';
+import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 import { OnboardingUnexpectedError } from '../../onboarding.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 

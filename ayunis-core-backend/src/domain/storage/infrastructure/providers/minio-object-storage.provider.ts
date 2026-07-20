@@ -6,7 +6,7 @@ import {
   ObjectStoragePort,
   type PresignedUrlResponseOverrides,
 } from '../../application/ports/object-storage.port';
-import storageConfig from '../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
 import { StorageObject } from '../../domain/storage-object.entity';
 import { StorageUrl } from '../../domain/storage-url.entity';

@@ -14,8 +14,8 @@ jest.mock('p-limit', () => ({
 import { CrawlUrlUseCase } from './crawl-url.use-case';
 import { CrawlUrlCommand } from './crawl-url.command';
 import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
-import { UrlRetrieverResult } from '../../../domain/url-retriever-result.entity';
-import { UrlCrawlConstants } from '../../../domain/url-crawl.constants';
+import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
+import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
 import { UrlRetrieverProviderNotAvailableError } from '../../url-retriever.errors';
 
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;

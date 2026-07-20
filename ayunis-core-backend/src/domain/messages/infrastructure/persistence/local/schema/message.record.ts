@@ -1,8 +1,8 @@
 import { Column, Entity, ManyToOne, Index } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { ThreadRecord } from '../../../../../threads/infrastructure/persistence/local/schema/thread.record';
-import { MessageRole } from '../../../../domain/value-objects/message-role.object';
-import { MessageContentType } from '../../../../domain/value-objects/message-content-type.object';
+import { BaseRecord } from 'src/common/db/base-record';
+import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
+import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { UUID } from 'crypto';
 import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 

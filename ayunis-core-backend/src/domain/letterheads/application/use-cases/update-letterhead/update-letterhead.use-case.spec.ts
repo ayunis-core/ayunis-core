@@ -15,7 +15,7 @@ import {
   LetterheadNotFoundError,
   LetterheadInvalidPdfError,
 } from '../../letterheads.errors';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 
 async function createSinglePagePdf(): Promise<Buffer> {
   const doc = await PDFDocument.create();

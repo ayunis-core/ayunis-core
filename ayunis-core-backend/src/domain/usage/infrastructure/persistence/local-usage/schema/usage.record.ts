@@ -1,11 +1,11 @@
 import { Entity, Column, Index, ManyToOne, Check } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { ModelRecord } from '../../../../../models/infrastructure/persistence/local-models/schema/model.record';
-import { ApiKeyRecord } from '../../../../../../iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
-import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { ModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 const decimalTransformer = {
   to: (value?: number | null) => value,

@@ -6,8 +6,8 @@ import { CreateQuizQuestionUseCase } from './create-quiz-question.use-case';
 import { CreateQuizQuestionCommand } from './create-quiz-question.command';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   ChapterNotFoundError,
   InvalidQuizQuestionError,

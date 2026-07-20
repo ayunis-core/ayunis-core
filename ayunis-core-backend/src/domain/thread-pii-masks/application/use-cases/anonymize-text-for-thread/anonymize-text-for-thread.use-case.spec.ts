@@ -8,7 +8,7 @@ import { AnonymizationFailedError } from 'src/common/anonymization/application/a
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
-import { ThreadPiiMask } from '../../../domain/thread-pii-mask.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
 
 describe('AnonymizeTextForThreadUseCase', () => {

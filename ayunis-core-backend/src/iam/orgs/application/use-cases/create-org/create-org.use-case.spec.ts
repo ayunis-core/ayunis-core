@@ -4,7 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateOrgUseCase } from './create-org.use-case';
 import { CreateOrgCommand } from './create-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgCreationFailedError } from '../../orgs.errors';
 import { OrgCreatedEvent } from '../../events/org-created.event';
 import type { UUID } from 'crypto';

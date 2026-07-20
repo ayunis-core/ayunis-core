@@ -5,8 +5,8 @@ import { UUID } from 'crypto';
 import {
   FindOneModelParams,
   ModelsRepository,
-} from '../../../application/ports/models.repository';
-import { Model } from '../../../domain/model.entity';
+} from 'src/domain/models/application/ports/models.repository';
+import { Model } from 'src/domain/models/domain/model.entity';
 import {
   EmbeddingModelRecord,
   ImageGenerationModelRecord,

@@ -1,7 +1,7 @@
-import { ModelType } from '../../../../domain/value-objects/model-type.enum';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { ModelProvider } from '../../../../domain/value-objects/model-provider.enum';
-import { EmbeddingDimensions } from '../../../../domain/value-objects/embedding-dimensions.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { Column, Entity, Index, TableInheritance, ChildEntity } from 'typeorm';
 
 const tokenCostColumnOptions = {

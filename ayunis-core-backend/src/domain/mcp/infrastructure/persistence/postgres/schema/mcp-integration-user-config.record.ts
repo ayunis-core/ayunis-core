@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { UUID } from 'crypto';
 import { McpIntegrationRecord } from './mcp-integration.record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity('mcp_integration_user_configs')
 @Unique(['integrationId', 'userId'])

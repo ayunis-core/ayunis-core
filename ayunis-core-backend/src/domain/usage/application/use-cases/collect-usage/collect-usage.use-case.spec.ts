@@ -10,15 +10,15 @@ import {
   UnexpectedUsageError,
 } from '../../usage.errors';
 import { UsageCollectedEvent } from '../../events/usage-collected.event';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
-import { ImageGenerationModel } from '../../../../models/domain/models/image-generation.model';
-import { LanguageModel } from '../../../../models/domain/models/language.model';
-import type { Usage } from '../../../domain/usage.entity';
-import { ContextService } from '../../../../../common/context/services/context.service';
-import { GetCreditsPerEuroUseCase } from '../../../../../iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
-import { PlatformConfigNotFoundError } from '../../../../../iam/platform-config/application/platform-config.errors';
-import { PlatformConfigKey } from '../../../../../iam/platform-config/domain/platform-config-keys.enum';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { Usage } from 'src/domain/usage/domain/usage.entity';
+import { ContextService } from 'src/common/context/services/context.service';
+import { GetCreditsPerEuroUseCase } from 'src/iam/platform-config/application/use-cases/get-credits-per-euro/get-credits-per-euro.use-case';
+import { PlatformConfigNotFoundError } from 'src/iam/platform-config/application/platform-config.errors';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 type ContextKey = 'userId' | 'apiKeyId' | 'orgId';
 

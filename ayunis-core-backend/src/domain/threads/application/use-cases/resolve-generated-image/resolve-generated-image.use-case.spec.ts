@@ -9,7 +9,7 @@ import {
   ThreadNotFoundError,
   GeneratedImageNotFoundError,
 } from '../../threads.errors';
-import { GeneratedImage } from '../../../domain/generated-image.entity';
+import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 
 describe('ResolveGeneratedImageUseCase', () => {
   let useCase: ResolveGeneratedImageUseCase;

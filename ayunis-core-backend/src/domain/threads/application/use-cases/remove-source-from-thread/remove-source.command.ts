@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { Thread } from '../../../domain/thread.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 export class RemoveSourceCommand {
   constructor(

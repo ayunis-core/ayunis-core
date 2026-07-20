@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GetResourcesResponse } from '../schema/getResourcesReponse';
-import { Resource } from '../../../domain/resource.entity';
+import { Resource } from 'src/common/clients/locaboo/domain/resource.entity';
 
 @Injectable()
 export class GetResourcesResponseMapper {

@@ -1,4 +1,4 @@
-import type { Tool } from '../../../domain/tool.entity';
+import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { ToolExecutionContext } from '../../ports/execution.handler';
 
 export class ExecuteToolCommand {

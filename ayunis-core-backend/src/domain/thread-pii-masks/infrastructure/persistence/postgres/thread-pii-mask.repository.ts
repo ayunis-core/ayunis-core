@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { ThreadPiiMaskRepository } from '../../../application/ports/thread-pii-mask.repository';
-import { ThreadPiiMask } from '../../../domain/thread-pii-mask.entity';
+import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { ThreadPiiMaskRecord } from './schema/thread-pii-mask.record';
 import { ThreadPiiMaskMapper } from './mappers/thread-pii-mask.mapper';
 

@@ -7,7 +7,7 @@ import {
   InferenceFailedError,
 } from 'src/domain/models/application/models.errors';
 import { randomUUID } from 'crypto';
-import { UserSystemPrompt } from '../../../domain/user-system-prompt.entity';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import type { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import type { UpsertUserSystemPromptUseCase } from '../upsert-user-system-prompt/upsert-user-system-prompt.use-case';

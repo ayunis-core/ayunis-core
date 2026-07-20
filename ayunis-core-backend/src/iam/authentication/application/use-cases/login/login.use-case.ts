@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
 import { LoginCommand } from './login.command';
-import { AuthTokens } from '../../../domain/auth-tokens.entity';
+import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { UnexpectedAuthenticationError } from '../../authentication.errors';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';

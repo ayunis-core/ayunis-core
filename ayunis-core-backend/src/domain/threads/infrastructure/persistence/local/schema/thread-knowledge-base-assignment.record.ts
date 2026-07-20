@@ -1,8 +1,8 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { UUID } from 'crypto';
 import { ThreadRecord } from './thread.record';
-import { KnowledgeBaseRecord } from '../../../../../knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { BaseRecord } from 'src/common/db/base-record';
 
 @Entity({ name: 'thread_knowledge_base_assignments' })
 export class ThreadKnowledgeBaseAssignmentRecord extends BaseRecord {

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { UnexpectedApiKeyError } from '../../api-keys.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';

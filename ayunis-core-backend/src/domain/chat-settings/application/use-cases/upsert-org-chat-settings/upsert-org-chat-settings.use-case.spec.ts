@@ -1,7 +1,7 @@
 import { UpsertOrgChatSettingsUseCase } from './upsert-org-chat-settings.use-case';
 import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command';
 import type { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
-import { OrgChatSettings } from '../../../domain/org-chat-settings.entity';
+import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

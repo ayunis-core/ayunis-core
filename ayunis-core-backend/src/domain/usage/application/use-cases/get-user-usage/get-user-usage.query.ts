@@ -3,7 +3,7 @@ import type { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination';
 
 // Static
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 
 export type UserUsageSortBy =
   'credits' | 'requests' | 'lastActivity' | 'userName';

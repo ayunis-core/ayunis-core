@@ -1,9 +1,9 @@
 import { Logger } from '@nestjs/common';
 import { AnonymizeTextUseCase } from './anonymize-text.use-case';
 import { AnonymizeTextCommand } from './anonymize-text.command';
-import { PiiCategory } from '../../../domain/pii-category.enum';
-import type { PiiDetection } from '../../../domain/pii-detection';
-import { PiiWhitelistEntry } from '../../../domain/pii-whitelist-entry';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import type { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
+import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 
 describe('AnonymizeTextUseCase', () => {
   let useCase: AnonymizeTextUseCase;

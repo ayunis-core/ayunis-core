@@ -3,7 +3,7 @@ import type { UUID } from 'crypto';
 import { SourceRepository } from '../../ports/source.repository';
 import { DeleteSourcesCommand } from './delete-sources.command';
 import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';

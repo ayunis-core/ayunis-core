@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsageRecord } from './schema/usage.record';
 import { LocalUsageRepository } from './local-usage.repository';
-import { UsageRepository } from '../../../application/ports/usage.repository';
+import { UsageRepository } from 'src/domain/usage/application/ports/usage.repository';
 import { UsageMapper } from './mappers/usage.mapper';
 import { UsageQueryMapper } from './mappers/usage-query.mapper';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';

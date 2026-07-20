@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
 
 /**
  * Generic response DTO for shares

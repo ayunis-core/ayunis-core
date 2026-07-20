@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import { SkillDtoMapper } from './skill.mapper';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 
 describe('SkillDtoMapper', () => {
   let mapper: SkillDtoMapper;

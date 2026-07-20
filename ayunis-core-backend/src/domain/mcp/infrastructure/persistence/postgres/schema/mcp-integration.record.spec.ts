@@ -11,8 +11,8 @@ import {
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
 } from './index';
-import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { IntegrationConfigSchema } from '../../../../domain/value-objects/integration-config-schema';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 describe('MCP Integration Persistence Records', () => {
   it('should instantiate custom integration record with base fields', () => {

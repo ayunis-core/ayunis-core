@@ -15,7 +15,7 @@ import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,

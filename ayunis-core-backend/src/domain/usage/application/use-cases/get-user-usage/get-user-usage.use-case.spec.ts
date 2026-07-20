@@ -8,10 +8,10 @@ import {
   InvalidPaginationError,
 } from '../../usage.errors';
 import { Paginated } from 'src/common/pagination';
-import { UserUsageItem } from '../../../domain/user-usage-item.entity';
+import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
 import type { UserUsageResult } from '../../ports/usage.repository';
 import type { UUID } from 'crypto';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
 
 function mockUserUsageResult(
   users: Paginated<UserUsageItem>,

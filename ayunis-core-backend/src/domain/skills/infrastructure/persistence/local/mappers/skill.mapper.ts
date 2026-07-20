@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Skill } from '../../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillRecord } from '../schema/skill.record';
 
 @Injectable()

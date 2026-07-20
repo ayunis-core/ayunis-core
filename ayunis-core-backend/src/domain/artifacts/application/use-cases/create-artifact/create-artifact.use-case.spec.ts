@@ -12,7 +12,7 @@ import type { UUID } from 'crypto';
 import { CreateArtifactUseCase } from './create-artifact.use-case';
 import { CreateArtifactCommand } from './create-artifact.command';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
@@ -22,7 +22,7 @@ import {
   ArtifactContentTooLargeError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;

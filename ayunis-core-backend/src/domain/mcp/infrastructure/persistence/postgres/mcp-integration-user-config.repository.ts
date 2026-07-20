@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { McpIntegrationUserConfigRepositoryPort } from '../../../application/ports/mcp-integration-user-config.repository.port';
-import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
+import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-config.record';
 
 /**

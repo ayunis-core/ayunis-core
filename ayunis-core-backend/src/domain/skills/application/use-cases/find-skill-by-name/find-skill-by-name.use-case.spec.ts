@@ -2,7 +2,7 @@ import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
 import type { SkillRepository } from '../../ports/skill.repository';
 import type { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import type { UUID } from 'crypto';

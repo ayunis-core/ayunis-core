@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
-import { AlwaysOnSkillTemplate } from '../../../domain/always-on-skill-template.entity';
-import { PreCreatedCopySkillTemplate } from '../../../domain/pre-created-copy-skill-template.entity';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
+import { AlwaysOnSkillTemplate } from 'src/domain/skill-templates/domain/always-on-skill-template.entity';
+import { PreCreatedCopySkillTemplate } from 'src/domain/skill-templates/domain/pre-created-copy-skill-template.entity';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 import {
   DuplicateSkillTemplateNameError,
   UnexpectedSkillTemplateError,
 } from '../../skill-templates.errors';
-import { InvalidSkillTemplateNameError } from '../../../domain/skill-template.entity';
+import { InvalidSkillTemplateNameError } from 'src/domain/skill-templates/domain/skill-template.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()

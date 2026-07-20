@@ -6,8 +6,8 @@ import { CheckQuotaQuery } from './check-quota.query';
 import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.port';
 import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
-import { QuotaType } from '../../../domain/quota-type.enum';
-import { UsageQuota } from '../../../domain/usage-quota.entity';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { UsageQuota } from 'src/iam/quotas/domain/usage-quota.entity';
 import { QuotaExceededError } from '../../quotas.errors';
 
 describe('CheckQuotaUseCase', () => {

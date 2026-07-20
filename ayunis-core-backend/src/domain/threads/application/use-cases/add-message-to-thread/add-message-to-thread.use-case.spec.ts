@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AddMessageToThreadUseCase } from './add-message-to-thread.use-case';
 import { AddMessageCommand } from './add-message.command';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';

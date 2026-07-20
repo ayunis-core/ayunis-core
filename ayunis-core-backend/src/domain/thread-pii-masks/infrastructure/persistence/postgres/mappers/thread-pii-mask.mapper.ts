@@ -1,4 +1,4 @@
-import { ThreadPiiMask } from '../../../../domain/thread-pii-mask.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { ThreadPiiMaskRecord } from '../schema/thread-pii-mask.record';
 
 export class ThreadPiiMaskMapper {

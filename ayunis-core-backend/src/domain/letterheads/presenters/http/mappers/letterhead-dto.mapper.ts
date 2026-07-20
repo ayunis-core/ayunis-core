@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadResponseDto } from '../dtos/letterhead-response.dto';
 
 @Injectable()

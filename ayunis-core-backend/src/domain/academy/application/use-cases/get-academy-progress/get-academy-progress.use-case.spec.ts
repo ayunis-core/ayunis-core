@@ -6,8 +6,8 @@ import { GetAcademyProgressUseCase } from './get-academy-progress.use-case';
 import { GetAcademyProgressQuery } from './get-academy-progress.query';
 import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { AcademyChapterProgress } from '../../../domain/academy-chapter-progress.entity';
-import { AcademyCompletion } from '../../../domain/academy-completion.entity';
+import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 
 describe('GetAcademyProgressUseCase', () => {
   let useCase: GetAcademyProgressUseCase;

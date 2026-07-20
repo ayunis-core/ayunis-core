@@ -9,8 +9,8 @@ import {
   UnexpectedUsageError,
 } from '../../usage.errors';
 import { validateOptionalDateRange } from '../../usage.utils';
-import { UsageConstants } from '../../../domain/value-objects/usage.constants';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { UsageConstants } from 'src/domain/usage/domain/value-objects/usage.constants';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUserUsageUseCase {

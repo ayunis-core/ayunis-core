@@ -2,7 +2,7 @@ import { SetImageFairUseLimitUseCase } from './set-image-fair-use-limit.use-case
 import { SetImageFairUseLimitCommand } from './set-image-fair-use-limit.command';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigInvalidValueError } from '../../platform-config.errors';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 describe('SetImageFairUseLimitUseCase', () => {
   let useCase: SetImageFairUseLimitUseCase;

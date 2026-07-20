@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { AnonymizationWhitelistRepository } from '../../../application/ports/anonymization-whitelist.repository';
-import { AnonymizationWhitelistEntry } from '../../../domain/anonymization-whitelist-entry.entity';
+import { AnonymizationWhitelistRepository } from 'src/domain/anonymization-settings/application/ports/anonymization-whitelist.repository';
+import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 import { AnonymizationWhitelistEntryRecord } from './schema/anonymization-whitelist-entry.record';
 import { AnonymizationWhitelistEntryMapper } from './mappers/anonymization-whitelist-entry.mapper';
 

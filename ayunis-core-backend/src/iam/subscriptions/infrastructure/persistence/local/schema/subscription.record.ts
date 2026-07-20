@@ -1,8 +1,8 @@
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
-import { RenewalCycle } from '../../../../domain/value-objects/renewal-cycle.enum';
-import { SubscriptionType } from '../../../../domain/value-objects/subscription-type.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { RenewalCycle } from 'src/iam/subscriptions/domain/value-objects/renewal-cycle.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import {
   Entity,
   OneToOne,

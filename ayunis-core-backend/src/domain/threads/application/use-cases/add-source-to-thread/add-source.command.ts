@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { Thread } from '../../../domain/thread.entity';
-import type { Source } from '../../../../sources/domain/source.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 export class AddSourceCommand {
   constructor(

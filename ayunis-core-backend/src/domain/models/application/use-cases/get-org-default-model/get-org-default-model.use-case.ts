@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetOrgDefaultModelQuery } from './get-org-default-model.query';
-import { PermittedLanguageModel } from '../../../domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UnexpectedModelError } from '../../models.errors';
 

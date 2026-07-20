@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { StorageObject } from '../../../domain/storage-object.entity';
+import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
 import { UploadFileResponseDto } from '../dto/upload-file-response.dto';
 
 @Injectable()

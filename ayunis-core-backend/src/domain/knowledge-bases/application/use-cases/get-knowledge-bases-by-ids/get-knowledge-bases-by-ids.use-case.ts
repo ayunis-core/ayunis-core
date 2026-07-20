@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

@@ -14,9 +14,9 @@ import { DeleteSourcesCommand } from './delete-sources.command';
 import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
 import { SourceRepository } from '../../ports/source.repository';
 import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
-import { SourceStatus } from '../../../domain/source-status.enum';
-import { TextType, FileType } from '../../../domain/source-type.enum';
-import { FileSource } from '../../../domain/sources/text-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 function makeSource(id: UUID, status: SourceStatus): FileSource {
   return new FileSource({

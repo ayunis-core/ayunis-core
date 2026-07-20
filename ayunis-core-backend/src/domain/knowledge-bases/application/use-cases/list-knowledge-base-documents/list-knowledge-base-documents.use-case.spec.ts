@@ -4,7 +4,7 @@ import type { UUID } from 'crypto';
 import { ListKnowledgeBaseDocumentsUseCase } from './list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from './list-knowledge-base-documents.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
-import { KnowledgeBase } from '../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';

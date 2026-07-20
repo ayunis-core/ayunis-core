@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { Source } from '../../../domain/source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceRepository } from '../../ports/source.repository';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { GetSourcesByKnowledgeBaseIdQuery } from './get-sources-by-knowledge-base-id.query';

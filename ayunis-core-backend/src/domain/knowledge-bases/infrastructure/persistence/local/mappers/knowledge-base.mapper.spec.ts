@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { KnowledgeBaseMapper } from './knowledge-base.mapper';
-import { KnowledgeBase } from '../../../../domain/knowledge-base.entity';
+import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseRecord } from '../schema/knowledge-base.record';
 
 describe('KnowledgeBaseMapper', () => {

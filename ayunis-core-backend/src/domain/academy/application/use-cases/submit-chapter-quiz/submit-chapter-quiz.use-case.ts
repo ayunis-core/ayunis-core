@@ -5,10 +5,10 @@ import { AcademyChapterRepository } from '../../ports/academy-chapter.repository
 import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
-import { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import { AcademyChapterProgress } from '../../../domain/academy-chapter-progress.entity';
-import { AcademyCompletion } from '../../../domain/academy-completion.entity';
-import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
+import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
+import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   ChapterNotFoundError,
   InvalidQuizSubmissionError,

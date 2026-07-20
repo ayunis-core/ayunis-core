@@ -12,13 +12,13 @@ import { DeleteShareUseCase } from './delete-share.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareDeletedEvent } from '../../events/share-deleted.event';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
-import { SkillShare } from '../../../domain/share.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { SkillShare } from 'src/domain/shares/domain/share.entity';
 import {
   OrgShareScope,
   TeamShareScope,
-} from '../../../domain/share-scope.entity';
+} from 'src/domain/shares/domain/share-scope.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { randomUUID } from 'crypto';
 

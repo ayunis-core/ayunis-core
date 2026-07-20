@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Artifact, DocumentArtifact } from '../../../domain/artifact.entity';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
+import {
+  Artifact,
+  DocumentArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,

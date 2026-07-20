@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { ListObjectsCommand } from './list-objects.command';
-import storageConfig from '../../../../../config/storage.config';
+import storageConfig from 'src/config/storage.config';
 
 @Injectable()
 export class ListObjectsUseCase {

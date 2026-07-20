@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { AcademyCourseModuleRecord } from './academy-course-module.record';
 import { AcademyQuizQuestionRecord } from './academy-quiz-question.record';
 

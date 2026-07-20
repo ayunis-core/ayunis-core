@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
-import { AppAlert } from '../../../domain/app-alert';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
+import { AppAlert } from 'src/iam/platform-config/domain/app-alert';
 
 @Injectable()
 export class GetAppAlertUseCase {

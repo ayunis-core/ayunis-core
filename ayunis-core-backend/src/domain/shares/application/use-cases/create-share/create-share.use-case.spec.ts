@@ -7,16 +7,19 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { SkillShare, KnowledgeBaseShare } from '../../../domain/share.entity';
-import { OrgShareScope } from '../../../domain/share-scope.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import {
+  SkillShare,
+  KnowledgeBaseShare,
+} from 'src/domain/shares/domain/share.entity';
+import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import { randomUUID } from 'crypto';
 import { CheckUserTeamMembershipUseCase } from 'src/iam/teams/application/use-cases/check-user-team-membership/check-user-team-membership.use-case';
 import {
   CreateOrgKnowledgeBaseShareCommand,
   CreateTeamKnowledgeBaseShareCommand,
 } from './create-share.command';
-import { TeamShareScope } from '../../../domain/share-scope.entity';
+import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
 
 describe('CreateShareUseCase', () => {
   let useCase: CreateShareUseCase;

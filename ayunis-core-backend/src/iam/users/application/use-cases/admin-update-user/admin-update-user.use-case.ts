@@ -4,7 +4,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UsersRepository } from '../../ports/users.repository';
 import { AdminUpdateUserCommand } from './admin-update-user.command';
-import { User } from '../../../domain/user.entity';
+import { User } from 'src/iam/users/domain/user.entity';
 import {
   UserAlreadyExistsError,
   UserInvalidInputError,

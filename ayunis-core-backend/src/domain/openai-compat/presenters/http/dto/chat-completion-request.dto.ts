@@ -16,7 +16,7 @@ import type {
   OpenAIChatCompletionRequest,
   OpenAIChatCompletionRole,
   OpenAIChatCompletionToolChoice,
-} from '../../../application/types/openai-request.types';
+} from 'src/domain/openai-compat/application/types/openai-request.types';
 
 export class ChatCompletionFunctionDto {
   @IsString()

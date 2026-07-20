@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
-import { ApiKeysRepository } from '../../../application/ports/api-keys.repository';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKeysRepository } from 'src/iam/api-keys/application/ports/api-keys.repository';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ApiKeyRecord } from './schema/api-key.record';
 import { ApiKeyMapper } from './mappers/api-key.mapper';
 

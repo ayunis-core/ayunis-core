@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 
-import { AcademyCourseModuleRepository } from '../../../application/ports/academy-course-module.repository';
-import { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
+import { AcademyCourseModuleRepository } from 'src/domain/academy/application/ports/academy-course-module.repository';
+import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
 import { AcademyCourseModuleRecord } from './schema/academy-course-module.record';
 import { AcademyMapper } from './mappers/academy.mapper';
-import { CourseModuleNotFoundError } from '../../../application/academy.errors';
+import { CourseModuleNotFoundError } from 'src/domain/academy/application/academy.errors';
 
 @Injectable()
 export class LocalAcademyCourseModuleRepository implements AcademyCourseModuleRepository {

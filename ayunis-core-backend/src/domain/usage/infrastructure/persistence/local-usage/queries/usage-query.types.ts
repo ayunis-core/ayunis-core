@@ -1,6 +1,6 @@
 import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import type { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 export interface ProviderStatsRow {

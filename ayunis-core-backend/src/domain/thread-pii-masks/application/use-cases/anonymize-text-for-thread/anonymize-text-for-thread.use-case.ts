@@ -7,7 +7,7 @@ import type { AnonymizationResult } from 'src/common/anonymization/application/p
 import { GetPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
 import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
 import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
-import { ThreadPiiMask } from '../../../domain/thread-pii-mask.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
 import type { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
 

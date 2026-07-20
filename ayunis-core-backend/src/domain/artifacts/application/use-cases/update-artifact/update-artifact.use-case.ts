@@ -10,9 +10,12 @@ import {
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
-import { Artifact, DocumentArtifact } from '../../../domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import {
+  Artifact,
+  DocumentArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { sanitizeHtmlContent } from '../../helpers/sanitize-html-content';
 import { ApplicationError } from 'src/common/errors/base.error';

@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 export enum StorageErrorCode {
   OBJECT_NOT_FOUND = 'OBJECT_NOT_FOUND',

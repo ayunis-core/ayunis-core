@@ -4,7 +4,7 @@ import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
 import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { Transactional } from '@nestjs-cls/transactional';

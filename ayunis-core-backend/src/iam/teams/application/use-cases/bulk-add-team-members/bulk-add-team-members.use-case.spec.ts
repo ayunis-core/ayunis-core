@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { BulkAddTeamMembersUseCase } from './bulk-add-team-members.use-case';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
 import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
-import { TeamMember } from '../../../domain/team-member.entity';
+import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { TeamNotFoundError } from '../../teams.errors';
 import { UserAlreadyTeamMemberError } from '../../team-members.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

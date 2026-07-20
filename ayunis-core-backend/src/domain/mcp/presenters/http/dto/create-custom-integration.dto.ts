@@ -9,7 +9,7 @@ import {
   Length,
   MinLength,
 } from 'class-validator';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 
 /**
  * DTO for creating a custom MCP integration.

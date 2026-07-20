@@ -14,7 +14,7 @@ import { ProviderUsageChartResponseDtoMapper } from './mappers/provider-usage-ch
 import { UserUsageResponseDtoMapper } from './mappers/user-usage-response-dto.mapper';
 import { parseDate } from './utils/parse-date.util';
 import { UUID } from 'crypto';
-import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { GetProviderUsageUseCase } from '../../application/use-cases/get-provider-usage/get-provider-usage.use-case';
 import { GetUserUsageUseCase } from '../../application/use-cases/get-user-usage/get-user-usage.use-case';
 import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { OrgAddon } from '../../../domain/org-addon.entity';
+import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
 import { OrgAddonRepository } from '../../ports/org-addon.repository';
 import { AddonActivatedEvent } from '../../events/addon-activated.event';
 import { UnexpectedAddonError } from '../../addons.errors';

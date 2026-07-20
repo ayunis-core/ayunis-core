@@ -11,20 +11,20 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { RegisterUserUseCase } from './register-user.use-case';
 import { UnexpectedAuthenticationError } from '../../authentication.errors';
 import { RegisterUserCommand } from './register-user.command';
-import { CreateAdminUserUseCase } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.use-case';
-import { IsValidPasswordUseCase } from '../../../../users/application/use-cases/is-valid-password/is-valid-password.use-case';
-import { CreateOrgUseCase } from '../../../../orgs/application/use-cases/create-org/create-org.use-case';
-import { User } from '../../../../users/domain/user.entity';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
-import { Org } from '../../../../orgs/domain/org.entity';
-import { ActiveUser } from '../../../domain/active-user.entity';
+import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
+import { CreateOrgUseCase } from 'src/iam/orgs/application/use-cases/create-org/create-org.use-case';
+import { User } from 'src/iam/users/domain/user.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { Org } from 'src/iam/orgs/domain/org.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { InvalidPasswordError } from '../../authentication.errors';
 import type { UUID } from 'crypto';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
 import { CreateTrialUseCase } from 'src/iam/trials/application/use-cases/create-trial/create-trial.use-case';
 import { ConfigService } from '@nestjs/config';
-import { FindUserByEmailUseCase } from '../../../../users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;

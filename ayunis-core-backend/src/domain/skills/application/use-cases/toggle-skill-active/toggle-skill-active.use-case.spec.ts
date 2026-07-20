@@ -13,7 +13,7 @@ import { ToggleSkillActiveUseCase } from './toggle-skill-active.use-case';
 import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
 import { SkillRepository } from '../../ports/skill.repository';
 import { SkillAccessService } from '../../services/skill-access.service';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import { SkillNotFoundError } from '../../skills.errors';

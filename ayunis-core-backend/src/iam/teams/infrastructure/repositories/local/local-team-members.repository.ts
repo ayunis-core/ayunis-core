@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TeamMembersRepository } from '../../../application/ports/team-members.repository';
+import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

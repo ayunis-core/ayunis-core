@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ModelProvider } from '../../../../models/domain/value-objects/model-provider.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export class ModelDistributionDto {
   @ApiProperty({ description: 'Model ID' })

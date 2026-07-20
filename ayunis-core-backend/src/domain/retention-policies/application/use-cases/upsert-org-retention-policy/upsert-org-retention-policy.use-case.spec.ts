@@ -5,7 +5,7 @@ import { UpsertOrgRetentionPolicyUseCase } from './upsert-org-retention-policy.u
 import { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-policy.command';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
 import { InvalidRetentionPeriodError } from '../../retention-policies.errors';
-import { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
+import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 
 describe('UpsertOrgRetentionPolicyUseCase', () => {
   let useCase: UpsertOrgRetentionPolicyUseCase;

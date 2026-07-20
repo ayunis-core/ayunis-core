@@ -4,7 +4,7 @@ import { ILike, IsNull, type Repository } from 'typeorm';
 import { LocalInvitesRepository } from './local-invites.repository';
 import { InviteRecord } from './schema/invite.record';
 import { InviteMapper } from './mappers/invite.mapper';
-import { UserRole } from '../../../../users/domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
 function makeAcceptedInviteRecord(email: string): InviteRecord {
   const record = new InviteRecord();

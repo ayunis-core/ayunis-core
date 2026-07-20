@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { OrgMfaRequirementsRepository } from '../../ports/org-mfa-requirements.repository';
-import { OrgMfaRequirement } from '../../../domain/org-mfa-requirement.entity';
+import { OrgMfaRequirement } from 'src/iam/mfa/domain/org-mfa-requirement.entity';
 import { UnexpectedMfaError } from '../../mfa.errors';
 import { GetOrgMfaRequirementQuery } from './get-org-mfa-requirement.query';
 

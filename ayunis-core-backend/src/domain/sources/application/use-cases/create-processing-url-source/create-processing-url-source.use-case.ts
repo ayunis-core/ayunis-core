@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { UrlSource } from '../../../domain/sources/text-source.entity';
-import { TextType } from '../../../domain/source-type.enum';
-import { SourceStatus } from '../../../domain/source-status.enum';
+import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import { TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceRepository } from '../../ports/source.repository';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { ApplicationError } from 'src/common/errors/base.error';

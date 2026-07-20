@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OrgSystemPrompt } from '../../../domain/org-system-prompt.entity';
+import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
 import { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

@@ -4,9 +4,9 @@ import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-mo
 import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
-import type { CreditUsage } from '../../../domain/credit-usage';
+import type { CreditUsage } from 'src/domain/usage/domain/credit-usage';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetCreditUsageUseCase {

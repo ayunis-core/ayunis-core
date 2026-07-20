@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { ImageGenerationModel } from '../../../../models/domain/models/image-generation.model';
-import type { LanguageModel } from '../../../../models/domain/models/language.model';
+import type { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 export type CollectableUsageModel = LanguageModel | ImageGenerationModel;
 

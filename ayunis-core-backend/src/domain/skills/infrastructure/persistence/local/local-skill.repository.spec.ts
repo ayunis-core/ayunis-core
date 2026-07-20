@@ -7,7 +7,7 @@ import { LocalSkillRepository } from './local-skill.repository';
 import type { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
-import { SkillNotActiveError } from '../../../application/skills.errors';
+import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors';
 
 describe('LocalSkillRepository', () => {
   let repository: LocalSkillRepository;

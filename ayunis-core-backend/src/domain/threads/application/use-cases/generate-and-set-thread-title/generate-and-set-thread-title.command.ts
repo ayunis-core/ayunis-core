@@ -1,4 +1,4 @@
-import type { Thread } from '../../../domain/thread.entity';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 export class GenerateAndSetThreadTitleCommand {

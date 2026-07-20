@@ -7,7 +7,7 @@ import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
-} from '../../../domain/file-retriever-result.entity';
+} from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';

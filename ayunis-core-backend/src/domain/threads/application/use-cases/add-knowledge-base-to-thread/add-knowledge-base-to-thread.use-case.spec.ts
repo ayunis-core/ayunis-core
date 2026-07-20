@@ -6,9 +6,9 @@ import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { KnowledgeBaseAssignment } from '../../../domain/thread-knowledge-base-assignment.entity';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 
 export class CreateSubscriptionCommand {
   public readonly orgId: UUID;

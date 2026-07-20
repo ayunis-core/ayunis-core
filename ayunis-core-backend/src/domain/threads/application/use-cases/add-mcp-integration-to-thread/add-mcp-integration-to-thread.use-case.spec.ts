@@ -5,7 +5,7 @@ import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-threa
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadNotFoundError } from '../../threads.errors';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { AuthenticationRepository } from '../../../application/ports/authentication.repository';
-import { ActiveUser } from '../../../domain/active-user.entity';
+import { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import type { StringValue } from 'ms';
 
 interface JwtConfig {

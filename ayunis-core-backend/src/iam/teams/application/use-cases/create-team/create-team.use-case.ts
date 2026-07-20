@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateTeamCommand } from './create-team.command';
 import { TeamsRepository } from '../../ports/teams.repository';
-import { Team } from '../../../domain/team.entity';
+import { Team } from 'src/iam/teams/domain/team.entity';
 import {
   TeamInvalidInputError,
   TeamNameAlreadyExistsError,

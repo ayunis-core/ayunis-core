@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { FindActiveAlwaysOnTemplatesUseCase } from '../find-active-always-on-templates/find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from '../find-active-always-on-templates/find-active-always-on-templates.query';
 import { FindAlwaysOnTemplateByNameQuery } from './find-always-on-template-by-name.query';
-import { SkillTemplate } from '../../../domain/skill-template.entity';
+import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
 
 @Injectable()
 export class FindAlwaysOnTemplateByNameUseCase {

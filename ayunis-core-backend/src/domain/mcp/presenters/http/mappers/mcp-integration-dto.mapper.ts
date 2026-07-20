@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../../domain/auth/oauth-mcp-integration-auth.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';

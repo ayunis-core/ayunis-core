@@ -2,9 +2,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CheckToolCapabilitiesUseCase } from './check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
-import { Tool } from '../../../domain/tool.entity';
-import { DisplayableTool } from '../../../domain/displayable-tool.entity';
-import { ToolType } from '../../../domain/value-objects/tool-type.enum';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { DisplayableTool } from 'src/domain/tools/domain/displayable-tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 // Mock tool implementation for testing
 class MockTool extends Tool {

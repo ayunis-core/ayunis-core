@@ -1,8 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'api_keys' })
 export class ApiKeyRecord extends BaseRecord {

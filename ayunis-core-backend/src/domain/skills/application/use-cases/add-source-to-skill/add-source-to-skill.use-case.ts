@@ -9,8 +9,8 @@ import {
   SkillSourceLimitExceededError,
   UnexpectedSkillError,
 } from '../../skills.errors';
-import { Skill } from '../../../domain/skill.entity';
-import { SkillsConstants } from '../../../domain/skills.constants';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import { CreateSubscriptionRequestDto } from './create-subscription-request.dto';
-import { OldSubscriptionDisposition } from '../../../domain/value-objects/old-subscription-disposition.enum';
+import { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
 
 export class ChangeSubscriptionRequestDto extends CreateSubscriptionRequestDto {
   @ApiProperty({

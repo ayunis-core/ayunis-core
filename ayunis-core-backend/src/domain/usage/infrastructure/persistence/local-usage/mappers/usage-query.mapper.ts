@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { ProviderUsage } from '../../../../domain/provider-usage.entity';
-import { TimeSeriesPoint } from '../../../../domain/time-series-point.entity';
-import { ModelDistribution } from '../../../../domain/model-distribution.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
+import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
+import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import type {
   ModelStatsRow,
   ProviderStatsRow,
   TimeSeriesRow,
   TopModelRow,
 } from '../queries/usage-query.types';
-import { ModelProvider } from '../../../../../models/domain/value-objects/model-provider.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 @Injectable()
 export class UsageQueryMapper {

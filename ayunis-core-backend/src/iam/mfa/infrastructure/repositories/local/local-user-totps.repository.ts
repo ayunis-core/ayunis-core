@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { UserTotpsRepository } from '../../../application/ports/user-totps.repository';
-import { UserTotp } from '../../../domain/user-totp.entity';
+import { UserTotpsRepository } from 'src/iam/mfa/application/ports/user-totps.repository';
+import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
 import { UserTotpRecord } from './schema/user-totp.record';
 import { UserTotpMapper } from './mappers/user-totp.mapper';
 

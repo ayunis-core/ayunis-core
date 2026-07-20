@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AvailabilityResponse } from '../schema/getAvailabilityResponse';
-import { Availability } from '../../../domain/availability.entity';
+import { Availability } from 'src/common/clients/locaboo/domain/availability.entity';
 
 @Injectable()
 export class GetAvailabilityResponseMapper {

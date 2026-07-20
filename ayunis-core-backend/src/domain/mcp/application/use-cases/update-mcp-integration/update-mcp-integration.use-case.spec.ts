@@ -8,16 +8,16 @@ import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-enc
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import {
   McpNotMarketplaceIntegrationError,
   McpMissingRequiredConfigError,
 } from '../../mcp.errors';
-import type { IntegrationConfigSchema } from '../../../domain/value-objects/integration-config-schema';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 describe('UpdateMcpIntegrationUseCase', () => {
   const orgId = randomUUID();

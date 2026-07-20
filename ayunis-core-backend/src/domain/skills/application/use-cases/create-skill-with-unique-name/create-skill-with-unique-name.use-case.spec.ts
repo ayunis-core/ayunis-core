@@ -1,7 +1,7 @@
 import { CreateSkillWithUniqueNameUseCase } from './create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from './create-skill-with-unique-name.command';
 import type { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillNameResolutionError } from '../../skills.errors';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';

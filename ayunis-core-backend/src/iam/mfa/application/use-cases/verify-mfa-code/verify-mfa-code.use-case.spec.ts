@@ -8,8 +8,8 @@ import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repos
 import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
 import { TotpPort } from '../../ports/totp.port';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
-import { UserTotp } from '../../../domain/user-totp.entity';
-import { MfaRecoveryCode } from '../../../domain/mfa-recovery-code.entity';
+import { UserTotp } from 'src/iam/mfa/domain/user-totp.entity';
+import { MfaRecoveryCode } from 'src/iam/mfa/domain/mfa-recovery-code.entity';
 import {
   InvalidMfaCodeError,
   MfaLockedError,

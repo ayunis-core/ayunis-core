@@ -1,8 +1,8 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { UUID } from 'crypto';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { TeamRecord } from './team.record';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity({ name: 'team_members' })
 @Index(['teamId'])

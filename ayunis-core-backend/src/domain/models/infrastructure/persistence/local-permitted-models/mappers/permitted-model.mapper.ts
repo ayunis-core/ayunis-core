@@ -3,7 +3,7 @@ import {
   PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
-} from '../../../../domain/permitted-model.entity';
+} from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelRecord } from '../schema/permitted-model.record';
 import { Injectable } from '@nestjs/common';
 import { ModelMapper } from '../../local-models/mappers/model.mapper';

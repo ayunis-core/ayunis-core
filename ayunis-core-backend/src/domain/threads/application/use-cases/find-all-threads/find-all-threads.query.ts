@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination/paginated.query';
-import { ThreadsConstants } from '../../../domain/threads.constants';
+import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
 export class FindAllThreadsQuery extends PaginatedQuery {
   constructor(

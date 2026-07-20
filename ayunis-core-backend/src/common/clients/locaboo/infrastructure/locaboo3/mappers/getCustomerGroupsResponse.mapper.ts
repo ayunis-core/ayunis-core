@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GetCustomerResponse } from '../schema/getCustomerResponse';
-import { CustomerGroup } from '../../../domain/customer-group.entity';
+import { CustomerGroup } from 'src/common/clients/locaboo/domain/customer-group.entity';
 
 @Injectable()
 export class GetCustomerGroupsResponseMapper {

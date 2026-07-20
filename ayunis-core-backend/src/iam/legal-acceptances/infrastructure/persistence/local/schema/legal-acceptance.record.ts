@@ -1,7 +1,7 @@
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { LegalAcceptanceType } from '../../../../domain/value-objects/legal-acceptance-type.enum';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { BaseRecord } from 'src/common/db/base-record';
+import { LegalAcceptanceType } from 'src/iam/legal-acceptances/domain/value-objects/legal-acceptance-type.enum';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import {
   ChildEntity,
   Column,

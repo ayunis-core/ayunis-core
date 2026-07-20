@@ -9,7 +9,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { DistributionMode } from '../../../domain/distribution-mode.enum';
+import { DistributionMode } from 'src/domain/skill-templates/domain/distribution-mode.enum';
 
 export class UpdateSkillTemplateDto {
   @ApiPropertyOptional({

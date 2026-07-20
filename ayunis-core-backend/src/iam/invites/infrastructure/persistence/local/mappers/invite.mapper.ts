@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Invite } from '../../../../domain/invite.entity';
+import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { InviteRecord } from '../schema/invite.record';
 
 @Injectable()

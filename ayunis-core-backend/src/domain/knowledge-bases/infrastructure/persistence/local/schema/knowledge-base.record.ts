@@ -6,11 +6,11 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import type { UUID } from 'crypto';
-import { SourceRecord } from '../../../../../sources/infrastructure/persistence/local/schema/source.record';
-import { OrgRecord } from '../../../../../../iam/orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRecord } from '../../../../../../iam/users/infrastructure/repositories/local/schema/user.record';
+import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 @Entity('knowledge_bases')
 export class KnowledgeBaseRecord extends BaseRecord {

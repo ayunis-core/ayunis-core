@@ -5,8 +5,8 @@ import {
   InvalidRetentionPeriodError,
   UnexpectedRetentionPolicyError,
 } from '../../retention-policies.errors';
-import { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
-import { isValidRetentionDays } from '../../../domain/retention-period';
+import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
+import { isValidRetentionDays } from 'src/domain/retention-policies/domain/retention-period';
 import type { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-policy.command';
 
 @Injectable()

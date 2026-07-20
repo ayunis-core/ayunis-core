@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Share } from '../../../domain/share.entity';
+import { Share } from 'src/domain/shares/domain/share.entity';
 import { ShareResponseDto } from '../dto/share-response.dto';
-import { ShareScopeType } from '../../../domain/value-objects/share-scope-type.enum';
-import { TeamShareScope } from '../../../domain/share-scope.entity';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { TeamShareScope } from 'src/domain/shares/domain/share-scope.entity';
 
 /**
  * Mapper for converting Share entities to generic DTOs

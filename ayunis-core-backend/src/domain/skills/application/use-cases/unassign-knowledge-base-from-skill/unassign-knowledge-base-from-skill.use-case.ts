@@ -3,7 +3,7 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnassignKnowledgeBaseFromSkillCommand } from './unassign-knowledge-base-from-skill.command';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import {
   SkillNotFoundError,
   SkillKnowledgeBaseNotAssignedError,

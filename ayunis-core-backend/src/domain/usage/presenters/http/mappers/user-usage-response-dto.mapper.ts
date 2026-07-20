@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UserUsageItem } from '../../../domain/user-usage-item.entity';
-import type { UserUsageResult } from '../../../application/ports/usage.repository';
+import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
+import type { UserUsageResult } from 'src/domain/usage/application/ports/usage.repository';
 import {
   UserUsageResponseDto,
   UserUsageDto,

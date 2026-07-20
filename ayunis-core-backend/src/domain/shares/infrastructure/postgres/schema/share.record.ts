@@ -6,11 +6,11 @@ import {
   TableInheritance,
   ChildEntity,
 } from 'typeorm';
-import { BaseRecord } from '../../../../../common/db/base-record';
-import { SharedEntityType } from '../../../../../domain/shares/domain/value-objects/shared-entity-type.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ShareScopeRecord } from './share-scope.record';
-import { SkillRecord } from '../../../../../domain/skills/infrastructure/persistence/local/schema/skill.record';
-import { KnowledgeBaseRecord } from '../../../../../domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { UUID } from 'crypto';
 
 @Entity('shares')

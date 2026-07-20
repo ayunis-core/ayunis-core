@@ -22,9 +22,9 @@ import type { UUID } from 'crypto';
 import {
   CurrentUser,
   UserProperty,
-} from '../../../authentication/application/decorators/current-user.decorator';
-import { Roles } from '../../../authorization/application/decorators/roles.decorator';
-import { UserRole } from '../../../users/domain/value-objects/role.object';
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
+import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetIpAllowlistUseCase } from '../../application/use-cases/get-ip-allowlist/get-ip-allowlist.use-case';
 import { GetIpAllowlistQuery } from '../../application/use-cases/get-ip-allowlist/get-ip-allowlist.query';
 import { UpdateIpAllowlistUseCase } from '../../application/use-cases/update-ip-allowlist/update-ip-allowlist.use-case';
@@ -33,7 +33,7 @@ import { DeleteIpAllowlistUseCase } from '../../application/use-cases/delete-ip-
 import { DeleteIpAllowlistCommand } from '../../application/use-cases/delete-ip-allowlist/delete-ip-allowlist.command';
 import { UpdateIpAllowlistRequestDto } from './dtos/update-ip-allowlist-request.dto';
 import { IpAllowlistResponseDto } from './dtos/ip-allowlist-response.dto';
-import { getClientIp } from '../../../../common/util/ip.util';
+import { getClientIp } from 'src/common/util/ip.util';
 
 @ApiTags('ip-allowlist')
 @Controller('ip-allowlist')

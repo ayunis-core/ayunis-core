@@ -1,7 +1,7 @@
 import { Entity, Column, Index, ManyToOne, Unique } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { UserRecord } from '../../../../../users/infrastructure/repositories/local/schema/user.record';
-import { QuotaType } from '../../../../domain/quota-type.enum';
+import { BaseRecord } from 'src/common/db/base-record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { UUID } from 'crypto';
 
 const bigintToNumberTransformer = {

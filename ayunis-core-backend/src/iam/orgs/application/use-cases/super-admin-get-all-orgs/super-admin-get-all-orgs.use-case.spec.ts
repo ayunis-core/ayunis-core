@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { SuperAdminGetAllOrgsUseCase } from './super-admin-get-all-orgs.use-case';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Org } from '../../../domain/org.entity';
+import { Org } from 'src/iam/orgs/domain/org.entity';
 import type { UUID } from 'crypto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { OrgUnauthorizedError } from '../../orgs.errors';

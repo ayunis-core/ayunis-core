@@ -3,8 +3,8 @@ import { UUID } from 'crypto';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
 

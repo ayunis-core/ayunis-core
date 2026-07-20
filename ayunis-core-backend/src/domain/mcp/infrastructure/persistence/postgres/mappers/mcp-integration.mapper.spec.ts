@@ -1,17 +1,17 @@
 import { randomUUID } from 'crypto';
 import { McpIntegrationMapper } from './mcp-integration.mapper';
-import { CustomMcpIntegration } from '../../../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegration } from '../../../../domain/integrations/predefined-mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../../../domain/integrations/marketplace-mcp-integration.entity';
-import { McpIntegrationKind } from '../../../../domain/value-objects/mcp-integration-kind.enum';
-import { PredefinedMcpIntegrationSlug } from '../../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import type { IntegrationConfigSchema } from '../../../../domain/value-objects/integration-config-schema';
-import { NoAuthMcpIntegrationAuth } from '../../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../../../domain/auth/oauth-mcp-integration-auth.entity';
-import { McpIntegrationFactory } from '../../../../application/factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../../../application/factories/mcp-integration-auth.factory';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
 import {
   BearerMcpIntegrationAuthRecord,
   CustomHeaderMcpIntegrationAuthRecord,

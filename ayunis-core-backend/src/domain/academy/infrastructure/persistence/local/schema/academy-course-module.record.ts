@@ -1,6 +1,6 @@
 import { UUID } from 'crypto';
 import { Column, Entity, Index, ManyToOne } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 import { AcademyChapterRecord } from './academy-chapter.record';
 
 @Entity({ name: 'academy_course_modules' })

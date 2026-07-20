@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { isActive } from '../../util/is-active';
-import { isUsageBased } from '../../../domain/subscription-type-guards';
+import { isUsageBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSubscriptionError } from '../../subscription.errors';
 

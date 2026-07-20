@@ -3,7 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
 import { UnexpectedAnonymizationSettingsError } from '../../anonymization-settings.errors';
 import type { GetPiiWhitelistQuery } from './get-pii-whitelist.query';
-import type { AnonymizationWhitelistEntry } from '../../../domain/anonymization-whitelist-entry.entity';
+import type { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 
 @Injectable()
 export class GetPiiWhitelistUseCase {

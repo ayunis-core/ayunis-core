@@ -4,10 +4,10 @@ import { ProviderUsageResponseDtoMapper } from './provider-usage-response-dto.ma
 import { ProviderUsageChartResponseDtoMapper } from './provider-usage-chart-response-dto.mapper';
 import { ModelDistributionResponseDtoMapper } from './model-distribution-response-dto.mapper';
 import { UserUsageResponseDtoMapper } from './user-usage-response-dto.mapper';
-import { UsageStats } from '../../../domain/usage-stats.entity';
-import { ProviderUsage } from '../../../domain/provider-usage.entity';
-import { ModelDistribution } from '../../../domain/model-distribution.entity';
-import type { UserUsageResult } from '../../../application/ports/usage.repository';
+import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
+import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
+import type { UserUsageResult } from 'src/domain/usage/application/ports/usage.repository';
 import { UsageStatsResponseDto } from '../dto/usage-stats-response.dto';
 import { ProviderUsageResponseDto } from '../dto/provider-usage-response.dto';
 import { ProviderUsageChartResponseDto } from '../dto/provider-usage-chart-response.dto';

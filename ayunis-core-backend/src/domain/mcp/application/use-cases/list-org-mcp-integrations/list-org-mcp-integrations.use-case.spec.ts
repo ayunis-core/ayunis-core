@@ -5,14 +5,14 @@ import { ListOrgMcpIntegrationsUseCase } from './list-org-mcp-integrations.use-c
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnexpectedMcpError } from '../../mcp.errors';
-import type { McpIntegration } from '../../../domain/mcp-integration.entity';
+import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+} from 'src/domain/mcp/domain/mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { randomUUID } from 'crypto';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('ListOrgMcpIntegrationsUseCase', () => {
   let useCase: ListOrgMcpIntegrationsUseCase;

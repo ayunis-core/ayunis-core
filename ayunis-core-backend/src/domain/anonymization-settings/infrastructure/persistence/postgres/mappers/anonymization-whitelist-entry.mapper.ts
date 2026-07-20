@@ -1,4 +1,4 @@
-import { AnonymizationWhitelistEntry } from '../../../../domain/anonymization-whitelist-entry.entity';
+import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
 import { AnonymizationWhitelistEntryRecord } from '../schema/anonymization-whitelist-entry.record';
 
 export class AnonymizationWhitelistEntryMapper {

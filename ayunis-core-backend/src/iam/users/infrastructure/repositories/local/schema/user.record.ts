@@ -1,9 +1,9 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
-import { OrgRecord } from '../../../../../orgs/infrastructure/repositories/local/schema/org.record';
-import { UserRole } from '../../../../domain/value-objects/role.object';
+import { BaseRecord } from 'src/common/db/base-record';
+import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
-import { SystemRole } from '../../../../domain/value-objects/system-role.enum';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 @Entity({ name: 'users' })
 export class UserRecord extends BaseRecord {

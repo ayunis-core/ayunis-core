@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SplitResult } from '../../../domain/split-result.entity';
+import { SplitResult } from 'src/domain/rag/splitters/domain/split-result.entity';
 import { SplitterHandlerRegistry } from '../../splitter-handler.registry';
 import { SplitTextCommand } from './split-text.command';
 

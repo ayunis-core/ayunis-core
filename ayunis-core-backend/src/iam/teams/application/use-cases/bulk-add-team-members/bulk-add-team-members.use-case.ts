@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
 import { AddTeamMemberCommand } from '../add-team-member/add-team-member.command';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
-import { TeamMember } from '../../../domain/team-member.entity';
+import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import {
   UserAlreadyTeamMemberError,
   UserNotInSameOrgError,

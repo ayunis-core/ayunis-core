@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
 

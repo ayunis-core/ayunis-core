@@ -11,7 +11,7 @@ import {
   KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
 } from '../../knowledge-bases.errors';
-import { KnowledgeBasesConstants } from '../../../domain/knowledge-bases.constants';
+import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
 
 @Injectable()

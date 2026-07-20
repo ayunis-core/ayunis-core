@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetProviderUsageQuery } from './get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
-import { ProviderUsage } from '../../../domain/provider-usage.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import {
   validateOptionalDateRange,
   calculateProviderPercentages,
 } from '../../usage.utils';
 import { UnexpectedUsageError } from '../../usage.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetProviderUsageUseCase {

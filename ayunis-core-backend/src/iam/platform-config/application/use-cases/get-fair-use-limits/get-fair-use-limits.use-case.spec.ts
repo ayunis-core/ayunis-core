@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { GetFairUseLimitsUseCase } from './get-fair-use-limits.use-case';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfig } from '../../../domain/platform-config.entity';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 describe('GetFairUseLimitsUseCase', () => {
   let useCase: GetFairUseLimitsUseCase;

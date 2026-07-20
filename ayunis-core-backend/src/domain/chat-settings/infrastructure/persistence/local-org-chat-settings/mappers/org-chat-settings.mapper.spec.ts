@@ -1,5 +1,5 @@
 import { OrgChatSettingsMapper } from './org-chat-settings.mapper';
-import { OrgChatSettings } from '../../../../domain/org-chat-settings.entity';
+import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { OrgChatSettingsRecord } from '../schema/org-chat-settings.record';
 import { randomUUID } from 'crypto';
 

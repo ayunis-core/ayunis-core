@@ -1,4 +1,4 @@
-import { RefreshToken } from '../../../../domain/refresh-token.entity';
+import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { RefreshTokenRecord } from '../schema/refresh-token.record';
 
 export class RefreshTokenMapper {

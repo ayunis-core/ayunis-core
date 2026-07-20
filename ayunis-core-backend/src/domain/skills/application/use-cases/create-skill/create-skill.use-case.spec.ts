@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import { DuplicateSkillNameError } from '../../skills.errors';

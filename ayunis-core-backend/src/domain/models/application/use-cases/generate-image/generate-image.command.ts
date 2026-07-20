@@ -1,4 +1,4 @@
-import type { ImageGenerationModel } from '../../../domain/models/image-generation.model';
+import type { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 
 export class GenerateImageCommand {
   public readonly model: ImageGenerationModel;

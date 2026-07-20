@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Thread } from '../../../domain/thread.entity';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { FindAllThreadsQuery } from './find-all-threads.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';

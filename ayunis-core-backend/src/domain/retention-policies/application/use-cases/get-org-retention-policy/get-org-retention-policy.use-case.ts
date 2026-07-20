@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
 import { UnexpectedRetentionPolicyError } from '../../retention-policies.errors';
-import type { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
+import type { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import type { GetOrgRetentionPolicyQuery } from './get-org-retention-policy.query';
 
 @Injectable()

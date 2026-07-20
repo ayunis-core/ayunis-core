@@ -6,8 +6,8 @@ import {
   UnexpectedCrawlDomainGrantError,
 } from '../../crawl-domain-grants.errors';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
-import { normalizeHost } from '../../../domain/crawl-domain.util';
-import { InvalidCrawlDomainError } from '../../../domain/crawl-domain.errors';
+import { normalizeHost } from 'src/domain/crawl-domain-grants/domain/crawl-domain.util';
+import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/crawl-domain.errors';
 
 /**
  * The single enforcement primitive for org-scoped crawling. Called from the

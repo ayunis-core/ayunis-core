@@ -1,6 +1,6 @@
 import { GetOrgSystemPromptUseCase } from './get-org-system-prompt.use-case';
 import type { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
-import { OrgSystemPrompt } from '../../../domain/org-system-prompt.entity';
+import { OrgSystemPrompt } from 'src/domain/chat-settings/domain/org-system-prompt.entity';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

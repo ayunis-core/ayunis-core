@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UpsertUserSystemPromptCommand } from './upsert-user-system-prompt.command';
-import { UserSystemPrompt } from '../../../domain/user-system-prompt.entity';
+import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

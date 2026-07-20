@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
-import { ParentChunk } from '../../../domain/parent-chunk.entity';
+import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
-import { ChildChunk } from '../../../domain/child-chunk.entity';
+import { ChildChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/child-chunk.entity';
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
 import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';

@@ -5,7 +5,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import { InvalidCreditLimitError } from '../../credit-limits.errors';
 import {
   aTeamCreditLimit,

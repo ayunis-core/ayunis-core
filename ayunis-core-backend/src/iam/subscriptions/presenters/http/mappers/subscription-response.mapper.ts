@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Subscription } from '../../../domain/subscription.entity';
+import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import {
   isSeatBased,
   isUsageBased,
-} from '../../../domain/subscription-type-guards';
+} from 'src/iam/subscriptions/domain/subscription-type-guards';
 import { SubscriptionResponseDto } from '../dto/subscription-response.dto';
 
 @Injectable()

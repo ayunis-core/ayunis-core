@@ -1,11 +1,11 @@
 import { GetCreditsPerEuroUseCase } from './get-credits-per-euro.use-case';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
-import { PlatformConfig } from '../../../domain/platform-config.entity';
+import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
 import {
   PlatformConfigInvalidValueError,
   PlatformConfigNotFoundError,
 } from '../../platform-config.errors';
-import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
+import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-config-keys.enum';
 
 describe('GetCreditsPerEuroUseCase', () => {
   let useCase: GetCreditsPerEuroUseCase;

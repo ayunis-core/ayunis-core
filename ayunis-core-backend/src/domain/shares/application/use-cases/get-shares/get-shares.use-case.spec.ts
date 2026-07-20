@@ -7,9 +7,9 @@ import { SharesRepository } from '../../ports/shares-repository.port';
 import { ShareAuthorizationFactory } from '../../factories/share-authorization.factory';
 import type { ShareAuthorizationStrategy } from '../../ports/share-authorization-strategy.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { SkillShare } from '../../../domain/share.entity';
-import { SharedEntityType } from '../../../domain/value-objects/shared-entity-type.enum';
-import { OrgShareScope } from '../../../domain/share-scope.entity';
+import { SkillShare } from 'src/domain/shares/domain/share.entity';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { OrgShareScope } from 'src/domain/shares/domain/share-scope.entity';
 import { randomUUID } from 'crypto';
 
 describe('GetSharesUseCase', () => {

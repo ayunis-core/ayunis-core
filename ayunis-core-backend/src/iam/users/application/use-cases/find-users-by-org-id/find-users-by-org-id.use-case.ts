@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UsersRepository } from '../../ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
-import { User } from '../../../domain/user.entity';
+import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';

@@ -8,7 +8,7 @@ import {
   MAX_BATCHES_PER_ORG,
 } from './enforce-retention.use-case';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
-import { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
+import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
 import {

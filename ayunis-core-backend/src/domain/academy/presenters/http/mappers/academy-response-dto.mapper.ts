@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { AcademyChapter } from '../../../domain/academy-chapter.entity';
-import type { AcademyCourseModule } from '../../../domain/academy-course-module.entity';
-import type { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
-import type { QuizAttemptResult } from '../../../application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
-import type { AcademyProgressView } from '../../../application/use-cases/get-academy-progress/get-academy-progress.use-case';
+import type { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
+import type { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
+import type { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
+import type { QuizAttemptResult } from 'src/domain/academy/application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
+import type { AcademyProgressView } from 'src/domain/academy/application/use-cases/get-academy-progress/get-academy-progress.use-case';
 import { AcademyChapterResponseDto } from '../dto/academy-chapter-response.dto';
 import { CourseModuleResponseDto } from '../dto/course-module-response.dto';
 import { SuperAdminAcademyChapterResponseDto } from '../dto/super-admin-academy-chapter-response.dto';

@@ -3,9 +3,9 @@ import { GetSourcesByIdsQuery } from './get-sources-by-ids.query';
 import type { SourceRepository } from '../../ports/source.repository';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
-import { SourceType } from '../../../domain/source-type.enum';
-import { Source } from '../../../domain/source.entity';
-import { SourceCreator } from '../../../domain/source-creator.enum';
+import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { UnexpectedSourceError } from '../../sources.errors';
 
 class StubSource extends Source {

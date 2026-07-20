@@ -3,7 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
-import { TeamCreditLimit } from '../../../domain/team-credit-limit.entity';
+import { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
 import {
   InvalidCreditLimitError,
   UnexpectedCreditLimitError,

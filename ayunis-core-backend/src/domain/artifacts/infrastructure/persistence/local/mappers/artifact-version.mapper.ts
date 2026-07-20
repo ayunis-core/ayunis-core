@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ArtifactVersion } from '../../../../domain/artifact-version.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { ArtifactVersionRecord } from '../schema/artifact-version.record';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Column, Entity, TableInheritance } from 'typeorm';
-import { BaseRecord } from '../../../../../../common/db/base-record';
+import { BaseRecord } from 'src/common/db/base-record';
 
 @Entity({ name: 'skill_templates' })
 @TableInheritance({ column: { type: 'varchar', name: 'distributionMode' } })

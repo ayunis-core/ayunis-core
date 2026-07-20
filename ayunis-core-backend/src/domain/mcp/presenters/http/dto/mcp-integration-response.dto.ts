@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 
 /**
  * Response DTO for MCP integration data.

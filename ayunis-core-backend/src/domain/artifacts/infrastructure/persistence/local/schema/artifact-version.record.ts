@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { UUID } from 'crypto';
 import { ArtifactRecord } from './artifact.record';
-import { AuthorType } from '../../../../domain/value-objects/author-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 
 @Entity({ name: 'artifact_versions' })
 @Unique('UQ_artifact_version_number', ['artifactId', 'versionNumber'])

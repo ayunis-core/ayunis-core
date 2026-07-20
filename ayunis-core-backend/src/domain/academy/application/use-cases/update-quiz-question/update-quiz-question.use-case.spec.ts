@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { UpdateQuizQuestionUseCase } from './update-quiz-question.use-case';
 import { UpdateQuizQuestionCommand } from './update-quiz-question.command';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
-import { AcademyQuizQuestion } from '../../../domain/academy-quiz-question.entity';
+import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   InvalidQuizQuestionError,
   QuizQuestionNotFoundError,

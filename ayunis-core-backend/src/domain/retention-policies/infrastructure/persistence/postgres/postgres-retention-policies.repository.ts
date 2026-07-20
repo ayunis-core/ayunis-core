@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, IsNull, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import { RetentionPoliciesRepository } from '../../../application/ports/retention-policies.repository';
-import { OrgRetentionPolicy } from '../../../domain/org-retention-policy.entity';
+import { RetentionPoliciesRepository } from 'src/domain/retention-policies/application/ports/retention-policies.repository';
+import { OrgRetentionPolicy } from 'src/domain/retention-policies/domain/org-retention-policy.entity';
 import { OrgRetentionPolicyRecord } from './schema/org-retention-policy.record';
 import { OrgRetentionPolicyMapper } from './mappers/org-retention-policy.mapper';
 

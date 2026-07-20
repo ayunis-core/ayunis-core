@@ -17,11 +17,11 @@ import {
 import {
   PredefinedMcpIntegration,
   CustomMcpIntegration,
-} from '../../../domain/mcp-integration.entity';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
-import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
+} from 'src/domain/mcp/domain/mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('GetMcpPromptUseCase', () => {
   let useCase: GetMcpPromptUseCase;

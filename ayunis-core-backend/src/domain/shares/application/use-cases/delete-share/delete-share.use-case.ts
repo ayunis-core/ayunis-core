@@ -10,11 +10,11 @@ import {
   RemainingShareScope,
   ShareDeletedEvent,
 } from '../../events/share-deleted.event';
-import { Share } from '../../../domain/share.entity';
+import { Share } from 'src/domain/shares/domain/share.entity';
 import {
   OrgShareScope,
   TeamShareScope,
-} from '../../../domain/share-scope.entity';
+} from 'src/domain/shares/domain/share-scope.entity';
 
 @Injectable()
 export class DeleteShareUseCase {

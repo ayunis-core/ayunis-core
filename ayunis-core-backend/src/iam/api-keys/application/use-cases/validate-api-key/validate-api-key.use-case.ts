@@ -3,7 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
-import { ApiKey } from '../../../domain/api-key.entity';
+import { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
 import {
   ApiKeyExpiredError,

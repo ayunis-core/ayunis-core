@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Usage } from '../../../../domain/usage.entity';
+import { Usage } from 'src/domain/usage/domain/usage.entity';
 import { UsageRecord } from '../schema/usage.record';
 
 @Injectable()

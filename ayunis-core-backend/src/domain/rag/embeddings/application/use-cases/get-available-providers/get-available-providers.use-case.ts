@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GetAvailableProvidersQuery } from './get-available-providers.query';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
-import { EmbeddingsProvider } from '../../../domain/embeddings-provider.enum';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
 @Injectable()
 export class GetAvailableProvidersUseCase {

@@ -13,9 +13,9 @@ import {
   ArtifactNotFoundError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from '../../../domain/artifact.entity';
-import { ArtifactVersion } from '../../../domain/artifact-version.entity';
-import { AuthorType } from '../../../domain/value-objects/author-type.enum';
+import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UpdateArtifactUseCase } from '../update-artifact/update-artifact.use-case';
 

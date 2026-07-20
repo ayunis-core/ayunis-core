@@ -6,7 +6,7 @@ import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { SubscriptionError } from '../../subscription.errors';
-import { SubscriptionType } from '../../../domain/value-objects/subscription-type.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import { isActive } from '../../util/is-active';
 
 // Mock the isActive utility

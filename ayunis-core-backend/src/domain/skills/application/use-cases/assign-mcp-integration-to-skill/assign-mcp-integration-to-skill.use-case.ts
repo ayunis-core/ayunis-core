@@ -4,7 +4,7 @@ import { AssignMcpIntegrationToSkillCommand } from './assign-mcp-integration-to-
 import { SkillRepository } from '../../ports/skill.repository';
 import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import {
   SkillNotFoundError,
   SkillMcpIntegrationNotFoundError,

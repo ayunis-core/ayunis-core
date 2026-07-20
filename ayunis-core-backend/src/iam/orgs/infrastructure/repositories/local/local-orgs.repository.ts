@@ -3,7 +3,7 @@ import {
   OrgsRepository,
   OrgsPagination,
   OrgsFilters,
-} from '../../../application/ports/orgs.repository';
+} from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,7 +16,7 @@ import {
   OrgUpdateFailedError,
   OrgDeletionFailedError,
   OrgRetrievalFailedError,
-} from '../../../application/orgs.errors';
+} from 'src/iam/orgs/application/orgs.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()

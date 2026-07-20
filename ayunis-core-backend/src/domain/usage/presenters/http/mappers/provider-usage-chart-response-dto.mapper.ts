@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProviderUsage } from '../../../domain/provider-usage.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import {
   ProviderTimeSeriesRowDto,
   ProviderUsageChartResponseDto,

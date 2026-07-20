@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SkillRepository } from '../../ports/skill.repository';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
-import { Skill } from '../../../domain/skill.entity';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';

@@ -6,14 +6,14 @@ import { McpIntegrationAuthRecord } from './schema/mcp-integration-auth.record';
 import type { PredefinedMcpIntegrationRecord } from './schema/predefined-mcp-integration.record';
 import type { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-integration.record';
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
-import { McpIntegrationFactory } from '../../../application/factories/mcp-integration.factory';
-import { McpIntegrationAuthFactory } from '../../../application/factories/mcp-integration-auth.factory';
-import { CustomMcpIntegration } from '../../../domain/integrations/custom-mcp-integration.entity';
-import { PredefinedMcpIntegration } from '../../../domain/integrations/predefined-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
-import { McpIntegrationKind } from '../../../domain/value-objects/mcp-integration-kind.enum';
-import { PredefinedMcpIntegrationSlug } from '../../../domain/value-objects/predefined-mcp-integration-slug.enum';
+import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
+import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 
 class InMemoryRepository<T extends { id: string }> {
   save = jest.fn(async (entity: T) => entity);
