@@ -31,7 +31,7 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
     if (!apiKey) {
       throw new Error('Staan search API key is not configured');
     }
-    // `||` (not `??`) so a blank override from .env.example falls back to the default.
+    
     const market =
       this.configService.get<string>('internetSearch.staan.market') || 'de-de';
     const baseUrl =
