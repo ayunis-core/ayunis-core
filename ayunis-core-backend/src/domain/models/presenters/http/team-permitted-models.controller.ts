@@ -28,6 +28,8 @@ import { Roles } from 'src/iam/authorization/application/decorators/roles.decora
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { GetTeamPermittedModelsUseCase } from '../../application/use-cases/get-team-permitted-models/get-team-permitted-models.use-case';
 import { GetTeamPermittedModelsQuery } from '../../application/use-cases/get-team-permitted-models/get-team-permitted-models.query';
+import { GetTeamPermittedImageGenerationModelsUseCase } from '../../application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.use-case';
+import { GetTeamPermittedImageGenerationModelsQuery } from '../../application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.query';
 import { CreateTeamPermittedModelUseCase } from '../../application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
 import { CreateTeamPermittedModelCommand } from '../../application/use-cases/create-team-permitted-model/create-team-permitted-model.command';
 import { DeleteTeamPermittedModelUseCase } from '../../application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
@@ -40,7 +42,7 @@ import { CreateTeamPermittedModelDto } from './dto/create-team-permitted-model.d
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { SetTeamDefaultModelDto } from './dto/set-team-default-model.dto';
 import { PermittedLanguageModelResponseDto } from './dto/permitted-language-model-response.dto';
-import { PermittedLanguageModel } from '../../domain/permitted-model.entity';
+import { PermittedImageGenerationModelResponseDto } from './dto/permitted-image-generation-model-response.dto';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 
 @ApiTags('team-permitted-models')
@@ -51,12 +53,14 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
   UpdatePermittedModelDto,
   SetTeamDefaultModelDto,
   PermittedLanguageModelResponseDto,
+  PermittedImageGenerationModelResponseDto,
 )
 export class TeamPermittedModelsController {
   private readonly logger = new Logger(TeamPermittedModelsController.name);
 
   constructor(
     private readonly getTeamPermittedModelsUseCase: GetTeamPermittedModelsUseCase,
+    private readonly getTeamPermittedImageGenerationModelsUseCase: GetTeamPermittedImageGenerationModelsUseCase,
     private readonly createTeamPermittedModelUseCase: CreateTeamPermittedModelUseCase,
     private readonly deleteTeamPermittedModelUseCase: DeleteTeamPermittedModelUseCase,
     private readonly updateTeamPermittedModelUseCase: UpdateTeamPermittedModelUseCase,
@@ -89,6 +93,35 @@ export class TeamPermittedModelsController {
     );
   }
 
+  @Get('image-generation')
+  @ApiOperation({
+    summary: "List a team's permitted image-generation models",
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      "Successfully retrieved team's permitted image-generation models",
+    schema: {
+      type: 'array',
+      items: {
+        $ref: getSchemaPath(PermittedImageGenerationModelResponseDto),
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Team not found' })
+  async listTeamImageGenerationModels(
+    @Param('teamId', ParseUUIDPipe) teamId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+  ): Promise<PermittedImageGenerationModelResponseDto[]> {
+    this.logger.log('listTeamImageGenerationModels', { teamId });
+    const query = new GetTeamPermittedImageGenerationModelsQuery(teamId, orgId);
+    const models =
+      await this.getTeamPermittedImageGenerationModelsUseCase.execute(query);
+    return models.map((model) =>
+      this.modelResponseDtoMapper.toImageGenerationModelDto(model),
+    );
+  }
+
   @Post()
   @ApiOperation({
     summary: 'Add a permitted model to a team',
@@ -99,7 +132,12 @@ export class TeamPermittedModelsController {
   @ApiResponse({
     status: 201,
     description: 'Successfully added permitted model to team',
-    schema: { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+        { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
+      ],
+    },
   })
   @ApiResponse({
     status: 400,
@@ -114,7 +152,9 @@ export class TeamPermittedModelsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @Body() dto: CreateTeamPermittedModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
-  ): Promise<PermittedLanguageModelResponseDto> {
+  ): Promise<
+    PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto
+  > {
     this.logger.log('createTeamPermittedModel', {
       teamId,
       modelId: dto.modelId,
@@ -126,12 +166,7 @@ export class TeamPermittedModelsController {
       dto.anonymousOnly,
     );
     const created = await this.createTeamPermittedModelUseCase.execute(command);
-    if (!(created instanceof PermittedLanguageModel)) {
-      throw new Error(
-        `Expected PermittedLanguageModel but got ${created.constructor.name}`,
-      );
-    }
-    return this.modelResponseDtoMapper.toLanguageModelDto(created);
+    return this.modelResponseDtoMapper.toTeamPermittedModelDto(created);
   }
 
   @Patch(':id')

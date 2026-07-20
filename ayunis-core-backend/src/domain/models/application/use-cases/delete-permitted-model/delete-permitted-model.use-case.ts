@@ -17,6 +17,7 @@ import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
+  PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -77,27 +78,7 @@ export class DeletePermittedModelUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      if (model instanceof PermittedLanguageModel) {
-        return this.deletePermittedLanguageModel(command.orgId, model);
-      } else if (model instanceof PermittedEmbeddingModel) {
-        return this.deletePermittedEmbeddingModel(command.orgId, model);
-      } else if (model instanceof PermittedImageGenerationModel) {
-        return this.deletePermittedImageGenerationModel(command.orgId, model);
-      } else {
-        this.logger.error(
-          'Model is not a language, embedding, or image-generation model',
-          {
-            modelId: command.permittedModelId,
-            orgId: command.orgId,
-          },
-        );
-        throw new PermittedModelDeletionFailedError(
-          'Model is not a language, embedding, or image-generation model',
-          {
-            modelId: command.permittedModelId,
-          },
-        );
-      }
+      return this.routeToDeletion(command, model);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -107,6 +88,32 @@ export class DeletePermittedModelUseCase {
         error instanceof Error ? error : new Error('Unknown error'),
       );
     }
+  }
+
+  private async routeToDeletion(
+    command: DeletePermittedModelCommand,
+    model: PermittedModel,
+  ): Promise<void> {
+    if (model instanceof PermittedLanguageModel) {
+      return this.deletePermittedLanguageModel(command.orgId, model);
+    } else if (model instanceof PermittedEmbeddingModel) {
+      return this.deletePermittedEmbeddingModel(command.orgId, model);
+    } else if (model instanceof PermittedImageGenerationModel) {
+      return this.deletePermittedImageGenerationModel(command.orgId, model);
+    }
+    this.logger.error(
+      'Model is not a language, embedding, or image-generation model',
+      {
+        modelId: command.permittedModelId,
+        orgId: command.orgId,
+      },
+    );
+    throw new PermittedModelDeletionFailedError(
+      'Model is not a language, embedding, or image-generation model',
+      {
+        modelId: command.permittedModelId,
+      },
+    );
   }
 
   private async deletePermittedLanguageModel(
@@ -204,6 +211,12 @@ export class DeletePermittedModelUseCase {
     orgId: UUID,
     model: PermittedImageGenerationModel,
   ): Promise<void> {
+    // Cascade: remove team-scoped permitted models referencing the same catalog model
+    await this.permittedModelsRepository.deleteTeamScopedByOrgAndModelId(
+      orgId,
+      model.model.id,
+    );
+
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId,

@@ -14,15 +14,17 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   DuplicateTeamPermittedModelError,
   ModelNotFoundError,
-  NotALanguageModelError,
+  ModelNotRestrictableForTeamError,
   TeamNotFoundInOrgError,
   UnexpectedModelError,
 } from '../../models.errors';
 import {
+  PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
@@ -192,7 +194,7 @@ describe('CreateTeamPermittedModelUseCase', () => {
     );
   });
 
-  it('should throw NotALanguageModelError when model is an embedding model', async () => {
+  it('should throw ModelNotRestrictableForTeamError when model is an embedding model', async () => {
     setAdminContext();
     setupOrgPermitted();
     permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
@@ -208,7 +210,39 @@ describe('CreateTeamPermittedModelUseCase', () => {
 
     const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
     await expect(useCase.execute(command)).rejects.toThrow(
-      NotALanguageModelError,
+      ModelNotRestrictableForTeamError,
     );
+  });
+
+  it('should create a team permitted image-generation model successfully', async () => {
+    setAdminContext();
+    const imageModel = new ImageGenerationModel({
+      id: modelId,
+      name: 'gpt-image-1',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 1',
+      isArchived: false,
+    });
+    permittedModelsRepository.findAll.mockResolvedValue([
+      new PermittedModel({
+        model: imageModel,
+        orgId,
+        scope: PermittedModelScope.ORG,
+      }),
+    ]);
+    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
+    modelsRepository.findOne.mockResolvedValue(imageModel);
+    const created = new PermittedImageGenerationModel({
+      model: imageModel,
+      orgId,
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamId,
+    });
+    permittedModelsRepository.create.mockResolvedValue(created);
+
+    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
+    const result = await useCase.execute(command);
+
+    expect(result).toBe(created);
   });
 });

@@ -4782,6 +4782,8 @@ offset?: number;
 
 export type ModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
+export type TeamPermittedModelsControllerCreateTeamPermittedModel201 = PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto;
+
 export type SuperAdminPermittedModelsControllerGetPermittedModels200Item = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;
 
 export type SuperAdminPermittedModelsControllerUpdatePermittedModel200 = PermittedLanguageModelResponseDto | PermittedEmbeddingModelResponseDto | PermittedImageGenerationModelResponseDto;

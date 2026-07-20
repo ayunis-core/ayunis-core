@@ -10,6 +10,7 @@ import {
   ModelNotFoundByIdError,
 } from '../../models.errors';
 import { ModelPolicyService } from '../../services/model-policy.service';
+import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import type { UUID } from 'crypto';
 
 describe('UpdateImageGenerationModelUseCase', () => {
@@ -34,6 +35,13 @@ describe('UpdateImageGenerationModelUseCase', () => {
         UpdateImageGenerationModelUseCase,
         ModelPolicyService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
+        {
+          provide: PermittedModelsRepository,
+          useValue: {
+            findOneEmbedding: jest.fn(),
+            findOneImageGeneration: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

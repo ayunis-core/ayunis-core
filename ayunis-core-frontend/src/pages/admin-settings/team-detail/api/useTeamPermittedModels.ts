@@ -1,8 +1,11 @@
 import { useTeamPermittedModelsControllerListTeamPermittedModels } from '@/shared/api/generated/ayunisCoreAPI';
 
 export function useTeamPermittedModels(teamId: string) {
-  const { data: models = [], isLoading } =
-    useTeamPermittedModelsControllerListTeamPermittedModels(teamId);
+  const {
+    data: models = [],
+    isLoading,
+    isError,
+  } = useTeamPermittedModelsControllerListTeamPermittedModels(teamId);
 
-  return { models, isLoading };
+  return { models, isLoading, isError };
 }

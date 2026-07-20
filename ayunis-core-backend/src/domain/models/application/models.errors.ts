@@ -29,6 +29,7 @@ export enum ModelErrorCode {
   UNEXPECTED_MODEL_ERROR = 'UNEXPECTED_MODEL_ERROR',
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
+  MODEL_NOT_RESTRICTABLE_FOR_TEAM = 'MODEL_NOT_RESTRICTABLE_FOR_TEAM',
 }
 
 /**
@@ -441,6 +442,23 @@ export class NotALanguageModelError extends ModelError {
     super(
       `Model '${modelId}' is not a language model`,
       ModelErrorCode.MODEL_INVALID,
+      400,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a model type cannot be restricted at the team level.
+ * Only language and image-generation models are restrictable; embedding
+ * models are intentionally excluded so document processing stays available
+ * to every team.
+ */
+export class ModelNotRestrictableForTeamError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' cannot be restricted at the team level`,
+      ModelErrorCode.MODEL_NOT_RESTRICTABLE_FOR_TEAM,
       400,
       metadata,
     );

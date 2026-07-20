@@ -87,6 +87,24 @@ export class ModelResponseDtoMapper {
     };
   }
 
+  // Team-scoped models are only ever language or image-generation — embedding
+  // models are not team-restrictable, so this narrows the return type accordingly.
+  toTeamPermittedModelDto(
+    permittedModel: PermittedModel,
+  ):
+    | PermittedLanguageModelResponseDto
+    | PermittedImageGenerationModelResponseDto {
+    if (permittedModel instanceof PermittedImageGenerationModel) {
+      return this.toImageGenerationModelDto(permittedModel);
+    }
+    if (permittedModel instanceof PermittedLanguageModel) {
+      return this.toLanguageModelDto(permittedModel);
+    }
+    throw new Error(
+      `Unexpected permitted model type: ${permittedModel.constructor.name}`,
+    );
+  }
+
   toDto(
     permittedModel: PermittedModel,
   ):

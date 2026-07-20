@@ -1,18 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelsRepository } from '../../ports/models.repository';
 import { CreateTeamPermittedModelCommand } from './create-team-permitted-model.command';
 import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { ApplicationError } from 'src/common/errors/base.error';
 import {
   DuplicateTeamPermittedModelError,
   ModelNotFoundError,
-  NotALanguageModelError,
+  ModelNotRestrictableForTeamError,
   UnexpectedModelError,
 } from '../../models.errors';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 
 @Injectable()
 export class CreateTeamPermittedModelUseCase {
@@ -24,6 +25,7 @@ export class CreateTeamPermittedModelUseCase {
     private readonly validator: TeamPermittedModelValidator,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     command: CreateTeamPermittedModelCommand,
   ): Promise<PermittedModel> {
@@ -33,41 +35,37 @@ export class CreateTeamPermittedModelUseCase {
       teamId: command.teamId,
     });
 
-    try {
-      this.validator.validateAdminAccess(command.orgId);
-      await this.validator.validateTeamInOrg(command.teamId, command.orgId);
-      await this.validateModelIsOrgPermitted(command.modelId, command.orgId);
-      await this.validateNoDuplicate(command);
+    this.validator.validateAdminAccess(command.orgId);
+    await this.validator.validateTeamInOrg(command.teamId, command.orgId);
+    await this.validateModelIsOrgPermitted(command.modelId, command.orgId);
+    await this.validateNoDuplicate(command);
 
-      const model = await this.modelsRepository.findOne({
-        id: command.modelId,
-      });
-      if (!model) {
-        throw new ModelNotFoundError(command.modelId);
-      }
-
-      if (!(model instanceof LanguageModel)) {
-        throw new NotALanguageModelError(command.modelId);
-      }
-
-      const permittedModel = new PermittedModel({
-        model,
-        orgId: command.orgId,
-        anonymousOnly: command.anonymousOnly,
-        scope: PermittedModelScope.TEAM,
-        scopeId: command.teamId,
-      });
-
-      return await this.permittedModelsRepository.create(permittedModel);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error creating team permitted model', error);
-      throw new UnexpectedModelError(
-        error instanceof Error ? error : new Error('Unknown error'),
-      );
+    const model = await this.modelsRepository.findOne({
+      id: command.modelId,
+    });
+    if (!model) {
+      throw new ModelNotFoundError(command.modelId);
     }
+
+    // Only language and image-generation models are restrictable per team.
+    // Embedding models are intentionally excluded so document processing
+    // stays available to every team.
+    if (
+      !(model instanceof LanguageModel) &&
+      !(model instanceof ImageGenerationModel)
+    ) {
+      throw new ModelNotRestrictableForTeamError(command.modelId);
+    }
+
+    const permittedModel = new PermittedModel({
+      model,
+      orgId: command.orgId,
+      anonymousOnly: command.anonymousOnly,
+      scope: PermittedModelScope.TEAM,
+      scopeId: command.teamId,
+    });
+
+    return this.permittedModelsRepository.create(permittedModel);
   }
 
   private async validateModelIsOrgPermitted(

@@ -93,6 +93,7 @@ import { CreateTeamPermittedModelUseCase } from './application/use-cases/create-
 import { DeleteTeamPermittedModelUseCase } from './application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
 import { UpdateTeamPermittedModelUseCase } from './application/use-cases/update-team-permitted-model/update-team-permitted-model.use-case';
 import { GetTeamPermittedModelsUseCase } from './application/use-cases/get-team-permitted-models/get-team-permitted-models.use-case';
+import { GetTeamPermittedImageGenerationModelsUseCase } from './application/use-cases/get-team-permitted-image-generation-models/get-team-permitted-image-generation-models.use-case';
 import { SetTeamDefaultModelUseCase } from './application/use-cases/set-team-default-model/set-team-default-model.use-case';
 import { TeamPermittedModelsController } from './presenters/http/team-permitted-models.controller';
 import { TeamPermittedModelValidator } from './application/services/team-permitted-model-validator.service';
@@ -285,6 +286,7 @@ import { MessagesModule } from '../messages/messages.module';
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
     GetTeamPermittedModelsUseCase,
+    GetTeamPermittedImageGenerationModelsUseCase,
     CreateTeamPermittedModelUseCase,
     DeleteTeamPermittedModelUseCase,
     UpdateTeamPermittedModelUseCase,

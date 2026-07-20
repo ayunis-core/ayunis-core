@@ -12,8 +12,12 @@ import { Logger } from '@nestjs/common';
 import { DeletePermittedModelUseCase } from './delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import {
+  PermittedImageGenerationModel,
+  PermittedLanguageModel,
+} from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import type { UUID } from 'crypto';
@@ -221,6 +225,48 @@ describe('DeletePermittedModelUseCase', () => {
       });
 
       await useCase.execute(command);
+
+      // Verify cascade happens before the org model is deleted
+      const cascadeCall =
+        permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mock
+          .invocationCallOrder[0];
+      const deleteCall =
+        permittedModelsRepository.delete.mock.invocationCallOrder[0];
+      expect(cascadeCall).toBeLessThan(deleteCall);
+    });
+
+    it('should delete team-scoped permitted models when deleting an org-scoped image-generation model', async () => {
+      const mockImageModel = new ImageGenerationModel({
+        id: mockCatalogModelId,
+        name: 'dall-e-3',
+        displayName: 'DALL-E 3',
+        provider: ModelProvider.OPENAI,
+        isArchived: false,
+      });
+
+      const orgPermittedImageModel = new PermittedImageGenerationModel({
+        id: mockPermittedModelId,
+        model: mockImageModel,
+        orgId: mockOrgId,
+        scope: PermittedModelScope.ORG,
+      });
+
+      permittedModelsRepository.findOne.mockResolvedValue(
+        orgPermittedImageModel,
+      );
+      permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mockResolvedValue();
+      permittedModelsRepository.delete.mockResolvedValue();
+
+      const command = new DeletePermittedModelCommand({
+        orgId: mockOrgId,
+        permittedModelId: mockPermittedModelId,
+      });
+
+      await useCase.execute(command);
+
+      expect(
+        permittedModelsRepository.deleteTeamScopedByOrgAndModelId,
+      ).toHaveBeenCalledWith(mockOrgId, mockCatalogModelId);
 
       // Verify cascade happens before the org model is deleted
       const cascadeCall =

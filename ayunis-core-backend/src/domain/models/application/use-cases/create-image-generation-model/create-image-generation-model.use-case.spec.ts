@@ -10,6 +10,7 @@ import {
   ModelAlreadyExistsError,
 } from '../../models.errors';
 import { ModelPolicyService } from '../../services/model-policy.service';
+import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 
 describe('CreateImageGenerationModelUseCase', () => {
   let useCase: CreateImageGenerationModelUseCase;
@@ -31,6 +32,13 @@ describe('CreateImageGenerationModelUseCase', () => {
         CreateImageGenerationModelUseCase,
         ModelPolicyService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
+        {
+          provide: PermittedModelsRepository,
+          useValue: {
+            findOneEmbedding: jest.fn(),
+            findOneImageGeneration: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

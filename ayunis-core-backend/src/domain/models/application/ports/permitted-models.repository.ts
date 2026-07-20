@@ -48,6 +48,10 @@ export abstract class PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]>;
+  abstract findManyImageGenerationByTeam(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel[]>;
   abstract findByTeamAndModelId(
     teamId: UUID,
     modelId: UUID,
