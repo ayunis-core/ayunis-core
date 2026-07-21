@@ -43,10 +43,12 @@ RUN echo "Frontend VITE_* vars present at build:" \
  && pnpm --filter core-frontend-tanstack run build
 RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
 # Build the workspace packages the backend depends on (@ayunis/inference,
-# @ayunis/provider-anthropic, @ayunis/provider-openai) before the backend so
-# their dist/ exists when nest build resolves them. The backend's `prebuild`
-# hook also runs this, but doing it explicitly keeps the build order legible.
-RUN pnpm --filter "@ayunis/inference" --filter "@ayunis/provider-anthropic" --filter "@ayunis/provider-openai" run build
+# @ayunis/provider-anthropic, @ayunis/provider-openai, @ayunis/agent-runtime)
+# before the backend so their dist/ exists when nest build resolves them. pnpm
+# orders @ayunis/inference ahead of @ayunis/agent-runtime (which depends on it).
+# The backend's `prebuild` hook also runs this, but doing it explicitly keeps
+# the build order legible.
+RUN pnpm --filter "@ayunis/inference" --filter "@ayunis/provider-anthropic" --filter "@ayunis/provider-openai" --filter "@ayunis/agent-runtime" run build
 RUN pnpm --filter core-backend run build
 
 # Produce a self-contained, production-only deploy bundle for the backend
