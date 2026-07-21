@@ -16,6 +16,8 @@ import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-ca
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 import { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import { MapMessagesToInferenceCommand } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.command';
+import { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
+import { TrimMessagesForContextCommand } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.command';
 import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
 import { RunUserInput } from '../../../domain/run-input.entity';
@@ -35,6 +37,7 @@ import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.ada
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
 const RUNTIME_MAX_ITERATIONS = 20;
+const MAX_CONTEXT_TOKENS = 80000;
 
 interface PreparedRuntimeRun {
   thread: Thread;
@@ -64,6 +67,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly mapMessagesToInferenceUseCase: MapMessagesToInferenceUseCase,
+    private readonly trimMessagesForContextUseCase: TrimMessagesForContextUseCase,
     private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly persistenceHookFactory: PersistenceHookFactory,
@@ -173,11 +177,14 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   private async startRun(prepared: PreparedRuntimeRun) {
-    const messages = await this.mapMessagesToInferenceUseCase.execute(
-      new MapMessagesToInferenceCommand(
+    const trimmedMessages = this.trimMessagesForContextUseCase.execute(
+      new TrimMessagesForContextCommand(
         prepared.thread.messages,
-        prepared.orgId,
+        MAX_CONTEXT_TOKENS,
       ),
+    );
+    const messages = await this.mapMessagesToInferenceUseCase.execute(
+      new MapMessagesToInferenceCommand(trimmedMessages, prepared.orgId),
     );
     const provider = await this.resolveModelProviderUseCase.execute(
       new ResolveModelProviderQuery(prepared.model),

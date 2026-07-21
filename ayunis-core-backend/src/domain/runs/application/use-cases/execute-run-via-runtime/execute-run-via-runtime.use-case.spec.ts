@@ -12,6 +12,7 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
+import type { TrimMessagesForContextUseCase } from 'src/domain/messages/application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
@@ -88,6 +89,9 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
+  const trimMessagesForContextUseCase = {
+    execute: jest.fn((command: { messages: unknown[] }) => command.messages),
+  } as unknown as TrimMessagesForContextUseCase;
   const resolveModelProviderUseCase = {
     execute: jest.fn().mockResolvedValue(new MockProvider([textTurn('Hello')])),
   } as unknown as ResolveModelProviderUseCase;
@@ -114,6 +118,7 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
     createUserMessageUseCase,
     addMessageToThreadUseCase,
     mapMessagesToInferenceUseCase,
+    trimMessagesForContextUseCase,
     resolveModelProviderUseCase,
     messageCleanupService,
     persistenceHookFactory,
