@@ -233,6 +233,107 @@ describe('RecursiveSplitterHandler', () => {
     });
   });
 
+  describe('chunk size enforcement', () => {
+    it('should split an oversized leading segment instead of emitting it as a single chunk', () => {
+      // Incident shape (AYC PDF ingestion): a huge separator-free block at the
+      // start of the document, followed by a normal paragraph. The leading
+      // segment used to bypass the size check and reach the embeddings API
+      // as one ~500k-char input.
+      const input: SplitterInput = {
+        text: 'A'.repeat(10000) + '\n\n' + 'Ein normaler Absatz mit Inhalt.',
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      };
+
+      const result = handler.processText(input);
+
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(2000);
+      }
+    });
+
+    it('should split an oversized trailing segment into chunks within the size limit', () => {
+      const input: SplitterInput = {
+        text: 'Ein normaler Absatz mit Inhalt.\n\n' + 'B'.repeat(10000),
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      };
+
+      const result = handler.processText(input);
+
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(2000);
+      }
+    });
+
+    it('should split an oversized segment between paragraphs into chunks within the size limit', () => {
+      const input: SplitterInput = {
+        text:
+          'Erster Absatz mit Inhalt.\n\n' +
+          'C'.repeat(10000) +
+          '\n\nZweiter Absatz mit Inhalt.',
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      };
+
+      const result = handler.processText(input);
+
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(2000);
+      }
+    });
+
+    it('should preserve all document content when splitting oversized segments', () => {
+      const input: SplitterInput = {
+        text: 'D'.repeat(10000) + '\n\n' + 'Ein normaler Absatz mit Inhalt.',
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      };
+
+      const result = handler.processText(input);
+
+      const combined = result.chunks.map((chunk) => chunk.text).join('');
+      const retainedDs = (combined.match(/D/g) ?? []).length;
+      expect(retainedDs).toBeGreaterThanOrEqual(10000);
+      expect(combined).toContain('Ein normaler Absatz mit Inhalt.');
+    });
+
+    it('should not emit chunks that only repeat the previous chunk overlap', () => {
+      // An oversized segment carries its trailing separator into recursion;
+      // the separator-only remainder splits must not surface as chunks whose
+      // content is entirely carried-over overlap from the previous chunk.
+      // Non-repetitive content so containment checks are meaningful.
+      let giantBlock = '';
+      let token = 0;
+      while (giantBlock.length < 9000) {
+        giantBlock += `tok${token}`;
+        token += 1;
+      }
+      const input: SplitterInput = {
+        text: giantBlock + '\n\n' + 'Ein normaler Absatz mit Inhalt.',
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      };
+
+      const result = handler.processText(input);
+
+      const chunks = result.chunks.map((chunk) => chunk.text);
+      for (let i = 1; i < chunks.length; i++) {
+        expect(chunks[i - 1]).not.toContain(chunks[i].trim());
+      }
+    });
+
+    it('should respect the size limit with default chunk configuration', () => {
+      const input: SplitterInput = {
+        text:
+          'Einleitung ohne Trennzeichenprobleme.\n\n' +
+          'E'.repeat(5000) +
+          '\n\nAbschluss des Dokuments.',
+      };
+
+      const result = handler.processText(input);
+
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(1000);
+      }
+    });
+  });
+
   describe('processText metadata', () => {
     it('should include provider name in result metadata', () => {
       const input: SplitterInput = {
