@@ -104,7 +104,6 @@ export default function ChatPage({
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
-  // In-flight submission, restored into the input if the run fails so the user can retry.
   const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
     null,
   );
@@ -256,9 +255,6 @@ export default function ChatPage({
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
     },
-    // Runs in the finally of every send (success or failure). Restore the
-    // prompt + images on any failure — incl. the 403/429 paths that never
-    // reach onError — then clear the stored submission.
     onComplete: (failed) => {
       if (failed) restoreFailedSubmission();
       lastSubmissionRef.current = null;
