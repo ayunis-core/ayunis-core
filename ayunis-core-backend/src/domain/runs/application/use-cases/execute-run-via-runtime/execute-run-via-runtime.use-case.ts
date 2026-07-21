@@ -163,7 +163,9 @@ export class ExecuteRunViaRuntimeUseCase {
       orgId,
       userId,
       isAnonymous,
-      instructions,
+      instructions: activated.skillName
+        ? this.appendSkillActivatedNote(instructions, activated.skillName)
+        : instructions,
       tools: this.backendToolAdapter.toRuntimeTools(tools),
       activeSkills,
       canUseTools,
@@ -180,7 +182,11 @@ export class ExecuteRunViaRuntimeUseCase {
   private async activateSkillIfRequested(
     command: ExecuteRunCommand,
     thread: Thread,
-  ): Promise<{ thread: Thread; skillInstructions?: string }> {
+  ): Promise<{
+    thread: Thread;
+    skillInstructions?: string;
+    skillName?: string;
+  }> {
     const input = command.input;
     if (!(input instanceof RunUserInput) || !input.skillId) {
       return { thread };
@@ -195,7 +201,22 @@ export class ExecuteRunViaRuntimeUseCase {
     return {
       thread: refreshed.thread,
       skillInstructions: activation.instructions,
+      skillName: activation.skillName,
     };
+  }
+
+  /**
+   * Mirrors the legacy loop: once a skill is activated at run start, guard the
+   * system prompt so the model does not call `activate_skill` again for it.
+   */
+  private appendSkillActivatedNote(
+    instructions: string,
+    skillName: string,
+  ): string {
+    const note = `<already_activated_skill>
+Skill "${skillName}" has already been activated on this thread. Do not call activate_skill for this skill.
+</already_activated_skill>`;
+    return instructions ? `${instructions}\n\n${note}` : note;
   }
 
   private async *streamRun(
@@ -292,7 +313,10 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<SeededInput> {
     const hasText = !!input.text && input.text.trim().length > 0;
     const hasImages = input.pendingImages.length > 0;
-    if (!hasText && !hasImages) {
+    const hasSkillInstructions =
+      !!prepared.skillInstructions &&
+      prepared.skillInstructions.trim().length > 0;
+    if (!hasText && !hasImages && !hasSkillInstructions) {
       throw new RunInvalidInputError(
         'Message must contain non-empty text or at least one image',
       );

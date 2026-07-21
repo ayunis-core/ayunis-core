@@ -19,10 +19,11 @@ export interface SkillActivationHookParams {
  * Builds the skill-activation hook. When the model calls the `activate_skill`
  * signal tool, the tool handler has already copied the skill's sources, MCP
  * integrations and knowledge bases onto the thread and returned its
- * instructions as the tool result. This hook rebuilds the whole tool context
- * from the refreshed thread and swaps it in via `setTools`, so the newly
- * available tools are offered on the next model call — the mid-loop
- * full-replace the runtime's `setTools` escape hatch exists for.
+ * instructions as the tool result. This hook rebuilds the whole run context
+ * from the refreshed thread and swaps it in via `setTools`/`setInstructions`,
+ * so the newly available tools and the updated system prompt (thread sources,
+ * knowledge bases) are used on the next model call — the mid-loop full-replace
+ * the runtime's `setTools`/`setInstructions` escape hatches exist for.
  */
 @Injectable()
 export class SkillActivationHookFactory {
@@ -43,13 +44,15 @@ export class SkillActivationHookFactory {
         const { thread } = await this.findThreadUseCase.execute(
           new FindThreadQuery(params.threadId),
         );
-        const { tools } = await this.toolAssemblyService.buildRunContext(
-          thread,
-          params.activeSkills,
-          params.canUseTools,
-          params.isAnonymous,
-        );
+        const { tools, instructions } =
+          await this.toolAssemblyService.buildRunContext(
+            thread,
+            params.activeSkills,
+            params.canUseTools,
+            params.isAnonymous,
+          );
         ctx.setTools(this.backendToolAdapter.toRuntimeTools(tools));
+        ctx.setInstructions(instructions);
       },
     };
   }

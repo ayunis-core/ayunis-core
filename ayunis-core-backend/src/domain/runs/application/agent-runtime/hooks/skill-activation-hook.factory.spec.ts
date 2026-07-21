@@ -10,9 +10,10 @@ function buildHook(overrides: { rebuiltTools?: unknown[] } = {}) {
   const findThreadUseCase = {
     execute: jest.fn().mockResolvedValue({ thread: { id: threadId } }),
   } as unknown as FindThreadUseCase;
-  const buildRunContext = jest
-    .fn()
-    .mockResolvedValue({ tools: [{ name: 'source_query' }], instructions: '' });
+  const buildRunContext = jest.fn().mockResolvedValue({
+    tools: [{ name: 'source_query' }],
+    instructions: 'Refreshed instructions.',
+  });
   const toolAssemblyService = {
     buildRunContext,
   } as unknown as ToolAssemblyService;
@@ -44,6 +45,7 @@ function toolCtx(name: string, isError = false) {
     result: 'ok',
     isError,
     setTools: jest.fn(),
+    setInstructions: jest.fn(),
   };
 }
 
@@ -56,6 +58,7 @@ describe('SkillActivationHookFactory', () => {
 
     expect(buildRunContext).toHaveBeenCalledTimes(1);
     expect(ctx.setTools).toHaveBeenCalledWith([{ name: 'source_query' }]);
+    expect(ctx.setInstructions).toHaveBeenCalledWith('Refreshed instructions.');
   });
 
   it('ignores other tool calls', async () => {
@@ -66,6 +69,7 @@ describe('SkillActivationHookFactory', () => {
 
     expect(buildRunContext).not.toHaveBeenCalled();
     expect(ctx.setTools).not.toHaveBeenCalled();
+    expect(ctx.setInstructions).not.toHaveBeenCalled();
   });
 
   it('ignores a failed activate_skill call', async () => {
@@ -75,5 +79,6 @@ describe('SkillActivationHookFactory', () => {
     await hook.afterToolCall!(ctx as never);
 
     expect(ctx.setTools).not.toHaveBeenCalled();
+    expect(ctx.setInstructions).not.toHaveBeenCalled();
   });
 });

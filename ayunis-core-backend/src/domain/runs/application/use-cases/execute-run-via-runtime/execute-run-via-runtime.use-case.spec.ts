@@ -50,6 +50,7 @@ interface Harness {
   anonymize: jest.Mock;
   activateOnThread: jest.Mock;
   createUser: jest.Mock;
+  provider: MockProvider;
 }
 
 interface HarnessOptions {
@@ -141,12 +142,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
+  const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
   const resolveModelProviderUseCase = {
-    execute: jest
-      .fn()
-      .mockResolvedValue(
-        new MockProvider(overrides.turns ?? [textTurn('Hello')]),
-      ),
+    execute: jest.fn().mockResolvedValue(provider),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
@@ -194,6 +192,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     anonymize,
     activateOnThread,
     createUser,
+    provider,
   };
 }
 
@@ -317,5 +316,33 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(createUser.mock.calls[0][0]).toMatchObject({
       skillInstructions: 'Be a helpful clerk',
     });
+  });
+
+  it('accepts a skill-only launch with empty text (no images)', async () => {
+    const { useCase, createUser } = buildHarness();
+
+    const command = userCommand(
+      new RunUserInput('', [], 'skill-1' as unknown as UUID),
+    );
+    // must not throw a validation error — the skill instructions are valid input
+    await drain(await useCase.execute(command));
+
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Be a helpful clerk',
+    });
+  });
+
+  it('appends the already-activated-skill note to the system prompt', async () => {
+    const { useCase, provider } = buildHarness();
+
+    const command = userCommand(
+      new RunUserInput('Hi', [], 'skill-1' as unknown as UUID),
+    );
+    await drain(await useCase.execute(command));
+
+    expect(provider.requests[0].instructions).toContain(
+      '<already_activated_skill>',
+    );
+    expect(provider.requests[0].instructions).toContain('"Clerk"');
   });
 });

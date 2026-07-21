@@ -100,6 +100,20 @@ describe('hook mutations', () => {
     expect(model.requests[1].tools).toEqual([]);
   });
 
+  it('replaces the entire system prompt with setInstructions', async () => {
+    const replacer: Hook = {
+      name: 'replacer',
+      afterToolCall: (ctx) => ctx.setInstructions('Rebuilt prompt.'),
+    };
+    const model = twoIterationModel();
+    await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [replacer] }),
+    );
+
+    expect(model.requests[0].instructions).toBe('Be helpful.');
+    expect(model.requests[1].instructions).toBe('Rebuilt prompt.');
+  });
+
   it('appends afterToolCall instruction additions to the next call', async () => {
     const injector: Hook = {
       name: 'injector',

@@ -21,6 +21,7 @@ export interface MutableRunConfig {
 export class PendingMutations {
   private messageTransforms: MessageTransform[] = [];
   private toolOps: ToolOp[] = [];
+  private instructionsOverride: string | undefined;
   private instructionAdditions: string[] = [];
 
   transformMessages(fn: MessageTransform): void {
@@ -39,6 +40,10 @@ export class PendingMutations {
     this.toolOps.push({ kind: 'set', tools });
   }
 
+  setInstructions(instructions: string): void {
+    this.instructionsOverride = instructions;
+  }
+
   addInstructions(text: string): void {
     this.instructionAdditions.push(text);
   }
@@ -52,12 +57,13 @@ export class PendingMutations {
     for (const op of this.toolOps) {
       tools = applyToolOp(tools, op);
     }
-    let instructions = config.instructions;
+    let instructions = this.instructionsOverride ?? config.instructions;
     for (const addition of this.instructionAdditions) {
       instructions = instructions ? `${instructions}\n\n${addition}` : addition;
     }
     this.messageTransforms = [];
     this.toolOps = [];
+    this.instructionsOverride = undefined;
     this.instructionAdditions = [];
     return { messages, tools, instructions };
   }
