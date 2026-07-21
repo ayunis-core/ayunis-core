@@ -60,8 +60,6 @@ export function useMessageSend(params: UseMessageSendParams) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
   const wasAbortedRef = useRef(false);
-  // Set by any failure path (SSE error event or HTTP/network error, incl. the
-  // 403/429 branches that don't call onError) so onComplete can restore.
   const hadErrorRef = useRef(false);
 
   const sendMessage = useCallback(
@@ -210,10 +208,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       } catch (error) {
         console.error('Error in sendMessage', error);
-
-        // An abort (superseded by a newer send, or user cancel) is not a
-        // failure: return before setting hadErrorRef so it can't pollute the
-        // shared flag of the send that superseded this one.
+        
         if (error instanceof Error && error.name === 'AbortError') {
           wasAbortedRef.current = true;
           return;
