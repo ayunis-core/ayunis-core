@@ -31,19 +31,6 @@ export class PredefinedMcpIntegrationRegistry {
       });
     }
 
-    // Legal MCP Integration
-    const legalMcpUrl = this.configService.get<string>('mcp.legalMcpUrl');
-    if (legalMcpUrl) {
-      this.configs.set(PredefinedMcpIntegrationSlug.LEGAL_CODES, {
-        slug: PredefinedMcpIntegrationSlug.LEGAL_CODES,
-        displayName: 'Deutsche Gesetzestexte',
-        description:
-          'Ermöglicht KI-Agenten den Zugriff auf aktuelle deutsche Gesetzestexte.',
-        serverUrl: legalMcpUrl,
-        authType: McpAuthMethod.NO_AUTH,
-      });
-    }
-
     // Locaboo integration (Bearer token auth)
     const locabooUrl = this.configService.get<string>('mcp.locaboo4Url');
     if (locabooUrl) {
