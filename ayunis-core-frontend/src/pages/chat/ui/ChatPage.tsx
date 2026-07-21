@@ -1,4 +1,12 @@
-import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+} from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
@@ -127,6 +135,13 @@ export default function ChatPage({
     setThreadTitle(thread.title);
     setPiiMasks(thread.piiMasks);
   }
+
+  // ChatPage is reused across thread switches; drop any pending restore from
+  // the previous thread so a send that fails after navigation can't paste its
+  // prompt/images into the newly shown thread.
+  useEffect(() => {
+    lastSubmissionRef.current = null;
+  }, [thread.id]);
   const [pendingSubmission, setPendingSubmission] = useState<string | null>(
     null,
   );

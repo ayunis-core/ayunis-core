@@ -208,7 +208,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       } catch (error) {
         console.error('Error in sendMessage', error);
-        
+
         if (error instanceof Error && error.name === 'AbortError') {
           wasAbortedRef.current = true;
           return;
