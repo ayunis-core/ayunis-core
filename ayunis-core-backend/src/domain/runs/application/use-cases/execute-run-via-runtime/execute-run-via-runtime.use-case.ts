@@ -58,6 +58,7 @@ import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextTrimHookFactory } from '../../agent-runtime/hooks/context-trim-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
@@ -112,6 +113,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly persistenceHookFactory: PersistenceHookFactory,
     private readonly usageHookFactory: UsageHookFactory,
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
+    private readonly contextTrimHookFactory: ContextTrimHookFactory,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -256,8 +258,14 @@ export class ExecuteRunViaRuntimeUseCase {
         MAX_CONTEXT_TOKENS,
       ),
     );
+    // Trimming can drop every message (e.g. an oversized user turn with a
+    // pending tool exchange leaves no user-anchored suffix). `run()` rejects an
+    // empty `messages` array, so fall back to the untrimmed history and let the
+    // provider decide instead of aborting an otherwise recoverable turn.
+    const effectiveMessages =
+      trimmed.length > 0 ? trimmed : prepared.thread.messages;
     const messages = await this.mapMessagesToInferenceUseCase.execute(
-      new MapMessagesToInferenceCommand(trimmed, prepared.orgId),
+      new MapMessagesToInferenceCommand(effectiveMessages, prepared.orgId),
     );
     const provider = await this.resolveModelProviderUseCase.execute(
       new ResolveModelProviderQuery(prepared.model),
@@ -282,6 +290,7 @@ export class ExecuteRunViaRuntimeUseCase {
 
   private buildHooks(prepared: PreparedRuntimeRun): Hook[] {
     return [
+      this.contextTrimHookFactory.create({ maxTokens: MAX_CONTEXT_TOKENS }),
       this.persistenceHookFactory.create({ threadId: prepared.thread.id }),
       this.usageHookFactory.create({ model: prepared.model }),
       this.skillActivationHookFactory.create({

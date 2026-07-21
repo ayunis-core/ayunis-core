@@ -11,6 +11,7 @@ import { BackendToolAdapter } from './application/agent-runtime/backend-tool.ada
 import { PersistenceHookFactory } from './application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextTrimHookFactory } from './application/agent-runtime/hooks/context-trim-hook.factory';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -38,6 +39,7 @@ import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates
 import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
+import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 
 @Module({
   imports: [
@@ -59,6 +61,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     ChatSettingsModule,
     ArtifactsModule,
     LetterheadsModule,
+    TokenCounterModule,
   ],
   controllers: [RunsController],
   providers: [
@@ -68,6 +71,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
     PersistenceHookFactory,
     UsageHookFactory,
     SkillActivationHookFactory,
+    ContextTrimHookFactory,
     ExecuteRunAndSetTitleUseCase,
     SystemPromptBuilderService,
     ToolAssemblyService,

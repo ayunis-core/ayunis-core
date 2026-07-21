@@ -27,6 +27,7 @@ import type { SkillActivationService } from 'src/domain/skills/application/servi
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextTrimHookFactory } from '../../agent-runtime/hooks/context-trim-hook.factory';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -59,6 +60,7 @@ interface HarnessOptions {
   turns?: readonly (readonly ProviderChunk[])[];
   runtimeTools?: RuntimeTool[];
   providerRejects?: boolean;
+  trimReturnsEmpty?: boolean;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -144,7 +146,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
-  const trim = jest.fn((cmd: { messages: unknown[] }) => cmd.messages);
+  const trim = jest.fn((cmd: { messages: unknown[] }) =>
+    overrides.trimReturnsEmpty ? [] : cmd.messages,
+  );
   const trimMessagesForContextUseCase = {
     execute: trim,
   } as unknown as TrimMessagesForContextUseCase;
@@ -173,6 +177,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   );
   const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
+  const contextTrimHookFactory = new ContextTrimHookFactory({
+    execute: jest.fn().mockReturnValue(1),
+  } as never);
 
   const useCase = new ExecuteRunViaRuntimeUseCase(
     contextService,
@@ -192,6 +199,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     persistenceHookFactory,
     usageHookFactory,
     skillActivationHookFactory,
+    contextTrimHookFactory,
     eventEmitter,
   );
 
@@ -297,6 +305,18 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(trim).toHaveBeenCalledWith(
       expect.objectContaining({ maxTokens: 80000 }),
     );
+  });
+
+  it('still runs when trimming drops every message instead of aborting', async () => {
+    const { useCase } = buildHarness({ trimReturnsEmpty: true });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    // an empty trim result must not abort the run with InvalidRunInputError
+    const assistant = items
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .pop();
+    expect(assistant).toBeDefined();
   });
 
   it('cleans up trailing non-assistant messages when the run fails', async () => {
