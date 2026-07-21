@@ -53,6 +53,21 @@ export const FILE_EXTENSIONS = {
   WEBM: '.webm',
 } as const;
 
+// Names shown in UnsupportedFileTypeError messages by the source-upload flows.
+export const SUPPORTED_FILE_TYPES: string[] = [
+  'PDF',
+  'DOCX',
+  'PPTX',
+  'TXT',
+  'CSV',
+  'XLSX',
+  'XLS',
+  'MP3',
+  'M4A',
+  'WAV',
+  'WEBM',
+];
+
 export type DetectedFileType =
   | 'pdf'
   | 'docx'

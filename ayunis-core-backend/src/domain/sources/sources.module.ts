@@ -20,11 +20,13 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
 import { FindContentChunksByIdsUseCase } from './application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { ExtractTextLinesUseCase } from './application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
-import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
 import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
+import { DataSourceCommandBuilderService } from './application/services/data-source-command-builder.service';
+import { SpreadsheetParserPort } from './application/ports/spreadsheet-parser.port';
+import { PiscinaSpreadsheetParserAdapter } from './infrastructure/parsing/piscina-spreadsheet-parser.adapter';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
@@ -42,6 +44,11 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     UrlCrawlModule,
   ],
   providers: [
+    {
+      provide: SpreadsheetParserPort,
+      useClass: PiscinaSpreadsheetParserAdapter,
+    },
+    DataSourceCommandBuilderService,
     SourceProcessingCleanupService,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
@@ -55,7 +62,6 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
-    CreateSourcesFromFileUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
@@ -66,6 +72,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     StartUrlCrawlUseCase,
   ],
   exports: [
+    DataSourceCommandBuilderService,
     LocalSourceRepositoryModule,
     DocumentProcessingModule,
     UrlCrawlModule,
@@ -81,7 +88,6 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
-    CreateSourcesFromFileUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
