@@ -22,8 +22,10 @@ import type { InferenceUsageGuard } from '../../services/inference-usage-guard.s
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
 import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
+import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -46,6 +48,8 @@ interface Harness {
   cleanup: jest.Mock;
   createToolResult: jest.Mock;
   anonymize: jest.Mock;
+  activateOnThread: jest.Mock;
+  createUser: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -92,10 +96,23 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     buildRunContext: jest
       .fn()
       .mockResolvedValue({ tools: [], instructions: 'system prompt' }),
+    findActiveSkills: jest.fn().mockResolvedValue([]),
   } as unknown as ToolAssemblyService;
   const backendToolAdapter = {
     toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
   } as unknown as BackendToolAdapter;
+  const activateOnThread = jest.fn().mockResolvedValue({
+    instructions: 'Be a helpful clerk',
+    skillName: 'Clerk',
+  });
+  const skillActivationService = {
+    activateOnThread,
+  } as unknown as SkillActivationService;
+  const skillActivationHookFactory = new SkillActivationHookFactory(
+    findThreadUseCase,
+    toolAssemblyService,
+    backendToolAdapter,
+  );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
     masks: [{ token: '{{pii:PERSON_1}}' }],
@@ -110,8 +127,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     execute: createToolResult,
   } as unknown as CreateToolResultMessageUseCase;
   const userMessage = { id: 'user-msg', threadId } as unknown as UserMessage;
+  const createUser = jest.fn().mockResolvedValue(userMessage);
   const createUserMessageUseCase = {
-    execute: jest.fn().mockResolvedValue(userMessage),
+    execute: createUser,
   } as unknown as CreateUserMessageUseCase;
   const addMessageToThreadUseCase = {
     execute: jest.fn(),
@@ -153,6 +171,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     inferenceUsageGuard,
     toolAssemblyService,
     backendToolAdapter,
+    skillActivationService,
     anonymizeTextForThreadUseCase,
     createUserMessageUseCase,
     createToolResultMessageUseCase,
@@ -162,6 +181,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     messageCleanupService,
     persistenceHookFactory,
     usageHookFactory,
+    skillActivationHookFactory,
     eventEmitter,
   );
 
@@ -172,6 +192,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     cleanup,
     createToolResult: flushToolResult,
     anonymize,
+    activateOnThread,
+    createUser,
   };
 }
 
@@ -282,13 +304,18 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(items[1]).toMatchObject({ id: 'user-msg' });
   });
 
-  it('rejects skill activation (not yet supported on the runtime path)', async () => {
-    const { useCase } = buildHarness();
+  it('activates a requested skill before the run and folds in its instructions', async () => {
+    const { useCase, activateOnThread, createUser } = buildHarness();
+
     const command = userCommand(
       new RunUserInput('Hi', [], 'skill-1' as unknown as UUID),
     );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      /does not yet support skill/i,
-    );
+    await drain(await useCase.execute(command));
+
+    expect(activateOnThread).toHaveBeenCalledWith('skill-1', expect.anything());
+    // the skill instructions are folded into the created user message
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Be a helpful clerk',
+    });
   });
 });
