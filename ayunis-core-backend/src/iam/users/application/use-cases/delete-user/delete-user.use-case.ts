@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { UUID } from 'crypto';
 import { UsersRepository } from '../../ports/users.repository';
 import { DeleteUserCommand } from './delete-user.command';
 import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';
@@ -12,6 +13,7 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { InviteNotFoundError } from 'src/iam/invites/application/invites.errors';
 import { UserDeletedEvent } from '../../events/user-deleted.event';
 import { UserDeletionRequestedEvent } from '../../events/user-deletion-requested.event';
+import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
@@ -25,30 +27,55 @@ export class DeleteUserUseCase {
     private readonly deleteInviteByEmailUseCase: DeleteInviteByEmailUseCase,
   ) {}
 
-  @Transactional()
   async execute(command: DeleteUserCommand): Promise<void> {
     this.logger.log('deleteUser', { userId: command.userId });
     const requestingUserId = this.contextService.get('userId');
-    const requestUserOrgId = this.contextService.get('orgId');
-    if (!requestingUserId || !requestUserOrgId) {
+    if (!requestingUserId) {
       throw new UserUnauthorizedError('User not authenticated');
     }
-    const orgRole = this.contextService.get('role');
-    const systemRole = this.contextService.get('systemRole');
 
     const userToDelete = await this.usersRepository.findOneById(command.userId);
     if (!userToDelete) {
       this.logger.error('User not found', { userId: command.userId });
       throw new UserNotFoundError(command.userId);
     }
+    this.assertAllowedToDelete(command, userToDelete);
 
+    // Two-phase cleanup: listeners resolve dependent data that database
+    // cascades cannot reach (MinIO assets, in-flight source processing) while
+    // the owning rows still exist, and defer the irreversible work; it runs
+    // only after the row delete succeeds.
+    const event = new UserDeletionRequestedEvent(
+      userToDelete.id,
+      userToDelete.orgId,
+    );
+    await this.eventEmitter.emitAsync(
+      UserDeletionRequestedEvent.EVENT_NAME,
+      event,
+    );
+
+    await this.deleteUserRows(userToDelete, requestingUserId);
+
+    await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
+    this.emitUserDeleted(userToDelete);
+  }
+
+  private assertAllowedToDelete(
+    command: DeleteUserCommand,
+    userToDelete: User,
+  ): void {
+    const requestUserOrgId = this.contextService.get('orgId');
+    if (!requestUserOrgId) {
+      throw new UserUnauthorizedError('User not authenticated');
+    }
     // Super admins can delete any user, regular admins can only delete users
     // from their own org. The passed command.orgId must match both the
     // requester's org (from context) and the target user's org to prevent
     // cross-org deletion.
-    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+    const isSuperAdmin =
+      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
     const isOrgAdmin =
-      orgRole === UserRole.ADMIN &&
+      this.contextService.get('role') === UserRole.ADMIN &&
       requestUserOrgId === command.orgId &&
       command.orgId === userToDelete.orgId;
     if (!isSuperAdmin && !isOrgAdmin) {
@@ -56,16 +83,17 @@ export class DeleteUserUseCase {
         'You are not allowed to delete this user',
       );
     }
+  }
 
-    // Purge dependent data that database cascades cannot reach (MinIO assets,
-    // RAG index entries) while the owning rows still exist. Awaited so it runs
-    // inside the deletion transaction and before the cascading row delete.
-    await this.eventEmitter.emitAsync(
-      UserDeletionRequestedEvent.EVENT_NAME,
-      new UserDeletionRequestedEvent(userToDelete.id, userToDelete.orgId),
-    );
-
-    await this.usersRepository.delete(command.userId);
+  // Kept transactional on its own so deferred cleanup in execute() stays
+  // outside the transaction boundary: irreversible external deletes must not
+  // run before the row delete is committed.
+  @Transactional()
+  private async deleteUserRows(
+    userToDelete: User,
+    requestingUserId: UUID,
+  ): Promise<void> {
+    await this.usersRepository.delete(userToDelete.id);
     await this.deleteInviteByEmailUseCase
       .execute(
         new DeleteInviteByEmailCommand({
@@ -79,7 +107,6 @@ export class DeleteUserUseCase {
         }
         throw error;
       });
-    this.emitUserDeleted(userToDelete);
   }
 
   private emitUserDeleted(user: User): void {

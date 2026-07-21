@@ -203,6 +203,120 @@ describe('DeleteUserUseCase', () => {
     ]);
   });
 
+  it('should run deferred cleanup after the row delete and before UserDeletedEvent', async () => {
+    const command = new DeleteUserCommand({
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+    });
+    const mockUser = new User({
+      id: command.userId,
+      email: 'user@example.com',
+      emailVerified: true,
+      passwordHash: 'hash',
+      role: UserRole.ADMIN,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+
+    const callOrder: string[] = [];
+    mockEventEmitter.emitAsync.mockImplementation(
+      (eventName: string, event: unknown) => {
+        callOrder.push(`event:${eventName}`);
+        if (event instanceof UserDeletionRequestedEvent) {
+          event.deferCleanup('purge', async () => {
+            callOrder.push('cleanup');
+          });
+        }
+        return Promise.resolve([]);
+      },
+    );
+    jest.spyOn(mockUsersRepository, 'delete').mockImplementation(() => {
+      callOrder.push('delete');
+      return Promise.resolve(undefined);
+    });
+
+    await useCase.execute(command);
+
+    expect(callOrder).toEqual([
+      `event:${UserDeletionRequestedEvent.EVENT_NAME}`,
+      'delete',
+      'cleanup',
+      `event:${UserDeletedEvent.EVENT_NAME}`,
+    ]);
+  });
+
+  it('should not run deferred cleanup when the row delete fails', async () => {
+    const command = new DeleteUserCommand({
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+    });
+    const mockUser = new User({
+      id: command.userId,
+      email: 'user@example.com',
+      emailVerified: true,
+      passwordHash: 'hash',
+      role: UserRole.ADMIN,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+
+    const cleanup = jest.fn().mockResolvedValue(undefined);
+    mockEventEmitter.emitAsync.mockImplementation(
+      (_eventName: string, event: unknown) => {
+        if (event instanceof UserDeletionRequestedEvent) {
+          event.deferCleanup('purge', cleanup);
+        }
+        return Promise.resolve([]);
+      },
+    );
+    jest
+      .spyOn(mockUsersRepository, 'delete')
+      .mockRejectedValue(new Error('Repository error'));
+
+    await expect(useCase.execute(command)).rejects.toThrow('Repository error');
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
+  it('should swallow deferred cleanup failures and still emit UserDeletedEvent', async () => {
+    const command = new DeleteUserCommand({
+      userId: '123e4567-e89b-12d3-a456-426614174000',
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+    });
+    const mockUser = new User({
+      id: command.userId,
+      email: 'user@example.com',
+      emailVerified: true,
+      passwordHash: 'hash',
+      role: UserRole.ADMIN,
+      orgId: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test User',
+      hasAcceptedMarketing: false,
+    });
+    jest.spyOn(mockUsersRepository, 'findOneById').mockResolvedValue(mockUser);
+    jest.spyOn(mockUsersRepository, 'delete').mockResolvedValue(undefined);
+
+    mockEventEmitter.emitAsync.mockImplementation(
+      (_eventName: string, event: unknown) => {
+        if (event instanceof UserDeletionRequestedEvent) {
+          event.deferCleanup('purge', () =>
+            Promise.reject(new Error('storage unavailable')),
+          );
+        }
+        return Promise.resolve([]);
+      },
+    );
+
+    await expect(useCase.execute(command)).resolves.toBeUndefined();
+    expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
+      UserDeletedEvent.EVENT_NAME,
+      expect.objectContaining({ userId: command.userId }),
+    );
+  });
+
   it('should handle repository errors', async () => {
     const command = new DeleteUserCommand({
       userId: 'user-id' as UUID,
