@@ -44,7 +44,6 @@ import { MessageImagesController } from './presenters/http/message-images.contro
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { ThreadsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
-import { ThreadStorageCleanupService } from './application/services/thread-storage-cleanup.service';
 import { RecordThreadActivityUseCase } from './application/use-cases/record-thread-activity/record-thread-activity.use-case';
 import { FindExpiredThreadRefsByOrgUseCase } from './application/use-cases/find-expired-thread-refs-by-org/find-expired-thread-refs-by-org.use-case';
 import { CleanupStaleThreadSourcesUseCase } from './application/use-cases/cleanup-stale-thread-sources/cleanup-stale-thread-sources.use-case';
@@ -116,7 +115,6 @@ import { McpModule } from '../mcp/mcp.module';
     ThreadActivityListener,
     ThreadsUserDeletionRequestedListener,
     // Services
-    ThreadStorageCleanupService,
     // Tasks
     StaleThreadSourcesCleanupTask,
     // Mappers
