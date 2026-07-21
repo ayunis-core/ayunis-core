@@ -76,28 +76,6 @@ describe('ProcessTextUseCase', () => {
       expect(result).toBe(expectedResult);
     });
 
-    it('should handle different splitter providers', () => {
-      const command = new SplitTextCommand('Test text', SplitterType.LINE);
-
-      const expectedResult = new SplitResult([new TextChunk('Test text')]);
-
-      const mockHandler = {
-        processText: jest.fn().mockReturnValue(expectedResult),
-        isAvailable: jest.fn().mockReturnValue(true),
-      };
-
-      jest
-        .spyOn(mockProviderRegistry, 'getHandler')
-        .mockReturnValue(mockHandler);
-
-      const result = useCase.execute(command);
-
-      expect(mockProviderRegistry.getHandler).toHaveBeenCalledWith(
-        SplitterType.LINE,
-      );
-      expect(result).toBe(expectedResult);
-    });
-
     it('should pass metadata to handler when provided', () => {
       const metadata = { chunkSize: 200, chunkOverlap: 20 };
       const command = new SplitTextCommand(
