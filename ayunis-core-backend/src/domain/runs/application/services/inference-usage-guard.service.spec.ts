@@ -23,7 +23,13 @@ describe('InferenceUsageGuard', () => {
   const apiKeyId = randomUUID();
   const orgId = randomUUID();
 
-  const makeModel = (tier?: ModelTier): LanguageModel =>
+  const makeModel = (
+    tier?: ModelTier,
+    costs: { inputTokenCost?: number; outputTokenCost?: number } = {
+      inputTokenCost: 5,
+      outputTokenCost: 15,
+    },
+  ): LanguageModel =>
     new LanguageModel({
       name: 'gpt-4o',
       provider: ModelProvider.OPENAI,
@@ -34,7 +40,13 @@ describe('InferenceUsageGuard', () => {
       canVision: false,
       isArchived: false,
       tier,
+      inputTokenCost: costs.inputTokenCost,
+      outputTokenCost: costs.outputTokenCost,
     });
+
+  // Free open-source model (e.g. a German-hosted "DE" model): no token costs.
+  const makeFreeModel = (tier?: ModelTier): LanguageModel =>
+    makeModel(tier, {});
 
   beforeEach(() => {
     checkQuotaUseCase = {
@@ -133,6 +145,35 @@ describe('InferenceUsageGuard', () => {
         guard.preflight({ userId, orgId }, makeModel(ModelTier.MEDIUM)),
       ).rejects.toBeInstanceOf(CreditBudgetExceededError);
     });
+
+    it('skips credit-budget and credit-limit for a free model with no token costs', async () => {
+      await guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.MEDIUM));
+
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
+      expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
+    });
+
+    it('still runs fair-use for a free model with a tier bucket', async () => {
+      await guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.MEDIUM));
+
+      expect(checkQuotaUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw for a free model even when the credit budget is exhausted', async () => {
+      creditBudgetGuardService.ensureBudgetAvailable.mockRejectedValue(
+        new CreditBudgetExceededError({
+          orgId,
+          creditsUsed: 1000,
+          monthlyCredits: 500,
+        }),
+      );
+
+      await expect(
+        guard.preflight({ userId, orgId }, makeFreeModel(ModelTier.ZERO)),
+      ).resolves.toBeUndefined();
+    });
   });
 
   describe('preflight with apiKey principal', () => {
@@ -144,6 +185,18 @@ describe('InferenceUsageGuard', () => {
         creditBudgetGuardService.ensureBudgetAvailable,
       ).toHaveBeenCalledWith(orgId);
       expect(creditLimitGuardService.ensureWithinLimits).not.toHaveBeenCalled();
+    });
+
+    it('skips credit-budget for a free model on an api-key request', async () => {
+      await guard.preflight(
+        { apiKeyId, orgId },
+        makeFreeModel(ModelTier.MEDIUM),
+      );
+
+      expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
     });
   });
 

@@ -5,9 +5,10 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 
-import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -403,16 +404,25 @@ describe('ExecuteRunUseCase', () => {
   });
 
   describe('tier-aware fair-use quota selection', () => {
+    // Paid model (has token costs) so `consumesCredits` is true and the
+    // credit-budget guard runs — these tests assert budget enforcement.
     function makeTieredModel(
       tier: ModelTier | undefined,
     ): PermittedLanguageModel {
       return {
-        model: {
+        model: new LanguageModel({
           name: 'gpt-tier',
+          provider: ModelProvider.OPENAI,
+          displayName: 'GPT Tier',
+          canStream: true,
           canUseTools: false,
+          isReasoning: false,
           canVision: false,
+          isArchived: false,
+          inputTokenCost: 5,
+          outputTokenCost: 15,
           tier,
-        } as unknown as LanguageModel,
+        }),
         anonymousOnly: false,
       } as PermittedLanguageModel;
     }

@@ -51,6 +51,15 @@ export class InferenceUsageGuard {
         );
       }
     }
+
+    // Credit budget/limit gating only applies to models that actually consume
+    // credits. Free open-source models (no token costs) must stay usable after
+    // the org's monthly credit budget is exhausted — they are still governed by
+    // the fair-use quota above.
+    if (!model.consumesCredits) {
+      return;
+    }
+
     await this.creditBudgetGuardService.ensureBudgetAvailable(principal.orgId);
     if (principal.userId) {
       await this.creditLimitGuardService.ensureWithinLimits(
