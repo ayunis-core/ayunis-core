@@ -162,7 +162,6 @@ import type {
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
-  StorageControllerUploadFileBody,
   SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -225,7 +224,6 @@ import type {
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
-  UploadFileResponseDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
   UpsertUserSystemPromptDto,
@@ -7539,73 +7537,9 @@ export const useTeamsControllerRemoveTeamMember = <TError = void,
     }
     
 /**
- * Generic file upload endpoint. Stores the file with optional metadata. Validation (file types, sizes) should be handled by consuming modules.
- * @summary Upload a file to object storage
+ * Serves org-prefixed image objects (e.g. chat message images). The object name must start with the requesting user’s organization id.
+ * @summary Download an image object owned by the requesting organization
  */
-export const storageControllerUploadFile = (
-    storageControllerUploadFileBody: StorageControllerUploadFileBody,
- signal?: AbortSignal
-) => {
-      
-      const formData = new FormData();
-formData.append(`file`, storageControllerUploadFileBody.file)
-
-      return customAxiosInstance<UploadFileResponseDto>(
-      {url: `/storage/upload`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-  
-
-
-export const getStorageControllerUploadFileMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext> => {
-
-const mutationKey = ['storageControllerUploadFile'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerUploadFile>>, {data: StorageControllerUploadFileBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  storageControllerUploadFile(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StorageControllerUploadFileMutationResult = NonNullable<Awaited<ReturnType<typeof storageControllerUploadFile>>>
-    export type StorageControllerUploadFileMutationBody = StorageControllerUploadFileBody
-    export type StorageControllerUploadFileMutationError = void
-
-    /**
- * @summary Upload a file to object storage
- */
-export const useStorageControllerUploadFile = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerUploadFile>>, TError,{data: StorageControllerUploadFileBody}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof storageControllerUploadFile>>,
-        TError,
-        {data: StorageControllerUploadFileBody},
-        TContext
-      > => {
-
-      const mutationOptions = getStorageControllerUploadFileMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
 export const storageControllerGetFile = (
     objectName: string,
  signal?: AbortSignal
@@ -7628,7 +7562,7 @@ export const getStorageControllerGetFileQueryKey = (objectName?: string,) => {
     }
 
     
-export const getStorageControllerGetFileQueryOptions = <TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = unknown>(objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
+export const getStorageControllerGetFileQueryOptions = <TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -7647,10 +7581,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type StorageControllerGetFileQueryResult = NonNullable<Awaited<ReturnType<typeof storageControllerGetFile>>>
-export type StorageControllerGetFileQueryError = unknown
+export type StorageControllerGetFileQueryError = void
 
 
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = unknown>(
+export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
  objectName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof storageControllerGetFile>>,
@@ -7660,7 +7594,7 @@ export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof st
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = unknown>(
+export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
  objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof storageControllerGetFile>>,
@@ -7670,160 +7604,20 @@ export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof st
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = unknown>(
+export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
  objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download an image object owned by the requesting organization
+ */
 
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = unknown>(
+export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
  objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStorageControllerGetFileQueryOptions(objectName,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-export const storageControllerDeleteFile = (
-    objectName: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/storage/${objectName}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getStorageControllerDeleteFileMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerDeleteFile>>, TError,{objectName: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof storageControllerDeleteFile>>, TError,{objectName: string}, TContext> => {
-
-const mutationKey = ['storageControllerDeleteFile'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storageControllerDeleteFile>>, {objectName: string}> = (props) => {
-          const {objectName} = props ?? {};
-
-          return  storageControllerDeleteFile(objectName,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StorageControllerDeleteFileMutationResult = NonNullable<Awaited<ReturnType<typeof storageControllerDeleteFile>>>
-    
-    export type StorageControllerDeleteFileMutationError = unknown
-
-    export const useStorageControllerDeleteFile = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storageControllerDeleteFile>>, TError,{objectName: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof storageControllerDeleteFile>>,
-        TError,
-        {objectName: string},
-        TContext
-      > => {
-
-      const mutationOptions = getStorageControllerDeleteFileMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-export const storageControllerGetPresignedUrl = (
-    objectName: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/storage/url/${objectName}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getStorageControllerGetPresignedUrlQueryKey = (objectName?: string,) => {
-    return [
-    `/storage/url/${objectName}`
-    ] as const;
-    }
-
-    
-export const getStorageControllerGetPresignedUrlQueryOptions = <TData = Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError = unknown>(objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStorageControllerGetPresignedUrlQueryKey(objectName);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>> = ({ signal }) => storageControllerGetPresignedUrl(objectName, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(objectName), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type StorageControllerGetPresignedUrlQueryResult = NonNullable<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>>
-export type StorageControllerGetPresignedUrlQueryError = unknown
-
-
-export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError = unknown>(
- objectName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>,
-          TError,
-          Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError = unknown>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>,
-          TError,
-          Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError = unknown>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useStorageControllerGetPresignedUrl<TData = Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError = unknown>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetPresignedUrl>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStorageControllerGetPresignedUrlQueryOptions(objectName,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

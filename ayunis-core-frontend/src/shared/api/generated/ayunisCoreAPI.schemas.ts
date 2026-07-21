@@ -1691,19 +1691,6 @@ export interface BulkAddTeamMembersDto {
   userIds: string[];
 }
 
-export interface UploadFileResponseDto {
-  /** Name of the uploaded object */
-  objectName: string;
-  /** Size of the uploaded file in bytes */
-  size: number;
-  /** ETag of the uploaded object */
-  etag: string;
-  /** Content type of the uploaded file */
-  contentType?: string;
-  /** Last modified date of the uploaded object */
-  lastModified?: string;
-}
-
 export interface TranscriptionResponseDto {
   /** The transcribed text from the audio file */
   text: string;
@@ -4801,11 +4788,6 @@ limit?: number;
  * Number of items to skip
  */
 offset?: number;
-};
-
-export type StorageControllerUploadFileBody = {
-  /** The file to upload */
-  file: Blob;
 };
 
 export type TranscriptionsControllerTranscribeBody = {

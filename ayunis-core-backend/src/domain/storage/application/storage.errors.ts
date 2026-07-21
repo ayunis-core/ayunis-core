@@ -9,6 +9,7 @@ export enum StorageErrorCode {
   BUCKET_NOT_FOUND = 'BUCKET_NOT_FOUND',
   INVALID_OBJECT_NAME = 'INVALID_OBJECT_NAME',
   PERMISSION_DENIED = 'PERMISSION_DENIED',
+  UNEXPECTED_STORAGE_ERROR = 'UNEXPECTED_STORAGE_ERROR',
 }
 
 export class StorageError extends ApplicationError {
@@ -109,6 +110,18 @@ export class InvalidObjectNameError extends StorageError {
       params.metadata,
     );
     this.name = 'InvalidObjectNameError';
+  }
+}
+
+export class UnexpectedStorageError extends StorageError {
+  constructor(error: Error) {
+    super(
+      'Unexpected storage error',
+      StorageErrorCode.UNEXPECTED_STORAGE_ERROR,
+      500,
+      { error },
+    );
+    this.name = 'UnexpectedStorageError';
   }
 }
 
