@@ -29,6 +29,8 @@ import type { InferenceOrchestratorService } from '../../services/inference-orch
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { ConfigService } from '@nestjs/config';
+import type { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
@@ -149,6 +151,12 @@ describe('ExecuteRunUseCase', () => {
       {
         emitAsync: jest.fn().mockResolvedValue([]),
       } as unknown as EventEmitter2,
+      {
+        get: jest.fn().mockReturnValue(false),
+      } as unknown as ConfigService,
+      {
+        execute: jest.fn(),
+      } as unknown as ExecuteRunViaRuntimeUseCase,
     );
   });
 
