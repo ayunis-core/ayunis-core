@@ -2,17 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 import { ThreadsRepository } from '../ports/threads.repository';
-import { ThreadStorageCleanupService } from '../services/thread-storage-cleanup.service';
+import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
 
 /**
- * Purges object-storage (MinIO) assets owned by a user's threads when the user
- * is being deleted. The thread rows themselves (and their messages, artifacts
- * and generated-image records) are removed by the `threads.userId` FK cascade;
- * this listener only handles the blobs that the database cannot reach.
+ * Cleans up object-storage (MinIO) assets owned by a user's threads when the
+ * user is being deleted. The thread rows themselves (and their messages,
+ * artifacts and generated-image records) are removed by the `threads.userId`
+ * FK cascade; only the blobs need explicit cleanup.
  *
- * Runs before the row deletion so message and generated-image records are still
- * available to resolve storage keys. Failures are logged, never thrown, so a
- * storage hiccup cannot block user deletion.
+ * Thread ids are resolved here, before the row delete, while the thread rows
+ * still exist; the blobs are then purged by key prefix (`<orgId>/<threadId>/`
+ * for message images, `generated-images/<orgId>/<threadId>/` for generated
+ * images), which needs no rows — so the purge itself is deferred until after
+ * the row delete succeeds. Failures are logged, never thrown, so a lookup
+ * error cannot block user deletion.
  */
 @Injectable()
 export class ThreadsUserDeletionRequestedListener {
@@ -22,7 +26,7 @@ export class ThreadsUserDeletionRequestedListener {
 
   constructor(
     private readonly threadsRepository: ThreadsRepository,
-    private readonly threadStorageCleanupService: ThreadStorageCleanupService,
+    private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
 
   @OnEvent(UserDeletionRequestedEvent.EVENT_NAME)
@@ -38,19 +42,22 @@ export class ThreadsUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.log('Cleaning up thread storage for deleted user', {
+      this.logger.log('Deferring thread storage cleanup for deleted user', {
         userId: event.userId,
         threadCount: threadIds.length,
       });
 
-      for (const threadId of threadIds) {
-        await this.threadStorageCleanupService.cleanupThreadStorage(
-          threadId,
-          event.orgId,
+      const prefixes = threadIds.flatMap((threadId) => [
+        `${event.orgId}/${threadId}/`,
+        `generated-images/${event.orgId}/${threadId}/`,
+      ]);
+      event.deferCleanup('purge thread storage', async () => {
+        await this.purgeStoragePrefixesUseCase.execute(
+          new PurgeStoragePrefixesCommand(prefixes),
         );
-      }
+      });
     } catch (error) {
-      this.logger.error('Failed to clean up thread storage for deleted user', {
+      this.logger.error('Failed to resolve thread storage for deleted user', {
         userId: event.userId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
