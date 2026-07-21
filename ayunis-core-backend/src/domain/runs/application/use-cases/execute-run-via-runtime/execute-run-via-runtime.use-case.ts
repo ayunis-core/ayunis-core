@@ -3,6 +3,7 @@ import {
   RunContext,
   type Hook,
   type Tool as RuntimeTool,
+  type ToolExecutionContext as RuntimeToolContext,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -271,10 +272,11 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   /**
-   * Seeds the client-supplied result for a display-only tool call so the
-   * runtime can continue the conversation. Mirrors the legacy display-tool
-   * handling: the matching call gets the client result, sibling display calls
-   * get an acknowledgement.
+   * Seeds the results for a turn that exited the runtime loop for a
+   * display-only tool. Mirrors the legacy `collectToolResults`: the matching
+   * call gets the client-supplied result, executable/hybrid siblings still run
+   * (the runtime skips its tool phase once any call is display-only), and other
+   * display-only siblings get an acknowledgement.
    */
   private async persistToolResultSeed(
     prepared: PreparedRuntimeRun,
@@ -286,18 +288,21 @@ export class ExecuteRunViaRuntimeUseCase {
       (content): content is ToolUseMessageContent =>
         content instanceof ToolUseMessageContent,
     );
-    const contents = toolUses.map((content) =>
-      content.id === input.toolId
-        ? new ToolResultMessageContent(
-            input.toolId,
-            input.toolName,
-            input.result,
-          )
-        : new ToolResultMessageContent(content.id, content.name, DISPLAY_ACK),
-    );
-    if (contents.length === 0) {
+    if (toolUses.length === 0) {
       throw new RunInvalidInputError(
         'No pending tool call to attach this result to',
+      );
+    }
+    const context = RunContext.create({
+      orgId: prepared.orgId,
+      userId: prepared.userId,
+      threadId: prepared.thread.id,
+      isAnonymous: prepared.isAnonymous,
+    });
+    const contents: ToolResultMessageContent[] = [];
+    for (const content of toolUses) {
+      contents.push(
+        await this.resolveSeedToolResult(prepared, input, content, context),
       );
     }
     const message = await this.createToolResultMessageUseCase.execute(
@@ -307,6 +312,41 @@ export class ExecuteRunViaRuntimeUseCase {
       new AddMessageCommand(prepared.thread, message),
     );
     return message;
+  }
+
+  private async resolveSeedToolResult(
+    prepared: PreparedRuntimeRun,
+    input: RunToolResultInput,
+    content: ToolUseMessageContent,
+    context: RunContext,
+  ): Promise<ToolResultMessageContent> {
+    // The call the client rendered gets its supplied result.
+    if (content.id === input.toolId) {
+      return new ToolResultMessageContent(
+        input.toolId,
+        input.toolName,
+        input.result,
+      );
+    }
+    // Executable/hybrid siblings still need to run; the runtime exited the loop
+    // before its tool phase because a display-only call was present.
+    const runtimeTool = prepared.tools.find(
+      (tool) => tool.name === content.name,
+    );
+    if (runtimeTool?.execute) {
+      const toolCtx: RuntimeToolContext = {
+        context,
+        toolCallId: content.id,
+        emit: () => {},
+        runChild: () => {
+          throw new Error('runChild is not supported outside the runtime loop');
+        },
+      };
+      const result = await runtimeTool.execute(content.params, toolCtx);
+      return new ToolResultMessageContent(content.id, content.name, result);
+    }
+    // Other display-only siblings are acknowledged.
+    return new ToolResultMessageContent(content.id, content.name, DISPLAY_ACK);
   }
 
   private emitRunExecuted(userId: UUID, orgId: UUID): void {

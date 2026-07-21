@@ -3,7 +3,8 @@ import type {
   Tool as RuntimeTool,
   ToolExecutionContext as RuntimeToolContext,
 } from '@ayunis/agent-runtime';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
@@ -14,6 +15,7 @@ import {
 } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import { ToolUsedEvent } from '../events/tool-used.event';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -33,9 +35,12 @@ const DISPLAY_ACK = 'Tool has been displayed successfully';
  */
 @Injectable()
 export class BackendToolAdapter {
+  private readonly logger = new Logger(BackendToolAdapter.name);
+
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   toRuntimeTools(tools: BackendTool[]): RuntimeTool[] {
@@ -66,13 +71,19 @@ export class BackendToolAdapter {
     ctx: RuntimeToolContext,
     capabilities: ToolCapabilities,
   ): Promise<string> {
+    const orgId = ctx.context.get<UUID>('orgId')!;
+    const userId = ctx.context.get<UUID>('userId');
     const context = {
-      orgId: ctx.context.get<UUID>('orgId')!,
+      orgId,
       threadId: ctx.context.get<UUID>('threadId')!,
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
     };
-    const result = await this.runTool(tool, input, context);
-    if (capabilities.isDisplayable) {
+    this.emitToolUsed(userId, orgId, tool.name);
+    const { result, succeeded } = await this.runTool(tool, input, context);
+    // Hybrid tools swap in the display acknowledgement only when the side
+    // effect succeeded; a failed execution still surfaces its error to the
+    // model (mirrors `ToolResultCollectorService.processHybridTool`).
+    if (capabilities.isDisplayable && succeeded) {
       return DISPLAY_ACK;
     }
     return result.length > MAX_TOOL_RESULT_LENGTH ? truncate(result) : result;
@@ -82,17 +93,42 @@ export class BackendToolAdapter {
     tool: BackendTool,
     input: Record<string, unknown>,
     context: { orgId: UUID; threadId: UUID; isAnonymous: boolean },
-  ): Promise<string> {
+  ): Promise<{ result: string; succeeded: boolean }> {
     try {
-      return await this.executeToolUseCase.execute(
+      const result = await this.executeToolUseCase.execute(
         new ExecuteToolCommand(tool, input, context),
       );
+      return { result, succeeded: true };
     } catch (error) {
       if (error instanceof ToolExecutionFailedError && error.exposeToLLM) {
-        return `The tool didn't provide any result due to the following error in tool usage: ${error.message}`;
+        return {
+          result: `The tool didn't provide any result due to the following error in tool usage: ${error.message}`,
+          succeeded: false,
+        };
       }
-      return `The tool didn't provide any result due to an unknown error`;
+      return {
+        result: `The tool didn't provide any result due to an unknown error`,
+        succeeded: false,
+      };
     }
+  }
+
+  private emitToolUsed(
+    userId: UUID | undefined,
+    orgId: UUID,
+    toolName: string,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        ToolUsedEvent.EVENT_NAME,
+        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, toolName),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit ToolUsedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          toolName,
+        });
+      });
   }
 }
 

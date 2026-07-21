@@ -11,6 +11,9 @@ import type { UserMessage } from 'src/domain/messages/domain/messages/user-messa
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import type { MessageContent } from 'src/domain/messages/domain/message-content.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
@@ -41,12 +44,14 @@ interface Harness {
   collectUsage: jest.Mock;
   cleanup: jest.Mock;
   createToolResult: jest.Mock;
+  seedToolResult: jest.Mock;
 }
 
 interface HarnessOptions {
   anonymous?: boolean;
   turns?: readonly (readonly ProviderChunk[])[];
   runtimeTools?: RuntimeTool[];
+  lastMessageContent?: MessageContent[];
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -65,7 +70,10 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     model: permitted,
     messages: [],
     isAnonymous: overrides.anonymous ?? false,
-    getLastMessage: () => undefined,
+    getLastMessage: () =>
+      overrides.lastMessageContent
+        ? { content: overrides.lastMessageContent }
+        : undefined,
   } as unknown as Thread;
 
   const contextService = {
@@ -158,6 +166,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     collectUsage,
     cleanup,
     createToolResult: flushToolResult,
+    seedToolResult: createToolResult,
   };
 }
 
@@ -255,6 +264,56 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     await expect(drain(await useCase.execute(command))).rejects.toThrow(
       /No pending tool call/i,
     );
+  });
+
+  it('executes executable siblings when continuing after a display-only tool', async () => {
+    const searchExecute = jest.fn().mockResolvedValue('search result');
+    const searchTool = {
+      name: 'internet_search',
+      description: 'search',
+      parameters: { type: 'object' },
+      execute: searchExecute,
+    };
+    // display-only tool: no execute, so the runtime exited the loop for it
+    const chartTool = {
+      name: 'bar_chart',
+      description: 'chart',
+      parameters: { type: 'object' },
+    };
+    const { useCase, seedToolResult } = buildHarness({
+      runtimeTools: [searchTool, chartTool],
+      lastMessageContent: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', {}),
+        new ToolUseMessageContent('search-1', 'internet_search', {
+          query: 'weather',
+        }),
+      ],
+      turns: [textTurn('done')],
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'chart-result'),
+    });
+
+    await drain(await useCase.execute(command));
+
+    // the executable sibling actually ran with its recorded params
+    expect(searchExecute).toHaveBeenCalledTimes(1);
+    expect(searchExecute).toHaveBeenCalledWith(
+      { query: 'weather' },
+      expect.anything(),
+    );
+
+    // both results are seeded: client result for the display tool, executed
+    // result for the sibling
+    const contents = (
+      seedToolResult.mock.calls[0][0] as {
+        content: ToolResultMessageContent[];
+      }
+    ).content;
+    const byId = new Map(contents.map((c) => [c.toolId, c.result]));
+    expect(byId.get('chart-1')).toBe('chart-result');
+    expect(byId.get('search-1')).toBe('search result');
   });
 
   it('rejects anonymous threads (not yet supported on the runtime path)', async () => {

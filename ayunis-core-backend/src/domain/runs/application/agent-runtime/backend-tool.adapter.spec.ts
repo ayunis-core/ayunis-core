@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { BackendToolAdapter } from './backend-tool.adapter';
 
@@ -27,14 +28,17 @@ function toolCtx(): ToolExecutionContext {
 describe('BackendToolAdapter', () => {
   let execute: jest.Mock;
   let checkExecute: jest.Mock;
+  let emitAsync: jest.Mock;
   let adapter: BackendToolAdapter;
 
   beforeEach(() => {
     execute = jest.fn();
     checkExecute = jest.fn();
+    emitAsync = jest.fn().mockResolvedValue([]);
     adapter = new BackendToolAdapter(
       { execute } as unknown as ExecuteToolUseCase,
       { execute: checkExecute } as unknown as CheckToolCapabilitiesUseCase,
+      { emitAsync } as unknown as EventEmitter2,
     );
   });
 
@@ -67,6 +71,36 @@ describe('BackendToolAdapter', () => {
 
     expect(result).toBe('Tool has been displayed successfully');
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces the error to the model when a hybrid tool execution fails', async () => {
+    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
+    execute.mockRejectedValue(
+      new ToolExecutionFailedError({
+        toolName: 'create_document',
+        message: 'disk full',
+        exposeToLLM: true,
+      }),
+    );
+
+    const [tool] = adapter.toRuntimeTools([fakeTool('create_document')]);
+    const result = await tool.execute!({}, toolCtx());
+
+    expect(result).toContain('disk full');
+    expect(result).not.toBe('Tool has been displayed successfully');
+  });
+
+  it('emits a ToolUsedEvent when running a tool', async () => {
+    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
+    execute.mockResolvedValue('ok');
+
+    const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
+    await tool.execute!({}, toolCtx());
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      'run.tool-used',
+      expect.objectContaining({ toolName: 'search', orgId }),
+    );
   });
 
   it('truncates oversized executable results', async () => {
