@@ -13,6 +13,7 @@ export enum ModelErrorCode {
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
   INFERENCE_FAILED = 'INFERENCE_FAILED',
   INFERENCE_ABORTED = 'INFERENCE_ABORTED',
+  INFERENCE_IMAGE_TOO_LARGE = 'INFERENCE_IMAGE_TOO_LARGE',
   INFERENCE_INPUT_INVALID = 'INFERENCE_INPUT_INVALID',
   INFERENCE_TIMEOUT = 'INFERENCE_TIMEOUT',
   MODEL_RATE_LIMIT_EXCEEDED = 'MODEL_RATE_LIMIT_EXCEEDED',
@@ -208,6 +209,22 @@ export class InferenceAbortedError extends ModelError {
       'Inference aborted by client',
       ModelErrorCode.INFERENCE_ABORTED,
       499,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Error thrown when a provider rejects an image for exceeding its size limit
+ * (Anthropic/Bedrock cap a single image at 5 MB base64). Distinct from the
+ * generic InferenceFailedError so the UI can tell the user to shrink the image.
+ */
+export class InferenceImageTooLargeError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Image exceeds the provider size limit',
+      ModelErrorCode.INFERENCE_IMAGE_TOO_LARGE,
+      400,
       metadata,
     );
   }

@@ -15,6 +15,7 @@
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
+    "errorImageTooLarge": "The image is too large for the selected model. Please reduce its size (e.g. lower the resolution) and try again.",
     "errorUnexpected": "An unexpected error occurred",
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
