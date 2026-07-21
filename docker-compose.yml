@@ -48,10 +48,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # S3 API on loopback so a host-side proxy can front it for presigned URLs
+    # Both the S3 API and the admin console are bound to loopback so a
+    # host-side proxy can front them; the console must not be exposed on all
+    # interfaces to avoid unintentionally publishing the admin UI.
     ports:
       - "127.0.0.1:9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9001:9001"
     logging:
       driver: json-file
       options:
