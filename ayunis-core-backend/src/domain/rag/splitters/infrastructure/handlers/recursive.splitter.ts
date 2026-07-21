@@ -7,12 +7,36 @@ import { SplitResult, TextChunk } from '../../domain/split-result.entity';
 import { SplitterProcessingError } from '../../application/splitter.errors';
 import { SplitterType } from '../../domain/splitter-type.enum';
 
+interface ChunkPosition {
+  startCharOffset: number;
+  endCharOffset: number;
+}
+
+interface SplitConfig {
+  chunkSize: number;
+  chunkOverlap: number;
+}
+
 @Injectable()
 export class RecursiveSplitterHandler extends SplitterHandler {
   private readonly logger = new Logger(RecursiveSplitterHandler.name);
   private readonly PROVIDER_NAME = SplitterType.RECURSIVE;
   private readonly DEFAULT_CHUNK_SIZE = 1000;
   private readonly DEFAULT_CHUNK_OVERLAP = 200;
+
+  // Separators in order of preference: paragraphs, lines, sentence
+  // boundaries, clauses, words, and character-level as last resort.
+  private readonly SEPARATORS = [
+    '\n\n',
+    '\n',
+    '. ',
+    '! ',
+    '? ',
+    '; ',
+    ', ',
+    ' ',
+    '',
+  ];
 
   constructor() {
     super();
@@ -37,8 +61,8 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       );
 
       // Implement the recursive text splitting algorithm
-      const chunks = this.splitTextRecursively(
-        input.text,
+      const chunks = this.enforceMaxChunkSize(
+        this.splitTextRecursively(input.text, chunkSize, chunkOverlap),
         chunkSize,
         chunkOverlap,
       );
@@ -72,128 +96,150 @@ export class RecursiveSplitterHandler extends SplitterHandler {
     chunkSize: number,
     chunkOverlap: number,
   ): TextChunk[] {
-    // List of separators to try in order of preference
-    const separators = [
-      '\n\n', // Double newlines (paragraphs)
-      '\n', // Single newlines
-      '. ', // Sentences
-      '! ', // Exclamations
-      '? ', // Questions
-      '; ', // Semicolons
-      ', ', // Commas
-      ' ', // Spaces
-      '', // Character level (last resort)
-    ];
-
-    return this.recursiveSplit(text, chunkSize, chunkOverlap, separators, 0, 0);
+    return this.recursiveSplit(text, { chunkSize, chunkOverlap }, 0, 0);
   }
 
   private recursiveSplit(
     text: string,
-    chunkSize: number,
-    chunkOverlap: number,
-    separators: string[],
+    config: SplitConfig,
     separatorIndex: number,
     depth: number = 0,
   ): TextChunk[] {
-    const chunks: TextChunk[] = [];
-
     // Prevent excessive recursion
     if (depth > 10) {
-      return this.splitByCharacter(text, chunkSize, chunkOverlap);
+      return this.splitByCharacter(text, config.chunkSize, config.chunkOverlap);
     }
 
-    // If text is small enough, return as single chunk
-    if (text.length <= chunkSize) {
-      if (text.trim().length > 0) {
-        chunks.push(new TextChunk(text, { index: 0 }));
-      }
-      return chunks;
+    if (text.length <= config.chunkSize) {
+      return text.trim().length > 0 ? [new TextChunk(text, { index: 0 })] : [];
     }
 
-    // If we've run out of separators, just split by character
-    if (separatorIndex >= separators.length) {
-      return this.splitByCharacter(text, chunkSize, chunkOverlap);
+    if (separatorIndex >= this.SEPARATORS.length) {
+      return this.splitByCharacter(text, config.chunkSize, config.chunkOverlap);
     }
 
-    const separator = separators[separatorIndex];
+    const separator = this.SEPARATORS[separatorIndex];
 
-    // Split by current separator
+    // Character level is the last resort: hard-split
     if (separator === '') {
-      // Character-level split
-      return this.splitByCharacter(text, chunkSize, chunkOverlap);
+      return this.splitByCharacter(text, config.chunkSize, config.chunkOverlap);
     }
 
     const splits = text.split(separator);
 
-    // If we only get one split (no separator found), try next separator
+    // Separator not found in text: try the next one
     if (splits.length === 1) {
-      return this.recursiveSplit(
-        text,
-        chunkSize,
-        chunkOverlap,
-        separators,
-        separatorIndex + 1,
-        depth + 1,
-      );
+      return this.recursiveSplit(text, config, separatorIndex + 1, depth + 1);
     }
 
-    // Combine splits to create chunks
+    return this.combineSplits(splits, separator, config, separatorIndex, depth);
+  }
+
+  /**
+   * Accumulates separator splits into chunks of at most chunkSize characters.
+   * A single split larger than chunkSize is recursively split with the next
+   * separator — regardless of position, so an oversized segment at the very
+   * start of the text cannot be emitted whole (the bug that sent a full
+   * document as one embedding input).
+   */
+  private combineSplits(
+    splits: string[],
+    separator: string,
+    config: SplitConfig,
+    separatorIndex: number,
+    depth: number,
+  ): TextChunk[] {
+    const chunks: TextChunk[] = [];
+    const pushChunk = (text: string) =>
+      chunks.push(new TextChunk(text, { index: chunks.length }));
+    // overlapSeed tracks the part of currentChunk that is only carried-over
+    // overlap, so chunks containing no new content are never emitted.
     let currentChunk = '';
-    let chunkIndex = 0;
+    let overlapSeed = '';
 
     for (let i = 0; i < splits.length; i++) {
-      const split = splits[i];
-      const splitWithSeparator =
-        i < splits.length - 1 ? split + separator : split;
+      const split = i < splits.length - 1 ? splits[i] + separator : splits[i];
+      const fitsCurrentChunk =
+        currentChunk.length === 0 ||
+        (currentChunk + split).length <= config.chunkSize;
 
-      // Check if adding this split would exceed chunk size
-      if (
-        currentChunk.length > 0 &&
-        (currentChunk + splitWithSeparator).length > chunkSize
-      ) {
-        // Current chunk is ready, save it
-        chunks.push(new TextChunk(currentChunk, { index: chunkIndex++ }));
+      if (split.length <= config.chunkSize && fitsCurrentChunk) {
+        currentChunk += split;
+        continue;
+      }
 
-        // Start new chunk with overlap
-        let overlapText = this.getOverlapText(currentChunk, chunkOverlap);
-        currentChunk = overlapText;
+      if (this.hasNewContent(currentChunk, overlapSeed)) {
+        pushChunk(currentChunk);
+      }
 
-        // If this single split is still too large, recursively split it
-        if (splitWithSeparator.length > chunkSize - overlapText.length) {
-          const splitChunks = this.recursiveSplit(
-            splitWithSeparator,
-            chunkSize,
-            chunkOverlap,
-            separators,
-            separatorIndex + 1,
-            depth + 1,
-          );
+      if (split.length > config.chunkSize) {
+        const subChunks = this.recursiveSplit(
+          split,
+          config,
+          separatorIndex + 1,
+          depth + 1,
+        );
+        subChunks.forEach((subChunk) => pushChunk(subChunk.text));
+        overlapSeed = this.getOverlapText(split, config.chunkOverlap);
+        currentChunk = overlapSeed;
+        continue;
+      }
 
-          // Add the recursively split chunks with overlap
-          for (const splitChunk of splitChunks) {
-            const finalChunkText = overlapText + splitChunk.text;
-            chunks.push(new TextChunk(finalChunkText, { index: chunkIndex++ }));
-            // Update overlap for next iteration
-            overlapText = this.getOverlapText(finalChunkText, chunkOverlap);
-          }
-          currentChunk = overlapText;
-        } else {
-          // Add to current chunk
-          currentChunk += splitWithSeparator;
-        }
+      // Seed the next chunk with the previous chunk's overlap — but only
+      // when overlap plus content stays within the chunk size limit.
+      const overlap = this.getOverlapText(currentChunk, config.chunkOverlap);
+      if ((overlap + split).length <= config.chunkSize) {
+        currentChunk = overlap + split;
+        overlapSeed = overlap;
       } else {
-        // Add to current chunk
-        currentChunk += splitWithSeparator;
+        currentChunk = split;
+        overlapSeed = '';
       }
     }
 
-    // Add final chunk if there's content
-    if (currentChunk.trim().length > 0) {
-      chunks.push(new TextChunk(currentChunk, { index: chunkIndex }));
+    if (this.hasNewContent(currentChunk, overlapSeed)) {
+      pushChunk(currentChunk);
     }
 
     return chunks;
+  }
+
+  /**
+   * currentChunk always begins with overlapSeed (it is only ever appended
+   * to after being reset to the seed), so new content means non-whitespace
+   * beyond the seed. Whitespace-only appends (e.g. the separator remainders
+   * of an oversized segment) must not make a chunk emittable.
+   */
+  private hasNewContent(currentChunk: string, overlapSeed: string): boolean {
+    return currentChunk.slice(overlapSeed.length).trim().length > 0;
+  }
+
+  /**
+   * Safety net for the splitter's contract: no emitted chunk may exceed
+   * chunkSize. Oversized chunks (e.g. from a future recursion edge case) are
+   * hard-split so they can never reach an embeddings API whole.
+   */
+  private enforceMaxChunkSize(
+    chunks: TextChunk[],
+    chunkSize: number,
+    chunkOverlap: number,
+  ): TextChunk[] {
+    if (chunks.every((chunk) => chunk.text.length <= chunkSize)) {
+      return chunks;
+    }
+    this.logger.warn(
+      'Recursive split produced oversized chunks; falling back to character split for them',
+    );
+    return chunks
+      .flatMap((chunk) =>
+        chunk.text.length > chunkSize
+          ? this.splitByCharacter(chunk.text, chunkSize, chunkOverlap)
+          : [chunk],
+      )
+      .map(
+        (chunk, index) =>
+          new TextChunk(chunk.text, { ...chunk.metadata, index }),
+      );
   }
 
   private splitByCharacter(
@@ -213,6 +259,12 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       const chunkText = text.slice(start, end);
 
       chunks.push(new TextChunk(chunkText, { index: chunkIndex++ }));
+
+      // The last chunk consumed the rest of the text — stepping back for
+      // overlap here would emit a duplicate tail-only chunk.
+      if (end >= text.length) {
+        break;
+      }
 
       // Move start position, accounting for overlap
       const nextStart = end - safeOverlap;
@@ -291,9 +343,13 @@ export class RecursiveSplitterHandler extends SplitterHandler {
     originalText: string,
     chunkText: string,
     searchStart: number,
-  ): { startCharOffset: number; endCharOffset: number } | null {
+  ): ChunkPosition | null {
     // Strategy 1: Try finding the full chunk text
-    let startCharOffset = originalText.indexOf(chunkText, searchStart);
+    const startCharOffset = this.indexOfNearOrAnywhere(
+      originalText,
+      chunkText,
+      searchStart,
+    );
     if (startCharOffset !== -1) {
       return {
         startCharOffset,
@@ -301,19 +357,36 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       };
     }
 
-    // Try from beginning as fallback
-    startCharOffset = originalText.indexOf(chunkText);
-    if (startCharOffset !== -1) {
-      return {
-        startCharOffset,
-        endCharOffset: startCharOffset + chunkText.length,
-      };
-    }
+    return (
+      this.findBySuffix(originalText, chunkText, searchStart) ??
+      this.findByMiddlePortion(originalText, chunkText, searchStart)
+    );
+  }
 
-    // Strategy 2: The chunk might have overlap prepended that doesn't match exactly.
-    // Try finding progressively smaller suffixes of the chunk.
-    // This handles cases where "overlapText + content" creates a string not in original.
-    const minSearchLength = Math.min(50, Math.floor(chunkText.length / 2));
+  /**
+   * indexOf that prefers a match at or after searchStart but falls back to
+   * searching from the beginning of the text.
+   */
+  private indexOfNearOrAnywhere(
+    text: string,
+    needle: string,
+    searchStart: number,
+  ): number {
+    const offset = text.indexOf(needle, searchStart);
+    return offset !== -1 ? offset : text.indexOf(needle);
+  }
+
+  /**
+   * Strategy 2: The chunk might have overlap prepended that doesn't match
+   * exactly. Try finding progressively smaller suffixes of the chunk — the
+   * chunk conceptually starts where the suffix starts.
+   */
+  private findBySuffix(
+    originalText: string,
+    chunkText: string,
+    searchStart: number,
+  ): ChunkPosition | null {
+    const minSearchLength = this.minSearchLength(chunkText);
 
     for (
       let suffixStart = 1;
@@ -321,61 +394,62 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       suffixStart++
     ) {
       const suffix = chunkText.slice(suffixStart);
-      const suffixOffset = originalText.indexOf(suffix, searchStart);
+      const suffixOffset = this.indexOfNearOrAnywhere(
+        originalText,
+        suffix,
+        searchStart,
+      );
 
       if (suffixOffset !== -1) {
-        // Found the suffix - calculate the approximate start position
-        // The chunk conceptually starts where the suffix starts
         return {
           startCharOffset: suffixOffset,
           endCharOffset: suffixOffset + suffix.length,
         };
       }
-
-      // Also try from beginning
-      const suffixOffsetFromStart = originalText.indexOf(suffix);
-      if (suffixOffsetFromStart !== -1) {
-        return {
-          startCharOffset: suffixOffsetFromStart,
-          endCharOffset: suffixOffsetFromStart + suffix.length,
-        };
-      }
     }
 
-    // Strategy 3: Try finding a significant middle portion
-    // Skip first 20% and last 20% which might have overlap artifacts
+    return null;
+  }
+
+  /**
+   * Strategy 3: Try finding a significant middle portion, skipping the first
+   * and last 20% which might have overlap artifacts.
+   */
+  private findByMiddlePortion(
+    originalText: string,
+    chunkText: string,
+    searchStart: number,
+  ): ChunkPosition | null {
     const skipPercent = 0.2;
     const middleStart = Math.floor(chunkText.length * skipPercent);
     const middleEnd = Math.floor(chunkText.length * (1 - skipPercent));
 
-    if (middleEnd > middleStart + minSearchLength) {
-      const middlePortion = chunkText.slice(middleStart, middleEnd);
-      const middleOffset = originalText.indexOf(middlePortion, searchStart);
-
-      if (middleOffset !== -1) {
-        // Found middle portion - adjust offsets with bounds checking
-        return {
-          startCharOffset: Math.max(0, middleOffset - middleStart),
-          endCharOffset: Math.min(
-            originalText.length,
-            middleOffset - middleStart + chunkText.length,
-          ),
-        };
-      }
-
-      const middleOffsetFromStart = originalText.indexOf(middlePortion);
-      if (middleOffsetFromStart !== -1) {
-        return {
-          startCharOffset: Math.max(0, middleOffsetFromStart - middleStart),
-          endCharOffset: Math.min(
-            originalText.length,
-            middleOffsetFromStart - middleStart + chunkText.length,
-          ),
-        };
-      }
+    if (middleEnd <= middleStart + this.minSearchLength(chunkText)) {
+      return null;
     }
 
-    return null;
+    const middlePortion = chunkText.slice(middleStart, middleEnd);
+    const middleOffset = this.indexOfNearOrAnywhere(
+      originalText,
+      middlePortion,
+      searchStart,
+    );
+
+    if (middleOffset === -1) {
+      return null;
+    }
+
+    return {
+      startCharOffset: Math.max(0, middleOffset - middleStart),
+      endCharOffset: Math.min(
+        originalText.length,
+        middleOffset - middleStart + chunkText.length,
+      ),
+    };
+  }
+
+  private minSearchLength(chunkText: string): number {
+    return Math.min(50, Math.floor(chunkText.length / 2));
   }
 
   /**
