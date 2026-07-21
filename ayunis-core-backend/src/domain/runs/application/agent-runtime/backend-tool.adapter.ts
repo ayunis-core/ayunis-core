@@ -14,6 +14,9 @@ import {
 } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { THREAD_PII_MASKS_EVENT } from './masks-event';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -29,13 +32,15 @@ const DISPLAY_ACK = 'Tool has been displayed successfully';
  *   surfaces the call — the client renders it and continues with a tool-result
  *   input (handled by the orchestrator).
  *
- * PII redaction of tool output is applied by the anonymization hook, not here.
+ * In anonymous threads, PII-returning tool output is redacted at production and
+ * the mask dictionary streamed via the run's `emit`, matching the legacy loop.
  */
 @Injectable()
 export class BackendToolAdapter {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
   ) {}
 
   toRuntimeTools(tools: BackendTool[]): RuntimeTool[] {
@@ -71,11 +76,31 @@ export class BackendToolAdapter {
       threadId: ctx.context.get<UUID>('threadId')!,
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
     };
-    const result = await this.runTool(tool, input, context);
-    if (capabilities.isDisplayable) {
-      return DISPLAY_ACK;
+    let result = await this.runTool(tool, input, context);
+    if (result.length > MAX_TOOL_RESULT_LENGTH) {
+      result = truncate(result);
     }
-    return result.length > MAX_TOOL_RESULT_LENGTH ? truncate(result) : result;
+    if (context.isAnonymous && tool.returnsPii) {
+      result = await this.redact(result, context, ctx);
+    }
+    return capabilities.isDisplayable ? DISPLAY_ACK : result;
+  }
+
+  /** Redacts PII from tool output and streams the mask dictionary. */
+  private async redact(
+    result: string,
+    context: { orgId: UUID; threadId: UUID },
+    ctx: RuntimeToolContext,
+  ): Promise<string> {
+    const anonymized = await this.anonymizeTextForThreadUseCase.execute(
+      new AnonymizeTextForThreadCommand(
+        result,
+        context.orgId,
+        context.threadId,
+      ),
+    );
+    ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: anonymized.masks });
+    return anonymized.anonymizedText;
   }
 
   private async runTool(

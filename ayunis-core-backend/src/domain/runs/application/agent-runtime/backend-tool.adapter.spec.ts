@@ -4,6 +4,7 @@ import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { BackendToolAdapter } from './backend-tool.adapter';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -27,14 +28,17 @@ function toolCtx(): ToolExecutionContext {
 describe('BackendToolAdapter', () => {
   let execute: jest.Mock;
   let checkExecute: jest.Mock;
+  let anonymize: jest.Mock;
   let adapter: BackendToolAdapter;
 
   beforeEach(() => {
     execute = jest.fn();
     checkExecute = jest.fn();
+    anonymize = jest.fn();
     adapter = new BackendToolAdapter(
       { execute } as unknown as ExecuteToolUseCase,
       { execute: checkExecute } as unknown as CheckToolCapabilitiesUseCase,
+      { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
     );
   });
 
@@ -77,6 +81,36 @@ describe('BackendToolAdapter', () => {
     const result = await tool.execute!({}, toolCtx());
 
     expect(result).toMatch(/too long to display/i);
+  });
+
+  it('redacts PII tool output and emits masks in anonymous mode', async () => {
+    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockResolvedValue({
+      anonymizedText: 'call {{pii:PERSON_1}} at {{pii:PHONE_1}}',
+      masks: [{ token: '{{pii:PERSON_1}}' }],
+    });
+    const piiTool = {
+      name: 'lookup',
+      description: 'lookup',
+      parameters: { type: 'object' },
+      returnsPii: true,
+    } as unknown as BackendTool;
+    const emit = jest.fn();
+    const ctx = {
+      context: RunContext.create({ orgId, threadId, isAnonymous: true }),
+      toolCallId: 'c1',
+      emit,
+    } as unknown as ToolExecutionContext;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+    const result = await tool.execute!({}, ctx);
+
+    expect(result).toBe('call {{pii:PERSON_1}} at {{pii:PHONE_1}}');
+    expect(anonymize).toHaveBeenCalledTimes(1);
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'thread_pii_masks' }),
+    );
   });
 
   it('surfaces an exposeToLLM tool error message to the model', async () => {
