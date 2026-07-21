@@ -1,4 +1,6 @@
-import { MockProvider, textTurn } from '@ayunis/agent-runtime';
+import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
+import type { Tool as RuntimeTool } from '@ayunis/agent-runtime';
+import type { ProviderChunk } from '@ayunis/inference';
 import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -7,15 +9,18 @@ import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
+import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
+import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
@@ -35,13 +40,21 @@ interface Harness {
   save: jest.Mock;
   collectUsage: jest.Mock;
   cleanup: jest.Mock;
+  createToolResult: jest.Mock;
 }
 
-function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
+interface HarnessOptions {
+  anonymous?: boolean;
+  turns?: readonly (readonly ProviderChunk[])[];
+  runtimeTools?: RuntimeTool[];
+}
+
+function buildHarness(overrides: HarnessOptions = {}): Harness {
   const model = {
     name: 'claude',
     provider: 'anthropic',
     canVision: false,
+    canUseTools: (overrides.runtimeTools?.length ?? 0) > 0,
   } as unknown as LanguageModel;
   const permitted = {
     model,
@@ -52,6 +65,7 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
     model: permitted,
     messages: [],
     isAnonymous: overrides.anonymous ?? false,
+    getLastMessage: () => undefined,
   } as unknown as Thread;
 
   const contextService = {
@@ -74,6 +88,15 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
       .fn()
       .mockResolvedValue({ tools: [], instructions: 'system prompt' }),
   } as unknown as ToolAssemblyService;
+  const backendToolAdapter = {
+    toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
+  } as unknown as BackendToolAdapter;
+  const createToolResult = jest
+    .fn()
+    .mockResolvedValue({ id: 'tool-result-msg' });
+  const createToolResultMessageUseCase = {
+    execute: createToolResult,
+  } as unknown as CreateToolResultMessageUseCase;
   const userMessage = { id: 'user-msg', threadId } as unknown as UserMessage;
   const createUserMessageUseCase = {
     execute: jest.fn().mockResolvedValue(userMessage),
@@ -89,7 +112,11 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
   const resolveModelProviderUseCase = {
-    execute: jest.fn().mockResolvedValue(new MockProvider([textTurn('Hello')])),
+    execute: jest
+      .fn()
+      .mockResolvedValue(
+        new MockProvider(overrides.turns ?? [textTurn('Hello')]),
+      ),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
@@ -100,9 +127,11 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
   } as unknown as EventEmitter2;
 
   const save = jest.fn().mockResolvedValue(undefined);
-  const persistenceHookFactory = new PersistenceHookFactory({
-    execute: save,
-  } as never);
+  const flushToolResult = jest.fn().mockResolvedValue(undefined);
+  const persistenceHookFactory = new PersistenceHookFactory(
+    { execute: save } as never,
+    { execute: flushToolResult } as never,
+  );
   const collectUsage = inferenceUsageGuard.collectUsage as jest.Mock;
   const usageHookFactory = new UsageHookFactory(inferenceUsageGuard);
 
@@ -111,7 +140,9 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
     findThreadUseCase,
     inferenceUsageGuard,
     toolAssemblyService,
+    backendToolAdapter,
     createUserMessageUseCase,
+    createToolResultMessageUseCase,
     addMessageToThreadUseCase,
     mapMessagesToInferenceUseCase,
     resolveModelProviderUseCase,
@@ -121,7 +152,13 @@ function buildHarness(overrides: { anonymous?: boolean } = {}): Harness {
     eventEmitter,
   );
 
-  return { useCase, save, collectUsage, cleanup };
+  return {
+    useCase,
+    save,
+    collectUsage,
+    cleanup,
+    createToolResult: flushToolResult,
+  };
 }
 
 async function drain(
@@ -162,14 +199,61 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(collectUsage).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects tool-result inputs (not yet supported on the runtime path)', async () => {
+  it('executes a tool in-loop and persists the grouped tool result', async () => {
+    const execute = jest.fn().mockResolvedValue('sunny in Berlin');
+    const searchTool = {
+      name: 'get_weather',
+      description: 'weather',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const { useCase, save, createToolResult } = buildHarness({
+      runtimeTools: [searchTool],
+      turns: [
+        toolCallTurn({
+          id: 'c1',
+          name: 'get_weather',
+          input: { city: 'Berlin' },
+        }),
+        textTurn('It is sunny.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    // the tool ran in-loop
+    expect(execute).toHaveBeenCalledTimes(1);
+    // two assistant turns persisted (tool call + final text), grouped tool result once
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    const finalText = items
+      .filter((i): i is AssistantMessage => i instanceof AssistantMessage)
+      .map((m) => (m.content[0] as TextMessageContent)?.text)
+      .filter(Boolean)
+      .pop();
+    expect(finalText).toBe('It is sunny.');
+
+    // the streamed and persisted tool-result copies share a deterministic id
+    const streamedToolResult = items.find(
+      (i): i is ToolResultMessage => i instanceof ToolResultMessage,
+    );
+    const persistedCommand = createToolResult.mock.calls[0][0] as {
+      id?: string;
+    };
+    expect(streamedToolResult).toBeDefined();
+    expect(persistedCommand.id).toBe(streamedToolResult!.id);
+  });
+
+  it('rejects a tool-result input with no pending tool call', async () => {
     const { useCase } = buildHarness();
     const command = new ExecuteRunCommand({
       threadId,
       input: new RunToolResultInput('t1', 'search', 'result'),
     });
-    await expect(useCase.execute(command)).rejects.toThrow(
-      /does not yet support tool-result/i,
+    // the (empty) thread has no assistant tool_use to attach the result to;
+    // the error surfaces when the stream is drained
+    await expect(drain(await useCase.execute(command))).rejects.toThrow(
+      /No pending tool call/i,
     );
   });
 

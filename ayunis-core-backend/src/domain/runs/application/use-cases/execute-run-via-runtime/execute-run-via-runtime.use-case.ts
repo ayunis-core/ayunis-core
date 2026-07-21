@@ -1,4 +1,9 @@
-import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
+import {
+  run,
+  RunContext,
+  type Hook,
+  type Tool as RuntimeTool,
+} from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -7,18 +12,28 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { ContextService } from 'src/common/context/services/context.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { UserMessage } from 'src/domain/messages/domain/messages/user-message.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import type { MessageContent } from 'src/domain/messages/domain/message-content.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
 import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
+import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
+import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import { MapMessagesToInferenceCommand } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.command';
 import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
-import { RunUserInput } from '../../../domain/run-input.entity';
+import {
+  RunUserInput,
+  RunToolResultInput,
+} from '../../../domain/run-input.entity';
+import type { RunInput } from '../../../domain/run-input.entity';
 import type { RunStreamItem } from '../../../domain/run-pii-masks-update.entity';
 import {
   RunExecutionFailedError,
@@ -29,12 +44,14 @@ import { RunExecutedEvent } from '../../events/run-executed.event';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
+import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
 const RUNTIME_MAX_ITERATIONS = 20;
+const DISPLAY_ACK = 'Tool has been displayed successfully';
 
 interface PreparedRuntimeRun {
   thread: Thread;
@@ -43,14 +60,15 @@ interface PreparedRuntimeRun {
   userId: UUID;
   isAnonymous: boolean;
   instructions: string;
+  tools: RuntimeTool[];
 }
 
 /**
  * Runs a thread through the extracted `@ayunis/agent-runtime` loop instead of
  * the legacy in-module loop. Gated behind the `agentRuntimeEnabled` toggle in
- * `ExecuteRunUseCase`. This slice covers plain chat only; tool loops,
- * anonymization and skills are added in later slices, so the unsupported paths
- * fail fast rather than silently degrading.
+ * `ExecuteRunUseCase`. Covers plain chat and tool loops (executable, hybrid and
+ * display-only tools); anonymization and skill activation are added in later
+ * slices, so those paths fail fast rather than silently degrading.
  */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
@@ -61,7 +79,9 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
+    private readonly backendToolAdapter: BackendToolAdapter,
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
+    private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly mapMessagesToInferenceUseCase: MapMessagesToInferenceUseCase,
     private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
@@ -76,8 +96,8 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
     this.logger.log('executeRunViaRuntime', { threadId: command.threadId });
     const prepared = await this.prepareRun(command);
-    const input = this.requireSupportedInput(command, prepared);
-    return this.streamRun(prepared, input);
+    this.requireSupported(command.input, prepared);
+    return this.streamRun(prepared, command.input);
   }
 
   private async prepareRun(
@@ -103,11 +123,17 @@ export class ExecuteRunViaRuntimeUseCase {
     );
 
     const isAnonymous = thread.isAnonymous || permittedModel.anonymousOnly;
-    const { instructions } = await this.toolAssemblyService.buildRunContext(
-      thread,
-      [],
-      false,
-      isAnonymous,
+    const { tools, instructions } =
+      await this.toolAssemblyService.buildRunContext(
+        thread,
+        [],
+        permittedModel.model.canUseTools,
+        isAnonymous,
+      );
+    // Skill activation is a later slice; drop the signal tool for now.
+    const activateSkill = ToolType.ACTIVATE_SKILL as string;
+    const runtimeTools = this.backendToolAdapter.toRuntimeTools(
+      tools.filter((tool) => tool.name !== activateSkill),
     );
 
     return {
@@ -117,40 +143,35 @@ export class ExecuteRunViaRuntimeUseCase {
       userId,
       isAnonymous,
       instructions,
+      tools: runtimeTools,
     };
   }
 
   /** Fails fast on inputs this slice does not yet route through the runtime. */
-  private requireSupportedInput(
-    command: ExecuteRunCommand,
+  private requireSupported(
+    input: RunInput,
     prepared: PreparedRuntimeRun,
-  ): RunUserInput {
-    if (!(command.input instanceof RunUserInput)) {
-      throw new RunInvalidInputError(
-        'The agent runtime path does not yet support tool-result inputs',
-      );
-    }
+  ): void {
     if (prepared.isAnonymous) {
       throw new RunInvalidInputError(
         'The agent runtime path does not yet support anonymous threads',
       );
     }
-    if (command.input.skillId) {
+    if (input instanceof RunUserInput && input.skillId) {
       throw new RunInvalidInputError(
         'The agent runtime path does not yet support skill activation',
       );
     }
-    return command.input;
   }
 
   private async *streamRun(
     prepared: PreparedRuntimeRun,
-    input: RunUserInput,
+    input: RunInput,
   ): AsyncGenerator<RunStreamItem, void, void> {
     let succeeded = false;
     try {
-      const userMessage = await this.persistUserMessage(prepared, input);
-      yield userMessage;
+      const seedMessage = await this.seedInput(prepared, input);
+      yield seedMessage;
       yield* adaptRunEventsToStream(
         await this.startRun(prepared),
         prepared.thread.id,
@@ -170,6 +191,19 @@ export class ExecuteRunViaRuntimeUseCase {
         );
       }
     }
+  }
+
+  private async seedInput(
+    prepared: PreparedRuntimeRun,
+    input: RunInput,
+  ): Promise<Message> {
+    if (input instanceof RunUserInput) {
+      return this.persistUserMessage(prepared, input);
+    }
+    if (input instanceof RunToolResultInput) {
+      return this.persistToolResultSeed(prepared, input);
+    }
+    throw new RunInvalidInputError('Invalid run input');
   }
 
   private async startRun(prepared: PreparedRuntimeRun) {
@@ -192,6 +226,8 @@ export class ExecuteRunViaRuntimeUseCase {
       instructions: prepared.instructions,
       model: provider,
       messages,
+      tools: prepared.tools,
+      ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
       hooks: this.buildHooks(prepared),
       context,
       maxIterations: RUNTIME_MAX_ITERATIONS,
@@ -208,7 +244,7 @@ export class ExecuteRunViaRuntimeUseCase {
   private async persistUserMessage(
     prepared: PreparedRuntimeRun,
     input: RunUserInput,
-  ): Promise<UserMessage> {
+  ): Promise<Message> {
     const hasText = !!input.text && input.text.trim().length > 0;
     const hasImages = input.pendingImages.length > 0;
     if (!hasText && !hasImages) {
@@ -227,6 +263,45 @@ export class ExecuteRunViaRuntimeUseCase {
         input.text,
         input.pendingImages,
       ),
+    );
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(prepared.thread, message),
+    );
+    return message;
+  }
+
+  /**
+   * Seeds the client-supplied result for a display-only tool call so the
+   * runtime can continue the conversation. Mirrors the legacy display-tool
+   * handling: the matching call gets the client result, sibling display calls
+   * get an acknowledgement.
+   */
+  private async persistToolResultSeed(
+    prepared: PreparedRuntimeRun,
+    input: RunToolResultInput,
+  ): Promise<Message> {
+    const lastMessage = prepared.thread.getLastMessage();
+    const items: MessageContent[] = lastMessage?.content ?? [];
+    const toolUses = items.filter(
+      (content): content is ToolUseMessageContent =>
+        content instanceof ToolUseMessageContent,
+    );
+    const contents = toolUses.map((content) =>
+      content.id === input.toolId
+        ? new ToolResultMessageContent(
+            input.toolId,
+            input.toolName,
+            input.result,
+          )
+        : new ToolResultMessageContent(content.id, content.name, DISPLAY_ACK),
+    );
+    if (contents.length === 0) {
+      throw new RunInvalidInputError(
+        'No pending tool call to attach this result to',
+      );
+    }
+    const message = await this.createToolResultMessageUseCase.execute(
+      new CreateToolResultMessageCommand(prepared.thread.id, contents),
     );
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(prepared.thread, message),

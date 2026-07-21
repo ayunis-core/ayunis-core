@@ -14,7 +14,7 @@ import {
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
-import { assistantMessageId } from './assistant-message-id';
+import { assistantMessageId, toolResultMessageId } from './message-id';
 import {
   toBackendAssistantMessage,
   toBackendToolResultMessage,
@@ -56,7 +56,11 @@ export async function* adaptRunEventsToStream(
       yield streamed;
       continue;
     }
-    const side = toSideStreamItem(event, threadId);
+    const side = toSideStreamItem(
+      event,
+      threadId,
+      assistant.lastCompletedIteration(),
+    );
     if (side instanceof ApplicationError) {
       pendingError = side;
     } else if (side) {
@@ -110,15 +114,29 @@ class AssistantTurnAccumulator {
     };
     return this.turn;
   }
+
+  /**
+   * The iteration of the most recently completed assistant turn — the one a
+   * following `tool_result_message` belongs to (tools always follow their
+   * assistant turn, so `turnIndex` has already advanced past it).
+   */
+  lastCompletedIteration(): number {
+    return Math.max(0, this.turnIndex - 1);
+  }
 }
 
 /** Maps the non-assistant events, or an ApplicationError to throw on drain. */
 function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
+  iteration: number,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
-    return toBackendToolResultMessage(event.message, threadId);
+    return toBackendToolResultMessage(
+      event.message,
+      threadId,
+      toolResultMessageId(event.runId, iteration),
+    );
   }
   if (event.type === 'custom') {
     return event.name === THREAD_PII_MASKS_EVENT

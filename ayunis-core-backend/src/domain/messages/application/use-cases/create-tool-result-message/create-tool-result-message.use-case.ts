@@ -25,6 +25,7 @@ export class CreateToolResultMessageUseCase {
     });
 
     const toolResultMessage = new ToolResultMessage({
+      id: command.id,
       threadId: command.threadId,
       content: command.content,
     });
