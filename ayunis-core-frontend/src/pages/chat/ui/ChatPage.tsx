@@ -316,8 +316,6 @@ export default function ChatPage({
 
   function handleSendCancelled() {
     abort();
-    // Cancelling is intentional: discard the saved submission so it is neither
-    // restored now (abort skips onComplete) nor left stale for a later failure.
     lastSubmissionRef.current = null;
     setIsStreaming(false);
     setPendingSubmission(null);
