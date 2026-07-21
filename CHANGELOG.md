@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.16.0](https://github.com/ayunis-core/ayunis-core/compare/v2.15.0...v2.16.0) (2026-07-21)
+
+
+### Features
+
+* **search:** add Staan as EU alternative to Brave web search (AYC-427) ([#1070](https://github.com/ayunis-core/ayunis-core/issues/1070)) ([e0547e2](https://github.com/ayunis-core/ayunis-core/commit/e0547e2cf08d8e2f78572b266f6eecef904488e7))
+
+
+### Bug Fixes
+
+* **chat:** keep new-chat gradient backdrop pinned to the bottom (AYC-459) ([#1078](https://github.com/ayunis-core/ayunis-core/issues/1078)) ([c604da2](https://github.com/ayunis-core/ayunis-core/commit/c604da2e44758a2ec470e7da7f4a55adc49ed816))
+* **integrations:** remove pre-selected Deutsche Gesetzestexte integration (AYC-484) ([#1080](https://github.com/ayunis-core/ayunis-core/issues/1080)) ([c600ea6](https://github.com/ayunis-core/ayunis-core/commit/c600ea66317ab0100618c74e4d3eb86526a1e9d9))
+* **marketplace:** remove terms-of-use confirmation for first-party skills (AYC-465) ([#1098](https://github.com/ayunis-core/ayunis-core/issues/1098)) ([783b9c6](https://github.com/ayunis-core/ayunis-core/commit/783b9c64c9b3c11511bf2c5f750f3389cda30ceb))
+* **minio:** tie api to loopback (AYC-466) ([#1076](https://github.com/ayunis-core/ayunis-core/issues/1076)) ([7508f7c](https://github.com/ayunis-core/ayunis-core/commit/7508f7c3448cfd63ebf89aca26cd33e9e7dfd0ea))
+* **rag:** prevent recursive splitter from emitting oversized chunks (AYC-000) ([#1088](https://github.com/ayunis-core/ayunis-core/issues/1088)) ([477e903](https://github.com/ayunis-core/ayunis-core/commit/477e9032356d1320ec26242bae921cb87b546a47))
+* **runs:** keep free open-source models usable after credit budget is exhausted (AYC-474) ([#1077](https://github.com/ayunis-core/ayunis-core/issues/1077)) ([7615539](https://github.com/ayunis-core/ayunis-core/commit/7615539a53b4421e402a3fc3d6aa0c708c9bdf69))
+
+
+### Code Refactoring
+
+* **imports:** normalize deep relative imports to src-absolute paths (AYC-000) ([#1071](https://github.com/ayunis-core/ayunis-core/issues/1071)) ([023a09e](https://github.com/ayunis-core/ayunis-core/commit/023a09e3acd3d136039d864a4be072eab8ef4371))
+* **models:** rename PermittedModelQueryService to PermittedModelFinder (AYC-325) ([#1062](https://github.com/ayunis-core/ayunis-core/issues/1062)) ([857634c](https://github.com/ayunis-core/ayunis-core/commit/857634c48d4bd99ec715c95de0ab6740a3fdfe3d))
+
+
+### Miscellaneous
+
+* **rag:** remove unused line splitter (AYC-000) ([#1099](https://github.com/ayunis-core/ayunis-core/issues/1099)) ([2dc8022](https://github.com/ayunis-core/ayunis-core/commit/2dc8022a5e21da1a065297b12660905258315ad2))
+* **skills:** update skills (AYC-000) ([#1073](https://github.com/ayunis-core/ayunis-core/issues/1073)) ([9f27046](https://github.com/ayunis-core/ayunis-core/commit/9f270467a22008fa3c6186cfe0a0dbc94ebd7dfb))
+
 ## [2.15.0](https://github.com/ayunis-core/ayunis-core/compare/v2.14.0...v2.15.0) (2026-07-20)
 
 
