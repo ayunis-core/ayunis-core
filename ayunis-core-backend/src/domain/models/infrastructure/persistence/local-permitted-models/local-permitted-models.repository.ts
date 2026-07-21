@@ -23,7 +23,7 @@ import {
   NotALanguageModelError,
   PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
-import { PermittedModelQueryService } from './permitted-model-query.service';
+import { PermittedModelFinder } from './permitted-model-finder';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -32,7 +32,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     @InjectRepository(PermittedModelRecord)
     private readonly permittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
-    private readonly queryService: PermittedModelQueryService,
+    private readonly finder: PermittedModelFinder,
   ) {
     super();
   }
@@ -178,31 +178,31 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
-    return this.queryService.findOneEmbedding(orgId);
+    return this.finder.findOneEmbedding(orgId);
   }
 
   async findOneImageGeneration(
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel | null> {
-    return this.queryService.findOneImageGeneration(orgId);
+    return this.finder.findOneImageGeneration(orgId);
   }
 
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
-    return this.queryService.findManyLanguage(orgId);
+    return this.finder.findManyLanguage(orgId);
   }
 
   async findManyLanguageByTeam(
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]> {
-    return this.queryService.findManyLanguageByTeam(teamId, orgId);
+    return this.finder.findManyLanguageByTeam(teamId, orgId);
   }
 
   async findManyImageGenerationByTeam(
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]> {
-    return this.queryService.findManyImageGenerationByTeam(teamId, orgId);
+    return this.finder.findManyImageGenerationByTeam(teamId, orgId);
   }
 
   async findByTeamAndModelId(
