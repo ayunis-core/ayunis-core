@@ -126,6 +126,18 @@ describe('RecursiveSplitterHandler', () => {
       expect(result.chunks).toHaveLength(0);
     });
 
+    it('should emit no chunks for whitespace-only text longer than the chunk size', () => {
+      const input: SplitterInput = {
+        // Tabs match no separator, so this would reach the fixed-size split
+        text: '\t'.repeat(3000),
+        metadata: { chunkSize: 1000, chunkOverlap: 100 },
+      };
+
+      const result = handler.processText(input);
+
+      expect(result.chunks).toHaveLength(0);
+    });
+
     it('should preserve chunk index in metadata', () => {
       const lines = Array.from(
         { length: 20 },
@@ -230,6 +242,161 @@ describe('RecursiveSplitterHandler', () => {
         expect(chunk.metadata.startLine).toBeGreaterThanOrEqual(1);
         expect(chunk.metadata.endLine).toBeLessThanOrEqual(lines.length);
       }
+    });
+  });
+
+  describe('configuration', () => {
+    it('should honor chunkOverlap of 0 by emitting non-overlapping chunks', () => {
+      const sentences = Array.from(
+        { length: 20 },
+        (_, i) => `Satz ${i + 1} mit etwas Inhalt.`,
+      );
+      const text = sentences.join(' ');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 60, chunkOverlap: 0 },
+      });
+
+      expect(result.metadata.chunkOverlap).toBe(0);
+      expect(result.chunks.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.chunks.length; i++) {
+        const prevEnd = result.chunks[i - 1].metadata.endCharOffset as number;
+        const currStart = result.chunks[i].metadata.startCharOffset as number;
+        expect(currStart).toBeGreaterThanOrEqual(prevEnd);
+      }
+      for (const chunk of result.chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        expect(text.slice(start, end)).toBe(chunk.text);
+      }
+    });
+
+    it('should derive a fitting default overlap when only a small chunkSize is given', () => {
+      const sentences = Array.from(
+        { length: 20 },
+        (_, i) => `Satz ${i + 1} mit etwas Inhalt.`,
+      );
+      const text = sentences.join(' ');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 100 },
+      });
+
+      // The built-in overlap default (200) exceeds this chunkSize; the
+      // derived default keeps the built-in 20% ratio instead of rejecting
+      // the caller's chunkSize.
+      expect(result.metadata.chunkOverlap).toBe(20);
+      expect(result.chunks.length).toBeGreaterThan(1);
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(100);
+      }
+    });
+
+    it.each([
+      ['zero chunkSize', { chunkSize: 0, chunkOverlap: 0 }],
+      ['negative chunkSize', { chunkSize: -5, chunkOverlap: 0 }],
+      ['non-integer chunkSize', { chunkSize: 10.5, chunkOverlap: 0 }],
+      ['negative chunkOverlap', { chunkSize: 100, chunkOverlap: -1 }],
+      [
+        'chunkOverlap equal to chunkSize',
+        { chunkSize: 100, chunkOverlap: 100 },
+      ],
+      ['chunkOverlap above chunkSize', { chunkSize: 100, chunkOverlap: 150 }],
+    ])('should reject invalid configuration: %s', (_label, metadata) => {
+      expect(() =>
+        handler.processText({ text: 'Some content to split.', metadata }),
+      ).toThrow('Failed to process text with Recursive Text Splitter');
+    });
+  });
+
+  describe('character offset tracking', () => {
+    const expectOffsetsPointAtContent = (
+      text: string,
+      chunks: { text: string; metadata: Record<string, unknown> }[],
+    ) => {
+      for (const chunk of chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        expect(start).toBeGreaterThanOrEqual(0);
+        expect(end).toBeGreaterThan(start);
+        expect(end).toBeLessThanOrEqual(text.length);
+        // The offset range covers the chunk's content: either the full chunk
+        // text (offsets contiguous) or the content without the prepended
+        // overlap — in both cases the slice is a suffix of the chunk text.
+        expect(chunk.text.endsWith(text.slice(start, end))).toBe(true);
+      }
+    };
+
+    it('should emit offsets whose slice matches the chunk content across split paths', () => {
+      const paragraphs = Array.from(
+        { length: 30 },
+        (_, i) =>
+          `Absatz ${i + 1}: ` +
+          'Inhalt mit einigen Worten, Satzzeichen und etwas Länge. '.repeat(3),
+      );
+      const text = paragraphs.join('\n\n');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 200, chunkOverlap: 50 },
+      });
+
+      expect(result.chunks.length).toBeGreaterThan(5);
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should emit exact offsets for separator-free text (character split path)', () => {
+      const text = 'X'.repeat(2500);
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 1000, chunkOverlap: 200 },
+      });
+
+      expect(
+        result.chunks.map((chunk) => chunk.metadata.startCharOffset),
+      ).toEqual([0, 800, 1600]);
+      expect(
+        result.chunks.map((chunk) => chunk.metadata.endCharOffset),
+      ).toEqual([1000, 1800, 2500]);
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should emit valid offsets when an oversized segment forces recursion with overlap seeding', () => {
+      const text =
+        'A'.repeat(10000) + '\n\n' + 'Ein normaler Absatz mit Inhalt.';
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      });
+
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should split a large document without quadratic position searching', () => {
+      // ~1MB of unique words: every chunk exists verbatim in the text, but a
+      // position search that rescans the document per chunk (the removed
+      // findChunkPosition fallback) degrades to minutes on inputs like this.
+      let text = '';
+      let word = 0;
+      while (text.length < 1_000_000) {
+        text += `wort${word} `;
+        word += 1;
+        if (word % 100 === 0) {
+          text += '\n';
+        }
+      }
+
+      const startedAt = performance.now();
+      const result = handler.processText({ text });
+      const elapsedMs = performance.now() - startedAt;
+
+      expect(result.chunks.length).toBeGreaterThan(500);
+      expect(elapsedMs).toBeLessThan(2000);
+      expectOffsetsPointAtContent(text, result.chunks);
     });
   });
 
