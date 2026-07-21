@@ -13,7 +13,6 @@ export default tseslint.config(
       'eslint.complexity.config.mjs',
       '.dependency-cruiser.cjs',
       'jest.setup.js',
-      'src/config/env-register.js',
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
