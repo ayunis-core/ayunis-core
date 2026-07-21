@@ -28,7 +28,6 @@ import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
 import { usePendingMessage } from '../hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
-import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
@@ -105,6 +104,10 @@ export default function ChatPage({
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
+  // In-flight submission, restored into the input if the run fails so the user can retry.
+  const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
+    null,
+  );
 
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -213,6 +216,12 @@ export default function ChatPage({
 
   const handleError = useRunErrorHandler(thread.id);
 
+  const restoreFailedSubmission = useCallback(() => {
+    const last = lastSubmissionRef.current;
+    if (!last) return;
+    chatInputRef.current?.restoreFailedSubmission(last.text, last.images ?? []);
+  }, []);
+
   const handleSession = useCallback((session: RunSessionResponseDto) => {
     if (config.env === 'development') {
       // eslint-disable-next-line no-console
@@ -247,9 +256,12 @@ export default function ChatPage({
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
     },
-    onComplete: () => {
-      // eslint-disable-next-line no-console
-      console.log('Message sending completed');
+    // Runs in the finally of every send (success or failure). Restore the
+    // prompt + images on any failure — incl. the 403/429 paths that never
+    // reach onError — then clear the stored submission.
+    onComplete: (failed) => {
+      if (failed) restoreFailedSubmission();
+      lastSubmissionRef.current = null;
       setIsStreaming(false);
       setPendingSubmission(null);
     },
@@ -261,7 +273,8 @@ export default function ChatPage({
 
   usePendingMessage({
     sendTextMessage,
-    onSendStart: (text) => {
+    onSendStart: (text, images) => {
+      lastSubmissionRef.current = { text, images: images?.map((i) => i.file) };
       setPendingSubmission(text);
       setIsStreaming(true);
     },
@@ -277,6 +290,10 @@ export default function ChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
+      lastSubmissionRef.current = {
+        text: message,
+        images: imageFiles?.map((img) => img.file),
+      };
       setPendingSubmission(message);
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
@@ -294,21 +311,18 @@ export default function ChatPage({
         text: message,
         images,
       });
-    } catch (error) {
-      chatInputRef.current?.setMessage(message);
-      setIsStreaming(false);
-      setPendingSubmission(null);
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        showError(t('chat.upgradeToProError'));
-      } else {
-        showError(t('chat.errorSendMessage'));
-      }
-      throw error; // rethrow the error to preserve the message
+    } catch {
+      // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
+      // onErrorEvent/onError); this only catches a rejected send promise.
+      restoreFailedSubmission();
     }
   }
 
   function handleSendCancelled() {
     abort();
+    // Cancelling is intentional: discard the saved submission so it is neither
+    // restored now (abort skips onComplete) nor left stale for a later failure.
+    lastSubmissionRef.current = null;
     setIsStreaming(false);
     setPendingSubmission(null);
 

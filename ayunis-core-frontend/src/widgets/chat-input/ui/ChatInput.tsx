@@ -111,6 +111,7 @@ interface ChatInputProps {
 export interface ChatInputRef {
   setMessage: (message: string) => void;
   sendMessage: (message: string) => void;
+  restoreFailedSubmission: (text: string, files: File[]) => void;
 }
 
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
@@ -180,7 +181,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const { pendingImages, addImages, removeImage, clearImages } =
       usePendingImages();
 
-    // Handle paste events for images
     const handleImagesPasted = (files: File[]) => {
       const result = addImages(files);
       if (result.limitExceeded) {
@@ -221,6 +221,12 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       sendMessage: (text: string) => {
         if (!text.trim() || !modelId) return;
         onSend(text);
+      },
+      // Restore only into a pristine input, never onto a mid-run follow-up draft.
+      restoreFailedSubmission: (text: string, files: File[]) => {
+        if (message.trim() || pendingImages.length > 0) return;
+        setMessage(text);
+        if (files.length > 0) addImages(files);
       },
     }));
 
