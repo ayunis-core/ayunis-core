@@ -41,7 +41,11 @@ interface StreamingTurn {
  *   carrying the tokens, as the client expects);
  * - `error` is captured and thrown only once the stream drains, so the
  *   runtime's `runEnd` hooks still fire before the error surfaces as an SSE
- *   error frame (matching the legacy loop's throw-then-cleanup order).
+ *   error frame (matching the legacy loop's throw-then-cleanup order);
+ * - a `run_end` with a non-`completed` status that emitted no `error` event
+ *   (i.e. `aborted`) is likewise surfaced as a throw, so callers route it
+ *   through the failure/interruption cleanup path instead of mistaking a
+ *   cancelled run for a successful one.
  */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
@@ -49,11 +53,16 @@ export async function* adaptRunEventsToStream(
 ): AsyncGenerator<RunStreamItem, void, void> {
   const assistant = new AssistantTurnAccumulator(threadId);
   let pendingError: ApplicationError | null = null;
+  let aborted = false;
 
   for await (const event of events) {
     const streamed = assistant.consume(event);
     if (streamed) {
       yield streamed;
+      continue;
+    }
+    if (event.type === 'run_end') {
+      aborted = event.status === 'aborted';
       continue;
     }
     const side = toSideStreamItem(event, threadId);
@@ -66,6 +75,9 @@ export async function* adaptRunEventsToStream(
 
   if (pendingError) {
     throw pendingError;
+  }
+  if (aborted) {
+    throw new RunExecutionFailedError('run aborted');
   }
 }
 

@@ -146,4 +146,15 @@ describe('adaptRunEventsToStream', () => {
       ),
     ).rejects.toBeInstanceOf(RunExecutionFailedError);
   });
+
+  it('throws on an aborted run_end that emitted no error event', async () => {
+    await expect(
+      collect(
+        eventsFrom([
+          { type: 'text_delta', delta: 'partial' },
+          { type: 'run_end', status: 'aborted', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(RunExecutionFailedError);
+  });
 });
