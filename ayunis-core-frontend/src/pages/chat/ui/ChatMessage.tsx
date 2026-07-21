@@ -29,10 +29,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       >
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {images.map((imageContent, index) => (
+            {images.map((imageContent) => (
               <ImageThumbnail
-                key={`image-${index}-${imageContent.imageUrl}`}
+                key={`image-${imageContent.index}`}
                 imageContent={imageContent}
+                imageUrl={`${config.api.baseUrl}/threads/${message.threadId}/messages/${message.id}/images/${imageContent.index}`}
               />
             ))}
           </div>
@@ -52,12 +53,12 @@ export default function ChatMessage({ message }: ChatMessageProps) {
 
 function ImageThumbnail({
   imageContent,
+  imageUrl,
 }: {
   readonly imageContent: ImageMessageContentResponseDto;
+  readonly imageUrl: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const encodedObjectName = encodeURIComponent(imageContent.imageUrl);
-  const imageUrl = `${config.api.baseUrl}/storage/${encodedObjectName}`;
 
   return (
     <>

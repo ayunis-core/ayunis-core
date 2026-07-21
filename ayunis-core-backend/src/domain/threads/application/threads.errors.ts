@@ -15,6 +15,7 @@ export enum ThreadErrorCode {
   MODEL_REPLACEMENT_FAILED = 'MODEL_REPLACEMENT_FAILED',
   NO_MODEL_PROVIDED = 'NO_MODEL_PROVIDED',
   GENERATED_IMAGE_NOT_FOUND = 'GENERATED_IMAGE_NOT_FOUND',
+  MESSAGE_IMAGE_NOT_FOUND = 'MESSAGE_IMAGE_NOT_FOUND',
   GENERATED_IMAGE_SAVE_FAILED = 'GENERATED_IMAGE_SAVE_FAILED',
   UNSUPPORTED_IMAGE_CONTENT_TYPE = 'UNSUPPORTED_IMAGE_CONTENT_TYPE',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
@@ -192,6 +193,17 @@ export class GeneratedImageNotFoundError extends ThreadError {
       ThreadErrorCode.GENERATED_IMAGE_NOT_FOUND,
       404,
       { imageId, ...metadata },
+    );
+  }
+}
+
+export class MessageImageNotFoundError extends ThreadError {
+  constructor(messageId: UUID, index: number, metadata?: ErrorMetadata) {
+    super(
+      `Image ${index} of message ${messageId} not found`,
+      ThreadErrorCode.MESSAGE_IMAGE_NOT_FOUND,
+      404,
+      { messageId, index, ...metadata },
     );
   }
 }

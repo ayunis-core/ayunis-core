@@ -1950,8 +1950,8 @@ export const ImageMessageContentResponseDtoType = {
 export interface ImageMessageContentResponseDto {
   /** Type of the message content */
   type: ImageMessageContentResponseDtoType;
-  /** Internal image reference (e.g. MinIO object name or /storage/:objectName path) */
-  imageUrl: string;
+  /** Zero-based index of the image within the message; download via GET /threads/:threadId/messages/:messageId/images/:index */
+  index: number;
   /** Optional alternative text for the image */
   altText?: string;
 }

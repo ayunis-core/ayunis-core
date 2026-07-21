@@ -3732,39 +3732,6 @@
         "tags": ["teams"]
       }
     },
-    "/storage/{objectName}": {
-      "get": {
-        "description": "Serves org-prefixed image objects (e.g. chat message images). The object name must start with the requesting user’s organization id.",
-        "operationId": "StorageController_getFile",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Org-prefixed name of the object to retrieve",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Object streamed successfully"
-          },
-          "400": {
-            "description": "Invalid object name"
-          },
-          "403": {
-            "description": "Object is not owned by the requesting organization"
-          },
-          "404": {
-            "description": "Object not found"
-          }
-        },
-        "summary": "Download an image object owned by the requesting organization",
-        "tags": ["storage"]
-      }
-    },
     "/transcriptions": {
       "post": {
         "description": "Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.",
@@ -4521,6 +4488,49 @@
           }
         },
         "summary": "Get presigned URL for a generated image",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{threadId}/messages/{messageId}/images/{index}": {
+      "get": {
+        "operationId": "MessageImagesController_download",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "messageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "index",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image streamed successfully"
+          },
+          "404": {
+            "description": "Thread, message, or image not found"
+          }
+        },
+        "summary": "Download an image attached to a message",
         "tags": ["threads"]
       }
     },
@@ -12864,10 +12874,10 @@
             "example": "text",
             "enum": ["text", "tool_use", "tool_result", "thinking", "image"]
           },
-          "imageUrl": {
-            "type": "string",
-            "description": "Internal image reference (e.g. MinIO object name or /storage/:objectName path)",
-            "example": "1711365678123-user-upload.png"
+          "index": {
+            "type": "number",
+            "description": "Zero-based index of the image within the message; download via GET /threads/:threadId/messages/:messageId/images/:index",
+            "example": 0
           },
           "altText": {
             "type": "string",
@@ -12875,7 +12885,7 @@
             "example": "Screenshot of the reported issue"
           }
         },
-        "required": ["type", "imageUrl"]
+        "required": ["type", "index"]
       },
       "ModelResponseDto": {
         "type": "object",

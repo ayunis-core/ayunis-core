@@ -108,10 +108,10 @@ export class ThinkingMessageContentResponseDto extends MessageContentResponseDto
 export class ImageMessageContentResponseDto extends MessageContentResponseDto {
   @ApiProperty({
     description:
-      'Internal image reference (e.g. MinIO object name or /storage/:objectName path)',
-    example: '1711365678123-user-upload.png',
+      'Zero-based index of the image within the message; download via GET /threads/:threadId/messages/:messageId/images/:index',
+    example: 0,
   })
-  imageUrl: string;
+  index: number;
 
   @ApiProperty({
     description: 'Optional alternative text for the image',

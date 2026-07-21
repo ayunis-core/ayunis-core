@@ -7537,100 +7537,6 @@ export const useTeamsControllerRemoveTeamMember = <TError = void,
     }
     
 /**
- * Serves org-prefixed image objects (e.g. chat message images). The object name must start with the requesting user’s organization id.
- * @summary Download an image object owned by the requesting organization
- */
-export const storageControllerGetFile = (
-    objectName: string,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/storage/${objectName}`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getStorageControllerGetFileQueryKey = (objectName?: string,) => {
-    return [
-    `/storage/${objectName}`
-    ] as const;
-    }
-
-    
-export const getStorageControllerGetFileQueryOptions = <TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getStorageControllerGetFileQueryKey(objectName);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageControllerGetFile>>> = ({ signal }) => storageControllerGetFile(objectName, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(objectName), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type StorageControllerGetFileQueryResult = NonNullable<Awaited<ReturnType<typeof storageControllerGetFile>>>
-export type StorageControllerGetFileQueryError = void
-
-
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
- objectName: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof storageControllerGetFile>>,
-          TError,
-          Awaited<ReturnType<typeof storageControllerGetFile>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof storageControllerGetFile>>,
-          TError,
-          Awaited<ReturnType<typeof storageControllerGetFile>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download an image object owned by the requesting organization
- */
-
-export function useStorageControllerGetFile<TData = Awaited<ReturnType<typeof storageControllerGetFile>>, TError = void>(
- objectName: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storageControllerGetFile>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getStorageControllerGetFileQueryOptions(objectName,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
  * Upload an audio file and receive the transcribed text. Supports webm, mp4, mp3, wav, and m4a formats.
  * @summary Transcribe audio file to text
  */
@@ -8969,6 +8875,113 @@ export function useGeneratedImagesControllerResolve<TData = Awaited<ReturnType<t
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGeneratedImagesControllerResolveQueryOptions(threadId,imageId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Download an image attached to a message
+ */
+export const messageImagesControllerDownload = (
+    threadId: string,
+    messageId: string,
+    index: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/threads/${threadId}/messages/${messageId}/images/${index}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMessageImagesControllerDownloadQueryKey = (threadId?: string,
+    messageId?: string,
+    index?: number,) => {
+    return [
+    `/threads/${threadId}/messages/${messageId}/images/${index}`
+    ] as const;
+    }
+
+    
+export const getMessageImagesControllerDownloadQueryOptions = <TData = Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError = void>(threadId: string,
+    messageId: string,
+    index: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMessageImagesControllerDownloadQueryKey(threadId,messageId,index);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof messageImagesControllerDownload>>> = ({ signal }) => messageImagesControllerDownload(threadId,messageId,index, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(threadId && messageId && index), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MessageImagesControllerDownloadQueryResult = NonNullable<Awaited<ReturnType<typeof messageImagesControllerDownload>>>
+export type MessageImagesControllerDownloadQueryError = void
+
+
+export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError = void>(
+ threadId: string,
+    messageId: string,
+    index: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof messageImagesControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof messageImagesControllerDownload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError = void>(
+ threadId: string,
+    messageId: string,
+    index: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof messageImagesControllerDownload>>,
+          TError,
+          Awaited<ReturnType<typeof messageImagesControllerDownload>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError = void>(
+ threadId: string,
+    messageId: string,
+    index: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download an image attached to a message
+ */
+
+export function useMessageImagesControllerDownload<TData = Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError = void>(
+ threadId: string,
+    messageId: string,
+    index: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof messageImagesControllerDownload>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMessageImagesControllerDownloadQueryOptions(threadId,messageId,index,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
