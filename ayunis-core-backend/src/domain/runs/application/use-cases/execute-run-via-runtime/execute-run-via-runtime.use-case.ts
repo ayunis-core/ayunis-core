@@ -2,6 +2,7 @@ import {
   run,
   RunContext,
   type Hook,
+  type RunEvent,
   type Tool as RuntimeTool,
 } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
@@ -51,7 +52,10 @@ import { RunExecutedEvent } from '../../events/run-executed.event';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
-import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import {
+  ANONYMIZATION_UNAVAILABLE,
+  BackendToolAdapter,
+} from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
@@ -181,10 +185,13 @@ export class ExecuteRunViaRuntimeUseCase {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield seeded.message;
-      yield* adaptRunEventsToStream(
-        await this.startRun(prepared),
-        prepared.thread.id,
-      );
+      const started = await this.startRun(prepared);
+      yield* adaptRunEventsToStream(started.events, prepared.thread.id);
+      // Fail closed: the runtime swallows the tool adapter's throw into a soft
+      // error result, so surface the outage flagged on the run context here.
+      if (started.context.get<boolean>(ANONYMIZATION_UNAVAILABLE)) {
+        throw new RunAnonymizationUnavailableError();
+      }
       succeeded = true;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
@@ -216,7 +223,9 @@ export class ExecuteRunViaRuntimeUseCase {
     throw new RunInvalidInputError('Invalid run input');
   }
 
-  private async startRun(prepared: PreparedRuntimeRun) {
+  private async startRun(
+    prepared: PreparedRuntimeRun,
+  ): Promise<{ events: AsyncIterable<RunEvent>; context: RunContext }> {
     const messages = await this.mapMessagesToInferenceUseCase.execute(
       new MapMessagesToInferenceCommand(
         prepared.thread.messages,
@@ -232,7 +241,7 @@ export class ExecuteRunViaRuntimeUseCase {
       threadId: prepared.thread.id,
       isAnonymous: prepared.isAnonymous,
     });
-    return run({
+    const events = run({
       instructions: prepared.instructions,
       model: provider,
       messages,
@@ -242,13 +251,32 @@ export class ExecuteRunViaRuntimeUseCase {
       context,
       maxIterations: RUNTIME_MAX_ITERATIONS,
     });
+    return { events, context };
   }
 
   private buildHooks(prepared: PreparedRuntimeRun): Hook[] {
     return [
       this.persistenceHookFactory.create({ threadId: prepared.thread.id }),
       this.usageHookFactory.create({ model: prepared.model }),
+      this.anonymizationGuardHook(),
     ];
+  }
+
+  /**
+   * Fail-closed guard: when tool-output anonymization fails, the tool adapter
+   * flags the run context. Abort the loop so the model is not called again with
+   * the pending (un-anonymized) tool output; `streamRun` then surfaces
+   * `RunAnonymizationUnavailableError`.
+   */
+  private anonymizationGuardHook(): Hook {
+    return {
+      name: 'ayunis-anonymization-guard',
+      afterToolCall: (ctx) => {
+        if (ctx.context.get<boolean>(ANONYMIZATION_UNAVAILABLE)) {
+          ctx.abort('anonymization unavailable');
+        }
+      },
+    };
   }
 
   private async persistUserMessage(

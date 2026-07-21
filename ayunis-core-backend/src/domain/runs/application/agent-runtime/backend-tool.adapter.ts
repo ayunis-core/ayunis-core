@@ -16,10 +16,22 @@ import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cas
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { RunAnonymizationUnavailableError } from '../runs.errors';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
+
+/**
+ * RunContext key set when tool-output anonymization fails. The runtime swallows
+ * a tool's thrown error into a soft error result, so the adapter flags the run
+ * here instead; the anonymization guard hook aborts the loop and the use case
+ * surfaces `RunAnonymizationUnavailableError` (fail-closed, matching the legacy
+ * `ToolResultCollectorService`).
+ */
+export const ANONYMIZATION_UNAVAILABLE = Symbol(
+  'ayunis:anonymizationUnavailable',
+);
 
 /**
  * Adapts backend catalog tools to the runtime's `Tool` contract, mirroring the
@@ -92,13 +104,27 @@ export class BackendToolAdapter {
     context: { orgId: UUID; threadId: UUID },
     ctx: RuntimeToolContext,
   ): Promise<string> {
-    const anonymized = await this.anonymizeTextForThreadUseCase.execute(
-      new AnonymizeTextForThreadCommand(
-        result,
-        context.orgId,
-        context.threadId,
-      ),
-    );
+    let anonymized: Awaited<
+      ReturnType<AnonymizeTextForThreadUseCase['execute']>
+    >;
+    try {
+      anonymized = await this.anonymizeTextForThreadUseCase.execute(
+        new AnonymizeTextForThreadCommand(
+          result,
+          context.orgId,
+          context.threadId,
+        ),
+      );
+    } catch (error) {
+      // Fail closed: never hand the model un-anonymized PII. The runtime turns
+      // a thrown tool error into a soft error result, so flag the run for the
+      // guard hook (which aborts the loop) and the use case (which surfaces
+      // RunAnonymizationUnavailableError) instead of relying on this throw.
+      ctx.context.set(ANONYMIZATION_UNAVAILABLE, true);
+      throw new RunAnonymizationUnavailableError({
+        originalError: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
     ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: anonymized.masks });
     return anonymized.anonymizedText;
   }

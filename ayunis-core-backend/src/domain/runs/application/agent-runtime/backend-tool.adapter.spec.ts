@@ -5,7 +5,11 @@ import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/
 import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { BackendToolAdapter } from './backend-tool.adapter';
+import { RunAnonymizationUnavailableError } from '../runs.errors';
+import {
+  ANONYMIZATION_UNAVAILABLE,
+  BackendToolAdapter,
+} from './backend-tool.adapter';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -111,6 +115,34 @@ describe('BackendToolAdapter', () => {
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'thread_pii_masks' }),
     );
+  });
+
+  it('fails closed when anonymizing PII tool output is unavailable', async () => {
+    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(new Error('anonymizer down'));
+    const piiTool = {
+      name: 'lookup',
+      description: 'lookup',
+      parameters: { type: 'object' },
+      returnsPii: true,
+    } as unknown as BackendTool;
+    const emit = jest.fn();
+    const context = RunContext.create({ orgId, threadId, isAnonymous: true });
+    const ctx = {
+      context,
+      toolCallId: 'c1',
+      emit,
+    } as unknown as ToolExecutionContext;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, ctx)).rejects.toBeInstanceOf(
+      RunAnonymizationUnavailableError,
+    );
+    // Never emits masks or hands the raw (un-anonymized) result to the model.
+    expect(emit).not.toHaveBeenCalled();
+    expect(context.get(ANONYMIZATION_UNAVAILABLE)).toBe(true);
   });
 
   it('surfaces an exposeToLLM tool error message to the model', async () => {
