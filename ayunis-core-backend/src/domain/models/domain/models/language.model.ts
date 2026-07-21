@@ -45,4 +45,20 @@ export class LanguageModel extends Model {
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;
   }
+
+  /**
+   * Whether inference with this model can consume credits. Mirrors the cost
+   * calculation in usage collection (`CollectUsageUseCase.calculateCost`): a
+   * credit cost is only ever incurred when both per-token prices are known and
+   * at least one is greater than zero. Free open-source models (e.g. the
+   * German-hosted "DE" models) carry no token costs, so this returns false and
+   * they stay usable after the org's monthly credit budget is exhausted.
+   */
+  get consumesCredits(): boolean {
+    const { inputTokenCost, outputTokenCost } = this;
+    if (inputTokenCost === undefined || outputTokenCost === undefined) {
+      return false;
+    }
+    return inputTokenCost > 0 || outputTokenCost > 0;
+  }
 }
