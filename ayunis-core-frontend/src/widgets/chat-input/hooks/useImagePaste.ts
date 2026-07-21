@@ -24,6 +24,16 @@ export function useImagePaste({
         return;
       }
 
+      // Rich-text copies (Word/Excel/browsers/macOS) place a synthesized
+      // image/png snapshot on the clipboard alongside text/plain. That image
+      // is not an intentional attachment — only auto-attach clipboard images
+      // for image-only pastes, otherwise the text handler owns this paste.
+      // Mirror the textarea handler's `!pastedText` check (ChatInput.tsx) so an
+      // empty text/plain entry alongside an image still lets the image attach.
+      if (e.clipboardData.getData('text/plain')) {
+        return;
+      }
+
       const imageFiles: File[] = [];
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
