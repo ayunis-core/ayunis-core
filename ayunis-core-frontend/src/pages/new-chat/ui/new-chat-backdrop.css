@@ -72,14 +72,15 @@
   animation-play-state: paused !important;
 }
 
+/* Fade-only entrance: the backdrop must stay pinned to the bottom, so it must
+   never translate vertically on appear (any Y movement reads as the gradient
+   "jumping up"). */
 @keyframes newChatBackdropAppear {
   from {
     opacity: 0;
-    transform: translate3d(0, 22%, 0);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -156,15 +157,18 @@
   animation-delay: var(--backdrop-blob-delay-3);
 }
 
+/* Blobs keep only horizontal drift + scale breathing. Vertical drift is
+   intentionally 0 so the glow stays anchored to the bottom edge and never
+   creeps upward. */
 @keyframes newChatBackdropBlobOne {
   0% {
     transform: translate3d(0%, 0%, 0) scale(1);
   }
   50% {
-    transform: translate3d(4%, -4%, 0) scale(1.06);
+    transform: translate3d(4%, 0%, 0) scale(1.06);
   }
   100% {
-    transform: translate3d(-3%, -7%, 0) scale(0.97);
+    transform: translate3d(-3%, 0%, 0) scale(0.97);
   }
 }
 
@@ -173,10 +177,10 @@
     transform: translate3d(0%, 0%, 0) scale(1);
   }
   50% {
-    transform: translate3d(5%, -5%, 0) scale(1.06);
+    transform: translate3d(5%, 0%, 0) scale(1.06);
   }
   100% {
-    transform: translate3d(-4%, -6%, 0) scale(1.01);
+    transform: translate3d(-4%, 0%, 0) scale(1.01);
   }
 }
 
@@ -185,10 +189,10 @@
     transform: translate3d(0%, 0%, 0) scale(1);
   }
   50% {
-    transform: translate3d(-14%, -5%, 0) scale(1.05, 1.02);
+    transform: translate3d(-14%, 0%, 0) scale(1.05, 1.02);
   }
   100% {
-    transform: translate3d(-8%, -6%, 0) scale(0.98, 1);
+    transform: translate3d(-8%, 0%, 0) scale(0.98, 1);
   }
 }
 
