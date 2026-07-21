@@ -13,7 +13,10 @@ import {
   SourceRecord,
   TextSourceRecord,
 } from './schema/source.record';
-import { DataSourceDetailsRecord } from './schema/data-source-details.record';
+import {
+  CSVDataSourceDetailsRecord,
+  DataSourceDetailsRecord,
+} from './schema/data-source-details.record';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
@@ -197,6 +200,32 @@ export class LocalSourceRepository extends SourceRepository {
         fromStatus,
       });
     const result = await qb.execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async refreshProcessingHeartbeat(sourceId: UUID): Promise<boolean> {
+    const result = await this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({ processingStartedAt: () => 'now()' })
+      .where('id = :id AND status = :status', {
+        id: sourceId,
+        status: SourceStatus.PROCESSING,
+      })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async updateCsvSourceData(
+    sourceId: UUID,
+    data: { headers: string[]; rows: string[][] },
+  ): Promise<boolean> {
+    const result = await this.dataSourceDetailsRepository
+      .createQueryBuilder()
+      .update(CSVDataSourceDetailsRecord)
+      .set({ data })
+      .where('"sourceId" = :id', { id: sourceId })
+      .execute();
     return (result.affected ?? 0) > 0;
   }
 

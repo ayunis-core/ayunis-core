@@ -149,7 +149,11 @@ export function SourcesList({
               source.createdBy === 'llm' && 'bg-[#8178C3]/10 text-[#8178C3]',
               isFailed && 'bg-destructive/10 text-destructive',
             )}
-            onClick={() => source.type === 'data' && onDownload?.(source.id)}
+            onClick={() =>
+              source.type === 'data' &&
+              source.status === SourceResponseDtoStatus.ready &&
+              onDownload?.(source.id)
+            }
           >
             {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
             {isFailed && <AlertCircle className="h-3 w-3" />}

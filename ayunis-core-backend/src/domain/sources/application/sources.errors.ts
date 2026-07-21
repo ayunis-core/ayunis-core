@@ -8,6 +8,8 @@ export enum SourceErrorCode {
   EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
+  SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
+  SOURCE_NOT_READY = 'SOURCE_NOT_READY',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -44,8 +46,22 @@ export class SourceNotFoundError extends SourceError {
 }
 
 export class UnexpectedSourceError extends SourceError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, SourceErrorCode.UNEXPECTED_SOURCE_ERROR, 500, metadata);
+  // Accepts Error for @HandleUnexpectedErrors; the string form remains for
+  // call sites not yet migrated to the decorator. The wrapped error travels
+  // on the non-serialized `cause` so raw internals never reach API callers.
+  constructor(cause: string | Error, metadata?: ErrorMetadata) {
+    if (typeof cause === 'string') {
+      super(cause, SourceErrorCode.UNEXPECTED_SOURCE_ERROR, 500, metadata);
+      return;
+    }
+
+    super(
+      'Unexpected error occurred',
+      SourceErrorCode.UNEXPECTED_SOURCE_ERROR,
+      500,
+      metadata,
+    );
+    this.cause = cause;
   }
 }
 
@@ -70,6 +86,28 @@ export class UnsupportedFileTypeError extends SourceError {
       `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
       SourceErrorCode.UNSUPPORTED_FILE_TYPE,
       400,
+      metadata,
+    );
+  }
+}
+
+export class SourceNotReadyError extends SourceError {
+  constructor(sourceId: string, metadata?: ErrorMetadata) {
+    super(
+      `Source '${sourceId}' is still processing or failed and has no data yet`,
+      SourceErrorCode.SOURCE_NOT_READY,
+      409,
+      metadata,
+    );
+  }
+}
+
+export class SpreadsheetParseTimeoutError extends SourceError {
+  constructor(timeoutMs: number, metadata?: ErrorMetadata) {
+    super(
+      `Spreadsheet could not be parsed within ${timeoutMs / 1000} seconds`,
+      SourceErrorCode.SPREADSHEET_PARSE_TIMEOUT,
+      422,
       metadata,
     );
   }

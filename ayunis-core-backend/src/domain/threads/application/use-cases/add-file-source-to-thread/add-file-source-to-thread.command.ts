@@ -1,20 +1,12 @@
-import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { UUID } from 'crypto';
+import type { UploadedFileRef } from 'src/common/util/source-file-upload';
 
 export class AddFileSourceToThreadCommand {
-  readonly thread: Thread;
-  readonly fileData: Buffer;
-  readonly fileName: string;
-  readonly fileType: string;
+  public readonly threadId: UUID;
+  public readonly file: UploadedFileRef;
 
-  constructor(params: {
-    thread: Thread;
-    fileData: Buffer;
-    fileName: string;
-    fileType: string;
-  }) {
-    this.thread = params.thread;
-    this.fileData = params.fileData;
-    this.fileName = params.fileName;
-    this.fileType = params.fileType;
+  constructor(params: { threadId: UUID; file: UploadedFileRef }) {
+    this.threadId = params.threadId;
+    this.file = params.file;
   }
 }

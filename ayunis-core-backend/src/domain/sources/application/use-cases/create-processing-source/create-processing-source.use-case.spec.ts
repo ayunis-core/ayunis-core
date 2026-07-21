@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { CreateProcessingSourceUseCase } from './create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from './create-processing-source.command';
 import { SourceRepository } from '../../ports/source.repository';
+import { createMockSourceRepository } from '../../testing/source.fixtures';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { UnsupportedSourceFileTypeError } from '../../sources.errors';
@@ -12,20 +13,7 @@ describe('CreateProcessingSourceUseCase', () => {
   let mockSourceRepository: jest.Mocked<SourceRepository>;
 
   beforeEach(async () => {
-    mockSourceRepository = {
-      findById: jest.fn(),
-      findByIds: jest.fn(),
-      findByKnowledgeBaseId: jest.fn(),
-      findStaleProcessingSourceIds: jest.fn(),
-      save: jest.fn().mockImplementation(async (source) => source),
-      saveTextSource: jest.fn(),
-      extractTextLines: jest.fn(),
-      findContentChunksByIds: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      updateStatusConditionally: jest.fn(),
-      findUnreferencedIds: jest.fn(),
-    };
+    mockSourceRepository = createMockSourceRepository();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

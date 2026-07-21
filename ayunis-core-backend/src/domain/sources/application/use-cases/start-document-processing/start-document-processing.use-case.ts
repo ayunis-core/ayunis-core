@@ -1,8 +1,8 @@
-import * as path from 'path';
 import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { CreateProcessingSourceUseCase } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.use-case';
 import { CreateProcessingSourceCommand } from 'src/domain/sources/application/use-cases/create-processing-source/create-processing-source.command';
@@ -76,7 +76,11 @@ export class StartDocumentProcessingUseCase {
       );
 
       // Upload and enqueue both happen outside the transaction
-      const minioPath = this.buildMinioPath(orgId, savedSource.id, command);
+      const minioPath = buildMinioProcessingPath(
+        orgId,
+        savedSource.id,
+        command.fileName,
+      );
       await this.uploadFileOrFail(savedSource, minioPath, command);
       await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
 
@@ -92,17 +96,6 @@ export class StartDocumentProcessingUseCase {
         error: error as Error,
       });
     }
-  }
-
-  private buildMinioPath(
-    orgId: string,
-    sourceId: string,
-    command: StartDocumentProcessingCommand,
-  ): string {
-    const sanitizedFileName = path
-      .basename(command.fileName)
-      .replace(/[^a-zA-Z0-9._-]/g, '_');
-    return `${orgId}/processing/${sourceId}/${sanitizedFileName}`;
   }
 
   private async uploadFileOrFail(

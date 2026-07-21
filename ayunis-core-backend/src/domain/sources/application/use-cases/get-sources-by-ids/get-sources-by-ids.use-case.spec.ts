@@ -1,6 +1,7 @@
 import { GetSourcesByIdsUseCase } from './get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from './get-sources-by-ids.query';
 import type { SourceRepository } from '../../ports/source.repository';
+import { createMockSourceRepository } from '../../testing/source.fixtures';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
@@ -24,20 +25,7 @@ describe('GetSourcesByIdsUseCase', () => {
   let sourceRepository: jest.Mocked<SourceRepository>;
 
   beforeEach(() => {
-    sourceRepository = {
-      findById: jest.fn(),
-      findByIds: jest.fn(),
-      findByKnowledgeBaseId: jest.fn(),
-      saveTextSource: jest.fn(),
-      findStaleProcessingSourceIds: jest.fn(),
-      save: jest.fn(),
-      extractTextLines: jest.fn(),
-      findContentChunksByIds: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      updateStatusConditionally: jest.fn(),
-      findUnreferencedIds: jest.fn(),
-    };
+    sourceRepository = createMockSourceRepository();
 
     useCase = new GetSourcesByIdsUseCase(sourceRepository);
   });

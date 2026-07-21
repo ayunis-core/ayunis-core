@@ -50,6 +50,13 @@ export default function handleSourceUploadError(
       case 'NO_PERMITTED_EMBEDDING_MODEL':
         showError(t('sources.noEmbeddingModelError'));
         break;
+      case 'SERVICE_BUSY':
+        showError(t('sources.fileSourceServiceBusyError'));
+        break;
+      case 'SERVICE_TIMEOUT':
+      case 'SPREADSHEET_PARSE_TIMEOUT':
+        showError(t('sources.fileSourceTimeoutError'));
+        break;
       default:
         showError(t('sources.failedToAdd'));
     }

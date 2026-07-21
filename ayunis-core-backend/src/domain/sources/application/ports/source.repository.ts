@@ -25,6 +25,21 @@ export abstract class SourceRepository {
     toStatus: SourceStatus,
     updates?: Partial<{ processingError: string | null }>,
   ): Promise<boolean>;
+  /**
+   * Refreshes processingStartedAt so the stale-processing cron leaves a
+   * long-running job alone. UPDATE-only and guarded on PROCESSING — unlike
+   * save(), it can never re-insert a concurrently deleted row. Returns false
+   * when the source is gone or no longer processing.
+   */
+  abstract refreshProcessingHeartbeat(sourceId: UUID): Promise<boolean>;
+  /**
+   * Writes a CSV source's parsed data. UPDATE-only — returns false instead of
+   * resurrecting the row when the source was deleted mid-processing.
+   */
+  abstract updateCsvSourceData(
+    sourceId: UUID,
+    data: { headers: string[]; rows: string[][] },
+  ): Promise<boolean>;
   abstract extractTextLines(
     sourceId: UUID,
     startLine: number,
