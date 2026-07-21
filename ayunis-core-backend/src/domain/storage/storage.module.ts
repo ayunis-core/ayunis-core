@@ -10,6 +10,7 @@ import { DeleteObjectUseCase } from './application/use-cases/delete-object/delet
 import { ListObjectsUseCase } from './application/use-cases/list-objects/list-objects.use-case';
 import { GetPresignedUrlUseCase } from './application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import { PurgeOrgStorageUseCase } from './application/use-cases/purge-org-storage/purge-org-storage.use-case';
+import { PurgeStoragePrefixesUseCase } from './application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { StorageOrgDeletionRequestedListener } from './application/listeners/org-deletion-requested.listener';
 
 @Module({
@@ -26,6 +27,7 @@ import { StorageOrgDeletionRequestedListener } from './application/listeners/org
     ListObjectsUseCase,
     GetPresignedUrlUseCase,
     PurgeOrgStorageUseCase,
+    PurgeStoragePrefixesUseCase,
     StorageOrgDeletionRequestedListener,
   ],
   exports: [
@@ -37,6 +39,7 @@ import { StorageOrgDeletionRequestedListener } from './application/listeners/org
     ListObjectsUseCase,
     GetPresignedUrlUseCase,
     PurgeOrgStorageUseCase,
+    PurgeStoragePrefixesUseCase,
   ],
 })
 export class StorageModule {}
