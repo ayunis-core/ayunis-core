@@ -214,6 +214,22 @@ This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and pe
 
 ## 💻 Development
 
+### Local Development Environment
+
+Local development is driven by the `./dev` script (see
+`ayunis-core-backend/README.md` for details). Configuration comes from one of
+two sources:
+
+- **Team members:** install the Infisical CLI and log in once
+  (`brew install infisical/get-cli/infisical && infisical login`) — `./dev up`
+  injects the complete dev config from Infisical; no local env files needed.
+- **Contributors without Infisical access:** copy
+  `ayunis-core-backend/.env.example` to `ayunis-core-backend/.env` and fill in
+  your values; `./dev` falls back to `.env` automatically.
+
+The production setup above (copying `.env` files for `docker compose`) is
+unaffected.
+
 ### Git Hooks (Husky)
 
 This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks for code quality checks.

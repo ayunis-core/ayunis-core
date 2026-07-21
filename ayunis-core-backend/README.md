@@ -31,13 +31,24 @@ This is the core backend for the Ayunis platform, built with NestJS and followin
 ## Setup and Installation
 
 1. Clone the repository
-2. Copy the example environment file:
+2. Set up environment configuration — two paths:
+
+   **Team members (Infisical):** the complete dev config (secrets + base
+   connection config) is injected from Infisical at process start — no local
+   env files needed.
+
+   ```bash
+   brew install infisical/get-cli/infisical
+   infisical login   # pick the Ayunis instance domain, log in as yourself
+   ```
+
+   **Contributors without Infisical access:** copy the example file and fill
+   in your values; `./dev` detects the missing Infisical setup and falls back
+   to `.env` automatically.
 
    ```bash
    cp .env.example .env
    ```
-
-3. Update the `.env` file with your specific configuration values
 
 ### Development Environment
 
@@ -51,6 +62,21 @@ From the **repository root**:
 ```
 
 Use `./dev up --slot 1` to run a second instance in parallel (e.g. for another worktree).
+
+Environment precedence and the `DEV_PORT_OFFSET` slot derivation are
+documented in `src/config/SUMMARY.md`. Useful to know:
+
+- **Manual commands that need secrets** (Infisical path) must be prefixed,
+  because the DB config no longer lives in a local file:
+  `infisical run --env=dev --path=/backend -- pnpm seed` (same for
+  `pnpm run cli` and `pnpm run migration:*:dev`).
+- **Personal overrides:** to change a shared value just for yourself (a
+  feature flag, a temporary API key), set a *personal override* on the secret
+  in the Infisical UI — the CLI resolves it automatically. Offline
+  alternative: a gitignored `.env.local`, which beats every other source.
+- **Secrets are fetched at process start** — after changing a value in
+  Infisical, restart via `./dev down && ./dev up`.
+- `AYUNIS_NO_INFISICAL=1 ./dev up` forces the local `.env` fallback.
 
 ### Production Environment
 
