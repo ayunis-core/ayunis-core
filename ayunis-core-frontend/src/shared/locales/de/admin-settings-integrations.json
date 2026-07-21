@@ -68,7 +68,9 @@
     },
     "list": {
       "noIntegrationsTitle": "Noch keine Integrationen",
-      "noIntegrationsMessage": "Erstellen Sie Ihre erste Integration, um loszulegen."
+      "noIntegrationsMessage": "Erstellen Sie Ihre erste Integration, um loszulegen.",
+      "noIntegrationsMarketplaceMessage": "Installieren Sie Integrationen über den Marktplatz, um loszulegen.",
+      "browseMarketplace": "Marktplatz durchsuchen"
     },
     "createCustomDialog": {
       "title": "Benutzerdefinierte Integration hinzufügen",

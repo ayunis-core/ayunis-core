@@ -68,7 +68,9 @@
     },
     "list": {
       "noIntegrationsTitle": "No integrations yet",
-      "noIntegrationsMessage": "Create your first integration to get started."
+      "noIntegrationsMessage": "Create your first integration to get started.",
+      "noIntegrationsMarketplaceMessage": "Install integrations from the Marketplace to get started.",
+      "browseMarketplace": "Browse Marketplace"
     },
     "createCustomDialog": {
       "title": "Add Custom Integration",

@@ -1,10 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import { FileQuestion } from 'lucide-react';
+import { Button } from '@/shared/ui/shadcn/button';
+import { ExternalLink, FileQuestion, Store } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { IntegrationCard } from './integration-card';
 import { useToggleIntegration } from '../api/useToggleIntegration';
 import { useValidateIntegration } from '../api/useValidateIntegration';
+import { useMarketplaceConfig } from '@/features/marketplace';
 
 interface IntegrationsListProps {
   integrations: McpIntegration[];
@@ -20,8 +22,11 @@ export function IntegrationsList({
   const { t } = useTranslation('admin-settings-integrations');
   const { toggleIntegration, togglingIds } = useToggleIntegration();
   const { validateIntegration, validatingIds } = useValidateIntegration();
+  const marketplace = useMarketplaceConfig();
 
   if (integrations.length === 0) {
+    const hasMarketplace = marketplace.enabled && !!marketplace.url;
+
     return (
       <Card>
         <CardContent>
@@ -31,8 +36,23 @@ export function IntegrationsList({
               {t('integrations.list.noIntegrationsTitle')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t('integrations.list.noIntegrationsMessage')}
+              {hasMarketplace
+                ? t('integrations.list.noIntegrationsMarketplaceMessage')
+                : t('integrations.list.noIntegrationsMessage')}
             </p>
+            {hasMarketplace && (
+              <Button variant="outline" size="sm" className="mt-4" asChild>
+                <a
+                  href={`${marketplace.url!.replace(/\/$/, '')}/integrations`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Store className="h-4 w-4" />
+                  {t('integrations.list.browseMarketplace')}
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
