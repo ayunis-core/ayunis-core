@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { RecursiveSplitterHandler } from './infrastructure/handlers/recursive.splitter';
-import { LineSplitterHandler } from './infrastructure/handlers/line.splitter';
 import { SplitterType } from './domain/splitter-type.enum';
 import { SplitterHandlerRegistry } from './application/splitter-handler.registry';
 import { SplitTextUseCase } from './application/use-cases/split-text/split-text.use-case';
@@ -9,23 +8,18 @@ import { SplitTextUseCase } from './application/use-cases/split-text/split-text.
   providers: [
     {
       provide: SplitterHandlerRegistry,
-      useFactory: (
-        recursiveSplitterHandler: RecursiveSplitterHandler,
-        lineSplitterHandler: LineSplitterHandler,
-      ) => {
+      useFactory: (recursiveSplitterHandler: RecursiveSplitterHandler) => {
         const registry = new SplitterHandlerRegistry();
         registry.registerHandler(
           SplitterType.RECURSIVE,
           recursiveSplitterHandler,
         );
-        registry.registerHandler(SplitterType.LINE, lineSplitterHandler);
         return registry;
       },
-      inject: [RecursiveSplitterHandler, LineSplitterHandler],
+      inject: [RecursiveSplitterHandler],
     },
     SplitTextUseCase,
     RecursiveSplitterHandler,
-    LineSplitterHandler,
   ],
   exports: [SplitTextUseCase],
 })
