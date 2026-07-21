@@ -82,6 +82,61 @@ dc() {
   docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" "$@"
 }
 
+# ── Infisical secrets injection ────────────────────────────────────────────
+# Team devs get the full dev config (secrets + base slot-0 connection config)
+# injected from Infisical (env `dev`, folders /backend and /frontend); the
+# backend derives slot ports from DEV_PORT_OFFSET at boot
+# (src/config/dev-port-offset.ts). Contributors without Infisical fall back
+# to plain .env files. Keep VITE_API_BASE_URL out of Infisical — it is
+# slot-specific and exported inline in cmd_up.
+INFISICAL_OK=false
+BACKEND_SECRETS_PREFIX=""
+FRONTEND_SECRETS_PREFIX=""
+
+_infisical_preflight() {
+  export INFISICAL_DISABLE_UPDATE_CHECK=true
+  if [ "${AYUNIS_NO_INFISICAL:-0}" = "1" ]; then
+    warn "AYUNIS_NO_INFISICAL=1 — using local .env files"
+    return
+  fi
+  if ! command -v infisical >/dev/null 2>&1; then
+    warn "infisical CLI not found — using local .env files  (install: brew install infisical/get-cli/infisical)"
+    return
+  fi
+  if [ ! -f "$REPO_DIR/.infisical.json" ]; then
+    warn ".infisical.json missing — using local .env files"
+    return
+  fi
+  if ! (cd "$REPO_DIR" && infisical export --env=dev --path=/backend --format=dotenv >/dev/null 2>&1); then
+    warn "Infisical login expired or no project access — run: infisical login  (using local .env files)"
+    return
+  fi
+  INFISICAL_OK=true
+  # --projectId pinned from .infisical.json so `infisical run` works from any
+  # subdirectory (tmux sessions cd into the package dirs).
+  local workspace_id
+  workspace_id="$(sed -n 's/.*"workspaceId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPO_DIR/.infisical.json" | head -n 1)"
+  local project_flag=""
+  [ -n "$workspace_id" ] && project_flag="--projectId=$workspace_id "
+  BACKEND_SECRETS_PREFIX="infisical run ${project_flag}--env=dev --path=/backend -- "
+  FRONTEND_SECRETS_PREFIX="infisical run ${project_flag}--env=dev --path=/frontend -- "
+}
+
+# Read KEY=value from a dotenv-formatted string (as printed by
+# `infisical export`), stripping surrounding single quotes.
+_read_exported_var() {
+  printf '%s\n' "$1" | grep -E "^${2}=" | head -n 1 | cut -d= -f2- \
+    | sed -e "s/^'//" -e "s/'\$//"
+}
+
+# Fallback-mode credential lookup: persisted .env.dev first, then .env.
+_fallback_cred() {
+  local v
+  v="$(_read_env_var "$REPO_DIR/ayunis-core-backend/.env.dev" "$1")"
+  [[ -z "$v" ]] && v="$(_read_env_var "$REPO_DIR/ayunis-core-backend/.env" "$1")"
+  printf '%s' "$v"
+}
+
 # compose.dev.yml requires MINIO_ROOT_USER/MINIO_ROOT_PASSWORD/REDIS_PASSWORD
 # (`:?` interpolation), so every compose invocation needs them exported —
 # including down/ps/logs, where the actual values are irrelevant. Reuse the
@@ -133,20 +188,35 @@ mkdir -p "$STATE_DIR"
 cmd_up() {
   info "Starting slot $SLOT  (port offset +$OFFSET)"
 
+  _infisical_preflight
+
   local env_dev="$REPO_DIR/ayunis-core-backend/.env.dev"
 
   # -- 0. Resolve infra secrets (before infra starts) ---------------------
-  # No insecure defaults: generate secure MinIO/Redis credentials on first run
-  # and preserve them across restarts (so the persisted MinIO volume and any
-  # long-lived data stay accessible). Exported so compose.dev.yml can consume
-  # them for the infra containers, and written into .env.dev for the backend.
-  local minio_user minio_password redis_password
-  minio_user="$(_read_env_var "$env_dev" MINIO_ACCESS_KEY)"
-  minio_password="$(_read_env_var "$env_dev" MINIO_SECRET_KEY)"
-  redis_password="$(_read_env_var "$env_dev" REDIS_PASSWORD)"
-  [[ -z "$minio_user" ]] && minio_user="ayunis-dev"
-  [[ -z "$minio_password" ]] && minio_password="$(openssl rand -hex 24)"
-  [[ -z "$redis_password" ]] && redis_password="$(openssl rand -hex 24)"
+  # Infisical mode: fixed shared dev creds come from Infisical (/backend).
+  # Fallback: reuse creds persisted in .env.dev / .env, generating secure
+  # ones on first run (no insecure defaults) so the persisted MinIO volume
+  # and long-lived data stay accessible. Exported for compose.dev.yml.
+  local minio_user minio_password redis_password mcp_key=""
+  if $INFISICAL_OK; then
+    local backend_secrets
+    backend_secrets="$(cd "$REPO_DIR" && infisical export --env=dev --path=/backend --format=dotenv)"
+    minio_user="$(_read_exported_var "$backend_secrets" MINIO_ACCESS_KEY)"
+    minio_password="$(_read_exported_var "$backend_secrets" MINIO_SECRET_KEY)"
+    redis_password="$(_read_exported_var "$backend_secrets" REDIS_PASSWORD)"
+    if [[ -z "$minio_user" || -z "$minio_password" || -z "$redis_password" ]]; then
+      die "Infisical dev /backend must define MINIO_ACCESS_KEY, MINIO_SECRET_KEY and REDIS_PASSWORD"
+    fi
+  else
+    minio_user="$(_fallback_cred MINIO_ACCESS_KEY)"
+    minio_password="$(_fallback_cred MINIO_SECRET_KEY)"
+    redis_password="$(_fallback_cred REDIS_PASSWORD)"
+    mcp_key="$(_fallback_cred MCP_ENCRYPTION_KEY)"
+    [[ -z "$minio_user" ]] && minio_user="ayunis-dev"
+    [[ -z "$minio_password" ]] && minio_password="$(openssl rand -hex 24)"
+    [[ -z "$redis_password" ]] && redis_password="$(openssl rand -hex 24)"
+    [[ -z "$mcp_key" ]] && mcp_key="$(openssl rand -hex 32)"
+  fi
   export MINIO_ROOT_USER="$minio_user"
   export MINIO_ROOT_PASSWORD="$minio_password"
   export REDIS_PASSWORD="$redis_password"
@@ -156,50 +226,47 @@ cmd_up() {
   dc up -d --build --wait 2>&1 | tail -5
 
   # -- 2. Generate .env.dev for backend ------------------------------------
-  # Preserve an existing MCP_ENCRYPTION_KEY across restarts so locally-stored
-  # MCP credentials remain decryptable; generate a new one on first run.
-  local mcp_key
-  mcp_key="$(_read_env_var "$env_dev" MCP_ENCRYPTION_KEY)"
-  if [[ -z "$mcp_key" ]]; then
-    mcp_key="$(openssl rand -hex 32)"
-  fi
+  # Slot selection only: the backend derives ports/URLs from DEV_PORT_OFFSET
+  # at boot (src/config/dev-port-offset.ts). In fallback mode the base
+  # connection config and persisted infra creds are written here too, since
+  # a contributor's .env (from .env.example) targets the Docker deployment.
   info "Writing $env_dev (slot $SLOT) …"
-  cat > "$env_dev" <<EOF
-# Auto-generated by ./dev up --slot $SLOT
-# Connection config for native dev — overrides .env when loaded.
-# Do not edit manually; re-run ./dev up to regenerate.
-PORT=$BACKEND_PORT
+  {
+    echo "# Auto-generated by ./dev up --slot $SLOT — do not edit manually."
+    echo "DEV_PORT_OFFSET=$OFFSET"
+    if ! $INFISICAL_OK; then
+      cat <<EOF
+# Local fallback (no Infisical): base slot-0 connection config; ports are
+# offset by DEV_PORT_OFFSET at boot. Provider API keys belong in .env.
+PORT=3000
 POSTGRES_HOST=localhost
-POSTGRES_PORT=$POSTGRES_HOST_PORT
+POSTGRES_PORT=5432
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
 POSTGRES_DB=${POSTGRES_DB:-ayunis}
 MINIO_ENDPOINT=localhost
-MINIO_PORT=$MINIO_HOST_PORT
+MINIO_PORT=9000
 MINIO_ACCESS_KEY=$minio_user
 MINIO_SECRET_KEY=$minio_password
 SMTP_HOST=127.0.0.1
-SMTP_PORT=$MAILCATCHER_SMTP_HOST_PORT
-CODE_EXECUTION_SERVICE_URL=http://localhost:$CODE_EXEC_HOST_PORT
-ANONYMIZE_SERVICE_URL=http://localhost:$ANONYMIZE_HOST_PORT
-FRONTEND_BASEURL=http://localhost:$FRONTEND_PORT
-CORS_ALLOWED_ORIGINS=http://localhost:$FRONTEND_PORT,http://localhost:$BACKEND_PORT
+SMTP_PORT=1025
+CODE_EXECUTION_SERVICE_URL=http://localhost:8080
+ANONYMIZE_SERVICE_URL=http://localhost:8002
+FRONTEND_BASEURL=http://localhost:3001
+CORS_ALLOWED_ORIGINS=http://localhost:3001,http://localhost:3000
 MARKETPLACE_SERVICE_URL=http://localhost:3002
 REDIS_HOST=localhost
-REDIS_PORT=$REDIS_HOST_PORT
+REDIS_PORT=6379
 REDIS_PASSWORD=$redis_password
-GOTENBERG_URL=http://localhost:$GOTENBERG_HOST_PORT
+GOTENBERG_URL=http://localhost:3100
 MCP_ENCRYPTION_KEY=$mcp_key
-# Provider API keys (OPENAI_API_KEY, ANTHROPIC_API_KEY, MISTRAL_API_KEY, …)
-# are intentionally NOT written here — they belong in .env (or your shell)
-# and would otherwise be clobbered by placeholders. If the backend crashes
-# at boot because a provider SDK rejects an empty key, add the key to
-# ayunis-core-backend/.env.
 EOF
+    fi
+  } > "$env_dev"
 
   # -- 3. Run database migrations ------------------------------------------
   info "Running database migrations …"
-  (cd "$REPO_DIR/ayunis-core-backend" && pnpm run migration:run:dev 2>&1) | tail -3
+  (cd "$REPO_DIR/ayunis-core-backend" && ${BACKEND_SECRETS_PREFIX}pnpm run migration:run:dev 2>&1) | tail -3
 
   # -- 4. Backend (native) ------------------------------------------------
   if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
@@ -212,7 +279,7 @@ EOF
       "$STATE_DIR/backend.pid" \
       "$STATE_DIR/backend.log" \
       "$BACKEND_SESSION" \
-      "cd '$REPO_DIR/ayunis-core-backend' && exec pnpm run start:dev"
+      "cd '$REPO_DIR/ayunis-core-backend' && exec ${BACKEND_SECRETS_PREFIX}pnpm run start:dev"
   fi
 
   # -- 5. Frontend (native) -----------------------------------------------
@@ -226,7 +293,7 @@ EOF
       "$STATE_DIR/frontend.pid" \
       "$STATE_DIR/frontend.log" \
       "$FRONTEND_SESSION" \
-      "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec pnpm exec vite --port '$FRONTEND_PORT'"
+      "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec ${FRONTEND_SECRETS_PREFIX}pnpm exec vite --port '$FRONTEND_PORT'"
   fi
 
   # -- 6. Wait for backend health -----------------------------------------
@@ -258,6 +325,12 @@ EOF
   echo "  Code exec:    localhost:$CODE_EXEC_HOST_PORT"
   echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
   echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
+  echo ""
+  if $INFISICAL_OK; then
+    echo "  Secrets:      Infisical (dev, /backend + /frontend)"
+  else
+    echo "  Secrets:      local .env fallback"
+  fi
   echo ""
   echo "  Logs dir:     $STATE_DIR/"
   echo ""
@@ -437,6 +510,9 @@ case "$COMMAND" in
     echo "The --slot flag is required on first use (./dev up --slot N)."
     echo "After that, the slot is saved to .dev/slot and all commands work without --slot."
     echo "Slots assign port offsets (+10 per slot) so multiple worktrees can coexist."
+    echo ""
+    echo "Secrets come from Infisical (infisical login, then ./dev up). Set"
+    echo "AYUNIS_NO_INFISICAL=1 or keep .env files to use the local fallback."
     ;;
   *)
     die "Unknown command: $COMMAND.  Run ./dev help for usage."
