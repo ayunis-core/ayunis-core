@@ -74,6 +74,8 @@ import enAdminSettingsInstructions from './shared/locales/en/admin-settings-inst
 import deAdminSettingsInstructions from './shared/locales/de/admin-settings-instructions.json';
 import enGettingStarted from './shared/locales/en/getting-started.json';
 import deGettingStarted from './shared/locales/de/getting-started.json';
+import enWelcomeVideo from './shared/locales/en/welcome-video.json';
+import deWelcomeVideo from './shared/locales/de/welcome-video.json';
 
 const resources = {
   en: {
@@ -113,6 +115,7 @@ const resources = {
     'mcp-user-config': enMcpUserConfig,
     'admin-settings-instructions': enAdminSettingsInstructions,
     'getting-started': enGettingStarted,
+    'welcome-video': enWelcomeVideo,
   },
   de: {
     auth: deAuth,
@@ -151,6 +154,7 @@ const resources = {
     'mcp-user-config': deMcpUserConfig,
     'admin-settings-instructions': deAdminSettingsInstructions,
     'getting-started': deGettingStarted,
+    'welcome-video': deWelcomeVideo,
   },
 };
 
