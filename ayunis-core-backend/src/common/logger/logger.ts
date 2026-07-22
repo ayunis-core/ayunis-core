@@ -1,5 +1,5 @@
 import { createLogger, format, transports } from 'winston';
-import { SentryLogTransport } from './sentry-log.transport';
+import { AppsignalLogTransport } from './appsignal-log.transport';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -27,32 +27,33 @@ function createConsoleFormat() {
   }
 }
 
-// Sentry error reporting is handled by @SentryExceptionCaptured() on the
+// AppSignal error reporting is handled by setError() in the
 // ApplicationErrorFilter (exception pipeline), not via a Winston transport.
 // This avoids duplicate events when logger.error() is followed by a thrown
 // exception that the filter also captures.
 //
-// Sentry *Logs* (structured log product, separate from Issues) are forwarded
-// in production via SentryLogTransport so that every this.logger.log/warn/…
-// call automatically appears in Sentry Logs, linked to traces.
+// AppSignal *Logging* (structured log product, separate from Errors) is fed
+// in production via AppsignalLogTransport so that every this.logger.log/warn/…
+// call automatically appears in AppSignal Logs.
 export const logger = createLogger({
   level: isDevelopment ? 'debug' : 'info',
   transports: [
     new transports.Console({
       format: createConsoleFormat(),
     }),
-    ...buildSentryTransport(),
+    ...buildAppsignalTransport(),
   ],
 });
 
-function buildSentryTransport(): SentryLogTransport[] {
-  if (isDevelopment || !process.env.SENTRY_DSN) {
+function buildAppsignalTransport(): AppsignalLogTransport[] {
+  if (isDevelopment || !process.env.APPSIGNAL_PUSH_API_KEY) {
     return [];
   }
 
   return [
-    new SentryLogTransport({
-      // Only forward info+ to Sentry to avoid noise
+    new AppsignalLogTransport({
+      group: 'app',
+      // Only forward info+ to AppSignal to avoid noise
       level: 'info',
     }),
   ];

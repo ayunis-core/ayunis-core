@@ -1,8 +1,8 @@
 import { applyDomPatch } from '@/shared/lib/dom-patch';
 applyDomPatch(); // Must be called before React renders
 
-import { initSentry } from '@/shared/lib/sentry';
-initSentry();
+import { initAppsignal } from '@/shared/lib/appsignal';
+initAppsignal();
 
 import {
   attemptChunkReload,

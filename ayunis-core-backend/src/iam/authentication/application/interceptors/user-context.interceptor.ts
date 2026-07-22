@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import * as Sentry from '@sentry/nestjs';
+import { setTag } from '@appsignal/nodejs';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ActiveUser } from '../../domain/active-user.entity';
 import type { ApiKeyPrincipal } from '../strategies/api-key.strategy';
@@ -31,11 +31,9 @@ export class UserContextInterceptor implements NestInterceptor {
       this.contextService.set('systemRole', principal.systemRole);
       this.contextService.set('refreshToken', this.extractRefreshToken(req));
 
-      Sentry.getCurrentScope().setUser({
-        id: principal.id,
-        orgId: principal.orgId,
-        role: principal.role,
-      });
+      setTag('user_id', principal.id);
+      setTag('org_id', principal.orgId);
+      setTag('role', principal.role);
     } else if (principal && 'apiKeyId' in principal) {
       this.contextService.set('apiKeyId', principal.apiKeyId);
       this.contextService.set('orgId', principal.orgId);

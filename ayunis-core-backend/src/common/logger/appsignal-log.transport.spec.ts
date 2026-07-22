@@ -1,4 +1,42 @@
-import { buildAttributes } from './sentry-log.transport';
+import { WinstonTransport } from '@appsignal/nodejs';
+import {
+  AppsignalLogTransport,
+  buildAttributes,
+} from './appsignal-log.transport';
+
+describe('AppsignalLogTransport', () => {
+  it('redacts attributes before delegating to WinstonTransport', () => {
+    const superLog = jest
+      .spyOn(WinstonTransport.prototype, 'log')
+      .mockImplementation((_info: unknown, callback: () => void) => callback());
+    const transport = new AppsignalLogTransport({ group: 'app' });
+    const callback = jest.fn();
+
+    transport.log(
+      {
+        level: 'info',
+        message: 'completion failed',
+        context: 'InferenceService',
+        model: 'gpt-5',
+        messages: [{ role: 'user', content: 'secret prompt' }],
+      },
+      callback,
+    );
+
+    expect(superLog).toHaveBeenCalledTimes(1);
+    const forwarded = superLog.mock.calls[0][0] as Record<string, unknown>;
+    expect(forwarded).toMatchObject({
+      level: 'info',
+      message: 'completion failed',
+      'nestjs.context': 'InferenceService',
+      model: 'gpt-5',
+      messages: '[redacted]',
+    });
+    expect(callback).toHaveBeenCalled();
+
+    superLog.mockRestore();
+  });
+});
 
 describe('buildAttributes', () => {
   it('forwards safe scalar metadata unchanged', () => {
