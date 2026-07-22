@@ -36,6 +36,27 @@ function assertSecretsConfigured(secrets: {
   }
 }
 
+/**
+ * Fail fast at boot when session cookies would be sent over plain HTTP in
+ * production. The code default for COOKIE_SECURE is `false`, which is fine for
+ * local http setups but dangerous in production: without the `Secure`
+ * attribute the access/refresh token cookies are transmitted over unencrypted
+ * HTTP as well, exposing them to network interception. Requiring
+ * COOKIE_SECURE=true in production (and only there) keeps local/test setups
+ * simple while preventing an insecure production deployment.
+ */
+function assertCookieSecureInProduction(secure: boolean): void {
+  const isProduction = (process.env.NODE_ENV ?? '').trim() === 'production';
+  if (isProduction && !secure) {
+    throw new Error(
+      'COOKIE_SECURE must be set to "true" in production. Session cookies ' +
+        '(access/refresh tokens) would otherwise be sent over unencrypted ' +
+        'HTTP. Set COOKIE_SECURE=true (requires HTTPS) before starting the ' +
+        'application.',
+    );
+  }
+}
+
 function jwtConfig(secret: string) {
   return {
     secret,
@@ -95,11 +116,14 @@ export const authenticationConfig = registerAs('auth', () => {
 
   assertSecretsConfigured(secrets);
 
+  const cookie = cookieConfig(secrets.cookieSecret);
+  assertCookieSecureInProduction(cookie.secure);
+
   return {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
     provider: (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
     jwt: jwtConfig(secrets.jwtSecret),
-    cookie: cookieConfig(secrets.cookieSecret),
+    cookie,
     cloud: {
       apiUrl: process.env.CLOUD_AUTH_API_URL,
       apiKey: process.env.CLOUD_AUTH_API_KEY,
