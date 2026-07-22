@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.17.0](https://github.com/ayunis-core/ayunis-core/compare/v2.16.0...v2.17.0) (2026-07-22)
+
+
+### Features
+
+* **auth:** refuse to boot in production when COOKIE_SECURE is not true (AYC-467) ([#1113](https://github.com/ayunis-core/ayunis-core/issues/1113)) ([11f06f3](https://github.com/ayunis-core/ayunis-core/commit/11f06f35a2046c72c9f09089824580a512ffa83b))
+* **observability:** replace sentry with appsignal (AYC-479) ([#1074](https://github.com/ayunis-core/ayunis-core/issues/1074)) ([c4ec0d5](https://github.com/ayunis-core/ayunis-core/commit/c4ec0d5415b631760069db906772ec595446b8c6))
+
+
+### Bug Fixes
+
+* **chat:** stop phantom image attachment on rich-text paste (AYC-453) ([#1091](https://github.com/ayunis-core/ayunis-core/issues/1091)) ([f1a4579](https://github.com/ayunis-core/ayunis-core/commit/f1a4579c40d799d1950e3f7e6e930c4eb3e8e38b))
+* **deps:** upgrade bcrypt to v6 to drop vulnerable tar chain (AYC-000) ([#1120](https://github.com/ayunis-core/ayunis-core/issues/1120)) ([9a7bb1f](https://github.com/ayunis-core/ayunis-core/commit/9a7bb1fa4bf932d659c566e62adc8c6468675a35))
+* **orgs:** purge object storage on org deletion (AYC-470) ([#1079](https://github.com/ayunis-core/ayunis-core/issues/1079)) ([9ec47e1](https://github.com/ayunis-core/ayunis-core/commit/9ec47e14f8cad261e0b002907698a5596c245906))
+* **storage:** restrict object download to requesting org (AYC-469) ([#1087](https://github.com/ayunis-core/ayunis-core/issues/1087)) ([5e081b8](https://github.com/ayunis-core/ayunis-core/commit/5e081b82d737f197814806933bcfaf861421c56f))
+* **threads:** purge thread blobs only after the row delete succeeds (AYC-470) ([#1086](https://github.com/ayunis-core/ayunis-core/issues/1086)) ([950fd13](https://github.com/ayunis-core/ayunis-core/commit/950fd1374542eaa712a388e2dd93e717459eb08d))
+* **threads:** scope message image downloads to thread owner (AYC-495) ([#1090](https://github.com/ayunis-core/ayunis-core/issues/1090)) ([d430ea1](https://github.com/ayunis-core/ayunis-core/commit/d430ea1825ab655fb00d1c884019ef1fd650cd83))
+* **users:** make user-deletion cleanup loss-safe and cascade-aware (AYC-470) ([#1085](https://github.com/ayunis-core/ayunis-core/issues/1085)) ([117b8fe](https://github.com/ayunis-core/ayunis-core/commit/117b8fe07933d80e97d5568a2a5bf7ec285ea9b1))
+
+
+### Code Refactoring
+
+* **users:** remove dead validateUser() method [AYC-468] ([#1112](https://github.com/ayunis-core/ayunis-core/issues/1112)) ([cac6588](https://github.com/ayunis-core/ayunis-core/commit/cac6588c4190d297fccd1a7b4d922927d764f8a9))
+
+
+### Miscellaneous
+
+* **agents:** add shared qa skill (AYC-000) ([#1115](https://github.com/ayunis-core/ayunis-core/issues/1115)) ([5e348bb](https://github.com/ayunis-core/ayunis-core/commit/5e348bb211d5b9f11f206d8b8038c98327ff2fe8))
+* **agents:** symlink claude setup for codex compatibility (AYC-000) ([#1097](https://github.com/ayunis-core/ayunis-core/issues/1097)) ([ea63b53](https://github.com/ayunis-core/ayunis-core/commit/ea63b534f900e99543b17f5ba6fada7aeb75ed79))
+* **skills:** remove fix-sentry-issues skill (AYC-479) ([#1075](https://github.com/ayunis-core/ayunis-core/issues/1075)) ([e201d56](https://github.com/ayunis-core/ayunis-core/commit/e201d56ffe62c41a3c2acbc0f0dfaad622256c8a))
+
 ## [2.16.0](https://github.com/ayunis-core/ayunis-core/compare/v2.15.0...v2.16.0) (2026-07-21)
 
 
