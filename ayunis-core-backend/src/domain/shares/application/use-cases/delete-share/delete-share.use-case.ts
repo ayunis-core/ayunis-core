@@ -58,16 +58,22 @@ export class DeleteShareUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      this.eventEmitter.emit(
-        ShareDeletedEvent.EVENT_NAME,
-        new ShareDeletedEvent(
-          share.entityType,
-          entityId,
-          share.ownerId,
-          orgId,
-          remainingScopes,
-        ),
-      );
+      this.eventEmitter
+        .emitAsync(
+          ShareDeletedEvent.EVENT_NAME,
+          new ShareDeletedEvent(
+            share.entityType,
+            entityId,
+            share.ownerId,
+            orgId,
+            remainingScopes,
+          ),
+        )
+        .catch((err: unknown) => {
+          this.logger.error(`Failed to emit ${ShareDeletedEvent.EVENT_NAME}`, {
+            error: err instanceof Error ? err.message : 'Unknown error',
+          });
+        });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(error);
