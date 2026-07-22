@@ -3732,57 +3732,16 @@
         "tags": ["teams"]
       }
     },
-    "/storage/upload": {
-      "post": {
-        "description": "Generic file upload endpoint. Stores the file with optional metadata. Validation (file types, sizes) should be handled by consuming modules.",
-        "operationId": "StorageController_uploadFile",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["file"],
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "The file to upload"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "File uploaded successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UploadFileResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "No file provided or invalid request"
-          }
-        },
-        "summary": "Upload a file to object storage",
-        "tags": ["storage"]
-      }
-    },
     "/storage/{objectName}": {
       "get": {
+        "description": "Serves org-prefixed image objects (e.g. chat message images). The object name must start with the requesting user’s organization id.",
         "operationId": "StorageController_getFile",
         "parameters": [
           {
             "name": "objectName",
             "required": true,
             "in": "path",
-            "description": "Name of the object to retrieve",
+            "description": "Org-prefixed name of the object to retrieve",
             "schema": {
               "type": "string"
             }
@@ -3790,51 +3749,19 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Object streamed successfully"
+          },
+          "400": {
+            "description": "Invalid object name"
+          },
+          "403": {
+            "description": "Object is not owned by the requesting organization"
+          },
+          "404": {
+            "description": "Object not found"
           }
         },
-        "tags": ["storage"]
-      },
-      "delete": {
-        "operationId": "StorageController_deleteFile",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Name of the object to delete",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": ["storage"]
-      }
-    },
-    "/storage/url/{objectName}": {
-      "get": {
-        "operationId": "StorageController_getPresignedUrl",
-        "parameters": [
-          {
-            "name": "objectName",
-            "required": true,
-            "in": "path",
-            "description": "Name of the object to get URL for",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
+        "summary": "Download an image object owned by the requesting organization",
         "tags": ["storage"]
       }
     },
@@ -12587,38 +12514,6 @@
           }
         },
         "required": ["userIds"]
-      },
-      "UploadFileResponseDto": {
-        "type": "object",
-        "properties": {
-          "objectName": {
-            "type": "string",
-            "description": "Name of the uploaded object",
-            "example": "1711365678123-user-upload.png"
-          },
-          "size": {
-            "type": "number",
-            "description": "Size of the uploaded file in bytes",
-            "example": 1024000
-          },
-          "etag": {
-            "type": "string",
-            "description": "ETag of the uploaded object",
-            "example": "d41d8cd98f00b204e9800998ecf8427e"
-          },
-          "contentType": {
-            "type": "string",
-            "description": "Content type of the uploaded file",
-            "example": "image/png"
-          },
-          "lastModified": {
-            "format": "date-time",
-            "type": "string",
-            "description": "Last modified date of the uploaded object",
-            "example": "2024-01-01T00:00:00.000Z"
-          }
-        },
-        "required": ["objectName", "size", "etag"]
       },
       "TranscriptionResponseDto": {
         "type": "object",
