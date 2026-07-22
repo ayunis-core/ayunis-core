@@ -9,6 +9,8 @@ import { GetObjectInfoUseCase } from './application/use-cases/get-object-info/ge
 import { DeleteObjectUseCase } from './application/use-cases/delete-object/delete-object.use-case';
 import { ListObjectsUseCase } from './application/use-cases/list-objects/list-objects.use-case';
 import { GetPresignedUrlUseCase } from './application/use-cases/get-presigned-url/get-presigned-url.use-case';
+import { PurgeOrgStorageUseCase } from './application/use-cases/purge-org-storage/purge-org-storage.use-case';
+import { StorageOrgDeletionRequestedListener } from './application/listeners/org-deletion-requested.listener';
 
 @Module({
   imports: [ConfigModule.forFeature(storageConfig)],
@@ -23,6 +25,8 @@ import { GetPresignedUrlUseCase } from './application/use-cases/get-presigned-ur
     DeleteObjectUseCase,
     ListObjectsUseCase,
     GetPresignedUrlUseCase,
+    PurgeOrgStorageUseCase,
+    StorageOrgDeletionRequestedListener,
   ],
   exports: [
     ObjectStoragePort,
@@ -32,6 +36,7 @@ import { GetPresignedUrlUseCase } from './application/use-cases/get-presigned-ur
     DeleteObjectUseCase,
     ListObjectsUseCase,
     GetPresignedUrlUseCase,
+    PurgeOrgStorageUseCase,
   ],
 })
 export class StorageModule {}
