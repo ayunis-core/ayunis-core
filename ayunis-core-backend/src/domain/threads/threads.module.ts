@@ -39,6 +39,8 @@ import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from './application/use-c
 import { SaveGeneratedImageUseCase } from './application/use-cases/save-generated-image/save-generated-image.use-case';
 import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
+import { DownloadMessageImageUseCase } from './application/use-cases/download-message-image/download-message-image.use-case';
+import { MessageImagesController } from './presenters/http/message-images.controller';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
 import { ThreadsUserDeletionRequestedListener } from './application/listeners/user-deletion-requested.listener';
@@ -72,6 +74,7 @@ import { McpModule } from '../mcp/mcp.module';
     ThreadKnowledgeBasesController,
     ThreadMcpIntegrationsController,
     GeneratedImagesController,
+    MessageImagesController,
   ],
   providers: [
     {
@@ -104,6 +107,7 @@ import { McpModule } from '../mcp/mcp.module';
     RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
     ResolveGeneratedImageUseCase,
+    DownloadMessageImageUseCase,
     CleanupStaleThreadSourcesUseCase,
     RecordThreadActivityUseCase,
     FindExpiredThreadRefsByOrgUseCase,
