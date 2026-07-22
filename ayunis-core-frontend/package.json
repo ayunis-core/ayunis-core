@@ -112,7 +112,7 @@
     "jsdom": "^29.1.1",
     "knip": "^6.24.0",
     "madge": "^8.0.0",
-    "orval": "^7.9.0",
+    "orval": "^8.22.0",
     "prettier": "^3.9.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
