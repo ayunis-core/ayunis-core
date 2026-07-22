@@ -132,15 +132,21 @@ export class LocalSourceRepository extends SourceRepository {
     return this.mapper.toDomain(savedSource);
   }
 
-  async findStaleProcessingSources(threshold: Date): Promise<Source[]> {
-    this.logger.log('findStaleProcessingSources', { threshold });
+  async findStaleProcessingSourceIds(
+    staleBefore: Date,
+    limit: number,
+  ): Promise<UUID[]> {
+    this.logger.log('findStaleProcessingSourceIds', { staleBefore, limit });
     const records = await this.sourceRepository.find({
+      select: { id: true },
       where: {
         status: SourceStatus.PROCESSING,
-        processingStartedAt: LessThan(threshold),
+        processingStartedAt: LessThan(staleBefore),
       },
+      order: { processingStartedAt: 'ASC' },
+      take: limit,
     });
-    return records.map((record) => this.mapper.toDomain(record));
+    return records.map((record) => record.id);
   }
 
   async save(source: TextSource): Promise<TextSource>;

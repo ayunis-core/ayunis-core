@@ -12,7 +12,7 @@ import { DocumentProcessingPort } from '../../application/ports/document-process
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
-import { StaleProcessingCleanupService } from './stale-processing-cleanup.service';
+import { StaleProcessingCleanupTask } from '../tasks/stale-processing-cleanup.task';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { StaleProcessingCleanupService } from './stale-processing-cleanup.servic
       useExisting: DocumentProcessingProducer,
     },
     DocumentProcessingConsumer,
-    StaleProcessingCleanupService,
+    StaleProcessingCleanupTask,
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
   ],
