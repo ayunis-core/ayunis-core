@@ -27,6 +27,5 @@ export abstract class UsersRepository {
   abstract create(user: User): Promise<User>;
   abstract update(user: User): Promise<User>;
   abstract delete(id: UUID): Promise<void>;
-  abstract validateUser(email: string, password: string): Promise<User>;
   abstract isValidPassword(password: string): Promise<boolean>;
 }

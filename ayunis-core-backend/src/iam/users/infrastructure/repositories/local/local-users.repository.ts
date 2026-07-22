@@ -14,7 +14,6 @@ import { UserMapper } from './mappers/user.mapper';
 import {
   UserNotFoundError,
   UserAlreadyExistsError,
-  UserAuthenticationFailedError,
 } from 'src/iam/users/application/users.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 
@@ -208,25 +207,6 @@ export class LocalUsersRepository extends UsersRepository {
 
     await this.userRepository.delete(id);
     this.logger.debug('User deleted successfully', { userId: id });
-  }
-
-  async validateUser(email: string, password: string): Promise<User> {
-    this.logger.log('validateUser', { email });
-
-    const user = await this.findOneByEmail(email);
-    if (!user) {
-      this.logger.warn('User not found during validation', { email });
-      throw new UserNotFoundError(email);
-    }
-
-    // In a real implementation, this would validate the password hash
-    if (password !== 'admin') {
-      // This is a placeholder validation
-      this.logger.warn('Invalid password during validation', { email });
-      throw new UserAuthenticationFailedError('Invalid password');
-    }
-
-    return user;
   }
 
   async isValidPassword(password: string): Promise<boolean> {
