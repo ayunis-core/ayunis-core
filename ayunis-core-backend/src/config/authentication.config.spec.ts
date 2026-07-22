@@ -67,8 +67,48 @@ describe('authenticationConfig', () => {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'jwt';
       process.env.COOKIE_SECRET = 'cookie';
+      process.env.COOKIE_SECURE = 'true';
 
       expect(() => authenticationConfig()).not.toThrow();
     });
+  });
+
+  describe('COOKIE_SECURE in production', () => {
+    beforeEach(() => {
+      process.env.JWT_SECRET = 'jwt';
+      process.env.COOKIE_SECRET = 'cookie';
+      delete process.env.COOKIE_SECURE;
+    });
+
+    it('throws in production when COOKIE_SECURE is not set', () => {
+      process.env.NODE_ENV = 'production';
+
+      expect(() => authenticationConfig()).toThrow(/COOKIE_SECURE/);
+    });
+
+    it('throws in production when COOKIE_SECURE is "false"', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.COOKIE_SECURE = 'false';
+
+      expect(() => authenticationConfig()).toThrow(/COOKIE_SECURE/);
+    });
+
+    it('does not throw in production when COOKIE_SECURE is "true"', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.COOKIE_SECURE = 'true';
+
+      expect(() => authenticationConfig()).not.toThrow();
+      expect(authenticationConfig().cookie.secure).toBe(true);
+    });
+
+    it.each(['development', 'test'])(
+      'does not throw outside production (%s) when COOKIE_SECURE is unset',
+      (nodeEnv) => {
+        process.env.NODE_ENV = nodeEnv;
+
+        expect(() => authenticationConfig()).not.toThrow();
+        expect(authenticationConfig().cookie.secure).toBe(false);
+      },
+    );
   });
 });
