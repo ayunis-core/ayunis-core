@@ -1,9 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { KnowledgeBasesUserDeletionRequestedListener } from './user-deletion-requested.listener';
 import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
-import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
+import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 
 describe('KnowledgeBasesUserDeletionRequestedListener', () => {
@@ -12,17 +14,19 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
     findAllByUserId: jest.Mock;
     findSourcesByKnowledgeBaseId: jest.Mock;
   };
-  let deleteSourcesUseCase: { execute: jest.Mock };
+  let cleanupSourceProcessingUseCase: { execute: jest.Mock };
 
-  const userId = '123e4567-e89b-12d3-a456-426614174000' as any;
-  const orgId = '123e4567-e89b-12d3-a456-426614174002' as any;
+  const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const orgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
     knowledgeBaseRepository = {
       findAllByUserId: jest.fn().mockResolvedValue([]),
       findSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue([]),
     };
-    deleteSourcesUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+    cleanupSourceProcessingUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -31,7 +35,10 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
           provide: KnowledgeBaseRepository,
           useValue: knowledgeBaseRepository,
         },
-        { provide: DeleteSourcesUseCase, useValue: deleteSourcesUseCase },
+        {
+          provide: CleanupSourceProcessingUseCase,
+          useValue: cleanupSourceProcessingUseCase,
+        },
       ],
     }).compile();
 
@@ -42,7 +49,7 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('deletes the sources of every knowledge base owned by the user', async () => {
+  it('defers processing cleanup for the processing sources of every knowledge base', async () => {
     knowledgeBaseRepository.findAllByUserId.mockResolvedValue([
       { id: 'kb-1' },
       { id: 'kb-2' },
@@ -51,51 +58,57 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
       (kbId: string) =>
         Promise.resolve(
           kbId === 'kb-1'
-            ? [{ id: 'src-1' }, { id: 'src-2' }]
-            : [{ id: 'src-3' }],
+            ? [
+                { id: 'src-1', status: SourceStatus.PROCESSING },
+                { id: 'src-2', status: SourceStatus.READY },
+              ]
+            : [{ id: 'src-3', status: SourceStatus.PROCESSING }],
         ),
     );
+    const event = new UserDeletionRequestedEvent(userId, orgId);
 
-    await listener.handleUserDeletionRequested(
-      new UserDeletionRequestedEvent(userId, orgId),
-    );
+    await listener.handleUserDeletionRequested(event);
 
-    expect(deleteSourcesUseCase.execute).toHaveBeenCalledTimes(1);
-    expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceIds: ['src-1', 'src-2', 'src-3'] }),
+    expect(cleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
+    const tasks = event.takeCleanupTasks();
+    expect(tasks).toHaveLength(1);
+
+    await tasks[0].run();
+    expect(cleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: ['src-1', 'src-3'], orgId }),
     );
   });
 
-  it('does not call source deletion when the user has no knowledge bases', async () => {
+  it('defers nothing when the user has no knowledge bases', async () => {
     knowledgeBaseRepository.findAllByUserId.mockResolvedValue([]);
+    const event = new UserDeletionRequestedEvent(userId, orgId);
 
-    await listener.handleUserDeletionRequested(
-      new UserDeletionRequestedEvent(userId, orgId),
-    );
+    await listener.handleUserDeletionRequested(event);
 
-    expect(deleteSourcesUseCase.execute).not.toHaveBeenCalled();
+    expect(event.takeCleanupTasks()).toHaveLength(0);
   });
 
-  it('does not call source deletion when knowledge bases have no sources', async () => {
+  it('defers nothing when no source is processing', async () => {
     knowledgeBaseRepository.findAllByUserId.mockResolvedValue([{ id: 'kb-1' }]);
-    knowledgeBaseRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([]);
+    knowledgeBaseRepository.findSourcesByKnowledgeBaseId.mockResolvedValue([
+      { id: 'src-1', status: SourceStatus.READY },
+    ]);
+    const event = new UserDeletionRequestedEvent(userId, orgId);
 
-    await listener.handleUserDeletionRequested(
-      new UserDeletionRequestedEvent(userId, orgId),
-    );
+    await listener.handleUserDeletionRequested(event);
 
-    expect(deleteSourcesUseCase.execute).not.toHaveBeenCalled();
+    expect(event.takeCleanupTasks()).toHaveLength(0);
   });
 
   it('never throws so user deletion is not blocked', async () => {
     knowledgeBaseRepository.findAllByUserId.mockRejectedValue(
       new Error('db down'),
     );
+    const event = new UserDeletionRequestedEvent(userId, orgId);
 
     await expect(
-      listener.handleUserDeletionRequested(
-        new UserDeletionRequestedEvent(userId, orgId),
-      ),
+      listener.handleUserDeletionRequested(event),
     ).resolves.toBeUndefined();
+    expect(event.takeCleanupTasks()).toHaveLength(0);
   });
 });
