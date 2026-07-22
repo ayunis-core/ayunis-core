@@ -48,10 +48,17 @@ export abstract class ModelError extends ApplicationError {
 
 export class UnexpectedModelError extends ModelError {
   constructor(error: Error, metadata?: ErrorMetadata) {
-    super(error.message, ModelErrorCode.UNEXPECTED_MODEL_ERROR, 500, {
-      ...metadata,
-      error,
-    });
+    // Generic message on purpose: the underlying error may expose internals
+    // (SQL, driver details). It stays in metadata for logging and Sentry.
+    super(
+      'Unexpected error occurred',
+      ModelErrorCode.UNEXPECTED_MODEL_ERROR,
+      500,
+      {
+        ...metadata,
+        error,
+      },
+    );
   }
 }
 

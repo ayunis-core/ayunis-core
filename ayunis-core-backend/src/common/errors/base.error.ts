@@ -52,13 +52,14 @@ export abstract class ApplicationError extends Error {
   }
 
   /**
-   * Convert to a NestJS HTTP exception
+   * Convert to a NestJS HTTP exception. Metadata stays off the response
+   * body on purpose — it may carry internals (raw driver errors, queries)
+   * and is only meant for server-side logging and Sentry.
    */
   toHttpException() {
     const body = {
       code: this.code,
       message: this.message,
-      ...(this.metadata && { metadata: this.metadata }),
     };
 
     const factory = EXCEPTION_FACTORIES[this.statusCode];

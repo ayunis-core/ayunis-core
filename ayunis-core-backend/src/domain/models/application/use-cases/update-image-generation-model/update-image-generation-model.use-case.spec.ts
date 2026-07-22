@@ -7,6 +7,7 @@ import { ImageGenerationModel } from 'src/domain/models/domain/models/image-gene
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import {
   ImageGenerationModelProviderNotSupportedError,
+  ModelAlreadyExistsError,
   ModelNotFoundByIdError,
 } from '../../models.errors';
 import { ModelPolicyService } from '../../services/model-policy.service';
@@ -88,6 +89,39 @@ describe('UpdateImageGenerationModelUseCase', () => {
       ImageGenerationModelProviderNotSupportedError,
     );
     expect(modelsRepository.findOne).not.toHaveBeenCalled();
+  });
+
+  it('throws when another model has the same name and provider', async () => {
+    const otherModelId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
+    const existingModel = new ImageGenerationModel({
+      id: modelId,
+      name: 'gpt-image-1',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 1',
+      isArchived: false,
+    });
+    const conflictingModel = new ImageGenerationModel({
+      id: otherModelId,
+      name: 'gpt-image-2',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 2',
+      isArchived: false,
+    });
+    const command = new UpdateImageGenerationModelCommand({
+      id: modelId,
+      name: 'gpt-image-2',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT Image 1',
+      isArchived: false,
+    });
+
+    modelsRepository.findOneImageGeneration.mockResolvedValue(existingModel);
+    modelsRepository.findOne.mockResolvedValue(conflictingModel);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ModelAlreadyExistsError,
+    );
+    expect(modelsRepository.save).not.toHaveBeenCalled();
   });
 
   it('throws when the target model does not exist', async () => {

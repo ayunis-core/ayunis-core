@@ -2,6 +2,7 @@ import { UpdateEmbeddingModelCommand } from './update-embedding-model.command';
 import { ModelsRepository } from '../../ports/models.repository';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import {
+  ModelAlreadyExistsError,
   ModelNotFoundByIdError,
   UnexpectedModelError,
 } from '../../models.errors';
@@ -27,6 +28,14 @@ export class UpdateEmbeddingModelUseCase {
 
       if (!existingModel) {
         throw new ModelNotFoundByIdError(command.id);
+      }
+
+      const modelWithSameKey = await this.modelsRepository.findOne({
+        name: command.name,
+        provider: command.provider,
+      });
+      if (modelWithSameKey && modelWithSameKey.id !== command.id) {
+        throw new ModelAlreadyExistsError(command.name, command.provider);
       }
 
       // Check if model is being archived (isArchived: false -> true)

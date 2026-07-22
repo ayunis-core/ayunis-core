@@ -8,7 +8,10 @@ import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catal
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
-import { ModelNotFoundByIdError } from '../../models.errors';
+import {
+  ModelAlreadyExistsError,
+  ModelNotFoundByIdError,
+} from '../../models.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
@@ -183,6 +186,39 @@ describe('UpdateLanguageModelUseCase', () => {
 
       // Assert
       expect(callOrder).toEqual(['save', 'clearDefaults']);
+    });
+
+    it('should throw ModelAlreadyExistsError when another model has the same name and provider', async () => {
+      // Arrange — a different catalog model already occupies (name, provider)
+      const otherModelId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const conflictingModel = createMockLanguageModel(otherModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockImplementation((params) =>
+        Promise.resolve('id' in params ? existingModel : conflictingModel),
+      );
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ModelAlreadyExistsError,
+      );
+      expect(modelsRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should not treat the model being updated as a duplicate of itself', async () => {
+      // Arrange — (name, provider) resolves to the same model that is updated
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      // Act
+      await useCase.execute(command);
+
+      // Assert
+      expect(modelsRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it('should throw ModelNotFoundByIdError when model does not exist', async () => {

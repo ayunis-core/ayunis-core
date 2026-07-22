@@ -31,6 +31,8 @@ export function useUpdateImageGenerationModel(onSuccess?: () => void) {
               const { code } = extractErrorData(error);
               if (code === 'MODEL_NOT_FOUND') {
                 showError(t('models.notFound'));
+              } else if (code === 'MODEL_ALREADY_EXISTS') {
+                showError(t('models.alreadyExists'));
               } else {
                 showError(t('models.updateError'));
               }

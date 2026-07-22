@@ -53,7 +53,6 @@ export class ApplicationErrorFilter extends BaseExceptionFilter {
       response.status(status).json({
         code: exception.code,
         message: exception.message,
-        ...(exception.metadata && { metadata: exception.metadata }),
         timestamp: new Date().toISOString(),
         path: request.url,
       });

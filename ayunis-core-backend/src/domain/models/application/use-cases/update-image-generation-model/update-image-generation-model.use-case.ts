@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import {
+  ModelAlreadyExistsError,
   ModelNotFoundByIdError,
   UnexpectedModelError,
 } from '../../models.errors';
@@ -30,6 +31,14 @@ export class UpdateImageGenerationModelUseCase {
 
       if (!existingModel) {
         throw new ModelNotFoundByIdError(command.id);
+      }
+
+      const modelWithSameKey = await this.modelsRepository.findOne({
+        name: command.name,
+        provider: command.provider,
+      });
+      if (modelWithSameKey && modelWithSameKey.id !== command.id) {
+        throw new ModelAlreadyExistsError(command.name, command.provider);
       }
 
       const model = new ImageGenerationModel({
