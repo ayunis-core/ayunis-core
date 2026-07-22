@@ -1,5 +1,6 @@
 import { RecursiveSplitterHandler } from './recursive.splitter';
 import type { SplitterInput } from '../../application/ports/splitter.handler';
+import type { TextChunk } from '../../domain/split-result.entity';
 
 describe('RecursiveSplitterHandler', () => {
   let handler: RecursiveSplitterHandler;
@@ -497,6 +498,130 @@ describe('RecursiveSplitterHandler', () => {
 
       for (const chunk of result.chunks) {
         expect(chunk.text.length).toBeLessThanOrEqual(1000);
+      }
+    });
+  });
+
+  describe('offset contract (property-based)', () => {
+    // Deterministic LCG so every run tests the identical case sequence and a
+    // failure is reproducible from the reported case index alone.
+    const createNextInt = (initialSeed: number) => {
+      let seed = initialSeed;
+      return (min: number, max: number): number => {
+        seed = (seed * 1103515245 + 12345) % 2 ** 31;
+        return min + Math.floor((seed / 2 ** 31) * (max - min + 1));
+      };
+    };
+
+    // Adversarial building blocks: separators of every level, separator-free
+    // low-entropy runs (repeated chars, dot leaders, tabs), and multi-byte
+    // characters.
+    const TEXT_FRAGMENTS = [
+      'wort',
+      'Satz.',
+      'Absatz!',
+      ' ',
+      '\n',
+      '\n\n',
+      '. ',
+      ', ',
+      '; ',
+      '? ',
+      '! ',
+      '\t',
+      'ÄÖÜäöüß',
+      'A'.repeat(50),
+      '.'.repeat(30),
+      '   ',
+      'x',
+    ];
+
+    const buildRandomText = (
+      nextInt: (min: number, max: number) => number,
+    ): string => {
+      const fragmentCount = nextInt(1, 400);
+      let text = '';
+      for (let i = 0; i < fragmentCount; i++) {
+        text += TEXT_FRAGMENTS[nextInt(0, TEXT_FRAGMENTS.length - 1)];
+      }
+      return text;
+    };
+
+    // Note: chunk starts are NOT required to be strictly increasing — with
+    // overlap close to chunkSize, a chunk's carried overlap may legitimately
+    // reach back past a smaller chunk emitted by a deeper recursion.
+    const collectChunkViolations = (
+      text: string,
+      chunkSize: number,
+      chunk: TextChunk,
+    ): string[] => {
+      const violations: string[] = [];
+      const start = chunk.metadata.startCharOffset as number;
+      const end = chunk.metadata.endCharOffset as number;
+      const startLine = chunk.metadata.startLine as number;
+      const endLine = chunk.metadata.endLine as number;
+
+      if (chunk.text.length > chunkSize) {
+        violations.push(`chunk exceeds size limit: ${chunk.text.length}`);
+      }
+      if (!(start >= 0 && end > start && end <= text.length)) {
+        violations.push(`offsets out of bounds: [${start},${end})`);
+      } else if (!chunk.text.endsWith(text.slice(start, end))) {
+        violations.push(`slice [${start},${end}) does not match chunk text`);
+      }
+      if (!(startLine >= 1 && endLine >= startLine)) {
+        violations.push(`invalid line range: ${startLine}-${endLine}`);
+      }
+      return violations;
+    };
+
+    const findUncoveredContentOffset = (
+      text: string,
+      chunks: TextChunk[],
+    ): number | null => {
+      const covered = new Uint8Array(text.length);
+      for (const chunk of chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        covered.fill(1, Math.max(0, start), Math.max(0, end));
+      }
+      for (let offset = 0; offset < text.length; offset++) {
+        if (covered[offset] === 0 && text[offset].trim().length > 0) {
+          return offset;
+        }
+      }
+      return null;
+    };
+
+    it('should uphold the offset contract across randomized inputs and configs', () => {
+      const nextInt = createNextInt(20260722);
+
+      for (let caseIndex = 0; caseIndex < 300; caseIndex++) {
+        const text = buildRandomText(nextInt);
+        const chunkSize = nextInt(1, 300);
+        const chunkOverlap = nextInt(0, chunkSize - 1);
+
+        const result = handler.processText({
+          text,
+          metadata: { chunkSize, chunkOverlap },
+        });
+
+        const violations = result.chunks.flatMap((chunk) =>
+          collectChunkViolations(text, chunkSize, chunk),
+        );
+        const uncoveredOffset = findUncoveredContentOffset(text, result.chunks);
+        if (uncoveredOffset !== null) {
+          violations.push(`content at offset ${uncoveredOffset} not covered`);
+        }
+
+        // Case parameters are part of the compared object so a failure
+        // reports which deterministic case broke the contract.
+        expect({ caseIndex, chunkSize, chunkOverlap, violations }).toEqual({
+          caseIndex,
+          chunkSize,
+          chunkOverlap,
+          violations: [],
+        });
       }
     });
   });
