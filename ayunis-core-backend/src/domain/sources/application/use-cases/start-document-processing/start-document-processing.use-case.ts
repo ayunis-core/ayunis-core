@@ -16,6 +16,8 @@ import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/de
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
@@ -30,6 +32,7 @@ export class StartDocumentProcessingUseCase {
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -53,6 +56,16 @@ export class StartDocumentProcessingUseCase {
       // fails fast with a clear error instead of a doomed processing job.
       await this.getPermittedEmbeddingModelUseCase.execute(
         new GetPermittedEmbeddingModelQuery({ orgId }),
+      );
+
+      // OCR would reject an oversized PDF only after the upload round trip —
+      // check the page cap here so it fails before any processing starts.
+      await this.preflightCheckUseCase.execute(
+        new PreflightCheckCommand({
+          fileData: command.fileData,
+          fileName: command.fileName,
+          fileType: command.fileType,
+        }),
       );
 
       const savedSource = await this.createProcessingSourceUseCase.execute(

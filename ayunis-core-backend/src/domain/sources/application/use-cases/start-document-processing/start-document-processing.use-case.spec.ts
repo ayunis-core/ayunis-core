@@ -10,6 +10,8 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -23,6 +25,7 @@ describe('StartDocumentProcessingUseCase', () => {
   let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
   let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
   let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
+  let mockPreflightCheckUseCase: jest.Mocked<PreflightCheckUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -65,6 +68,10 @@ describe('StartDocumentProcessingUseCase', () => {
       execute: jest.fn().mockResolvedValue({}),
     } as unknown as jest.Mocked<GetPermittedEmbeddingModelUseCase>;
 
+    mockPreflightCheckUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<PreflightCheckUseCase>;
+
     mockContextService = {
       get: jest.fn().mockImplementation((key: string) => {
         if (key === 'orgId') return orgId;
@@ -97,6 +104,10 @@ describe('StartDocumentProcessingUseCase', () => {
         {
           provide: GetPermittedEmbeddingModelUseCase,
           useValue: mockGetPermittedEmbeddingModelUseCase,
+        },
+        {
+          provide: PreflightCheckUseCase,
+          useValue: mockPreflightCheckUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -185,6 +196,24 @@ describe('StartDocumentProcessingUseCase', () => {
 
     // MinIO file should be cleaned up
     expect(mockDeleteObjectUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject before creating a source when the preflight check fails', async () => {
+    mockPreflightCheckUseCase.execute.mockRejectedValue(
+      new TooManyPagesError({ pageCount: 1486, maxPages: 1000 }),
+    );
+
+    const command = new StartDocumentProcessingCommand({
+      fileData: Buffer.from('fake pdf content'),
+      fileName: 'Haushaltsplan.pdf',
+      fileType: 'application/pdf',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(TooManyPagesError);
+
+    expect(mockCreateProcessingSourceUseCase.execute).not.toHaveBeenCalled();
+    expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
+    expect(mockEnqueueDocumentProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should reject before creating a source when the org has no permitted embedding model', async () => {

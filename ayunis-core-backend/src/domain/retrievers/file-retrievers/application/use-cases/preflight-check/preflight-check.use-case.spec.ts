@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PreflightCheckUseCase } from './preflight-check.use-case';
 import { PreflightCheckCommand } from './preflight-check.command';
-import { DocumentTooLargeForChatError } from '../../file-retriever.errors';
+import { TooManyPagesError } from '../../file-retriever.errors';
 import retrievalConfig from 'src/config/retrieval.config';
 
 // Mock pdf-parse to control page count without needing real PDFs
@@ -19,8 +19,7 @@ describe('PreflightCheckUseCase', () => {
 
   const defaultConfig = {
     mistral: { apiKey: undefined },
-    chatUploadMaxPdfPages: 50,
-    chatUploadMaxFileSizeMb: 5,
+    processingMaxPdfPages: 1000,
   };
 
   beforeAll(async () => {
@@ -41,11 +40,11 @@ describe('PreflightCheckUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('PDF preflight', () => {
-    it('should allow a PDF with fewer pages than the limit', async () => {
+  describe('PDF page cap', () => {
+    it('should allow a PDF within the page cap', async () => {
       mockedPdfParse.mockResolvedValueOnce({
-        numpages: 10,
-        numrender: 10,
+        numpages: 999,
+        numrender: 999,
         info: {},
         metadata: null,
         version: 'default',
@@ -56,17 +55,17 @@ describe('PreflightCheckUseCase', () => {
         useCase.execute(
           new PreflightCheckCommand({
             fileData: Buffer.from('fake-pdf-data'),
-            fileName: 'small-document.pdf',
+            fileName: 'large-but-ok.pdf',
             fileType: 'application/pdf',
           }),
         ),
       ).resolves.toBeUndefined();
     });
 
-    it('should reject a PDF exceeding the page limit', async () => {
+    it('should reject a PDF exceeding the page cap with page counts in the error', async () => {
       mockedPdfParse.mockResolvedValueOnce({
-        numpages: 120,
-        numrender: 120,
+        numpages: 1486,
+        numrender: 1486,
         info: {},
         metadata: null,
         version: 'default',
@@ -81,7 +80,7 @@ describe('PreflightCheckUseCase', () => {
             fileType: 'application/pdf',
           }),
         ),
-      ).rejects.toThrow(DocumentTooLargeForChatError);
+      ).rejects.toThrow(TooManyPagesError);
     });
 
     it('should allow the PDF through if pdf-parse fails to read metadata', async () => {
@@ -99,54 +98,22 @@ describe('PreflightCheckUseCase', () => {
     });
   });
 
-  describe('DOCX/PPTX file size preflight', () => {
-    it('should allow a DOCX file under the size limit', async () => {
-      const smallFile = Buffer.alloc(1 * 1024 * 1024); // 1MB
-
+  describe('file types without preflight', () => {
+    it('should pass through DOCX files without any checks', async () => {
       await expect(
         useCase.execute(
           new PreflightCheckCommand({
-            fileData: smallFile,
-            fileName: 'report.docx',
-            fileType:
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          }),
-        ),
-      ).resolves.toBeUndefined();
-    });
-
-    it('should reject a DOCX file exceeding the size limit', async () => {
-      const largeFile = Buffer.alloc(10 * 1024 * 1024); // 10MB > 5MB limit
-
-      await expect(
-        useCase.execute(
-          new PreflightCheckCommand({
-            fileData: largeFile,
+            fileData: Buffer.alloc(10 * 1024 * 1024),
             fileName: 'huge-report.docx',
             fileType:
               'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           }),
         ),
-      ).rejects.toThrow(DocumentTooLargeForChatError);
+      ).resolves.toBeUndefined();
+
+      expect(mockedPdfParse).not.toHaveBeenCalled();
     });
 
-    it('should reject a PPTX file exceeding the size limit', async () => {
-      const largeFile = Buffer.alloc(8 * 1024 * 1024); // 8MB > 5MB limit
-
-      await expect(
-        useCase.execute(
-          new PreflightCheckCommand({
-            fileData: largeFile,
-            fileName: 'large-presentation.pptx',
-            fileType:
-              'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          }),
-        ),
-      ).rejects.toThrow(DocumentTooLargeForChatError);
-    });
-  });
-
-  describe('file types without preflight', () => {
     it('should pass through TXT files without any checks', async () => {
       await expect(
         useCase.execute(
@@ -159,18 +126,6 @@ describe('PreflightCheckUseCase', () => {
       ).resolves.toBeUndefined();
 
       expect(mockedPdfParse).not.toHaveBeenCalled();
-    });
-
-    it('should pass through CSV files without any checks', async () => {
-      await expect(
-        useCase.execute(
-          new PreflightCheckCommand({
-            fileData: Buffer.from('header1,header2\nval1,val2'),
-            fileName: 'data.csv',
-            fileType: 'text/csv',
-          }),
-        ),
-      ).resolves.toBeUndefined();
     });
   });
 });
