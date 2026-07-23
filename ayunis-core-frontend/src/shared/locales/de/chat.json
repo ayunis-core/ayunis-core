@@ -21,6 +21,7 @@
     "errorToolNotFound": "Tool nicht gefunden",
     "errorAnonymizationUnavailable": "Die Anonymisierung ist derzeit nicht verfügbar. Ihre Nachricht wurde nicht gesendet, um Ihre Daten zu schützen.",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "errorRestoreFailedSubmission": "Ihre vorherige Nachricht und Anhänge konnten nicht wiederhergestellt werden, da die Eingabe bereits einen Entwurf enthält.",
     "errorQuotaExceeded": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es später erneut.",
     "errorQuotaExceededWithTime": "Sie haben das Nachrichtenlimit erreicht. Bitte versuchen Sie es in {{minutes}} Minuten erneut.",
     "errorCreditBudgetExceeded": "Sie haben das Credits-Limit für diesen Monat erreicht. Bitte wenden Sie sich an Ihren Administrator.",

@@ -41,7 +41,7 @@ interface UseMessageSendParams {
   onMasksEvent?: (data: RunMasksResponseDto) => void;
   onErrorEvent?: (data: RunErrorResponseDto) => void;
   onError?: (error: Error) => void;
-  onComplete?: () => void;
+  onComplete?: (failed: boolean) => void;
 }
 
 interface SendMessagePayload {
@@ -60,6 +60,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isLoadingRef = useRef(false);
   const wasAbortedRef = useRef(false);
+  const hadErrorRef = useRef(false);
 
   const sendMessage = useCallback(
     // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -72,6 +73,7 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         isLoadingRef.current = true;
         wasAbortedRef.current = false;
+        hadErrorRef.current = false;
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
 
@@ -157,6 +159,7 @@ export function useMessageSend(params: UseMessageSendParams) {
                 params.onMasksEvent?.(data as RunMasksResponseDto);
                 break;
               case 'error':
+                hadErrorRef.current = true;
                 params.onErrorEvent?.(data as RunErrorResponseDto);
                 break;
               case undefined:
@@ -206,12 +209,14 @@ export function useMessageSend(params: UseMessageSendParams) {
       } catch (error) {
         console.error('Error in sendMessage', error);
 
-        if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            wasAbortedRef.current = true;
-            return; // Request was cancelled, don't show error
-          }
+        if (error instanceof Error && error.name === 'AbortError') {
+          wasAbortedRef.current = true;
+          return;
+        }
 
+        hadErrorRef.current = true;
+
+        if (error instanceof Error) {
           // Handle specific error status codes
           if (error.message.includes('429')) {
             // Try to extract retry time from error response
@@ -241,7 +246,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         // When aborted, we keep the optimistic local state to avoid race conditions
         // with the backend's async save operation
         if (!wasAbortedRef.current) {
-          params.onComplete?.();
+          params.onComplete?.(hadErrorRef.current);
           // Cancel any in-flight thread refetch (e.g. an active refetchInterval
           // poll) so its older response can't land after ours and shorten the
           // displayed assistant text. Then await the refetch so the cache

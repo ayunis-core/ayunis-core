@@ -1,4 +1,12 @@
-import { useState, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+} from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
@@ -8,7 +16,6 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
-import config from '@/shared/config';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
@@ -28,7 +35,6 @@ import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
 import { useLetterheadChange } from '../hooks/useLetterheadChange';
 import { usePendingMessage } from '../hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
-import { AxiosError } from 'axios';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
 import { useDeleteFileSource } from '../api/useDeleteFileSource';
@@ -105,6 +111,9 @@ export default function ChatPage({
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
+  const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
+    null,
+  );
 
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -125,6 +134,13 @@ export default function ChatPage({
     setThreadTitle(thread.title);
     setPiiMasks(thread.piiMasks);
   }
+
+  // ChatPage is reused across thread switches; drop any pending restore from
+  // the previous thread so a send that fails after navigation can't paste its
+  // prompt/images into the newly shown thread.
+  useEffect(() => {
+    lastSubmissionRef.current = null;
+  }, [thread.id]);
   const [pendingSubmission, setPendingSubmission] = useState<string | null>(
     null,
   );
@@ -213,21 +229,24 @@ export default function ChatPage({
 
   const handleError = useRunErrorHandler(thread.id);
 
+  const restoreFailedSubmission = useCallback(() => {
+    const last = lastSubmissionRef.current;
+    if (!last) return;
+    // false = a follow-up draft blocked restore; warn instead of dropping silently.
+    const restored = chatInputRef.current?.restoreFailedSubmission(
+      last.text,
+      last.images ?? [],
+    );
+    if (restored === false) showError(t('chat.errorRestoreFailedSubmission'));
+  }, [t]);
+
   const handleSession = useCallback((session: RunSessionResponseDto) => {
-    if (config.env === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('session', session);
-    }
     if (session.streaming === true) setIsStreaming(true);
     if (session.streaming === false) setIsStreaming(false);
   }, []);
 
   const handleThread = useCallback(
     (thread: RunThreadResponseDto) => {
-      if (config.env === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('Thread', thread);
-      }
       setThreadTitle(thread.title);
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindAllQueryKey(),
@@ -247,9 +266,9 @@ export default function ChatPage({
       console.error('Error in useMessageSend:', error);
       showError(t('chat.errorSendMessage'));
     },
-    onComplete: () => {
-      // eslint-disable-next-line no-console
-      console.log('Message sending completed');
+    onComplete: (failed) => {
+      if (failed) restoreFailedSubmission();
+      lastSubmissionRef.current = null;
       setIsStreaming(false);
       setPendingSubmission(null);
     },
@@ -261,7 +280,8 @@ export default function ChatPage({
 
   usePendingMessage({
     sendTextMessage,
-    onSendStart: (text) => {
+    onSendStart: (text, images) => {
+      lastSubmissionRef.current = { text, images: images?.map((i) => i.file) };
       setPendingSubmission(text);
       setIsStreaming(true);
     },
@@ -277,6 +297,10 @@ export default function ChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
   ) {
     try {
+      lastSubmissionRef.current = {
+        text: message,
+        images: imageFiles?.map((img) => img.file),
+      };
       setPendingSubmission(message);
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
@@ -294,21 +318,16 @@ export default function ChatPage({
         text: message,
         images,
       });
-    } catch (error) {
-      chatInputRef.current?.setMessage(message);
-      setIsStreaming(false);
-      setPendingSubmission(null);
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        showError(t('chat.upgradeToProError'));
-      } else {
-        showError(t('chat.errorSendMessage'));
-      }
-      throw error; // rethrow the error to preserve the message
+    } catch {
+      // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
+      // onErrorEvent/onError); this only catches a rejected send promise.
+      restoreFailedSubmission();
     }
   }
 
   function handleSendCancelled() {
     abort();
+    lastSubmissionRef.current = null;
     setIsStreaming(false);
     setPendingSubmission(null);
 

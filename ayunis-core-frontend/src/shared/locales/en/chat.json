@@ -21,6 +21,7 @@
     "errorToolNotFound": "Tool not found",
     "errorAnonymizationUnavailable": "Anonymization is currently unavailable. Your message was not sent to protect your data.",
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
+    "errorRestoreFailedSubmission": "Your previous message and attachments couldn't be restored because the input already contains a draft.",
     "errorQuotaExceeded": "You have reached the message limit. Please try again later.",
     "errorQuotaExceededWithTime": "You have reached the message limit. Please try again in {{minutes}} minutes.",
     "errorCreditBudgetExceeded": "You have reached the credit limit for this month. Please contact your administrator.",
