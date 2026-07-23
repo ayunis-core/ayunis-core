@@ -1,6 +1,6 @@
-// Load env (.env.dev → .env) before typeorm.config reads process.env. This
-// makes the datasource self-sufficient for CLI runners (typeorm-ts-node-commonjs)
-// that don't preload env-register.
+// Load env (.env.local → injected → .env.dev → .env, plus DEV_PORT_OFFSET
+// derivation) before typeorm.config reads process.env. This makes the
+// datasource self-sufficient for CLI runners (typeorm-ts-node-commonjs).
 import '../config/env';
 import { typeormConfigRaw } from '../config/typeorm.config';
 import { DataSource } from 'typeorm';
