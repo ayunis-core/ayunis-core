@@ -62,6 +62,24 @@ const userId = this.contextService.get('userId');
 async execute(command: { userId: string })  // Don't pass context
 ```
 
+## Outbound Provider Errors
+
+Any code path that calls an external provider over the network (LLM inference, embeddings, Mistral OCR, vendor SDKs) must classify failures through the shared taxonomy in `src/common/errors` (AYC-538) — do **not** invent per-adapter "service busy / timeout" error classes:
+
+```typescript
+const providerError = wrapProviderFailure(error, { provider, modelId });
+if (providerError) throw providerError; // ProviderUnavailableError family
+// else: ApplicationError rethrows as-is; upstream 4xx and unknown errors
+// stay in the module's own error family (potentially OUR bug — must remain
+// a distinct, first-occurrence-alerting AppSignal incident)
+```
+
+- `wrapProviderFailure` returns `ProviderConnectionError` (502) / `ProviderTimeoutError` (504) / `ProviderServerError` (502) for transport failures (errno, undici, TLS codes, SDK wrapper names — cause chains are walked) and upstream 5xx; `undefined` for everything else.
+- **Grouping contract**: each error sets `name === code === PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>` so AppSignal opens one incident per provider+failure-class on both reporting paths (HTTP `setError()` groups by `name`; BullMQ OTel `recordException` prefers `code`). Never add these errors to `ignoreErrors` in `appsignal.cjs` — per-occurrence notifications are disabled AppSignal-side so rate-based anomaly triggers keep working.
+- Reference choke points: `stream-inference.use-case.ts`, `get-inference.use-case.ts` (models), `embed-text.use-case.ts` (embeddings), `mistral-file-retriever.handler.ts` (OCR, incl. `ProviderRequestRejectedError` for machine-generated 4xx — but not 401/403 auth-config bugs).
+- **Not a provider**: fetching customer-pasted URLs. Keep `UrlRetrieverRetrievalError` (422) and enrich its metadata with `classifyTransportError()` output instead.
+- This hand-written translate-catch at outbound choke points is the sanctioned exception to `use-case-reference`'s "no hand-written try/catch error boundaries" rule.
+
 ## Key Files
 
 | Purpose                     | Location                                        |
