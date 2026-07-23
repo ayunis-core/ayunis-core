@@ -12,6 +12,7 @@ export enum ModelErrorCode {
   MODEL_INVALID = 'MODEL_INVALID',
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
   INFERENCE_FAILED = 'INFERENCE_FAILED',
+  INFERENCE_ABORTED = 'INFERENCE_ABORTED',
   INFERENCE_INPUT_INVALID = 'INFERENCE_INPUT_INVALID',
   INFERENCE_TIMEOUT = 'INFERENCE_TIMEOUT',
   MODEL_RATE_LIMIT_EXCEEDED = 'MODEL_RATE_LIMIT_EXCEEDED',
@@ -190,6 +191,23 @@ export class InferenceFailedError extends ModelError {
       `Inference failed: ${reason}`,
       ModelErrorCode.INFERENCE_FAILED,
       500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * Client-side cancellation of a streaming inference (aborted fetch or
+ * disconnected SSE consumer). Expected behavior, not a provider failure —
+ * status 499 ("client closed request") keeps it below the error filter's
+ * 5xx reporting threshold so it never opens an AppSignal incident.
+ */
+export class InferenceAbortedError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Inference aborted by client',
+      ModelErrorCode.INFERENCE_ABORTED,
+      499,
       metadata,
     );
   }
