@@ -16,7 +16,6 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
-import config from '@/shared/config';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
@@ -233,24 +232,21 @@ export default function ChatPage({
   const restoreFailedSubmission = useCallback(() => {
     const last = lastSubmissionRef.current;
     if (!last) return;
-    chatInputRef.current?.restoreFailedSubmission(last.text, last.images ?? []);
-  }, []);
+    // false = a follow-up draft blocked restore; warn instead of dropping silently.
+    const restored = chatInputRef.current?.restoreFailedSubmission(
+      last.text,
+      last.images ?? [],
+    );
+    if (restored === false) showError(t('chat.errorRestoreFailedSubmission'));
+  }, [t]);
 
   const handleSession = useCallback((session: RunSessionResponseDto) => {
-    if (config.env === 'development') {
-      // eslint-disable-next-line no-console
-      console.log('session', session);
-    }
     if (session.streaming === true) setIsStreaming(true);
     if (session.streaming === false) setIsStreaming(false);
   }, []);
 
   const handleThread = useCallback(
     (thread: RunThreadResponseDto) => {
-      if (config.env === 'development') {
-        // eslint-disable-next-line no-console
-        console.log('Thread', thread);
-      }
       setThreadTitle(thread.title);
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindAllQueryKey(),
