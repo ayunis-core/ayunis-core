@@ -1,4 +1,5 @@
 import * as path from 'path';
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -13,6 +14,8 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
+import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
+import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { UnexpectedSourceError } from '../../sources.errors';
 import { StartDocumentProcessingCommand } from './start-document-processing.command';
 
@@ -26,6 +29,7 @@ export class StartDocumentProcessingUseCase {
     private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
+    private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -44,7 +48,13 @@ export class StartDocumentProcessingUseCase {
         throw new Error('userId is required');
       }
 
-      // 1. Create source with PROCESSING status
+      // Indexing resolves the org's embedding model only inside the worker,
+      // after the (expensive) OCR step — reject here so an unprovisioned org
+      // fails fast with a clear error instead of a doomed processing job.
+      await this.getPermittedEmbeddingModelUseCase.execute(
+        new GetPermittedEmbeddingModelQuery({ orgId }),
+      );
+
       const savedSource = await this.createProcessingSourceUseCase.execute(
         new CreateProcessingSourceCommand({
           fileType: command.fileType,
@@ -52,47 +62,10 @@ export class StartDocumentProcessingUseCase {
         }),
       );
 
-      // 2. Upload file to MinIO (outside transaction)
-      const sanitizedFileName = path
-        .basename(command.fileName)
-        .replace(/[^a-zA-Z0-9._-]/g, '_');
-      const minioPath = `${orgId}/processing/${savedSource.id}/${sanitizedFileName}`;
-      try {
-        await this.uploadObjectUseCase.execute(
-          new UploadObjectCommand(minioPath, command.fileData),
-        );
-      } catch (error) {
-        await this.tryMarkSourceFailed(
-          savedSource,
-          'Failed to upload file to storage',
-        );
-        throw error;
-      }
-
-      // 3. Enqueue BullMQ job (outside transaction)
-      try {
-        await this.enqueueDocumentProcessingUseCase.execute(
-          new EnqueueDocumentProcessingCommand({
-            sourceId: savedSource.id,
-            orgId,
-            userId,
-            minioPath,
-            fileName: command.fileName,
-            fileType: command.fileType,
-          }),
-        );
-      } catch (error) {
-        this.logger.error('Failed to enqueue document processing job', {
-          sourceId: savedSource.id,
-          error: error as Error,
-        });
-        await this.tryMarkSourceFailed(
-          savedSource,
-          'Failed to enqueue processing job',
-        );
-        await this.cleanupMinioFile(minioPath);
-        throw error;
-      }
+      // Upload and enqueue both happen outside the transaction
+      const minioPath = this.buildMinioPath(orgId, savedSource.id, command);
+      await this.uploadFileOrFail(savedSource, minioPath, command);
+      await this.enqueueOrFail(savedSource, minioPath, orgId, userId, command);
 
       return savedSource;
     } catch (error) {
@@ -105,6 +78,67 @@ export class StartDocumentProcessingUseCase {
       throw new UnexpectedSourceError('Error starting document processing', {
         error: error as Error,
       });
+    }
+  }
+
+  private buildMinioPath(
+    orgId: string,
+    sourceId: string,
+    command: StartDocumentProcessingCommand,
+  ): string {
+    const sanitizedFileName = path
+      .basename(command.fileName)
+      .replace(/[^a-zA-Z0-9._-]/g, '_');
+    return `${orgId}/processing/${sourceId}/${sanitizedFileName}`;
+  }
+
+  private async uploadFileOrFail(
+    source: FileSource,
+    minioPath: string,
+    command: StartDocumentProcessingCommand,
+  ): Promise<void> {
+    try {
+      await this.uploadObjectUseCase.execute(
+        new UploadObjectCommand(minioPath, command.fileData),
+      );
+    } catch (error) {
+      await this.tryMarkSourceFailed(
+        source,
+        'Failed to upload file to storage',
+      );
+      throw error;
+    }
+  }
+
+  private async enqueueOrFail(
+    source: FileSource,
+    minioPath: string,
+    orgId: UUID,
+    userId: UUID,
+    command: StartDocumentProcessingCommand,
+  ): Promise<void> {
+    try {
+      await this.enqueueDocumentProcessingUseCase.execute(
+        new EnqueueDocumentProcessingCommand({
+          sourceId: source.id,
+          orgId,
+          userId,
+          minioPath,
+          fileName: command.fileName,
+          fileType: command.fileType,
+        }),
+      );
+    } catch (error) {
+      this.logger.error('Failed to enqueue document processing job', {
+        sourceId: source.id,
+        error: error as Error,
+      });
+      await this.tryMarkSourceFailed(
+        source,
+        'Failed to enqueue processing job',
+      );
+      await this.cleanupMinioFile(minioPath);
+      throw error;
     }
   }
 

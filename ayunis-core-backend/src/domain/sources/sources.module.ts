@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/local-source-repository.module';
+import { ModelsModule } from '../models/models.module';
 import { SplitterModule } from '../rag/splitters/splitter.module';
 import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
@@ -40,6 +41,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     StorageModule,
     DocumentProcessingModule,
     UrlCrawlModule,
+    forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   providers: [
     SourceProcessingCleanupService,
