@@ -119,6 +119,36 @@ describe('DocumentProcessingConsumer', () => {
     );
   });
 
+  it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    downloadObjectUseCase.execute.mockRejectedValueOnce(
+      new Error('MinIO object not found'),
+    );
+
+    await expect(consumer.process(makeJob())).rejects.toMatchObject({
+      name: 'JobRetryScheduledError',
+      message: 'MinIO object not found',
+    });
+    expect(helper.markFailed).not.toHaveBeenCalled();
+  });
+
+  it('rethrows the original error on the final attempt', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    downloadObjectUseCase.execute.mockRejectedValueOnce(
+      new Error('MinIO object not found'),
+    );
+
+    await expect(
+      consumer.process(makeJob({ attemptsMade: 2 } as never)),
+    ).rejects.toMatchObject({
+      name: 'Error',
+      message: 'MinIO object not found',
+    });
+    expect(helper.markFailed).toHaveBeenCalled();
+  });
+
   it('should skip saving and clean up when source is deleted mid-processing', async () => {
     const source = makeSource(SourceStatus.PROCESSING);
 

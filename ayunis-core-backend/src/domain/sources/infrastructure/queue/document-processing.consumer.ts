@@ -19,6 +19,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
+import { isFinalAttempt, wrapIfRetryScheduled } from './bullmq-job.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -73,8 +74,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
           error: error as Error,
         });
 
-        const isLastAttempt = job.attemptsMade >= (job.opts.attempts ?? 3) - 1;
-        if (isLastAttempt) {
+        if (isFinalAttempt(job)) {
           await this.helper.markFailed(
             sourceId,
             error instanceof Error ? error.message : 'Unknown processing error',
@@ -82,7 +82,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
           await this.helper.cleanupIndex(sourceId);
           await this.cleanupMinioFile(minioPath);
         }
-        throw error; // Re-throw so BullMQ handles retries
+        // Re-throw so BullMQ handles retries; non-final attempts are renamed
+        // so AppSignal only opens incidents for final failures.
+        throw wrapIfRetryScheduled(job, error);
       }
     });
   }

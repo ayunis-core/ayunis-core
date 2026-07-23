@@ -53,6 +53,10 @@ if (pushApiKey && environment !== 'development') {
     disableDefaultInstrumentations: [
       '@opentelemetry/instrumentation-nestjs-core',
     ],
+    // Queue consumers rename job failures that BullMQ will retry to this
+    // error (see bullmq-job.helpers.ts), so only final failures — thrown
+    // with their original name — become incidents.
+    ignoreErrors: ['JobRetryScheduledError'],
   });
 
   console.warn(`✅ AppSignal initialized for environment: ${environment}`);
