@@ -121,6 +121,7 @@ export class PrometheusMetricsListener {
           error_type: classifyInferenceError({
             message: event.error!.message,
             status: event.error!.statusCode,
+            failureClass: event.error!.failureClass,
           }),
           streaming: streamingLabel,
         });

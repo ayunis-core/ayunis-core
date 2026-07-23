@@ -1,8 +1,10 @@
 import type { UUID } from 'crypto';
+import type { ProviderFailureClass } from 'src/common/errors/provider.errors';
 
 export interface InferenceErrorInfo {
   message: string;
   statusCode?: number;
+  failureClass?: ProviderFailureClass;
 }
 
 export class InferenceCompletedEvent {

@@ -111,9 +111,28 @@ const PROVIDER_FAILURE_TYPES: Record<ProviderFailureClass, InferenceErrorType> =
     [ProviderFailureClass.REJECTED]: 'server_error',
   };
 
+/**
+ * Recovers a {@link ProviderFailureClass} from either a live
+ * {@link ProviderUnavailableError} or a serialized error payload (as carried
+ * by `InferenceCompletedEvent`, where the `instanceof` identity is lost).
+ */
+function extractFailureClass(error: unknown): ProviderFailureClass | undefined {
+  if (error instanceof ProviderUnavailableError) return error.failureClass;
+  if (typeof error !== 'object' || error === null) return undefined;
+  const failureClass = (error as Record<string, unknown>)['failureClass'];
+  if (
+    typeof failureClass === 'string' &&
+    failureClass in PROVIDER_FAILURE_TYPES
+  ) {
+    return failureClass as ProviderFailureClass;
+  }
+  return undefined;
+}
+
 export function classifyInferenceError(error: unknown): InferenceErrorType {
-  if (error instanceof ProviderUnavailableError) {
-    return PROVIDER_FAILURE_TYPES[error.failureClass];
+  const failureClass = extractFailureClass(error);
+  if (failureClass !== undefined) {
+    return PROVIDER_FAILURE_TYPES[failureClass];
   }
   const status = extractStatusCode(error);
   if (status !== undefined) {

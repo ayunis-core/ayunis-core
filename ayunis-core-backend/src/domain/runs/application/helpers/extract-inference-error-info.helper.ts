@@ -1,4 +1,5 @@
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import type { InferenceErrorInfo } from '../events/inference-completed.event';
 
 /**
@@ -23,6 +24,17 @@ function extractStatusCode(error: unknown): number | undefined {
 
   if (error instanceof ApplicationError) return undefined;
 
+  return extractStatusFromProviderShape(r);
+}
+
+/**
+ * Falls back to provider-SDK error shapes (OpenAI/Anthropic `status`,
+ * fetch-style `response.status`, AWS `$metadata.httpStatusCode`) for any
+ * path that bypasses the use-case wrapper.
+ */
+function extractStatusFromProviderShape(
+  r: Record<string, unknown>,
+): number | undefined {
   if (typeof r.status === 'number') return r.status;
   if (typeof r.statusCode === 'number') return r.statusCode;
 
@@ -42,10 +54,14 @@ function extractStatusCode(error: unknown): number | undefined {
  * arbitrary non-Error exceptions (stringified).
  */
 export function extractInferenceErrorInfo(error: unknown): InferenceErrorInfo {
+  const failureClass =
+    error instanceof ProviderUnavailableError ? error.failureClass : undefined;
+
   if (error instanceof Error) {
     return {
       message: error.message,
       statusCode: extractStatusCode(error),
+      failureClass,
     };
   }
 
