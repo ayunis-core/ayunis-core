@@ -16,6 +16,7 @@ import {
   UrlRetrieverContentTooLargeError,
 } from '../application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAX_REDIRECTS = 5;
@@ -303,10 +304,19 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
       error instanceof Error ? error.stack : 'Unknown error',
     );
 
+    // Transport classification is attached for debuggability only — a dead
+    // customer site is not a provider outage, so the status stays 422 and no
+    // ProviderUnavailableError is raised (AYC-538).
+    const transport = classifyTransportError(error);
     throw new UrlRetrieverRetrievalError('Failed to retrieve URL with HTTP', {
       url,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'Unknown error',
+      ...(transport && {
+        failureClass: transport.failureClass,
+        underlyingCode: transport.code,
+        host: transport.host,
+      }),
     });
   }
 }
