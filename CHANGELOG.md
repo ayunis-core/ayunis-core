@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.18.0](https://github.com/ayunis-core/ayunis-core/compare/v2.17.0...v2.18.0) (2026-07-23)
+
+
+### Features
+
+* **dev:** manage local dev config with infisical (AYC-505) ([#1110](https://github.com/ayunis-core/ayunis-core/issues/1110)) ([8149475](https://github.com/ayunis-core/ayunis-core/commit/8149475d901f9fb1cce44abd8fe22e5935657b96))
+* **webhooks:** enrich user.created payload with org name (AYC-445) ([#1130](https://github.com/ayunis-core/ayunis-core/issues/1130)) ([22eb689](https://github.com/ayunis-core/ayunis-core/commit/22eb68966d6822ecace9f58ec446c3b151f7fc64))
+
+
+### Bug Fixes
+
+* **app:** survive unhandled rejections and close keep-alive races (AYC-491) ([#1093](https://github.com/ayunis-core/ayunis-core/issues/1093)) ([f5add1f](https://github.com/ayunis-core/ayunis-core/commit/f5add1fd53efa33b212743e105ab57f3ce5aac32))
+* **chat:** preserve prompt and images when a run fails (AYC-473) ([#1081](https://github.com/ayunis-core/ayunis-core/issues/1081)) ([7737087](https://github.com/ayunis-core/ayunis-core/commit/77370870585d729c26fd714ef23e8cee83e378f4))
+* **observability:** report queue job failures only when retries are exhausted (AYC-479) ([#1128](https://github.com/ayunis-core/ayunis-core/issues/1128)) ([c760da8](https://github.com/ayunis-core/ayunis-core/commit/c760da8b179239c11142f9c5c92fe803322d9df7))
+* **observability:** stop reporting expected 4xx errors as appsignal incidents (AYC-479) ([#1127](https://github.com/ayunis-core/ayunis-core/issues/1127)) ([cad0c99](https://github.com/ayunis-core/ayunis-core/commit/cad0c999c7809b99f897f1e0514f1d9f9f8c6c52))
+* **observability:** treat client stream aborts as expected cancellations (AYC-479) ([#1129](https://github.com/ayunis-core/ayunis-core/issues/1129)) ([9f8603b](https://github.com/ayunis-core/ayunis-core/commit/9f8603b67935fd80f2a4640162f41c80aa318928))
+* **runs:** defuse crash vectors in SSE, share events, and cleanup cron (AYC-491) ([#1094](https://github.com/ayunis-core/ayunis-core/issues/1094)) ([85e3216](https://github.com/ayunis-core/ayunis-core/commit/85e3216900f676cac7ff062eb22ba78f7f4d0e93))
+* **runs:** unsubscribe buffered stream on early consumer exit (AYC-491) ([#1118](https://github.com/ayunis-core/ayunis-core/issues/1118)) ([b145b32](https://github.com/ayunis-core/ayunis-core/commit/b145b32be6b1dd0c64896cd466ad32532fff077a))
+* **shares:** stop share-deleted listener failures crashing the process (AYC-491) ([#1119](https://github.com/ayunis-core/ayunis-core/issues/1119)) ([1ac5238](https://github.com/ayunis-core/ayunis-core/commit/1ac52385a8918ad8dac03c22517bee953671f4ce))
+
+
+### Performance Improvements
+
+* **rag:** track chunk offsets during splitting instead of searching (AYC-491) ([#1092](https://github.com/ayunis-core/ayunis-core/issues/1092)) ([249f650](https://github.com/ayunis-core/ayunis-core/commit/249f650a0f6f1e5130e743a7e51217041f6a1b1c))
+
+
+### Code Refactoring
+
+* **sources:** tighten stale processing cleanup task (AYC-491) ([#1117](https://github.com/ayunis-core/ayunis-core/issues/1117)) ([7d57c29](https://github.com/ayunis-core/ayunis-core/commit/7d57c29ba75581d36dcb597b5eaf738f7d7b11be))
+
+
+### Miscellaneous
+
+* **deps:** upgrade @mistralai/mistralai to v2 (AYC-129) ([#958](https://github.com/ayunis-core/ayunis-core/issues/958)) ([4994d7f](https://github.com/ayunis-core/ayunis-core/commit/4994d7f15d42cee79087dad179d344d9a9479868))
+
 ## [2.17.0](https://github.com/ayunis-core/ayunis-core/compare/v2.16.0...v2.17.0) (2026-07-22)
 
 
