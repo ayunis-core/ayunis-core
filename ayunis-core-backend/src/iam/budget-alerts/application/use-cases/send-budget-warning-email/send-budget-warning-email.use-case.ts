@@ -7,7 +7,10 @@ import { RenderTemplateCommand } from 'src/common/email-templates/application/us
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.command';
-import { BudgetWarningEmailSendingFailedError } from '../../budget-alerts.errors';
+import {
+  BudgetWarningEmailRenderingFailedError,
+  BudgetWarningEmailSendingFailedError,
+} from '../../budget-alerts.errors';
 
 const CREDIT_LIMITS_SETTINGS_PATH = '/admin-settings/usage';
 
@@ -29,20 +32,19 @@ export class SendBudgetWarningEmailUseCase {
     const content = this.renderTemplateUseCase.execute(
       new RenderTemplateCommand(template),
     );
+    if (!content.subject) {
+      throw new BudgetWarningEmailRenderingFailedError(
+        'template rendered without a subject',
+      );
+    }
     await this.sendEmailUseCase.execute(
       new SendEmailCommand({
         to: command.recipientEmail,
-        subject: this.buildSubject(command.threshold),
+        subject: content.subject,
         html: content.html,
         text: content.text,
       }),
     );
-  }
-
-  private buildSubject(threshold: number): string {
-    return threshold >= 100
-      ? 'Budget vollständig aufgebraucht'
-      : `Budgetwarnung: ${threshold}% des Budgets erreicht`;
   }
 
   private buildTemplate(

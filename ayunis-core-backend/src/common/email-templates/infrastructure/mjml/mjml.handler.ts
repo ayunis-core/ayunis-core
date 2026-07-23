@@ -26,6 +26,7 @@ import {
 } from './templates/set-initial-password.template';
 import {
   budgetWarningHtml,
+  budgetWarningSubject,
   budgetWarningText,
 } from './templates/budget-warning.template';
 import { RenderedEmailContent } from '../../domain/rendered-email-content.entity';
@@ -61,6 +62,7 @@ export class MjmlHandler implements TemplateRendererPort {
       return new RenderedEmailContent({
         html: budgetWarningHtml(template.content).html,
         text: budgetWarningText(template.content),
+        subject: budgetWarningSubject(template.content),
       });
     }
     throw new Error(`Template type ${template.templateType} not supported`);

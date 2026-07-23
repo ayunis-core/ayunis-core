@@ -100,6 +100,61 @@ describe('collectCrossings', () => {
     expect(result).toEqual([]);
   });
 
+  it('does not fire a 50% warning for user limits', () => {
+    const userId = '22222222-2222-2222-2222-222222222222' as UUID;
+    const result = collectCrossings(
+      [
+        {
+          scope: BudgetAlertScope.USER,
+          targetId: userId,
+          name: 'Jane Doe',
+          monthlyCredits: 200,
+          creditsUsed: 130,
+        },
+      ],
+      new Set(),
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it('does not fire a 50% warning for team limits', () => {
+    const teamId = '33333333-3333-3333-3333-333333333333' as UUID;
+    const result = collectCrossings(
+      [
+        {
+          scope: BudgetAlertScope.TEAM,
+          targetId: teamId,
+          name: 'Engineering',
+          monthlyCredits: 200,
+          creditsUsed: 130,
+        },
+      ],
+      new Set(),
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it('records only 80 and 100 when a user limit is fully used at once', () => {
+    const userId = '22222222-2222-2222-2222-222222222222' as UUID;
+    const result = collectCrossings(
+      [
+        {
+          scope: BudgetAlertScope.USER,
+          targetId: userId,
+          name: 'Jane Doe',
+          monthlyCredits: 200,
+          creditsUsed: 200,
+        },
+      ],
+      new Set(),
+    );
+
+    expect(result[0].emailThreshold).toBe(100);
+    expect(result[0].recordThresholds).toEqual([80, 100]);
+  });
+
   it('never crosses a frozen (zero) or unlimited (<=0) limit', () => {
     const result = collectCrossings(
       [orgTarget({ monthlyCredits: 0, creditsUsed: 500 })],

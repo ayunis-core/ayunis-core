@@ -1,7 +1,12 @@
 import type { UUID } from 'crypto';
-import type { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
+import { BudgetAlertScope } from '../../domain/value-objects/budget-alert-scope.enum';
 
-const WARNING_THRESHOLDS = [50, 80, 100] as const;
+const WARNING_THRESHOLDS_BY_SCOPE: Record<BudgetAlertScope, readonly number[]> =
+  {
+    [BudgetAlertScope.ORG]: [50, 80, 100],
+    [BudgetAlertScope.USER]: [80, 100],
+    [BudgetAlertScope.TEAM]: [80, 100],
+  };
 
 export interface BudgetTarget {
   scope: BudgetAlertScope;
@@ -52,7 +57,7 @@ function evaluateTarget(
     return null;
   }
   const percentUsed = (target.creditsUsed / target.monthlyCredits) * 100;
-  const recordThresholds = WARNING_THRESHOLDS.filter(
+  const recordThresholds = WARNING_THRESHOLDS_BY_SCOPE[target.scope].filter(
     (threshold) =>
       percentUsed >= threshold &&
       !sentKeys.has(notificationKey(target.scope, target.targetId, threshold)),

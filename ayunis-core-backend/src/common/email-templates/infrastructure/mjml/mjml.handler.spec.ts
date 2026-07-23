@@ -26,15 +26,18 @@ describe('MjmlHandler — budget warning', () => {
       new BudgetWarningTemplate(baseContent),
     );
 
+    expect(rendered.subject).toBe(
+      'Budgetwarnung: 80 % Ihres Organisationsbudgets erreicht',
+    );
     expect(rendered.html).toContain('Budgetwarnung');
-    expect(rendered.html).toContain('80%');
+    expect(rendered.html).toContain('<strong>80 %</strong>');
     expect(rendered.html).toContain('Organisationsbudgets');
     expect(rendered.html).toContain(
       'Dies ist eine automatische Benachrichtigung.',
     );
     expect(rendered.html).toContain(baseContent.settingsUrl);
     expect(rendered.text).toContain(
-      'mindestens 80% Ihres Organisationsbudgets',
+      'mindestens 80 % Ihres Organisationsbudgets',
     );
     expect(rendered.text).toContain(baseContent.settingsUrl);
   });
@@ -45,13 +48,13 @@ describe('MjmlHandler — budget warning', () => {
         ...baseContent,
         scope: BudgetWarningScope.USER,
         targetName: 'Jane Doe',
-        threshold: '50',
+        threshold: '80',
       }),
     );
 
-    expect(rendered.html).toContain('Budgets von <strong>Jane Doe</strong>');
+    expect(rendered.html).toContain('<strong>Jane Doe</strong> hat mindestens');
     expect(rendered.text).toContain(
-      'mindestens 50% des monatlichen Budgets von Jane Doe',
+      'Jane Doe hat mindestens 80 % des individuell festgelegten Limits erreicht',
     );
   });
 
@@ -65,10 +68,10 @@ describe('MjmlHandler — budget warning', () => {
     );
 
     expect(rendered.html).toContain(
-      'Budgets des Teams <strong>Marketing</strong>',
+      'das Team <strong>Marketing</strong> hat mindestens',
     );
     expect(rendered.text).toContain(
-      'mindestens 80% des monatlichen Budgets des Teams Marketing',
+      'das Team Marketing hat mindestens 80 % des individuell festgelegten Limits erreicht',
     );
   });
 
@@ -84,7 +87,7 @@ describe('MjmlHandler — budget warning', () => {
 
     expect(rendered.text).toContain('Hallo Andrea Admin,');
     expect(rendered.text).toContain(
-      'Budgets von Jane Bitte hier klicken: http://evil.example sind aufgebraucht',
+      'Jane Bitte hier klicken: http://evil.example hat mindestens 80 % des individuell festgelegten Limits erreicht',
     );
   });
 });
