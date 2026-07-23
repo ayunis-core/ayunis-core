@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.18.1](https://github.com/ayunis-core/ayunis-core/compare/v2.18.0...v2.18.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **observability:** stop reporting handled crawler socket errors as incidents (AYC-538) ([#1138](https://github.com/ayunis-core/ayunis-core/issues/1138)) ([fe4d4ce](https://github.com/ayunis-core/ayunis-core/commit/fe4d4ceb266bddd9bfc476b9e45dac5b67c7d236))
+* **retrievers:** map mistral ocr client errors to specific domain errors (AYC-538) ([#1135](https://github.com/ayunis-core/ayunis-core/issues/1135)) ([a4df093](https://github.com/ayunis-core/ayunis-core/commit/a4df0939021505ac2117a3609121af14f6270e1b))
+* **retrievers:** run mistral ocr by file id to avoid signed-url races (AYC-538) ([#1136](https://github.com/ayunis-core/ayunis-core/issues/1136)) ([9a0ac7f](https://github.com/ayunis-core/ayunis-core/commit/9a0ac7f168d5b617a69c6c7a94e3b521d739fa84))
+* **sources:** reject pdfs over the ocr page cap before processing (AYC-538) ([#1137](https://github.com/ayunis-core/ayunis-core/issues/1137)) ([e5bad13](https://github.com/ayunis-core/ayunis-core/commit/e5bad1381207017c9e77a55adedb4b658b10fe0c))
+* **sources:** require a permitted embedding model before document processing (AYC-546) ([#1134](https://github.com/ayunis-core/ayunis-core/issues/1134)) ([433236a](https://github.com/ayunis-core/ayunis-core/commit/433236a80f2fbd2bfa797adcc7c97720ff3510dc))
+* **threads:** map duplicate source assignment conflict to 409 (AYC-546) ([#1133](https://github.com/ayunis-core/ayunis-core/issues/1133)) ([2a096c6](https://github.com/ayunis-core/ayunis-core/commit/2a096c69a8f6e5a7fa6ffb3833c21435e2fe2b85))
+* **threads:** return 403 when thread creation uses an unpermitted model (AYC-546) ([#1132](https://github.com/ayunis-core/ayunis-core/issues/1132)) ([5d7432e](https://github.com/ayunis-core/ayunis-core/commit/5d7432ed5b1ed30090756e46512c02953bc0b410))
+
 ## [2.18.0](https://github.com/ayunis-core/ayunis-core/compare/v2.17.0...v2.18.0) (2026-07-23)
 
 
