@@ -12,6 +12,9 @@ export function useRunErrorHandler(_threadId: string) {
         case 'EXECUTION_ERROR':
           showError(t('chat.errorExecutionError'));
           break;
+        case 'INFERENCE_IMAGE_TOO_LARGE':
+          showError(t('chat.errorImageTooLarge'));
+          break;
         case 'RUN_NO_MODEL_FOUND':
           showError(t('chat.errorNoModelFound'));
           break;
