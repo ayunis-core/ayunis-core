@@ -136,7 +136,7 @@ export class PrometheusMetricsListener {
     const baseLabels = {
       user_id: event.userId ?? 'none',
       api_key_id: event.apiKeyId ?? 'none',
-      org_id: event.orgId,
+      org_id: event.orgId ?? 'unknown',
       model: event.model,
       provider: event.provider,
     };

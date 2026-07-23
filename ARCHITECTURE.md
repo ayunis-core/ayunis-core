@@ -30,7 +30,7 @@ ayunis-core/
 ### Domain Modules — Core Business Logic
 
 | Module | Summary | Detail |
-|--------|---------|--------|
+| ------ | ------- | ------ |
 | [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) | Conversations | Chat session management with organization sharing |
 | [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md) | Chat History | Message storage and retrieval |
 | [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) | AI Execution | LLM request tracking and streaming |
@@ -53,7 +53,7 @@ ayunis-core/
 ### IAM Modules — Identity & Access Management
 
 | Module | Summary | Detail |
-|--------|---------|--------|
+| ------ | ------- | ------ |
 | [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) | User Auth | Login, registration, JWT tokens |
 | [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) | Access Control | Role-based guards |
 | [users](ayunis-core-backend/src/iam/users/SUMMARY.md) | Accounts | User profiles and credentials |
@@ -62,6 +62,7 @@ ayunis-core/
 | [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
 | [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
 | [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user and per-team monthly credit allowances |
+| [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md) | Alerts | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
 | [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md) | Groups | Team-based access control |
 | [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md) | Onboarding | User invitation flows |
 | [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md) | Trial Access | Free trial management |
@@ -73,7 +74,7 @@ ayunis-core/
 ### Infrastructure & Support
 
 | Module | Summary | Detail |
-|--------|---------|--------|
+| ------ | ------- | ------ |
 | [common](ayunis-core-backend/src/common/SUMMARY.md) | Shared Infrastructure | Base classes, utilities, cross-cutting concerns |
 | [integrations](ayunis-core-backend/src/integrations/SUMMARY.md) | External Integrations | Prometheus metrics and outbound webhook delivery |
 | [admin](ayunis-core-backend/src/admin/SUMMARY.md) | Platform Admin | Super admin routes for platform management |
@@ -89,7 +90,7 @@ ayunis-core/
 📁 **[`ayunis-core-frontend/src/`](ayunis-core-frontend/src/SUMMARY.md)**
 
 | Layer | Summary | Detail |
-|-------|---------|--------|
+| ----- | ------- | ------ |
 | [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, skills, knowledge bases, settings |
 | [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic | Theme, language, models, usage tracking |
 | [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md) | Composites | Sidebar, chat input, markdown renderer |

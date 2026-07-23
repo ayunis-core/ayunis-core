@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { ClsModule, ClsService } from 'nestjs-cls';
 import { ContextService } from 'src/common/context/services/context.service';
+import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 
 @Global()
 @Module({
@@ -10,7 +11,8 @@ import { ContextService } from 'src/common/context/services/context.service';
       provide: ContextService,
       useExisting: ClsService,
     },
+    OrgContextRunner,
   ],
-  exports: [ContextService],
+  exports: [ContextService, OrgContextRunner],
 })
 export class ContextModule {}

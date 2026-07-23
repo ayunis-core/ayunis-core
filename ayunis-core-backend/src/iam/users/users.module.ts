@@ -59,6 +59,7 @@ import { SuperAdminUsersController } from './presenters/http/super-admin-users.c
 import { SuperAdminUserExportsController } from './presenters/http/super-admin-user-exports.controller';
 import { SuperAdminManagementController } from './presenters/http/super-admin-management.controller';
 import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admins/find-super-admins.use-case';
+import { GetOrgAdminsUseCase } from './application/use-cases/get-org-admins/get-org-admins.use-case';
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-users/export-admin-users.use-case';
@@ -129,6 +130,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     SendSetInitialPasswordEmailUseCase,
     TriggerSetInitialPasswordUseCase,
     FindSuperAdminsUseCase,
+    GetOrgAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
     ExportAdminUsersUseCase,
@@ -150,6 +152,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
+    GetOrgAdminsUseCase,
     UsersRepository, // Export repository for seeding
   ],
 })
