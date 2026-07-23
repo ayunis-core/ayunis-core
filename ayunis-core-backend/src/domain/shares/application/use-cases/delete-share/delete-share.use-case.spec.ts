@@ -52,7 +52,7 @@ describe('DeleteShareUseCase', () => {
         {
           provide: EventEmitter2,
           useValue: {
-            emit: jest.fn(),
+            emitAsync: jest.fn().mockResolvedValue([]),
           },
         },
       ],
@@ -90,7 +90,7 @@ describe('DeleteShareUseCase', () => {
       SharedEntityType.SKILL,
     );
 
-    const emittedEvent = (eventEmitter.emit as jest.Mock).mock.calls[0][1];
+    const emittedEvent = (eventEmitter.emitAsync as jest.Mock).mock.calls[0][1];
     expect(emittedEvent.entityType).toBe(SharedEntityType.SKILL);
     expect(emittedEvent.entityId).toBe(skillId);
     expect(emittedEvent.ownerId).toBe(mockUserId);
@@ -124,7 +124,7 @@ describe('DeleteShareUseCase', () => {
 
     await useCase.execute(share.id);
 
-    const emittedEvent = (eventEmitter.emit as jest.Mock).mock.calls[0][1];
+    const emittedEvent = (eventEmitter.emitAsync as jest.Mock).mock.calls[0][1];
     expect(emittedEvent.remainingScopes).toEqual([
       { scopeType: ShareScopeType.TEAM, scopeId: teamId },
     ]);
@@ -148,16 +148,37 @@ describe('DeleteShareUseCase', () => {
     await useCase.execute(share.id);
 
     expect(repository.delete).toHaveBeenCalledWith(share);
-    expect(eventEmitter.emit).toHaveBeenCalledWith(
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
       ShareDeletedEvent.EVENT_NAME,
       expect.any(ShareDeletedEvent),
     );
 
-    const emittedEvent = (eventEmitter.emit as jest.Mock).mock.calls[0][1];
+    const emittedEvent = (eventEmitter.emitAsync as jest.Mock).mock.calls[0][1];
     expect(emittedEvent.entityType).toBe(SharedEntityType.SKILL);
     expect(emittedEvent.entityId).toBe(skillId);
     expect(emittedEvent.ownerId).toBe(mockUserId);
     expect(emittedEvent.remainingScopes).toEqual([]);
+  });
+
+  it('should not fail the deletion when a share-deleted listener rejects', async () => {
+    const share = new SkillShare({
+      skillId: randomUUID(),
+      scope: new OrgShareScope({ orgId: mockOrgId }),
+      ownerId: mockUserId,
+    });
+
+    (contextService.get as jest.Mock).mockImplementation((key: string) =>
+      key === 'orgId' ? mockOrgId : mockUserId,
+    );
+    (repository.findById as jest.Mock).mockResolvedValue(share);
+    (repository.delete as jest.Mock).mockResolvedValue(undefined);
+    (repository.findByEntityIdAndType as jest.Mock).mockResolvedValue([]);
+    (eventEmitter.emitAsync as jest.Mock).mockRejectedValueOnce(
+      new Error('listener db write failed'),
+    );
+
+    await expect(useCase.execute(share.id)).resolves.toBeUndefined();
+    await new Promise(process.nextTick);
   });
 
   it('should throw UnauthorizedAccessError when user is not authenticated', async () => {
@@ -166,7 +187,7 @@ describe('DeleteShareUseCase', () => {
     await expect(useCase.execute(randomUUID())).rejects.toThrow(
       UnauthorizedAccessError,
     );
-    expect(eventEmitter.emit).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should throw when share does not exist', async () => {
@@ -174,7 +195,7 @@ describe('DeleteShareUseCase', () => {
     (repository.findById as jest.Mock).mockResolvedValue(null);
 
     await expect(useCase.execute(randomUUID())).rejects.toThrow();
-    expect(eventEmitter.emit).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should throw UnauthorizedAccessError when user does not own the share', async () => {
@@ -192,6 +213,6 @@ describe('DeleteShareUseCase', () => {
       UnauthorizedAccessError,
     );
     expect(repository.delete).not.toHaveBeenCalled();
-    expect(eventEmitter.emit).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });
