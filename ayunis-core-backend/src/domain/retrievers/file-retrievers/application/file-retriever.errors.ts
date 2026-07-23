@@ -21,8 +21,6 @@ export enum FileRetrieverErrorCode {
   INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   TOO_MANY_PAGES = 'TOO_MANY_PAGES',
-  SERVICE_BUSY = 'SERVICE_BUSY',
-  SERVICE_TIMEOUT = 'SERVICE_TIMEOUT',
   UNAUTHORIZED = 'UNAUTHORIZED',
 }
 
@@ -130,28 +128,6 @@ export class TooManyPagesError extends FileRetrieverError {
         : 'This document has too many pages to be processed.',
       FileRetrieverErrorCode.TOO_MANY_PAGES,
       422,
-      metadata,
-    );
-  }
-}
-
-export class ServiceBusyError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'Document processing service is busy. Please try again later.',
-      FileRetrieverErrorCode.SERVICE_BUSY,
-      503,
-      metadata,
-    );
-  }
-}
-
-export class ServiceTimeoutError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'Document conversion exceeded timeout',
-      FileRetrieverErrorCode.SERVICE_TIMEOUT,
-      504,
       metadata,
     );
   }
