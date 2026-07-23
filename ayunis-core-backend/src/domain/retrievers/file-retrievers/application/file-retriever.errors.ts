@@ -21,7 +21,6 @@ export enum FileRetrieverErrorCode {
   INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   TOO_MANY_PAGES = 'TOO_MANY_PAGES',
-  DOCUMENT_TOO_LARGE_FOR_CHAT = 'DOCUMENT_TOO_LARGE_FOR_CHAT',
   SERVICE_BUSY = 'SERVICE_BUSY',
   SERVICE_TIMEOUT = 'SERVICE_TIMEOUT',
   UNAUTHORIZED = 'UNAUTHORIZED',
@@ -122,9 +121,13 @@ export class FileTooLargeError extends FileRetrieverError {
 }
 
 export class TooManyPagesError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
+  constructor(
+    metadata?: ErrorMetadata & { pageCount?: number; maxPages?: number },
+  ) {
     super(
-      'Document rejected by preflight check (too many pages)',
+      metadata?.pageCount && metadata.maxPages
+        ? `This document has ${metadata.pageCount} pages; the maximum is ${metadata.maxPages}.`
+        : 'This document has too many pages to be processed.',
       FileRetrieverErrorCode.TOO_MANY_PAGES,
       422,
       metadata,
@@ -160,17 +163,6 @@ export class FileRetrieverUnauthorizedError extends FileRetrieverError {
       'Invalid or missing API key for document processing service',
       FileRetrieverErrorCode.UNAUTHORIZED,
       401,
-      metadata,
-    );
-  }
-}
-
-export class DocumentTooLargeForChatError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'This document is too large to process in a chat. Please add it to a knowledge base instead.',
-      FileRetrieverErrorCode.DOCUMENT_TOO_LARGE_FOR_CHAT,
-      422,
       metadata,
     );
   }
