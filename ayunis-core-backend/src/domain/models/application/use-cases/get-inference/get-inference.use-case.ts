@@ -8,7 +8,8 @@ import {
 import { InferenceFailedError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
+import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -58,6 +59,17 @@ export class GetInferenceUseCase {
     command: GetInferenceCommand,
   ): never {
     if (error instanceof ApplicationError) throw error;
+    const providerError = wrapProviderFailure(error, {
+      provider: command.model.provider,
+      modelId: command.model.name,
+    });
+    if (providerError) {
+      this.logger.error('Provider unavailable during inference', {
+        code: providerError.code,
+        ...providerError.context,
+      });
+      throw providerError;
+    }
     const status = extractUpstreamStatus(error);
     this.logger.error('Provider inference failed', {
       model: command.model.name,

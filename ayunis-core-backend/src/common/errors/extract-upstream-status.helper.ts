@@ -1,4 +1,4 @@
-import { ApplicationError } from 'src/common/errors/base.error';
+import { ApplicationError } from './base.error';
 
 /**
  * Extracts the upstream HTTP status code from a provider SDK error.
