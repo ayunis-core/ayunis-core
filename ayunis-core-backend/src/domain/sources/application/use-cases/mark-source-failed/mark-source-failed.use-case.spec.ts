@@ -20,7 +20,7 @@ describe('MarkSourceFailedUseCase', () => {
       findById: jest.fn(),
       findByIds: jest.fn(),
       findByKnowledgeBaseId: jest.fn(),
-      findStaleProcessingSources: jest.fn(),
+      findStaleProcessingSourceIds: jest.fn(),
       save: jest.fn().mockImplementation(async (source) => source),
       saveTextSource: jest.fn(),
       extractTextLines: jest.fn(),

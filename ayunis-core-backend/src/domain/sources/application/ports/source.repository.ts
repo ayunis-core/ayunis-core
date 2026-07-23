@@ -13,7 +13,10 @@ export abstract class SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource>;
-  abstract findStaleProcessingSources(threshold: Date): Promise<Source[]>;
+  abstract findStaleProcessingSourceIds(
+    staleBefore: Date,
+    limit: number,
+  ): Promise<UUID[]>;
   abstract save(source: Source): Promise<Source>;
   /** Atomically update status only if the current status matches `fromStatus`. Returns true if the row was updated. */
   abstract updateStatusConditionally(
