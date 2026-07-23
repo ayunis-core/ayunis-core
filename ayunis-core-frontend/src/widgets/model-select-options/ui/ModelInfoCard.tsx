@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
+import { TierStars } from '@/widgets/model-type-card';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { getModelKeyFallbacks } from '../lib/getModelKey';
 
 export type ModelInfoModel = Pick<
   PermittedLanguageModelResponseDto,
-  'name' | 'provider' | 'displayName' | 'tier'
+  'name' | 'provider' | 'displayName' | 'tier' | 'description'
 >;
 
 interface ModelInfoCardProps {
@@ -16,31 +16,29 @@ interface ModelInfoCardProps {
 export default function ModelInfoCard({ model }: Readonly<ModelInfoCardProps>) {
   const { t } = useTranslation('common');
 
-  const descriptionKeys = getModelKeyFallbacks(model.name).map(
-    (key) => `models.descriptions.${key}`,
-  );
-  const description = t([...descriptionKeys, 'models.descriptions.fallback']);
+  const description = model.description?.trim();
   const hostingDetail = t(`models.providerHosting.${model.provider}`, {
     defaultValue: '',
   });
   const flag = getFlagByProvider(model.provider);
 
-  const badges: string[] = [];
-  if (model.tier) badges.push(t(`models.usage.${model.tier}`));
-
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <p className="text-sm font-semibold">{model.displayName}</p>
-        <p className="text-sm">{description}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-semibold">{model.displayName}</p>
+          {model.tier && <TierStars tier={model.tier} />}
+        </div>
+        {description && <p className="text-sm">{description}</p>}
       </div>
-      {badges.length > 0 && (
+      {model.tier && (
         <div className="flex flex-wrap gap-1">
-          {badges.map((b) => (
-            <Badge key={b} variant="secondary" className="font-normal">
-              {b}
-            </Badge>
-          ))}
+          <Badge variant="secondary" className="font-normal">
+            {t(`models.tierPerformance.${model.tier}`)}
+          </Badge>
+          <Badge variant="secondary" className="font-normal">
+            {t(`models.tierUsage.${model.tier}`)}
+          </Badge>
         </div>
       )}
       {hostingDetail && (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Popover,
@@ -58,12 +58,28 @@ export default function ModelSelectOptions({
 }: Readonly<ModelSelectOptionsProps>) {
   const { t } = useTranslation('common');
   const [hoveredModel, setHoveredModel] = useState<ModelOption | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
   const sortedModels = [...models].sort(compareModels);
+
+  const cancelScheduledClose = () => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  // Grace period so the cursor can travel from the list into the card
+  const scheduleClose = () => {
+    cancelScheduledClose();
+    closeTimerRef.current = window.setTimeout(() => setHoveredModel(null), 150);
+  };
+
+  useEffect(() => cancelScheduledClose, []);
 
   return (
     <Popover open={!!hoveredModel}>
       <PopoverAnchor asChild>
-        <div onMouseLeave={() => setHoveredModel(null)}>
+        <div onMouseLeave={scheduleClose}>
           <SelectGroup>
             {showHeading && (
               <SelectLabel>{t('models.availableHeading')}</SelectLabel>
@@ -74,7 +90,10 @@ export default function ModelSelectOptions({
                 <SelectItem
                   key={model.id}
                   value={model.id}
-                  onMouseEnter={() => setHoveredModel(model)}
+                  onMouseEnter={() => {
+                    cancelScheduledClose();
+                    setHoveredModel(model);
+                  }}
                 >
                   {showFlag
                     ? `${getFlagByProvider(model.provider)} ${name}`
@@ -97,8 +116,12 @@ export default function ModelSelectOptions({
         align="start"
         sideOffset={12}
         alignOffset={-4}
-        className="pointer-events-none w-80"
+        // pointer-events-auto so hovering the card keeps it open while the
+        // Radix Select locks pointer events on the body
+        className="pointer-events-auto w-80"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onMouseEnter={cancelScheduledClose}
+        onMouseLeave={scheduleClose}
       >
         {hoveredModel && <ModelInfoCard model={hoveredModel} />}
       </PopoverContent>

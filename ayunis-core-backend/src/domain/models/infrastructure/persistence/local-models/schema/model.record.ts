@@ -82,6 +82,12 @@ export class LanguageModelRecord extends ModelRecord {
     nullable: true,
   })
   tier?: string | null;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  description?: string | null;
 }
 
 @ChildEntity(ModelType.EMBEDDING)

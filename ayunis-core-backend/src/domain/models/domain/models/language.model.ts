@@ -19,6 +19,8 @@ export class LanguageModel extends Model {
    * tracked in AYC-109.
    */
   public readonly tier?: ModelTier;
+  /** User-facing description maintained by super admins in the model catalog */
+  public readonly description?: string;
 
   constructor(params: {
     id?: UUID;
@@ -35,6 +37,7 @@ export class LanguageModel extends Model {
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
+    description?: string;
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     this.canStream = params.canStream;
@@ -44,6 +47,7 @@ export class LanguageModel extends Model {
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;
+    this.description = params.description;
   }
 
   /**

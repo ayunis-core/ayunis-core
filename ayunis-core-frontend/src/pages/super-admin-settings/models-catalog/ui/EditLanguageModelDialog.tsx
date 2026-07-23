@@ -1,7 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUpdateLanguageModel } from '../api/useUpdateLanguageModel';
 import type { LanguageModelFormData } from '../model/types';
+import { normalizeLanguageModelFormData } from '../lib/normalizeLanguageModelFormData';
 import type {
   LanguageModelResponseDto,
   UpdateLanguageModelRequestDtoProvider,
@@ -10,6 +12,7 @@ import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
 import { LanguageModelTierField } from './LanguageModelTierField';
+import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
 import { ModelPricingFields } from './ModelPricingFields';
 
 interface EditLanguageModelDialogProps {
@@ -23,6 +26,7 @@ export function EditLanguageModelDialog({
   open,
   onOpenChange,
 }: Readonly<EditLanguageModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const { updateLanguageModel, isUpdating } = useUpdateLanguageModel(() => {
     onOpenChange(false);
   });
@@ -38,6 +42,7 @@ export function EditLanguageModelDialog({
       isReasoning: false,
       isArchived: false,
       tier: undefined,
+      description: '',
     },
   });
 
@@ -56,33 +61,36 @@ export function EditLanguageModelDialog({
         inputTokenCost: model.inputTokenCost,
         outputTokenCost: model.outputTokenCost,
         tier: model.tier,
+        description: model.description ?? '',
       });
     }
   }, [model, open, form]);
 
   const handleSubmit = (data: LanguageModelFormData) => {
     if (!model) return;
-    updateLanguageModel(model.id, data);
+    updateLanguageModel(model.id, normalizeLanguageModelFormData(data));
   };
 
   return (
     <ModelFormDialog
-      title="Edit Language Model"
+      title={t('models.catalog.dialog.editLanguageTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={handleSubmit}
       isSubmitting={isUpdating}
-      submitLabel="Update"
-      submittingLabel="Updating..."
+      mode="edit"
       providers={LANGUAGE_MODEL_PROVIDERS}
-      namePlaceholder="e.g., gpt-4"
-      displayNamePlaceholder="e.g., GPT-4"
+      namePlaceholder={t('models.catalog.dialog.languageNamePlaceholder')}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.languageDisplayNamePlaceholder',
+      )}
       hasContent={!!model}
     >
+      <LanguageModelTierField form={form} disabled={isUpdating} />
+      <LanguageModelDescriptionField form={form} disabled={isUpdating} />
       <LanguageModelCapabilityFields form={form} disabled={isUpdating} />
       <ModelPricingFields form={form} disabled={isUpdating} />
-      <LanguageModelTierField form={form} disabled={isUpdating} />
     </ModelFormDialog>
   );
 }

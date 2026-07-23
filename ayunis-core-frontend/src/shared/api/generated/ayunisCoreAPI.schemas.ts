@@ -805,6 +805,8 @@ export interface ModelWithConfigResponseDto {
   anonymousOnly: boolean | null;
   /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
   tier?: ModelWithConfigResponseDtoTier;
+  /** User-facing description of the model, shown in the model selector info card. Maintained by super admins. */
+  description?: string;
 }
 
 /**
@@ -945,6 +947,11 @@ export interface PermittedLanguageModelResponseDto {
    * @nullable
    */
   tier?: PermittedLanguageModelResponseDtoTier;
+  /**
+   * User-facing description of the model, shown in the model selector info card. Maintained by super admins.
+   * @nullable
+   */
+  description?: string | null;
 }
 
 /**
@@ -1179,6 +1186,8 @@ export interface LanguageModelResponseDto {
   outputTokenCost?: number;
   /** Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
   tier?: LanguageModelResponseDtoTier;
+  /** User-facing description of the model, shown in the model selector info card. Maintained by super admins. */
+  description?: string;
 }
 
 /**
@@ -1362,6 +1371,11 @@ export interface CreateLanguageModelRequestDto {
   outputTokenCost?: number;
   /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
   tier?: CreateLanguageModelRequestDtoTier;
+  /**
+   * User-facing description of the model, shown in the model selector info card. Maintained by super admins.
+   * @maxLength 500
+   */
+  description?: string;
 }
 
 /**
@@ -1429,6 +1443,11 @@ export interface UpdateLanguageModelRequestDto {
   outputTokenCost?: number;
   /** Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109. */
   tier?: UpdateLanguageModelRequestDtoTier;
+  /**
+   * User-facing description of the model, shown in the model selector info card. Maintained by super admins.
+   * @maxLength 500
+   */
+  description?: string;
 }
 
 /**

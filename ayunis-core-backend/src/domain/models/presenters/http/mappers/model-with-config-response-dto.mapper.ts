@@ -6,6 +6,27 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
 export class ModelWithConfigResponseDtoMapper {
+  private languageModelFields(model: Model) {
+    if (!(model instanceof LanguageModel)) {
+      return {
+        canStream: false,
+        isReasoning: false,
+        canUseTools: false,
+        canVision: false,
+        tier: undefined,
+        description: undefined,
+      };
+    }
+    return {
+      canStream: model.canStream,
+      isReasoning: model.isReasoning,
+      canUseTools: model.canUseTools,
+      canVision: model.canVision,
+      tier: model.tier,
+      description: model.description,
+    };
+  }
+
   toDto(
     allModels: Model[],
     permittedModels: PermittedModel[],
@@ -24,14 +45,10 @@ export class ModelWithConfigResponseDtoMapper {
         provider: model.provider,
         displayName: model.displayName,
         type: model.type,
-        canStream: model instanceof LanguageModel ? model.canStream : false,
-        isReasoning: model instanceof LanguageModel ? model.isReasoning : false,
-        canUseTools: model instanceof LanguageModel ? model.canUseTools : false,
-        canVision: model instanceof LanguageModel ? model.canVision : false,
         isPermitted,
         isDefault,
         anonymousOnly: permittedModel?.anonymousOnly,
-        tier: model instanceof LanguageModel ? model.tier : undefined,
+        ...this.languageModelFields(model),
       };
     });
   }

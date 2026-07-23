@@ -11301,6 +11301,10 @@
             "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models.",
             "example": "medium"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins."
           }
         },
         "required": [
@@ -11458,6 +11462,11 @@
             "enum": ["zero", "low", "medium", "high"],
             "nullable": true,
             "description": "Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins."
           }
         },
         "required": [
@@ -11786,6 +11795,11 @@
             "enum": ["zero", "low", "medium", "high"],
             "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
             "example": "medium"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
+            "example": "Geeignet für komplexe Aufgaben und lange Dokumente."
           }
         },
         "required": [
@@ -12031,6 +12045,12 @@
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
             "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
+            "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
+            "maxLength": 500
           }
         },
         "required": [
@@ -12118,6 +12138,12 @@
             "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
             "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
+          },
+          "description": {
+            "type": "string",
+            "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
+            "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
+            "maxLength": 500
           }
         },
         "required": [

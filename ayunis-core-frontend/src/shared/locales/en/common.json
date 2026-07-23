@@ -129,13 +129,19 @@
   "models": {
     "availableHeading": "Available models",
     "category": {
-      "zero": "Fast",
-      "low": "Fast",
+      "zero": "Very weak",
+      "low": "Weak",
       "medium": "Balanced",
       "high": "Powerful"
     },
-    "usage": {
-      "zero": "Unlimited use",
+    "tierPerformance": {
+      "zero": "Very weak performance",
+      "low": "Weak performance",
+      "medium": "Balanced performance",
+      "high": "Powerful"
+    },
+    "tierUsage": {
+      "zero": "No usage",
       "low": "Low usage",
       "medium": "Medium usage",
       "high": "High usage"
@@ -153,25 +159,6 @@
       "synaforce": "Hosted in Germany on Ayunis sovereign cloud.",
       "ayunis": "Hosted in Germany on Ayunis sovereign cloud.",
       "ollama": "Self-hosted via Ollama."
-    },
-    "descriptions": {
-      "fallback": "Suitable for general tasks such as writing, summarising, and answering questions.",
-      "gpt-5": "Suitable for research, longer texts and multi-step tasks.",
-      "gpt-5_1": "Suitable for everyday tasks like emails, summaries and simple research.",
-      "gpt-5_2": "Suitable for more complex tasks, longer texts and analyses.",
-      "gpt-5_4": "Suitable for very complex tasks, longer research and multi-step analyses.",
-      "gpt-5-mini": "Suitable for short answers and simple tasks.",
-      "gpt-4o": "Suitable for everyday tasks such as writing, summarising and answering questions.",
-      "gpt-4": "Older model for simple tasks such as short texts and answering questions.",
-      "claude-opus-4-7": "Suitable for very complex tasks, thorough analyses and longer research.",
-      "claude-sonnet-4-6": "A solid choice for longer texts, research and more complex tasks.",
-      "claude-haiku-4-5": "Suitable for short answers and simple tasks.",
-      "claude-3-5-sonnet": "Suitable for general tasks and longer texts.",
-      "claude-3": "Older model for simple tasks such as short texts and answering questions.",
-      "mistral-large": "Suitable for demanding tasks and longer texts.",
-      "mistral-small": "Suitable for short answers and simple tasks.",
-      "gemini-3-5-flash": "Suitable for short answers and simple tasks.",
-      "gemini-2-5-pro": "Suitable for more complex tasks and longer texts."
     }
   },
   "mfa": {
