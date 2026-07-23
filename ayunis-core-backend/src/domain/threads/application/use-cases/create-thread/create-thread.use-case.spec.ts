@@ -14,6 +14,7 @@ import {
   NoModelProvidedError,
   ThreadCreationError,
 } from '../../threads.errors';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 
 describe('CreateThreadUseCase', () => {
@@ -147,6 +148,23 @@ describe('CreateThreadUseCase', () => {
         NoModelProvidedError,
       );
       expect(getPermittedLanguageModelUseCase.execute).not.toHaveBeenCalled();
+      expect(threadsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should propagate UnauthorizedAccessError when the model is not permitted', async () => {
+      // Arrange
+      const command = new CreateThreadCommand({
+        modelId: mockModelId,
+      });
+
+      getPermittedLanguageModelUseCase.execute.mockRejectedValue(
+        new UnauthorizedAccessError(),
+      );
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        UnauthorizedAccessError,
+      );
       expect(threadsRepository.create).not.toHaveBeenCalled();
     });
 
