@@ -8,6 +8,8 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
+import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
+import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -20,6 +22,7 @@ describe('StartDocumentProcessingUseCase', () => {
   let mockUploadObjectUseCase: jest.Mocked<UploadObjectUseCase>;
   let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
   let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
+  let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
 
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -58,6 +61,10 @@ describe('StartDocumentProcessingUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<EnqueueDocumentProcessingUseCase>;
 
+    mockGetPermittedEmbeddingModelUseCase = {
+      execute: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<GetPermittedEmbeddingModelUseCase>;
+
     mockContextService = {
       get: jest.fn().mockImplementation((key: string) => {
         if (key === 'orgId') return orgId;
@@ -86,6 +93,10 @@ describe('StartDocumentProcessingUseCase', () => {
         {
           provide: EnqueueDocumentProcessingUseCase,
           useValue: mockEnqueueDocumentProcessingUseCase,
+        },
+        {
+          provide: GetPermittedEmbeddingModelUseCase,
+          useValue: mockGetPermittedEmbeddingModelUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -174,6 +185,27 @@ describe('StartDocumentProcessingUseCase', () => {
 
     // MinIO file should be cleaned up
     expect(mockDeleteObjectUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject before creating a source when the org has no permitted embedding model', async () => {
+    mockGetPermittedEmbeddingModelUseCase.execute.mockRejectedValue(
+      new PermittedEmbeddingModelNotFoundForOrgError(orgId),
+    );
+
+    const command = new StartDocumentProcessingCommand({
+      fileData: Buffer.from('fake pdf content'),
+      fileName: 'Protokoll.pdf',
+      fileType: 'application/pdf',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      PermittedEmbeddingModelNotFoundForOrgError,
+    );
+
+    // Nothing was created, uploaded, or enqueued
+    expect(mockCreateProcessingSourceUseCase.execute).not.toHaveBeenCalled();
+    expect(mockUploadObjectUseCase.execute).not.toHaveBeenCalled();
+    expect(mockEnqueueDocumentProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should throw when orgId is missing from context', async () => {
