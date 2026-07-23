@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -80,6 +81,7 @@ const EXCEPTION_FACTORIES: Record<
   429: (body) => new HttpException(body, HttpStatus.TOO_MANY_REQUESTS),
   500: (body) => new InternalServerErrorException(body),
   501: (body) => new NotImplementedException(body),
+  502: (body) => new BadGatewayException(body),
   503: (body) => new ServiceUnavailableException(body),
   504: (body) => new GatewayTimeoutException(body),
 };

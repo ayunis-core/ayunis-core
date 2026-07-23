@@ -8,7 +8,7 @@ import {
 import { InferenceFailedError } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
+import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
 
 @Injectable()
 export class GetInferenceUseCase {

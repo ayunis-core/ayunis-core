@@ -1,4 +1,4 @@
-import { ApplicationError } from 'src/common/errors/base.error';
+import { ApplicationError } from './base.error';
 import { extractUpstreamStatus } from './extract-upstream-status.helper';
 
 class TestDomainError extends ApplicationError {
