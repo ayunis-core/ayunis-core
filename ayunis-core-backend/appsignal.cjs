@@ -3,8 +3,12 @@
 // patches http/express/pg before any application module is required.
 const { config } = require('dotenv');
 const { Appsignal } = require('@appsignal/nodejs');
+const {
+  UndiciInstrumentation,
+} = require('@opentelemetry/instrumentation-undici');
 const { readFileSync } = require('fs');
 const { join } = require('path');
+const { isCrawlerRequest } = require('./appsignal-hooks.cjs');
 
 // This file runs before main.ts imports src/config/env, so load the same
 // .env files here (dotenv never overwrites variables already set, so the
@@ -52,6 +56,25 @@ if (pushApiKey && environment !== 'development') {
     // spans and route-based action names.
     disableDefaultInstrumentations: [
       '@opentelemetry/instrumentation-nestjs-core',
+      // Replaced by the configured instance below.
+      '@opentelemetry/instrumentation-undici',
+    ],
+    // The undici instrumentation records raw socket errors (ENOTFOUND,
+    // EAI_AGAIN, connect/body timeouts, aborts) on outbound-request spans
+    // even when application code catches and handles them. Crawler fetches
+    // target arbitrary user-supplied URLs whose failures are expected and
+    // already surface as domain errors, so those requests are not
+    // instrumented at all. Requests to model/OCR providers don't carry the
+    // crawler User-Agent and stay fully instrumented — genuine inference
+    // errors must keep reporting.
+    additionalInstrumentations: [
+      new UndiciInstrumentation({
+        // AppSignal's default for its own undici instrumentation — without
+        // it, fire-and-forget fetches outside any request context create
+        // orphan root spans.
+        requireParentforSpans: true,
+        ignoreRequestHook: isCrawlerRequest,
+      }),
     ],
     // Queue consumers rename job failures that BullMQ will retry to this
     // error (see bullmq-job.helpers.ts), so only final failures — thrown
