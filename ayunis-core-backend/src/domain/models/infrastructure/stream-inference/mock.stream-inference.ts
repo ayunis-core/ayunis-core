@@ -1,3 +1,4 @@
+import type { ModelProvider, ProviderChunk } from '@ayunis/inference';
 import {
   StreamInferenceHandler,
   StreamInferenceInput,
@@ -9,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
+import type { Model } from '../../domain/model.entity';
 
 /**
  * Mock streaming inference handler for testing environments.
@@ -55,7 +57,7 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       }
 
       // Check if this is a naming request
-      const namingMatch = textContent.match(/Name this chat (\S+)/i);
+      const namingMatch = /Name this chat (\S+)/i.exec(textContent);
       if (namingMatch) {
         // Include the requested name in the response
         const requestedName = namingMatch[1];
@@ -69,5 +71,21 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       thinkingDelta: null,
     });
     return of(chunk);
+  }
+
+  /**
+   * Deterministic provider for the agent-runtime path under NODE_ENV=test:
+   * emits a single text chunk of `{provider}::{model}`, mirroring `answer()`
+   * so runtime-backed specs stay fast, offline, and key-free.
+   */
+  resolveProvider(model: Model): ModelProvider {
+    const responseText = `${model.provider}::${model.name}`;
+    return {
+      name: responseText,
+      // eslint-disable-next-line @typescript-eslint/require-await -- generator satisfies the async ModelProvider.stream contract
+      stream: async function* (): AsyncIterable<ProviderChunk> {
+        yield { textDelta: responseText, finishReason: 'stop' };
+      },
+    };
   }
 }
