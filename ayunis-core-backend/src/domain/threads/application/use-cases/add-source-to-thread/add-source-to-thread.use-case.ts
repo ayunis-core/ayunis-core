@@ -12,6 +12,23 @@ import {
 } from '../../threads.errors';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 
+const PG_UNIQUE_VIOLATION = '23505';
+
+// The duplicate check below is check-then-insert and can race with a
+// concurrent add of the same source; the database unique violation is the
+// authoritative signal and must map to the same 409 as the app-level check.
+function isUniqueConstraintViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const record = error as Record<string, unknown>;
+  const driverError = record.driverError as Record<string, unknown> | undefined;
+  return (
+    record.code === PG_UNIQUE_VIOLATION ||
+    driverError?.code === PG_UNIQUE_VIOLATION
+  );
+}
+
 @Injectable()
 export class AddSourceToThreadUseCase {
   private readonly logger = new Logger(AddSourceToThreadUseCase.name);
@@ -46,19 +63,7 @@ export class AddSourceToThreadUseCase {
       }
 
       const currentAssignments = freshThread.sourceAssignments ?? [];
-
-      // Check if source already exists in thread (against DB state)
-      const sourceExists = currentAssignments.some(
-        (assignment) => assignment.source.id === command.source.id,
-      );
-
-      if (sourceExists) {
-        throw new SourceAlreadyAssignedError(command.source.id);
-      }
-
-      if (currentAssignments.length >= ThreadsConstants.MAX_SOURCES) {
-        throw new ThreadSourceLimitExceededError(ThreadsConstants.MAX_SOURCES);
-      }
+      this.assertSourceCanBeAdded(currentAssignments, command.source.id);
 
       const sourceAssignment = new SourceAssignment({
         source: command.source,
@@ -71,11 +76,33 @@ export class AddSourceToThreadUseCase {
         sourceAssignments: updatedAssignments,
       });
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('addSource', error);
-      throw new SourceAdditionError(command.thread.id, error as Error);
+      throw this.mapAddSourceError(error, command);
     }
+  }
+
+  private assertSourceCanBeAdded(
+    assignments: SourceAssignment[],
+    sourceId: string,
+  ): void {
+    const sourceExists = assignments.some(
+      (assignment) => assignment.source.id === sourceId,
+    );
+    if (sourceExists) {
+      throw new SourceAlreadyAssignedError(sourceId);
+    }
+    if (assignments.length >= ThreadsConstants.MAX_SOURCES) {
+      throw new ThreadSourceLimitExceededError(ThreadsConstants.MAX_SOURCES);
+    }
+  }
+
+  private mapAddSourceError(error: unknown, command: AddSourceCommand): Error {
+    if (error instanceof ApplicationError) {
+      return error;
+    }
+    if (isUniqueConstraintViolation(error)) {
+      return new SourceAlreadyAssignedError(command.source.id);
+    }
+    this.logger.error('addSource', error);
+    return new SourceAdditionError(command.thread.id, error as Error);
   }
 }

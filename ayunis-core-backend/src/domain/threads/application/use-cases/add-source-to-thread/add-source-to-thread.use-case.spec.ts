@@ -18,7 +18,10 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import { SourceAlreadyAssignedError } from '../../threads.errors';
+import {
+  SourceAdditionError,
+  SourceAlreadyAssignedError,
+} from '../../threads.errors';
 
 class ConcreteSource extends Source {
   constructor(params: { id?: UUID; name: string }) {
@@ -168,6 +171,44 @@ describe('AddSourceToThreadUseCase', () => {
       SourceAlreadyAssignedError,
     );
     expect(threadsRepository.updateSourceAssignments).not.toHaveBeenCalled();
+  });
+
+  it('should map a unique-constraint violation from the database to SourceAlreadyAssignedError', async () => {
+    const source = new ConcreteSource({ name: 'Raced.pdf' });
+    const thread = new Thread({
+      userId: mockUserId,
+      messages: [],
+      sourceAssignments: [],
+    });
+    const command = new AddSourceCommand(thread, source);
+
+    threadsRepository.findOne.mockResolvedValue(thread);
+    const dbError = Object.assign(
+      new Error('duplicate key value violates unique constraint'),
+      { driverError: { code: '23505' } },
+    );
+    threadsRepository.updateSourceAssignments.mockRejectedValue(dbError);
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      SourceAlreadyAssignedError,
+    );
+  });
+
+  it('should wrap other database errors in SourceAdditionError', async () => {
+    const source = new ConcreteSource({ name: 'Broken.pdf' });
+    const thread = new Thread({
+      userId: mockUserId,
+      messages: [],
+      sourceAssignments: [],
+    });
+    const command = new AddSourceCommand(thread, source);
+
+    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.updateSourceAssignments.mockRejectedValue(
+      new Error('Connection terminated'),
+    );
+
+    await expect(useCase.execute(command)).rejects.toThrow(SourceAdditionError);
   });
 
   it('should detect duplicates from DB even when in-memory thread is stale', async () => {
