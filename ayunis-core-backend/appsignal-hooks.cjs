@@ -27,6 +27,16 @@
 //    `ignoreErrors`.
 // 4. Otherwise it is signal. Tune the alert threshold; do not suppress.
 //
+// PROVIDER OUTAGES ARE TRIAGE STEP 4, NEVER A SUPPRESSION
+//
+// External provider failures (LLM / embeddings / OCR) arrive as the
+// ProviderUnavailableError family (src/common/errors/provider.errors.ts) with
+// name === code === PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>, so both reporting
+// paths group them identically: setError() groups by name, the BullMQ OTel
+// recordException path prefers code. That yields one incident per provider and
+// failure class, which is the whole point — adding them to SUPPRESSIONS would
+// blind the rate/anomaly triggers that make an outage visible (AYC-538).
+//
 // STANDING RULE
 //
 // The incident list is a queryable record, not a work queue. Per-occurrence
