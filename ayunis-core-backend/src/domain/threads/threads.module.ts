@@ -19,6 +19,7 @@ import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
 import { AddMessageToThreadUseCase } from './application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddSourceToThreadUseCase } from './application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
+import { AddFileSourceToThreadUseCase } from './application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
 import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from './application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { UpdateThreadTitleUseCase } from './application/use-cases/update-thread-title/update-thread-title.use-case';
@@ -76,6 +77,7 @@ import { McpModule } from '../mcp/mcp.module';
     MessageImagesController,
   ],
   providers: [
+    AddFileSourceToThreadUseCase,
     {
       provide: ThreadsRepository,
       useExisting: LocalThreadsRepository,

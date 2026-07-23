@@ -42,6 +42,7 @@ skills/
 │       ├── toggle-skill-pinned/
 │       ├── find-active-skills/
 │       ├── add-source-to-skill/
+│       ├── add-file-source-to-skill/
 │       ├── remove-source-from-skill/
 │       ├── list-skill-sources/
 │       ├── assign-mcp-integration-to-skill/
@@ -71,7 +72,7 @@ skills/
 
 ## Design Decisions
 
-Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` pattern. The domain entity stores `sourceIds: UUID[]` and `mcpIntegrationIds: UUID[]`. Full entity objects are fetched via dedicated list use cases (`ListSkillSourcesUseCase`, `ListSkillMcpIntegrationsUseCase`) that batch-fetch by IDs.
+Both sources and MCP integrations use the same `@ManyToMany` + `@JoinTable` pattern. The domain entity stores `sourceIds: UUID[]` and `mcpIntegrationIds: UUID[]`. Full entity objects are fetched via dedicated list use cases (`ListSkillSourcesUseCase`, `ListSkillMcpIntegrationsUseCase`) that batch-fetch by IDs. File uploads are orchestrated by `AddFileSourceToSkillUseCase`, which detects the file type, dispatches documents to processing and CSV/spreadsheet files to data-source creation via the sources module's `DataSourceCommandBuilderService`, and attaches every created source to the skill (the CSV and spreadsheet paths are transactional); the controller only handles the HTTP concerns.
 
 Activation state is stored in a separate `skill_activations` table rather than a boolean on the skill entity. This allows tracking activation per user without modifying the skill record itself. The `SkillActivationRecord` has a unique constraint on `(skillId, userId)` to ensure each user can only have one activation per skill. The repository uses atomic upsert operations (`INSERT ... ON CONFLICT DO NOTHING`) to handle concurrent activation requests safely.
 

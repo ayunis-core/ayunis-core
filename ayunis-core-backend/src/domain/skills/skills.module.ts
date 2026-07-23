@@ -22,6 +22,7 @@ import { ToggleSkillActiveUseCase } from './application/use-cases/toggle-skill-a
 import { ToggleSkillPinnedUseCase } from './application/use-cases/toggle-skill-pinned/toggle-skill-pinned.use-case';
 import { FindActiveSkillsUseCase } from './application/use-cases/find-active-skills/find-active-skills.use-case';
 import { AddSourceToSkillUseCase } from './application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
+import { AddFileSourceToSkillUseCase } from './application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { RemoveSourceFromSkillUseCase } from './application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
 import { ListSkillSourcesUseCase } from './application/use-cases/list-skill-sources/list-skill-sources.use-case';
 import { AssignMcpIntegrationToSkillUseCase } from './application/use-cases/assign-mcp-integration-to-skill/assign-mcp-integration-to-skill.use-case';
@@ -82,6 +83,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     forwardRef(() => ThreadsModule),
   ],
   providers: [
+    AddFileSourceToSkillUseCase,
     {
       provide: SkillRepository,
       useClass: LocalSkillRepository,
