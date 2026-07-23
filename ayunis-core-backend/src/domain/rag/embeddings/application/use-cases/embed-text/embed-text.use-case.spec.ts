@@ -1,6 +1,7 @@
 import { EmbedTextUseCase } from './embed-text.use-case';
 import { EmbedTextCommand } from './embed-text.command';
 import { NoEmbeddingsReturnedError } from '../../embeddings.errors';
+import { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 import {
   ProviderConnectionError,
   ProviderServerError,
@@ -34,7 +35,9 @@ function useCaseWithFailingHandler(error: Error): EmbedTextUseCase {
 
 describe('EmbedTextUseCase error mapping', () => {
   it('passes ApplicationErrors through unchanged', async () => {
-    const domainError = new NoEmbeddingsReturnedError('mistral');
+    const domainError = new NoEmbeddingsReturnedError(
+      EmbeddingsProvider.MISTRAL,
+    );
 
     await expect(
       useCaseWithFailingHandler(domainError).execute(makeCommand()),
