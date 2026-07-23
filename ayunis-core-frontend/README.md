@@ -1,4 +1,4 @@
-Welcome to your new TanStack app! 
+Welcome to your new TanStack app!
 
 # Getting Started
 
@@ -28,8 +28,6 @@ npm run test
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-
 
 ## Shadcn
 
@@ -62,11 +60,16 @@ To add components from the Ayunis registry:
 pnpx shadcn@latest add @ayunis/component-name
 ```
 
-**Note:** You need to set the `AYUNIS_REGISTRY_TOKEN` environment variable and have the registry server running on port 1998.
+**Note:** You need the `AYUNIS_REGISTRY_TOKEN` environment variable set and the registry server reachable. Team members get the token injected from Infisical:
 
+```bash
+infisical run --env=dev --path=/frontend -- pnpx shadcn@latest add @ayunis/component-name
+```
 
+(The `ui-library-update` GitHub workflow keeps its own Actions secret.)
 
 ## Routing
+
 This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
 
 ### Adding A Route
@@ -126,7 +129,6 @@ export const Route = createRootRoute({
 The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
 
 More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
 
 ## Data Fetching
 
