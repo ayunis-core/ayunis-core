@@ -7,9 +7,10 @@ import {
 import {
   FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
-  ServiceBusyError,
-  ServiceTimeoutError,
 } from '../../application/file-retriever.errors';
+import type { ApplicationError } from 'src/common/errors/base.error';
+import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
@@ -59,19 +60,33 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         error instanceof Error ? error.stack : 'Unknown error',
       );
 
-      const metadata = { model: this.MODEL_NAME };
-
-      if (error instanceof MistralError) {
-        if (error.statusCode === 502 || error.statusCode === 503) {
-          throw new ServiceBusyError(metadata);
-        }
-        if (error.statusCode === 504) {
-          throw new ServiceTimeoutError(metadata);
-        }
-      }
-
-      throw new FileRetrieverUnexpectedError(error as Error, metadata);
+      throw this.mapProcessingError(error);
     }
+  }
+
+  private mapProcessingError(error: unknown): ApplicationError {
+    const ctx = { provider: 'mistral', modelId: this.MODEL_NAME };
+
+    const providerError = wrapProviderFailure(error, ctx);
+    if (providerError) return providerError;
+
+    // OCR requests are machine-generated, so a 4xx is the provider choking
+    // on a document, not a bug in how we built the request (AYC-538) —
+    // except auth failures, which are our configuration's fault and must
+    // stay a distinct, first-occurrence-alerting incident.
+    if (
+      error instanceof MistralError &&
+      isProviderRejection(error.statusCode)
+    ) {
+      return new ProviderRequestRejectedError(
+        { ...ctx, upstreamStatus: error.statusCode },
+        error,
+      );
+    }
+
+    return new FileRetrieverUnexpectedError(error as Error, {
+      model: this.MODEL_NAME,
+    });
   }
 
   private async uploadFile(fileBlob: Blob): Promise<string> {
@@ -169,4 +184,13 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       model: this.MODEL_NAME,
     });
   }
+}
+
+function isProviderRejection(statusCode: number): boolean {
+  return (
+    statusCode >= 400 &&
+    statusCode < 500 &&
+    statusCode !== 401 &&
+    statusCode !== 403
+  );
 }
