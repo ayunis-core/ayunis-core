@@ -1,5 +1,16 @@
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
+
+// p-limit is ESM-only — mock the dynamic import so Jest (CJS) doesn't choke.
+// (Pulled in transitively via UrlCrawlConsumer → CrawlUrlUseCase.)
+jest.mock('p-limit', () => ({
+  __esModule: true,
+  default:
+    () =>
+    <T>(fn: () => T) =>
+      fn(),
+}));
+
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -166,5 +177,26 @@ describe('UrlCrawlConsumer', () => {
 
     await expect(consumer.process(job)).rejects.toThrow('root unreachable');
     expect(indexer.markFailed).toHaveBeenCalled();
+  });
+
+  it('rethrows as JobRetryScheduledError when retries remain, so AppSignal ignores the attempt', async () => {
+    const source = makeSource();
+    sourceRepository.findById.mockResolvedValue(source);
+    crawlUrlUseCase.execute.mockRejectedValueOnce(
+      new Error('root unreachable'),
+    );
+
+    const job = {
+      data: makeJobData(),
+      id: 'job-1',
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+    } as unknown as Job<UrlCrawlJobData>;
+
+    await expect(consumer.process(job)).rejects.toMatchObject({
+      name: 'JobRetryScheduledError',
+      message: 'root unreachable',
+    });
+    expect(indexer.markFailed).not.toHaveBeenCalled();
   });
 });
