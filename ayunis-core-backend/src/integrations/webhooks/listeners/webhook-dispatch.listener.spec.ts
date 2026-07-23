@@ -25,6 +25,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
 import type { UsageCollectedWebhookPayload } from '../domain/webhook-events/usage-collected.webhook-event';
 import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
+import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
 
@@ -74,6 +75,7 @@ describe('WebhookDispatchListener', () => {
   let listener: WebhookDispatchListener;
   let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
   let findUserByIdUseCase: jest.Mocked<FindUserByIdUseCase>;
+  let findOrgByIdUseCase: jest.Mocked<FindOrgByIdUseCase>;
   let configService: jest.Mocked<ConfigService>;
 
   beforeEach(() => {
@@ -83,6 +85,9 @@ describe('WebhookDispatchListener', () => {
     findUserByIdUseCase = {
       execute: jest.fn().mockResolvedValue(makeUser()),
     } as unknown as jest.Mocked<FindUserByIdUseCase>;
+    findOrgByIdUseCase = {
+      execute: jest.fn().mockResolvedValue(makeOrg()),
+    } as unknown as jest.Mocked<FindOrgByIdUseCase>;
     configService = {
       get: jest.fn().mockReturnValue('https://connect.example.com/webhooks'),
     } as unknown as jest.Mocked<ConfigService>;
@@ -90,12 +95,13 @@ describe('WebhookDispatchListener', () => {
     listener = new WebhookDispatchListener(
       sendWebhookUseCase,
       findUserByIdUseCase,
+      findOrgByIdUseCase,
       configService,
     );
   });
 
   describe('handleUserCreated', () => {
-    it('should dispatch UserCreatedWebhookEvent', async () => {
+    it('should dispatch UserCreatedWebhookEvent enriched with orgName', async () => {
       const user = makeUser();
       await listener.handleUserCreated(
         new UserCreatedEvent(USER_ID, ORG_ID, user),
@@ -104,6 +110,41 @@ describe('WebhookDispatchListener', () => {
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       expect(command.event.eventType).toBe(WebhookEventType.USER_CREATED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          email: 'test@example.com',
+          orgId: ORG_ID,
+          orgName: 'Test Org',
+        }),
+      );
+    });
+
+    it('should dispatch without orgName when the org lookup fails', async () => {
+      findOrgByIdUseCase.execute.mockRejectedValueOnce(
+        new Error('org lookup failed'),
+      );
+
+      await listener.handleUserCreated(
+        new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+      );
+
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.USER_CREATED);
+      expect(
+        (command.event.data as { orgName?: string }).orgName,
+      ).toBeUndefined();
+    });
+
+    it('should skip the org lookup when no webhook receiver is configured', async () => {
+      configService.get.mockReturnValue(undefined);
+
+      await listener.handleUserCreated(
+        new UserCreatedEvent(USER_ID, ORG_ID, makeUser()),
+      );
+
+      expect(findOrgByIdUseCase.execute).not.toHaveBeenCalled();
+      expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });
 

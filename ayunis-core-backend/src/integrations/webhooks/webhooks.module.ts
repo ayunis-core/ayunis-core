@@ -1,13 +1,14 @@
 import { Logger, Module, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersModule } from 'src/iam/users/users.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { SendWebhookUseCase } from './application/use-cases/send-webhook/send-webhook.use-case';
 import { WebhookHandler } from './application/ports/webhook.handler';
 import { HttpWebhookHandler } from './infrastructure/http/http-webhook.handler';
 import { WebhookDispatchListener } from './listeners/webhook-dispatch.listener';
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, OrgsModule],
   providers: [
     {
       provide: WebhookHandler,

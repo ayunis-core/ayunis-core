@@ -17,6 +17,8 @@ import { AddonDeactivatedEvent } from 'src/iam/addons/application/events/addon-d
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { SendWebhookUseCase } from '../application/use-cases/send-webhook/send-webhook.use-case';
 import { SendWebhookCommand } from '../application/use-cases/send-webhook/send-webhook.command';
@@ -49,13 +51,23 @@ export class WebhookDispatchListener {
   constructor(
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
+    private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly configService: ConfigService,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
+    // Enrich with the org name (AYC-445, consumed by the Brevo
+    // onboarding sink). Skipped when no webhook receiver is configured.
+    const orgName = this.webhookConfigured()
+      ? await this.resolveOrgName(event.orgId)
+      : undefined;
     await this.dispatch(
-      new UserCreatedWebhookEvent({ user: event.user, orgId: event.orgId }),
+      new UserCreatedWebhookEvent({
+        user: event.user,
+        orgId: event.orgId,
+        orgName,
+      }),
     );
   }
 
@@ -206,6 +218,26 @@ export class WebhookDispatchListener {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       return null;
+    }
+  }
+
+  /**
+   * Best-effort org-name lookup for payload enrichment. Returns
+   * undefined instead of throwing so a failed lookup degrades to an
+   * un-enriched event, never a dropped webhook.
+   */
+  private async resolveOrgName(orgId: UUID): Promise<string | undefined> {
+    try {
+      const org = await this.findOrgByIdUseCase.execute(
+        new FindOrgByIdQuery(orgId),
+      );
+      return org.name;
+    } catch (error) {
+      this.logger.error('Failed to resolve org for webhook enrichment', {
+        orgId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return undefined;
     }
   }
 
