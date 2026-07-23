@@ -26,10 +26,26 @@ jest.mock('@mistralai/mistralai', () => ({
   })),
 }));
 
-// Mock retryWithBackoff to execute fn directly (no retries in tests)
+// Mock retryWithBackoff with single-retry semantics so tests can assert
+// which errors the call sites treat as retryable
 jest.mock('src/common/util/retryWithBackoff', () => ({
   __esModule: true,
-  default: ({ fn }: { fn: () => Promise<unknown> }) => fn(),
+  default: async ({
+    fn,
+    retryIfError,
+  }: {
+    fn: () => Promise<unknown>;
+    retryIfError?: (error: Error) => boolean;
+  }) => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retryIfError?.(error as Error)) {
+        return fn();
+      }
+      throw error;
+    }
+  },
 }));
 
 function createMistralError(statusCode: number, body: string): MistralError {
@@ -93,13 +109,63 @@ describe('MistralFileRetrieverHandler', () => {
     });
   });
 
+  describe('OCR flow', () => {
+    beforeEach(() => {
+      mockClient.files.upload.mockResolvedValue({ id: 'file-123' });
+      mockClient.files.delete.mockResolvedValue(undefined);
+    });
+
+    it('should run OCR by file id without requesting a signed URL', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [{ markdown: '# Content', index: 0 }],
+      });
+
+      const result = await handler.processFile(testFile);
+
+      expect(mockClient.ocr.process).toHaveBeenCalledWith(
+        expect.objectContaining({
+          document: { type: 'file', fileId: 'file-123' },
+        }),
+      );
+      expect(mockClient.files.getSignedUrl).not.toHaveBeenCalled();
+      expect(result.pages).toHaveLength(1);
+    });
+
+    it('should retry when OCR cannot see the just-uploaded file yet', async () => {
+      const notVisibleYet = createMistralError(
+        404,
+        '{"detail":"File not found"}',
+      );
+      mockClient.ocr.process
+        .mockRejectedValueOnce(notVisibleYet)
+        .mockResolvedValueOnce({
+          pages: [{ markdown: '# Content', index: 0 }],
+        });
+
+      const result = await handler.processFile(testFile);
+
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(2);
+      expect(result.pages).toHaveLength(1);
+    });
+
+    it('should not retry client errors like too many pages', async () => {
+      const tooManyPages = createMistralError(
+        400,
+        '{"type":"document_parser_too_many_pages"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(tooManyPages);
+
+      await expect(handler.processFile(testFile)).rejects.toThrow(
+        TooManyPagesError,
+      );
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('transient upstream error handling', () => {
     beforeEach(() => {
-      // Setup upload and signedUrl to succeed — error on OCR process
+      // Setup upload to succeed — error on OCR process
       mockClient.files.upload.mockResolvedValue({ id: 'file-123' });
-      mockClient.files.getSignedUrl.mockResolvedValue({
-        url: 'https://signed.url',
-      });
       mockClient.files.delete.mockResolvedValue(undefined);
     });
 
@@ -175,12 +241,12 @@ describe('MistralFileRetrieverHandler', () => {
       );
     });
 
-    it('should throw FileRetrievalFailedError when Mistral cannot find the uploaded file', async () => {
+    it('should throw FileRetrievalFailedError when the file stays invisible to OCR after retries', async () => {
       const mistralError = createMistralError(
         404,
         '{"detail":"File not found"}',
       );
-      mockClient.files.getSignedUrl.mockRejectedValue(mistralError);
+      mockClient.ocr.process.mockRejectedValue(mistralError);
 
       await expect(handler.processFile(testFile)).rejects.toThrow(
         FileRetrievalFailedError,
