@@ -22,8 +22,6 @@ export enum FileRetrieverErrorCode {
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   TOO_MANY_PAGES = 'TOO_MANY_PAGES',
   DOCUMENT_TOO_LARGE_FOR_CHAT = 'DOCUMENT_TOO_LARGE_FOR_CHAT',
-  SERVICE_BUSY = 'SERVICE_BUSY',
-  SERVICE_TIMEOUT = 'SERVICE_TIMEOUT',
   UNAUTHORIZED = 'UNAUTHORIZED',
 }
 
@@ -127,28 +125,6 @@ export class TooManyPagesError extends FileRetrieverError {
       'Document rejected by preflight check (too many pages)',
       FileRetrieverErrorCode.TOO_MANY_PAGES,
       422,
-      metadata,
-    );
-  }
-}
-
-export class ServiceBusyError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'Document processing service is busy. Please try again later.',
-      FileRetrieverErrorCode.SERVICE_BUSY,
-      503,
-      metadata,
-    );
-  }
-}
-
-export class ServiceTimeoutError extends FileRetrieverError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'Document conversion exceeded timeout',
-      FileRetrieverErrorCode.SERVICE_TIMEOUT,
-      504,
       metadata,
     );
   }

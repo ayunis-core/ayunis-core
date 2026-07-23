@@ -2,11 +2,13 @@ import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './mistral-file-retriever.handler';
+import { FileRetrieverUnexpectedError } from '../../application/file-retriever.errors';
 import {
-  FileRetrieverUnexpectedError,
-  ServiceBusyError,
-  ServiceTimeoutError,
-} from '../../application/file-retriever.errors';
+  ProviderConnectionError,
+  ProviderRequestRejectedError,
+  ProviderServerError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { File } from '../../domain/file.entity';
 
@@ -101,67 +103,105 @@ describe('MistralFileRetrieverHandler', () => {
       mockClient.files.delete.mockResolvedValue(undefined);
     });
 
-    it('should throw ServiceBusyError when Mistral returns 502', async () => {
+    it('throws ProviderServerError when Mistral returns 502', async () => {
       const mistralError = createMistralError(
         502,
         '{"message":"An invalid response was received from the upstream server"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        ServiceBusyError,
-      );
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(ProviderServerError);
+      await expect(result).rejects.toMatchObject({
+        code: 'PROVIDER_UNAVAILABLE_SERVER_MISTRAL',
+        context: {
+          provider: 'mistral',
+          modelId: 'mistral-ocr-latest',
+          upstreamStatus: 502,
+        },
+      });
     });
 
-    it('should throw ServiceBusyError when Mistral returns 503', async () => {
+    it('throws ProviderServerError when Mistral returns 503', async () => {
       const mistralError = createMistralError(
         503,
         '{"message":"Service temporarily unavailable"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        ServiceBusyError,
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderServerError,
       );
     });
 
-    it('should throw ServiceTimeoutError when Mistral returns 504', async () => {
+    it('throws ProviderTimeoutError when Mistral returns 504', async () => {
       const mistralError = createMistralError(
         504,
         '{"message":"Gateway timeout"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        ServiceTimeoutError,
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderTimeoutError,
       );
     });
 
-    it('should throw FileRetrieverUnexpectedError for non-transient Mistral errors', async () => {
+    it('throws ProviderRequestRejectedError for Mistral OCR 400s — provider failures per AYC-538', async () => {
       const mistralError = createMistralError(400, '{"message":"Bad request"}');
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(ProviderRequestRejectedError);
+      await expect(result).rejects.toMatchObject({
+        code: 'PROVIDER_UNAVAILABLE_REJECTED_MISTRAL',
+        context: { upstreamStatus: 400 },
+      });
+    });
+
+    it('keeps Mistral 401 as FileRetrieverUnexpectedError — bad API key is our config bug', async () => {
+      const mistralError = createMistralError(
+        401,
+        '{"message":"Unauthorized"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         FileRetrieverUnexpectedError,
       );
     });
 
-    it('should throw FileRetrieverUnexpectedError for non-Mistral errors', async () => {
+    it('throws ProviderConnectionError for transport failures behind SDK wrappers', async () => {
+      const transport = Object.assign(new Error('connection error'), {
+        name: 'ConnectionError',
+        cause: Object.assign(new Error('read ECONNRESET'), {
+          code: 'ECONNRESET',
+        }),
+      });
+      mockClient.ocr.process.mockRejectedValue(transport);
+
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(ProviderConnectionError);
+      await expect(result).rejects.toMatchObject({
+        context: { underlyingCode: 'ECONNRESET' },
+      });
+    });
+
+    it('throws FileRetrieverUnexpectedError for non-Mistral errors', async () => {
       mockClient.ocr.process.mockRejectedValue(
-        new Error('Network connection lost'),
+        new Error('cannot read properties of undefined'),
       );
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         FileRetrieverUnexpectedError,
       );
     });
 
-    it('should throw ServiceBusyError when file upload returns 502', async () => {
+    it('throws ProviderServerError when file upload returns 502', async () => {
       const mistralError = createMistralError(502, '{"message":"Bad gateway"}');
       mockClient.files.upload.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        ServiceBusyError,
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderServerError,
       );
     });
   });
