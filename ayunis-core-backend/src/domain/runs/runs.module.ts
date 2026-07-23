@@ -6,6 +6,10 @@ import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { SendMessageUseCase } from './application/use-cases/send-message/send-message.use-case';
+import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
+import { RunSsePresenter } from './presenters/http/sse/run-sse.presenter';
+import { SendMessageRequestValidator } from './presenters/http/validation/send-message-request.validator';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -59,6 +63,10 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
   providers: [
     ExecuteRunUseCase,
     ExecuteRunAndSetTitleUseCase,
+    SendMessageUseCase,
+    RunEventResponseMapper,
+    RunSsePresenter,
+    SendMessageRequestValidator,
     SystemPromptBuilderService,
     ToolAssemblyService,
     ArtifactToolAssemblerService,

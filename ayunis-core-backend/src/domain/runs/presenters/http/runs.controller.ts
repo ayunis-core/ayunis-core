@@ -7,16 +7,13 @@ import {
   Res,
   UseInterceptors,
   UploadedFiles,
-  BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
 import {
   ApiOperation,
   ApiBody,
   ApiTags,
   ApiResponse,
-  getSchemaPath,
   ApiExtraModels,
   ApiConsumes,
 } from '@nestjs/swagger';
@@ -48,31 +45,23 @@ import {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
-  RunResponse,
 } from './dto/run-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
-import { ExecuteRunAndSetTitleUseCase } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
-import { ExecuteRunAndSetTitleCommand } from '../../application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
-import { RunEvent } from '../../application/run-events';
+import { SendMessageUseCase } from '../../application/use-cases/send-message/send-message.use-case';
+import { SendMessageCommand } from '../../application/use-cases/send-message/send-message.command';
 import { RequireSubscription } from 'src/iam/authorization/application/decorators/subscription.decorator';
-import { RunInput } from '../../domain/run-input.entity';
-import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
-import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
-import { HasActiveSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/has-active-subscription/has-active-subscription.use-case';
 import { RequestWithSubscriptionContext } from 'src/iam/authorization/application/guards/subscription.guard';
-import { MessageDtoMapper } from '../../../threads/presenters/http/mappers/message.mapper';
 import { Response } from 'express';
-import { ApplicationError } from 'src/common/errors/base.error';
 
-const MAX_IMAGES = 10;
-const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per image
-const MAX_TOTAL_SIZE_BYTES = 50 * 1024 * 1024; // 50MB total
-const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
+import { MAX_IMAGES } from './image-upload.constants';
+import { IMAGE_UPLOAD_OPTIONS } from './image-upload.options';
+import {
+  SEND_MESSAGE_API_BODY,
+  SEND_MESSAGE_API_OPERATION,
+  SEND_MESSAGE_SSE_RESPONSE,
+} from './send-message.swagger';
+import { RunSsePresenter } from './sse/run-sse.presenter';
+import { SendMessageRequestValidator } from './validation/send-message-request.validator';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -100,130 +89,25 @@ export class RunsController {
   private readonly logger = new Logger(RunsController.name);
 
   constructor(
-    private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
-    private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
-    private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
-    private readonly messageDtoMapper: MessageDtoMapper,
+    private readonly sendMessageUseCase: SendMessageUseCase,
+    private readonly requestValidator: SendMessageRequestValidator,
+    private readonly ssePresenter: RunSsePresenter,
   ) {}
 
   @Post('send-message')
   @RequireSubscription()
-  @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP header */
-    FilesInterceptor('images', MAX_IMAGES, {
-      storage: memoryStorage(),
-      limits: { fileSize: MAX_IMAGE_SIZE_BYTES },
-      /* eslint-enable sonarjs/content-length */
-      fileFilter: (req, file, cb) => {
-        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(
-            new BadRequestException(`Invalid file type: ${file.mimetype}`),
-            false,
-          );
-        }
-      },
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('images', MAX_IMAGES, IMAGE_UPLOAD_OPTIONS))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({
-    summary:
-      'Send a message with optional images and receive streaming response',
-    description:
-      'Sends a user message (with optional image attachments) and returns a server-sent events stream with the AI response. Images are processed transactionally with the message.',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      required: ['threadId'],
-      properties: {
-        threadId: { type: 'string', format: 'uuid' },
-        text: {
-          type: 'string',
-          description: 'Message text (optional if images provided)',
-        },
-        images: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-          description:
-            'Image files to attach (max 10, max 10MB each, 50MB total)',
-        },
-        imageAltTexts: {
-          type: 'string',
-          description: 'JSON array of alt texts matching image order',
-        },
-        toolResult: {
-          type: 'string',
-          description: 'JSON object for tool result input',
-        },
-        skillId: {
-          type: 'string',
-          format: 'uuid',
-          description: 'Skill ID to activate for this message',
-        },
-        streaming: { type: 'boolean', default: true },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Server-sent events stream with discriminated response types',
-    content: {
-      'text/event-stream': {
-        schema: {
-          oneOf: [
-            { $ref: getSchemaPath(RunSessionResponseDto) },
-            { $ref: getSchemaPath(RunMessageResponseDto) },
-            { $ref: getSchemaPath(RunErrorResponseDto) },
-            { $ref: getSchemaPath(RunThreadResponseDto) },
-            { $ref: getSchemaPath(RunMasksResponseDto) },
-          ],
-          discriminator: {
-            propertyName: 'type',
-            mapping: {
-              session: getSchemaPath(RunSessionResponseDto),
-              message: getSchemaPath(RunMessageResponseDto),
-              error: getSchemaPath(RunErrorResponseDto),
-              thread: getSchemaPath(RunThreadResponseDto),
-              masks: getSchemaPath(RunMasksResponseDto),
-            },
-          },
-        },
-      },
-    },
-    headers: {
-      'Content-Type': {
-        description: 'Content type for server-sent events',
-        schema: { type: 'string', example: 'text/event-stream' },
-      },
-      'Cache-Control': {
-        description: 'Cache control header',
-        schema: { type: 'string', example: 'no-cache' },
-      },
-      Connection: {
-        description: 'Connection type',
-        schema: { type: 'string', example: 'keep-alive' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid request payload',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Subscription required',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
+  @ApiOperation(SEND_MESSAGE_API_OPERATION)
+  @ApiBody(SEND_MESSAGE_API_BODY)
+  @ApiResponse(SEND_MESSAGE_SSE_RESPONSE)
+  @ApiResponse({ status: 400, description: 'Invalid request payload' })
+  @ApiResponse({ status: 403, description: 'Subscription required' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async sendMessage(
     @Body() sendMessageDto: SendMessageDto,
     @UploadedFiles() files: Express.Multer.File[] | undefined,
     @CurrentUser(UserProperty.ID) userId: UUID,
-    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Req() request: RequestWithSubscriptionContext,
     @Res() response: Response,
   ): Promise<void> {
@@ -238,259 +122,25 @@ export class RunsController {
       hasToolResult: !!sendMessageDto.toolResult,
     });
 
-    // Validate: at least text, images, tool result, or skillId must be provided
-    if (
-      !sendMessageDto.text?.trim() &&
-      uploadedFiles.length === 0 &&
-      !sendMessageDto.toolResult &&
-      !sendMessageDto.skillId
-    ) {
-      throw new BadRequestException(
-        'Message must contain text, images, tool result, or skillId',
-      );
-    }
+    this.requestValidator.validate(sendMessageDto, uploadedFiles);
 
-    // Validate total file size
-    const totalSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > MAX_TOTAL_SIZE_BYTES) {
-      throw new BadRequestException(
-        `Total file size (${Math.round(totalSize / (1024 * 1024))}MB) exceeds maximum (${MAX_TOTAL_SIZE_BYTES / (1024 * 1024)}MB)`,
-      );
-    }
+    const command = new SendMessageCommand({
+      threadId: sendMessageDto.threadId,
+      input: RunInputMapper.toCommand(
+        sendMessageDto,
+        uploadedFiles,
+        sendMessageDto.skillId,
+      ),
+      streaming: sendMessageDto.streaming ?? true,
+      consumeTrialMessage: Boolean(
+        request.subscriptionContext?.hasRemainingTrialMessages,
+      ),
+    });
 
-    // Set SSE headers
-    response.setHeader('Content-Type', 'text/event-stream');
-    response.setHeader('Cache-Control', 'no-cache');
-    response.setHeader('Connection', 'keep-alive');
-    // Disable response buffering in nginx-style reverse proxies so SSE chunks
-    // reach the client immediately. Without this, buffered streams that get
-    // interrupted mid-flight surface as permanently truncated assistant
-    // messages because the server-side finally-block persists what it has.
-    response.setHeader('X-Accel-Buffering', 'no');
-    response.flushHeaders();
-    // Send initial connection confirmation
-    response.write(': connection established\n\n');
-
-    try {
-      // Send session establishment event immediately
-      const sessionResponse: RunSessionResponseDto = {
-        type: 'session',
-        success: true,
-        threadId: sendMessageDto.threadId,
-        timestamp: new Date().toISOString(),
-        streaming: sendMessageDto.streaming ?? true,
-      };
-
-      this.writeSSEEvent(response, 'session', sessionResponse);
-
-      // Handle subscription context
-      const subscriptionContext = request.subscriptionContext;
-
-      if (subscriptionContext?.hasRemainingTrialMessages) {
-        this.logger.debug(
-          'Incrementing trial messages for non-subscription user',
-          {
-            orgId,
-            userId,
-          },
-        );
-
-        void this.incrementTrialMessagesUseCase.execute(
-          new IncrementTrialMessagesCommand(orgId),
-        );
-      }
-
-      // Execute run and stream events
-      await this.executeRunAndStream({
-        threadId: sendMessageDto.threadId,
-        input: RunInputMapper.toCommand(
-          sendMessageDto,
-          uploadedFiles,
-          sendMessageDto.skillId,
-        ),
-        userId,
-        streaming: sendMessageDto.streaming ?? true,
-        orgId,
-        response,
-      });
-
-      // Close the connection
-      response.end();
-    } catch (error) {
-      this.logger.error('Error in sendMessage', {
-        userId,
-        threadId: sendMessageDto.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-
-      // Send error response for connection errors
-      const errorResponse: RunErrorResponseDto = {
-        type: 'error',
-        message: 'Failed to process message',
-        threadId: sendMessageDto.threadId,
-        timestamp: new Date().toISOString(),
-        code: 'CONNECTION_ERROR',
-        details: {
-          error: error instanceof Error ? error.toString() : 'Unknown error',
-        },
-      };
-
-      this.writeSSEEvent(response, 'connection-error', errorResponse);
-      response.end();
-    }
-  }
-
-  private mapEventToResponse(event: RunEvent): RunResponse {
-    switch (event.type) {
-      case 'message':
-        return {
-          type: 'message',
-          message: this.messageDtoMapper.toDto(event.message),
-          threadId: event.threadId,
-          timestamp: event.timestamp,
-        };
-      case 'thread':
-        return {
-          type: 'thread',
-          threadId: event.threadId,
-          updateType: event.updateType,
-          title: event.title,
-          timestamp: event.timestamp,
-        };
-      case 'error':
-        return {
-          type: 'error',
-          message: event.message,
-          threadId: event.threadId,
-          timestamp: event.timestamp,
-          code: event.code,
-          details: event.details,
-        };
-      case 'session':
-        return {
-          type: 'session',
-          streaming: event.streaming,
-          threadId: event.threadId,
-          timestamp: event.timestamp,
-        };
-      case 'masks':
-        return {
-          type: 'masks',
-          threadId: event.threadId,
-          masks: event.masks,
-          timestamp: event.timestamp,
-        };
-    }
-  }
-
-  private writeSSEEvent(response: Response, id: string, data: unknown): void {
-    response.write(`id: ${id}\ndata: ${JSON.stringify(data)}\n\n`);
-  }
-
-  private async executeRunAndStream(params: {
-    threadId: UUID;
-    input: RunInput;
-    userId: UUID;
-    streaming?: boolean;
-    orgId: UUID;
-    response: Response;
-  }) {
-    try {
-      const command = new ExecuteRunAndSetTitleCommand({
-        threadId: params.threadId,
-        input: params.input,
-        streaming: params.streaming,
-      });
-
-      const eventGenerator = this.executeRunAndSetTitleUseCase.execute(command);
-
-      // Track if client disconnected (object wrapper so TS recognises async mutation)
-      const connection = { disconnected: false };
-      const disconnectHandler = () => {
-        this.logger.log('Client disconnected from SSE stream', {
-          threadId: params.threadId,
-        });
-        connection.disconnected = true;
-      };
-
-      // Listen for client disconnect
-      params.response.on('close', disconnectHandler);
-
-      // Send periodic heartbeat comments to keep the connection alive
-      // through proxies (e.g. nginx proxy_read_timeout) and prevent
-      // the browser from treating the connection as dead during long
-      // pauses in the LLM stream (tool call generation, thinking, etc.).
-      // SSE comments (lines starting with ':') are ignored by clients.
-      const heartbeatInterval = setInterval(() => {
-        if (!connection.disconnected) {
-          params.response.write(': heartbeat\n\n');
-        }
-      }, 15_000);
-
-      try {
-        for await (const event of eventGenerator) {
-          // Check if client disconnected before writing
-          if (connection.disconnected) {
-            this.logger.log('Stopping event stream due to client disconnect');
-            break;
-          }
-
-          // Map domain event to presenter DTO
-          const responseDto = this.mapEventToResponse(event);
-
-          // Generate appropriate event ID based on response type
-          let eventId: string;
-          switch (event.type) {
-            case 'message':
-              eventId = `message-${event.timestamp}`;
-              break;
-            case 'thread':
-              eventId = `thread-${event.threadId}`;
-              break;
-            case 'error':
-              eventId = 'error';
-              break;
-            case 'session':
-              eventId = 'session';
-              break;
-            case 'masks':
-              eventId = `masks-${event.timestamp}`;
-              break;
-            default:
-              eventId = 'event';
-          }
-
-          this.writeSSEEvent(params.response, eventId, responseDto);
-        }
-      } finally {
-        clearInterval(heartbeatInterval);
-        // Clean up disconnect listener
-        params.response.off('close', disconnectHandler);
-      }
-    } catch (error) {
-      this.logger.error('Error in executeRunAndStream', error);
-
-      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND)
-      const errorCode =
-        error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
-
-      // Send structured error response
-      const errorResponse: RunErrorResponseDto = {
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'An error occurred while executing the run',
-        threadId: params.threadId,
-        timestamp: new Date().toISOString(),
-        code: errorCode,
-        details: {
-          error: error instanceof Error ? error.toString() : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-        },
-      };
-
-      this.writeSSEEvent(params.response, 'execution-error', errorResponse);
-    }
+    await this.ssePresenter.stream(
+      response,
+      sendMessageDto.threadId,
+      this.sendMessageUseCase.execute(command),
+    );
   }
 }
