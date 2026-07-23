@@ -1,3 +1,8 @@
+import {
+  ProviderFailureClass,
+  ProviderUnavailableError,
+} from 'src/common/errors/provider.errors';
+
 /**
  * Known inference error types used as Prometheus `error_type` label values.
  */
@@ -98,7 +103,18 @@ function extractMessage(error: unknown): string | undefined {
 /**
  * Classifies an inference error into a Prometheus-friendly error_type label.
  */
+const PROVIDER_FAILURE_TYPES: Record<ProviderFailureClass, InferenceErrorType> =
+  {
+    [ProviderFailureClass.CONNECTION]: 'connection_error',
+    [ProviderFailureClass.TIMEOUT]: 'timeout',
+    [ProviderFailureClass.SERVER]: 'server_error',
+    [ProviderFailureClass.REJECTED]: 'server_error',
+  };
+
 export function classifyInferenceError(error: unknown): InferenceErrorType {
+  if (error instanceof ProviderUnavailableError) {
+    return PROVIDER_FAILURE_TYPES[error.failureClass];
+  }
   const status = extractStatusCode(error);
   if (status !== undefined) {
     const statusMatch = STATUS_RULES.find((r) => r.test(status));

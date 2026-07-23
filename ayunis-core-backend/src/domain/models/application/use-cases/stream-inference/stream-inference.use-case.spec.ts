@@ -7,6 +7,10 @@ import {
   ModelRateLimitExceededError,
 } from '../../models.errors';
 import type { Model } from 'src/domain/models/domain/model.entity';
+import {
+  ProviderConnectionError,
+  ProviderServerError,
+} from 'src/common/errors/provider.errors';
 
 const model = {
   name: 'claude-sonnet-4',
@@ -63,6 +67,56 @@ describe('StreamInferenceUseCase error mapping', () => {
         useCaseWithFailingHandler(providerError).execute(makeInput()),
       ),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('wraps transport failures as ProviderConnectionError with provider and model', async () => {
+    const transport = Object.assign(new Error('read ECONNRESET'), {
+      code: 'ECONNRESET',
+    });
+
+    const result = firstValueFrom(
+      useCaseWithFailingHandler(transport).execute(makeInput()),
+    );
+    await expect(result).rejects.toBeInstanceOf(ProviderConnectionError);
+    await expect(result).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
+      context: {
+        provider: 'anthropic',
+        modelId: 'claude-sonnet-4',
+        underlyingCode: 'ECONNRESET',
+      },
+    });
+  });
+
+  it('wraps upstream 5xx responses as ProviderServerError', async () => {
+    const upstream = Object.assign(new Error('service unavailable'), {
+      status: 503,
+    });
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(upstream).execute(makeInput())),
+    ).rejects.toBeInstanceOf(ProviderServerError);
+  });
+
+  it('keeps upstream 4xx responses as InferenceFailedError — potentially our bug', async () => {
+    const upstream = Object.assign(new Error('invalid request'), {
+      status: 400,
+    });
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(upstream).execute(makeInput())),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('maps aborts to InferenceAbortedError even when a transport code is attached', async () => {
+    const abort = Object.assign(new Error('aborted'), {
+      name: 'AbortError',
+      code: 'ECONNRESET',
+    });
+
+    await expect(
+      firstValueFrom(useCaseWithFailingHandler(abort).execute(makeInput())),
+    ).rejects.toBeInstanceOf(InferenceAbortedError);
   });
 
   it('passes ApplicationErrors through unchanged', async () => {

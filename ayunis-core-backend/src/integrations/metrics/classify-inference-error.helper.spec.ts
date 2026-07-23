@@ -1,6 +1,39 @@
 import { classifyInferenceError } from './classify-inference-error.helper';
+import {
+  ProviderConnectionError,
+  ProviderRequestRejectedError,
+  ProviderServerError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
 
 describe('classifyInferenceError', () => {
+  describe('ProviderUnavailableError family', () => {
+    const context = { provider: 'openai', modelId: 'gpt-5.2' };
+
+    it('classifies ProviderConnectionError as connection_error', () => {
+      expect(classifyInferenceError(new ProviderConnectionError(context))).toBe(
+        'connection_error',
+      );
+    });
+
+    it('classifies ProviderTimeoutError as timeout', () => {
+      expect(classifyInferenceError(new ProviderTimeoutError(context))).toBe(
+        'timeout',
+      );
+    });
+
+    it('classifies ProviderServerError as server_error', () => {
+      expect(classifyInferenceError(new ProviderServerError(context))).toBe(
+        'server_error',
+      );
+    });
+
+    it('classifies ProviderRequestRejectedError as server_error', () => {
+      expect(
+        classifyInferenceError(new ProviderRequestRejectedError(context)),
+      ).toBe('server_error');
+    });
+  });
   describe('timeout errors', () => {
     it('should classify "timeout" message as timeout', () => {
       expect(classifyInferenceError(new Error('Request timeout'))).toBe(
