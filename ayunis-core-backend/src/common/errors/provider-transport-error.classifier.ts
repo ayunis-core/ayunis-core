@@ -11,7 +11,6 @@ export interface TransportFailure {
 const CONNECTION_CODES = new Set([
   'ECONNRESET',
   'ECONNREFUSED',
-  'ECONNABORTED',
   'ENOTFOUND',
   'EAI_AGAIN',
   'EPIPE',
@@ -34,6 +33,10 @@ const CONNECTION_CODES = new Set([
 
 const TIMEOUT_CODES = new Set([
   'ETIMEDOUT',
+  // Axios/Node attach ECONNABORTED to request aborts and timeouts, not clean
+  // provider-side connection outages — treat it as a timeout, matching the
+  // rest of the retriever stack (e.g. gotenberg-converter.service.ts).
+  'ECONNABORTED',
   'ERR_SOCKET_TIMEOUT',
   'ERR_SOCKET_CONNECTION_TIMEOUT',
   'UND_ERR_CONNECT_TIMEOUT',
