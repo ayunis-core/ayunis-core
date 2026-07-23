@@ -20,6 +20,16 @@ import { isTransientMistralError } from 'src/common/util/mistral-transient-error
 import { File } from '../../domain/file.entity';
 import { ConfigService } from '@nestjs/config';
 
+// A 404 from OCR right after a successful upload is files-API eventual
+// consistency, not a missing file — retry it alongside the shared transient
+// set. Other 4xx (e.g. too many pages) stay fatal.
+function isTransientOcrError(error: Error): boolean {
+  return (
+    isTransientMistralError(error) ||
+    (error instanceof MistralError && error.statusCode === 404)
+  );
+}
+
 @Injectable()
 export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
@@ -120,36 +130,21 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     return uploaded.id;
   }
 
-  /** Fetches the signed URL and runs OCR; deletes the uploaded file on failure. */
+  /** Runs OCR on the uploaded file by id; deletes the uploaded file on failure. */
   private async runOcr(fileId: string): Promise<OCRResponse> {
-    const signedUrl = await retryWithBackoff({
-      fn: () => this.client.files.getSignedUrl({ fileId }),
-      maxRetries: 3,
-      delay: 1000,
-      retryIfError: isTransientMistralError,
-    }).catch(async (error) => {
-      this.logger.error(
-        `Mistral OCR signed URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : 'Unknown error',
-      );
-      await this.client.files.delete({ fileId }).catch(() => undefined);
-      throw error;
-    });
-
-    this.logger.debug('signed URL', { signedUrl });
     return retryWithBackoff({
       fn: () =>
         this.client.ocr.process({
           model: this.MODEL_NAME,
           document: {
-            type: 'document_url',
-            documentUrl: signedUrl.url,
+            type: 'file',
+            fileId,
           },
           includeImageBase64: true,
         }),
       maxRetries: 3,
       delay: 1000,
-      retryIfError: isTransientMistralError,
+      retryIfError: isTransientOcrError,
     }).catch(async (error) => {
       this.logger.error(
         `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
