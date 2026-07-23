@@ -3,9 +3,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './mistral-file-retriever.handler';
 import {
+  FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
   ServiceBusyError,
   ServiceTimeoutError,
+  TooManyPagesError,
 } from '../../application/file-retriever.errors';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { File } from '../../domain/file.entity';
@@ -101,6 +103,18 @@ describe('MistralFileRetrieverHandler', () => {
       mockClient.files.delete.mockResolvedValue(undefined);
     });
 
+    it('should throw ServiceBusyError when Mistral rate limiting persists past retries', async () => {
+      const mistralError = createMistralError(
+        429,
+        '{"message":"Rate limit exceeded"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toThrow(
+        ServiceBusyError,
+      );
+    });
+
     it('should throw ServiceBusyError when Mistral returns 502', async () => {
       const mistralError = createMistralError(
         502,
@@ -137,12 +151,39 @@ describe('MistralFileRetrieverHandler', () => {
       );
     });
 
-    it('should throw FileRetrieverUnexpectedError for non-transient Mistral errors', async () => {
-      const mistralError = createMistralError(400, '{"message":"Bad request"}');
+    it('should throw TooManyPagesError when Mistral rejects the document for its page count', async () => {
+      const mistralError = createMistralError(
+        400,
+        '{"object":"error","message":"This document has 1486 pages, which is more than the maximum allowed of 1000.","type":"document_parser_too_many_pages","code":"3730"}',
+      );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
       await expect(handler.processFile(testFile)).rejects.toThrow(
-        FileRetrieverUnexpectedError,
+        TooManyPagesError,
+      );
+    });
+
+    it('should throw FileRetrievalFailedError for other Mistral 400 responses', async () => {
+      const mistralError = createMistralError(
+        400,
+        '{"object":"error","message":"File could not be fetched from url","type":"invalid_request_file","code":"3310"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toThrow(
+        FileRetrievalFailedError,
+      );
+    });
+
+    it('should throw FileRetrievalFailedError when Mistral cannot find the uploaded file', async () => {
+      const mistralError = createMistralError(
+        404,
+        '{"detail":"File not found"}',
+      );
+      mockClient.files.getSignedUrl.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toThrow(
+        FileRetrievalFailedError,
       );
     });
 

@@ -6,9 +6,11 @@ import {
 } from '../../domain/file-retriever-result.entity';
 import {
   FileRetrievalFailedError,
+  FileRetrieverError,
   FileRetrieverUnexpectedError,
   ServiceBusyError,
   ServiceTimeoutError,
+  TooManyPagesError,
 } from '../../application/file-retriever.errors';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
@@ -62,16 +64,40 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       const metadata = { model: this.MODEL_NAME };
 
       if (error instanceof MistralError) {
-        if (error.statusCode === 502 || error.statusCode === 503) {
-          throw new ServiceBusyError(metadata);
-        }
-        if (error.statusCode === 504) {
-          throw new ServiceTimeoutError(metadata);
-        }
+        throw this.mapMistralError(error, metadata);
       }
 
       throw new FileRetrieverUnexpectedError(error as Error, metadata);
     }
+  }
+
+  private mapMistralError(
+    error: MistralError,
+    metadata: { model: string },
+  ): FileRetrieverError {
+    // 429 lands here only after the transient-error retries are exhausted —
+    // persistent rate limiting is "busy, try again later", not a failed
+    // retrieval.
+    if (
+      error.statusCode === 429 ||
+      error.statusCode === 502 ||
+      error.statusCode === 503
+    ) {
+      return new ServiceBusyError(metadata);
+    }
+    if (error.statusCode === 504) {
+      return new ServiceTimeoutError(metadata);
+    }
+    if (
+      typeof error.body === 'string' &&
+      error.body.includes('document_parser_too_many_pages')
+    ) {
+      return new TooManyPagesError(metadata);
+    }
+    if (error.statusCode >= 400 && error.statusCode < 500) {
+      return new FileRetrievalFailedError(error.message, metadata);
+    }
+    return new FileRetrieverUnexpectedError(error, metadata);
   }
 
   private async uploadFile(fileBlob: Blob): Promise<string> {
