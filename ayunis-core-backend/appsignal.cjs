@@ -43,6 +43,16 @@ if (pushApiKey && environment !== 'development') {
     // processor. Debugging context comes from tags and structured logs.
     sendParams: false,
     sendSessionData: false,
+    // The NestJS instrumentation records EVERY exception thrown from guards
+    // and handlers on its span — before ApplicationErrorFilter runs — so
+    // expected 4xx errors (failed logins, expired sessions, domain
+    // validation) become AppSignal incidents despite the filter's guard.
+    // Disabling it makes the filter's setError() the single reporting path
+    // for HTTP errors; express/http instrumentation still provides request
+    // spans and route-based action names.
+    disableDefaultInstrumentations: [
+      '@opentelemetry/instrumentation-nestjs-core',
+    ],
   });
 
   console.warn(`✅ AppSignal initialized for environment: ${environment}`);
