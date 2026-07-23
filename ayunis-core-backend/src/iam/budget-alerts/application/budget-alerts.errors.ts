@@ -2,6 +2,7 @@ import type { ErrorMetadata } from '../../../common/errors/base.error';
 import { ApplicationError } from '../../../common/errors/base.error';
 
 export enum BudgetAlertErrorCode {
+  EMAIL_RENDERING_FAILED = 'BUDGET_WARNING_EMAIL_RENDERING_FAILED',
   EMAIL_SENDING_FAILED = 'BUDGET_WARNING_EMAIL_SENDING_FAILED',
   UNEXPECTED_ERROR = 'UNEXPECTED_BUDGET_ALERT_ERROR',
 }
@@ -14,6 +15,17 @@ export abstract class BudgetAlertError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
+  }
+}
+
+export class BudgetWarningEmailRenderingFailedError extends BudgetAlertError {
+  constructor(reason: string) {
+    super(
+      'Failed to render budget warning email',
+      BudgetAlertErrorCode.EMAIL_RENDERING_FAILED,
+      500,
+      { reason },
+    );
   }
 }
 

@@ -7,7 +7,10 @@ import { BudgetWarningTemplate } from 'src/common/email-templates/domain/email-t
 import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 import { SendBudgetWarningEmailUseCase } from './send-budget-warning-email.use-case';
 import { SendBudgetWarningEmailCommand } from './send-budget-warning-email.command';
-import { BudgetWarningEmailSendingFailedError } from '../../budget-alerts.errors';
+import {
+  BudgetWarningEmailRenderingFailedError,
+  BudgetWarningEmailSendingFailedError,
+} from '../../budget-alerts.errors';
 
 describe('SendBudgetWarningEmailUseCase', () => {
   let useCase: SendBudgetWarningEmailUseCase;
@@ -17,9 +20,11 @@ describe('SendBudgetWarningEmailUseCase', () => {
   beforeEach(async () => {
     sendEmail = { execute: jest.fn().mockResolvedValue(undefined) };
     renderTemplate = {
-      execute: jest
-        .fn()
-        .mockReturnValue({ html: '<html></html>', text: 'text' }),
+      execute: jest.fn().mockReturnValue({
+        html: '<html></html>',
+        text: 'text',
+        subject: 'Limitwarnung: Jane Doe hat 80 % des Limits erreicht',
+      }),
     };
     const config = {
       get: jest.fn((key: string) =>
@@ -64,22 +69,27 @@ describe('SendBudgetWarningEmailUseCase', () => {
     expect(sendEmail.execute).toHaveBeenCalledTimes(1);
     const sent = sendEmail.execute.mock.calls[0][0];
     expect(sent.to).toBe('andrea@stadt-musterhausen.de');
-    expect(sent.subject).toBe('Budgetwarnung: 80% des Budgets erreicht');
   });
 
-  it('uses the exhausted subject at the 100% threshold', async () => {
-    await useCase.execute(
-      new SendBudgetWarningEmailCommand({
-        recipientName: 'Andrea Admin',
-        recipientEmail: 'andrea@stadt-musterhausen.de',
-        scope: BudgetWarningScope.ORG,
-        targetName: 'Stadt Musterhausen',
-        threshold: 100,
-      }),
-    );
+  it('uses the subject produced by the template renderer', async () => {
+    await useCase.execute(command);
 
     const sent = sendEmail.execute.mock.calls[0][0];
-    expect(sent.subject).toBe('Budget vollständig aufgebraucht');
+    expect(sent.subject).toBe(
+      'Limitwarnung: Jane Doe hat 80 % des Limits erreicht',
+    );
+  });
+
+  it('fails with a rendering error when the renderer returns no subject', async () => {
+    renderTemplate.execute.mockReturnValue({
+      html: '<html></html>',
+      text: 'text',
+    });
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      BudgetWarningEmailRenderingFailedError,
+    );
+    expect(sendEmail.execute).not.toHaveBeenCalled();
   });
 
   it('wraps transport failures in a domain error', async () => {
