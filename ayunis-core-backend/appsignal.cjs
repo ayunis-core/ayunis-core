@@ -56,6 +56,15 @@ if (pushApiKey && environment !== 'development') {
     // Queue consumers rename job failures that BullMQ will retry to this
     // error (see bullmq-job.helpers.ts), so only final failures — thrown
     // with their original name — become incidents.
+    //
+    // External provider outages (LLM/embeddings/OCR) arrive as the
+    // ProviderUnavailableError family (src/common/errors/provider.errors.ts)
+    // with name === code === PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>, so both
+    // reporting paths group them identically: setError() groups by name, the
+    // BullMQ OTel recordException path prefers code. Do NOT add them to
+    // ignoreErrors — they must keep reporting so rate-based anomaly triggers
+    // work; per-occurrence notifications are disabled AppSignal-side instead
+    // (AYC-538).
     ignoreErrors: ['JobRetryScheduledError'],
   });
 
