@@ -153,6 +153,9 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       const response = await fetch(currentUrl, {
         signal,
+        // This User-Agent is also the key that excludes crawler requests
+        // from AppSignal's undici instrumentation — keep in sync with
+        // appsignal-hooks.cjs.
         headers: { 'User-Agent': 'Ayunis/1.0' },
         redirect: 'manual',
       });
