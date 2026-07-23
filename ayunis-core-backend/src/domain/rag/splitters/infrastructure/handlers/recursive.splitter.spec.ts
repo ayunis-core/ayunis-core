@@ -1,5 +1,6 @@
 import { RecursiveSplitterHandler } from './recursive.splitter';
 import type { SplitterInput } from '../../application/ports/splitter.handler';
+import type { TextChunk } from '../../domain/split-result.entity';
 
 describe('RecursiveSplitterHandler', () => {
   let handler: RecursiveSplitterHandler;
@@ -126,6 +127,18 @@ describe('RecursiveSplitterHandler', () => {
       expect(result.chunks).toHaveLength(0);
     });
 
+    it('should emit no chunks for whitespace-only text longer than the chunk size', () => {
+      const input: SplitterInput = {
+        // Tabs match no separator, so this would reach the fixed-size split
+        text: '\t'.repeat(3000),
+        metadata: { chunkSize: 1000, chunkOverlap: 100 },
+      };
+
+      const result = handler.processText(input);
+
+      expect(result.chunks).toHaveLength(0);
+    });
+
     it('should preserve chunk index in metadata', () => {
       const lines = Array.from(
         { length: 20 },
@@ -233,6 +246,161 @@ describe('RecursiveSplitterHandler', () => {
     });
   });
 
+  describe('configuration', () => {
+    it('should honor chunkOverlap of 0 by emitting non-overlapping chunks', () => {
+      const sentences = Array.from(
+        { length: 20 },
+        (_, i) => `Satz ${i + 1} mit etwas Inhalt.`,
+      );
+      const text = sentences.join(' ');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 60, chunkOverlap: 0 },
+      });
+
+      expect(result.metadata.chunkOverlap).toBe(0);
+      expect(result.chunks.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.chunks.length; i++) {
+        const prevEnd = result.chunks[i - 1].metadata.endCharOffset as number;
+        const currStart = result.chunks[i].metadata.startCharOffset as number;
+        expect(currStart).toBeGreaterThanOrEqual(prevEnd);
+      }
+      for (const chunk of result.chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        expect(text.slice(start, end)).toBe(chunk.text);
+      }
+    });
+
+    it('should derive a fitting default overlap when only a small chunkSize is given', () => {
+      const sentences = Array.from(
+        { length: 20 },
+        (_, i) => `Satz ${i + 1} mit etwas Inhalt.`,
+      );
+      const text = sentences.join(' ');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 100 },
+      });
+
+      // The built-in overlap default (200) exceeds this chunkSize; the
+      // derived default keeps the built-in 20% ratio instead of rejecting
+      // the caller's chunkSize.
+      expect(result.metadata.chunkOverlap).toBe(20);
+      expect(result.chunks.length).toBeGreaterThan(1);
+      for (const chunk of result.chunks) {
+        expect(chunk.text.length).toBeLessThanOrEqual(100);
+      }
+    });
+
+    it.each([
+      ['zero chunkSize', { chunkSize: 0, chunkOverlap: 0 }],
+      ['negative chunkSize', { chunkSize: -5, chunkOverlap: 0 }],
+      ['non-integer chunkSize', { chunkSize: 10.5, chunkOverlap: 0 }],
+      ['negative chunkOverlap', { chunkSize: 100, chunkOverlap: -1 }],
+      [
+        'chunkOverlap equal to chunkSize',
+        { chunkSize: 100, chunkOverlap: 100 },
+      ],
+      ['chunkOverlap above chunkSize', { chunkSize: 100, chunkOverlap: 150 }],
+    ])('should reject invalid configuration: %s', (_label, metadata) => {
+      expect(() =>
+        handler.processText({ text: 'Some content to split.', metadata }),
+      ).toThrow('Failed to process text with Recursive Text Splitter');
+    });
+  });
+
+  describe('character offset tracking', () => {
+    const expectOffsetsPointAtContent = (
+      text: string,
+      chunks: { text: string; metadata: Record<string, unknown> }[],
+    ) => {
+      for (const chunk of chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        expect(start).toBeGreaterThanOrEqual(0);
+        expect(end).toBeGreaterThan(start);
+        expect(end).toBeLessThanOrEqual(text.length);
+        // The offset range covers the chunk's content: either the full chunk
+        // text (offsets contiguous) or the content without the prepended
+        // overlap — in both cases the slice is a suffix of the chunk text.
+        expect(chunk.text.endsWith(text.slice(start, end))).toBe(true);
+      }
+    };
+
+    it('should emit offsets whose slice matches the chunk content across split paths', () => {
+      const paragraphs = Array.from(
+        { length: 30 },
+        (_, i) =>
+          `Absatz ${i + 1}: ` +
+          'Inhalt mit einigen Worten, Satzzeichen und etwas Länge. '.repeat(3),
+      );
+      const text = paragraphs.join('\n\n');
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 200, chunkOverlap: 50 },
+      });
+
+      expect(result.chunks.length).toBeGreaterThan(5);
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should emit exact offsets for separator-free text (character split path)', () => {
+      const text = 'X'.repeat(2500);
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 1000, chunkOverlap: 200 },
+      });
+
+      expect(
+        result.chunks.map((chunk) => chunk.metadata.startCharOffset),
+      ).toEqual([0, 800, 1600]);
+      expect(
+        result.chunks.map((chunk) => chunk.metadata.endCharOffset),
+      ).toEqual([1000, 1800, 2500]);
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should emit valid offsets when an oversized segment forces recursion with overlap seeding', () => {
+      const text =
+        'A'.repeat(10000) + '\n\n' + 'Ein normaler Absatz mit Inhalt.';
+
+      const result = handler.processText({
+        text,
+        metadata: { chunkSize: 2000, chunkOverlap: 200 },
+      });
+
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+
+    it('should split a large document without quadratic position searching', () => {
+      // ~1MB of unique words: every chunk exists verbatim in the text, but a
+      // position search that rescans the document per chunk (the removed
+      // findChunkPosition fallback) degrades to minutes on inputs like this.
+      let text = '';
+      let word = 0;
+      while (text.length < 1_000_000) {
+        text += `wort${word} `;
+        word += 1;
+        if (word % 100 === 0) {
+          text += '\n';
+        }
+      }
+
+      const startedAt = performance.now();
+      const result = handler.processText({ text });
+      const elapsedMs = performance.now() - startedAt;
+
+      expect(result.chunks.length).toBeGreaterThan(500);
+      expect(elapsedMs).toBeLessThan(2000);
+      expectOffsetsPointAtContent(text, result.chunks);
+    });
+  });
+
   describe('chunk size enforcement', () => {
     it('should split an oversized leading segment instead of emitting it as a single chunk', () => {
       // Incident shape (AYC PDF ingestion): a huge separator-free block at the
@@ -330,6 +498,130 @@ describe('RecursiveSplitterHandler', () => {
 
       for (const chunk of result.chunks) {
         expect(chunk.text.length).toBeLessThanOrEqual(1000);
+      }
+    });
+  });
+
+  describe('offset contract (property-based)', () => {
+    // Deterministic LCG so every run tests the identical case sequence and a
+    // failure is reproducible from the reported case index alone.
+    const createNextInt = (initialSeed: number) => {
+      let seed = initialSeed;
+      return (min: number, max: number): number => {
+        seed = (seed * 1103515245 + 12345) % 2 ** 31;
+        return min + Math.floor((seed / 2 ** 31) * (max - min + 1));
+      };
+    };
+
+    // Adversarial building blocks: separators of every level, separator-free
+    // low-entropy runs (repeated chars, dot leaders, tabs), and multi-byte
+    // characters.
+    const TEXT_FRAGMENTS = [
+      'wort',
+      'Satz.',
+      'Absatz!',
+      ' ',
+      '\n',
+      '\n\n',
+      '. ',
+      ', ',
+      '; ',
+      '? ',
+      '! ',
+      '\t',
+      'ÄÖÜäöüß',
+      'A'.repeat(50),
+      '.'.repeat(30),
+      '   ',
+      'x',
+    ];
+
+    const buildRandomText = (
+      nextInt: (min: number, max: number) => number,
+    ): string => {
+      const fragmentCount = nextInt(1, 400);
+      let text = '';
+      for (let i = 0; i < fragmentCount; i++) {
+        text += TEXT_FRAGMENTS[nextInt(0, TEXT_FRAGMENTS.length - 1)];
+      }
+      return text;
+    };
+
+    // Note: chunk starts are NOT required to be strictly increasing — with
+    // overlap close to chunkSize, a chunk's carried overlap may legitimately
+    // reach back past a smaller chunk emitted by a deeper recursion.
+    const collectChunkViolations = (
+      text: string,
+      chunkSize: number,
+      chunk: TextChunk,
+    ): string[] => {
+      const violations: string[] = [];
+      const start = chunk.metadata.startCharOffset as number;
+      const end = chunk.metadata.endCharOffset as number;
+      const startLine = chunk.metadata.startLine as number;
+      const endLine = chunk.metadata.endLine as number;
+
+      if (chunk.text.length > chunkSize) {
+        violations.push(`chunk exceeds size limit: ${chunk.text.length}`);
+      }
+      if (!(start >= 0 && end > start && end <= text.length)) {
+        violations.push(`offsets out of bounds: [${start},${end})`);
+      } else if (!chunk.text.endsWith(text.slice(start, end))) {
+        violations.push(`slice [${start},${end}) does not match chunk text`);
+      }
+      if (!(startLine >= 1 && endLine >= startLine)) {
+        violations.push(`invalid line range: ${startLine}-${endLine}`);
+      }
+      return violations;
+    };
+
+    const findUncoveredContentOffset = (
+      text: string,
+      chunks: TextChunk[],
+    ): number | null => {
+      const covered = new Uint8Array(text.length);
+      for (const chunk of chunks) {
+        const start = chunk.metadata.startCharOffset as number;
+        const end = chunk.metadata.endCharOffset as number;
+        covered.fill(1, Math.max(0, start), Math.max(0, end));
+      }
+      for (let offset = 0; offset < text.length; offset++) {
+        if (covered[offset] === 0 && text[offset].trim().length > 0) {
+          return offset;
+        }
+      }
+      return null;
+    };
+
+    it('should uphold the offset contract across randomized inputs and configs', () => {
+      const nextInt = createNextInt(20260722);
+
+      for (let caseIndex = 0; caseIndex < 300; caseIndex++) {
+        const text = buildRandomText(nextInt);
+        const chunkSize = nextInt(1, 300);
+        const chunkOverlap = nextInt(0, chunkSize - 1);
+
+        const result = handler.processText({
+          text,
+          metadata: { chunkSize, chunkOverlap },
+        });
+
+        const violations = result.chunks.flatMap((chunk) =>
+          collectChunkViolations(text, chunkSize, chunk),
+        );
+        const uncoveredOffset = findUncoveredContentOffset(text, result.chunks);
+        if (uncoveredOffset !== null) {
+          violations.push(`content at offset ${uncoveredOffset} not covered`);
+        }
+
+        // Case parameters are part of the compared object so a failure
+        // reports which deterministic case broke the contract.
+        expect({ caseIndex, chunkSize, chunkOverlap, violations }).toEqual({
+          caseIndex,
+          chunkSize,
+          chunkOverlap,
+          violations: [],
+        });
       }
     });
   });
