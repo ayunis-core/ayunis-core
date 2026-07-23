@@ -3,8 +3,12 @@
 // the start scripts / Dockerfile CMD), so its OpenTelemetry instrumentation
 // patches core modules before anything below is imported.
 import './config/env';
+// Crash handlers - self-register on import; must run before the AppModule
+// import evaluates the whole application graph
+import './common/process/process-crash-handlers';
 // Utils
 import 'reflect-metadata';
+import type { Server } from 'http';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
@@ -16,6 +20,7 @@ import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-option
 
 import { AppModule } from './app/app.module';
 import { METRICS_PATH } from './integrations/metrics/metrics.constants';
+import { parsePositiveIntWithDefault } from './common/util/number.util';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
@@ -26,9 +31,28 @@ class Bootstrap {
     });
 
     this.configureApp(app);
+    this.configureHttpTimeouts(app);
     await app.listen(this.PORT);
 
     Logger.log(`🚀 Application is running on http://localhost:${this.PORT}`);
+  }
+
+  /**
+   * Both timeouts must exceed the fronting proxy's idle timeout: when Node
+   * closes a keep-alive socket first, the proxy can dispatch a request onto
+   * the just-closed socket and surface an intermittent 502. Configured
+   * before listen() so no socket is ever accepted under Node's 5s default.
+   */
+  private static configureHttpTimeouts(
+    app: Awaited<ReturnType<typeof NestFactory.create>>,
+  ) {
+    const server = app.getHttpServer() as Server;
+    const keepAliveTimeout = parsePositiveIntWithDefault(
+      process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS,
+      65_000,
+    );
+    server.keepAliveTimeout = keepAliveTimeout;
+    server.headersTimeout = keepAliveTimeout + 1_000;
   }
 
   private static configureApp(
