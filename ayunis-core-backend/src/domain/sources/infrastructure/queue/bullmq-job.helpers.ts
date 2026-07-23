@@ -1,5 +1,5 @@
 import type { Logger } from '@nestjs/common';
-import type { JobsOptions, Queue } from 'bullmq';
+import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 
 /**
@@ -15,6 +15,46 @@ export const STANDARD_JOB_OPTIONS: JobsOptions = {
   removeOnComplete: 100,
   removeOnFail: 200,
 };
+
+/**
+ * True when no BullMQ retry will follow this attempt. When opts.attempts is
+ * unset, BullMQ runs the job exactly once, so the first attempt is final.
+ */
+export function isFinalAttempt(job: Job): boolean {
+  return job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+}
+
+/**
+ * Failure of a job attempt that BullMQ will retry. The AppSignal agent is
+ * configured to drop errors with this name (`ignoreErrors` in appsignal.cjs)
+ * so only final failures — thrown with their original name — become
+ * incidents. Message and stack are preserved so job.failedReason and logs
+ * stay as informative as the original error.
+ */
+export class JobRetryScheduledError extends Error {
+  constructor(original: unknown) {
+    const message =
+      original instanceof Error ? original.message : String(original);
+    super(message, { cause: original });
+    this.name = 'JobRetryScheduledError';
+    if (original instanceof Error && original.stack) {
+      this.stack = original.stack;
+    }
+  }
+}
+
+/**
+ * BullMQ's UnrecoverableError aborts remaining retries by error name, so it
+ * must never be renamed — and its failure is final regardless of attempts.
+ */
+export function wrapIfRetryScheduled(job: Job, error: unknown): unknown {
+  const isUnrecoverable =
+    error instanceof Error && error.name === 'UnrecoverableError';
+  if (isFinalAttempt(job) || isUnrecoverable) {
+    return error;
+  }
+  return new JobRetryScheduledError(error);
+}
 
 /**
  * Best-effort cancellation of a queued job keyed by its source id. Active jobs
