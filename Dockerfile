@@ -74,6 +74,7 @@ COPY --from=build /usr/src/app/ayunis-core-backend/dist ./dist
 COPY --from=build /usr/src/app/ayunis-core-backend/frontend ./dist/frontend
 # AppSignal bootstrap, loaded before the app via --require in CMD
 COPY --from=build /usr/src/app/ayunis-core-backend/appsignal.cjs ./appsignal.cjs
+COPY --from=build /usr/src/app/ayunis-core-backend/appsignal-hooks.cjs ./appsignal-hooks.cjs
 
 # Uploads dir (resolved relative to cwd = /app at runtime; matches the
 # app-uploads:/app/uploads compose mount)
