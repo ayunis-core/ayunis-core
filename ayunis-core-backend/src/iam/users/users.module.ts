@@ -141,6 +141,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     SuperAdminUserResponseDtoMapper,
   ],
   exports: [
+    CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
     SendConfirmationEmailUseCase,

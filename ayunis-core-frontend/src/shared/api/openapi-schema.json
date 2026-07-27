@@ -10289,7 +10289,7 @@
           "role": {
             "type": "string",
             "description": "User role",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "orgId": {
@@ -10361,7 +10361,7 @@
           "role": {
             "type": "string",
             "description": "New role for the user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "admin"
           }
         },
@@ -10509,7 +10509,7 @@
           "role": {
             "type": "string",
             "description": "Role for the user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "sendActivationEmail": {
@@ -10542,7 +10542,7 @@
           "role": {
             "type": "string",
             "description": "User role",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "orgId": {
@@ -10602,7 +10602,7 @@
           "role": {
             "type": "string",
             "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           }
         },
@@ -10631,7 +10631,7 @@
           "role": {
             "type": "string",
             "description": "Role to assign to the invited user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           }
         },
@@ -10663,7 +10663,7 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "success": {
@@ -10744,7 +10744,7 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "status": {
@@ -10812,7 +10812,7 @@
           "role": {
             "type": "string",
             "description": "Role assigned to the invited user",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "status": {
@@ -12618,7 +12618,7 @@
           "userRole": {
             "type": "string",
             "description": "The role of the team member in the organization",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "joinedAt": {
@@ -17443,7 +17443,7 @@
           "role": {
             "type": "string",
             "description": "User role",
-            "enum": ["admin", "user"],
+            "enum": ["admin", "manager", "user"],
             "example": "user"
           },
           "systemRole": {

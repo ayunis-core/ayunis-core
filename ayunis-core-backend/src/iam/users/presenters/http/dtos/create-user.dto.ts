@@ -32,7 +32,7 @@ export class CreateUserDto {
     example: UserRole.USER,
   })
   @IsEnum(UserRole, {
-    message: 'Role must be either admin or user',
+    message: 'Role must be a valid user role',
   })
   role: UserRole;
 
