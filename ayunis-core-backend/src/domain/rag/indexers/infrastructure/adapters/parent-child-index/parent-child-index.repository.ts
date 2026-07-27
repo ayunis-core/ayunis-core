@@ -36,7 +36,9 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     const records = parentChunks.map((chunk) =>
       this.parentChildIndexerMapper.toParentChunkRecord(chunk),
     );
-    await this.parentChunkRepository.save(records);
+    // Chunked insert: a large document's chunks in one statement can exceed
+    // Postgres's 65535-parameter limit.
+    await this.parentChunkRepository.save(records, { chunk: 500 });
   }
 
   async delete(relatedDocumentId: UUID) {
