@@ -14,6 +14,7 @@
     "role": "Rolle",
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
+    "roleManager": "Manager",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
     "delete": "Löschen"
@@ -230,6 +231,7 @@
     "rolePlaceholder": "Rolle auswählen",
     "roleRequired": "Rolle ist erforderlich",
     "roleUser": "Benutzer",
+    "roleManager": "Manager",
     "roleAdmin": "Administrator",
     "create": "Benutzer erstellen",
     "creating": "Wird erstellt...",

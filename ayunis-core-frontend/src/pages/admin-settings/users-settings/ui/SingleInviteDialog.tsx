@@ -157,6 +157,9 @@ export default function SingleInviteDialog({
                   <SelectItem value="user">
                     {t('inviteDialog.roleUser')}
                   </SelectItem>
+                  <SelectItem value="manager">
+                    {t('inviteDialog.roleManager')}
+                  </SelectItem>
                   <SelectItem value="admin">
                     {t('inviteDialog.roleAdmin')}
                   </SelectItem>

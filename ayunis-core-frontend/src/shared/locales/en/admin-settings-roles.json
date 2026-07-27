@@ -1,0 +1,31 @@
+{
+  "title": "Roles & Permissions",
+  "description": "Choose what managers and users are allowed to do. Admins always have every permission.",
+  "columns": {
+    "permission": "Permission",
+    "user": "User",
+    "manager": "Manager",
+    "admin": "Admin"
+  },
+  "groups": {
+    "teams": "Teams",
+    "skills": "Skills",
+    "knowledge_bases": "Knowledge bases"
+  },
+  "permissions": {
+    "manage_teams": "Manage teams",
+    "assign_users_to_teams": "Assign users to teams",
+    "manage_skills": "Manage skills",
+    "share_skills": "Share skills",
+    "manage_knowledge_bases": "Manage knowledge bases",
+    "share_knowledge_bases": "Share knowledge bases"
+  },
+  "adminHint": "Admins always have every permission and cannot be restricted.",
+  "save": "Save changes",
+  "saving": "Saving…",
+  "saveSuccess": "Permissions updated",
+  "saveError": "Could not update permissions",
+  "minOnePermission": "Each role must keep at least one permission",
+  "loadError": "Could not load permissions",
+  "retry": "Retry"
+}

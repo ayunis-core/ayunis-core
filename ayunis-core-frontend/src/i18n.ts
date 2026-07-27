@@ -64,6 +64,8 @@ import enAdminSettingsAcademy from './shared/locales/en/admin-settings-academy.j
 import deAdminSettingsAcademy from './shared/locales/de/admin-settings-academy.json';
 import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
 import deAdminSettingsAnonymization from './shared/locales/de/admin-settings-anonymization.json';
+import enAdminSettingsRoles from './shared/locales/en/admin-settings-roles.json';
+import deAdminSettingsRoles from './shared/locales/de/admin-settings-roles.json';
 import enAdminSettingsRetention from './shared/locales/en/admin-settings-retention.json';
 import deAdminSettingsRetention from './shared/locales/de/admin-settings-retention.json';
 import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
@@ -110,6 +112,7 @@ const resources = {
     'admin-settings-security': enAdminSettingsSecurity,
     'admin-settings-academy': enAdminSettingsAcademy,
     'admin-settings-anonymization': enAdminSettingsAnonymization,
+    'admin-settings-roles': enAdminSettingsRoles,
     'admin-settings-retention': enAdminSettingsRetention,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
     'admin-settings-api-keys': enAdminSettingsApiKeys,
@@ -149,6 +152,7 @@ const resources = {
     'admin-settings-security': deAdminSettingsSecurity,
     'admin-settings-academy': deAdminSettingsAcademy,
     'admin-settings-anonymization': deAdminSettingsAnonymization,
+    'admin-settings-roles': deAdminSettingsRoles,
     'admin-settings-retention': deAdminSettingsRetention,
     'admin-settings-letterheads': deAdminSettingsLetterheads,
     'admin-settings-api-keys': deAdminSettingsApiKeys,

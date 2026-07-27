@@ -14,6 +14,7 @@
     "role": "Role",
     "roleAdmin": "Admin",
     "roleUser": "User",
+    "roleManager": "Manager",
     "actions": "Actions",
     "sendPasswordReset": "Send Password Reset",
     "delete": "Delete"
@@ -230,6 +231,7 @@
     "rolePlaceholder": "Select a role",
     "roleRequired": "Role is required",
     "roleUser": "User",
+    "roleManager": "Manager",
     "roleAdmin": "Admin",
     "create": "Create User",
     "creating": "Creating...",
