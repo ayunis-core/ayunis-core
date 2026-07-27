@@ -88,7 +88,7 @@ Every domain module ships a `SUMMARY.md`. Read it first when editing an existing
 ├── domain/              # Pure entities, no decorators
 ├── application/
 │   ├── use-cases/       # Business operations
-│   ├── ports/           # Abstract interfaces
+│   ├── ports/           # Abstract classes (DI tokens, not interfaces)
 │   └── dtos/            # Validation decorators
 ├── infrastructure/
 │   └── persistence/postgres/
@@ -98,6 +98,20 @@ Every domain module ships a `SUMMARY.md`. Read it first when editing an existing
 ├── presenters/http/     # Controllers (thin)
 └── [module].module.ts   # NestJS wiring
 ```
+
+### File & class naming
+
+Suffixes carry structural meaning — the wrong one silently breaks the layer contract readers rely on and triggers review churn. **Before naming a new file, grep how the suffix is already used** (`find src -name "*.<suffix>.ts"`) and match that role.
+
+- **`*.service.ts`** — application-layer domain service (`application/services/`). In `infrastructure/`, only for adapters wrapping an *external* capability (encryption, export, transcription, queue) — never a persistence read helper.
+- **`*.repository.ts`** — port-backed persistence adapter. **Must `extends` an abstract port** (every `*Repository` does). No port → it is not a repository.
+- **`*.query.ts`** — query-input DTO in the application layer: the parameter object for a query use case (`GetXQuery`). Not a persistence read class.
+- **`*.command.ts`** — command-input DTO in the application layer: the parameter object for a write use case.
+- **`*.mapper.ts`** — object conversion, always in a `mappers/` dir. Two roles: domain ↔ record in `infrastructure/persistence/*/mappers/`, and domain → response DTO in `presenters/http/mappers/` (some modules also keep application-layer mappers in `application/mappers/`).
+
+**Ports are abstract classes, not interfaces** — NestJS DI needs a runtime token. Impls `extends` the port; the module wires `{ provide: Port, useClass: Impl }`; consumers inject the abstract class directly (no `@Inject('TOKEN')`).
+
+A **read-only collaborator of a repository** (a `findOne*`/`findMany*` helper with no port, often extracted to keep the repository under the file-size limit) is neither a repository nor a service — name it `*.finder.ts` / `*Finder`.
 
 ## Key Patterns
 
@@ -147,3 +161,4 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 | Test implementation details (mock internals)          | Brittle tests that break on refactor | Test inputs → outputs and side effects |
 | Use vague test names (`should work`, `handles error`) | Tests are documentation              | Name the specific behavior being proven|
 | Throw HTTP exceptions from use cases                  | Couples domain to HTTP               | Throw domain errors                    |
+| Name a portless read helper `*.repository`            | Implies a port-backed adapter        | `*.finder.ts` / `*Finder`              |
