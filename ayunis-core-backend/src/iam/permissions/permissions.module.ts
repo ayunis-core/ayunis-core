@@ -8,13 +8,15 @@ import { LocalRolePermissionsRepository } from './infrastructure/persistence/loc
 import { HasPermissionUseCase } from './application/use-cases/has-permission/has-permission.use-case';
 import { GetRolePermissionsUseCase } from './application/use-cases/get-role-permissions/get-role-permissions.use-case';
 import { UpdateRolePermissionsUseCase } from './application/use-cases/update-role-permissions/update-role-permissions.use-case';
+import { GetMyPermissionsUseCase } from './application/use-cases/get-my-permissions/get-my-permissions.use-case';
 import { SeedDefaultRolePermissionsUseCase } from './application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 
 import { RolePermissionsController } from './presenters/http/role-permissions.controller';
+import { MyPermissionsController } from './presenters/http/my-permissions.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([RolePermissionRecord])],
-  controllers: [RolePermissionsController],
+  controllers: [RolePermissionsController, MyPermissionsController],
   providers: [
     {
       provide: RolePermissionsRepository,
@@ -23,6 +25,7 @@ import { RolePermissionsController } from './presenters/http/role-permissions.co
     HasPermissionUseCase,
     GetRolePermissionsUseCase,
     UpdateRolePermissionsUseCase,
+    GetMyPermissionsUseCase,
     SeedDefaultRolePermissionsUseCase,
   ],
   // HasPermissionUseCase is exported so the PermissionsGuard (bound globally by

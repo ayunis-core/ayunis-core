@@ -8,6 +8,7 @@ import KnowledgeBasesEmptyState from './KnowledgeBasesEmptyState';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import type { KnowledgeBase } from '../model/openapi';
 import { useTranslation } from 'react-i18next';
+import { useMyPermissions } from '@/features/permissions';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   Tabs,
@@ -25,6 +26,8 @@ export default function KnowledgeBasesPage({
   knowledgeBases,
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+  const canCreate = isLoadingPermissions || can('manage_knowledge_bases');
 
   const personalKnowledgeBases = knowledgeBases
     .filter((kb) => !kb.isShared)
@@ -79,12 +82,18 @@ export default function KnowledgeBasesPage({
               {personalKnowledgeBases.length === 0 ? (
                 <EmptyState
                   title={t('emptyState.personal.title')}
-                  description={t('emptyState.personal.description')}
+                  description={
+                    canCreate
+                      ? t('emptyState.personal.description')
+                      : t('emptyState.noAccessDescription')
+                  }
                   action={
-                    <CreateKnowledgeBaseDialog
-                      buttonText={t('createDialog.buttonTextFirst')}
-                      showIcon={true}
-                    />
+                    canCreate ? (
+                      <CreateKnowledgeBaseDialog
+                        buttonText={t('createDialog.buttonTextFirst')}
+                        showIcon={true}
+                      />
+                    ) : undefined
                   }
                 />
               ) : (

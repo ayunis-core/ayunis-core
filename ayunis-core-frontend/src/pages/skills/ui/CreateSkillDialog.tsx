@@ -11,6 +11,7 @@ import {
   ShortDescriptionField,
   InstructionsField,
 } from '@/widgets/entity-form-fields';
+import { useMyPermissions } from '@/features/permissions';
 
 interface CreateSkillDialogProps {
   buttonText?: string;
@@ -32,6 +33,15 @@ export default function CreateSkillDialog({
     resetForm,
     isLoading,
   } = useCreateSkill();
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+
+  // Hide the control from members without the manage-skills permission (rather
+  // than let them hit a 403 on submit). Wait for the permissions fetch to
+  // resolve first, so the surrounding OnboardingTourTarget wrapper isn't left
+  // empty on first visit before /permissions/me is cached.
+  if (!isLoadingPermissions && !can('manage_skills')) {
+    return null;
+  }
 
   const handleSubmit = (data: CreateSkillData) => {
     originalOnSubmit(data);

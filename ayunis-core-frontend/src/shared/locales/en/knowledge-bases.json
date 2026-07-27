@@ -59,6 +59,7 @@
   "emptyState": {
     "title": "No knowledge bases yet",
     "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",
+    "noAccessDescription": "Ask an admin to share a knowledge base with you, or to give you permission to create your own.",
     "personal": {
       "title": "No own knowledge bases yet",
       "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI."

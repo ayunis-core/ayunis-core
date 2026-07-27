@@ -51,12 +51,17 @@ configurable (`RoleNotConfigurableError`). Writes are transactional: both
 `setForRole` and `setForRoles` delete then insert in one transaction, so seeding
 a new org's whole matrix cannot half-succeed.
 
+Any authenticated user can read **their own** effective permissions via
+`MyPermissionsController` (`GET /permissions/me`, no role gate) →
+`GetMyPermissionsUseCase` (admin ⇒ all permissions, otherwise the caller's
+role grants). The frontend uses this to hide controls the user cannot use.
+
 ## Layout
 
 Standard hexagonal: `domain/` (`RolePermission` entity, `Permission` enum,
 `default-role-permissions.constants`), `application/`
 (repository port, use-cases, errors), `infrastructure/`
 (local TypeORM record + mapper + repository), `presenters/http/` (admin
-controller + DTOs).
+`RolePermissionsController`, non-admin `MyPermissionsController`, and DTOs).
 Two use cases are exported: `HasPermissionUseCase` for the `PermissionsGuard`,
 and `SeedDefaultRolePermissionsUseCase` for org creation.

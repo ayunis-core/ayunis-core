@@ -17,6 +17,7 @@
   "emptyState": {
     "title": "No skills yet",
     "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations.",
+    "noAccessDescription": "Ask an admin to share a skill with you, or to give you permission to create your own.",
     "personal": {
       "title": "No own skills yet",
       "description": "Create your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations."

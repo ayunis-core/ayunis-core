@@ -6,6 +6,7 @@ import {
   useCreateDialogTranslations,
 } from '@/widgets/create-entity-dialog';
 import { NameField, ShortDescriptionField } from '@/widgets/entity-form-fields';
+import { useMyPermissions } from '@/features/permissions';
 
 interface CreateKnowledgeBaseDialogProps {
   buttonText?: string;
@@ -28,6 +29,15 @@ export default function CreateKnowledgeBaseDialog({
   const { form, onSubmit, resetForm, isLoading } = useCreateKnowledgeBase({
     onClose: handleClose,
   });
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+
+  // Hide the control from members without the manage-knowledge-bases permission
+  // (rather than let them hit a 403 on submit). Wait for the permissions fetch
+  // to resolve first, so the surrounding OnboardingTourTarget wrapper isn't left
+  // empty on first visit before /permissions/me is cached.
+  if (!isLoadingPermissions && !can('manage_knowledge_bases')) {
+    return null;
+  }
 
   return (
     <CreateEntityDialog
