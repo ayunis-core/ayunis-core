@@ -487,6 +487,57 @@ export interface SuperAdminOrgListResponseDto {
   pagination: PaginationDto;
 }
 
+export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RolePermissionSetDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export type RolePermissionSetDtoPermissionsItem = typeof RolePermissionSetDtoPermissionsItem[keyof typeof RolePermissionSetDtoPermissionsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RolePermissionSetDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills: 'share_skills',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases: 'share_knowledge_bases',
+} as const;
+
+export interface RolePermissionSetDto {
+  role: RolePermissionSetDtoRole;
+  permissions: RolePermissionSetDtoPermissionsItem[];
+}
+
+export interface RolePermissionsResponseDto {
+  /** Granted permissions per configurable role. Admins implicitly hold all permissions and are omitted. */
+  roles: RolePermissionSetDto[];
+}
+
+export type UpdateRolePermissionsDtoPermissionsItem = typeof UpdateRolePermissionsDtoPermissionsItem[keyof typeof UpdateRolePermissionsDtoPermissionsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateRolePermissionsDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills: 'share_skills',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases: 'share_knowledge_bases',
+} as const;
+
+export interface UpdateRolePermissionsDto {
+  /** Permissions granted to the role. Must contain at least one permission. */
+  permissions: UpdateRolePermissionsDtoPermissionsItem[];
+}
+
 /**
  * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
  * @nullable

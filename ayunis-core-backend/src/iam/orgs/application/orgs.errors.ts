@@ -12,6 +12,7 @@ export enum OrgErrorCode {
   ORG_DELETION_FAILED = 'ORG_DELETION_FAILED',
   ORG_RETRIEVAL_FAILED = 'ORG_RETRIEVAL_FAILED',
   ORG_UNAUTHORIZED = 'ORG_UNAUTHORIZED',
+  ORG_UNEXPECTED_ERROR = 'ORG_UNEXPECTED_ERROR',
 }
 
 /**
@@ -123,5 +124,13 @@ export class OrgUnauthorizedError extends OrgError {
       403,
       metadata,
     );
+  }
+}
+
+export class UnexpectedOrgError extends OrgError {
+  constructor(error: Error) {
+    super('Unexpected org error', OrgErrorCode.ORG_UNEXPECTED_ERROR, 500, {
+      error,
+    });
   }
 }

@@ -22,6 +22,7 @@ import { BudgetAlertsModule } from './budget-alerts/budget-alerts.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
 import { AcademyAccessModule } from './academy-access/academy-access.module';
+import { PermissionsModule } from './permissions/permissions.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { MfaModule } from './mfa/mfa.module';
@@ -29,6 +30,7 @@ import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
 import { RolesGuard } from './authorization/application/guards/roles.guard';
+import { PermissionsGuard } from './authorization/application/guards/permissions.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
@@ -57,6 +59,7 @@ const IAM_FEATURE_MODULES = [
   ApiKeysModule,
   AddonsModule,
   AcademyAccessModule,
+  PermissionsModule,
   MfaModule,
 ];
 
@@ -83,6 +86,7 @@ const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: IpAllowlistGuard },
   { provide: APP_GUARD, useExisting: EmailConfirmGuard },
   { provide: APP_GUARD, useExisting: RolesGuard },
+  { provide: APP_GUARD, useExisting: PermissionsGuard },
   { provide: APP_GUARD, useExisting: SystemRolesGuard },
   { provide: APP_GUARD, useExisting: AddonGuard },
   { provide: APP_GUARD, useExisting: SubscriptionGuard },

@@ -151,6 +151,7 @@ import type {
   ResetPasswordDto,
   RetentionPolicyResponseDto,
   RevertArtifactDto,
+  RolePermissionsResponseDto,
   RunsControllerSendMessage200,
   RunsControllerSendMessageBody,
   SetAppAlertRequestDto,
@@ -221,6 +222,7 @@ import type {
   UpdatePiiWhitelistRequestDto,
   UpdateQuizQuestionRequestDto,
   UpdateRetentionPolicyRequestDto,
+  UpdateRolePermissionsDto,
   UpdateSeatsDto,
   UpdateSkillDto,
   UpdateSkillTemplateDto,
@@ -2825,6 +2827,164 @@ export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType
 
 
 
+/**
+ * @summary Get the per-role permission grants for the current user's organization
+ */
+export const rolePermissionsControllerGet = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<RolePermissionsResponseDto>(
+      {url: `/role-permissions`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getRolePermissionsControllerGetQueryKey = () => {
+    return [
+    `/role-permissions`
+    ] as const;
+    }
+
+    
+export const getRolePermissionsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRolePermissionsControllerGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof rolePermissionsControllerGet>>> = ({ signal }) => rolePermissionsControllerGet(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RolePermissionsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof rolePermissionsControllerGet>>>
+export type RolePermissionsControllerGetQueryError = unknown
+
+
+export function useRolePermissionsControllerGet<TData = Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof rolePermissionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof rolePermissionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRolePermissionsControllerGet<TData = Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof rolePermissionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof rolePermissionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRolePermissionsControllerGet<TData = Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the per-role permission grants for the current user's organization
+ */
+
+export function useRolePermissionsControllerGet<TData = Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rolePermissionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRolePermissionsControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Replace the permissions granted to a role
+ */
+export const rolePermissionsControllerUpdate = (
+    role: 'manager' | 'user',
+    updateRolePermissionsDto: UpdateRolePermissionsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/role-permissions/${role}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRolePermissionsDto
+    },
+      );
+    }
+  
+
+
+export const getRolePermissionsControllerUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>, TError,{role: 'manager' | 'user';data: UpdateRolePermissionsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>, TError,{role: 'manager' | 'user';data: UpdateRolePermissionsDto}, TContext> => {
+
+const mutationKey = ['rolePermissionsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>, {role: 'manager' | 'user';data: UpdateRolePermissionsDto}> = (props) => {
+          const {role,data} = props ?? {};
+
+          return  rolePermissionsControllerUpdate(role,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RolePermissionsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>>
+    export type RolePermissionsControllerUpdateMutationBody = UpdateRolePermissionsDto
+    export type RolePermissionsControllerUpdateMutationError = unknown
+
+    /**
+ * @summary Replace the permissions granted to a role
+ */
+export const useRolePermissionsControllerUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>, TError,{role: 'manager' | 'user';data: UpdateRolePermissionsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rolePermissionsControllerUpdate>>,
+        TError,
+        {role: 'manager' | 'user';data: UpdateRolePermissionsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRolePermissionsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Check if the current organization has an active subscription
  */

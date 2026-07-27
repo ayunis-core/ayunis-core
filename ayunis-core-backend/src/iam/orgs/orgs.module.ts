@@ -15,9 +15,10 @@ import { FindAllOrgIdsUseCase } from './application/use-cases/find-all-org-ids/f
 import { SuperAdminGetAllOrgsUseCase } from './application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
 import { SuperAdminOrgsController } from './presenters/http/super-admin-orgs.controller';
 import { SuperAdminOrgResponseDtoMapper } from './presenters/http/mappers/super-admin-org-response-dto.mapper';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrgRecord])],
+  imports: [TypeOrmModule.forFeature([OrgRecord]), PermissionsModule],
   controllers: [SuperAdminOrgsController],
   providers: [
     {

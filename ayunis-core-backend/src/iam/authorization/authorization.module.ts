@@ -5,9 +5,11 @@ import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { TrialsModule } from '../trials/trials.module';
 import { AddonsModule } from '../addons/addons.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 import { EmailConfirmGuard } from './application/guards/email-confirm.guard';
 import { SystemRolesGuard } from './application/guards/system-roles.guard';
 import { AddonGuard } from './application/guards/addon.guard';
+import { PermissionsGuard } from './application/guards/permissions.guard';
 import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-subscription.guard';
 
 /**
@@ -23,7 +25,7 @@ import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-su
  * @nestjs/passport exposes its strategy module.
  */
 @Module({
-  imports: [SubscriptionsModule, TrialsModule, AddonsModule],
+  imports: [SubscriptionsModule, TrialsModule, AddonsModule, PermissionsModule],
   providers: [
     EmailConfirmGuard,
     RolesGuard,
@@ -31,6 +33,7 @@ import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-su
     SubscriptionGuard,
     RateLimitGuard,
     AddonGuard,
+    PermissionsGuard,
     UsageBasedSubscriptionGuard,
   ],
   exports: [
@@ -40,10 +43,12 @@ import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-su
     SubscriptionGuard,
     RateLimitGuard,
     AddonGuard,
+    PermissionsGuard,
     UsageBasedSubscriptionGuard,
     SubscriptionsModule,
     TrialsModule,
     AddonsModule,
+    PermissionsModule,
   ],
 })
 export class AuthorizationModule {}

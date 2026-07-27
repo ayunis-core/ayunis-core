@@ -1317,6 +1317,59 @@
         "tags": ["Super Admin Orgs"]
       }
     },
+    "/role-permissions": {
+      "get": {
+        "operationId": "RolePermissionsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolePermissionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the per-role permission grants for the current user's organization",
+        "tags": ["Role Permissions"]
+      }
+    },
+    "/role-permissions/{role}": {
+      "put": {
+        "operationId": "RolePermissionsController_update",
+        "parameters": [
+          {
+            "name": "role",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["manager", "user"],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRolePermissionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Replace the permissions granted to a role",
+        "tags": ["Role Permissions"]
+      }
+    },
     "/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
@@ -10978,6 +11031,64 @@
           }
         },
         "required": ["data", "pagination"]
+      },
+      "RolePermissionSetDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["admin", "manager", "user"]
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills",
+                "manage_knowledge_bases",
+                "share_knowledge_bases"
+              ]
+            }
+          }
+        },
+        "required": ["role", "permissions"]
+      },
+      "RolePermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "description": "Granted permissions per configurable role. Admins implicitly hold all permissions and are omitted.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RolePermissionSetDto"
+            }
+          }
+        },
+        "required": ["roles"]
+      },
+      "UpdateRolePermissionsDto": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "description": "Permissions granted to the role. Must contain at least one permission.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills",
+                "manage_knowledge_bases",
+                "share_knowledge_bases"
+              ]
+            }
+          }
+        },
+        "required": ["permissions"]
       },
       "ActiveSubscriptionResponseDto": {
         "type": "object",
