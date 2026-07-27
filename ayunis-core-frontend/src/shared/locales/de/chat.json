@@ -15,6 +15,7 @@
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
+    "errorImageTooLarge": "Das Bild ist zu groß für das gewählte Modell. Bitte verkleinern Sie es (z. B. Auflösung reduzieren) und versuchen Sie es erneut.",
     "errorUnexpected": "Ein unerwarteter Fehler ist aufgetreten",
     "errorNoModelFound": "Kein Modell gefunden",
     "errorMaxIterationsReached": "Maximale Anzahl an Iterationen erreicht",

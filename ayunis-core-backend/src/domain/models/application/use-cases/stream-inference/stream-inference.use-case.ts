@@ -10,6 +10,7 @@ import { Model } from 'src/domain/models/domain/model.entity';
 import {
   InferenceAbortedError,
   InferenceFailedError,
+  InferenceImageTooLargeError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
@@ -50,6 +51,7 @@ export class StreamInferenceUseCase {
       return new InferenceAbortedError();
     }
     const status = extractUpstreamStatus(error);
+    const message = error instanceof Error ? error.message : String(error);
     this.logger.error('Provider stream inference failed', {
       model: input.model.name,
       provider: input.model.provider,
@@ -59,6 +61,12 @@ export class StreamInferenceUseCase {
       errorName: error instanceof Error ? error.name : 'Unknown',
       status,
     });
+    // Anthropic/Bedrock reject oversized images with "image exceeds N MB
+    // maximum" — surface a distinct code so the UI can tell the user to shrink
+    // it instead of showing a generic failure.
+    if (/image exceeds .* maximum/i.test(message)) {
+      return new InferenceImageTooLargeError({ status });
+    }
     return new InferenceFailedError('Provider inference failed', { status });
   }
 
