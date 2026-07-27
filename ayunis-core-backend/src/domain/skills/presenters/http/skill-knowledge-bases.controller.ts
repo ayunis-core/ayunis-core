@@ -28,6 +28,8 @@ import { KnowledgeBaseResponseDto } from 'src/domain/knowledge-bases/presenters/
 import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
 @RequireFeature(FeatureFlag.Skills)
@@ -46,6 +48,7 @@ export class SkillKnowledgeBasesController {
     private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Assign knowledge base to skill' })
   @ApiParam({
@@ -89,6 +92,7 @@ export class SkillKnowledgeBasesController {
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':skillId/knowledge-bases/:knowledgeBaseId')
   @ApiOperation({ summary: 'Unassign knowledge base from skill' })
   @ApiParam({

@@ -9,6 +9,7 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 
 describe('FindUsersByOrgIdUseCase', () => {
   let useCase: FindUsersByOrgIdUseCase;
@@ -29,6 +30,10 @@ describe('FindUsersByOrgIdUseCase', () => {
         FindUsersByOrgIdUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: HasPermissionUseCase,
+          useValue: { execute: jest.fn().mockResolvedValue(false) },
+        },
       ],
     }).compile();
 
