@@ -133,6 +133,29 @@ describe('DownloadObjectUseCase', () => {
       );
     });
 
+    it('should not expose the object path or the upstream message', async () => {
+      // Arrange
+      const objectName = 'org-id/thread-id/message-id/3.jpg';
+      const command = new DownloadObjectCommand(objectName);
+
+      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(
+          new Error('getaddrinfo EAI_AGAIN cdn-core.ayunis.com'),
+        );
+
+      // Act
+      const error = await useCase.execute(command).catch((e: unknown) => e);
+
+      // Assert — the serialised HTTP body is what reaches the client
+      const body = JSON.stringify(
+        (error as DownloadFailedError).toHttpException().getResponse(),
+      );
+      expect(body).not.toContain(objectName);
+      expect(body).not.toContain('cdn-core.ayunis.com');
+    });
+
     it('should pass through ObjectNotFoundError from download', async () => {
       // Arrange
       const objectName = 'test-file.txt';

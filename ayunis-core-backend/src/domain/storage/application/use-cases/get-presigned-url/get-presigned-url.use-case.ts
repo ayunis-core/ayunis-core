@@ -65,11 +65,7 @@ export class GetPresignedUrlUseCase {
         `Failed to generate presigned URL for object: ${command.objectName}`,
         error,
       );
-      throw new DownloadFailedError({
-        objectName: command.objectName,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        metadata: { originalError: error as Error },
-      });
+      throw new DownloadFailedError();
     }
   }
 
@@ -81,15 +77,10 @@ export class GetPresignedUrlUseCase {
     objectName: string,
     bucket?: string,
   ): Promise<boolean> {
-    try {
-      const bucketName = bucket ?? this.getDefaultBucket();
-      return this.objectStorage.exists(new StorageUrl(objectName, bucketName));
-    } catch (error) {
-      this.logger.error(
-        `Error checking if object exists: ${objectName}`,
-        error,
-      );
-      return false;
-    }
+    // Rejections propagate to execute()'s handler on purpose: a stat that
+    // fails because storage is unreachable is a 500, not a 404 telling the
+    // caller their object is gone.
+    const bucketName = bucket ?? this.getDefaultBucket();
+    return this.objectStorage.exists(new StorageUrl(objectName, bucketName));
   }
 }

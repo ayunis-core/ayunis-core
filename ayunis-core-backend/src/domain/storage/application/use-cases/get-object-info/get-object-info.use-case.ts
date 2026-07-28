@@ -58,11 +58,7 @@ export class GetObjectInfoUseCase {
         `Failed to get object info: ${command.objectName}`,
         error,
       );
-      throw new DownloadFailedError({
-        objectName: command.objectName,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        metadata: { originalError: error as Error },
-      });
+      throw new DownloadFailedError();
     }
   }
 
