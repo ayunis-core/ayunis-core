@@ -80,7 +80,13 @@ if (pushApiKey && environment !== 'development') {
     // Queue consumers rename job failures that BullMQ will retry to this
     // error (see bullmq-job.helpers.ts), so only final failures — thrown
     // with their original name — become incidents.
-    ignoreErrors: ['JobRetryScheduledError'],
+    //
+    // PayloadTooLargeError is thrown by body-parser before routing, so the
+    // express instrumentation records it on the middleware span and neither
+    // ApplicationErrorFilter's 4xx guard nor any Nest filter can suppress it.
+    // A client sending an oversized body is a 413, not an app defect
+    // (AYC-553).
+    ignoreErrors: ['JobRetryScheduledError', 'PayloadTooLargeError'],
   });
 
   console.warn(`✅ AppSignal initialized for environment: ${environment}`);
