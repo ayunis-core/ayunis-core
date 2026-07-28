@@ -1,6 +1,38 @@
-// Hooks for the AppSignal OpenTelemetry setup in appsignal.cjs. Kept
-// dependency-free (no dotenv, no @appsignal import) so tests can load this
-// file without booting the AppSignal client.
+// Suppression policy for the AppSignal OpenTelemetry setup in appsignal.cjs.
+// Kept dependency-free (no dotenv, no @appsignal import) so tests can load
+// this file without booting the AppSignal client.
+//
+// WHY THIS FILE IS A REGISTRY AND NOT A PILE OF HOOKS
+//
+// `setError()` is literally `span.recordException(error)`, and AppSignal's
+// SpanProcessor forwards EVERY `exception` span event from EVERY span into the
+// agent (@appsignal/nodejs, dist/helpers.js + dist/span_processor.js).
+// Application-reported and instrumentation-reported errors travel the same
+// path, so there is no "handled" bit to test and no single reporting path to
+// funnel HTTP errors through — the premise PR #1127 was built on. Suppression
+// is therefore always a deliberate exception, and every one of them lives in
+// SUPPRESSIONS below, carrying the reason it exists and the ticket that
+// justified it. The spec enforces that; see appsignal-hooks.spec.ts (AYC-563).
+//
+// TRIAGE ORDER WHEN A NEW INCIDENT APPEARS
+//
+// 1. Did a user experience degraded behaviour? Fix the code. This is the
+//    answer most of the time: four of the five 2026-07-28 investigations
+//    (AYC-549, 552, 553, 555, 560) turned out to be real robustness gaps, not
+//    reporting noise. Suppressing them would have hidden live defects.
+// 2. Is the failure intrinsic to a class of egress we do not own? Scope the
+//    instrumentation with `ignoreRequestHook`. This requires a property that
+//    is structurally true of the whole class, not of one observed failure.
+// 3. Is the error name a deliberate protocol signal we throw ourselves? Use
+//    `ignoreErrors`.
+// 4. Otherwise it is signal. Tune the alert threshold; do not suppress.
+//
+// STANDING RULE
+//
+// The incident list is a queryable record, not a work queue. Per-occurrence
+// notifications are disabled AppSignal-side, so work comes from rate/anomaly
+// triggers and from user-visible failures — not from an incident merely being
+// open.
 
 // Must match the User-Agent the URL crawler sends
 // (cheerio.url-retriever.ts) — it is the key that scopes the undici
@@ -30,7 +62,9 @@ function isCrawlerRequest(request) {
  * The listening stream is the only outbound GET sending exactly
  * `text/event-stream`; MCP JSON-RPC calls are POSTs sending
  * `application/json, text/event-stream`, so genuine connectivity and auth
- * failures stay fully instrumented.
+ * failures stay fully instrumented. That "only" holds today because MCP is the
+ * sole SSE client — a second one would silently widen this predicate, which is
+ * why it is registered as a stopgap rather than a permanent scoping rule.
  */
 function isMcpEventStreamRequest(request) {
   return (
@@ -40,12 +74,130 @@ function isMcpEventStreamRequest(request) {
 }
 
 /**
+ * The key AppSignal's agent matches `ignoreErrors` against.
+ *
+ * OpenTelemetry derives it as `code` when truthy, falling back to `name`
+ * (@opentelemetry/sdk-trace-base, Span.recordException). So socket failures
+ * arrive as `ENOTFOUND` / `UND_ERR_CONNECT_TIMEOUT` / `ECONNABORTED` rather
+ * than as a class name, and an `ignoreErrors` entry naming a class whose
+ * instances carry a `.code` suppresses nothing at all — silently. The spec
+ * asserts every entry below against a real instance of its error so that
+ * mismatch fails the build instead of shipping.
+ */
+function exceptionTypeOf(error) {
+  if (!error) {
+    return undefined;
+  }
+  if (error.code) {
+    return String(error.code);
+  }
+  return error.name;
+}
+
+/**
+ * Every deliberate exception to "OpenTelemetry reports what it observes".
+ *
+ * Levers:
+ * - `ignoreRequestHook`      — undici skips span creation, so nothing can be
+ *                              recorded for the request. Scopes by egress
+ *                              class (triage step 2).
+ * - `ignoreErrors`           — the agent drops errors whose `exceptionType`
+ *                              matches. Global across every action, so it only
+ *                              suits names we throw ourselves (triage step 3).
+ * - `disableInstrumentation` — the instrumentation is not loaded at all.
+ *
+ * `stopgapFor` marks a suppression that covers for a defect rather than
+ * describing a permanent property. Those are expected to be removed when the
+ * referenced ticket lands.
+ */
+const SUPPRESSIONS = [
+  {
+    id: 'crawler-egress',
+    lever: 'ignoreRequestHook',
+    ticket: 'AYC-538',
+    reason:
+      'Untrusted user-supplied URLs. Failures against arbitrary hosts are the ' +
+      "crawler's expected outcome and already surface as " +
+      'UrlRetrieverRetrievalError, so the raw socket errors are not ours to ' +
+      'report.',
+    match: isCrawlerRequest,
+  },
+  {
+    id: 'mcp-listening-stream',
+    lever: 'ignoreRequestHook',
+    ticket: 'AYC-555',
+    stopgapFor: 'AYC-571',
+    reason:
+      'The MCP SDK opens a background SSE GET on connect and close() aborts ' +
+      'it, so undici records an AbortError after the operation already ' +
+      'succeeded. This covers for per-operation connect/close — remove it ' +
+      'once connections are reused.',
+    match: isMcpEventStreamRequest,
+  },
+  {
+    id: 'bullmq-retry-scheduled',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-479',
+    reason:
+      'Queue consumers rename failures BullMQ will retry (see ' +
+      'bullmq-job.helpers.ts), so only final failures — thrown with their ' +
+      'original name — become incidents.',
+    exceptionType: 'JobRetryScheduledError',
+  },
+  {
+    id: 'oversized-request-body',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-553',
+    reason:
+      'body-parser throws before routing, so the express instrumentation ' +
+      'records it and no Nest filter ever sees it. An oversized client body ' +
+      'is a 413, not a defect of ours.',
+    exceptionType: 'PayloadTooLargeError',
+  },
+  {
+    id: 'nestjs-core-instrumentation',
+    lever: 'disableInstrumentation',
+    ticket: 'AYC-479',
+    reason:
+      'Records EVERY exception thrown from guards and handlers on its span, ' +
+      'so expected 4xx errors (failed logins, expired sessions, domain ' +
+      'validation) become incidents. express/http still provide request spans ' +
+      'and route-based action names.',
+    instrumentation: '@opentelemetry/instrumentation-nestjs-core',
+  },
+  {
+    id: 'undici-default-instance',
+    lever: 'disableInstrumentation',
+    ticket: 'AYC-538',
+    reason:
+      'Replaced by the configured instance in appsignal.cjs, which carries ' +
+      'the ignoreRequestHook. Disabling a default also discards the config ' +
+      'AppSignal sets for it, so requireParentforSpans is re-supplied there.',
+    instrumentation: '@opentelemetry/instrumentation-undici',
+  },
+];
+
+function suppressionsFor(lever) {
+  return SUPPRESSIONS.filter((suppression) => suppression.lever === lever);
+}
+
+/**
  * The undici ignore hook wired in appsignal.cjs. Returning true skips span
  * creation entirely, so no exception can be recorded for the request.
  */
 function shouldIgnoreRequest(request) {
-  return isCrawlerRequest(request) || isMcpEventStreamRequest(request);
+  return suppressionsFor('ignoreRequestHook').some((suppression) =>
+    suppression.match(request),
+  );
 }
+
+const ignoredErrorTypes = suppressionsFor('ignoreErrors').map(
+  (suppression) => suppression.exceptionType,
+);
+
+const disabledInstrumentations = suppressionsFor('disableInstrumentation').map(
+  (suppression) => suppression.instrumentation,
+);
 
 // Undici request headers are either a raw `name: value\r\n` string (undici
 // v5) or a flat [name, value, ...] array whose values may be string arrays
@@ -75,8 +227,12 @@ function headerValue(headers, name) {
 }
 
 module.exports = {
+  SUPPRESSIONS,
   isCrawlerRequest,
   isMcpEventStreamRequest,
   shouldIgnoreRequest,
+  exceptionTypeOf,
+  ignoredErrorTypes,
+  disabledInstrumentations,
   CRAWLER_USER_AGENT,
 };
