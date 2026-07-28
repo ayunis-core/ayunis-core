@@ -42,11 +42,17 @@ export class OpenAIErrorMapper {
           : ((body as { message?: string }).message ?? error.message);
       return mappedError(status, message);
     }
+    const status = extractStatus(error);
+    // Express middleware (body-parser, CORS, Multer) rejects requests before
+    // routing, so its errors are plain `http-errors` instances rather than
+    // HttpExceptions. Without this branch a 413 would be reported as a 500
+    // and SDK clients would retry a permanently failing request (AYC-553).
+    if (status !== undefined && status >= 400 && status < 500) {
+      return mappedError(status, clientErrorMessage(error, status));
+    }
     // Log structurally — never include the raw error object, which can
     // echo prompt fragments from upstream SDKs (AYC-92 redaction sweep).
-    this.logger.error('Unhandled error in OpenAI-compat path', {
-      status: extractStatus(error),
-    });
+    this.logger.error('Unhandled error in OpenAI-compat path', { status });
     return {
       status: 500,
       body: envelope({
@@ -57,10 +63,25 @@ export class OpenAIErrorMapper {
   }
 }
 
+/**
+ * `http-errors` sets `expose` to true for client errors whose message is safe
+ * to return. Anything else falls back to the status' generic reason so an
+ * internal detail is never echoed to the caller.
+ */
+function clientErrorMessage(error: unknown, status: number): string {
+  const { expose, message } = error as { expose?: unknown; message?: unknown };
+  if (expose === true && typeof message === 'string' && message.length > 0) {
+    return message;
+  }
+  return status === 413 ? 'Request entity too large' : 'Bad request';
+}
+
 function extractStatus(error: unknown): number | undefined {
   if (typeof error !== 'object' || error === null) return undefined;
   const maybeStatus = (error as { status?: unknown }).status;
   if (typeof maybeStatus === 'number') return maybeStatus;
+  const maybeStatusCode = (error as { statusCode?: unknown }).statusCode;
+  if (typeof maybeStatusCode === 'number') return maybeStatusCode;
   const maybeResponse = (error as { response?: { status?: unknown } }).response;
   if (
     maybeResponse &&

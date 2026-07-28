@@ -17,6 +17,7 @@ import { WinstonModule } from 'nest-winston';
 import { logger } from './common/logger/logger';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from './app/app.module';
 import { METRICS_PATH } from './integrations/metrics/metrics.constants';
@@ -24,9 +25,10 @@ import { parsePositiveIntWithDefault } from './common/util/number.util';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
+  private static readonly DEFAULT_BODY_LIMIT = '5mb';
 
   public static async start() {
-    const app = await NestFactory.create(AppModule, {
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
       logger: WinstonModule.createLogger({ instance: logger }),
     });
 
@@ -55,9 +57,21 @@ class Bootstrap {
     server.headersTimeout = keepAliveTimeout + 1_000;
   }
 
-  private static configureApp(
-    app: Awaited<ReturnType<typeof NestFactory.create>>,
-  ) {
+  /**
+   * Express defaults to a 100kb body limit, which rejects legitimate
+   * OpenAI-compatible requests carrying long conversation histories and makes
+   * the 512k artifact content cap unreachable — body-parser fails before any
+   * validation runs (AYC-553). Must be called before listen(), which is when
+   * Nest registers its own parsers for any type not already applied.
+   */
+  private static configureBodyParser(app: NestExpressApplication) {
+    const limit = process.env.HTTP_BODY_LIMIT ?? this.DEFAULT_BODY_LIMIT;
+    app.useBodyParser('json', { limit });
+    app.useBodyParser('urlencoded', { limit, extended: true });
+  }
+
+  private static configureApp(app: NestExpressApplication) {
+    this.configureBodyParser(app);
     this.configureCors(app);
     this.setupSwagger(app);
     app.setGlobalPrefix('api', {

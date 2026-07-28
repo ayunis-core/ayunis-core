@@ -106,5 +106,62 @@ describe('OpenAIErrorMapper', () => {
       // The public message must NOT echo the upstream payload.
       expect(result.body.error.message).toBe('Internal server error');
     });
+
+    it('maps an unknown 5xx-carrying error to server_error 500', () => {
+      const result = mapper.toEnvelope(
+        httpError(503, 'upstream unavailable', { expose: false }),
+      );
+      expect(result.status).toBe(500);
+      expect(result.body.error.type).toBe('server_error');
+      expect(result.body.error.message).toBe('Internal server error');
+    });
+  });
+
+  // body-parser rejects oversized bodies before routing, so the error never
+  // reaches a Nest filter and arrives here as a plain http-errors instance
+  // rather than an ApplicationError or HttpException (AYC-553).
+  describe('express middleware client errors', () => {
+    it('maps body-parser PayloadTooLargeError to 413, not 500', () => {
+      const result = mapper.toEnvelope(
+        httpError(413, 'request entity too large', {
+          name: 'PayloadTooLargeError',
+        }),
+      );
+      expect(result.status).toBe(413);
+      expect(result.body.error.type).toBe('invalid_request_error');
+      expect(result.body.error.message).toBe('request entity too large');
+    });
+
+    it('does not echo the message of a non-exposable client error', () => {
+      const result = mapper.toEnvelope(
+        httpError(400, 'internal detail: secret', { expose: false }),
+      );
+      expect(result.status).toBe(400);
+      expect(result.body.error.type).toBe('invalid_request_error');
+      expect(result.body.error.message).toBe('Bad request');
+    });
+
+    it('reads statusCode when status is absent', () => {
+      const error = Object.assign(new Error('request entity too large'), {
+        statusCode: 413,
+        expose: true,
+      });
+      expect(mapper.toEnvelope(error).status).toBe(413);
+    });
   });
 });
+
+/** Mirrors the shape the `http-errors` package produces. */
+function httpError(
+  status: number,
+  message: string,
+  options: { name?: string; expose?: boolean } = {},
+): Error {
+  const error = new Error(message);
+  error.name = options.name ?? 'HttpError';
+  return Object.assign(error, {
+    status,
+    statusCode: status,
+    expose: options.expose ?? status < 500,
+  });
+}
