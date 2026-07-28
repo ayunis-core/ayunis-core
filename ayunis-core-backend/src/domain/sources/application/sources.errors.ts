@@ -10,6 +10,7 @@ export enum SourceErrorCode {
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
   SOURCE_NOT_READY = 'SOURCE_NOT_READY',
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
 }
 
 export abstract class SourceError extends ApplicationError {
@@ -86,6 +87,19 @@ export class UnsupportedFileTypeError extends SourceError {
       `File type '${fileType}' is not supported. Supported types: ${supportedTypes.join(', ')}`,
       SourceErrorCode.UNSUPPORTED_FILE_TYPE,
       400,
+      metadata,
+    );
+  }
+}
+
+// The documents cap is enforced by multer; tabular files have a lower cap
+// because their parsed rows are stored as a single jsonb value.
+export class TabularFileTooLargeError extends SourceError {
+  constructor(fileName: string, maxBytes: number, metadata?: ErrorMetadata) {
+    super(
+      `The file '${fileName}' exceeds the ${Math.floor(maxBytes / (1024 * 1024))} MB limit for CSV/spreadsheet files`,
+      SourceErrorCode.FILE_TOO_LARGE,
+      413,
       metadata,
     );
   }

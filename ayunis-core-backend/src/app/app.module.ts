@@ -15,6 +15,7 @@ import { SplitterModule } from '../domain/rag/splitters/splitter.module';
 import { EmbeddingsModule } from '../domain/rag/embeddings/embeddings.module';
 import { RetrieverModule } from '../domain/retrievers/retriever.module';
 import { SourcesModule } from '../domain/sources/sources.module';
+import { UploadsModule } from '../domain/uploads/uploads.module';
 import { StorageModule } from '../domain/storage/storage.module';
 import { SharesModule } from '../domain/shares/shares.module';
 import { McpModule } from '../domain/mcp/mcp.module';
@@ -121,6 +122,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     EmbeddingsModule,
     RetrieverModule,
     SourcesModule,
+    UploadsModule,
     StorageModule,
     SharesModule,
     McpModule,

@@ -6,6 +6,7 @@ import {
 } from '../../domain/file-retriever-result.entity';
 import {
   FileRetrievalFailedError,
+  FileRetrieverError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
@@ -19,6 +20,7 @@ import { OCRResponse } from '@mistralai/mistralai/models/components';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
 import { File } from '../../domain/file.entity';
+import { OcrSession, PageOcrPort } from '../../application/ports/page-ocr.port';
 import { ConfigService } from '@nestjs/config';
 
 // A 404 from OCR right after a successful upload is files-API eventual
@@ -36,7 +38,10 @@ function isFileNotFound(error: unknown): boolean {
 }
 
 @Injectable()
-export class MistralFileRetrieverHandler extends FileRetrieverHandler {
+export class MistralFileRetrieverHandler
+  extends FileRetrieverHandler
+  implements PageOcrPort
+{
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
@@ -91,6 +96,61 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     return new FileRetrieverUnexpectedError(error as Error, {
       model: this.MODEL_NAME,
     });
+  }
+
+  /**
+   * Page-scoped OCR: upload once, OCR arbitrary page subsets against the
+   * same remote file, delete on close.
+   */
+  async openSession(file: File): Promise<OcrSession> {
+    const blobPart: BlobPart = file.fileData as unknown as BlobPart;
+    const fileBlob = new Blob([blobPart], { type: file.fileType });
+    let uploadedFileId: string;
+    try {
+      uploadedFileId = await this.uploadFile(fileBlob);
+    } catch (error) {
+      throw this.toRetrieverError(error);
+    }
+
+    return {
+      ocrPages: async (pageIndexes: number[]) => {
+        try {
+          const response = await this.runOcr(uploadedFileId, pageIndexes);
+          return this.mapBatchPages(response, pageIndexes);
+        } catch (error) {
+          throw this.toRetrieverError(error);
+        }
+      },
+      close: () => this.deleteFileBestEffort(uploadedFileId),
+    };
+  }
+
+  private toRetrieverError(error: unknown): ApplicationError {
+    if (error instanceof FileRetrieverError) {
+      return error;
+    }
+    return this.mapProcessingError(error);
+  }
+
+  /**
+   * Maps a batch response positionally onto the requested indexes: the API
+   * returns the requested pages in request order, so this stays correct
+   * whether `page.index` is absolute or batch-relative.
+   */
+  private mapBatchPages(
+    response: OCRResponse,
+    pageIndexes: number[],
+  ): FileRetrieverPage[] {
+    if (response.pages.length !== pageIndexes.length) {
+      throw new FileRetrievalFailedError(
+        `Mistral OCR returned ${response.pages.length} pages for a ${pageIndexes.length}-page batch`,
+        { model: this.MODEL_NAME },
+      );
+    }
+    return response.pages.map(
+      (page, position) =>
+        new FileRetrieverPage(page.markdown, pageIndexes[position] + 1),
+    );
   }
 
   private mapMistralError(
@@ -203,11 +263,14 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   }
 
   /**
-   * Runs OCR on the uploaded file by id. Cleanup is the caller's job — it must
-   * not delete before `ocrWithReuploadRecovery` has probed whether the file
-   * still exists.
+   * Runs OCR on the uploaded file by id, optionally scoped to specific
+   * 0-based pages. Cleanup is the caller's job — it must not delete before
+   * `ocrWithReuploadRecovery` has probed whether the file still exists.
    */
-  private async runOcr(fileId: string): Promise<OCRResponse> {
+  private async runOcr(
+    fileId: string,
+    pageIndexes?: number[],
+  ): Promise<OCRResponse> {
     return retryWithBackoff({
       fn: () =>
         this.client.ocr.process({
@@ -216,7 +279,9 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
             type: 'file',
             fileId,
           },
-          includeImageBase64: true,
+          ...(pageIndexes ? { pages: pageIndexes } : {}),
+          // The extracted images are never read — text only.
+          includeImageBase64: false,
         }),
       maxRetries: 3,
       delay: 1000,

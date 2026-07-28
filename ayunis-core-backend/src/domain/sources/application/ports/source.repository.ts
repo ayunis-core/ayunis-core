@@ -4,6 +4,7 @@ import type { DataSource } from '../../domain/sources/data-source.entity';
 import type { Source } from '../../domain/source.entity';
 import type { TextSourceContentChunk } from '../../domain/source-content-chunk.entity';
 import type { SourceStatus } from '../../domain/source-status.enum';
+import type { SourceProcessingProgress } from '../../domain/source-processing-progress';
 
 export abstract class SourceRepository {
   abstract findById(id: UUID): Promise<TextSource | DataSource | null>;
@@ -23,7 +24,19 @@ export abstract class SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingProgress: SourceProcessingProgress | null;
+    }>,
+  ): Promise<boolean>;
+  /**
+   * Writes a progress snapshot and refreshes processingStartedAt — the
+   * heartbeat that keeps the stale-processing cron away from long-running
+   * jobs. Guarded on PROCESSING so a deleted source is never resurrected.
+   */
+  abstract updateProcessingProgress(
+    sourceId: UUID,
+    progress: SourceProcessingProgress,
   ): Promise<boolean>;
   /**
    * Refreshes processingStartedAt so the stale-processing cron leaves a

@@ -18,6 +18,7 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
       .fn()
       .mockImplementation((source: Source) => Promise.resolve(source)),
     updateStatusConditionally: jest.fn().mockResolvedValue(true),
+    updateProcessingProgress: jest.fn().mockResolvedValue(true),
     refreshProcessingHeartbeat: jest.fn().mockResolvedValue(true),
     updateCsvSourceData: jest.fn().mockResolvedValue(true),
     extractTextLines: jest.fn().mockResolvedValue(null),

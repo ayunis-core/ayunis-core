@@ -7,6 +7,7 @@ import { ThreadsRepository } from './application/ports/threads.repository';
 import { GeneratedImagesRepository } from './application/ports/generated-images.repository';
 import { LocalThreadsRepositoryModule } from './infrastructure/persistence/local/local-threads-repository.module';
 import { SourcesModule } from '../sources/sources.module';
+import { UploadsModule } from '../uploads/uploads.module';
 import { ModelsModule } from '../models/models.module';
 import { SourceDtoMapper } from './presenters/http/mappers/source.mapper';
 import { GetThreadDtoMapper } from './presenters/http/mappers/get-thread.mapper';
@@ -59,6 +60,7 @@ import { McpModule } from '../mcp/mcp.module';
   imports: [
     LocalThreadsRepositoryModule,
     SourcesModule,
+    UploadsModule,
     forwardRef(() => ModelsModule),
     KnowledgeBasesModule,
     MessagesModule,

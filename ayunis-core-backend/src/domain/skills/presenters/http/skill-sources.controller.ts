@@ -41,6 +41,7 @@ import { Skill } from '../../domain/skill.entity';
 import { MissingFileError } from '../../application/skills.errors';
 import { AddFileSourceToSkillUseCase } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
+import { TusUploadService } from 'src/domain/uploads/application/services/tus-upload.service';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 
@@ -57,6 +58,7 @@ export class SkillSourcesController {
     private readonly addFileSourceToSkillUseCase: AddFileSourceToSkillUseCase,
     private readonly skillAccessService: SkillAccessService,
     private readonly skillCreatorNameService: SkillCreatorNameService,
+    private readonly tusUploadService: TusUploadService,
   ) {}
 
   @Get(':id/sources')
@@ -113,6 +115,44 @@ export class SkillSourcesController {
       throw error;
     } finally {
       removeUploadedFile(file.path);
+    }
+  }
+
+  @Post(':id/sources/uploads/:uploadId')
+  @ApiOperation({
+    summary: 'Attach a completed resumable (tus) upload as a file source',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the skill',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({ name: 'uploadId', description: 'The tus upload id' })
+  @ApiResponse({
+    status: 201,
+    description: 'The file source has been successfully added to the skill',
+    type: SkillResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Skill or upload not found' })
+  @ApiResponse({ status: 409, description: 'Upload not finished yet' })
+  async finalizeUpload(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Param('id', ParseUUIDPipe) skillId: UUID,
+    @Param('uploadId') uploadId: string,
+  ): Promise<SkillResponseDto> {
+    this.logger.log('finalizeUpload', { skillId, uploadId, userId });
+    const file = await this.tusUploadService.resolveCompletedUpload(
+      uploadId,
+      userId,
+    );
+    try {
+      const updatedSkill = await this.addFileSourceToSkillUseCase.execute(
+        new AddFileSourceToSkillCommand({ skillId, file }),
+      );
+      return await this.toSkillDtoWithCreator(updatedSkill, skillId);
+    } finally {
+      this.tusUploadService.cleanupUpload(uploadId);
     }
   }
 

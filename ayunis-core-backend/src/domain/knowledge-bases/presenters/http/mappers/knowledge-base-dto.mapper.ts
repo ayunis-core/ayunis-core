@@ -43,6 +43,10 @@ export class KnowledgeBaseDtoMapper {
       dto.processingError = source.processingError;
     }
 
+    if (source.processingProgress) {
+      dto.processingProgress = source.processingProgress;
+    }
+
     if (source instanceof TextSource) {
       dto.textType = source.textType;
     }

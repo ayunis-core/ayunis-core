@@ -121,7 +121,7 @@ describe('DataSourceProcessingConsumer', () => {
       first.id,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
-      { processingError: null },
+      { processingError: null, processingProgress: null },
     );
     expect(deleteObject.execute).toHaveBeenCalledTimes(1);
     expect(markSourceFailed.execute).not.toHaveBeenCalled();
@@ -167,10 +167,10 @@ describe('DataSourceProcessingConsumer', () => {
     expect(markSourceFailed.execute).not.toHaveBeenCalled();
   });
 
-  it('skips a target whose heartbeat refresh finds no processing row', async () => {
+  it('skips a target whose progress heartbeat finds no processing row', async () => {
     const source = processingSource('haushalt.csv');
     sourceRepository.findById.mockResolvedValue(source);
-    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+    sourceRepository.updateProcessingProgress.mockResolvedValue(false);
 
     await consumer.process(
       jobFor({ targets: [{ sourceId: source.id, sheetName: 'A' }] }),

@@ -3,19 +3,12 @@ import { Test } from '@nestjs/testing';
 import { PreflightCheckUseCase } from './preflight-check.use-case';
 import { PreflightCheckCommand } from './preflight-check.command';
 import { TooManyPagesError } from '../../file-retriever.errors';
+import { PdfTextExtractorPort } from '../../ports/pdf-text-extractor.port';
 import retrievalConfig from 'src/config/retrieval.config';
-
-// Mock pdf-parse to control page count without needing real PDFs
-jest.mock('pdf-parse', () => {
-  return jest.fn().mockResolvedValue({ numpages: 5 });
-});
-
-import PdfParse from 'pdf-parse';
-
-const mockedPdfParse = PdfParse as jest.MockedFunction<typeof PdfParse>;
 
 describe('PreflightCheckUseCase', () => {
   let useCase: PreflightCheckUseCase;
+  let countPages: jest.Mock;
 
   const defaultConfig = {
     mistral: { apiKey: undefined },
@@ -23,12 +16,17 @@ describe('PreflightCheckUseCase', () => {
   };
 
   beforeAll(async () => {
+    countPages = jest.fn();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PreflightCheckUseCase,
         {
           provide: retrievalConfig.KEY,
           useValue: defaultConfig,
+        },
+        {
+          provide: PdfTextExtractorPort,
+          useValue: { countPages },
         },
       ],
     }).compile();
@@ -42,14 +40,7 @@ describe('PreflightCheckUseCase', () => {
 
   describe('PDF page cap', () => {
     it('should allow a PDF within the page cap', async () => {
-      mockedPdfParse.mockResolvedValueOnce({
-        numpages: 999,
-        numrender: 999,
-        info: {},
-        metadata: null,
-        version: 'default',
-        text: '',
-      });
+      countPages.mockResolvedValueOnce(999);
 
       await expect(
         useCase.execute(
@@ -63,14 +54,7 @@ describe('PreflightCheckUseCase', () => {
     });
 
     it('should reject a PDF exceeding the page cap with page counts in the error', async () => {
-      mockedPdfParse.mockResolvedValueOnce({
-        numpages: 1486,
-        numrender: 1486,
-        info: {},
-        metadata: null,
-        version: 'default',
-        text: '',
-      });
+      countPages.mockResolvedValueOnce(1486);
 
       await expect(
         useCase.execute(
@@ -83,8 +67,8 @@ describe('PreflightCheckUseCase', () => {
       ).rejects.toThrow(TooManyPagesError);
     });
 
-    it('should allow the PDF through if pdf-parse fails to read metadata', async () => {
-      mockedPdfParse.mockRejectedValueOnce(new Error('Corrupt PDF header'));
+    it('should allow the PDF through if the metadata read fails', async () => {
+      countPages.mockRejectedValueOnce(new Error('Corrupt PDF header'));
 
       await expect(
         useCase.execute(
@@ -111,7 +95,7 @@ describe('PreflightCheckUseCase', () => {
         ),
       ).resolves.toBeUndefined();
 
-      expect(mockedPdfParse).not.toHaveBeenCalled();
+      expect(countPages).not.toHaveBeenCalled();
     });
 
     it('should pass through TXT files without any checks', async () => {
@@ -125,7 +109,7 @@ describe('PreflightCheckUseCase', () => {
         ),
       ).resolves.toBeUndefined();
 
-      expect(mockedPdfParse).not.toHaveBeenCalled();
+      expect(countPages).not.toHaveBeenCalled();
     });
   });
 });

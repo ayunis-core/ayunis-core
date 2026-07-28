@@ -1,12 +1,22 @@
+import { Injectable } from '@nestjs/common';
 import { FileRetrieverHandler } from '../../application/ports/file-retriever.handler';
 import { FileRetrieverResult } from '../../domain/file-retriever-result.entity';
 import { FileRetrieverPage } from '../../domain/file-retriever-result.entity';
+import { PdfTextExtractorPort } from '../../application/ports/pdf-text-extractor.port';
 import type { File } from '../../domain/file.entity';
-import PdfParse from 'pdf-parse';
 
+@Injectable()
 export class NpmPdfParseFileRetrieverHandler extends FileRetrieverHandler {
+  constructor(private readonly pdfTextExtractor: PdfTextExtractorPort) {
+    super();
+  }
+
   async processFile(file: File): Promise<FileRetrieverResult> {
-    const pdf = await PdfParse(file.fileData);
-    return new FileRetrieverResult([new FileRetrieverPage(pdf.text, 1)]);
+    const pageTexts = await this.pdfTextExtractor.extractPageTexts(
+      file.fileData,
+    );
+    return new FileRetrieverResult(
+      pageTexts.map((text, index) => new FileRetrieverPage(text, index + 1)),
+    );
   }
 }

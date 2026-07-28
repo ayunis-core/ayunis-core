@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceProcessingProgress } from 'src/domain/sources/domain/source-processing-progress';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
@@ -179,7 +180,10 @@ export class LocalSourceRepository extends SourceRepository {
     sourceId: UUID,
     fromStatus: SourceStatus,
     toStatus: SourceStatus,
-    updates?: Partial<{ processingError: string | null }>,
+    updates?: Partial<{
+      processingError: string | null;
+      processingProgress: SourceProcessingProgress | null;
+    }>,
   ): Promise<boolean> {
     this.logger.log('updateStatusConditionally', {
       sourceId,
@@ -193,6 +197,9 @@ export class LocalSourceRepository extends SourceRepository {
         status: toStatus,
         ...(updates?.processingError !== undefined
           ? { processingError: updates.processingError }
+          : {}),
+        ...(updates?.processingProgress !== undefined
+          ? { processingProgress: updates.processingProgress }
           : {}),
       })
       .where('id = :id AND status = :fromStatus', {
@@ -208,6 +215,28 @@ export class LocalSourceRepository extends SourceRepository {
       .createQueryBuilder()
       .update()
       .set({ processingStartedAt: () => 'now()' })
+      .where('id = :id AND status = :status', {
+        id: sourceId,
+        status: SourceStatus.PROCESSING,
+      })
+      .execute();
+    return (result.affected ?? 0) > 0;
+  }
+
+  async updateProcessingProgress(
+    sourceId: UUID,
+    progress: SourceProcessingProgress,
+  ): Promise<boolean> {
+    this.logger.log('updateProcessingProgress', { sourceId, progress });
+    const result = await this.sourceRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        processingProgress: progress,
+        // Heartbeat: keeps the stale-processing cron from reaping a source
+        // whose job is alive but long-running.
+        processingStartedAt: () => 'now()',
+      })
       .where('id = :id AND status = :status', {
         id: sourceId,
         status: SourceStatus.PROCESSING,

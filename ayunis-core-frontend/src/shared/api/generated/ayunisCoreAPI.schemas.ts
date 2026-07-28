@@ -1994,6 +1994,28 @@ export interface ModelResponseDto {
 }
 
 /**
+ * Current processing stage
+ */
+export type SourceProcessingProgressDtoStage = typeof SourceProcessingProgressDtoStage[keyof typeof SourceProcessingProgressDtoStage];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SourceProcessingProgressDtoStage = {
+  extracting: 'extracting',
+  indexing: 'indexing',
+  parsing: 'parsing',
+} as const;
+
+export interface SourceProcessingProgressDto {
+  /** Current processing stage */
+  stage: SourceProcessingProgressDtoStage;
+  /** Pages extracted so far (documents only) */
+  processedPages?: number;
+  /** Total page count (documents only) */
+  totalPages?: number;
+}
+
+/**
  * Type of source
  */
 export type SourceResponseDtoType = typeof SourceResponseDtoType[keyof typeof SourceResponseDtoType];
@@ -2046,6 +2068,8 @@ export interface SourceResponseDto {
   status: SourceResponseDtoStatus;
   /** Error message if processing failed */
   processingError?: string;
+  /** Stage and page progress while the source is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2132,6 +2156,8 @@ export interface FileSourceResponseDto {
   status: FileSourceResponseDtoStatus;
   /** Error message if processing failed */
   processingError?: string;
+  /** Stage and page progress while the source is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2207,6 +2233,8 @@ export interface UrlSourceResponseDto {
   status: UrlSourceResponseDtoStatus;
   /** Error message if processing failed */
   processingError?: string;
+  /** Stage and page progress while the source is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2291,6 +2319,8 @@ export interface CSVDataSourceResponseDto {
   status: CSVDataSourceResponseDtoStatus;
   /** Error message if processing failed */
   processingError?: string;
+  /** Stage and page progress while the source is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
@@ -2532,6 +2562,8 @@ export interface KnowledgeBaseDocumentResponseDto {
   status: KnowledgeBaseDocumentResponseDtoStatus;
   /** Error message if processing failed (only present when status is failed) */
   processingError?: string;
+  /** Stage and page progress while the document is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** The text source subtype (e.g. file, web) */
   textType?: KnowledgeBaseDocumentResponseDtoTextType;
   /** The URL of the source (only for web sources) */
@@ -2734,6 +2766,8 @@ export interface SkillSourceResponseDto {
   status: SkillSourceResponseDtoStatus;
   /** Error message if processing failed */
   processingError?: string;
+  /** Stage and page progress while the source is processing */
+  processingProgress?: SourceProcessingProgressDto;
   /** The date and time when the source was created */
   createdAt: string;
 }
@@ -4864,14 +4898,16 @@ offset?: number;
 export type ThreadSourcesControllerGetThreadSources200Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type ThreadSourcesControllerAddFileSourceBody = {
-  /** The file to upload (max 25 MB) */
+  /** The file to upload (max 50 MB; CSV/XLSX max 25 MB) */
   file: Blob;
 };
 
 export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
-export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
+export type ThreadSourcesControllerFinalizeUpload201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+
+export type KnowledgeBaseDocumentsControllerAddDocumentBody = {
+  /** The file to upload (PDF, DOCX, PPTX, TXT, max 50 MB) */
   file: Blob;
 };
 
@@ -4897,7 +4933,7 @@ export const SharesControllerGetSharesEntityType = {
 } as const;
 
 export type SkillSourcesControllerAddFileSourceBody = {
-  /** The file to upload (max 25 MB) */
+  /** The file to upload (max 50 MB; CSV/XLSX max 25 MB) */
   file: Blob;
 };
 

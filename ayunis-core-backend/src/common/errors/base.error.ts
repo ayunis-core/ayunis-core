@@ -9,6 +9,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
+  PayloadTooLargeException,
   ServiceUnavailableException,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -78,6 +79,7 @@ const EXCEPTION_FACTORIES: Record<
   403: (body) => new ForbiddenException(body),
   404: (body) => new NotFoundException(body),
   409: (body) => new ConflictException(body),
+  413: (body) => new PayloadTooLargeException(body),
   422: (body) => new UnprocessableEntityException(body),
   // Nest ships no TooManyRequestsException; use the generic base.
   429: (body) => new HttpException(body, HttpStatus.TOO_MANY_REQUESTS),

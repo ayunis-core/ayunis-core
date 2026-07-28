@@ -9,8 +9,13 @@ import {
   FileRetrieverPage,
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
-import { RetrieveFileContentCommand } from './retrieve-file-content.command';
+import {
+  ExtractedPageBatch,
+  RetrieveFileContentCommand,
+} from './retrieve-file-content.command';
 import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
+import { PdfTextExtractorPort } from '../../ports/pdf-text-extractor.port';
+import { PageOcrPort } from '../../ports/page-ocr.port';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
@@ -29,6 +34,18 @@ import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 
+// A page whose native text layer has at least this many characters is
+// considered born-digital and skips OCR entirely.
+const TEXT_LAYER_MIN_CHARS = 50;
+// Small enough that a batch finishes well inside one OCR call timeout and
+// progress advances visibly; large enough to keep call overhead negligible.
+const OCR_BATCH_SIZE = 25;
+
+interface PdfExtractionOptions {
+  skipPages?: number[];
+  onBatchExtracted?: (batch: ExtractedPageBatch) => Promise<void>;
+}
+
 @Injectable()
 export class RetrieveFileContentUseCase {
   private readonly logger = new Logger(RetrieveFileContentUseCase.name);
@@ -38,6 +55,8 @@ export class RetrieveFileContentUseCase {
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,
     private readonly transcribeUseCase: TranscribeUseCase,
+    private readonly pdfTextExtractor: PdfTextExtractorPort,
+    private readonly pageOcr: PageOcrPort,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
@@ -64,6 +83,7 @@ export class RetrieveFileContentUseCase {
           command.fileData,
           command.fileName,
           command.fileType,
+          command,
         );
       }
 
@@ -71,6 +91,7 @@ export class RetrieveFileContentUseCase {
         return await this.processOfficeDocument(
           command.fileData,
           command.fileName,
+          command,
         );
       }
 
@@ -95,9 +116,153 @@ export class RetrieveFileContentUseCase {
   }
 
   /**
-   * PDF: Prefer Mistral OCR, fallback to pdf-parse.
+   * PDF, hybrid: the native text layer is extracted locally and only
+   * text-poor pages (scans) are sent to OCR, in page batches. Falls back to
+   * whole-file processing when the text layer is unreadable.
    */
   private async processPdf(
+    fileData: Buffer,
+    fileName: string,
+    mimeType: string,
+    options: PdfExtractionOptions,
+  ): Promise<FileRetrieverResult> {
+    let pageTexts: string[];
+    try {
+      pageTexts = await this.pdfTextExtractor.extractPageTexts(fileData);
+    } catch (error) {
+      this.logger.warn(
+        'Local text-layer extraction failed, falling back to whole-file processing',
+        { fileName, error: error as Error },
+      );
+      return this.processPdfWholeFile(fileData, fileName, mimeType);
+    }
+
+    const skip = new Set(options.skipPages ?? []);
+    const { localPages, ocrIndexes } = this.partitionByTextLayer(
+      pageTexts,
+      skip,
+    );
+
+    // Text-poor pages without an OCR key keep their (possibly empty) local
+    // text — same outcome as the old pdf-parse-only path.
+    const canOcr = Boolean(this.config.mistral.apiKey) && ocrIndexes.length > 0;
+    if (!canOcr) {
+      return this.finishWithoutOcr(pageTexts, localPages, ocrIndexes, {
+        skippedPages: skip.size,
+        onBatchExtracted: options.onBatchExtracted,
+      });
+    }
+
+    return this.finishWithOcr(
+      new File(fileData, fileName, mimeType),
+      { totalPages: pageTexts.length, skippedPages: skip.size },
+      localPages,
+      ocrIndexes,
+      options,
+    );
+  }
+
+  private async finishWithOcr(
+    file: File,
+    counts: { totalPages: number; skippedPages: number },
+    localPages: FileRetrieverPage[],
+    ocrIndexes: number[],
+    options: PdfExtractionOptions,
+  ): Promise<FileRetrieverResult> {
+    const { totalPages } = counts;
+    let processedPages = counts.skippedPages + localPages.length;
+    if (localPages.length > 0) {
+      await options.onBatchExtracted?.({
+        pages: localPages,
+        processedPages,
+        totalPages,
+      });
+    }
+
+    const ocrPages = await this.ocrInBatches(
+      file,
+      ocrIndexes,
+      async (batchPages) => {
+        processedPages += batchPages.length;
+        await options.onBatchExtracted?.({
+          pages: batchPages,
+          processedPages,
+          totalPages,
+        });
+      },
+    );
+
+    return new FileRetrieverResult(
+      this.sortByPageNumber([...localPages, ...ocrPages]),
+    );
+  }
+
+  private partitionByTextLayer(
+    pageTexts: string[],
+    skip: Set<number>,
+  ): { localPages: FileRetrieverPage[]; ocrIndexes: number[] } {
+    const localPages: FileRetrieverPage[] = [];
+    const ocrIndexes: number[] = [];
+    pageTexts.forEach((text, index) => {
+      if (skip.has(index)) {
+        return;
+      }
+      if (text.trim().length >= TEXT_LAYER_MIN_CHARS) {
+        localPages.push(new FileRetrieverPage(text, index + 1));
+      } else {
+        ocrIndexes.push(index);
+      }
+    });
+    return { localPages, ocrIndexes };
+  }
+
+  private async finishWithoutOcr(
+    pageTexts: string[],
+    localPages: FileRetrieverPage[],
+    ocrIndexes: number[],
+    context: {
+      skippedPages: number;
+      onBatchExtracted?: (batch: ExtractedPageBatch) => Promise<void>;
+    },
+  ): Promise<FileRetrieverResult> {
+    const fallbackPages = ocrIndexes.map(
+      (index) => new FileRetrieverPage(pageTexts[index], index + 1),
+    );
+    const pages = this.sortByPageNumber([...localPages, ...fallbackPages]);
+    await context.onBatchExtracted?.({
+      pages,
+      processedPages: context.skippedPages + pages.length,
+      totalPages: pageTexts.length,
+    });
+    return new FileRetrieverResult(pages);
+  }
+
+  private async ocrInBatches(
+    file: File,
+    ocrIndexes: number[],
+    onBatch: (pages: FileRetrieverPage[]) => Promise<void>,
+  ): Promise<FileRetrieverPage[]> {
+    const session = await this.pageOcr.openSession(file);
+    const pages: FileRetrieverPage[] = [];
+    try {
+      for (let i = 0; i < ocrIndexes.length; i += OCR_BATCH_SIZE) {
+        const batch = ocrIndexes.slice(i, i + OCR_BATCH_SIZE);
+        const batchPages = await session.ocrPages(batch);
+        pages.push(...batchPages);
+        await onBatch(batchPages);
+      }
+    } finally {
+      await session.close();
+    }
+    return pages;
+  }
+
+  private sortByPageNumber(pages: FileRetrieverPage[]): FileRetrieverPage[] {
+    return [...pages].sort((a, b) => a.number - b.number);
+  }
+
+  /** Pre-hybrid behavior, kept for PDFs whose text layer cannot be read. */
+  private async processPdfWholeFile(
     fileData: Buffer,
     fileName: string,
     mimeType: string,
@@ -116,13 +281,14 @@ export class RetrieveFileContentUseCase {
   private async processOfficeDocument(
     fileData: Buffer,
     fileName: string,
+    options: PdfExtractionOptions,
   ): Promise<FileRetrieverResult> {
     const pdfBuffer = await this.documentConverter.convertToPdf(
       fileData,
       fileName,
     );
     const pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
-    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF);
+    return this.processPdf(pdfBuffer, pdfFileName, MIME_TYPES.PDF, options);
   }
 
   /**

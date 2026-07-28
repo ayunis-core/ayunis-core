@@ -52,7 +52,7 @@
     "fileSourceUploadError": "Error uploading file",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data",
     "invalidFileTypeError": "This file type is currently not supported.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB (25MB for CSV/Excel files).",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
@@ -120,13 +120,17 @@
     "failedToAdd": "Error uploading file",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB (25MB for CSV/Excel files).",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another.",
-    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files."
+    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files.",
+    "progressExtracting": "Extracting page {{current}}/{{total}}…",
+    "progressIndexing": "Indexing…",
+    "progressProcessing": "Processing…",
+    "progressUploading": "Uploading {{percent}}%…"
   },
   "models": {
     "availableHeading": "Available models",

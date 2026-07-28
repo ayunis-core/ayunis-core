@@ -3,6 +3,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './mistral-file-retriever.handler';
 import {
+  FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
@@ -470,6 +471,93 @@ describe('MistralFileRetrieverHandler', () => {
       expect(mockClient.files.delete).toHaveBeenCalledWith({
         fileId: 'file-456',
       });
+    });
+  });
+
+  describe('page-scoped OCR session', () => {
+    beforeEach(() => {
+      mockClient.files.upload.mockResolvedValue({ id: 'file-123' });
+      mockClient.files.delete.mockResolvedValue(undefined);
+    });
+
+    it('uploads once and OCRs multiple page batches against the same file', async () => {
+      mockClient.ocr.process
+        .mockResolvedValueOnce({
+          pages: [
+            { markdown: '# Seite 2', index: 1 },
+            { markdown: '# Seite 4', index: 3 },
+          ],
+        })
+        .mockResolvedValueOnce({
+          pages: [{ markdown: '# Seite 9', index: 8 }],
+        });
+
+      const session = await handler.openSession(testFile);
+      const first = await session.ocrPages([1, 3]);
+      const second = await session.ocrPages([8]);
+      await session.close();
+
+      expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(2);
+      expect(mockClient.ocr.process).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          document: { type: 'file', fileId: 'file-123' },
+          pages: [1, 3],
+          includeImageBase64: false,
+        }),
+      );
+      expect(first.map((page) => page.number)).toEqual([2, 4]);
+      expect(second.map((page) => page.number)).toEqual([9]);
+      expect(mockClient.files.delete).toHaveBeenCalledWith({
+        fileId: 'file-123',
+      });
+    });
+
+    it('maps batch pages positionally even when the API returns relative indexes', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [
+          { markdown: 'a', index: 0 },
+          { markdown: 'b', index: 1 },
+        ],
+      });
+
+      const session = await handler.openSession(testFile);
+      const pages = await session.ocrPages([5, 7]);
+
+      expect(pages.map((page) => page.number)).toEqual([6, 8]);
+    });
+
+    it('rejects a batch whose page count does not match the request', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [{ markdown: 'only one', index: 0 }],
+      });
+
+      const session = await handler.openSession(testFile);
+
+      await expect(session.ocrPages([2, 4])).rejects.toThrow(
+        FileRetrievalFailedError,
+      );
+    });
+
+    it('maps session errors through the provider-failure classification', async () => {
+      mockClient.ocr.process.mockRejectedValue(
+        createMistralError(429, '{"message":"rate limited"}'),
+      );
+
+      const session = await handler.openSession(testFile);
+
+      await expect(session.ocrPages([0])).rejects.toThrow(
+        ProviderRequestRejectedError,
+      );
+    });
+
+    it('never throws from close()', async () => {
+      mockClient.files.delete.mockRejectedValue(new Error('gone'));
+
+      const session = await handler.openSession(testFile);
+
+      await expect(session.close()).resolves.toBeUndefined();
     });
   });
 });

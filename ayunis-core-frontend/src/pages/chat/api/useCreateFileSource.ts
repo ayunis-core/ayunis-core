@@ -1,9 +1,9 @@
 import {
   getThreadsControllerFindOneQueryKey,
-  threadSourcesControllerAddFileSource,
+  threadSourcesControllerFinalizeUpload,
 } from '@/shared/api';
-import type { ThreadSourcesControllerAddFileSourceBody } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { uploadFileResumable } from '@/shared/lib/upload-file-resumable';
 import { useTranslation } from 'react-i18next';
 import {
   useIsMutating,
@@ -11,8 +11,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-
-const UPLOAD_TIMEOUT_MS = 60_000;
 
 interface UseFileSourceProps {
   threadId?: string;
@@ -30,18 +28,12 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
   const createFileSourceMutation = useMutation({
     mutationKey,
     retry: 0,
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: ThreadSourcesControllerAddFileSourceBody;
-    }) =>
-      threadSourcesControllerAddFileSource(
-        id,
-        data,
-        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-      ),
+    // Resumable chunked upload (tus), then a finalize call that validates and
+    // starts processing. tus handles retries/resume internally.
+    mutationFn: async ({ id, file }: { id: string; file: File }) => {
+      const uploadId = await uploadFileResumable(file);
+      return threadSourcesControllerFinalizeUpload(id, uploadId);
+    },
     onError: (error: unknown) => {
       handleSourceUploadError(error, t);
     },
@@ -60,8 +52,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadSourcesControllerAddFileSourceBody = { file };
-    createFileSourceMutation.mutate({ id: threadId, data });
+    createFileSourceMutation.mutate({ id: threadId, file });
   }
 
   function createFileSourceAsync({ file }: UploadFileParams) {
@@ -70,8 +61,7 @@ export function useCreateFileSource({ threadId }: UseFileSourceProps = {}) {
       return;
     }
 
-    const data: ThreadSourcesControllerAddFileSourceBody = { file };
-    return createFileSourceMutation.mutateAsync({ id: threadId, data });
+    return createFileSourceMutation.mutateAsync({ id: threadId, file });
   }
 
   const activeUploads = useIsMutating({ mutationKey });

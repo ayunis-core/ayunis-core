@@ -3,12 +3,11 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadKnowledgeBasesControllerAddKnowledgeBase,
   threadMcpIntegrationsControllerAddMcpIntegration,
-  threadSourcesControllerAddFileSource,
-  threadsControllerFindOne,
+  threadSourcesControllerFinalizeUpload,
   useThreadsControllerCreate,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
+import { uploadFileResumable } from '@/shared/lib/upload-file-resumable';
 import { showError } from '@/shared/lib/toast';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
@@ -22,9 +21,6 @@ import { useTranslation } from 'react-i18next';
 import type { CreateThreadData } from '../model/openapi';
 import type { SourceResponseDtoType } from '@/shared/api';
 
-const PROCESSING_POLL_INTERVAL_MS = 500;
-const PROCESSING_TIMEOUT_MS = 180_000;
-const UPLOAD_TIMEOUT_MS = 60_000;
 /** Compose slide duration (matches --new-chat-settle-duration in CSS) */
 const NEW_CHAT_SETTLE_MS = 1450;
 /** Disclaimer soft fade after slide (matches --new-chat-disclaimer-fade-duration) */
@@ -42,7 +38,7 @@ interface PendingSource {
 }
 
 export type SourceUploadStatus =
-  | { kind: 'uploading' }
+  | { kind: 'uploading'; percent?: number }
   | { kind: 'processing' }
   | { kind: 'failed'; message: string };
 
@@ -56,34 +52,6 @@ interface InitiateChatParams {
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
-}
-
-class CancelledError extends Error {
-  constructor() {
-    super('Cancelled');
-    this.name = 'CancelledError';
-  }
-}
-
-async function waitForSourcesProcessed(
-  threadId: string,
-  isCancelled: () => boolean,
-): Promise<void> {
-  const deadline = Date.now() + PROCESSING_TIMEOUT_MS;
-  for (;;) {
-    if (isCancelled()) throw new CancelledError();
-    const thread = await threadsControllerFindOne(threadId);
-    const stillProcessing = thread.sources.some(
-      (s) => s.status === SourceResponseDtoStatus.processing,
-    );
-    if (!stillProcessing) return;
-    if (Date.now() >= deadline) {
-      throw new Error('Source processing timed out');
-    }
-    await new Promise((resolve) =>
-      setTimeout(resolve, PROCESSING_POLL_INTERVAL_MS),
-    );
-  }
 }
 
 export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
@@ -129,11 +97,13 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     onSourceStatus?: (id: string, status: SourceUploadStatus) => void,
   ): Promise<void> {
     try {
-      await threadSourcesControllerAddFileSource(
-        threadId,
-        { file: source.file },
-        AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-      );
+      // Resumable chunked upload (tus) with live percent, then finalize to
+      // validate and start server-side processing.
+      const uploadId = await uploadFileResumable(source.file, {
+        onProgress: (percent) =>
+          onSourceStatus?.(source.id, { kind: 'uploading', percent }),
+      });
+      await threadSourcesControllerFinalizeUpload(threadId, uploadId);
       onSourceStatus?.(source.id, { kind: 'processing' });
     } catch (error) {
       onSourceStatus?.(source.id, {
@@ -252,21 +222,11 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     setIsAttachingResources(true);
     try {
       if (sources.length > 0) {
+        // No wait for server-side processing here: the chat page renders the
+        // processing chips and the system prompt tells the model which
+        // attachments are still pending.
         const ok = await uploadAllSources(thread.id, sources, onSourceStatus);
         if (!ok || isCancelled()) {
-          endSettleAnimation();
-          return;
-        }
-
-        try {
-          await waitForSourcesProcessed(thread.id, isCancelled);
-        } catch (error) {
-          if (error instanceof CancelledError) {
-            endSettleAnimation();
-            return;
-          }
-          console.error('Source processing failed or timed out:', error);
-          showError(tCommon('sources.fileSourceTimeoutError'));
           endSettleAnimation();
           return;
         }

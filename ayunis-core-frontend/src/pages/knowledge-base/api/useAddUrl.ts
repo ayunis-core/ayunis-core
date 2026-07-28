@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
-  useKnowledgeBasesControllerAddUrl,
-  getKnowledgeBasesControllerListDocumentsQueryKey,
+  useKnowledgeBaseDocumentsControllerAddUrl,
+  getKnowledgeBaseDocumentsControllerListDocumentsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -11,12 +11,14 @@ export function useAddUrl(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');
   const queryClient = useQueryClient();
 
-  const mutation = useKnowledgeBasesControllerAddUrl({
+  const mutation = useKnowledgeBaseDocumentsControllerAddUrl({
     mutation: {
       onSuccess: () => {
         void queryClient.invalidateQueries({
           queryKey:
-            getKnowledgeBasesControllerListDocumentsQueryKey(knowledgeBaseId),
+            getKnowledgeBaseDocumentsControllerListDocumentsQueryKey(
+              knowledgeBaseId,
+            ),
         });
         showSuccess(t('detail.documents.addUrlSuccess'));
       },

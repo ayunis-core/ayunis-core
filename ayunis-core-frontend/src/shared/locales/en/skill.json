@@ -90,7 +90,9 @@
     "statusProcessing": "processing… You can safely navigate away.",
     "statusProcessingSlow": "still processing… You can safely navigate away.",
     "statusFailed": "failed",
-    "retryUpload": "Try uploading the file again."
+    "retryUpload": "Try uploading the file again.",
+    "statusExtractingPages": "Extracting page {{current}}/{{total}}…",
+    "statusIndexing": "Indexing…"
   },
   "knowledgeBases": {
     "title": "Knowledge Bases",
@@ -115,7 +117,7 @@
     "failedToAdd": "Failed to add source",
     "invalidFileTypeError": "This file type is currently not supported.",
     "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
-    "fileSourceTooLargeError": "File is too large. Maximum file size is 25MB.",
+    "fileSourceTooLargeError": "File is too large. Maximum file size is 50MB (25MB for CSV/Excel files).",
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",

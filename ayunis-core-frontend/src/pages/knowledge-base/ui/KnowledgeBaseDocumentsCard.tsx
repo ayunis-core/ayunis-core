@@ -310,6 +310,7 @@ function DocumentItem({
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
           processingError={doc.processingError}
+          processingProgress={doc.processingProgress}
           t={t}
         />
         <ItemDescription>
@@ -335,6 +336,31 @@ function DocumentItem({
   );
 }
 
+interface DocumentProcessingProgress {
+  stage: string;
+  processedPages?: number;
+  totalPages?: number;
+}
+
+function documentProcessingLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  isProcessingSlow: boolean,
+  progress?: DocumentProcessingProgress,
+): string {
+  if (progress?.stage === 'extracting' && progress.totalPages) {
+    return t('detail.documents.statusExtractingPages', {
+      current: progress.processedPages ?? 0,
+      total: progress.totalPages,
+    });
+  }
+  if (progress?.stage === 'indexing') {
+    return t('detail.documents.statusIndexing');
+  }
+  return isProcessingSlow
+    ? t('detail.documents.statusProcessingSlow')
+    : t('detail.documents.statusProcessing');
+}
+
 function DocumentItemDescription({
   isWeb,
   url,
@@ -342,6 +368,7 @@ function DocumentItemDescription({
   isProcessingSlow,
   isFailed,
   processingError,
+  processingProgress,
   t,
 }: Readonly<{
   isWeb: boolean;
@@ -350,7 +377,8 @@ function DocumentItemDescription({
   isProcessingSlow: boolean;
   isFailed: boolean;
   processingError: string | null | undefined;
-  t: (key: string) => string;
+  processingProgress?: DocumentProcessingProgress;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }>) {
   if (isProcessing) {
     return (
@@ -359,9 +387,7 @@ function DocumentItemDescription({
           isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
         }
       >
-        {isProcessingSlow
-          ? t('detail.documents.statusProcessingSlow')
-          : t('detail.documents.statusProcessing')}
+        {documentProcessingLabel(t, isProcessingSlow, processingProgress)}
       </ItemDescription>
     );
   }

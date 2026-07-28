@@ -1,31 +1,11 @@
-import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import {
-  detectFileType,
-  getCanonicalMimeType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
-  isSpreadsheetFile,
-  isCSVFile,
-  SUPPORTED_FILE_TYPES,
-  type DetectedFileType,
-} from 'src/common/util/file-type';
-import type { UploadedFileRef } from 'src/common/util/source-file-upload';
 import { Source } from 'src/domain/sources/domain/source.entity';
-import type { DataSourceFileKind } from 'src/domain/sources/domain/data-source-file-kind.type';
-import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
-import { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
-import { StartDataSourceProcessingCommand } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.command';
+import { StartFileSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-file-source-processing/start-file-source-processing.use-case';
+import { StartFileSourceProcessingCommand } from 'src/domain/sources/application/use-cases/start-file-source-processing/start-file-source-processing.command';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
-import {
-  UnsupportedFileTypeError,
-  UnsupportedSourceFileTypeError,
-} from 'src/domain/sources/application/sources.errors';
 import { Thread } from '../../../domain/thread.entity';
 import { UnexpecteThreadError } from '../../threads.errors';
 import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
@@ -42,8 +22,7 @@ export class AddFileSourceToThreadUseCase {
   constructor(
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
-    private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
-    private readonly startDataSourceProcessingUseCase: StartDataSourceProcessingUseCase,
+    private readonly startFileSourceProcessingUseCase: StartFileSourceProcessingUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
   ) {}
 
@@ -54,10 +33,6 @@ export class AddFileSourceToThreadUseCase {
       fileName: command.file.originalname,
     });
 
-    const detectedType = detectFileType(
-      command.file.mimetype,
-      command.file.originalname,
-    );
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
@@ -69,65 +44,18 @@ export class AddFileSourceToThreadUseCase {
     // for concurrent adds.
     assertThreadHasSourceCapacity(thread.sourceAssignments ?? []);
 
-    if (
-      isDocumentFile(detectedType) ||
-      isPlainTextFile(detectedType) ||
-      isAudioFile(detectedType)
-    ) {
-      return this.addDocumentSource(thread, command.file, detectedType);
-    }
-    if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {
-      return this.addDataSources(
-        thread,
+    const sources = await this.startFileSourceProcessingUseCase.execute(
+      new StartFileSourceProcessingCommand(
         command.file,
-        isCSVFile(detectedType) ? 'csv' : 'spreadsheet',
-      );
-    }
-    throw new UnsupportedFileTypeError(
-      detectedType === 'unknown' ? command.file.originalname : detectedType,
-      SUPPORTED_FILE_TYPES,
-    );
-  }
-
-  private async addDocumentSource(
-    thread: Thread,
-    file: UploadedFileRef,
-    detectedType: DetectedFileType,
-  ): Promise<Source[]> {
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      throw new UnsupportedSourceFileTypeError(detectedType);
-    }
-    const source = await this.startDocumentProcessingUseCase.execute(
-      new StartDocumentProcessingCommand({
-        fileData: await fs.promises.readFile(file.path),
-        fileName: file.originalname,
-        fileType: canonicalMimeType,
-      }),
-    );
-    await this.attachOrCompensate(thread, [source]);
-    return [source];
-  }
-
-  private async addDataSources(
-    thread: Thread,
-    file: UploadedFileRef,
-    kind: DataSourceFileKind,
-  ): Promise<Source[]> {
-    const sources = await this.startDataSourceProcessingUseCase.execute(
-      new StartDataSourceProcessingCommand({
-        fileData: await fs.promises.readFile(file.path),
-        fileName: file.originalname,
-        kind,
         // A workbook creates one source per data sheet; re-check the cap with
         // the real count so an oversized upload is rejected before any
         // sources, storage objects, or jobs exist.
-        ensureCapacityFor: (sourceCount) =>
+        (sourceCount) =>
           assertThreadHasSourceCapacity(
             thread.sourceAssignments ?? [],
             sourceCount,
           ),
-      }),
+      ),
     );
     await this.attachOrCompensate(thread, sources);
     return sources;
