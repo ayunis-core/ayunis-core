@@ -41,49 +41,42 @@ export class ObjectNotFoundError extends StorageError {
   }
 }
 
+// The object name and the upstream driver message are deliberately kept out
+// of these messages: ApplicationError.message is serialised into the HTTP
+// response body, so embedding them exposes the bucket layout
+// ('<orgId>/<threadId>/<messageId>/3.jpg') and the CDN hostname to the
+// client. Every thrower logs both server-side before constructing these.
 export class UploadFailedError extends StorageError {
-  constructor(params: {
-    objectName: string;
-    message: string;
-    metadata?: ErrorMetadata;
-  }) {
+  constructor(params?: { metadata?: ErrorMetadata }) {
     super(
-      `Failed to upload object '${params.objectName}': ${params.message}`,
+      'Failed to upload object',
       StorageErrorCode.UPLOAD_FAILED,
       500,
-      params.metadata,
+      params?.metadata,
     );
     this.name = 'UploadFailedError';
   }
 }
 
 export class DownloadFailedError extends StorageError {
-  constructor(params: {
-    objectName: string;
-    message: string;
-    metadata?: ErrorMetadata;
-  }) {
+  constructor(params?: { metadata?: ErrorMetadata }) {
     super(
-      `Failed to download object '${params.objectName}': ${params.message}`,
+      'Failed to download object',
       StorageErrorCode.DOWNLOAD_FAILED,
       500,
-      params.metadata,
+      params?.metadata,
     );
     this.name = 'DownloadFailedError';
   }
 }
 
 export class DeleteFailedError extends StorageError {
-  constructor(params: {
-    objectName: string;
-    message: string;
-    metadata?: ErrorMetadata;
-  }) {
+  constructor(params?: { metadata?: ErrorMetadata }) {
     super(
-      `Failed to delete object '${params.objectName}': ${params.message}`,
+      'Failed to delete object',
       StorageErrorCode.DELETE_FAILED,
       500,
-      params.metadata,
+      params?.metadata,
     );
     this.name = 'DeleteFailedError';
   }

@@ -28,19 +28,7 @@ export class UploadObjectUseCase {
     });
 
     try {
-      if (!this.isValidObjectName(command.objectName)) {
-        throw new InvalidObjectNameError({ objectName: command.objectName });
-      }
-
-      const bucketName = command.bucket || this.getDefaultBucket();
-
-      // Check if bucket exists before uploading
-      if (bucketName !== this.getDefaultBucket()) {
-        const bucketExists = this.bucketExists(bucketName);
-        if (!bucketExists) {
-          throw new BucketNotFoundError({ bucket: bucketName });
-        }
-      }
+      const bucketName = this.resolveTargetBucket(command);
 
       const result = await this.objectStorage.upload(
         new StorageObjectUpload(
@@ -78,12 +66,23 @@ export class UploadObjectUseCase {
         `Failed to upload object: ${command.objectName}`,
         error,
       );
-      throw new UploadFailedError({
-        objectName: command.objectName,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        metadata: { originalError: error as Error },
-      });
+      throw new UploadFailedError();
     }
+  }
+
+  private resolveTargetBucket(command: UploadObjectCommand): string {
+    if (!this.isValidObjectName(command.objectName)) {
+      throw new InvalidObjectNameError({ objectName: command.objectName });
+    }
+
+    const bucketName = command.bucket || this.getDefaultBucket();
+    if (
+      bucketName !== this.getDefaultBucket() &&
+      !this.bucketExists(bucketName)
+    ) {
+      throw new BucketNotFoundError({ bucket: bucketName });
+    }
+    return bucketName;
   }
 
   private getDefaultBucket(): string {
