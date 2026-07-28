@@ -8,24 +8,18 @@ import {
   Logger,
   HttpCode,
   HttpStatus,
-  UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiBody,
-  ApiConsumes,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 
 import { AddSourceToSkillUseCase } from '../../application/use-cases/add-source-to-skill/add-source-to-skill.use-case';
+import { AddFileSourceToSkillUseCase } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
+import { AddFileSourceToSkillCommand } from '../../application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
 import { RemoveSourceFromSkillUseCase } from '../../application/use-cases/remove-source-from-skill/remove-source-from-skill.use-case';
 import { ListSkillSourcesUseCase } from '../../application/use-cases/list-skill-sources/list-skill-sources.use-case';
 
@@ -42,15 +36,10 @@ import {
 } from './dto/skill-response.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
 
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Transactional } from '@nestjs-cls/transactional';
-import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
+import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { Skill } from '../../domain/skill.entity';
 import {
@@ -82,10 +71,10 @@ export class SkillSourcesController {
 
   constructor(
     private readonly addSourceToSkillUseCase: AddSourceToSkillUseCase,
+    private readonly addFileSourceToSkillUseCase: AddFileSourceToSkillUseCase,
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
-    private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly skillAccessService: SkillAccessService,
     private readonly skillCreatorNameService: SkillCreatorNameService,
@@ -119,55 +108,7 @@ export class SkillSourcesController {
   }
 
   @Post(':id/sources/file')
-  @ApiOperation({ summary: 'Add a file source to a skill' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the skill',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'The file to upload (max 25 MB)',
-        },
-      },
-      required: ['file'],
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'The file source has been successfully added to the skill',
-    type: SkillResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Skill not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid or unsupported file type',
-  })
-  @ApiResponse({
-    status: 413,
-    description: 'File exceeds the 25 MB upload limit',
-  })
-  @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const randomName = randomUUID();
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
-    }),
-    /* eslint-enable sonarjs/content-length */
-  )
+  @ApiSkillFileSourceUpload()
   async addFileSource(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
@@ -262,15 +203,13 @@ export class SkillSourcesController {
           `Unable to determine MIME type for detected file type: ${detectedType}`,
         );
       }
-      const source = await this.startDocumentProcessingUseCase.execute(
-        new StartDocumentProcessingCommand({
+      return this.addFileSourceToSkillUseCase.execute(
+        new AddFileSourceToSkillCommand({
+          skillId,
           fileData,
           fileName: file.originalname,
           fileType: canonicalMimeType,
         }),
-      );
-      return this.addSourceToSkillUseCase.execute(
-        new AddSourceToSkillCommand({ skillId, sourceId: source.id }),
       );
     } else if (isCSVFile(detectedType)) {
       return this.processCSVUpload(skillId, file);
