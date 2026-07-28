@@ -30,6 +30,10 @@ function isTransientOcrError(error: Error): boolean {
   );
 }
 
+function isFileNotFound(error: unknown): boolean {
+  return error instanceof MistralError && error.statusCode === 404;
+}
+
 @Injectable()
 export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   private readonly logger = new Logger(MistralFileRetrieverHandler.name);
@@ -60,9 +64,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       const blobPart: BlobPart = file.fileData as unknown as BlobPart;
       const fileBlob = new Blob([blobPart], { type: file.fileType });
 
-      const uploadedFileId = await this.uploadFile(fileBlob);
-      const ocrResponse = await this.runOcr(uploadedFileId);
-      await this.deleteFileBestEffort(uploadedFileId);
+      const ocrResponse = await this.ocrWithReuploadRecovery(fileBlob);
 
       return this.parseResponse(ocrResponse);
     } catch (error) {
@@ -130,7 +132,67 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     return uploaded.id;
   }
 
-  /** Runs OCR on the uploaded file by id; deletes the uploaded file on failure. */
+  /**
+   * Uploads, runs OCR, and cleans up.
+   *
+   * Mistral deduplicates uploads by content signature, so two jobs processing
+   * byte-identical documents are handed the same file id; whichever finishes
+   * first deletes it, and the other's OCR call fails even though its own
+   * upload succeeded (AYC-556). Re-uploading recovers, because once the id is
+   * gone an upload of the same bytes yields a fresh, live one.
+   *
+   * The recoverable case is decided by asking the files API whether the file
+   * still exists, not by matching the OCR error's text: `invalid_request_file`
+   * / code 3310 also covers unrelated failures that re-uploading cannot fix,
+   * and error wording is not a stable contract.
+   */
+  private async ocrWithReuploadRecovery(fileBlob: Blob): Promise<OCRResponse> {
+    const fileId = await this.uploadFile(fileBlob);
+    try {
+      const response = await this.runOcr(fileId);
+      await this.deleteFileBestEffort(fileId);
+      return response;
+    } catch (error) {
+      // Probe before any cleanup — deleting first would make every failure
+      // look like the vanished-file case.
+      if (!(await this.uploadedFileIsGone(fileId))) {
+        await this.deleteFileBestEffort(fileId);
+        throw error;
+      }
+      this.logger.warn(
+        'Uploaded file was removed before OCR ran; re-uploading once',
+        { fileId },
+      );
+    }
+
+    const freshFileId = await this.uploadFile(fileBlob);
+    try {
+      return await this.runOcr(freshFileId);
+    } finally {
+      await this.deleteFileBestEffort(freshFileId);
+    }
+  }
+
+  /**
+   * Distinguishes "the file we uploaded is gone" from any other OCR failure.
+   * A retrieve of a deleted or never-existing id returns 404; a live one
+   * returns 200. Treats an inconclusive answer as "still there" so an
+   * unrelated failure is never retried as if the file had vanished.
+   */
+  private async uploadedFileIsGone(fileId: string): Promise<boolean> {
+    try {
+      await this.client.files.retrieve({ fileId });
+      return false;
+    } catch (error) {
+      return isFileNotFound(error);
+    }
+  }
+
+  /**
+   * Runs OCR on the uploaded file by id. Cleanup is the caller's job — it must
+   * not delete before `ocrWithReuploadRecovery` has probed whether the file
+   * still exists.
+   */
   private async runOcr(fileId: string): Promise<OCRResponse> {
     return retryWithBackoff({
       fn: () =>
@@ -145,12 +207,11 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       maxRetries: 3,
       delay: 1000,
       retryIfError: isTransientOcrError,
-    }).catch(async (error) => {
+    }).catch((error) => {
       this.logger.error(
         `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error instanceof Error ? error.stack : 'Unknown error',
       );
-      await this.client.files.delete({ fileId }).catch(() => undefined);
       throw error;
     });
   }
