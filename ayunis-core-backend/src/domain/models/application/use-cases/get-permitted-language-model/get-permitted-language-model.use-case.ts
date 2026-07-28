@@ -32,16 +32,19 @@ export class GetPermittedLanguageModelUseCase {
       const model = await this.permittedModelsRepository.findOneLanguage({
         id: query.id,
       });
-      const isFromOrg = orgId === model?.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-      if (!isFromOrg && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
+      // Existence is checked before ownership: `orgId === model?.orgId` is
+      // false for a missing model, so an ownership-first order reports a
+      // deleted id as a permission problem and never reaches this branch.
       if (!model) {
         this.logger.error('model not found', {
           query,
         });
         throw new ModelNotFoundByIdError(query.id);
+      }
+      const isFromOrg = orgId === model.orgId;
+      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
+      if (!isFromOrg && !isSuperAdmin) {
+        throw new UnauthorizedAccessError();
       }
       return model;
     } catch (error) {
