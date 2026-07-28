@@ -12,6 +12,18 @@ import { StorageObject } from '../../domain/storage-object.entity';
 import { StorageUrl } from '../../domain/storage-url.entity';
 import { PresignedUrl } from '../../domain/presigned-url.entity';
 import { StorageBucket } from '../../domain/storage-bucket.entity';
+import { ObjectNotFoundError } from '../../application/storage.errors';
+
+/**
+ * S3 error codes minio raises for a key that is not there. `NotFound` comes
+ * back from HEAD-style calls, `NoSuchKey` from GETs.
+ */
+const MISSING_OBJECT_CODES = new Set(['NoSuchKey', 'NotFound']);
+
+function isMissingObjectError(error: unknown): boolean {
+  const code = (error as { code?: string } | null)?.code;
+  return code !== undefined && MISSING_OBJECT_CODES.has(code);
+}
 
 @Injectable()
 export class MinioObjectStorageProvider
@@ -117,7 +129,19 @@ export class MinioObjectStorageProvider
 
   async download(storageUrl: StorageUrl): Promise<NodeJS.ReadableStream> {
     const bucketName = storageUrl.bucket || this.defaultBucket;
-    return this.client.getObject(bucketName, storageUrl.objectName);
+    try {
+      return await this.client.getObject(bucketName, storageUrl.objectName);
+    } catch (error) {
+      // Without this translation a missing object is indistinguishable from
+      // storage being unreachable, and callers turn both into a 500.
+      if (isMissingObjectError(error)) {
+        throw new ObjectNotFoundError({
+          objectName: storageUrl.objectName,
+          bucket: bucketName,
+        });
+      }
+      throw error;
+    }
   }
 
   async getObjectInfo(storageUrl: StorageUrl): Promise<StorageObject> {

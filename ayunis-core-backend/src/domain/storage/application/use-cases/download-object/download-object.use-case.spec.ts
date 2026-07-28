@@ -8,6 +8,12 @@ import storageConfig from 'src/config/storage.config';
 import { DownloadFailedError, ObjectNotFoundError } from '../../storage.errors';
 import { Readable } from 'stream';
 
+function networkError(code: string): Error {
+  const error: NodeJS.ErrnoException = new Error(`${code} cdn-core.test`);
+  error.code = code;
+  return error;
+}
+
 describe('DownloadObjectUseCase', () => {
   let useCase: DownloadObjectUseCase;
   let mockObjectStorage: Partial<ObjectStoragePort>;
@@ -48,145 +54,136 @@ describe('DownloadObjectUseCase', () => {
 
   describe('execute', () => {
     it('should download object successfully', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const command = new DownloadObjectCommand(objectName);
+      const command = new DownloadObjectCommand('test-file.txt');
       const mockStream = new Readable();
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
       jest.spyOn(mockObjectStorage, 'download').mockResolvedValue(mockStream);
 
-      // Act
       const result = await useCase.execute(command);
 
-      // Assert
-      expect(mockObjectStorage.exists).toHaveBeenCalled();
-      expect(mockObjectStorage.download).toHaveBeenCalled();
       expect(result).toBe(mockStream);
     });
 
-    it('should throw ObjectNotFoundError when object does not exist', async () => {
-      // Arrange
-      const objectName = 'non-existent-file.txt';
-      const command = new DownloadObjectCommand(objectName);
+    it('should not stat the object before downloading it', async () => {
+      const command = new DownloadObjectCommand('test-file.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockResolvedValue(new Readable());
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(false);
+      await useCase.execute(command);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
+      // The extra round-trip is what made a single DNS blip fatal.
+      expect(mockObjectStorage.exists).not.toHaveBeenCalled();
+      expect(mockObjectStorage.download).toHaveBeenCalledTimes(1);
+    });
+
+    it('should pass through ObjectNotFoundError from the storage adapter', async () => {
+      const command = new DownloadObjectCommand('missing.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(
+          new ObjectNotFoundError({ objectName: 'missing.txt' }),
+        );
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         ObjectNotFoundError,
       );
-      expect(mockObjectStorage.exists).toHaveBeenCalled();
-      expect(mockObjectStorage.download).not.toHaveBeenCalled();
     });
 
     it('should use default bucket when no bucket specified', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const command = new DownloadObjectCommand(objectName);
-      const mockStream = new Readable();
+      const command = new DownloadObjectCommand('test-file.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockResolvedValue(new Readable());
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
-      jest.spyOn(mockObjectStorage, 'download').mockResolvedValue(mockStream);
-
-      // Act
       await useCase.execute(command);
 
-      // Assert
-      expect(mockObjectStorage.exists).toHaveBeenCalledWith(
+      expect(mockObjectStorage.download).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: 'test-bucket' }),
       );
     });
 
     it('should use custom bucket when specified', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const customBucket = 'custom-bucket';
-      const command = new DownloadObjectCommand(objectName, customBucket);
-      const mockStream = new Readable();
+      const command = new DownloadObjectCommand('test-file.txt', 'custom');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockResolvedValue(new Readable());
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
-      jest.spyOn(mockObjectStorage, 'download').mockResolvedValue(mockStream);
-
-      // Act
       await useCase.execute(command);
 
-      // Assert
-      expect(mockObjectStorage.exists).toHaveBeenCalledWith(
-        expect.objectContaining({ bucket: customBucket }),
+      expect(mockObjectStorage.download).toHaveBeenCalledWith(
+        expect.objectContaining({ bucket: 'custom' }),
       );
     });
 
-    it('should throw DownloadFailedError on storage error', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const command = new DownloadObjectCommand(objectName);
+    it('should retry a transient DNS failure and succeed', async () => {
+      const command = new DownloadObjectCommand('test-file.txt');
+      const mockStream = new Readable();
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
       jest
         .spyOn(mockObjectStorage, 'download')
-        .mockRejectedValue(new Error('Storage error'));
+        .mockRejectedValueOnce(networkError('EAI_AGAIN'))
+        .mockResolvedValueOnce(mockStream);
 
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
+      await expect(useCase.execute(command)).resolves.toBe(mockStream);
+      expect(mockObjectStorage.download).toHaveBeenCalledTimes(2);
+    });
+
+    it('should give up after exhausting retries on a persistent network fault', async () => {
+      const command = new DownloadObjectCommand('test-file.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(networkError('ECONNRESET'));
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         DownloadFailedError,
       );
+      expect(mockObjectStorage.download).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not retry an error that a retry cannot fix', async () => {
+      const command = new DownloadObjectCommand('test-file.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(new Error('Access Denied'));
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        DownloadFailedError,
+      );
+      expect(mockObjectStorage.download).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not retry a missing object', async () => {
+      const command = new DownloadObjectCommand('missing.txt');
+      jest
+        .spyOn(mockObjectStorage, 'download')
+        .mockRejectedValue(
+          new ObjectNotFoundError({ objectName: 'missing.txt' }),
+        );
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        ObjectNotFoundError,
+      );
+      expect(mockObjectStorage.download).toHaveBeenCalledTimes(1);
     });
 
     it('should not expose the object path or the upstream message', async () => {
-      // Arrange
       const objectName = 'org-id/thread-id/message-id/3.jpg';
       const command = new DownloadObjectCommand(objectName);
 
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
       jest
         .spyOn(mockObjectStorage, 'download')
         .mockRejectedValue(
           new Error('getaddrinfo EAI_AGAIN cdn-core.ayunis.com'),
         );
 
-      // Act
       const error = await useCase.execute(command).catch((e: unknown) => e);
 
-      // Assert — the serialised HTTP body is what reaches the client
       const body = JSON.stringify(
         (error as DownloadFailedError).toHttpException().getResponse(),
       );
       expect(body).not.toContain(objectName);
       expect(body).not.toContain('cdn-core.ayunis.com');
-    });
-
-    it('should pass through ObjectNotFoundError from download', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const command = new DownloadObjectCommand(objectName);
-
-      jest.spyOn(mockObjectStorage, 'exists').mockResolvedValue(true);
-      const notFoundError = new ObjectNotFoundError({ objectName });
-      jest
-        .spyOn(mockObjectStorage, 'download')
-        .mockRejectedValue(notFoundError);
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        ObjectNotFoundError,
-      );
-    });
-
-    it('should handle exists check error gracefully', async () => {
-      // Arrange
-      const objectName = 'test-file.txt';
-      const command = new DownloadObjectCommand(objectName);
-
-      jest
-        .spyOn(mockObjectStorage, 'exists')
-        .mockRejectedValue(new Error('Exists check failed'));
-
-      // Act & Assert
-      await expect(useCase.execute(command)).rejects.toThrow(
-        DownloadFailedError,
-      );
-      expect(mockObjectStorage.download).not.toHaveBeenCalled();
     });
   });
 });
