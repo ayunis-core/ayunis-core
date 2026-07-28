@@ -1,23 +1,44 @@
 // appsignal-hooks.cjs is a plain CJS module loaded by appsignal.cjs before
 // the app boots; require() mirrors how it is consumed there.
+import createHttpError from 'http-errors';
+import { JobRetryScheduledError } from '../../domain/sources/infrastructure/queue/bullmq-job.helpers';
 
 type UndiciRequest = {
   method?: string;
   headers: string | (string | string[])[];
 };
 
+type Suppression = {
+  id: string;
+  lever: 'ignoreRequestHook' | 'ignoreErrors' | 'disableInstrumentation';
+  ticket: string;
+  reason: string;
+  stopgapFor?: string;
+  match?: (request: UndiciRequest) => boolean;
+  exceptionType?: string;
+  instrumentation?: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const hooks = require('../../../appsignal-hooks.cjs') as {
+  SUPPRESSIONS: Suppression[];
   isCrawlerRequest: (request: UndiciRequest) => boolean;
   isMcpEventStreamRequest: (request: UndiciRequest) => boolean;
   shouldIgnoreRequest: (request: UndiciRequest) => boolean;
+  exceptionTypeOf: (error: unknown) => string | undefined;
+  ignoredErrorTypes: string[];
+  disabledInstrumentations: string[];
   CRAWLER_USER_AGENT: string;
 };
 
 const {
+  SUPPRESSIONS,
   isCrawlerRequest,
   isMcpEventStreamRequest,
   shouldIgnoreRequest,
+  exceptionTypeOf,
+  ignoredErrorTypes,
+  disabledInstrumentations,
   CRAWLER_USER_AGENT,
 } = hooks;
 
@@ -155,5 +176,124 @@ describe('shouldIgnoreRequest', () => {
         headers: ['user-agent', 'OpenAI/JS 4.104.0'],
       }),
     ).toBe(false);
+  });
+});
+
+describe('exceptionTypeOf', () => {
+  // Mirrors @opentelemetry/sdk-trace-base's Span.recordException, which is
+  // what decides the string AppSignal's agent matches ignoreErrors against.
+  it('prefers code over name', () => {
+    const error = Object.assign(new Error('boom'), { code: 'ECONNABORTED' });
+    expect(exceptionTypeOf(error)).toBe('ECONNABORTED');
+  });
+
+  it('falls back to name when there is no code', () => {
+    expect(exceptionTypeOf(new TypeError('boom'))).toBe('TypeError');
+  });
+
+  it('falls back to name when code is falsy', () => {
+    const error = Object.assign(new Error('boom'), { code: '' });
+    expect(exceptionTypeOf(error)).toBe('Error');
+  });
+
+  it('stringifies a numeric code', () => {
+    const error = Object.assign(new Error('boom'), { code: 413 });
+    expect(exceptionTypeOf(error)).toBe('413');
+  });
+
+  it('returns undefined for a missing error', () => {
+    expect(exceptionTypeOf(undefined)).toBeUndefined();
+  });
+});
+
+// A real instance of each error an `ignoreErrors` entry claims to suppress.
+// Keyed by suppression id so an entry cannot be added without one.
+const ERROR_SAMPLES: Record<string, () => Error> = {
+  'bullmq-retry-scheduled': () =>
+    new JobRetryScheduledError(new Error('upstream failed')),
+  'oversized-request-body': () =>
+    createHttpError(413, 'request entity too large', {
+      type: 'entity.too.large',
+    }),
+};
+
+describe('SUPPRESSIONS registry', () => {
+  it('is not empty', () => {
+    expect(SUPPRESSIONS.length).toBeGreaterThan(0);
+  });
+
+  it.each(SUPPRESSIONS.map((s) => [s.id, s] as const))(
+    '%s carries a reason and a ticket',
+    (_id, suppression) => {
+      expect(suppression.reason.trim().length).toBeGreaterThan(0);
+      expect(suppression.ticket).toMatch(/^AYC-\d+$/);
+      if (suppression.stopgapFor !== undefined) {
+        expect(suppression.stopgapFor).toMatch(/^AYC-\d+$/);
+      }
+    },
+  );
+
+  it('has unique ids', () => {
+    const ids = SUPPRESSIONS.map((suppression) => suppression.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  describe('ignoreRequestHook entries', () => {
+    const entries = SUPPRESSIONS.filter(
+      (s) => s.lever === 'ignoreRequestHook',
+    ).map((s) => [s.id, s] as const);
+
+    it.each(entries)('%s supplies a predicate', (_id, suppression) => {
+      expect(typeof suppression.match).toBe('function');
+    });
+  });
+
+  describe('ignoreErrors entries', () => {
+    const entries = SUPPRESSIONS.filter((s) => s.lever === 'ignoreErrors').map(
+      (s) => [s.id, s] as const,
+    );
+
+    it('are all exported as ignoredErrorTypes', () => {
+      expect(ignoredErrorTypes).toEqual(
+        entries.map(([, s]) => s.exceptionType),
+      );
+    });
+
+    it.each(entries)('%s has a sample error', (id) => {
+      expect(ERROR_SAMPLES[id]).toBeDefined();
+    });
+
+    // The whole point of the registry. OpenTelemetry derives exception.type as
+    // `code ?? name`, so an entry naming a class whose instances carry a
+    // `.code` suppresses nothing — silently, in production, forever. Asserting
+    // against a real instance turns that into a build failure.
+    it.each(entries)(
+      '%s suppresses the type its error actually reports',
+      (id, suppression) => {
+        const sample = ERROR_SAMPLES[id];
+        expect(exceptionTypeOf(sample())).toBe(suppression.exceptionType);
+      },
+    );
+  });
+
+  describe('disableInstrumentation entries', () => {
+    const entries = SUPPRESSIONS.filter(
+      (s) => s.lever === 'disableInstrumentation',
+    ).map((s) => [s.id, s] as const);
+
+    it('are all exported as disabledInstrumentations', () => {
+      expect(disabledInstrumentations).toEqual(
+        entries.map(([, s]) => s.instrumentation),
+      );
+    });
+
+    // AppSignal does not export its DefaultInstrumentations map and the
+    // packages are not resolvable from this workspace under pnpm's strict
+    // layout, so this checks the package-name shape rather than membership.
+    it.each(entries)('%s names an instrumentation package', (_id, s) => {
+      expect(s.instrumentation).toMatch(
+        /^@(opentelemetry|appsignal)\/(opentelemetry-)?instrumentation-[a-z0-9-]+$/,
+      );
+    });
   });
 });
