@@ -62,15 +62,13 @@ export class AddSourceToThreadUseCase {
       const currentAssignments = freshThread.sourceAssignments ?? [];
       this.assertSourceCanBeAdded(currentAssignments, command.source.id);
 
-      const sourceAssignment = new SourceAssignment({
-        source: command.source,
-        originSkillId: command.originSkillId,
-      });
-      const updatedAssignments = [...currentAssignments, sourceAssignment];
-      return await this.threadsRepository.updateSourceAssignments({
+      return await this.threadsRepository.addSourceAssignment({
         threadId: command.thread.id,
         userId,
-        sourceAssignments: updatedAssignments,
+        sourceAssignment: new SourceAssignment({
+          source: command.source,
+          originSkillId: command.originSkillId,
+        }),
       });
     } catch (error) {
       throw this.mapAddSourceError(error, command);

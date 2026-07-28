@@ -236,12 +236,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
     );
   }
 
-  async updateSourceAssignments(params: {
+  async addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;
-    sourceAssignments: SourceAssignment[];
+    sourceAssignment: SourceAssignment;
   }): Promise<void> {
-    return this.assignments.updateSourceAssignments(params);
+    return this.assignments.addSourceAssignment(params);
   }
 
   async updateModel(params: {

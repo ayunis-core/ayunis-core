@@ -66,10 +66,10 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     lastActivityAt: Date;
   }): Promise<void>;
-  abstract updateSourceAssignments(params: {
+  abstract addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;
-    sourceAssignments: SourceAssignment[];
+    sourceAssignment: SourceAssignment;
   }): Promise<void>;
   abstract updateMcpIntegrations(params: {
     threadId: UUID;

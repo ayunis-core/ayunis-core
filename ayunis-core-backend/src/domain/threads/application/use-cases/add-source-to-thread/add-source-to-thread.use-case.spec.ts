@@ -43,7 +43,7 @@ describe('AddSourceToThreadUseCase', () => {
   beforeAll(async () => {
     const mockThreadsRepository = {
       findOne: jest.fn(),
-      updateSourceAssignments: jest.fn(),
+      addSourceAssignment: jest.fn(),
     };
 
     const mockContextService = {
@@ -91,22 +91,23 @@ describe('AddSourceToThreadUseCase', () => {
       thread.id,
       mockUserId,
     );
-    expect(threadsRepository.updateSourceAssignments).toHaveBeenCalledWith(
+    expect(threadsRepository.addSourceAssignment).toHaveBeenCalledWith(
       expect.objectContaining({
         threadId: thread.id,
         userId: mockUserId,
       }),
     );
 
-    const savedAssignments =
-      threadsRepository.updateSourceAssignments.mock.calls[0][0]
-        .sourceAssignments;
-    expect(savedAssignments).toHaveLength(1);
-    expect(savedAssignments[0].source.id).toBe(source.id);
-    expect(savedAssignments[0].originSkillId).toBeUndefined();
+    const written =
+      threadsRepository.addSourceAssignment.mock.calls[0][0].sourceAssignment;
+    expect(written.source.id).toBe(source.id);
+    expect(written.originSkillId).toBeUndefined();
   });
 
-  it('should pass survivors alongside the new assignment when the thread already has sources', async () => {
+  // Regression for AYC-551: writing the whole desired set re-inserted rows
+  // that a concurrent delete had removed between the two reads, colliding on
+  // their primary key. Only the added row may ever be written.
+  it('writes only the new assignment when the thread already has sources', async () => {
     const existingSource = new ConcreteSource({ name: 'Existing.pdf' });
     const existingAssignment = new SourceAssignment({ source: existingSource });
     const newSource = new ConcreteSource({ name: 'New.pdf' });
@@ -121,12 +122,11 @@ describe('AddSourceToThreadUseCase', () => {
 
     await useCase.execute(command);
 
-    const savedAssignments =
-      threadsRepository.updateSourceAssignments.mock.calls[0][0]
-        .sourceAssignments;
-    expect(savedAssignments).toHaveLength(2);
-    expect(savedAssignments[0]).toBe(existingAssignment);
-    expect(savedAssignments[1].source.id).toBe(newSource.id);
+    expect(threadsRepository.addSourceAssignment).toHaveBeenCalledTimes(1);
+    const written =
+      threadsRepository.addSourceAssignment.mock.calls[0][0].sourceAssignment;
+    expect(written.source.id).toBe(newSource.id);
+    expect(written.id).not.toBe(existingAssignment.id);
   });
 
   it('should propagate originSkillId to the created SourceAssignment', async () => {
@@ -145,13 +145,11 @@ describe('AddSourceToThreadUseCase', () => {
 
     await useCase.execute(command);
 
-    const savedAssignments =
-      threadsRepository.updateSourceAssignments.mock.calls[0][0]
-        .sourceAssignments;
-    expect(savedAssignments).toHaveLength(1);
-    expect(savedAssignments[0]).toBeInstanceOf(SourceAssignment);
-    expect(savedAssignments[0].source.id).toBe(source.id);
-    expect(savedAssignments[0].originSkillId).toBe(skillId);
+    const written =
+      threadsRepository.addSourceAssignment.mock.calls[0][0].sourceAssignment;
+    expect(written).toBeInstanceOf(SourceAssignment);
+    expect(written.source.id).toBe(source.id);
+    expect(written.originSkillId).toBe(skillId);
   });
 
   it('should throw SourceAlreadyAssignedError when source is already on the thread', async () => {
@@ -170,7 +168,7 @@ describe('AddSourceToThreadUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,
     );
-    expect(threadsRepository.updateSourceAssignments).not.toHaveBeenCalled();
+    expect(threadsRepository.addSourceAssignment).not.toHaveBeenCalled();
   });
 
   it('should map a unique-constraint violation from the database to SourceAlreadyAssignedError', async () => {
@@ -187,7 +185,7 @@ describe('AddSourceToThreadUseCase', () => {
       new Error('duplicate key value violates unique constraint'),
       { driverError: { code: '23505' } },
     );
-    threadsRepository.updateSourceAssignments.mockRejectedValue(dbError);
+    threadsRepository.addSourceAssignment.mockRejectedValue(dbError);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,
@@ -204,7 +202,7 @@ describe('AddSourceToThreadUseCase', () => {
     const command = new AddSourceCommand(thread, source);
 
     threadsRepository.findOne.mockResolvedValue(thread);
-    threadsRepository.updateSourceAssignments.mockRejectedValue(
+    threadsRepository.addSourceAssignment.mockRejectedValue(
       new Error('Connection terminated'),
     );
 
@@ -236,6 +234,6 @@ describe('AddSourceToThreadUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,
     );
-    expect(threadsRepository.updateSourceAssignments).not.toHaveBeenCalled();
+    expect(threadsRepository.addSourceAssignment).not.toHaveBeenCalled();
   });
 });
