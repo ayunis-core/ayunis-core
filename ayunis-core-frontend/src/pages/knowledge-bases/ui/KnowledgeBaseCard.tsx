@@ -2,6 +2,7 @@ import { Button } from '@/shared/ui/shadcn/button';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { Trash2 } from 'lucide-react';
 import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
+import { PermissionGate } from '@/features/permissions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { KnowledgeBase } from '../model/openapi';
@@ -67,21 +68,26 @@ export default function KnowledgeBaseCard({
           <ItemDescription>{knowledgeBase.description}</ItemDescription>
         )}
       </ItemContent>
+      {/* The gate wraps ItemActions rather than the button: delete is the only
+          action here, so gating inside would leave an empty flex sibling and a
+          trailing gap that shared cards don't have. */}
       {!isShared && (
-        <ItemActions>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete();
-            }}
-            disabled={deleteKnowledgeBase.isPending}
-          >
-            <Trash2 />
-          </Button>
-        </ItemActions>
+        <PermissionGate permission="manage_knowledge_bases">
+          <ItemActions>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+              disabled={deleteKnowledgeBase.isPending}
+            >
+              <Trash2 />
+            </Button>
+          </ItemActions>
+        </PermissionGate>
       )}
     </Item>
   );

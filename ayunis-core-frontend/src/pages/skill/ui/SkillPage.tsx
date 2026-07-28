@@ -11,6 +11,7 @@ import SkillKnowledgeBasesCard from './SkillKnowledgeBasesCard';
 import { KnowledgeBaseCard } from '@/widgets/knowledge-base-card';
 import SkillMcpIntegrationsCard from './SkillMcpIntegrationsCard';
 import { SharesTab } from '@/widgets/shares-tab';
+import { useMyPermissions } from '@/features/permissions';
 import {
   Tabs,
   TabsList,
@@ -90,6 +91,8 @@ export function SkillPage({
   }
 
   const isReadOnly = skill.isShared;
+  const { can } = useMyPermissions();
+  const canManageSkills = can('manage_skills');
 
   return (
     <AppLayout>
@@ -155,7 +158,7 @@ export function SkillPage({
                     </TooltipContent>
                   </Tooltip>
                 )}
-                {!isReadOnly && (
+                {!isReadOnly && canManageSkills && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -206,12 +209,18 @@ export function SkillPage({
               </TabsList>
               <TabsContent value="config" className="mt-4">
                 <div className="grid gap-4">
-                  <SkillPropertiesCard skill={skill} />
-                  {isEmbeddingModelEnabled && <SkillKnowledgeBasesCard />}
-                  <SkillMcpIntegrationsCard />
+                  <SkillPropertiesCard
+                    skill={skill}
+                    disabled={!canManageSkills}
+                  />
+                  {isEmbeddingModelEnabled && (
+                    <SkillKnowledgeBasesCard disabled={!canManageSkills} />
+                  )}
+                  <SkillMcpIntegrationsCard disabled={!canManageSkills} />
                   <KnowledgeBaseCard
                     entity={skill}
                     isEnabled={isEmbeddingModelEnabled}
+                    disabled={!canManageSkills}
                     translationNamespace="skill"
                     sourcesHook={sourcesHook}
                   />

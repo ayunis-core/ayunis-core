@@ -8,6 +8,7 @@ import {
 } from '@/shared/ui/shadcn/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '../api/useDeleteSkill';
+import { PermissionGate } from '@/features/permissions';
 import {
   useToggleSkillActive,
   useToggleSkillPinned,
@@ -134,24 +135,26 @@ export default function SkillCard({
             pinButton
           ))}
         {!skill.isShared && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
-                disabled={deleteSkill.isPending}
-                aria-label={t('card.deleteLabel')}
-              >
-                <Trash2 />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
-          </Tooltip>
+          <PermissionGate permission="manage_skills">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  disabled={deleteSkill.isPending}
+                  aria-label={t('card.deleteLabel')}
+                >
+                  <Trash2 />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('card.deleteLabel')}</TooltipContent>
+            </Tooltip>
+          </PermissionGate>
         )}
       </ItemActions>
     </Item>
