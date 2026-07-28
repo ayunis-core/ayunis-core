@@ -15,17 +15,21 @@ export const Route = createFileRoute(
   '/_authenticated/admin-settings/teams/$id',
 )({
   component: RouteComponent,
-  loader: async ({ context: { queryClient }, params: { id } }) => {
-    void queryClient.prefetchQuery({
-      queryKey:
-        getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),
-      queryFn: () => teamPermittedModelsControllerListTeamPermittedModels(id),
-    });
+  loader: async ({ context: { user, queryClient }, params: { id } }) => {
+    // Both feed admin-only tabs behind admin-only endpoints; prefetching them
+    // for a manager who reached this page via a teams permission only 403s.
+    if (user.role === 'admin') {
+      void queryClient.prefetchQuery({
+        queryKey:
+          getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),
+        queryFn: () => teamPermittedModelsControllerListTeamPermittedModels(id),
+      });
 
-    void queryClient.prefetchQuery({
-      queryKey: getUsageControllerGetCreditUsageQueryKey(),
-      queryFn: () => usageControllerGetCreditUsage(),
-    });
+      void queryClient.prefetchQuery({
+        queryKey: getUsageControllerGetCreditUsageQueryKey(),
+        queryFn: () => usageControllerGetCreditUsage(),
+      });
+    }
 
     const [team, membersResponse] = await Promise.all([
       queryClient.fetchQuery({

@@ -23,11 +23,11 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermission = this.reflector.getAllAndOverride<
-      Permission | undefined
+    const requiredPermissions = this.reflector.getAllAndOverride<
+      Permission[] | undefined
     >(REQUIRE_PERMISSION_KEY, [context.getHandler(), context.getClass()]);
 
-    if (!requiredPermission) {
+    if (!requiredPermissions?.length) {
       return true;
     }
 
@@ -37,20 +37,25 @@ export class PermissionsGuard implements CanActivate {
     if (!user) {
       this.logger.warn('Access denied: no principal for permission check', {
         ...buildAccessDeniedAuditContext(request, user),
-        requiredPermission,
+        requiredPermissions,
       });
       return false;
     }
 
-    const allowed = await this.hasPermissionUseCase.execute(
-      new HasPermissionQuery(user.orgId, user.role, requiredPermission),
+    const grants = await Promise.all(
+      requiredPermissions.map((permission) =>
+        this.hasPermissionUseCase.execute(
+          new HasPermissionQuery(user.orgId, user.role, permission),
+        ),
+      ),
     );
+    const allowed = grants.includes(true);
 
     if (!allowed) {
       this.logger.warn('Access denied: missing permission', {
         ...buildAccessDeniedAuditContext(request, user),
         userRole: user.role,
-        requiredPermission,
+        requiredPermissions,
       });
     }
 

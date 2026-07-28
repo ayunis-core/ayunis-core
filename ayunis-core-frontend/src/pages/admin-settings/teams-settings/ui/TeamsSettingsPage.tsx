@@ -13,6 +13,7 @@ import { EditTeamDialog } from './EditTeamDialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { Team } from '../model/types';
+import { PermissionGate } from '@/features/permissions';
 
 interface TeamsSettingsPageProps {
   teams: Team[];
@@ -39,11 +40,13 @@ export function TeamsSettingsPage({ teams }: Readonly<TeamsSettingsPageProps>) {
   const headerActions = (
     <div className="flex gap-2">
       <HelpLink path="settings/admin/teams/" />
-      <OnboardingTourTarget name={TOUR_TARGET.createTeam}>
-        <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-          {t('teams.page.add')}
-        </Button>
-      </OnboardingTourTarget>
+      <PermissionGate permission="manage_teams">
+        <OnboardingTourTarget name={TOUR_TARGET.createTeam}>
+          <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+            {t('teams.page.add')}
+          </Button>
+        </OnboardingTourTarget>
+      </PermissionGate>
     </div>
   );
 

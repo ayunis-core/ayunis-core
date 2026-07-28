@@ -12,6 +12,7 @@ import {
 import { TeamMembersEmptyState } from './TeamMembersEmptyState';
 import { useRemoveTeamMember } from '../api/useRemoveTeamMember';
 import type { TeamMember } from '../model/types';
+import { PermissionGate } from '@/features/permissions';
 
 interface TeamMembersListProps {
   teamId: string;
@@ -48,15 +49,17 @@ export function TeamMembersList({
               {new Date(member.joinedAt).toLocaleDateString()}
             </TableCell>
             <TableCell>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-destructive hover:text-destructive"
-                onClick={() => removeTeamMember(member.userId)}
-                disabled={removingUserIds.has(member.userId)}
-              >
-                <Trash2 />
-              </Button>
+              <PermissionGate permission="assign_users_to_teams">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => removeTeamMember(member.userId)}
+                  disabled={removingUserIds.has(member.userId)}
+                >
+                  <Trash2 />
+                </Button>
+              </PermissionGate>
             </TableCell>
           </TableRow>
         ))}
