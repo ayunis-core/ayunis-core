@@ -18,6 +18,10 @@ import {
   UrlCrawlPage,
   UrlCrawlResult,
 } from 'src/domain/retrievers/url-retrievers/domain/url-crawl-result.entity';
+import {
+  UrlRetrieverTimeoutError,
+  UrlRetrieverUnsupportedContentTypeError,
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
@@ -196,6 +200,49 @@ describe('UrlCrawlConsumer', () => {
     await expect(consumer.process(job)).rejects.toMatchObject({
       name: 'JobRetryScheduledError',
       message: 'root unreachable',
+    });
+    expect(indexer.markFailed).not.toHaveBeenCalled();
+  });
+
+  it('completes without throwing when the crawl fails for a user-caused reason', async () => {
+    const source = makeSource();
+    sourceRepository.findById.mockResolvedValue(source);
+    crawlUrlUseCase.execute.mockRejectedValueOnce(
+      new UrlRetrieverUnsupportedContentTypeError(
+        'https://acme.test/',
+        'application/zip',
+      ),
+    );
+
+    const job = {
+      data: makeJobData(),
+      id: 'job-1',
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+    } as unknown as Job<UrlCrawlJobData>;
+
+    // Completing rather than throwing is what keeps it out of AppSignal.
+    await expect(consumer.process(job)).resolves.toBeUndefined();
+    expect(indexer.markFailed).toHaveBeenCalled();
+    expect(indexer.cleanupIndex).toHaveBeenCalled();
+  });
+
+  it('still retries a crawl timeout, which may succeed on a later attempt', async () => {
+    const source = makeSource();
+    sourceRepository.findById.mockResolvedValue(source);
+    crawlUrlUseCase.execute.mockRejectedValueOnce(
+      new UrlRetrieverTimeoutError('https://acme.test/', 5000),
+    );
+
+    const job = {
+      data: makeJobData(),
+      id: 'job-1',
+      attemptsMade: 0,
+      opts: { attempts: 3 },
+    } as unknown as Job<UrlCrawlJobData>;
+
+    await expect(consumer.process(job)).rejects.toMatchObject({
+      name: 'JobRetryScheduledError',
     });
     expect(indexer.markFailed).not.toHaveBeenCalled();
   });

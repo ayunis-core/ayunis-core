@@ -1,12 +1,25 @@
 import type { Job } from 'bullmq';
 import {
   isFinalAttempt,
-  wrapIfRetryScheduled,
+  isExpectedFailure,
+  classifyJobFailure,
   JobRetryScheduledError,
 } from './bullmq-job.helpers';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 function jobWith(attemptsMade: number, attempts?: number): Job {
   return { attemptsMade, opts: { attempts } } as Job;
+}
+
+class FakeRetrieverError extends ApplicationError {
+  constructor(statusCode: number) {
+    super(
+      `retrieval failed with ${statusCode}`,
+      'RETRIEVAL_FAILED',
+      statusCode,
+    );
+    this.name = 'FakeRetrieverError';
+  }
 }
 
 describe('isFinalAttempt', () => {
@@ -27,50 +40,117 @@ describe('isFinalAttempt', () => {
   });
 });
 
-describe('wrapIfRetryScheduled', () => {
+describe('isExpectedFailure', () => {
+  it('is true for an ApplicationError below 500', () => {
+    expect(isExpectedFailure(new FakeRetrieverError(422))).toBe(true);
+  });
+
+  it('is false for an ApplicationError at 500 and above', () => {
+    expect(isExpectedFailure(new FakeRetrieverError(503))).toBe(false);
+  });
+
+  it('is false for a plain Error, which carries no status', () => {
+    expect(isExpectedFailure(new Error('socket hang up'))).toBe(false);
+  });
+});
+
+describe('classifyJobFailure', () => {
   const providerError = new Error(
     'API error occurred: Status 400 - File could not be fetched from url',
   );
 
-  it('wraps the error in JobRetryScheduledError when a retry will follow', () => {
-    const result = wrapIfRetryScheduled(jobWith(0, 3), providerError);
+  describe('unexpected failures', () => {
+    it('wraps in JobRetryScheduledError when a retry will follow', () => {
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(0, 3),
+        providerError,
+      );
 
-    expect(result).toBeInstanceOf(JobRetryScheduledError);
-    expect((result as Error).name).toBe('JobRetryScheduledError');
+      expect(final).toBe(false);
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+      expect((rethrow as Error).name).toBe('JobRetryScheduledError');
+    });
+
+    it('preserves message, stack and cause so job.failedReason stays informative', () => {
+      const { rethrow } = classifyJobFailure(jobWith(0, 3), providerError);
+
+      expect((rethrow as Error).message).toBe(providerError.message);
+      expect((rethrow as Error).stack).toBe(providerError.stack);
+      expect((rethrow as Error).cause).toBe(providerError);
+    });
+
+    it('rethrows the original error on the final attempt, so it opens an incident', () => {
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(2, 3),
+        providerError,
+      );
+
+      expect(final).toBe(true);
+      expect(rethrow).toBe(providerError);
+    });
+
+    it('treats UnrecoverableError as final even when attempts remain', () => {
+      const unrecoverable = new Error('source was deleted mid-processing');
+      unrecoverable.name = 'UnrecoverableError';
+
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(0, 3),
+        unrecoverable,
+      );
+
+      expect(final).toBe(true);
+      expect(rethrow).toBe(unrecoverable);
+    });
+
+    it('wraps non-Error throwables with a stringified message', () => {
+      const { rethrow } = classifyJobFailure(jobWith(0, 3), 'redis timeout');
+
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+      expect((rethrow as Error).message).toBe('redis timeout');
+    });
   });
 
-  it('preserves the original message so job.failedReason stays informative', () => {
-    const result = wrapIfRetryScheduled(jobWith(0, 3), providerError);
+  describe('expected failures', () => {
+    it('settles a permanent failure immediately, without an incident', () => {
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(0, 3),
+        new FakeRetrieverError(422),
+      );
 
-    expect((result as Error).message).toBe(providerError.message);
-  });
+      expect(final).toBe(true);
+      expect(rethrow).toBeNull();
+    });
 
-  it('preserves the original stack and exposes the original as cause', () => {
-    const result = wrapIfRetryScheduled(jobWith(0, 3), providerError) as Error;
-
-    expect(result.stack).toBe(providerError.stack);
-    expect(result.cause).toBe(providerError);
-  });
-
-  it('returns the original error untouched on the final attempt', () => {
-    expect(wrapIfRetryScheduled(jobWith(2, 3), providerError)).toBe(
-      providerError,
+    it.each([413, 415, 404])(
+      'skips the remaining retries for status %i',
+      (status) => {
+        expect(
+          classifyJobFailure(jobWith(0, 3), new FakeRetrieverError(status)),
+        ).toEqual({ final: true, rethrow: null });
+      },
     );
-  });
 
-  it('returns UnrecoverableError untouched even when attempts remain, since BullMQ will not retry it', () => {
-    const unrecoverable = new Error('source was deleted mid-processing');
-    unrecoverable.name = 'UnrecoverableError';
+    it.each([408, 429])(
+      'keeps retrying status %i under the ignored name, since it may succeed later',
+      (status) => {
+        const { final, rethrow } = classifyJobFailure(
+          jobWith(0, 3),
+          new FakeRetrieverError(status),
+        );
 
-    expect(wrapIfRetryScheduled(jobWith(0, 3), unrecoverable)).toBe(
-      unrecoverable,
+        expect(final).toBe(false);
+        expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+      },
     );
-  });
 
-  it('wraps non-Error throwables with a stringified message', () => {
-    const result = wrapIfRetryScheduled(jobWith(0, 3), 'redis timeout');
+    it('settles a retryable failure quietly once its attempts run out', () => {
+      const { final, rethrow } = classifyJobFailure(
+        jobWith(2, 3),
+        new FakeRetrieverError(408),
+      );
 
-    expect(result).toBeInstanceOf(JobRetryScheduledError);
-    expect((result as Error).message).toBe('redis timeout');
+      expect(final).toBe(true);
+      expect(rethrow).toBeNull();
+    });
   });
 });

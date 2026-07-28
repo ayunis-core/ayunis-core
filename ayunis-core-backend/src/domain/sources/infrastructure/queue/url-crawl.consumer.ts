@@ -16,7 +16,7 @@ import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
-import { isFinalAttempt, wrapIfRetryScheduled } from './bullmq-job.helpers';
+import { classifyJobFailure } from './bullmq-job.helpers';
 
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
@@ -75,16 +75,15 @@ export class UrlCrawlConsumer extends WorkerHost {
           error: error as Error,
         });
 
-        if (isFinalAttempt(job)) {
+        const { final, rethrow } = classifyJobFailure(job, error);
+        if (final) {
           await this.helper.markFailed(
             sourceId,
             error instanceof Error ? error.message : 'Unknown crawl error',
           );
           await this.helper.cleanupIndex(sourceId);
         }
-        // Re-throw so BullMQ handles retries; non-final attempts are renamed
-        // so AppSignal only opens incidents for final failures.
-        throw wrapIfRetryScheduled(job, error);
+        if (rethrow) throw rethrow;
       }
     });
   }

@@ -5,6 +5,7 @@ import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 
 /* ------------------------------------------------------------------ */
@@ -147,6 +148,19 @@ describe('DocumentProcessingConsumer', () => {
       message: 'MinIO object not found',
     });
     expect(helper.markFailed).toHaveBeenCalled();
+  });
+
+  it('completes without throwing when the file itself is the problem', async () => {
+    const source = makeSource(SourceStatus.PROCESSING);
+    sourceRepository.findById.mockResolvedValue(source);
+    retrieveFileContentUseCase.execute.mockRejectedValueOnce(
+      new FileTooLargeError(),
+    );
+
+    // Completing rather than throwing is what keeps it out of AppSignal.
+    await expect(consumer.process(makeJob())).resolves.toBeUndefined();
+    expect(helper.markFailed).toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
   it('should skip saving and clean up when source is deleted mid-processing', async () => {

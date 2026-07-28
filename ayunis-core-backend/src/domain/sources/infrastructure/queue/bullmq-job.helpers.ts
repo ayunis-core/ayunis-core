@@ -1,6 +1,7 @@
 import type { Logger } from '@nestjs/common';
 import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 /**
  * Standard retry/retention options shared by the source processing queues:
@@ -26,10 +27,11 @@ export function isFinalAttempt(job: Job): boolean {
 
 /**
  * Failure of a job attempt that BullMQ will retry. The AppSignal agent is
- * configured to drop errors with this name (`ignoreErrors` in appsignal.cjs)
- * so only final failures — thrown with their original name — become
- * incidents. Message and stack are preserved so job.failedReason and logs
- * stay as informative as the original error.
+ * configured to drop errors with this name (the `bullmq-retry-scheduled`
+ * suppression in appsignal-hooks.cjs) so only unexpected final failures —
+ * thrown with their original name — become incidents. Message and stack are
+ * preserved so job.failedReason and logs stay as informative as the original
+ * error.
  */
 export class JobRetryScheduledError extends Error {
   constructor(original: unknown) {
@@ -44,16 +46,62 @@ export class JobRetryScheduledError extends Error {
 }
 
 /**
- * BullMQ's UnrecoverableError aborts remaining retries by error name, so it
- * must never be renamed — and its failure is final regardless of attempts.
+ * Statuses where the same request may well succeed later: a timeout or a rate
+ * limit says nothing about whether the resource is fetchable. Every other
+ * expected status (404, 413, 415, 422, …) describes the input itself, so
+ * retrying only repeats the same failure against the same host.
  */
-export function wrapIfRetryScheduled(job: Job, error: unknown): unknown {
+const RETRYABLE_EXPECTED_STATUSES = new Set([408, 429]);
+
+/**
+ * A failure caused by the job's own input rather than by a defect of ours —
+ * the queue-side counterpart of ApplicationErrorFilter's `statusCode < 500`
+ * rule for HTTP. A user pasting a URL to a dead intranet host is not an
+ * incident.
+ */
+export function isExpectedFailure(error: unknown): boolean {
+  return error instanceof ApplicationError && error.statusCode < 500;
+}
+
+export interface JobFailureOutcome {
+  /** No further attempt will run, so the source must be settled as FAILED. */
+  final: boolean;
+  /**
+   * What to rethrow, or null to let the job complete. Returning null is what
+   * keeps an expected failure out of AppSignal: a job that completes opens no
+   * incident, while the source still shows FAILED with its message.
+   */
+  rethrow: Error | null;
+}
+
+/**
+ * Decides how a consumer should end a failed attempt. Expected failures never
+ * reach AppSignal — permanent ones settle immediately instead of burning two
+ * more attempts, while retryable ones (timeouts, rate limits) keep their
+ * retries under the ignored name and still settle quietly if those run out.
+ */
+export function classifyJobFailure(
+  job: Job,
+  error: unknown,
+): JobFailureOutcome {
+  const expected = isExpectedFailure(error);
+  const retryIsPointless =
+    expected &&
+    !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode);
   const isUnrecoverable =
     error instanceof Error && error.name === 'UnrecoverableError';
-  if (isFinalAttempt(job) || isUnrecoverable) {
-    return error;
+
+  if (!isFinalAttempt(job) && !isUnrecoverable && !retryIsPointless) {
+    return { final: false, rethrow: new JobRetryScheduledError(error) };
   }
-  return new JobRetryScheduledError(error);
+  if (expected) {
+    return { final: true, rethrow: null };
+  }
+  // AppSignal needs an Error to report; a bare throwable would be dropped.
+  return {
+    final: true,
+    rethrow: error instanceof Error ? error : new Error(String(error)),
+  };
 }
 
 /**
