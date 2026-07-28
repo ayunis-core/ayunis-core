@@ -33,9 +33,11 @@ function makeAssignmentRecord(
 
 describe('LocalThreadAssignmentsRepository', () => {
   let repository: LocalThreadAssignmentsRepository;
-  let threadRepo: jest.Mocked<Pick<Repository<ThreadRecord>, 'findOne'>>;
+  let threadRepo: jest.Mocked<
+    Pick<Repository<ThreadRecord>, 'findOne' | 'exists'>
+  >;
   let sourceAssignmentRepo: jest.Mocked<
-    Pick<Repository<ThreadSourceAssignmentRecord>, 'remove' | 'save'>
+    Pick<Repository<ThreadSourceAssignmentRecord>, 'save'>
   >;
   let kbAssignmentRepo: jest.Mocked<
     Repository<ThreadKnowledgeBaseAssignmentRecord>
@@ -49,13 +51,11 @@ describe('LocalThreadAssignmentsRepository', () => {
   beforeEach(() => {
     threadRepo = {
       findOne: jest.fn(),
+      exists: jest.fn(),
     };
     sourceAssignmentRepo = {
-      remove: jest.fn(),
       save: jest.fn(),
-    } as jest.Mocked<
-      Pick<Repository<ThreadSourceAssignmentRecord>, 'remove' | 'save'>
-    >;
+    };
     kbAssignmentRepo = {} as jest.Mocked<
       Repository<ThreadKnowledgeBaseAssignmentRecord>
     >;
@@ -85,155 +85,79 @@ describe('LocalThreadAssignmentsRepository', () => {
     );
   });
 
-  describe('updateSourceAssignments', () => {
-    it('inserts only the new assignment when adding to an existing list', async () => {
+  describe('addSourceAssignment', () => {
+    it('inserts exactly the new assignment', async () => {
+      const source = new ConcreteSource({ name: 'new.pdf' });
+      threadRepo.exists.mockResolvedValue(true);
+      const assignment = new SourceAssignment({ source });
+
+      await repository.addSourceAssignment({
+        threadId,
+        userId,
+        sourceAssignment: assignment,
+      });
+
+      expect(mapper.toRecord).toHaveBeenCalledTimes(1);
+      expect(mapper.toRecord).toHaveBeenCalledWith(assignment, threadId);
+      expect(sourceAssignmentRepo.save).toHaveBeenCalledTimes(1);
+      const inserted = sourceAssignmentRepo.save.mock
+        .calls[0][0] as ThreadSourceAssignmentRecord;
+      expect(inserted.sourceId).toBe(source.id);
+      expect(inserted.threadId).toBe(threadId);
+    });
+
+    // Regression for AYC-551: the previous full-set-replace write re-derived
+    // the diff from a second read, so a row deleted between the two reads was
+    // re-INSERTed with its original primary key and raised a 23505.
+    it('never writes assignments other than the one being added', async () => {
       const existingSource = new ConcreteSource({ name: 'existing.pdf' });
       const existingRecord = makeAssignmentRecord(threadId, existingSource.id);
-      const newSource = new ConcreteSource({ name: 'new.pdf' });
+      threadRepo.exists.mockResolvedValue(true);
 
-      threadRepo.findOne.mockResolvedValue({
-        id: threadId,
-        userId,
-        sourceAssignments: [existingRecord],
-      } as ThreadRecord);
-
-      await repository.updateSourceAssignments({
+      await repository.addSourceAssignment({
         threadId,
         userId,
-        sourceAssignments: [
-          new SourceAssignment({
-            id: existingRecord.id,
-            source: existingSource,
-            createdAt: existingRecord.createdAt,
-            updatedAt: existingRecord.updatedAt,
-          }),
-          new SourceAssignment({ source: newSource }),
-        ],
+        sourceAssignment: new SourceAssignment({
+          source: new ConcreteSource({ name: 'new.pdf' }),
+        }),
       });
 
-      expect(sourceAssignmentRepo.remove).not.toHaveBeenCalled();
-      expect(mapper.toRecord).toHaveBeenCalledTimes(1);
-      expect(mapper.toRecord).toHaveBeenCalledWith(
-        expect.objectContaining({ source: newSource }),
-        threadId,
-      );
+      const inserted = sourceAssignmentRepo.save.mock
+        .calls[0][0] as ThreadSourceAssignmentRecord;
+      expect(inserted.id).not.toBe(existingRecord.id);
       expect(sourceAssignmentRepo.save).toHaveBeenCalledTimes(1);
-      const savedRecords = sourceAssignmentRepo.save.mock
-        .calls[0][0] as ThreadSourceAssignmentRecord[];
-      expect(savedRecords).toHaveLength(1);
-      expect(savedRecords[0].sourceId).toBe(newSource.id);
-    });
-
-    it('removes stale assignments and does not re-insert survivors', async () => {
-      const keptSource = new ConcreteSource({ name: 'kept.pdf' });
-      const droppedSource = new ConcreteSource({ name: 'dropped.pdf' });
-      const keptRecord = makeAssignmentRecord(threadId, keptSource.id);
-      const droppedRecord = makeAssignmentRecord(threadId, droppedSource.id);
-
-      threadRepo.findOne.mockResolvedValue({
-        id: threadId,
-        userId,
-        sourceAssignments: [keptRecord, droppedRecord],
-      } as ThreadRecord);
-
-      await repository.updateSourceAssignments({
-        threadId,
-        userId,
-        sourceAssignments: [
-          new SourceAssignment({
-            id: keptRecord.id,
-            source: keptSource,
-            createdAt: keptRecord.createdAt,
-            updatedAt: keptRecord.updatedAt,
-          }),
-        ],
-      });
-
-      expect(sourceAssignmentRepo.remove).toHaveBeenCalledTimes(1);
-      expect(sourceAssignmentRepo.remove).toHaveBeenCalledWith([droppedRecord]);
-      expect(mapper.toRecord).not.toHaveBeenCalled();
-      expect(sourceAssignmentRepo.save).not.toHaveBeenCalled();
-    });
-
-    it('no-ops when target list matches the existing assignments', async () => {
-      const source = new ConcreteSource({ name: 'same.pdf' });
-      const record = makeAssignmentRecord(threadId, source.id);
-
-      threadRepo.findOne.mockResolvedValue({
-        id: threadId,
-        userId,
-        sourceAssignments: [record],
-      } as ThreadRecord);
-
-      await repository.updateSourceAssignments({
-        threadId,
-        userId,
-        sourceAssignments: [
-          new SourceAssignment({
-            id: record.id,
-            source,
-            createdAt: record.createdAt,
-            updatedAt: record.updatedAt,
-          }),
-        ],
-      });
-
-      expect(sourceAssignmentRepo.remove).not.toHaveBeenCalled();
-      expect(mapper.toRecord).not.toHaveBeenCalled();
-      expect(sourceAssignmentRepo.save).not.toHaveBeenCalled();
-    });
-
-    it('handles mixed add and remove in one call', async () => {
-      const keptSource = new ConcreteSource({ name: 'kept.pdf' });
-      const droppedSource = new ConcreteSource({ name: 'dropped.pdf' });
-      const addedSource = new ConcreteSource({ name: 'added.pdf' });
-      const keptRecord = makeAssignmentRecord(threadId, keptSource.id);
-      const droppedRecord = makeAssignmentRecord(threadId, droppedSource.id);
-
-      threadRepo.findOne.mockResolvedValue({
-        id: threadId,
-        userId,
-        sourceAssignments: [keptRecord, droppedRecord],
-      } as ThreadRecord);
-
-      await repository.updateSourceAssignments({
-        threadId,
-        userId,
-        sourceAssignments: [
-          new SourceAssignment({
-            id: keptRecord.id,
-            source: keptSource,
-            createdAt: keptRecord.createdAt,
-            updatedAt: keptRecord.updatedAt,
-          }),
-          new SourceAssignment({ source: addedSource }),
-        ],
-      });
-
-      expect(sourceAssignmentRepo.remove).toHaveBeenCalledWith([droppedRecord]);
-      expect(mapper.toRecord).toHaveBeenCalledTimes(1);
-      expect(mapper.toRecord).toHaveBeenCalledWith(
-        expect.objectContaining({ source: addedSource }),
-        threadId,
-      );
-      const savedRecords = sourceAssignmentRepo.save.mock
-        .calls[0][0] as ThreadSourceAssignmentRecord[];
-      expect(savedRecords).toHaveLength(1);
-      expect(savedRecords[0].sourceId).toBe(addedSource.id);
+      expect(threadRepo.findOne).not.toHaveBeenCalled();
     });
 
     it('throws ThreadNotFoundError when the thread does not exist', async () => {
-      threadRepo.findOne.mockResolvedValue(null);
+      threadRepo.exists.mockResolvedValue(false);
 
       await expect(
-        repository.updateSourceAssignments({
+        repository.addSourceAssignment({
           threadId,
           userId,
-          sourceAssignments: [],
+          sourceAssignment: new SourceAssignment({
+            source: new ConcreteSource({ name: 'new.pdf' }),
+          }),
         }),
       ).rejects.toBeInstanceOf(ThreadNotFoundError);
-      expect(sourceAssignmentRepo.remove).not.toHaveBeenCalled();
       expect(sourceAssignmentRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('scopes the ownership check to the requesting user', async () => {
+      threadRepo.exists.mockResolvedValue(true);
+
+      await repository.addSourceAssignment({
+        threadId,
+        userId,
+        sourceAssignment: new SourceAssignment({
+          source: new ConcreteSource({ name: 'new.pdf' }),
+        }),
+      });
+
+      expect(threadRepo.exists).toHaveBeenCalledWith({
+        where: { id: threadId, userId },
+      });
     });
   });
 });
