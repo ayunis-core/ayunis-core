@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.18.2](https://github.com/ayunis-core/ayunis-core/compare/v2.18.1...v2.18.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **app:** accept larger json bodies and return 413 for oversized ones (AYC-553) ([#1157](https://github.com/ayunis-core/ayunis-core/issues/1157)) ([4e1e09f](https://github.com/ayunis-core/ayunis-core/commit/4e1e09f7f8ae5446bfc5580220b4020f30886e27))
+* **app:** bound db pool and statement time (AYC-491) ([#1095](https://github.com/ayunis-core/ayunis-core/issues/1095)) ([01fd154](https://github.com/ayunis-core/ayunis-core/commit/01fd154df3f45d5346781eac759e9649eb916a9c))
+* **chat:** show a clear error when an image exceeds the provider size limit (AYC-473) ([#1089](https://github.com/ayunis-core/ayunis-core/issues/1089)) ([ae56b8b](https://github.com/ayunis-core/ayunis-core/commit/ae56b8bce905500642fff65695380ed379346f57))
+* **observability:** stop reporting aborted mcp listening streams (AYC-555) ([#1156](https://github.com/ayunis-core/ayunis-core/issues/1156)) ([4b0466d](https://github.com/ayunis-core/ayunis-core/commit/4b0466d5197ced181993995363479b06d04dbe49))
+* **retrievers:** recover when a deduplicated mistral upload is deleted mid-flight (AYC-556) ([#1159](https://github.com/ayunis-core/ayunis-core/issues/1159)) ([05c25bf](https://github.com/ayunis-core/ayunis-core/commit/05c25bfeb83b03790156ee1a1ff75c8b9f433c0d))
+* **skills:** check the source cap before starting document processing (AYC-566) ([#1161](https://github.com/ayunis-core/ayunis-core/issues/1161)) ([99b2506](https://github.com/ayunis-core/ayunis-core/commit/99b25068db2473d4a406e36a9d3394790c6d49f9))
+* **threads:** check the source cap before starting document processing (AYC-566) ([#1160](https://github.com/ayunis-core/ayunis-core/issues/1160)) ([61e61af](https://github.com/ayunis-core/ayunis-core/commit/61e61afd3beacbd23d714fa9acbc094301ac1a6d))
+* **threads:** insert only the added source assignment (AYC-551) ([#1158](https://github.com/ayunis-core/ayunis-core/issues/1158)) ([dab4cbe](https://github.com/ayunis-core/ayunis-core/commit/dab4cbe412753de68e3fb36064b91cfbce6849cb))
+
+
+### Code Refactoring
+
+* **observability:** declare appsignal suppressions in one registry (AYC-563) ([#1162](https://github.com/ayunis-core/ayunis-core/issues/1162)) ([362e4d4](https://github.com/ayunis-core/ayunis-core/commit/362e4d43e81da457941c2f9aaa73df7ab50e7ee1))
+
+
+### Documentation
+
+* **skills:** document backend file & class naming conventions (AYC-000) ([#1063](https://github.com/ayunis-core/ayunis-core/issues/1063)) ([df8381a](https://github.com/ayunis-core/ayunis-core/commit/df8381a8cf2b9f41c17cdd18f2e77621cef7e0ef))
+
 ## [2.18.1](https://github.com/ayunis-core/ayunis-core/compare/v2.18.0...v2.18.1) (2026-07-25)
 
 
