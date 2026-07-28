@@ -6,11 +6,10 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   SkillNotFoundError,
   SkillSourceAlreadyAssignedError,
-  SkillSourceLimitExceededError,
   UnexpectedSkillError,
 } from '../../skills.errors';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillsConstants } from 'src/domain/skills/domain/skills.constants';
+import { assertSkillHasSourceCapacity } from '../../util/skill-source-capacity';
 import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
@@ -42,9 +41,7 @@ export class AddSourceToSkillUseCase {
         throw new SkillSourceAlreadyAssignedError(command.sourceId);
       }
 
-      if (skill.sourceIds.length >= SkillsConstants.MAX_SOURCES) {
-        throw new SkillSourceLimitExceededError(SkillsConstants.MAX_SOURCES);
-      }
+      assertSkillHasSourceCapacity(skill.sourceIds);
 
       const updatedSkill = new Skill({
         ...skill,
