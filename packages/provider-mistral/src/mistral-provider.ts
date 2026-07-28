@@ -16,13 +16,11 @@ import {
   convertToolChoice,
 } from './convert-request';
 
-// Hard ceiling on the WHOLE request, stream consumption included: the Mistral
-// SDK arms AbortSignal.timeout(timeoutMs) as the fetch signal, which stays
-// active while the body streams. Generous on purpose — long healthy chat
-// streams must fit — while still bounding a stalled connection, which
-// previously hung forever (the SDK has no default timeout). Note: the SDK
-// skips this when a per-request signal is supplied, so a host-provided
-// AbortSignal takes over the deadline entirely.
+// Hard ceiling on the WHOLE request, stream consumption included. Generous on
+// purpose — long healthy chat streams must fit — while still bounding a
+// stalled connection, which hung forever before it existed (the SDK has no
+// default timeout). Applied via `boundedSignal`; see there for why this
+// provider arms the deadline itself rather than letting the SDK do it.
 export const DEFAULT_TIMEOUT_MS = 300_000;
 
 export interface MistralProviderOptions {
@@ -43,9 +41,10 @@ export interface MistralProviderOptions {
  * are out of scope for this provider.
  */
 export const mistral = (options: MistralProviderOptions): ModelProvider => {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const client = new Mistral({
     apiKey: options.apiKey,
-    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    timeoutMs,
     ...(options.baseUrl ? { serverURL: options.baseUrl } : {}),
     ...(options.maxRetries !== undefined
       ? { retryConfig: toRetryConfig(options.maxRetries) }
@@ -53,7 +52,7 @@ export const mistral = (options: MistralProviderOptions): ModelProvider => {
   });
   return {
     name: `mistral:${options.model}`,
-    stream: (request) => streamChat(client, options.model, request),
+    stream: (request) => streamChat(client, options.model, request, timeoutMs),
   };
 };
 
@@ -78,17 +77,33 @@ const toRetryConfig = (maxRetries: number): RetryConfig => {
   };
 };
 
+/**
+ * The SDK arms `AbortSignal.timeout(timeoutMs)` only when the caller supplies
+ * no signal of its own (`lib/sdks.js`: `if (!fetchOptions?.signal && ...)`), so
+ * a host-provided signal would silently delete the deadline. Composing the two
+ * keeps `timeoutMs` meaningful whether or not the host cancels. Note this makes
+ * the ceiling span the whole call rather than each retried attempt, which is
+ * what "whole request" was always meant to mean.
+ */
+function boundedSignal(
+  hostSignal: AbortSignal | undefined,
+  timeoutMs: number,
+): AbortSignal {
+  const deadline = AbortSignal.timeout(timeoutMs);
+  return hostSignal ? AbortSignal.any([hostSignal, deadline]) : deadline;
+}
+
 async function* streamChat(
   client: Mistral,
   model: string,
   request: ProviderRequest,
+  timeoutMs: number,
 ): AsyncIterable<ProviderChunk> {
   const codec = new ToolNameCodec(request.tools);
   const params = buildParams(model, request, codec);
-  const stream = await client.chat.stream(
-    params,
-    request.signal ? { signal: request.signal } : undefined,
-  );
+  const stream = await client.chat.stream(params, {
+    signal: boundedSignal(request.signal, timeoutMs),
+  });
   for await (const event of stream) {
     const converted = convertChunk(event, codec);
     if (converted) {

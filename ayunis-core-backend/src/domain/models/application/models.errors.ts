@@ -244,15 +244,13 @@ export class InferenceInputInvalidError extends ModelError {
   }
 }
 
-/**
- * Error thrown when inference times out
- */
-export class InferenceTimeoutError extends ModelError {
-  constructor(timeoutMs: number, metadata?: ErrorMetadata) {
+/** A provider stream that went silent mid-response — see stream-idle-watchdog.ts. */
+export class InferenceStreamStalledError extends ModelError {
+  constructor(idleMs: number, metadata?: ErrorMetadata) {
     super(
-      `Inference timed out after ${timeoutMs}ms`,
+      `Provider stream produced no data for ${idleMs}ms`,
       ModelErrorCode.INFERENCE_TIMEOUT,
-      408,
+      504,
       metadata,
     );
   }

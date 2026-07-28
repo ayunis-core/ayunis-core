@@ -11,6 +11,11 @@ import type { Model } from '../../domain/model.entity';
 import { toProviderRequest } from './request.mapper';
 import { toStreamChunk } from './chunk.mapper';
 import type { ChunkTransform } from './chunk-transform';
+import {
+  StreamIdleWatchdog,
+  STREAM_IDLE_TIMEOUT_MS,
+} from './stream-idle-watchdog';
+import { InferenceStreamStalledError } from '../../application/models.errors';
 
 /**
  * Streaming inference handler backed by a `@ayunis` ModelProvider. Concrete
@@ -56,24 +61,45 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
     return new Observable<StreamInferenceResponseChunk>((subscriber) => {
-      void this.streamResponse(input, subscriber);
+      const controller = new AbortController();
+      void this.streamResponse(input, subscriber, controller);
+      // Unsubscribing (client disconnect, downstream error) cancels the
+      // provider call. Without this the stream runs to completion unread and
+      // the tokens are billed for nobody.
+      return () => controller.abort();
     });
   }
 
   private async streamResponse(
     input: StreamInferenceInput,
     subscriber: Subscriber<StreamInferenceResponseChunk>,
+    controller: AbortController,
   ): Promise<void> {
+    const watchdog = new StreamIdleWatchdog(STREAM_IDLE_TIMEOUT_MS, () =>
+      controller.abort(new InferenceStreamStalledError(STREAM_IDLE_TIMEOUT_MS)),
+    );
     try {
       const request = await toProviderRequest(input, this.imageContentService);
       const provider = this.getProvider(input.model);
       const transform = this.createChunkTransform();
-      for await (const chunk of provider.stream(request)) {
+      for await (const chunk of provider.stream({
+        ...request,
+        signal: controller.signal,
+      })) {
+        watchdog.notifyChunk();
         subscriber.next(toStreamChunk(transform(chunk)));
       }
       subscriber.complete();
     } catch (error) {
-      subscriber.error(error);
+      // A stalled stream surfaces from the SDK as a generic AbortError, which
+      // the use case would otherwise read as a client cancellation. The abort
+      // reason carries what actually happened.
+      const reason: unknown = controller.signal.reason;
+      subscriber.error(
+        reason instanceof InferenceStreamStalledError ? reason : error,
+      );
+    } finally {
+      watchdog.stop();
     }
   }
 }
