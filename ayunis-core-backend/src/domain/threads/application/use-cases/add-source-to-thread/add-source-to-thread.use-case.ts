@@ -6,11 +6,8 @@ import { SourceAdditionError } from '../../threads.errors';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import {
-  SourceAlreadyAssignedError,
-  ThreadSourceLimitExceededError,
-} from '../../threads.errors';
-import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
+import { SourceAlreadyAssignedError } from '../../threads.errors';
+import { assertThreadHasSourceCapacity } from '../../util/thread-source-capacity';
 
 const PG_UNIQUE_VIOLATION = '23505';
 
@@ -90,9 +87,7 @@ export class AddSourceToThreadUseCase {
     if (sourceExists) {
       throw new SourceAlreadyAssignedError(sourceId);
     }
-    if (assignments.length >= ThreadsConstants.MAX_SOURCES) {
-      throw new ThreadSourceLimitExceededError(ThreadsConstants.MAX_SOURCES);
-    }
+    assertThreadHasSourceCapacity(assignments);
   }
 
   private mapAddSourceError(error: unknown, command: AddSourceCommand): Error {

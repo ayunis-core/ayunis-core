@@ -7,7 +7,6 @@ import {
   Logger,
   Param,
   ParseUUIDPipe,
-  UseInterceptors,
   UploadedFile,
   HttpCode,
   HttpStatus,
@@ -17,24 +16,20 @@ import {
 import { Transactional } from '@nestjs-cls/transactional';
 import { Response } from 'express';
 import { UUID } from 'crypto';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiTags,
-  ApiBody,
-  ApiConsumes,
-  getSchemaPath,
-  ApiExtraModels,
-} from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { randomUUID } from 'crypto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import * as fs from 'fs';
+import {
+  ApiFileSourceUpload,
+  ApiSourceCsvDownload,
+  ApiSourceIdParam,
+  ApiSourceListResponse,
+  ApiThreadIdParam,
+} from './decorators/thread-sources.decorators';
 import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
 import { AddSourceToThreadUseCase } from '../../application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
+import { AddFileSourceToThreadUseCase } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.use-case';
+import { AddFileSourceToThreadCommand } from '../../application/use-cases/add-file-source-to-thread/add-file-source-to-thread.command';
 import { RemoveSourceFromThreadUseCase } from '../../application/use-cases/remove-source-from-thread/remove-source-from-thread.use-case';
 import { GetThreadSourcesUseCase } from '../../application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { AddSourceCommand } from '../../application/use-cases/add-source-to-thread/add-source.command';
@@ -50,8 +45,6 @@ import { convertCSVToString } from 'src/common/util/csv';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import {
@@ -98,9 +91,9 @@ export class ThreadSourcesController {
   constructor(
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
+    private readonly addFileSourceToThreadUseCase: AddFileSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
-    private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
@@ -108,33 +101,10 @@ export class ThreadSourcesController {
 
   @Get(':id/sources')
   @ApiOperation({ summary: 'Get all sources for a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns all sources for the thread',
-    schema: {
-      type: 'array',
-      items: {
-        oneOf: [
-          { $ref: getSchemaPath(FileSourceResponseDto) },
-          { $ref: getSchemaPath(UrlSourceResponseDto) },
-          { $ref: getSchemaPath(CSVDataSourceResponseDto) },
-        ],
-      },
-    },
-  })
+  @ApiThreadIdParam()
+  @ApiSourceListResponse(200, 'Returns all sources for the thread')
   @ApiResponse({ status: 404, description: 'Thread not found' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
-  @ApiExtraModels(
-    FileSourceResponseDto,
-    UrlSourceResponseDto,
-    CSVDataSourceResponseDto,
-  )
   async getThreadSources(
     @Param('id', ParseUUIDPipe) threadId: UUID,
   ): Promise<
@@ -150,66 +120,7 @@ export class ThreadSourcesController {
   }
 
   @Post(':id/sources/file')
-  @ApiOperation({ summary: 'Add a file source to a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'The file to upload (max 25 MB)',
-        },
-      },
-      required: ['file'],
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'The file source has been successfully added to the thread',
-    schema: {
-      type: 'array',
-      items: {
-        oneOf: [
-          { $ref: getSchemaPath(FileSourceResponseDto) },
-          { $ref: getSchemaPath(UrlSourceResponseDto) },
-          { $ref: getSchemaPath(CSVDataSourceResponseDto) },
-        ],
-      },
-    },
-  })
-  @ApiResponse({
-    status: 413,
-    description: 'File exceeds the 25 MB upload limit',
-  })
-  @ApiExtraModels(
-    FileSourceResponseDto,
-    UrlSourceResponseDto,
-    CSVDataSourceResponseDto,
-  )
-  @UseInterceptors(
-    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-    FileInterceptor('file', {
-      storage: diskStorage({
-        // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
-        // TODO: Move this to a separate service
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const randomName = randomUUID();
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
-    }),
-    /* eslint-enable sonarjs/content-length */
-  )
+  @ApiFileSourceUpload()
   async addFileSource(
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @UploadedFile()
@@ -252,18 +163,8 @@ export class ThreadSourcesController {
 
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a thread' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'sourceId',
-    description: 'The UUID of the source to remove',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiThreadIdParam()
+  @ApiSourceIdParam('The UUID of the source to remove')
   @ApiResponse({
     status: 204,
     description: 'The source has been successfully removed from the thread',
@@ -285,36 +186,7 @@ export class ThreadSourcesController {
   }
 
   @Get(':id/sources/:sourceId/download')
-  @ApiOperation({ summary: 'Download a data source as CSV' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the thread',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiParam({
-    name: 'sourceId',
-    description: 'The UUID of the source to download',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the source as a CSV file',
-    content: {
-      'text/csv': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 404, description: 'Thread or source not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Source is not a CSV data source',
-  })
+  @ApiSourceCsvDownload()
   async downloadSource(
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
@@ -399,15 +271,13 @@ export class ThreadSourcesController {
     if (!canonicalMimeType) {
       throw new UnsupportedSourceFileTypeError(detectedType);
     }
-    const source = await this.startDocumentProcessingUseCase.execute(
-      new StartDocumentProcessingCommand({
+    const source = await this.addFileSourceToThreadUseCase.execute(
+      new AddFileSourceToThreadCommand({
+        thread,
         fileData: fs.readFileSync(file.path),
         fileName: file.originalname,
         fileType: canonicalMimeType,
       }),
-    );
-    await this.addSourceToThreadUseCase.execute(
-      new AddSourceCommand(thread, source),
     );
     return [source];
   }
