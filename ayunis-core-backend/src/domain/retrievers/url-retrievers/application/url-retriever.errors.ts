@@ -107,10 +107,14 @@ export class UrlRetrieverTimeoutError extends UrlRetrieverError {
 
 export class UrlRetrieverHttpError extends UrlRetrieverError {
   constructor(url: string, statusCode: number, metadata?: ErrorMetadata) {
+    // Preserve the upstream status so the queue classifier can retry the
+    // statuses that may succeed later (e.g. 429 rate limits, 408 timeouts).
+    // A remote 5xx is not a defect of ours, so keep it an expected input
+    // failure (422) rather than letting it look like one of our incidents.
     super(
       `HTTP error when retrieving '${url}': ${statusCode}`,
       UrlRetrieverErrorCode.HTTP_ERROR,
-      422,
+      statusCode < 500 ? statusCode : 422,
       metadata,
     );
     this.name = 'UrlRetrieverHttpError';
