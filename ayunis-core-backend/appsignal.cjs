@@ -8,7 +8,7 @@ const {
 } = require('@opentelemetry/instrumentation-undici');
 const { readFileSync } = require('fs');
 const { join } = require('path');
-const { isCrawlerRequest } = require('./appsignal-hooks.cjs');
+const { shouldIgnoreRequest } = require('./appsignal-hooks.cjs');
 
 // This file runs before main.ts imports src/config/env, so load the same
 // .env files here (dotenv never overwrites variables already set, so the
@@ -63,17 +63,18 @@ if (pushApiKey && environment !== 'development') {
     // EAI_AGAIN, connect/body timeouts, aborts) on outbound-request spans
     // even when application code catches and handles them. Crawler fetches
     // target arbitrary user-supplied URLs whose failures are expected and
-    // already surface as domain errors, so those requests are not
-    // instrumented at all. Requests to model/OCR providers don't carry the
-    // crawler User-Agent and stay fully instrumented — genuine inference
-    // errors must keep reporting.
+    // already surface as domain errors, and the MCP listening stream is
+    // aborted by design on every close — neither is instrumented (see
+    // appsignal-hooks.cjs). Requests to model/OCR providers and MCP
+    // JSON-RPC calls stay fully instrumented — genuine inference and
+    // connectivity errors must keep reporting.
     additionalInstrumentations: [
       new UndiciInstrumentation({
         // AppSignal's default for its own undici instrumentation — without
         // it, fire-and-forget fetches outside any request context create
         // orphan root spans.
         requireParentforSpans: true,
-        ignoreRequestHook: isCrawlerRequest,
+        ignoreRequestHook: shouldIgnoreRequest,
       }),
     ],
     // Queue consumers rename job failures that BullMQ will retry to this
