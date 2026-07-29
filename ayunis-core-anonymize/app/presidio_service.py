@@ -1,3 +1,4 @@
+import threading
 from typing import List, Optional
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -93,16 +94,23 @@ class PresidioService:
 
 
 presidio_service: Optional[PresidioService] = None
+_presidio_service_lock = threading.Lock()
 
 
 def get_presidio_service() -> PresidioService:
     """
     Get or create the global PresidioService instance.
 
+    Locked because requests are served from a threadpool: without it, two
+    callers arriving before the first load finishes would each construct a
+    PresidioService, and a second copy of the model is roughly 1.9 GB.
+
     Returns:
         Singleton PresidioService instance
     """
     global presidio_service
     if presidio_service is None:
-        presidio_service = PresidioService()
+        with _presidio_service_lock:
+            if presidio_service is None:
+                presidio_service = PresidioService()
     return presidio_service
