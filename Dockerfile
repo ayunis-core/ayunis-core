@@ -81,7 +81,12 @@ COPY --from=build /usr/src/app/ayunis-core-backend/appsignal-hooks.cjs ./appsign
 RUN mkdir -p uploads
 
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=3072"
+# Heap sized well below the container limit so allocations outside the V8 heap
+# (Chromium, file buffers) have room. Deliberately no
+# --heapsnapshot-near-heap-limit: a snapshot persists prompts, PII and
+# credentials unencrypted in the container layer — the same disclosure
+# appsignal.cjs refuses for chat content. Snapshot on staging instead.
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 # PORT is set via environment variable at runtime, defaults to 3000 in app code
 # Port exposure is handled by docker-compose port mapping
 
