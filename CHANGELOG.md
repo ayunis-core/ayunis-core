@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.19.0](https://github.com/ayunis-core/ayunis-core/compare/v2.18.2...v2.19.0) (2026-07-29)
+
+
+### Features
+
+* **credit-alerts:** add budget threshold evaluation and warning emails (AYC-360) ([4ba12ef](https://github.com/ayunis-core/ayunis-core/commit/4ba12ef1ed3ba70429d32b98cf4cb5ce2df0c8ee))
+* **credit-alerts:** add budget-alert notification persistence (AYC-360) ([4ba12ef](https://github.com/ayunis-core/ayunis-core/commit/4ba12ef1ed3ba70429d32b98cf4cb5ce2df0c8ee))
+* **credit-alerts:** wire daily budget-alerts cron and module (AYC-360) ([4ba12ef](https://github.com/ayunis-core/ayunis-core/commit/4ba12ef1ed3ba70429d32b98cf4cb5ce2df0c8ee))
+* **email-templates:** add budget-warning email template (AYC-360) ([4ba12ef](https://github.com/ayunis-core/ayunis-core/commit/4ba12ef1ed3ba70429d32b98cf4cb5ce2df0c8ee))
+* **users:** add org-admins lookup use case (AYC-360) ([4ba12ef](https://github.com/ayunis-core/ayunis-core/commit/4ba12ef1ed3ba70429d32b98cf4cb5ce2df0c8ee))
+
+
+### Bug Fixes
+
+* **anonymize:** serve pii analysis off the event loop (AYC-561) ([#1173](https://github.com/ayunis-core/ayunis-core/issues/1173)) ([d5a3e0b](https://github.com/ayunis-core/ayunis-core/commit/d5a3e0bb03f0bd5c33cce1f1c508509c10f8b8f6))
+* **docker:** raise app heap and container resource limits (AYC-000) ([#1172](https://github.com/ayunis-core/ayunis-core/issues/1172)) ([68d3e64](https://github.com/ayunis-core/ayunis-core/commit/68d3e6457c7c47bcef60e5999a07fc6b4e452df0))
+* **models:** detect stalled provider streams in seconds, not minutes (AYC-565) ([#1168](https://github.com/ayunis-core/ayunis-core/issues/1168)) ([dbb0ca4](https://github.com/ayunis-core/ayunis-core/commit/dbb0ca4802321149b810535555d81487bdcd4145))
+* **models:** return 404 instead of 403 for a non-existent model id (AYC-567) ([#1165](https://github.com/ayunis-core/ayunis-core/issues/1165)) ([fb48b4d](https://github.com/ayunis-core/ayunis-core/commit/fb48b4d5a64a2e67cacc2c6a5e96424c0f485a45))
+* **sources:** stop reporting expected queue-job failures as incidents (AYC-564) ([#1169](https://github.com/ayunis-core/ayunis-core/issues/1169)) ([a7da237](https://github.com/ayunis-core/ayunis-core/commit/a7da237f810d07c29b3bb92c699e11cc6d3e56f5))
+* **storage:** retry transient object downloads instead of double round-tripping (AYC-568) ([#1170](https://github.com/ayunis-core/ayunis-core/issues/1170)) ([a1aaffe](https://github.com/ayunis-core/ayunis-core/commit/a1aaffecfe77b31d57c000c1b0505c5cbcdc789a))
+* **storage:** stop leaking object paths and upstream errors to clients (AYC-568) ([#1166](https://github.com/ayunis-core/ayunis-core/issues/1166)) ([8489001](https://github.com/ayunis-core/ayunis-core/commit/84890012612692a5bb65272391fa54cf9a7e98b6))
+
 ## [2.18.2](https://github.com/ayunis-core/ayunis-core/compare/v2.18.1...v2.18.2) (2026-07-28)
 
 
