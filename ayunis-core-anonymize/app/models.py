@@ -2,9 +2,28 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+# Analysis cost is linear in input length: presidio splits the text into
+# 250-character chunks and runs one model pass per chunk, measured at roughly
+# 0.4 ms per character (30k chars ≈ 11s, 50k ≈ 20s, 100k ≈ 43s).
+#
+# The cap is set where the work can still finish inside the caller's 30s
+# timeout on a slower host, not at the point where it starts failing. Admitting
+# input that is certain to time out is worse than rejecting it: the analysis
+# continues after the caller gives up, so a single oversized request holds one
+# of the two analysis slots for its full duration and makes everyone else queue
+# behind work whose result nobody will read (AYC-561).
+#
+# 30k characters is ~7,500 words — far beyond any realistic message.
+MAX_TEXT_LENGTH = 30_000
+
+
 class AnalyzeRequest(BaseModel):
     """Request model for PII analysis"""
-    text: str = Field(..., description="Text to analyze for PII")
+    text: str = Field(
+        ...,
+        max_length=MAX_TEXT_LENGTH,
+        description="Text to analyze for PII",
+    )
     entities: Optional[List[str]] = Field(
         None,
         description="Optional list of specific entity types to detect (e.g., ['PERSON', 'EMAIL'])"
