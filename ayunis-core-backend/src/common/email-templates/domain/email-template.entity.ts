@@ -1,4 +1,5 @@
 import { EmailTemplateType } from './value-objects/email-template-type.enum';
+import type { BudgetWarningScope } from './value-objects/budget-warning-scope.enum';
 
 export abstract class EmailTemplate {
   constructor(
@@ -50,6 +51,19 @@ export interface SetInitialPasswordTemplateContent {
   bannerUrl: string;
 }
 
+export interface BudgetWarningTemplateContent {
+  recipientName: string | null;
+  recipientEmail: string;
+  scope: BudgetWarningScope;
+  targetName: string;
+  threshold: string;
+  productName: string;
+  currentYear: string;
+  logoUrl: string;
+  teamUrl: string;
+  settingsUrl: string;
+}
+
 export class EmailConfirmationTemplate extends EmailTemplate {
   constructor(public readonly content: EmailConfirmationTemplateContent) {
     super(EmailTemplateType.EMAIL_CONFIRMATION, {
@@ -97,6 +111,21 @@ export class SetInitialPasswordTemplate extends EmailTemplate {
       userName: content.userName,
       productName: content.productName,
       currentYear: content.currentYear,
+    });
+  }
+}
+
+export class BudgetWarningTemplate extends EmailTemplate {
+  constructor(public readonly content: BudgetWarningTemplateContent) {
+    super(EmailTemplateType.BUDGET_WARNING, {
+      recipientName: content.recipientName,
+      recipientEmail: content.recipientEmail,
+      scope: content.scope,
+      targetName: content.targetName,
+      threshold: content.threshold,
+      productName: content.productName,
+      currentYear: content.currentYear,
+      settingsUrl: content.settingsUrl,
     });
   }
 }

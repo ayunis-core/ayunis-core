@@ -19,6 +19,13 @@ export abstract class SubscriptionRepository {
   abstract findByOrgId(orgId: UUID): Promise<Subscription[]>;
   abstract findLatestByOrgId(orgId: UUID): Promise<Subscription | null>;
   abstract findAll(): Promise<Subscription[]>;
+  /**
+   * Distinct ids of orgs holding an active usage-based subscription. Filters
+   * at the query level; must mirror `isActive` for the usage-based type
+   * (started and not cancelled — usage-based ends immediately on
+   * cancellation).
+   */
+  abstract findActiveUsageBasedOrgIds(now: Date): Promise<UUID[]>;
   abstract create(subscription: Subscription): Promise<Subscription>;
   abstract update(subscription: Subscription): Promise<Subscription>;
   abstract updateStartDate(

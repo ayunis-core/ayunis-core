@@ -12,6 +12,7 @@ import {
   TEST_TEAM_ID,
 } from '../../testing/credit-limit.fixtures';
 import { GetTeamCreditLimitsOverviewUseCase } from './get-team-credit-limits-overview.use-case';
+import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overview.query';
 
 describe('GetTeamCreditLimitsOverviewUseCase', () => {
   let useCase: GetTeamCreditLimitsOverviewUseCase;
@@ -22,6 +23,7 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
 
   const orgId = TEST_ORG_ID;
   const teamId = TEST_TEAM_ID;
+  const since = new Date('2026-07-10T00:00:00.000Z');
 
   const teamLimit = aTeamCreditLimit();
 
@@ -65,6 +67,14 @@ describe('GetTeamCreditLimitsOverviewUseCase', () => {
       },
     ]);
     expect(repository.findTeamLimits).toHaveBeenCalledWith(orgId);
+  });
+
+  it('forwards an explicit usage start to the consumption query', async () => {
+    await useCase.execute(new GetTeamCreditLimitsOverviewQuery(since));
+
+    expect(getUsage.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ since }),
+    );
   });
 
   it('returns an empty list without enriching when no team limits exist', async () => {

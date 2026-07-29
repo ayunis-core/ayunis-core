@@ -1,0 +1,93 @@
+import { MjmlHandler } from './mjml.handler';
+import {
+  BudgetWarningTemplate,
+  type BudgetWarningTemplateContent,
+} from '../../domain/email-template.entity';
+import { BudgetWarningScope } from '../../domain/value-objects/budget-warning-scope.enum';
+
+describe('MjmlHandler — budget warning', () => {
+  const handler = new MjmlHandler();
+
+  const baseContent: BudgetWarningTemplateContent = {
+    recipientName: 'Andrea Admin',
+    recipientEmail: 'andrea@stadt-musterhausen.de',
+    scope: BudgetWarningScope.ORG,
+    targetName: 'Stadt Musterhausen',
+    threshold: '80',
+    productName: 'Ayunis Core',
+    currentYear: '2026',
+    logoUrl: 'https://assets.example/logo.png',
+    teamUrl: 'https://assets.example/team.png',
+    settingsUrl: 'https://app.example/settings/credit-limits',
+  };
+
+  it('renders the org-scope warning with threshold and settings link', () => {
+    const rendered = handler.renderTemplate(
+      new BudgetWarningTemplate(baseContent),
+    );
+
+    expect(rendered.subject).toBe(
+      'Budgetwarnung: 80 % Ihres Organisationsbudgets erreicht',
+    );
+    expect(rendered.html).toContain('Budgetwarnung');
+    expect(rendered.html).toContain('<strong>80 %</strong>');
+    expect(rendered.html).toContain('Organisationsbudgets');
+    expect(rendered.html).toContain(
+      'Dies ist eine automatische Benachrichtigung.',
+    );
+    expect(rendered.html).toContain(baseContent.settingsUrl);
+    expect(rendered.text).toContain(
+      'mindestens 80 % Ihres Organisationsbudgets',
+    );
+    expect(rendered.text).toContain(baseContent.settingsUrl);
+  });
+
+  it('names the affected user for the user scope', () => {
+    const rendered = handler.renderTemplate(
+      new BudgetWarningTemplate({
+        ...baseContent,
+        scope: BudgetWarningScope.USER,
+        targetName: 'Jane Doe',
+        threshold: '80',
+      }),
+    );
+
+    expect(rendered.html).toContain('<strong>Jane Doe</strong> hat mindestens');
+    expect(rendered.text).toContain(
+      'Jane Doe hat mindestens 80 % des individuell festgelegten Limits erreicht',
+    );
+  });
+
+  it('names the affected team for the team scope', () => {
+    const rendered = handler.renderTemplate(
+      new BudgetWarningTemplate({
+        ...baseContent,
+        scope: BudgetWarningScope.TEAM,
+        targetName: 'Marketing',
+      }),
+    );
+
+    expect(rendered.html).toContain(
+      'das Team <strong>Marketing</strong> hat mindestens',
+    );
+    expect(rendered.text).toContain(
+      'das Team Marketing hat mindestens 80 % des individuell festgelegten Limits erreicht',
+    );
+  });
+
+  it('keeps user-controlled names on a single line in the plain-text variant', () => {
+    const rendered = handler.renderTemplate(
+      new BudgetWarningTemplate({
+        ...baseContent,
+        scope: BudgetWarningScope.USER,
+        recipientName: 'Andrea\r\nAdmin',
+        targetName: 'Jane\n\nBitte hier klicken: http://evil.example',
+      }),
+    );
+
+    expect(rendered.text).toContain('Hallo Andrea Admin,');
+    expect(rendered.text).toContain(
+      'Jane Bitte hier klicken: http://evil.example hat mindestens 80 % des individuell festgelegten Limits erreicht',
+    );
+  });
+});
