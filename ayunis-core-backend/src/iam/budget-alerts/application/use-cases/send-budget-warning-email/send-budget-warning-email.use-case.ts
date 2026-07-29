@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { BudgetWarningTemplate } from 'src/common/email-templates/domain/email-template.entity';
+import { BudgetWarningScope } from 'src/common/email-templates/domain/value-objects/budget-warning-scope.enum';
 import { RenderTemplateUseCase } from 'src/common/email-templates/application/use-cases/render-template/render-template.use-case';
 import { RenderTemplateCommand } from 'src/common/email-templates/application/use-cases/render-template/render-template.command';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
@@ -12,7 +13,17 @@ import {
   BudgetWarningEmailSendingFailedError,
 } from '../../budget-alerts.errors';
 
-const CREDIT_LIMITS_SETTINGS_PATH = '/admin-settings/usage';
+// Where an admin can act on the warning: org budgets are only visible on the
+// usage page (raising them goes through the provider), team limits live on the
+// team detail page, user limits on the users page.
+const SETTINGS_PATH_BY_SCOPE: Record<
+  BudgetWarningScope,
+  (targetId: string) => string
+> = {
+  [BudgetWarningScope.ORG]: () => '/admin-settings/usage',
+  [BudgetWarningScope.TEAM]: (targetId) => `/admin-settings/teams/${targetId}`,
+  [BudgetWarningScope.USER]: () => '/admin-settings/users',
+};
 
 @Injectable()
 export class SendBudgetWarningEmailUseCase {
@@ -68,7 +79,7 @@ export class SendBudgetWarningEmailUseCase {
       currentYear: new Date().getFullYear().toString(),
       logoUrl: `${assetBase}/logo.png`,
       teamUrl: `${assetBase}/team.png`,
-      settingsUrl: `${frontendBaseUrl}${CREDIT_LIMITS_SETTINGS_PATH}`,
+      settingsUrl: `${frontendBaseUrl}${SETTINGS_PATH_BY_SCOPE[command.scope](command.targetId)}`,
     });
   }
 }

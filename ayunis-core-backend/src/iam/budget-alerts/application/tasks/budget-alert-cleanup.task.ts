@@ -4,8 +4,8 @@ import { CleanupBudgetAlertNotificationsUseCase } from '../use-cases/cleanup-bud
 
 /**
  * Purges budget-alert notification markers older than the retention window.
- * Alert evaluation itself is event-driven (see BudgetAlertsListener); only
- * this time-based housekeeping remains on a schedule.
+ * Alert evaluation itself is event-driven (see BudgetAlertsListener) with a
+ * daily sweep as safety net (see BudgetAlertEvaluationTask).
  */
 @Injectable()
 export class BudgetAlertCleanupTask {

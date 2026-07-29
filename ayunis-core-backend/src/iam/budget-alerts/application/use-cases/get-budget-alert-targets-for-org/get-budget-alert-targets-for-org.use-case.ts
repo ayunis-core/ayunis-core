@@ -53,16 +53,20 @@ export class GetBudgetAlertTargetsForOrgUseCase {
       return null;
     }
 
-    const usageSince = startsAt ?? undefined;
+    // Each scope must measure the same window its enforcement uses: the org
+    // budget guard anchors on the subscription start, while user and team
+    // limits are enforced over the plain calendar month
+    // (CreditLimitGuardService) — narrowing them to the subscription start
+    // would under-count and alert late or never.
     const [orgUsage, userItems, teamItems] = await Promise.all([
       this.getMonthlyCreditUsageUseCase.execute(
-        new GetMonthlyCreditUsageQuery(query.orgId, usageSince),
+        new GetMonthlyCreditUsageQuery(query.orgId, startsAt ?? undefined),
       ),
       this.getUserCreditLimitsOverviewUseCase.execute(
-        new GetUserCreditLimitsOverviewQuery(usageSince),
+        new GetUserCreditLimitsOverviewQuery(),
       ),
       this.getTeamCreditLimitsOverviewUseCase.execute(
-        new GetTeamCreditLimitsOverviewQuery(usageSince),
+        new GetTeamCreditLimitsOverviewQuery(),
       ),
     ]);
 

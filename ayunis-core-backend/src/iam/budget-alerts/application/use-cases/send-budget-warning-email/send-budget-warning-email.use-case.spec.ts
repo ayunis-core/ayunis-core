@@ -50,25 +50,64 @@ describe('SendBudgetWarningEmailUseCase', () => {
     recipientName: 'Andrea Admin',
     recipientEmail: 'andrea@stadt-musterhausen.de',
     scope: BudgetWarningScope.USER,
+    targetId: '22222222-2222-2222-2222-222222222222',
     targetName: 'Jane Doe',
     threshold: 80,
   });
 
-  it('renders a budget-warning template and sends it to the recipient', async () => {
-    await useCase.execute(command);
-
+  const renderedTemplate = (): BudgetWarningTemplate => {
     const rendered = renderTemplate.execute.mock.calls[0][0] as {
       template: BudgetWarningTemplate;
     };
-    expect(rendered.template).toBeInstanceOf(BudgetWarningTemplate);
-    expect(rendered.template.content.threshold).toBe('80');
-    expect(rendered.template.content.settingsUrl).toBe(
-      'https://app.example/admin-settings/usage',
-    );
+    return rendered.template;
+  };
+
+  it('renders a budget-warning template and sends it to the recipient', async () => {
+    await useCase.execute(command);
+
+    const template = renderedTemplate();
+    expect(template).toBeInstanceOf(BudgetWarningTemplate);
+    expect(template.content.threshold).toBe('80');
 
     expect(sendEmail.execute).toHaveBeenCalledTimes(1);
     const sent = sendEmail.execute.mock.calls[0][0];
     expect(sent.to).toBe('andrea@stadt-musterhausen.de');
+  });
+
+  it('links user warnings to the users settings page', async () => {
+    await useCase.execute(command);
+
+    expect(renderedTemplate().content.settingsUrl).toBe(
+      'https://app.example/admin-settings/users',
+    );
+  });
+
+  it('links team warnings to the team detail page', async () => {
+    await useCase.execute(
+      new SendBudgetWarningEmailCommand({
+        ...command,
+        scope: BudgetWarningScope.TEAM,
+        targetName: 'Bauamt',
+      }),
+    );
+
+    expect(renderedTemplate().content.settingsUrl).toBe(
+      'https://app.example/admin-settings/teams/22222222-2222-2222-2222-222222222222',
+    );
+  });
+
+  it('links org warnings to the usage settings page', async () => {
+    await useCase.execute(
+      new SendBudgetWarningEmailCommand({
+        ...command,
+        scope: BudgetWarningScope.ORG,
+        targetName: '',
+      }),
+    );
+
+    expect(renderedTemplate().content.settingsUrl).toBe(
+      'https://app.example/admin-settings/usage',
+    );
   });
 
   it('uses the subject produced by the template renderer', async () => {

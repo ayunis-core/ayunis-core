@@ -25,6 +25,7 @@ import { SubscriptionBillingInfoMapper } from './infrastructure/persistence/loca
 import { SubscriptionBillingInfoRecord } from './infrastructure/persistence/local/schema/subscription-billing-info.record';
 import { GetCurrentPriceUseCase } from './application/use-cases/get-current-price/get-current-price.use-case';
 import { GetMonthlyCreditLimitUseCase } from './application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
+import { ListUsageBasedSubscriptionOrgIdsUseCase } from './application/use-cases/list-usage-based-subscription-org-ids/list-usage-based-subscription-org-ids.use-case';
 import { IsUsageBasedSubscriptionUseCase } from './application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { UpdateStartDateUseCase } from './application/use-cases/update-start-date/update-start-date.use-case';
 import { UpdateMonthlyCreditsUseCase } from './application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
@@ -65,6 +66,7 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     UpdateMonthlyCreditsUseCase,
     GetCurrentPriceUseCase,
     GetMonthlyCreditLimitUseCase,
+    ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
   ],
   exports: [
@@ -73,6 +75,7 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     CreateSubscriptionUseCase,
     UpdateSeatsUseCase,
     GetMonthlyCreditLimitUseCase,
+    ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
   ],
 })

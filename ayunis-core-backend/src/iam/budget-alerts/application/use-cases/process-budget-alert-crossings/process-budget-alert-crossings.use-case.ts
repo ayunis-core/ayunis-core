@@ -169,6 +169,7 @@ export class ProcessBudgetAlertCrossingsUseCase {
       recipientName: admin.name,
       recipientEmail: admin.email,
       scope: SCOPE_TO_WARNING[crossing.target.scope],
+      targetId: crossing.target.targetId,
       targetName: crossing.target.name,
       threshold: crossing.emailThreshold,
     });

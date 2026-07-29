@@ -4,6 +4,7 @@ import type { UUID } from 'crypto';
 import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
+import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
 import { BudgetAlertsListener } from './budget-alerts.listener';
 
 const COOLDOWN_MS = 10 * 60 * 1000;
@@ -40,6 +41,9 @@ describe('BudgetAlertsListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BudgetAlertsListener,
+        // Real evaluator on purpose: the listener's debounce guarantees only
+        // hold together with the evaluator's per-org serialization.
+        BudgetAlertEvaluator,
         { provide: OrgContextRunner, useValue: orgContextRunner },
         { provide: EvaluateBudgetAlertsForOrgUseCase, useValue: evaluateOrg },
       ],
@@ -146,6 +150,31 @@ describe('BudgetAlertsListener', () => {
     await jest.advanceTimersByTimeAsync(COOLDOWN_MS * 2);
 
     expect(evaluateOrg.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not overlap the trailing evaluation with a still-running one', async () => {
+    let resolveFirst!: () => void;
+    evaluateOrg.execute.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+
+    const first = listener.handleTokensConsumed(tokensConsumed(orgA));
+    await listener.handleTokensConsumed(tokensConsumed(orgA));
+
+    // Cooldown expires while the first evaluation is still in flight — the
+    // trailing evaluation must wait, or both would read the sent markers
+    // before either records and email the same crossing twice.
+    await jest.advanceTimersByTimeAsync(COOLDOWN_MS);
+    expect(evaluateOrg.execute).toHaveBeenCalledTimes(1);
+
+    resolveFirst();
+    await first;
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(evaluateOrg.execute).toHaveBeenCalledTimes(2);
   });
 
   it('never rejects when the trailing evaluation fails', async () => {

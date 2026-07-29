@@ -22,7 +22,9 @@ import { EvaluateBudgetAlertsForOrgUseCase } from './application/use-cases/evalu
 import { GetBudgetAlertTargetsForOrgUseCase } from './application/use-cases/get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
 import { ProcessBudgetAlertCrossingsUseCase } from './application/use-cases/process-budget-alert-crossings/process-budget-alert-crossings.use-case';
 import { CleanupBudgetAlertNotificationsUseCase } from './application/use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
+import { BudgetAlertEvaluator } from './application/services/budget-alert-evaluator.service';
 import { BudgetAlertCleanupTask } from './application/tasks/budget-alert-cleanup.task';
+import { BudgetAlertEvaluationTask } from './application/tasks/budget-alert-evaluation.task';
 import { BudgetAlertsListener } from './application/listeners/budget-alerts.listener';
 
 @Module({
@@ -51,7 +53,9 @@ import { BudgetAlertsListener } from './application/listeners/budget-alerts.list
     ProcessBudgetAlertCrossingsUseCase,
     EvaluateBudgetAlertsForOrgUseCase,
     CleanupBudgetAlertNotificationsUseCase,
+    BudgetAlertEvaluator,
     BudgetAlertCleanupTask,
+    BudgetAlertEvaluationTask,
     BudgetAlertsListener,
   ],
 })

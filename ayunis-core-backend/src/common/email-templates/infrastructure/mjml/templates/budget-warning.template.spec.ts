@@ -122,7 +122,7 @@ describe('budget-warning template', () => {
 
       expect(text).toContain('Ayunis Core – Limitwarnung');
       expect(text).toContain(
-        'Jane Doe hat mindestens 80 % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.',
+        'Jane Doe hat mindestens 80 % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.',
       );
       expect(text).toContain(
         'Sie können das Limit für einzelne Nutzer jederzeit in den Einstellungen prüfen und anpassen.',
@@ -155,10 +155,10 @@ describe('budget-warning template', () => {
 
       expect(text).toContain('Ayunis Core – Limit erreicht');
       expect(text).toContain(
-        'Jane Doe hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.',
+        'Jane Doe hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.',
       );
       expect(text).toContain(
-        'Passen Sie das Limit in den Einstellungen an, damit diese Person wieder weiterarbeiten kann.',
+        'Passen Sie das Limit in den Einstellungen an, damit diese Person wieder normal weiterarbeiten kann.',
       );
     });
   });
@@ -175,7 +175,7 @@ describe('budget-warning template', () => {
 
       expect(text).toContain('Ayunis Core – Limitwarnung');
       expect(text).toContain(
-        'das Team Engineering hat mindestens 80 % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.',
+        'das Team Engineering hat mindestens 80 % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.',
       );
       expect(text).toContain(
         'Sie können das Limit für einzelne Teams jederzeit in den Einstellungen prüfen und anpassen.',
@@ -195,10 +195,10 @@ describe('budget-warning template', () => {
 
       expect(text).toContain('Ayunis Core – Limit erreicht');
       expect(text).toContain(
-        'das Team Engineering hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.',
+        'das Team Engineering hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.',
       );
       expect(text).toContain(
-        'Passen Sie das Limit in den Einstellungen an, damit das Team wieder weiterarbeiten kann.',
+        'Passen Sie das Limit in den Einstellungen an, damit das Team wieder normal weiterarbeiten kann.',
       );
     });
   });
@@ -228,7 +228,7 @@ describe('budget-warning template', () => {
         'Limitwarnung: Jane Doe hat 80 % des Limits erreicht',
       );
       expect(budgetWarningSubject(userContent('100'))).toBe(
-        'Limit erreicht: Jane Doe kann Ayunis Core nicht mehr nutzen',
+        'Limit erreicht: Jane Doe kann nicht mehr mit allen Modellen arbeiten',
       );
     });
 
@@ -244,7 +244,7 @@ describe('budget-warning template', () => {
         'Limitwarnung: Das Team Engineering hat 80 % des Limits erreicht',
       );
       expect(budgetWarningSubject(teamContent('100'))).toBe(
-        'Limit erreicht: Das Team Engineering kann Ayunis Core nicht mehr nutzen',
+        'Limit erreicht: Das Team Engineering kann nicht mehr mit allen Modellen arbeiten',
       );
     });
   });

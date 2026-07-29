@@ -66,7 +66,7 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
     useCase = module.get(GetBudgetAlertTargetsForOrgUseCase);
   });
 
-  it('builds org, user, and team targets using the subscription usage start', async () => {
+  it('builds org, user, and team targets over the windows enforcement uses', async () => {
     const result = await useCase.execute(
       new GetBudgetAlertTargetsForOrgQuery(orgId),
     );
@@ -95,8 +95,11 @@ describe('GetBudgetAlertTargetsForOrgUseCase', () => {
       },
     ]);
     expect(orgUsage.execute.mock.calls[0][0].since).toEqual(startsAt);
-    expect(userOverview.execute.mock.calls[0][0].since).toEqual(startsAt);
-    expect(teamOverview.execute.mock.calls[0][0].since).toEqual(startsAt);
+    // User and team limits are enforced over the calendar month (see
+    // CreditLimitGuardService), so alerts must not narrow the window to the
+    // subscription start.
+    expect(userOverview.execute.mock.calls[0][0].since).toBeUndefined();
+    expect(teamOverview.execute.mock.calls[0][0].since).toBeUndefined();
   });
 
   it('skips all usage reads without an active usage-based subscription', async () => {

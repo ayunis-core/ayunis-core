@@ -67,6 +67,7 @@ describe('ProcessBudgetAlertCrossingsUseCase', () => {
 
     expect(sendEmail.execute).toHaveBeenCalledTimes(1);
     expect(sendEmail.execute.mock.calls[0][0].threshold).toBe(80);
+    expect(sendEmail.execute.mock.calls[0][0].targetId).toBe(orgId);
     expect(repository.recordMany).toHaveBeenCalledTimes(1);
     expect(repository.recordMany.mock.calls[0][0]).toEqual([
       expect.objectContaining({ threshold: 50 }),

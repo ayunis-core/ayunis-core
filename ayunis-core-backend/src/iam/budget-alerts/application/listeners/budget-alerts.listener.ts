@@ -3,11 +3,9 @@ import type { OnModuleDestroy } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 
-import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
 import { TokensConsumedEvent } from 'src/domain/usage/application/events/tokens-consumed.event';
 
-import { EvaluateBudgetAlertsForOrgQuery } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.query';
-import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-alerts-for-org/evaluate-budget-alerts-for-org.use-case';
+import { BudgetAlertEvaluator } from '../services/budget-alert-evaluator.service';
 
 const EVALUATION_COOLDOWN_MS = 10 * 60 * 1000;
 
@@ -21,8 +19,8 @@ interface CooldownState {
  * threshold when tokens are consumed, and the event is emitted after the
  * usage row is persisted, so the evaluation sees the crossing this very
  * message caused. A budget lowered mid-month below the already-consumed
- * amount is therefore only alerted on the org's next activity — accepted,
- * since that is also the moment the change starts to matter.
+ * amount is alerted on the org's next activity, or at the latest by the
+ * daily sweep (BudgetAlertEvaluationTask).
  *
  * The cooldown is a leading+trailing debounce, not a plain skip: the first
  * event evaluates immediately, and if further usage arrives during the
@@ -32,7 +30,8 @@ interface CooldownState {
  * arrive to deliver the 100% email.
  *
  * Notification persistence remains responsible for preventing duplicate
- * alerts.
+ * alerts; BudgetAlertEvaluator serializes runs per org so a run that
+ * outlives the cooldown never overlaps the trailing one.
  *
  * Note: the cooldown is not distributed. When multiple application replicas
  * are running, each replica may evaluate the same organization independently.
@@ -42,10 +41,7 @@ export class BudgetAlertsListener implements OnModuleDestroy {
   private readonly logger = new Logger(BudgetAlertsListener.name);
   private readonly cooldowns = new Map<UUID, CooldownState>();
 
-  constructor(
-    private readonly orgContextRunner: OrgContextRunner,
-    private readonly evaluateBudgetAlertsForOrgUseCase: EvaluateBudgetAlertsForOrgUseCase,
-  ) {}
+  constructor(private readonly budgetAlertEvaluator: BudgetAlertEvaluator) {}
 
   onModuleDestroy(): void {
     for (const state of this.cooldowns.values()) {
@@ -69,7 +65,10 @@ export class BudgetAlertsListener implements OnModuleDestroy {
     }
 
     this.startCooldown(orgId);
-    await this.evaluateOrg(orgId);
+    this.logger.debug('Evaluating budget alerts after token consumption', {
+      orgId,
+    });
+    await this.budgetAlertEvaluator.evaluate(orgId);
   }
 
   private startCooldown(orgId: UUID): void {
@@ -90,28 +89,6 @@ export class BudgetAlertsListener implements OnModuleDestroy {
     }
 
     this.startCooldown(orgId);
-    void this.evaluateOrg(orgId);
-  }
-
-  private async evaluateOrg(orgId: UUID): Promise<void> {
-    try {
-      this.logger.debug('Evaluating budget alerts after token consumption', {
-        orgId,
-      });
-
-      await this.orgContextRunner.runForOrg(orgId, () =>
-        this.evaluateBudgetAlertsForOrgUseCase.execute(
-          new EvaluateBudgetAlertsForOrgQuery(orgId),
-        ),
-      );
-    } catch (error) {
-      this.logger.error(
-        'Failed to evaluate budget alerts after token consumption',
-        {
-          orgId,
-          stack: error instanceof Error ? error.stack : String(error),
-        },
-      );
-    }
+    void this.budgetAlertEvaluator.evaluate(orgId);
   }
 }

@@ -152,19 +152,19 @@ function userMessage(
 ): BudgetWarningMessage {
   if (threshold >= 100) {
     return {
-      subject: `Limit erreicht: ${name.text} kann Ayunis Core nicht mehr nutzen`,
+      subject: `Limit erreicht: ${name.text} kann nicht mehr mit allen Modellen arbeiten`,
       headline: 'Limit erreicht',
       preheader: `${name.text} hat das festgelegte Limit vollständig erreicht.`,
       ctaLabel: 'Einstellungen öffnen',
       settingsLinkLabel: 'Einstellungen',
       paragraphs: [
         {
-          text: `${name.text} hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.`,
-          html: `<strong>${name.html}</strong> hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.`,
+          text: `${name.text} hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.`,
+          html: `<strong>${name.html}</strong> hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.`,
         },
         {
-          text: 'Passen Sie das Limit in den Einstellungen an, damit diese Person wieder weiterarbeiten kann.',
-          html: `Passen Sie das Limit in den ${settingsLink(settingsUrl, 'Einstellungen')} an, damit diese Person wieder weiterarbeiten kann.`,
+          text: 'Passen Sie das Limit in den Einstellungen an, damit diese Person wieder normal weiterarbeiten kann.',
+          html: `Passen Sie das Limit in den ${settingsLink(settingsUrl, 'Einstellungen')} an, damit diese Person wieder normal weiterarbeiten kann.`,
         },
       ],
     };
@@ -177,8 +177,8 @@ function userMessage(
     settingsLinkLabel: 'Einstellungen',
     paragraphs: [
       {
-        text: `${name.text} hat mindestens ${threshold} % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.`,
-        html: `<strong>${name.html}</strong> hat mindestens <strong>${threshold} %</strong> des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.`,
+        text: `${name.text} hat mindestens ${threshold} % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.`,
+        html: `<strong>${name.html}</strong> hat mindestens <strong>${threshold} %</strong> des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, kann diese Person Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.`,
       },
       {
         text: 'Sie können das Limit für einzelne Nutzer jederzeit in den Einstellungen prüfen und anpassen.',
@@ -195,19 +195,19 @@ function teamMessage(
 ): BudgetWarningMessage {
   if (threshold >= 100) {
     return {
-      subject: `Limit erreicht: Das Team ${name.text} kann Ayunis Core nicht mehr nutzen`,
+      subject: `Limit erreicht: Das Team ${name.text} kann nicht mehr mit allen Modellen arbeiten`,
       headline: 'Limit erreicht',
       preheader: `Das Team ${name.text} hat das festgelegte Limit vollständig erreicht.`,
       ctaLabel: 'Einstellungen öffnen',
       settingsLinkLabel: 'Einstellungen',
       paragraphs: [
         {
-          text: `das Team ${name.text} hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.`,
-          html: `das Team <strong>${name.html}</strong> hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr nutzen.`,
+          text: `das Team ${name.text} hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.`,
+          html: `das Team <strong>${name.html}</strong> hat das individuell festgelegte Limit vollständig erreicht und kann Ayunis Core aktuell nicht mehr mit allen Modellen nutzen.`,
         },
         {
-          text: 'Passen Sie das Limit in den Einstellungen an, damit das Team wieder weiterarbeiten kann.',
-          html: `Passen Sie das Limit in den ${settingsLink(settingsUrl, 'Einstellungen')} an, damit das Team wieder weiterarbeiten kann.`,
+          text: 'Passen Sie das Limit in den Einstellungen an, damit das Team wieder normal weiterarbeiten kann.',
+          html: `Passen Sie das Limit in den ${settingsLink(settingsUrl, 'Einstellungen')} an, damit das Team wieder normal weiterarbeiten kann.`,
         },
       ],
     };
@@ -220,8 +220,8 @@ function teamMessage(
     settingsLinkLabel: 'Einstellungen',
     paragraphs: [
       {
-        text: `das Team ${name.text} hat mindestens ${threshold} % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.`,
-        html: `das Team <strong>${name.html}</strong> hat mindestens <strong>${threshold} %</strong> des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr nutzen, bis Sie das Limit anpassen.`,
+        text: `das Team ${name.text} hat mindestens ${threshold} % des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.`,
+        html: `das Team <strong>${name.html}</strong> hat mindestens <strong>${threshold} %</strong> des individuell festgelegten Limits erreicht. Sobald das Limit vollständig erreicht ist, können die Teammitglieder Ayunis Core nicht mehr mit allen Modellen nutzen, bis Sie das Limit anpassen.`,
       },
       {
         text: 'Sie können das Limit für einzelne Teams jederzeit in den Einstellungen prüfen und anpassen.',

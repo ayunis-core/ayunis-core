@@ -8,6 +8,7 @@ import {
 } from 'src/iam/subscriptions/application/ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
 import { OldSubscriptionDisposition } from 'src/iam/subscriptions/domain/value-objects/old-subscription-disposition.enum';
+import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
 import {
   SeatBasedSubscriptionRecord,
   SubscriptionRecord,
@@ -75,6 +76,28 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       return records.map((record) => this.subscriptionMapper.toDomain(record));
     } catch (error) {
       this.logger.error(`Failed to find all subscriptions`, error);
+      throw error;
+    }
+  }
+
+  async findActiveUsageBasedOrgIds(now: Date): Promise<UUID[]> {
+    try {
+      const rows = await this.subscriptionRepository
+        .createQueryBuilder('subscription')
+        .select('DISTINCT subscription.orgId', 'orgId')
+        .where('subscription.type = :type', {
+          type: SubscriptionType.USAGE_BASED,
+        })
+        .andWhere('subscription.cancelledAt IS NULL')
+        .andWhere('subscription.startsAt <= :now', { now })
+        .getRawMany<{ orgId: UUID }>();
+
+      return rows.map((row) => row.orgId);
+    } catch (error) {
+      this.logger.error(
+        'Failed to find orgs with active usage-based subscriptions',
+        error,
+      );
       throw error;
     }
   }
