@@ -29,21 +29,46 @@ jobs:
           script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
+            # The checkout still supplies the compose files, the .env files and
+            # postgres/init.sql — only the build is gone (AYC-589).
             git fetch --all --tags
             if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
               git checkout -f "$RELEASE_TAG"
+              CORE_TAG="$RELEASE_TAG"
             else
               git checkout -f "$RELEASE_TAG"
               git reset --hard "origin/$RELEASE_TAG"
+              # A branch has no version tag — run the sha- image built for the
+              # commit it points at (the input defaults to main).
+              CORE_TAG="sha-$(git rev-parse --short=7 HEAD)"
+            fi
+            export CORE_TAG
+            export COMPOSE_FILE=docker-compose.yml:compose.release.yml
+            echo "Deploying $CORE_TAG"
+            # Pull while the old containers still serve traffic, and abort
+            # BEFORE touching them if anything is missing. Scoped to the Core
+            # services: a bare `compose pull` would also refresh
+            # minio/dozzle/redis/gotenberg, which are deliberately only pulled
+            # when first started.
+            if ! docker compose pull app code-execution anonymize; then
+              echo "::error::image pull failed — keeping current containers, not deploying"
+              exit 1
+            fi
+            # The sandbox is not a compose service; code-execution pulls it
+            # through the docker-socket-proxy on first use. Pulling it here
+            # keeps that first execution fast and proves the tag exists.
+            if ! docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"; then
+              echo "::error::sandbox image pull failed — keeping current containers, not deploying"
+              exit 1
             fi
             docker compose down
-            # Clean up old images and build cache before building new ones
-            docker image prune -af
-            docker builder prune -af
-            # Rebuild the sandbox image after the prune deleted it (not a
-            # compose service; code-execution fails hard without it — AYC-588.
-            # AYC-589 switches deploys to GHCR pulls.)
-            docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox
-            docker compose up -d --build
+            docker compose up -d --no-build
             sleep 60
             docker compose ps
+            # Cleanup moved after `up`: the old unfiltered `prune -af` ran
+            # while everything was down, which would now delete the images we
+            # just pulled. The cut-off additionally spares the sandbox image,
+            # which no running container holds a reference to.
+            docker image prune -af --filter "until=336h"
+            # The host no longer builds, so the leftover cache is dead weight
+            docker builder prune -af
