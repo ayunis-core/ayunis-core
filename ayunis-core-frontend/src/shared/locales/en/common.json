@@ -124,6 +124,7 @@
     "fileSourceTooManyPagesError": "Document has too many pages to process.",
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another."
   },
   "models": {

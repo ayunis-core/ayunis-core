@@ -176,6 +176,7 @@
     "fileSourceTooManyPagesError": "Das Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "fileSourceUnreadableError": "Das Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
     "sourceLimitExceededError": "Eine Wissensdatenbank kann maximal 500 Dokumente enthalten. Bitte entfernen Sie eines, bevor Sie ein weiteres hinzufügen."
   }
 }

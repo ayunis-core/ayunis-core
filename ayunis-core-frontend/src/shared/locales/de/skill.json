@@ -119,6 +119,7 @@
     "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "fileSourceUnreadableError": "Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
     "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
   },
   "mcpIntegrations": {

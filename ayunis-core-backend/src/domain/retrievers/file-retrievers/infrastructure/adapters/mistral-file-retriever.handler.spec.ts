@@ -3,9 +3,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './mistral-file-retriever.handler';
 import {
-  FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
+  UnprocessableDocumentError,
 } from '../../application/file-retriever.errors';
 import {
   ProviderConnectionError,
@@ -247,7 +247,7 @@ describe('MistralFileRetrieverHandler', () => {
     // Uses a still-reachable 3310 message: "could not be fetched from url"
     // belongs to the pre-#1136 signed-URL era and can no longer occur now that
     // OCR is always addressed by file id.
-    it('should throw FileRetrievalFailedError for other Mistral 400 responses', async () => {
+    it('should throw UnprocessableDocumentError for other Mistral 400 responses', async () => {
       const mistralError = createMistralError(
         400,
         '{"object":"error","message":"File is corrupted and cannot be parsed.","type":"invalid_request_file","code":"3310"}',
@@ -256,9 +256,11 @@ describe('MistralFileRetrieverHandler', () => {
       // The file is still there, so this is not the vanished-file case.
       mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
 
-      await expect(handler.processFile(testFile)).rejects.toThrow(
-        FileRetrievalFailedError,
-      );
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(UnprocessableDocumentError);
+      // 422 is what keeps a corrupt upload out of AppSignal and stops the queue
+      // from re-sending it to Mistral — see classifyJobFailure.
+      await expect(result).rejects.toMatchObject({ statusCode: 422 });
       expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
     });
 
@@ -416,7 +418,7 @@ describe('MistralFileRetrieverHandler', () => {
       mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
 
       await expect(handler.processFile(testFile)).rejects.toThrow(
-        FileRetrievalFailedError,
+        UnprocessableDocumentError,
       );
       expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
       expect(mockClient.files.delete).toHaveBeenCalledWith({
@@ -450,7 +452,7 @@ describe('MistralFileRetrieverHandler', () => {
       );
 
       await expect(handler.processFile(testFile)).rejects.toThrow(
-        FileRetrievalFailedError,
+        UnprocessableDocumentError,
       );
       expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
     });
@@ -462,7 +464,7 @@ describe('MistralFileRetrieverHandler', () => {
       fileGone();
 
       await expect(handler.processFile(testFile)).rejects.toThrow(
-        FileRetrievalFailedError,
+        UnprocessableDocumentError,
       );
       expect(mockClient.files.upload).toHaveBeenCalledTimes(2);
       expect(mockClient.files.delete).toHaveBeenCalledWith({

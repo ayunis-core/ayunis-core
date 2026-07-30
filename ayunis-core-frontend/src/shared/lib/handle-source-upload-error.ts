@@ -7,7 +7,9 @@ import type { TFunction } from 'i18next';
  * Maps known backend error codes to user-facing toast messages.
  *
  * Works with any i18n namespace that contains the `sources.*` keys
- * (currently `agent` and `skill`).
+ * (currently `common`, `skill` and `knowledge-bases`) — a new key must be
+ * added to all of them, or the namespace that lacks it falls back to the
+ * raw key.
  */
 export default function handleSourceUploadError(
   error: unknown,
@@ -38,6 +40,9 @@ export default function handleSourceUploadError(
         break;
       case 'TOO_MANY_PAGES':
         showError(t('sources.fileSourceTooManyPagesError'));
+        break;
+      case 'UNPROCESSABLE_DOCUMENT':
+        showError(t('sources.fileSourceUnreadableError'));
         break;
       case 'SOURCE_LIMIT_EXCEEDED':
         showError(t('sources.sourceLimitExceededError'));
