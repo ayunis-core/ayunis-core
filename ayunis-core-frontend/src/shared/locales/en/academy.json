@@ -6,6 +6,11 @@
     "title": "No chapters yet",
     "description": "Academy content will appear here once it has been published."
   },
+  "placeholder": {
+    "title": "Unlock the Ayunis Core Academy",
+    "description": "The Academy add-on isn't active for your organization yet. Learn how the AI driver's license helps your team work confidently with Ayunis Core.",
+    "cta": "Discover the Academy"
+  },
   "detail": {
     "letsGo": "Let's go!",
     "previous": "Previous",

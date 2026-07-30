@@ -6,6 +6,11 @@
     "title": "Noch keine Kapitel",
     "description": "Academy-Inhalte erscheinen hier, sobald sie veröffentlicht wurden."
   },
+  "placeholder": {
+    "title": "Ayunis Core Academy freischalten",
+    "description": "Das Academy-Add-on ist für Ihre Organisation noch nicht aktiviert. Erfahren Sie, wie der KI-Führerschein Ihr Team sicher mit Ayunis Core arbeiten lässt.",
+    "cta": "Academy entdecken"
+  },
   "detail": {
     "letsGo": "Los geht's!",
     "previous": "Zurück",

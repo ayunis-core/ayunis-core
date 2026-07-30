@@ -1,5 +1,5 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { AcademyPage } from '@/pages/academy';
+import { createFileRoute } from '@tanstack/react-router';
+import { AcademyPage, AcademyPlaceholderPage } from '@/pages/academy';
 import { isAcademyAddonActive } from '@/features/academy';
 import {
   addonsControllerList,
@@ -15,18 +15,23 @@ export const Route = createFileRoute('/_authenticated/academy/')({
       queryKey: getAddonsControllerListQueryKey(),
       queryFn: () => addonsControllerList(),
     });
+    // The academy menu entry is always visible. Non-customers see a landing
+    // placeholder instead of the (add-on-gated) content.
     if (!isAcademyAddonActive(addons)) {
-      throw redirect({ to: '/chat' });
+      return { active: false as const };
     }
     const chapters = await queryClient.fetchQuery({
       queryKey: getAcademyChaptersControllerGetChaptersQueryKey(),
       queryFn: () => academyChaptersControllerGetChapters(),
     });
-    return { chapters };
+    return { active: true as const, chapters };
   },
 });
 
 function RouteComponent() {
-  const { chapters } = Route.useLoaderData();
-  return <AcademyPage chapters={chapters} />;
+  const data = Route.useLoaderData();
+  if (!data.active) {
+    return <AcademyPlaceholderPage />;
+  }
+  return <AcademyPage chapters={data.chapters} />;
 }
