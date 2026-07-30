@@ -62,8 +62,11 @@ jobs:
           username: ${{ secrets.INTERNAL_USER }}
           key: ${{ secrets.INTERNAL_SSH_KEY }}
           envs: RELEASE_TAG
-          script_stop: true
           script: |
+            # `script_stop` is not an input of appleboy/ssh-action v1.2.5 — it
+            # was accepted here for years and silently ignored, so the script
+            # has to abort on error itself.
+            set -e
             cd /home/ayunis/apps/ayunis-core
             git fetch --all --tags
             git checkout -f "$RELEASE_TAG"
@@ -99,8 +102,11 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           envs: RELEASE_TAG
-          script_stop: true
           script: |
+            # `script_stop` is not an input of appleboy/ssh-action v1.2.5 — it
+            # was accepted here for years and silently ignored, so the script
+            # has to abort on error itself.
+            set -e
             cd /home/ayunis/apps/ayunis-core
             git fetch --all --tags
             git checkout -f "$RELEASE_TAG"
