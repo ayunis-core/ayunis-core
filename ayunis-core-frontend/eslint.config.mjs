@@ -17,6 +17,9 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
+      // plain JS assets served as-is; outside the tsconfig project, so
+      // typed lint rules cannot load them
+      'public/**',
       'src/app/routeTree.gen.ts',
       'src/shared/api/generated/**',
       'src/shared/scripts/**',

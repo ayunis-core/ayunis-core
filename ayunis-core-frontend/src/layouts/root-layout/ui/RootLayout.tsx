@@ -1,11 +1,12 @@
+import { runtimeEnv } from '@/shared/config/runtime-env';
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const plausibleDomain = import.meta.env.VITE_PLAUSIBLE_DOMAIN as
-    string | undefined;
-  const plausibleSrc = import.meta.env.VITE_PLAUSIBLE_SRC as string | undefined;
+  const plausibleDomain = runtimeEnv('VITE_PLAUSIBLE_DOMAIN');
+  const plausibleSrc = runtimeEnv('VITE_PLAUSIBLE_SRC');
 
   return (
     <>
