@@ -1,12 +1,12 @@
-import { ExportAdminUsersUseCase } from './export-admin-users.use-case';
+import { ExportUsersUseCase } from './export-users.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
-import type { AdminUsersExportRepository } from '../../ports/admin-users-export.repository';
+import type { UsersExportRepository } from '../../ports/users-export.repository';
 
-describe('ExportAdminUsersUseCase', () => {
-  it('should export subscribed organization admins as CSV', async () => {
-    const repository: jest.Mocked<AdminUsersExportRepository> = {
-      findSubscribedOrgAdmins: jest.fn().mockResolvedValue([
+describe('ExportUsersUseCase', () => {
+  it('should export all users of subscribed organizations as CSV', async () => {
+    const repository: jest.Mocked<UsersExportRepository> = {
+      findSubscribedOrgUsers: jest.fn().mockResolvedValue([
         {
           id: 'user-1' as UUID,
           name: 'Ada Lovelace',
@@ -21,7 +21,7 @@ describe('ExportAdminUsersUseCase', () => {
           id: 'user-2' as UUID,
           name: 'Grace',
           email: 'grace@example.com',
-          role: UserRole.ADMIN,
+          role: UserRole.USER,
           orgName: 'Future Org',
           teams: '',
           subscriptionType: 'USAGE_BASED',
@@ -30,21 +30,21 @@ describe('ExportAdminUsersUseCase', () => {
       ]),
     };
 
-    const csv = await new ExportAdminUsersUseCase(repository).execute();
+    const csv = await new ExportUsersUseCase(repository).execute();
 
-    expect(repository.findSubscribedOrgAdmins).toHaveBeenCalledTimes(1);
+    expect(repository.findSubscribedOrgUsers).toHaveBeenCalledTimes(1);
     expect(csv).toBe(
       [
         '"Eindeutige ID","Vorname","Nachname","E-Mail","Rolle","Organisation","Teams","Abonnement","Abonnement Startdatum"',
         '"user-1","Ada","Lovelace","ada@example.com","admin","Ayunis","Engineering, Product","SEAT_BASED","01.07.2026"',
-        '"user-2","Grace","","grace@example.com","admin","Future Org","","USAGE_BASED","15.09.2026"',
+        '"user-2","Grace","","grace@example.com","user","Future Org","","USAGE_BASED","15.09.2026"',
       ].join('\n'),
     );
   });
 
   it('should neutralize CSV formula injection in user-controlled fields', async () => {
-    const repository: jest.Mocked<AdminUsersExportRepository> = {
-      findSubscribedOrgAdmins: jest.fn().mockResolvedValue([
+    const repository: jest.Mocked<UsersExportRepository> = {
+      findSubscribedOrgUsers: jest.fn().mockResolvedValue([
         {
           id: 'user-1' as UUID,
           name: '=cmd|calc Lovelace',
@@ -58,7 +58,7 @@ describe('ExportAdminUsersUseCase', () => {
       ]),
     };
 
-    const csv = await new ExportAdminUsersUseCase(repository).execute();
+    const csv = await new ExportUsersUseCase(repository).execute();
     const dataRow = csv.split('\n')[1];
 
     expect(dataRow).toBe(

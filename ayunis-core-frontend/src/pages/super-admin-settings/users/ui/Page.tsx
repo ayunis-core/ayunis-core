@@ -7,7 +7,7 @@ import { useUserExport } from '../api/useUserExport';
 export default function SuperAdminUsersPage() {
   const { t } = useTranslation('super-admin-settings-users');
   const { t: tLayout } = useTranslation('super-admin-settings-layout');
-  const { exportAdmins, isExporting } = useUserExport();
+  const { exportUsers, isExporting } = useUserExport();
 
   return (
     <SuperAdminSettingsLayout pageTitle={tLayout('layout.users')}>
@@ -21,7 +21,7 @@ export default function SuperAdminUsersPage() {
           </div>
           <Button
             className="sm:shrink-0"
-            onClick={() => void exportAdmins()}
+            onClick={() => void exportUsers()}
             disabled={isExporting}
           >
             <Download />

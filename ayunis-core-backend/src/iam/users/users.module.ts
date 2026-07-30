@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { UsersRepository } from './application/ports/users.repository';
-import { AdminUsersExportRepository } from './application/ports/admin-users-export.repository';
+import { UsersExportRepository } from './application/ports/users-export.repository';
 import { LocalUsersRepository } from './infrastructure/repositories/local/local-users.repository';
-import { LocalAdminUsersExportRepository } from './infrastructure/repositories/local/local-admin-users-export.repository';
+import { LocalUsersExportRepository } from './infrastructure/repositories/local/local-users-export.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { PasswordSetTokenRecord } from './infrastructure/repositories/local/schema/password-set-token.record';
@@ -62,7 +62,7 @@ import { FindSuperAdminsUseCase } from './application/use-cases/find-super-admin
 import { GetOrgAdminsUseCase } from './application/use-cases/get-org-admins/get-org-admins.use-case';
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
-import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-users/export-admin-users.use-case';
+import { ExportUsersUseCase } from './application/use-cases/export-users/export-users.use-case';
 
 @Module({
   imports: [
@@ -93,8 +93,8 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
       inject: [getRepositoryToken(UserRecord)],
     },
     {
-      provide: AdminUsersExportRepository,
-      useClass: LocalAdminUsersExportRepository,
+      provide: UsersExportRepository,
+      useClass: LocalUsersExportRepository,
     },
     // Use cases
     FindUserByIdUseCase,
@@ -133,7 +133,7 @@ import { ExportAdminUsersUseCase } from './application/use-cases/export-admin-us
     GetOrgAdminsUseCase,
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
-    ExportAdminUsersUseCase,
+    ExportUsersUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers

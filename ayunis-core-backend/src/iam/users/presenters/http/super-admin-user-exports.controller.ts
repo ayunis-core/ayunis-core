@@ -15,7 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { ExportAdminUsersUseCase } from '../../application/use-cases/export-admin-users/export-admin-users.use-case';
+import { ExportUsersUseCase } from '../../application/use-cases/export-users/export-users.use-case';
 
 @ApiTags('Super Admin Users')
 @Controller('super-admin/users/export')
@@ -23,21 +23,16 @@ import { ExportAdminUsersUseCase } from '../../application/use-cases/export-admi
 export class SuperAdminUserExportsController {
   private readonly logger = new Logger(SuperAdminUserExportsController.name);
 
-  constructor(
-    private readonly exportAdminUsersUseCase: ExportAdminUsersUseCase,
-  ) {}
+  constructor(private readonly exportUsersUseCase: ExportUsersUseCase) {}
 
-  @Get('admins.csv')
+  @Get('users.csv')
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'text/csv; charset=utf-8')
-  @Header(
-    'Content-Disposition',
-    'attachment; filename="admin-users-export.csv"',
-  )
+  @Header('Content-Disposition', 'attachment; filename="users-export.csv"')
   @ApiOperation({
-    summary: 'Export admin users as CSV',
+    summary: 'Export users as CSV',
     description:
-      'Export all admin users from organizations with a non-cancelled subscription, including subscriptions that start in the future. This endpoint is only accessible to super admins.',
+      'Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -55,11 +50,11 @@ export class SuperAdminUserExportsController {
     description: 'User not authenticated or not authorized as super admin',
   })
   @ApiInternalServerErrorResponse({
-    description: 'Internal server error occurred while exporting admin users',
+    description: 'Internal server error occurred while exporting users',
   })
-  async exportAdminUsers(): Promise<string> {
-    this.logger.log('exportAdminUsers');
+  async exportUsers(): Promise<string> {
+    this.logger.log('exportUsers');
 
-    return this.exportAdminUsersUseCase.execute();
+    return this.exportUsersUseCase.execute();
   }
 }

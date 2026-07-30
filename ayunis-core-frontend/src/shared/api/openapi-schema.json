@@ -749,10 +749,10 @@
         "tags": ["Super Admin Users"]
       }
     },
-    "/super-admin/users/export/admins.csv": {
+    "/super-admin/users/export/users.csv": {
       "get": {
-        "description": "Export all admin users from organizations with a non-cancelled subscription, including subscriptions that start in the future. This endpoint is only accessible to super admins.",
-        "operationId": "SuperAdminUserExportsController_exportAdminUsers",
+        "description": "Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.",
+        "operationId": "SuperAdminUserExportsController_exportUsers",
         "parameters": [],
         "responses": {
           "200": {
@@ -770,10 +770,10 @@
             "description": "User not authenticated or not authorized as super admin"
           },
           "500": {
-            "description": "Internal server error occurred while exporting admin users"
+            "description": "Internal server error occurred while exporting users"
           }
         },
-        "summary": "Export admin users as CSV",
+        "summary": "Export users as CSV",
         "tags": ["Super Admin Users"]
       }
     },

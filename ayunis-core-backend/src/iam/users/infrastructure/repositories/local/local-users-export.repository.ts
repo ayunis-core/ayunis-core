@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
-  AdminUserExportRow,
-  AdminUsersExportRepository,
-} from 'src/iam/users/application/ports/admin-users-export.repository';
+  UserExportRow,
+  UsersExportRepository,
+} from 'src/iam/users/application/ports/users-export.repository';
 import { SubscriptionRecord } from 'src/iam/subscriptions/infrastructure/persistence/local/schema/subscription.record';
 import { TeamMemberRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team-member.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UserRecord } from './schema/user.record';
 
 @Injectable()
-export class LocalAdminUsersExportRepository implements AdminUsersExportRepository {
+export class LocalUsersExportRepository implements UsersExportRepository {
   constructor(private readonly dataSource: DataSource) {}
 
-  findSubscribedOrgAdmins(): Promise<AdminUserExportRow[]> {
+  findSubscribedOrgUsers(): Promise<UserExportRow[]> {
     return this.dataSource
       .createQueryBuilder()
       .select('user.id', 'id')
@@ -37,7 +36,6 @@ export class LocalAdminUsersExportRepository implements AdminUsersExportReposito
       )
       .leftJoin(TeamMemberRecord, 'teamMember', 'teamMember.userId = user.id')
       .leftJoin(TeamRecord, 'team', 'team.id = teamMember.teamId')
-      .where('user.role = :role', { role: UserRole.ADMIN })
       .groupBy('user.id')
       .addGroupBy('user.name')
       .addGroupBy('user.email')
@@ -48,6 +46,6 @@ export class LocalAdminUsersExportRepository implements AdminUsersExportReposito
       .orderBy('org.name', 'ASC')
       .addOrderBy('user.name', 'ASC')
       .addOrderBy('user.email', 'ASC')
-      .getRawMany<AdminUserExportRow>();
+      .getRawMany<UserExportRow>();
   }
 }

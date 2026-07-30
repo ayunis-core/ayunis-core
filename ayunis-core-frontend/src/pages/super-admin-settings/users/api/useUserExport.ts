@@ -1,4 +1,4 @@
-import { superAdminUserExportsControllerExportAdminUsers } from '@/shared/api';
+import { superAdminUserExportsControllerExportUsers } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,17 +7,17 @@ export function useUserExport() {
   const { t } = useTranslation('super-admin-settings-users');
   const [isExporting, setIsExporting] = useState(false);
 
-  const exportAdmins = useCallback(async () => {
+  const exportUsers = useCallback(async () => {
     setIsExporting(true);
     try {
-      const data = await superAdminUserExportsControllerExportAdminUsers();
+      const data = await superAdminUserExportsControllerExportUsers();
 
       // The response is a file blob — trigger download
       const blob = data instanceof Blob ? data : new Blob([data]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'admin-users-export.csv';
+      a.download = 'users-export.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -29,5 +29,5 @@ export function useUserExport() {
     }
   }, [t]);
 
-  return { exportAdmins, isExporting };
+  return { exportUsers, isExporting };
 }
