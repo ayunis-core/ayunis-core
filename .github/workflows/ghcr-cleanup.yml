@@ -1,0 +1,46 @@
+name: GHCR Cleanup
+
+# Every push to main publishes four sha-* images (build-images.yml), so the
+# packages accumulate fast. This deletes untagged versions and sha-* tags
+# older than the cut-off across the four Core packages. Versions tagged
+# vX.Y.Z or latest are safe even though release builds also carry a sha-*
+# tag: the action only deletes a version when ALL of its tags match the
+# image-tags filter (partial matches are kept and logged as warnings — see
+# filter_by_matchers in the action's select_package_versions.rs).
+#
+# GITHUB_TOKEN works because the packages are published from this repo with
+# GITHUB_TOKEN, which links them with admin access. If a run ever fails on
+# permissions, fall back to a fine-grained PAT org secret (read+delete
+# packages) per the snok/container-retention-policy docs.
+#
+# First run should be a manual dispatch with dry-run: true — verify the
+# candidate list contains only untagged/sha-* versions before trusting the
+# schedule.
+
+on:
+  schedule:
+    - cron: '17 4 * * 1' # Mondays 04:17 UTC
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Log what would be deleted without deleting
+        type: boolean
+        default: false
+
+permissions:
+  packages: write # deleting package versions requires write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete untagged and stale sha-* versions
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
+        with:
+          account: ayunis-core
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: 'ayunis-core-app ayunis-core-code-execution ayunis-core-anonymize ayunis-core-python-sandbox'
+          image-tags: 'sha-*'
+          tag-selection: both
+          cut-off: 4w
+          dry-run: ${{ inputs.dry-run || false }}
