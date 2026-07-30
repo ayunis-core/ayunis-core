@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write # dispatch build-images.yml for the release tag
 
 jobs:
   release-please:
@@ -24,6 +25,24 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Tags created with GITHUB_TOKEN don't trigger push-tag workflows, so
+  # dispatch the image build for the release tag explicitly. Separate job:
+  # the deploys build on the host and don't consume these images, so a
+  # failed dispatch must not gate them (the dispatch is fire-and-forget
+  # anyway — it never waited for the build to succeed).
+  build-release-images:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch image build for release tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run build-images.yml \
+            --ref "${{ needs.release-please.outputs.tag_name }}" \
+            --repo "${{ github.repository }}"
 
   deploy-internal:
     needs: release-please
