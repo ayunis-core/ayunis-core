@@ -208,6 +208,28 @@ describe('CheerioUrlRetrieverHandler.fetch', () => {
     ).rejects.toBeInstanceOf(UrlRetrieverRetrievalError);
   });
 
+  it('enriches transport failures with the classified failure class, code, and host', async () => {
+    // Customer-site outages stay a 422 UrlRetrieverRetrievalError (they are
+    // not provider outages, AYC-538) but carry the transport classification
+    // for debuggability.
+    const cause = Object.assign(
+      new Error('getaddrinfo ENOTFOUND dead.example.org'),
+      { code: 'ENOTFOUND', hostname: 'dead.example.org' },
+    );
+    fetchSpy.mockRejectedValueOnce(new TypeError('fetch failed', { cause }));
+
+    const result = handler.fetch({ url: 'https://dead.example.org' });
+    await expect(result).rejects.toBeInstanceOf(UrlRetrieverRetrievalError);
+    await expect(result).rejects.toMatchObject({
+      statusCode: 422,
+      metadata: {
+        failureClass: 'CONNECTION',
+        underlyingCode: 'ENOTFOUND',
+        host: 'dead.example.org',
+      },
+    });
+  });
+
   it('invokes assertContentType with the headers and rejects before reading the body', async () => {
     const response = streamedResponse({
       headers: { 'content-type': 'image/png' },

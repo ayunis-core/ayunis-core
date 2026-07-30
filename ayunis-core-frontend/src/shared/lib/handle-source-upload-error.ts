@@ -15,6 +15,16 @@ export default function handleSourceUploadError(
 ): void {
   try {
     const { code } = extractErrorData(error);
+    // Provider outages arrive as PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>
+    // (AYC-538) — map the class onto the existing busy/timeout toasts.
+    if (code.startsWith('PROVIDER_UNAVAILABLE')) {
+      showError(
+        code.includes('_TIMEOUT_')
+          ? t('sources.fileSourceTimeoutError')
+          : t('sources.fileSourceServiceBusyError'),
+      );
+      return;
+    }
     switch (code) {
       case 'INVALID_FILE_TYPE':
       case 'UNSUPPORTED_FILE_TYPE':
@@ -31,12 +41,6 @@ export default function handleSourceUploadError(
         break;
       case 'SOURCE_LIMIT_EXCEEDED':
         showError(t('sources.sourceLimitExceededError'));
-        break;
-      case 'SERVICE_BUSY':
-        showError(t('sources.fileSourceServiceBusyError'));
-        break;
-      case 'SERVICE_TIMEOUT':
-        showError(t('sources.fileSourceTimeoutError'));
         break;
       default:
         showError(t('sources.failedToAdd'));

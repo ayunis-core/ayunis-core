@@ -13,7 +13,8 @@ import {
   InferenceImageTooLargeError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { extractUpstreamStatus } from '../../helpers/extract-upstream-status.helper';
+import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 @Injectable()
 export class StreamInferenceUseCase {
@@ -49,6 +50,17 @@ export class StreamInferenceUseCase {
         provider: input.model.provider,
       });
       return new InferenceAbortedError();
+    }
+    const providerError = wrapProviderFailure(error, {
+      provider: input.model.provider,
+      modelId: input.model.name,
+    });
+    if (providerError) {
+      this.logger.error('Provider unavailable during stream inference', {
+        code: providerError.code,
+        ...providerError.context,
+      });
+      return providerError;
     }
     const status = extractUpstreamStatus(error);
     const message = error instanceof Error ? error.message : String(error);

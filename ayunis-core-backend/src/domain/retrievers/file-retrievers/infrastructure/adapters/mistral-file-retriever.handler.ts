@@ -6,12 +6,12 @@ import {
 } from '../../domain/file-retriever-result.entity';
 import {
   FileRetrievalFailedError,
-  FileRetrieverError,
   FileRetrieverUnexpectedError,
-  ServiceBusyError,
-  ServiceTimeoutError,
   TooManyPagesError,
 } from '../../application/file-retriever.errors';
+import type { ApplicationError } from 'src/common/errors/base.error';
+import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { MistralError } from '@mistralai/mistralai/models/errors';
 import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
@@ -73,42 +73,52 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         error instanceof Error ? error.stack : 'Unknown error',
       );
 
-      const metadata = { model: this.MODEL_NAME };
-
-      if (error instanceof MistralError) {
-        throw this.mapMistralError(error, metadata);
-      }
-
-      throw new FileRetrieverUnexpectedError(error as Error, metadata);
+      throw this.mapProcessingError(error);
     }
+  }
+
+  private mapProcessingError(error: unknown): ApplicationError {
+    const ctx = { provider: 'mistral', modelId: this.MODEL_NAME };
+
+    const providerError = wrapProviderFailure(error, ctx);
+    if (providerError) return providerError;
+
+    if (error instanceof MistralError) {
+      return this.mapMistralError(error, ctx);
+    }
+
+    return new FileRetrieverUnexpectedError(error as Error, {
+      model: this.MODEL_NAME,
+    });
   }
 
   private mapMistralError(
     error: MistralError,
-    metadata: { model: string },
-  ): FileRetrieverError {
-    // 429 lands here only after the transient-error retries are exhausted —
-    // persistent rate limiting is "busy, try again later", not a failed
-    // retrieval.
-    if (
-      error.statusCode === 429 ||
-      error.statusCode === 502 ||
-      error.statusCode === 503
-    ) {
-      return new ServiceBusyError(metadata);
-    }
-    if (error.statusCode === 504) {
-      return new ServiceTimeoutError(metadata);
-    }
-    if (
-      typeof error.body === 'string' &&
-      error.body.includes('document_parser_too_many_pages')
-    ) {
+    ctx: { provider: string; modelId: string },
+  ): ApplicationError {
+    const metadata = { model: this.MODEL_NAME };
+
+    // A rejection Mistral attributes to the document itself stays a document
+    // error: the page cap is actionable for the user, and a corrupt file will
+    // never succeed on retry — so neither may present as a provider outage.
+    if (rejectsDocument(error, 'document_parser_too_many_pages')) {
       return new TooManyPagesError(metadata);
     }
-    if (error.statusCode >= 400 && error.statusCode < 500) {
+    if (rejectsDocument(error, 'invalid_request_file')) {
       return new FileRetrievalFailedError(error.message, metadata);
     }
+
+    // Every other OCR 4xx is the provider choking on a machine-generated
+    // request, not a bug in how we built it (AYC-538) — except auth failures,
+    // which are our configuration's fault and must stay a distinct,
+    // first-occurrence-alerting incident.
+    if (isProviderRejection(error.statusCode)) {
+      return new ProviderRequestRejectedError(
+        { ...ctx, upstreamStatus: error.statusCode },
+        error,
+      );
+    }
+
     return new FileRetrieverUnexpectedError(error, metadata);
   }
 
@@ -251,4 +261,17 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       model: this.MODEL_NAME,
     });
   }
+}
+
+function rejectsDocument(error: MistralError, errorType: string): boolean {
+  return typeof error.body === 'string' && error.body.includes(errorType);
+}
+
+function isProviderRejection(statusCode: number): boolean {
+  return (
+    statusCode >= 400 &&
+    statusCode < 500 &&
+    statusCode !== 401 &&
+    statusCode !== 403
+  );
 }
