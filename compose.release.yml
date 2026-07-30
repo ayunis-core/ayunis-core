@@ -1,0 +1,27 @@
+# Release overlay — run published GHCR images instead of building on the host
+# (AYC-588). The base docker-compose.yml keeps its build: blocks for the
+# current build-on-host deploys; this overlay adds image: keys, which `up`
+# prefers (pass --no-build to be explicit). Wiring this into the deploy
+# workflows is AYC-589; retiring the split once prod moves to ayunis-infra
+# is AYC-592.
+#
+# Usage:
+#   CORE_TAG=v2.20.0 docker compose -f docker-compose.yml -f compose.release.yml up -d --no-build
+#
+# The python-sandbox image is not a compose service: code-execution pulls it
+# through the docker-socket-proxy when missing (the packages are public, so
+# no registry auth is needed).
+
+services:
+  app:
+    image: ghcr.io/ayunis-core/ayunis-core-app:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}
+
+  code-execution:
+    image: ghcr.io/ayunis-core/ayunis-core-code-execution:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}
+    environment:
+      # Overrides the base file's python-sandbox:latest (list-form env
+      # merges per key; the later file wins)
+      - DOCKER_IMAGE=ghcr.io/ayunis-core/ayunis-core-python-sandbox:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}
+
+  anonymize:
+    image: ghcr.io/ayunis-core/ayunis-core-anonymize:${CORE_TAG:?Set CORE_TAG to a release tag, e.g. v2.20.0}

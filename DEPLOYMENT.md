@@ -13,6 +13,15 @@ This guide covers deploying Ayunis Core to production and managing configuration
 
 ## Initial Deployment
 
+> **Published images:** every push to main and every release tag publishes the
+> four Core images (`app`, `code-execution`, `anonymize`, `python-sandbox`) to
+> `ghcr.io/ayunis-core/*` (`.github/workflows/build-images.yml`). To run a
+> release from the registry instead of building on the host, use the
+> `compose.release.yml` overlay:
+> `CORE_TAG=vX.Y.Z docker compose -f docker-compose.yml -f compose.release.yml up -d --no-build`.
+> The deploy workflows still build on the host; switching them to pulls is
+> tracked separately (AYC-589).
+
 ### Prerequisites
 
 - Node.js 24 or higher
