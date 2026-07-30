@@ -1,0 +1,125 @@
+name: Build & Publish Images
+
+# Publishes the four Core images to GHCR (AYC-588):
+#   ayunis-core-app             — frontend + backend (root Dockerfile)
+#   ayunis-core-code-execution  — sandbox orchestrator service
+#   ayunis-core-anonymize       — PII anonymization service
+#   ayunis-core-python-sandbox  — image user code executes in (DOCKER_IMAGE)
+#
+# Pushes to main produce sha-<commit> + latest tags (what staging pulls,
+# AYC-589); release tags produce vX.Y.Z. release-please dispatches this
+# workflow for its tags explicitly (GITHUB_TOKEN-created tags don't fire
+# push-tag workflows) — see release-please.yml.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ayunis-core-app
+            context: .
+            dockerfile: Dockerfile
+            target: production
+          - image: ayunis-core-code-execution
+            context: ./ayunis-core-code-execution
+            dockerfile: ./ayunis-core-code-execution/Dockerfile
+            target: ''
+          - image: ayunis-core-anonymize
+            context: ./ayunis-core-anonymize
+            dockerfile: ./ayunis-core-anonymize/Dockerfile
+            target: ''
+          - image: ayunis-core-python-sandbox
+            context: ./ayunis-core-code-execution/sandbox
+            dockerfile: ./ayunis-core-code-execution/sandbox/Dockerfile
+            target: ''
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          # latest=false: the default latest=auto also tags :latest on semver
+          # builds, which would let a release (or a re-run of an old tag)
+          # overwrite the main-branch latest that staging pulls.
+          flavor: |
+            latest=false
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern=v{{version}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # provenance: false keeps one manifest per tag — the default attestation
+      # manifests show up as untagged children in GHCR, which clutters the
+      # package view and makes the untagged-version cleanup workflow unsafe.
+      - name: Build and push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=build-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.image }}
+
+  # On a versioned release, ping ayunis-infra so Renovate opens a bump PR for
+  # the new image tags within a minute or two. Runs once per tag, not per
+  # matrix leg — the listener ignores the payload (pure wake-up), and one
+  # dispatch avoids four redundant app-token mints. The token is the shared
+  # Ayunis CI app, scoped to ayunis-infra; the app must be installed there
+  # and CI_APP_* org secrets shared with this repo.
+  notify-infra:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint ayunis-infra token
+        id: infra-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ayunis-core
+          repositories: ayunis-infra
+
+      - name: Trigger infra Renovate
+        env:
+          INFRA_TOKEN: ${{ steps.infra-token.outputs.token }}
+          IMAGE: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${INFRA_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/ayunis-core/ayunis-infra/dispatches \
+            -d "$(jq -nc --arg image "$IMAGE" --arg tag "$TAG" '{event_type:"image-published",client_payload:{image:$image,tag:$tag}}')"
