@@ -18,6 +18,7 @@ export enum FileRetrieverErrorCode {
   PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   RETRIEVAL_FAILED = 'RETRIEVAL_FAILED',
+  UNPROCESSABLE_DOCUMENT = 'UNPROCESSABLE_DOCUMENT',
   INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
   TOO_MANY_PAGES = 'TOO_MANY_PAGES',
@@ -81,9 +82,34 @@ export class FileRetrieverProviderNotAvailableError extends FileRetrieverError {
   }
 }
 
+/**
+ * Extraction failed for a reason on our side of the boundary — the converter
+ * being unreachable, an empty provider response — so it stays 500 and alerts
+ * on first occurrence. A file we simply cannot read is
+ * {@link UnprocessableDocumentError} instead.
+ */
 export class FileRetrievalFailedError extends FileRetrieverError {
   constructor(message: string, metadata?: ErrorMetadata) {
     super(message, FileRetrieverErrorCode.RETRIEVAL_FAILED, 500, metadata);
+  }
+}
+
+/**
+ * The uploaded document itself cannot be processed — corrupt, malformed, or
+ * refused outright by OCR or the converter. 422 is load-bearing: it is what
+ * `isExpectedFailure` reads to keep a user's broken file out of AppSignal, and
+ * what makes `classifyJobFailure` settle the source as FAILED immediately
+ * rather than spending two more attempts re-sending a file that can never
+ * parse (AYC-538).
+ */
+export class UnprocessableDocumentError extends FileRetrieverError {
+  constructor(message: string, metadata?: ErrorMetadata) {
+    super(
+      message,
+      FileRetrieverErrorCode.UNPROCESSABLE_DOCUMENT,
+      422,
+      metadata,
+    );
   }
 }
 

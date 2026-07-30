@@ -1,12 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
+import type { AxiosError } from 'axios';
 import FormData from 'form-data';
 import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { DocumentConverterPort } from '../../application/ports/document-converter.port';
 import {
   FileRetrievalFailedError,
+  FileRetrieverError,
   FileTooLargeError,
+  UnprocessableDocumentError,
 } from '../../application/file-retriever.errors';
 
 @Injectable()
@@ -68,35 +71,45 @@ export class GotenbergConverterService extends DocumentConverterPort {
       return pdfBuffer;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-
-        if (status === 400) {
-          throw new FileRetrievalFailedError(
-            `Gotenberg rejected the document: ${fileName}`,
-          );
-        }
-
-        if (status === 413) {
-          throw new FileTooLargeError();
-        }
-
-        if (status === 504 || error.code === 'ECONNABORTED') {
-          throw new FileRetrievalFailedError(
-            `Gotenberg conversion timed out for ${fileName}`,
-          );
-        }
-
-        if (!error.response) {
-          throw new FileRetrievalFailedError(
-            'Gotenberg service is unreachable',
-          );
-        }
-
-        throw new FileRetrievalFailedError(
-          `Gotenberg conversion failed for ${fileName} (HTTP ${status})`,
-        );
+        throw this.mapConversionError(error, fileName);
       }
       throw error;
     }
+  }
+
+  /**
+   * Only a 400 is attributable to the document. Gotenberg is our own service,
+   * so an unreachable host, a timeout or an unexpected status is an outage of
+   * ours and must keep alerting on first occurrence (AYC-538).
+   */
+  private mapConversionError(
+    error: AxiosError,
+    fileName: string,
+  ): FileRetrieverError {
+    const status = error.response?.status;
+
+    if (status === 400) {
+      return new UnprocessableDocumentError(
+        `Gotenberg rejected the document: ${fileName}`,
+      );
+    }
+
+    if (status === 413) {
+      return new FileTooLargeError();
+    }
+
+    if (status === 504 || error.code === 'ECONNABORTED') {
+      return new FileRetrievalFailedError(
+        `Gotenberg conversion timed out for ${fileName}`,
+      );
+    }
+
+    if (!error.response) {
+      return new FileRetrievalFailedError('Gotenberg service is unreachable');
+    }
+
+    return new FileRetrievalFailedError(
+      `Gotenberg conversion failed for ${fileName} (HTTP ${status})`,
+    );
   }
 }

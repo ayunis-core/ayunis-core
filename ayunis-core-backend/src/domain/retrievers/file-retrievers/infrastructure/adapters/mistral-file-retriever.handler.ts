@@ -8,6 +8,7 @@ import {
   FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
+  UnprocessableDocumentError,
 } from '../../application/file-retriever.errors';
 import type { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
@@ -104,8 +105,11 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     if (rejectsDocument(error, 'document_parser_too_many_pages')) {
       return new TooManyPagesError(metadata);
     }
+    // Reached only after `ocrWithReuploadRecovery` has probed the file and, if
+    // it had vanished, re-uploaded once — so a surviving 3310 is the document,
+    // not the AYC-556 dedup race that shares this error type.
     if (rejectsDocument(error, 'invalid_request_file')) {
-      return new FileRetrievalFailedError(error.message, metadata);
+      return new UnprocessableDocumentError(error.message, metadata);
     }
 
     // Every other OCR 4xx is the provider choking on a machine-generated
