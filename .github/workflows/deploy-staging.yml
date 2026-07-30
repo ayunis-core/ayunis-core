@@ -91,7 +91,11 @@ jobs:
             # old. Deleting exactly the Core tags that aren't the one just
             # deployed cannot touch what this deploy pulled. Superseded tags
             # stay in GHCR, so a rollback re-pulls them.
-            docker images --filter "reference=ghcr.io/ayunis-core/*" --format '{{.Repository}}:{{.Tag}}' \
+            #
+            # The pattern is `ayunis-core-*`, not `*`: the hosts run other
+            # images from this org namespace (ayunis-backup), and matching the
+            # whole namespace made the deploy try to delete them.
+            docker images --filter "reference=ghcr.io/ayunis-core/ayunis-core-*" --format '{{.Repository}}:{{.Tag}}' \
               | grep -v ":${CORE_TAG}$" \
               | xargs -r docker rmi || true
             docker image prune -f
