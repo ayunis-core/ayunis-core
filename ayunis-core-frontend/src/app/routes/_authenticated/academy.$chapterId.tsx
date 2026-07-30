@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_authenticated/academy/$chapterId')({
       queryFn: () => addonsControllerList(),
     });
     if (!isAcademyAddonActive(addons)) {
-      throw redirect({ to: '/chat' });
+      throw redirect({ to: '/academy' });
     }
     const chapters = await queryClient.fetchQuery({
       queryKey: getAcademyChaptersControllerGetChaptersQueryKey(),

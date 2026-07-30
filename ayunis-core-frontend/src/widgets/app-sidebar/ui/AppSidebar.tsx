@@ -43,7 +43,6 @@ import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
-import { useAcademyActive } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -55,7 +54,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
-  const academyActive = useAcademyActive();
   const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
@@ -141,19 +139,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
-            {academyActive && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname.startsWith('/academy')}
-                >
-                  <Link to="/academy">
-                    <GraduationCap />
-                    <span>{t('sidebar.academy')}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={location.pathname.startsWith('/academy')}
+              >
+                <Link to="/academy">
+                  <GraduationCap />
+                  <span>{t('sidebar.academy')}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
