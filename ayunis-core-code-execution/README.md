@@ -27,6 +27,7 @@ A secure Python code execution service that runs user code in isolated Docker co
    ```
 
 4. **Test the API**:
+
    ```bash
    curl -X POST http://localhost:8080/execute \
      -H "Content-Type: application/json" \
@@ -86,6 +87,12 @@ Configure the service using environment variables:
 - `PORT`: Server port (default: 8080)
 - `DOCKER_IMAGE`: Docker image for sandboxing (default: python-sandbox:latest)
 
+The sandbox image is defined in `sandbox/Dockerfile` and published to GHCR as
+`ghcr.io/ayunis-core/ayunis-core-python-sandbox`. The service pulls it when
+missing but never builds it; startup fails hard when the image is unavailable.
+For local development `./dev` builds `python-sandbox:latest` automatically
+(manually: `docker build -t python-sandbox:latest sandbox/`).
+
 ## Development
 
 1. **Install development dependencies**:
@@ -107,6 +114,7 @@ Configure the service using environment variables:
    ```
 
 4. **Run linting**:
+
    ```bash
    flake8 .
    ```

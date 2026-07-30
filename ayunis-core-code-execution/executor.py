@@ -24,40 +24,35 @@ class PythonExecutor:
         )
         self.docker_client = docker.from_env()
 
-        # Build the sandbox image on startup
-        self._build_sandbox_image()
+        # Ensure the sandbox image is available on startup
+        self._ensure_sandbox_image()
 
-    def _build_sandbox_image(self):
-        """Build the minimal sandbox image for code execution"""
-        dockerfile_content = """
-FROM python:3.12-slim
-RUN useradd -m -u 1000 sandbox
-WORKDIR /execution
-RUN pip install --no-cache-dir numpy pandas matplotlib
-RUN chown -R sandbox:sandbox /execution
-USER sandbox
-"""
-        # Use fileobj instead of temporary file to avoid permission issues
-        import io
+    def _ensure_sandbox_image(self) -> None:
+        """Ensure the sandbox image exists locally, pulling it if missing.
 
-        dockerfile_obj = io.BytesIO(dockerfile_content.encode("utf-8"))
+        The image is defined in sandbox/Dockerfile and published to GHCR; it
+        is never built here. Raises when unavailable — the service must not
+        come up healthy without a runnable sandbox (main.py exits on this).
+        """
+        image = self.config.docker_image
+        try:
+            self.docker_client.images.get(image)
+            print(f"Sandbox image present: {image}")
+            return
+        except docker.errors.ImageNotFound:
+            print(f"Sandbox image {image} not found locally, pulling...")
 
         try:
-            self.docker_client.images.build(
-                fileobj=dockerfile_obj, tag=self.config.docker_image, rm=True
-            )
+            self.docker_client.images.pull(image)
+            print(f"Pulled sandbox image: {image}")
         except Exception as e:
-            # If building fails, try to use existing image or continue
-            print(f"Warning: Could not build Docker image: {e}")
-            print(f"Will attempt to use existing image: {self.config.docker_image}")
-            # Check if image exists
-            try:
-                self.docker_client.images.get(self.config.docker_image)
-                print(f"✅ Found existing image: {self.config.docker_image}")
-            except:
-                print(
-                    f"❌ Image {self.config.docker_image} not found. Please build manually or use a different image."
-                )
+            raise RuntimeError(
+                f"Sandbox image '{image}' is not available locally and could "
+                f"not be pulled: {e}. "
+                f"Dev: run ./dev up (builds it) or `docker build -t "
+                f"python-sandbox:latest ayunis-core-code-execution/sandbox`. "
+                f"Prod: point DOCKER_IMAGE at a published GHCR sandbox tag."
+            ) from e
 
     async def execute(self, request: ExecutionRequest) -> ExecutionResponse:
         """

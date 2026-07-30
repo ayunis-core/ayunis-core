@@ -50,6 +50,9 @@ jobs:
             git checkout -f "$RELEASE_TAG"
             # Build with cache while old containers still serve traffic
             docker compose build
+            # Sandbox image: not a compose service, never built at runtime
+            # anymore (AYC-588); host-built until AYC-589 switches to GHCR pulls
+            docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox
             # Quick swap — downtime is only the restart
             docker compose down
             docker compose up -d
@@ -84,6 +87,9 @@ jobs:
             git checkout -f "$RELEASE_TAG"
             # Build with cache while old containers still serve traffic
             docker compose build
+            # Sandbox image: not a compose service, never built at runtime
+            # anymore (AYC-588); host-built until AYC-589 switches to GHCR pulls
+            docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox
             # Quick swap — downtime is only the restart
             docker compose down
             docker compose up -d
