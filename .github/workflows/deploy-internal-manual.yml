@@ -67,8 +67,11 @@ jobs:
             docker compose ps
             # Cleanup moved after `up`: the old unfiltered `prune -af` ran
             # while everything was down, which would now delete the images we
-            # just pulled. The cut-off additionally spares the sandbox image,
-            # which no running container holds a reference to.
+            # just pulled.
             docker image prune -af --filter "until=336h"
+            # `until` keys off the image build time, not pull time, and no
+            # container holds the sandbox — re-pull so it survives the prune
+            # even when its build predates the cut-off.
+            docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"
             # The host no longer builds, so the leftover cache is dead weight
             docker builder prune -af

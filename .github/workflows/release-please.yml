@@ -95,6 +95,10 @@ jobs:
             # material; images in use by the running containers are never
             # removed.
             docker image prune -af --filter "until=336h"
+            # `until` keys off the image build time, not pull time, and no
+            # container holds the sandbox — re-pull so it survives the prune
+            # even when its build predates the cut-off.
+            docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"
 
   deploy-production:
     needs: [release-please, build-release-images, deploy-internal]
@@ -150,6 +154,10 @@ jobs:
             # material; images in use by the running containers are never
             # removed.
             docker image prune -af --filter "until=336h"
+            # `until` keys off the image build time, not pull time, and no
+            # container holds the sandbox — re-pull so it survives the prune
+            # even when its build predates the cut-off.
+            docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"
 
   notify-slack:
     name: Notify Slack
