@@ -14,6 +14,20 @@ export function sanitizeUnicodeEscapes(input: unknown): string {
     return String(input);
   }
 
+  // Dropping a completed null escape can leave a new broken tail behind, so
+  // one pass is not stable — and message contents are re-sanitized on every
+  // copy. Iterate to a fixpoint so a second pass never changes the result of
+  // the first. Terminates: every changing pass shortens the string.
+  let current = input;
+  let next = sanitizeUnicodeEscapesOnce(current);
+  while (next !== current) {
+    current = next;
+    next = sanitizeUnicodeEscapesOnce(current);
+  }
+  return next;
+}
+
+function sanitizeUnicodeEscapesOnce(input: string): string {
   return (
     input
       // Only remove \u sequences that are clearly broken Unicode escapes
@@ -70,7 +84,7 @@ export function safeJsonParse<T>(
  */
 export function sanitizeObject<T>(obj: T): T {
   // Handle primitives
-  if (obj === null || obj === undefined) {
+  if (obj === null || typeof obj === 'undefined') {
     return obj;
   }
 
@@ -89,10 +103,13 @@ export function sanitizeObject<T>(obj: T): T {
   }
 
   // Handle objects
-  const sanitized = {} as Record<string, unknown>;
-  for (const [key, value] of Object.entries(obj)) {
-    sanitized[key] = sanitizeObject(value);
-  }
+  // fromEntries defines own properties, so a `__proto__` key in untrusted
+  // JSON stays inert data instead of replacing the returned object's
+  // prototype (which bracket assignment would do, letting reads of absent
+  // fields resolve to attacker-controlled values).
+  const sanitizedEntries = Object.entries(obj).map(
+    ([key, value]): [string, unknown] => [key, sanitizeObject(value)],
+  );
 
-  return sanitized as T;
+  return Object.fromEntries(sanitizedEntries) as T;
 }
