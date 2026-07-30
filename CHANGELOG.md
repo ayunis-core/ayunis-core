@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.20.0](https://github.com/ayunis-core/ayunis-core/compare/v2.19.0...v2.20.0) (2026-07-30)
+
+
+### Features
+
+* **academy:** always show academy with landing placeholder for non-customers (AYC-341) ([#1175](https://github.com/ayunis-core/ayunis-core/issues/1175)) ([fa87387](https://github.com/ayunis-core/ayunis-core/commit/fa8738737f3cf6cf5ed1ff4469bc5ff667f3e25e))
+* **observability:** group external provider failures into a stable error taxonomy (AYC-538) ([#1131](https://github.com/ayunis-core/ayunis-core/issues/1131)) ([46a7e6e](https://github.com/ayunis-core/ayunis-core/commit/46a7e6ef7e7a633c25921ffa3b93dde0125ac222))
+* **users:** export all users with role column (AYC-582) ([#1174](https://github.com/ayunis-core/ayunis-core/issues/1174)) ([142f7bf](https://github.com/ayunis-core/ayunis-core/commit/142f7bfba45595f752a4243852e245448d6fa236))
+
+
+### Bug Fixes
+
+* **retrievers:** classify unreadable documents as unprocessable, not server failures (AYC-538) ([#1177](https://github.com/ayunis-core/ayunis-core/issues/1177)) ([ed48acc](https://github.com/ayunis-core/ayunis-core/commit/ed48acc39abb6f317c513d7662afd911df60af6a))
+
 ## [2.19.0](https://github.com/ayunis-core/ayunis-core/compare/v2.18.2...v2.19.0) (2026-07-29)
 
 
