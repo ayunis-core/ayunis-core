@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
 
-export interface AdminUserExportRow {
+export interface UserExportRow {
   id: UUID;
   name: string;
   email: string;
@@ -11,6 +11,6 @@ export interface AdminUserExportRow {
   subscriptionStartsAt: Date | string;
 }
 
-export abstract class AdminUsersExportRepository {
-  abstract findSubscribedOrgAdmins(): Promise<AdminUserExportRow[]>;
+export abstract class UsersExportRepository {
+  abstract findSubscribedOrgUsers(): Promise<UserExportRow[]>;
 }

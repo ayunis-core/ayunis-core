@@ -1669,17 +1669,17 @@ export const useSuperAdminUsersControllerCreateUser = <TError = void,
     }
     
 /**
- * Export all admin users from organizations with a non-cancelled subscription, including subscriptions that start in the future. This endpoint is only accessible to super admins.
- * @summary Export admin users as CSV
+ * Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.
+ * @summary Export users as CSV
  */
-export const superAdminUserExportsControllerExportAdminUsers = (
+export const superAdminUserExportsControllerExportUsers = (
     
  signal?: AbortSignal
 ) => {
       
       
       return customAxiosInstance<Blob>(
-      {url: `/super-admin/users/export/admins.csv`, method: 'GET',
+      {url: `/super-admin/users/export/users.csv`, method: 'GET',
         responseType: 'blob', signal
     },
       );
@@ -1688,69 +1688,69 @@ export const superAdminUserExportsControllerExportAdminUsers = (
 
 
 
-export const getSuperAdminUserExportsControllerExportAdminUsersQueryKey = () => {
+export const getSuperAdminUserExportsControllerExportUsersQueryKey = () => {
     return [
-    `/super-admin/users/export/admins.csv`
+    `/super-admin/users/export/users.csv`
     ] as const;
     }
 
     
-export const getSuperAdminUserExportsControllerExportAdminUsersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+export const getSuperAdminUserExportsControllerExportUsersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUserExportsControllerExportAdminUsersQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUserExportsControllerExportUsersQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>> = ({ signal }) => superAdminUserExportsControllerExportAdminUsers(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>> = ({ signal }) => superAdminUserExportsControllerExportUsers(signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type SuperAdminUserExportsControllerExportAdminUsersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>>
-export type SuperAdminUserExportsControllerExportAdminUsersQueryError = void
+export type SuperAdminUserExportsControllerExportUsersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>>
+export type SuperAdminUserExportsControllerExportUsersQueryError = void
 
 
-export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>> & Pick<
+export function useSuperAdminUserExportsControllerExportUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>,
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>,
           TError,
-          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>> & Pick<
+export function useSuperAdminUserExportsControllerExportUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>,
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>,
           TError,
-          Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>
+          Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+export function useSuperAdminUserExportsControllerExportUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Export admin users as CSV
+ * @summary Export users as CSV
  */
 
-export function useSuperAdminUserExportsControllerExportAdminUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportAdminUsers>>, TError, TData>>, }
+export function useSuperAdminUserExportsControllerExportUsers<TData = Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserExportsControllerExportUsers>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSuperAdminUserExportsControllerExportAdminUsersQueryOptions(options)
+  const queryOptions = getSuperAdminUserExportsControllerExportUsersQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
