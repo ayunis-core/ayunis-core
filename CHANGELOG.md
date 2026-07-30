@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.20.1](https://github.com/ayunis-core/ayunis-core/compare/v2.20.0...v2.20.1) (2026-07-30)
+
+
+### Code Refactoring
+
+* **code-execution:** pull pinned sandbox image instead of building at startup (AYC-588) ([#1180](https://github.com/ayunis-core/ayunis-core/issues/1180)) ([bfaa56f](https://github.com/ayunis-core/ayunis-core/commit/bfaa56fb72228ed2c55c00733819c1054ee577d1))
+* **frontend:** inject env config at runtime instead of build time (AYC-588) ([#1179](https://github.com/ayunis-core/ayunis-core/issues/1179)) ([4306219](https://github.com/ayunis-core/ayunis-core/commit/4306219fa7a047a3f571706317cf41fe3e09eab0))
+
+
+### CI/CD
+
+* add release compose overlay and ghcr cleanup workflow (AYC-588) ([#1182](https://github.com/ayunis-core/ayunis-core/issues/1182)) ([058178f](https://github.com/ayunis-core/ayunis-core/commit/058178f01fa821648e081b674d2d9a883f9888a8))
+* publish core images to ghcr on main and release tags (AYC-588) ([#1181](https://github.com/ayunis-core/ayunis-core/issues/1181)) ([e7ea22c](https://github.com/ayunis-core/ayunis-core/commit/e7ea22c88b9af8834efedd340ed83e234be8ffdb))
+
 ## [2.20.0](https://github.com/ayunis-core/ayunis-core/compare/v2.19.0...v2.20.0) (2026-07-30)
 
 
