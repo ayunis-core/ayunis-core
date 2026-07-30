@@ -10,6 +10,14 @@ name: Build & Publish Images
 # AYC-589); release tags produce vX.Y.Z. release-please dispatches this
 # workflow for its tags explicitly (GITHUB_TOKEN-created tags don't fire
 # push-tag workflows) — see release-please.yml.
+#
+# Each image is published as a multi-arch manifest list (AYC-589). This is not
+# optional: staging runs aarch64 while internal and production run x86_64, and
+# amd64-only images died on staging with `exec format error`. Every leg builds
+# on a runner of its own architecture rather than under QEMU — emulating the
+# torch/chromium/bcrypt builds would turn a 7-minute job into an hour on every
+# push to main. Hosts pull only their own platform, so this costs the boxes
+# nothing.
 
 on:
   push:
@@ -26,11 +34,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Builds one architecture of one image and pushes it by digest — no tags.
+  # Tagging happens once per image in `merge`, which binds both digests into a
+  # single manifest list. Tagging here instead would leave the two
+  # architectures fighting over the same tag.
   build:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        image:
+          - ayunis-core-app
+          - ayunis-core-code-execution
+          - ayunis-core-anonymize
+          - ayunis-core-python-sandbox
+        platform: [amd64, arm64]
+        # Keys here attach to every combination whose `image` matches, so each
+        # entry covers both platform legs.
         include:
           - image: ayunis-core-app
             context: .
@@ -48,6 +67,7 @@ jobs:
             context: ./ayunis-core-code-execution/sandbox
             dockerfile: ./ayunis-core-code-execution/sandbox/Dockerfile
             target: ''
+    runs-on: ${{ matrix.platform == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -57,6 +77,81 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Labels only — the tags this produces are applied in `merge`.
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # provenance: false keeps one manifest per tag — the default attestation
+      # manifests show up as untagged children in GHCR, which clutters the
+      # package view and makes the untagged-version cleanup workflow unsafe.
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          platforms: linux/${{ matrix.platform }}
+          provenance: false
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=build-${{ matrix.image }}-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.image }}-${{ matrix.platform }}
+
+      # The filename is the digest; the file itself is empty. `merge` only needs
+      # the names.
+      - name: Export digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: digests-${{ matrix.image }}-${{ matrix.platform }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Binds each image's per-architecture digests into one tagged manifest list.
+  # This is where sha-/latest/vX.Y.Z actually get applied.
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ayunis-core-app
+          - ayunis-core-code-execution
+          - ayunis-core-anonymize
+          - ayunis-core-python-sandbox
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.image }}-*
+          merge-multiple: true
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Extract image metadata
         id: meta
@@ -73,24 +168,33 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern=v{{version}}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+        run: |
+          set -e
+          # Word splitting is the mechanism here, not an accident: the first
+          # substitution expands to one `-t <tag>` pair per tag, the second to
+          # one `<image>@sha256:<digest>` argument per digest file.
+          # shellcheck disable=SC2046
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "${IMAGE}@sha256:%s " *)
 
-      # provenance: false keeps one manifest per tag — the default attestation
-      # manifests show up as untagged children in GHCR, which clutters the
-      # package view and makes the untagged-version cleanup workflow unsafe.
-      - name: Build and push
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
-          target: ${{ matrix.target }}
-          push: true
-          provenance: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=build-${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=build-${{ matrix.image }}
+      - name: Verify both architectures are present
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -e
+          PLATFORMS=$(docker buildx imagetools inspect "${IMAGE}:${VERSION}" --raw \
+            | jq -r '[.manifests[].platform | select(.os != "unknown") | "\(.os)/\(.architecture)"] | sort | join(",")')
+          echo "Published platforms: $PLATFORMS"
+          if [ "$PLATFORMS" != "linux/amd64,linux/arm64" ]; then
+            echo "::error::expected linux/amd64,linux/arm64 — got '$PLATFORMS'"
+            exit 1
+          fi
 
   # On a versioned release, ping ayunis-infra so Renovate opens a bump PR for
   # the new image tags within a minute or two. Runs once per tag, not per
@@ -99,7 +203,7 @@ jobs:
   # Ayunis CI app, scoped to ayunis-infra; the app must be installed there
   # and CI_APP_* org secrets shared with this repo.
   notify-infra:
-    needs: build
+    needs: merge
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
