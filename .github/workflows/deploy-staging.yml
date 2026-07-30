@@ -36,8 +36,11 @@ jobs:
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           envs: DEPLOY_SHA
-          script_stop: true
           script: |
+            # `script_stop` is not an input of appleboy/ssh-action v1.2.5 — it
+            # was accepted here for years and silently ignored, so the script
+            # has to abort on error itself.
+            set -e
             cd /home/ayunis/apps/ayunis-core
             # The checkout still supplies the compose files, the .env files and
             # postgres/init.sql — only the build is gone. Reset to the exact
