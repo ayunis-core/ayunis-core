@@ -6,7 +6,7 @@
 #   docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox).
 # Prod: published as ghcr.io/ayunis-core/ayunis-core-python-sandbox and
 # referenced via the code-execution service's DOCKER_IMAGE env var.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 RUN useradd -m -u 1000 sandbox
 WORKDIR /execution
