@@ -76,7 +76,8 @@ class Bootstrap {
     this.setupSwagger(app);
     app.setGlobalPrefix('api', {
       // strip leading '/' — setGlobalPrefix exclude expects bare paths
-      exclude: [METRICS_PATH.slice(1)],
+      // config.js is the SPA's runtime environment and must live at the root
+      exclude: [METRICS_PATH.slice(1), 'config.js'],
     });
     app.useGlobalPipes(
       new ValidationPipe({

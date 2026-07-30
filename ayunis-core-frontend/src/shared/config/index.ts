@@ -1,4 +1,8 @@
-// Simple configuration for Vite environment
+import { runtimeEnv } from './runtime-env';
+
+// Simple configuration for Vite environment. Environment-specific values come
+// from the backend at runtime via runtimeEnv (see runtime-env.ts) so the
+// built bundle stays host-agnostic.
 const config = {
   env: import.meta.env.MODE as 'development' | 'production' | 'test',
   api: {
@@ -13,13 +17,11 @@ const config = {
   },
   features: {
     devtools: import.meta.env.MODE !== 'production',
-    announcableOrgId: import.meta.env.VITE_ANNOUNCABLE_ORG_ID as
-      string | undefined,
+    announcableOrgId: runtimeEnv('VITE_ANNOUNCABLE_ORG_ID'),
   },
   analytics: {
-    gtmContainerId: import.meta.env.VITE_GTM_CONTAINER_ID as string | undefined,
-    usercentricsSettingsId: import.meta.env.VITE_USERCENTRICS_SETTINGS_ID as
-      string | undefined,
+    gtmContainerId: runtimeEnv('VITE_GTM_CONTAINER_ID'),
+    usercentricsSettingsId: runtimeEnv('VITE_USERCENTRICS_SETTINGS_ID'),
   },
 } as const;
 

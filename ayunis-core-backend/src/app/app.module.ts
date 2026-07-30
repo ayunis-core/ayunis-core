@@ -44,6 +44,7 @@ import type { RedisConfig } from '../config/redis.config';
 import { BullModule } from '@nestjs/bullmq';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
+import { GetFrontendRuntimeConfigUseCase } from './application/use-cases/get-frontend-runtime-config/get-frontend-runtime-config.use-case';
 import { ClsModule } from 'nestjs-cls';
 import { ContextModule } from 'src/common/context/context.module';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -162,6 +163,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     SecurityHeadersMiddleware,
     IsCloudUseCase,
     IsRegistrationDisabledUseCase,
+    GetFrontendRuntimeConfigUseCase,
   ],
 })
 export class AppModule implements NestModule {

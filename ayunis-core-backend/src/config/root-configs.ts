@@ -13,6 +13,7 @@ import { mcpConfig } from './mcp.config';
 import { marketplaceConfig } from './marketplace.config';
 import toolsConfig from './tools.config';
 import { featuresConfig } from './features.config';
+import { frontendConfig } from './frontend.config';
 import { metricsConfig } from './metrics.config';
 import { redisConfig } from './redis.config';
 import { gotenbergConfig } from './gotenberg.config';
@@ -45,6 +46,7 @@ export const rootConfigs = [
   marketplaceConfig,
   toolsConfig,
   featuresConfig,
+  frontendConfig,
   metricsConfig,
   redisConfig,
   gotenbergConfig,
