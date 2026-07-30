@@ -77,10 +77,9 @@ services:
       - CONTAINERS=1 # Allow container operations
       - EXEC=1 # Allow exec operations inside containers
       - PUT=1 # Allow PUT requests (copy archive into containers)
-      - POST=1 # Allow POST requests (create containers)
+      - POST=1 # Allow POST requests (create containers, pull images)
       - DELETE=1 # Allow DELETE requests (remove containers)
-      - BUILD=1 # Allow image building
-      - IMAGES=1 # Allow image operations
+      - IMAGES=1 # Allow image operations (get/pull the sandbox image; BUILD stays off — the sandbox is a published image, never built at runtime)
       # Allow volume operations (needed for per-execution ephemeral volumes)
       - VOLUMES=1
       # Deny everything else for security

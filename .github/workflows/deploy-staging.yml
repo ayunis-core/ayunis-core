@@ -34,6 +34,14 @@ jobs:
               echo "::error::docker compose build failed — keeping current containers, not deploying"
               exit 1
             fi
+            # The sandbox is not a compose service and is never built at
+            # runtime anymore (AYC-588) — build it here until AYC-589 switches
+            # deploys to GHCR pulls. Same guard: abort before touching
+            # running containers.
+            if ! docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox; then
+              echo "::error::sandbox image build failed — keeping current containers, not deploying"
+              exit 1
+            fi
             # Quick swap — downtime is only the restart
             docker compose down
             docker compose up -d

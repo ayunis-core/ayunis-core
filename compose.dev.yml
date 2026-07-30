@@ -58,7 +58,6 @@ services:
       - PUT=1
       - POST=1
       - DELETE=1
-      - BUILD=1
       - IMAGES=1
       - VOLUMES=1
       - AUTH=0

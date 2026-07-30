@@ -221,6 +221,13 @@ cmd_up() {
   export MINIO_ROOT_PASSWORD="$minio_password"
   export REDIS_PASSWORD="$redis_password"
 
+  # -- 0.5 Sandbox image ----------------------------------------------------
+  # code-execution fails hard at startup when the sandbox image is missing
+  # (it pulls but never builds), so build it before compose waits on health.
+  # The image is host-global and shared across dev slots.
+  info "Building python-sandbox image …"
+  docker build -t python-sandbox:latest "$REPO_DIR/ayunis-core-code-execution/sandbox" 2>&1 | tail -2
+
   # -- 1. Docker infrastructure -------------------------------------------
   info "Starting Docker infrastructure …"
   dc up -d --build --wait 2>&1 | tail -5

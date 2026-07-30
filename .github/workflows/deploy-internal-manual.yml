@@ -40,6 +40,10 @@ jobs:
             # Clean up old images and build cache before building new ones
             docker image prune -af
             docker builder prune -af
+            # Rebuild the sandbox image after the prune deleted it (not a
+            # compose service; code-execution fails hard without it — AYC-588.
+            # AYC-589 switches deploys to GHCR pulls.)
+            docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox
             docker compose up -d --build
             sleep 60
             docker compose ps
