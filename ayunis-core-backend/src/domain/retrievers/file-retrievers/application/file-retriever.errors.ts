@@ -7,8 +7,6 @@ import {
   UnauthorizedException,
   PayloadTooLargeException,
   UnprocessableEntityException,
-  ServiceUnavailableException,
-  GatewayTimeoutException,
 } from '@nestjs/common';
 
 /**
@@ -60,10 +58,6 @@ export abstract class FileRetrieverError extends ApplicationError {
         return new UnprocessableEntityException(payload);
       case 500:
         return new InternalServerErrorException(payload);
-      case 503:
-        return new ServiceUnavailableException(payload);
-      case 504:
-        return new GatewayTimeoutException(payload);
       default:
         return new InternalServerErrorException(payload);
     }
