@@ -1,13 +1,8 @@
 name: Deploy to Staging
 
-# Staging runs published GHCR images instead of building on the host (AYC-589).
-# Chained after build-images.yml rather than triggered by the push itself: the
-# image for a commit does not exist until that build finishes (~7 min).
-
 on:
-  workflow_run:
-    workflows: ["Build & Publish Images"]
-    types: [completed]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -16,79 +11,42 @@ concurrency:
 
 jobs:
   deploy:
-    # Tag builds have head_branch == the tag, so only main-branch builds deploy.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
       - name: Deploy to Staging
         uses: appleboy/ssh-action@v1.2.5
-        env:
-          # The commit whose images were just built. Empty on manual dispatch,
-          # where the script falls back to origin/main.
-          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          envs: DEPLOY_SHA
           script_stop: true
           script: |
             cd /home/ayunis/apps/ayunis-core
-            # The checkout still supplies the compose files, the .env files and
-            # postgres/init.sql — only the build is gone. Reset to the exact
-            # built commit so the compose files and the image tag cannot drift
-            # apart if another push lands mid-deploy.
             git fetch origin main
-            git reset --hard "${DEPLOY_SHA:-origin/main}"
-            export COMPOSE_FILE=docker-compose.yml:compose.release.yml
-            # Plain truncation, not `git rev-parse --short=7`: --short is a
-            # *minimum* and git lengthens it when the prefix is ambiguous,
-            # while metadata-action's type=sha is an unconditional
-            # sha.substring(0, 7). A longer abbreviation would name a tag that
-            # was never published.
-            export CORE_TAG="sha-$(git rev-parse HEAD | cut -c1-7)"
-            echo "Deploying $CORE_TAG"
-            # Pull while the old containers still serve traffic. If a pull
-            # fails, abort BEFORE touching them — otherwise a missing image
-            # would tear down the app and leave it down while the deploy still
-            # reports success (see AYC: corepack outage).
-            # Scoped to the Core services on purpose: a bare `compose pull`
-            # would also refresh minio/dozzle/redis/gotenberg, which are
-            # deliberately only pulled when first started.
-            if ! docker compose pull app code-execution anonymize; then
-              echo "::error::image pull failed — keeping current containers, not deploying"
+            git reset --hard origin/main
+            # Build with cache while old containers still serve traffic. If the
+            # build fails, abort BEFORE touching running containers — otherwise a
+            # broken build would tear down the app and restart the stale image
+            # while the deploy still reports success (see AYC: corepack outage).
+            if ! docker compose build; then
+              echo "::error::docker compose build failed — keeping current containers, not deploying"
               exit 1
             fi
-            # The sandbox is not a compose service; code-execution pulls it
-            # through the docker-socket-proxy on first use. Pulling it here
-            # keeps that first execution fast and proves the tag exists before
-            # the swap.
-            if ! docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"; then
-              echo "::error::sandbox image pull failed — keeping current containers, not deploying"
+            # The sandbox is not a compose service and is never built at
+            # runtime anymore (AYC-588) — build it here until AYC-589 switches
+            # deploys to GHCR pulls. Same guard: abort before touching
+            # running containers.
+            if ! docker build -t python-sandbox:latest ayunis-core-code-execution/sandbox; then
+              echo "::error::sandbox image build failed — keeping current containers, not deploying"
               exit 1
             fi
             # Quick swap — downtime is only the restart
             docker compose down
-            docker compose up -d --no-build
+            docker compose up -d
             # Wait for app to be healthy (up to 120s)
             timeout 120 bash -c 'until docker compose ps app --format json | grep -q "(healthy)"; do sleep 5; done'
             docker compose ps
-            # Reclaim superseded Core images — pulled images are tagged, not
-            # dangling, so `prune -f` alone would never touch them and every
-            # main push would add four. `prune -a` is the wrong tool here: the
-            # sandbox image is referenced only by ephemeral per-execution
-            # containers, so it always looks unused, and no `until=` cut-off
-            # saves it either — a cache-hit rebuild keeps the original Created
-            # date, so a freshly pulled sandbox tag can already read as weeks
-            # old. Deleting exactly the Core tags that aren't the one just
-            # deployed cannot touch what this deploy pulled. Superseded tags
-            # stay in GHCR, so a rollback re-pulls them.
-            docker images --filter "reference=ghcr.io/ayunis-core/*" --format '{{.Repository}}:{{.Tag}}' \
-              | grep -v ":${CORE_TAG}$" \
-              | xargs -r docker rmi || true
+            # Clean up dangling images to reclaim disk space
             docker image prune -f
