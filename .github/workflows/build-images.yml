@@ -88,9 +88,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
-      # provenance: false keeps one manifest per tag — the default attestation
-      # manifests show up as untagged children in GHCR, which clutters the
-      # package view and makes the untagged-version cleanup workflow unsafe.
+      # provenance: false keeps the index children to just the architectures
+      # published here — the default attestation manifests add further untagged
+      # children on top, cluttering the package view. (The per-architecture
+      # children are untagged too and are unavoidable for a manifest list;
+      # ghcr-cleanup.yml relies on its pinned action version to spare them.)
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2

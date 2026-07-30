@@ -8,6 +8,15 @@ name: GHCR Cleanup
 # image-tags filter (partial matches are kept and logged as warnings — see
 # filter_by_matchers in the action's select_package_versions.rs).
 #
+# The pinned action version is load-bearing, not incidental. Since the images
+# went multi-arch (AYC-589) each tag is an image index whose per-architecture
+# child manifests are stored untagged — exactly what this workflow deletes.
+# v3.1.0 is the first release that resolves kept tags' manifests and excludes
+# their children from the deletion candidates (fail-closed: it skips the whole
+# package if a manifest can't be fetched). Do not downgrade below v3.1.0 or
+# swap in another cleanup tool without checking for the same guarantee —
+# deleting one child silently breaks every tag pointing at it.
+#
 # GITHUB_TOKEN works because the packages are published from this repo with
 # GITHUB_TOKEN, which links them with admin access. If a run ever fails on
 # permissions, fall back to a fine-grained PAT org secret (read+delete
