@@ -54,12 +54,13 @@ export class ExecuteOpenAIChatCompletionUseCase {
     );
 
     const requestId = this.requestMapper.newRequestId();
+    const tools = this.requestMapper.toToolSchemas(command.request);
 
     const response = await this.getInferenceUseCase.execute(
       new GetInferenceCommand({
         model,
         messages,
-        tools: this.requestMapper.toToolSchemas(command.request),
+        tools,
         toolChoice: this.requestMapper.toModelToolChoice(command.request),
         instructions: systemPrompt || undefined,
       }),
@@ -83,6 +84,7 @@ export class ExecuteOpenAIChatCompletionUseCase {
       id: this.completionId(),
       modelName: command.request.model,
       response,
+      tools,
     });
   }
 
