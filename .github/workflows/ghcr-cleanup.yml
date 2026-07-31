@@ -25,6 +25,13 @@ name: GHCR Cleanup
 # First run should be a manual dispatch with dry-run: true — verify the
 # candidate list contains only untagged/sha-* versions before trusting the
 # schedule.
+#
+# build-images.yml stores its BuildKit cache in these same packages under
+# buildcache-<platform> tags. Those survive because image-tags is 'sha-*' and
+# v3.1.0 excludes kept tags' child manifests; superseded cache blobs go untagged
+# and are collected here, which is what bounds their growth. Widening image-tags
+# would delete the live build cache — every push to main would then rebuild the
+# 3 GB torch layer from scratch under a new digest.
 
 on:
   schedule:

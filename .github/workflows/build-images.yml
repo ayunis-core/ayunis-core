@@ -104,8 +104,22 @@ jobs:
           provenance: false
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=build-${{ matrix.image }}-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=build-${{ matrix.image }}-${{ matrix.platform }}
+          # Registry cache rather than type=gha: four images across two
+          # platforms export eight mode=max scopes, and the two anonymize layer
+          # blobs are ~2.7 GB each — the repo sat at 10.97 GB against GitHub's
+          # 10 GB per-repo cache quota. Over quota GitHub evicts LRU, so the
+          # 3 GB torch layer got rebuilt under a fresh digest on unpredictable
+          # pushes. A new digest means the staging host cannot share layers with
+          # the generation it is still running and has to hold two full copies
+          # of a 6 GB image, which is what exhausted its disk (AYC-589).
+          #
+          # Safe against ghcr-cleanup.yml: that workflow only deletes tags
+          # matching sha-*, so buildcache-* survives the weekly sweep, and its
+          # pinned v3.1.0 spares the child manifests of kept tags. Superseded
+          # cache blobs do go untagged and are collected — which is what keeps
+          # this from growing without bound.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-${{ matrix.platform }}
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:buildcache-${{ matrix.platform }},mode=max
 
       # The filename is the digest; the file itself is empty. `merge` only needs
       # the names.
