@@ -5,7 +5,7 @@ import { EmptyState } from '@/widgets/empty-state';
 import { Button } from '@/shared/ui/shadcn/button';
 import { ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ACADEMY_LANDING_PAGE_URL } from '../model/constants';
+import { ACADEMY_LANDING_PAGE_URL } from '@/features/academy';
 
 export default function AcademyPlaceholderPage() {
   const { t } = useTranslation('academy');

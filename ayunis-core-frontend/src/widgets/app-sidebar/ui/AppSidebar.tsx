@@ -43,6 +43,10 @@ import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
+import {
+  useIsAcademyAddonActive,
+  ACADEMY_LANDING_PAGE_URL,
+} from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -54,6 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { closeMobileWithCleanup } = useSidebar();
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
+  const academyAddonActive = useIsAcademyAddonActive();
   const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
@@ -142,12 +147,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={location.pathname.startsWith('/academy')}
+                isActive={
+                  academyAddonActive && location.pathname.startsWith('/academy')
+                }
               >
-                <Link to="/academy">
-                  <GraduationCap />
-                  <span>{t('sidebar.academy')}</span>
-                </Link>
+                {academyAddonActive ? (
+                  <Link to="/academy">
+                    <GraduationCap />
+                    <span>{t('sidebar.academy')}</span>
+                  </Link>
+                ) : (
+                  <a
+                    href={ACADEMY_LANDING_PAGE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <GraduationCap />
+                    <span>{t('sidebar.academy')}</span>
+                  </a>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
