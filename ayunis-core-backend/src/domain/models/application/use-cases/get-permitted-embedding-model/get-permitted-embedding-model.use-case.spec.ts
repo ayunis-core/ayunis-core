@@ -14,6 +14,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import {
+  ModelErrorCode,
   PermittedEmbeddingModelNotFoundForOrgError,
   UnexpectedModelError,
 } from '../../models.errors';
@@ -128,6 +129,16 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
     ).rejects.toThrow(
       new PermittedEmbeddingModelNotFoundForOrgError(orgId).message,
     );
+  });
+
+  it('tags the not-found error with a distinctive code so the UI can surface it', async () => {
+    permittedModelsRepository.findOneEmbedding.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(new GetPermittedEmbeddingModelQuery({ orgId })),
+    ).rejects.toMatchObject({
+      code: ModelErrorCode.NO_PERMITTED_EMBEDDING_MODEL,
+    });
   });
 
   it('throws a not-found error when the repository returns a non-embedding permitted model', async () => {

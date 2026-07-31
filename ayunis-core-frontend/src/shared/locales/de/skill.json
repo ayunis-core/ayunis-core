@@ -120,7 +120,8 @@
     "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist ausgelastet. Bitte versuchen Sie es später erneut.",
     "fileSourceTimeoutError": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
     "fileSourceUnreadableError": "Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
-    "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen."
+    "sourceLimitExceededError": "Ein Skill kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen.",
+    "noEmbeddingModelError": "Es ist kein Embedding-Modell aktiviert. Bitte bitten Sie Ihren Administrator, eines zu aktivieren, bevor Sie Dateien hochladen."
   },
   "mcpIntegrations": {
     "title": "Integrationen",

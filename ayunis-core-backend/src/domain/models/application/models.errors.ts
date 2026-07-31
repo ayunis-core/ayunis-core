@@ -8,6 +8,7 @@ import type { UUID } from 'crypto';
  */
 export enum ModelErrorCode {
   MODEL_NOT_FOUND = 'MODEL_NOT_FOUND',
+  NO_PERMITTED_EMBEDDING_MODEL = 'NO_PERMITTED_EMBEDDING_MODEL',
   NO_DEFAULT_MODEL_FOUND = 'NO_DEFAULT_MODEL_FOUND',
   MODEL_INVALID = 'MODEL_INVALID',
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
@@ -115,7 +116,7 @@ export class PermittedEmbeddingModelNotFoundForOrgError extends ModelError {
   constructor(orgId: UUID, metadata?: ErrorMetadata) {
     super(
       `Permitted embedding model not found for org '${orgId}'`,
-      ModelErrorCode.MODEL_NOT_FOUND,
+      ModelErrorCode.NO_PERMITTED_EMBEDDING_MODEL,
       404,
       metadata,
     );
