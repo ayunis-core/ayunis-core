@@ -18,6 +18,7 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
@@ -48,6 +49,7 @@ export default function NewChatPage({
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
+  const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
   const { setPendingImages, setPendingSkillId } = useChatContext();
@@ -253,6 +255,8 @@ export default function NewChatPage({
               {t('chat.inputDisclaimer')}
             </p>
 
+            <AcademyGateNotice className="mb-2" />
+
             <ChatInput
               ref={chatInputRef}
               modelId={modelId}
@@ -260,6 +264,7 @@ export default function NewChatPage({
               knowledgeBases={selectedKnowledgeBases}
               mcpIntegrations={selectedIntegrations}
               submissionState={isCreating ? 'submitting' : 'idle'}
+              isSendDisabled={isAcademyGated}
               onModelChange={handleModelChange}
               onSend={handleSend}
               onCancel={handleCancel}

@@ -14,7 +14,8 @@
     "retention": "Datenaufbewahrung",
     "instructions": "Chat",
     "letterheads": "Briefpapier",
-    "apiKeys": "API-Schlüssel"
+    "apiKeys": "API-Schlüssel",
+    "academy": "KI-Führerschein"
   },
   "groups": {
     "membersAccess": "Mitglieder & Zugriff",

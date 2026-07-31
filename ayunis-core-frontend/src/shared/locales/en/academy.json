@@ -58,10 +58,18 @@
     "completed": {
       "title": "Academy complete!",
       "description": "You've passed every chapter."
-    }
+    },
+    "renewalDue": "Renewal due"
   },
   "certificate": {
     "downloadError": "The certificate could not be downloaded. Please try again.",
     "download": "Download certificate"
+  },
+  "gate": {
+    "title": "Certificate required",
+    "description": "Your organization requires the AI certificate (KI-Führerschein) before you can use Ayunis Core chat. Complete the academy to unlock it — your existing chats stay readable in the meantime.",
+    "action": "Go to the academy",
+    "emptyTitle": "No academy content yet",
+    "emptyDescription": "Chat is locked until you pass the certificate, but no chapters have been published yet. Please contact your administrator."
   }
 }

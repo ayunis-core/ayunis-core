@@ -20,6 +20,7 @@ import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/useDeleteThread';
+import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -187,6 +188,7 @@ export default function ChatPage({
     },
   });
 
+  const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { createFileSource, isLoading: isCreatingFileSource } =
     useCreateFileSource({
       threadId: thread.id,
@@ -289,8 +291,10 @@ export default function ChatPage({
 
   // Send is gated while a fresh upload is in flight or while server-side
   // processing of an attached source hasn't finished — both are reasons we
-  // want the user to wait before they can submit a message.
-  const isSendDisabled = isCreatingFileSource || hasProcessingSources;
+  // want the user to wait before they can submit a message. The academy gate
+  // adds a third: the org requires a certificate this user does not hold.
+  const isSendDisabled =
+    isCreatingFileSource || hasProcessingSources || isAcademyGated;
 
   async function handleSend(
     message: string,
@@ -419,6 +423,7 @@ export default function ChatPage({
         {t('chat.inputDisclaimer')}
       </p>
       {thread.isLongChat && <LongChatWarning />}
+      <AcademyGateNotice className="mb-2" />
       <ChatInput
         key={thread.id}
         ref={chatInputRef}

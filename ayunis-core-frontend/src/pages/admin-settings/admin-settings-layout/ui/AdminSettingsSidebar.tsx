@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   MessageSquareText,
   Trash2,
+  GraduationCap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,10 +18,12 @@ import {
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
+import { useIsAcademyAddonActive } from '@/features/academy';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
+  const academyAddonActive = useIsAcademyAddonActive();
 
   const groups: SidebarMenuGroup[] = [
     {
@@ -90,6 +93,15 @@ export function AdminSettingsSidebar() {
           icon: <Trash2 />,
           label: t('layout.retention'),
         },
+        ...(academyAddonActive
+          ? [
+              {
+                to: '/admin-settings/academy' as const,
+                icon: <GraduationCap />,
+                label: t('layout.academy'),
+              },
+            ]
+          : []),
       ],
     },
     {

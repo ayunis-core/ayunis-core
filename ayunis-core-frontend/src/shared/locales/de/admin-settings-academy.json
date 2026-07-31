@@ -1,0 +1,23 @@
+{
+  "requirement": {
+    "title": "KI-Führerschein-Pflicht",
+    "description": "Lege fest, ob Mitglieder deiner Organisation den KI-Führerschein in der Academy bestehen müssen, bevor sie den Ayunis Core Chat nutzen können. Das Lesen bestehender Chats wird nie blockiert.",
+    "saved": "Zertifikatspflicht aktualisiert",
+    "error": "Zertifikatspflicht konnte nicht aktualisiert werden",
+    "errorUnexpected": "Beim Speichern ist etwas schiefgelaufen. Bitte versuche es erneut.",
+    "modes": {
+      "unrestricted": {
+        "label": "Nicht erforderlich",
+        "description": "Alle können den Chat sofort nutzen. Die Academy bleibt freiwillig verfügbar."
+      },
+      "requiredOnce": {
+        "label": "Einmalig erforderlich",
+        "description": "Mitglieder müssen den KI-Führerschein bestehen, bevor sie den Chat nutzen. Einmal bestanden, läuft er nie ab."
+      },
+      "requiredAnnually": {
+        "label": "Jährlich erforderlich",
+        "description": "Mitglieder müssen den KI-Führerschein bestehen und alle 12 Monate erneuern. Zum Erneuern muss die gesamte Academy erneut abgeschlossen werden."
+      }
+    }
+  }
+}
