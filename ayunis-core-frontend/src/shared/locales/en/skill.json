@@ -120,7 +120,8 @@
     "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
     "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
-    "sourceLimitExceededError": "A skill can have at most 20 sources. Please remove one before adding another."
+    "sourceLimitExceededError": "A skill can have at most 20 sources. Please remove one before adding another.",
+    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files."
   },
   "mcpIntegrations": {
     "title": "Integrations",
