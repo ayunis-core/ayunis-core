@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { UnexpectedAcademyError } from '../../academy.errors';
-import { assertSameIdSet } from '../../reorder-validation';
+import { assertSameIdSet } from '../../util/reorder-validation';
 import { ReorderChaptersCommand } from './reorder-chapters.command';
 
 @Injectable()

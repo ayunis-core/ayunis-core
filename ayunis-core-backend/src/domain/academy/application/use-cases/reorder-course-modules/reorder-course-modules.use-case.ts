@@ -6,7 +6,7 @@ import {
   ChapterNotFoundError,
   UnexpectedAcademyError,
 } from '../../academy.errors';
-import { assertSameIdSet } from '../../reorder-validation';
+import { assertSameIdSet } from '../../util/reorder-validation';
 import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
 
 @Injectable()

@@ -1,5 +1,5 @@
-import type { QuizAnswerOption } from '../domain/academy-quiz-question.entity';
-import { InvalidQuizQuestionError } from './academy.errors';
+import type { QuizAnswerOption } from '../../domain/academy-quiz-question.entity';
+import { InvalidQuizQuestionError } from '../academy.errors';
 
 export const MIN_QUIZ_OPTIONS = 2;
 export const MAX_QUIZ_OPTIONS = 6;

@@ -17,7 +17,7 @@ progress toward whole-academy completion.
   link (`https://loom.com/(share|embed)/...`).
 - `AcademyQuizQuestion` — `{ id, chapterId, text, options[], position }`,
   cascade-deleted with its chapter. `options` is jsonb `{ text, isCorrect }[]`
-  with 2–6 options, exactly one correct (`quiz-question-validation.ts`).
+  with 2–6 options, exactly one correct (`util/quiz-question-validation.ts`).
 
 ## Quiz-taking & progress
 
@@ -78,7 +78,7 @@ and are freely sortable:
 - Creates append at `max(position) + 1`; reads order by
   `position ASC, createdAt ASC`.
 - Reorder use cases require the submitted ids to be exactly the current set
-  (set equality, validated via `reorder-validation.ts`) and rewrite positions
+  (set equality, validated via `util/reorder-validation.ts`) and rewrite positions
   `0..n-1` in a single transaction. Mismatches throw `InvalidReorderError`
   (400) with `missing`/`extra` metadata.
 - Concurrent reorders are last-write-wins (acceptable for a super-admin-only
@@ -119,8 +119,8 @@ Super-admin only (`@SystemRoles(SUPER_ADMIN)`) under `super-admin/academy`:
 
 Standard hexagonal: `domain/` (chapter, courseModule, quizQuestion, chapter
 progress + completion entities), `application/` (repository ports, use-cases,
-errors, reorder + quiz-question validation, `quiz.constants.ts`,
-`util/certificate-validity.ts`),
+errors, `quiz.constants.ts`, and pure helpers in `util/` — reorder +
+quiz-question validation, certificate validity),
 `infrastructure/` (Postgres records + mapper + repositories), `presenters/http/`
 (super-admin + learner controllers, DTOs, response mapper). The learner DTOs
 deliberately omit `isCorrect`; grading is server-side.

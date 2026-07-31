@@ -7,7 +7,7 @@ import {
   ChapterNotFoundError,
   UnexpectedAcademyError,
 } from '../../academy.errors';
-import { assertValidQuizOptions } from '../../quiz-question-validation';
+import { assertValidQuizOptions } from '../../util/quiz-question-validation';
 import { CreateQuizQuestionCommand } from './create-quiz-question.command';
 
 @Injectable()
