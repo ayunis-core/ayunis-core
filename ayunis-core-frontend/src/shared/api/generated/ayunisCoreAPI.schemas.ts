@@ -4280,6 +4280,8 @@ export interface ChapterProgressResponseDto {
   chapterId: string;
   /** Whether the learner has passed this chapter quiz */
   passed: boolean;
+  /** Whether the pass is recent enough to still count toward a completion. False once it has aged out of the certificate validity period. */
+  passValid: boolean;
   /** Score of the most recent attempt, as a percentage */
   lastScore: number;
   /**
@@ -4297,6 +4299,11 @@ export interface AcademyProgressResponseDto {
    * @nullable
    */
   academyCompletedAt: string | null;
+  /**
+   * When the completion stops being valid, or null if the academy was never completed. Only enforced by orgs requiring annual recertification.
+   * @nullable
+   */
+  academyCompletionExpiresAt: string | null;
 }
 
 export interface QuizAnswerOptionResponseDto {

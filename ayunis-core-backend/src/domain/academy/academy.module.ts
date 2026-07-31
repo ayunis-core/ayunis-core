@@ -35,6 +35,7 @@ import { DeleteQuizQuestionUseCase } from './application/use-cases/delete-quiz-q
 import { GetChapterQuizUseCase } from './application/use-cases/get-chapter-quiz/get-chapter-quiz.use-case';
 import { SubmitChapterQuizUseCase } from './application/use-cases/submit-chapter-quiz/submit-chapter-quiz.use-case';
 import { GetAcademyProgressUseCase } from './application/use-cases/get-academy-progress/get-academy-progress.use-case';
+import { GetAcademyCompletionUseCase } from './application/use-cases/get-academy-completion/get-academy-completion.use-case';
 import { GetAcademyCertificateUseCase } from './application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
 import { SuperAdminAcademyChaptersController } from './presenters/http/super-admin-academy-chapters.controller';
 import { SuperAdminAcademyCourseModulesController } from './presenters/http/super-admin-academy-course-modules.controller';
@@ -112,11 +113,13 @@ import { AcademyResponseDtoMapper } from './presenters/http/mappers/academy-resp
     GetChapterQuizUseCase,
     SubmitChapterQuizUseCase,
     GetAcademyProgressUseCase,
+    GetAcademyCompletionUseCase,
     GetAcademyCertificateUseCase,
   ],
   exports: [
     GetAcademyContentUseCase,
     GetAcademyProgressUseCase,
+    GetAcademyCompletionUseCase,
     SubmitChapterQuizUseCase,
   ],
 })

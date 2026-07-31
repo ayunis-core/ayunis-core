@@ -12,6 +12,7 @@ import { AcademyCompletionRepository } from '../../ports/academy-completion.repo
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
 import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
 import {
   InvalidQuizSubmissionError,
@@ -263,6 +264,85 @@ describe('SubmitChapterQuizUseCase', () => {
 
     expect(result.academyCompleted).toBe(true);
     expect(completionRepository.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  describe('renewal window', () => {
+    const otherChapterId = randomUUID();
+    // 12 months is 365 or 366 days, so these sit unambiguously either side of it.
+    const WELL_OUTSIDE_WINDOW_DAYS = 400;
+    const INSIDE_WINDOW_DAYS = 360;
+
+    function daysAgo(days: number): Date {
+      return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    }
+
+    function passOf(chapterId: UUID, passedAt: Date): AcademyChapterProgress {
+      return new AcademyChapterProgress({
+        userId,
+        chapterId,
+        passedAt,
+        lastScore: 100,
+        lastAttemptAt: passedAt,
+      });
+    }
+
+    function submitEverythingCorrect() {
+      const pool = makePool(chapter.id, 10);
+      quizQuestionRepository.findAllByChapter.mockResolvedValue(pool);
+      return submit(answersFor(pool, 10));
+    }
+
+    beforeEach(() => {
+      chapterRepository.findQuizEnabledIds.mockResolvedValue([
+        chapter.id,
+        otherChapterId,
+      ]);
+    });
+
+    it('does not stamp completion when a sibling pass has aged out', async () => {
+      progressRepository.findAllByUser.mockResolvedValue([
+        passOf(chapter.id, new Date()),
+        passOf(otherChapterId, daysAgo(WELL_OUTSIDE_WINDOW_DAYS)),
+      ]);
+
+      const result = await submitEverythingCorrect();
+
+      expect(result.passed).toBe(true);
+      expect(result.academyCompleted).toBe(false);
+      expect(completionRepository.upsert).not.toHaveBeenCalled();
+    });
+
+    it('stamps completion when a sibling pass sits just inside the window', async () => {
+      progressRepository.findAllByUser.mockResolvedValue([
+        passOf(chapter.id, new Date()),
+        passOf(otherChapterId, daysAgo(INSIDE_WINDOW_DAYS)),
+      ]);
+
+      const result = await submitEverythingCorrect();
+
+      expect(result.academyCompleted).toBe(true);
+    });
+
+    it('re-stamps a fresh completedAt once every chapter is re-passed after expiry', async () => {
+      const expired = new AcademyCompletion({
+        userId,
+        completedAt: daysAgo(WELL_OUTSIDE_WINDOW_DAYS),
+      });
+      completionRepository.findByUser.mockResolvedValue(expired);
+      progressRepository.findAllByUser.mockResolvedValue([
+        passOf(chapter.id, new Date()),
+        passOf(otherChapterId, new Date()),
+      ]);
+
+      const result = await submitEverythingCorrect();
+
+      expect(result.academyCompleted).toBe(true);
+      const stamped = completionRepository.upsert.mock.calls[0][0];
+      expect(stamped.id).toBe(expired.id);
+      expect(stamped.completedAt.getTime()).toBeGreaterThan(
+        expired.completedAt.getTime(),
+      );
+    });
   });
 
   it('rejects a submission with fewer answers than drawn', async () => {

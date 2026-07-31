@@ -15,6 +15,7 @@ import {
   QuizNotAvailableError,
   UnexpectedAcademyError,
 } from '../../academy.errors';
+import { isPassWithinValidity } from '../../certificate-validity';
 import { DRAWN_QUESTION_COUNT, requiredCorrect } from '../../quiz.constants';
 import {
   QuizAnswerSubmission,
@@ -164,12 +165,19 @@ export class SubmitChapterQuizUseCase {
   }
 
   // Stamp/refresh the single whole-academy completion snapshot when every
-  // currently quiz-enabled chapter has a passing progress row.
+  // currently quiz-enabled chapter has a passing progress row. Passes that have
+  // themselves aged out of the validity window do not count, so renewing a
+  // lapsed certificate means re-passing the whole academy rather than one quiz.
   private async recomputeCompletion(userId: UUID): Promise<boolean> {
+    const now = new Date();
     const quizEnabledIds = await this.chapterRepository.findQuizEnabledIds();
     const progress = await this.progressRepository.findAllByUser(userId);
     const passedIds = new Set(
-      progress.filter((p) => p.passed).map((p) => p.chapterId),
+      progress
+        .filter(
+          (p) => p.passedAt !== null && isPassWithinValidity(p.passedAt, now),
+        )
+        .map((p) => p.chapterId),
     );
     const completed =
       quizEnabledIds.length > 0 &&
@@ -180,7 +188,7 @@ export class SubmitChapterQuizUseCase {
       new AcademyCompletion({
         id: existing?.id,
         userId,
-        completedAt: new Date(),
+        completedAt: now,
         createdAt: existing?.createdAt,
       }),
     );

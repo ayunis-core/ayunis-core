@@ -118,11 +118,13 @@ export class AcademyResponseDtoMapper {
       const chapterDto = new ChapterProgressResponseDto();
       chapterDto.chapterId = chapter.chapterId;
       chapterDto.passed = chapter.passed;
+      chapterDto.passValid = chapter.passValid;
       chapterDto.lastScore = chapter.lastScore;
       chapterDto.lastPassedAt = chapter.lastPassedAt;
       return chapterDto;
     });
     dto.academyCompletedAt = view.academyCompletedAt;
+    dto.academyCompletionExpiresAt = view.academyCompletionExpiresAt;
     return dto;
   }
 
