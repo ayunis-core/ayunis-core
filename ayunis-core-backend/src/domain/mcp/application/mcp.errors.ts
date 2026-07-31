@@ -86,8 +86,25 @@ export class McpIntegrationAccessDeniedError extends McpError {
 }
 
 export class UnexpectedMcpError extends McpError {
-  constructor(message: string, metadata?: ErrorMetadata) {
-    super(message, McpErrorCode.UNEXPECTED_MCP_ERROR, 500, metadata);
+  // Accepts Error for @HandleUnexpectedErrors; the string form remains for
+  // call sites not yet migrated to the decorator. Message and metadata are
+  // serialized into the HTTP response by toHttpException(), so the wrapped
+  // error must only travel on the non-serialized `cause` — raw internals
+  // (driver queries, request configs, upstream error text) must never reach
+  // API callers.
+  constructor(cause: string | Error, metadata?: ErrorMetadata) {
+    if (typeof cause === 'string') {
+      super(cause, McpErrorCode.UNEXPECTED_MCP_ERROR, 500, metadata);
+      return;
+    }
+
+    super(
+      'Unexpected error occurred',
+      McpErrorCode.UNEXPECTED_MCP_ERROR,
+      500,
+      metadata,
+    );
+    this.cause = cause;
   }
 }
 

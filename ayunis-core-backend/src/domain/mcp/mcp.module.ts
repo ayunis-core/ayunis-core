@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { McpCredentialEncryptionPort } from './application/ports/mcp-credential-encryption.port';
 import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-credential-encryption.service';
 import { McpClientPort } from './application/ports/mcp-client.port';
+import { McpCapabilityCacheService } from './application/services/mcp-capability-cache.service';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
 import { McpClientService } from './application/services/mcp-client.service';
 import { MarketplaceConfigService } from './application/services/marketplace-config.service';
@@ -95,6 +96,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpIntegrationFactory,
     McpIntegrationAuthFactory,
     McpClientService,
+    McpCapabilityCacheService,
     MarketplaceConfigService,
     ConnectionValidationService,
     PredefinedMcpIntegrationRegistry,

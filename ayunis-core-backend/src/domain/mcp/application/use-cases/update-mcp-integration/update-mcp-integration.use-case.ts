@@ -9,7 +9,7 @@ import {
   McpNotMarketplaceIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enum';
@@ -19,6 +19,7 @@ import { McpValidationFailedError } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -30,72 +31,90 @@ export class UpdateMcpIntegrationUseCase {
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly marketplaceConfigService: MarketplaceConfigService,
     private readonly connectionValidationService: ConnectionValidationService,
+    private readonly capabilityCache: McpCapabilityCacheService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(command: UpdateMcpIntegrationCommand): Promise<McpIntegration> {
     this.logger.log('updateMcpIntegration', { id: command.integrationId });
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+    const integration = await this.getAuthorizedIntegration(
+      command.integrationId as UUID,
+    );
 
-      const integration = await this.repository.findById(
-        command.integrationId as UUID,
-      );
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(command.integrationId);
-      }
+    await this.applyUpdates(integration, command);
 
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(command.integrationId);
-      }
+    const saved = await this.repository.save(integration);
 
-      // Update fields (only if provided)
-      if (command.name !== undefined) {
-        integration.updateName(command.name);
-      }
+    // Invalidate as soon as the new config is committed — the connection
+    // validation below runs live MCP requests that can take tens of seconds,
+    // and cached discoveries must not keep serving the pre-update tool list
+    // for that long.
+    this.capabilityCache.invalidate(command.integrationId as UUID);
 
-      if (command.returnsPii !== undefined) {
-        integration.updateReturnsPii(command.returnsPii);
-      }
+    return this.validateConnectionIfNeeded(saved, command);
+  }
 
-      if (
-        command.credentials !== undefined ||
-        command.authHeaderName !== undefined
-      ) {
-        await this.rotateCredentials(
-          integration,
-          command.credentials,
-          command.authHeaderName,
-        );
-      }
-
-      if (command.orgConfigValues !== undefined) {
-        await this.updateOrgConfigValues(integration, command.orgConfigValues);
-      }
-
-      let saved = await this.repository.save(integration);
-
-      if (command.orgConfigValues !== undefined) {
-        saved =
-          await this.connectionValidationService.validateAndUpdateStatus(saved);
-      }
-
-      return saved;
-    } catch (error) {
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-      this.logger.error('Unexpected error updating integration', {
-        error: error as Error,
-      });
-      throw new UnexpectedMcpError('Unexpected error occurred');
+  private async getAuthorizedIntegration(
+    integrationId: UUID,
+  ): Promise<McpIntegration> {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
     }
+
+    const integration = await this.repository.findById(integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(integrationId);
+    }
+
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(integrationId);
+    }
+
+    return integration;
+  }
+
+  // Update fields (only if provided)
+  private async applyUpdates(
+    integration: McpIntegration,
+    command: UpdateMcpIntegrationCommand,
+  ): Promise<void> {
+    if (command.name !== undefined) {
+      integration.updateName(command.name);
+    }
+
+    if (command.returnsPii !== undefined) {
+      integration.updateReturnsPii(command.returnsPii);
+    }
+
+    if (
+      command.credentials !== undefined ||
+      command.authHeaderName !== undefined
+    ) {
+      await this.rotateCredentials(
+        integration,
+        command.credentials,
+        command.authHeaderName,
+      );
+    }
+
+    if (command.orgConfigValues !== undefined) {
+      await this.updateOrgConfigValues(integration, command.orgConfigValues);
+    }
+  }
+
+  private async validateConnectionIfNeeded(
+    integration: McpIntegration,
+    command: UpdateMcpIntegrationCommand,
+  ): Promise<McpIntegration> {
+    if (command.orgConfigValues !== undefined) {
+      return this.connectionValidationService.validateAndUpdateStatus(
+        integration,
+      );
+    }
+
+    return integration;
   }
 
   private async updateOrgConfigValues(
@@ -120,8 +139,7 @@ export class UpdateMcpIntegrationUseCase {
     credentials?: string,
     authHeaderName?: string,
   ): Promise<void> {
-    const auth = integration.auth;
-    const authMethod = auth.getMethod();
+    const authMethod = integration.auth.getMethod();
 
     switch (authMethod) {
       case McpAuthMethod.NO_AUTH: {
@@ -134,50 +152,14 @@ export class UpdateMcpIntegrationUseCase {
         }
         return;
       }
-      case McpAuthMethod.BEARER_TOKEN: {
-        if (authHeaderName !== undefined) {
-          throw new McpValidationFailedError(
-            integration.id,
-            integration.name,
-            'Bearer token integrations always use the Authorization header.',
-          );
-        }
-
-        if (credentials === undefined) {
-          return;
-        }
-
-        const encryptedToken =
-          await this.credentialEncryption.encrypt(credentials);
-        (auth as BearerMcpIntegrationAuth).setToken(encryptedToken);
-        return;
-      }
-      case McpAuthMethod.CUSTOM_HEADER: {
-        const customAuth = auth as CustomHeaderMcpIntegrationAuth;
-
-        if (credentials !== undefined) {
-          const encryptedSecret =
-            await this.credentialEncryption.encrypt(credentials);
-          const headerNameToUse =
-            authHeaderName ?? customAuth.getAuthHeaderName();
-          customAuth.setSecret(encryptedSecret, headerNameToUse);
-          return;
-        }
-
-        if (authHeaderName !== undefined) {
-          const currentSecret = customAuth.secret;
-          if (!currentSecret) {
-            throw new McpValidationFailedError(
-              integration.id,
-              integration.name,
-              'Credentials must be configured before updating the header name.',
-            );
-          }
-
-          customAuth.setSecret(currentSecret, authHeaderName);
-        }
-        return;
-      }
+      case McpAuthMethod.BEARER_TOKEN:
+        return this.rotateBearerToken(integration, credentials, authHeaderName);
+      case McpAuthMethod.CUSTOM_HEADER:
+        return this.rotateCustomHeader(
+          integration,
+          credentials,
+          authHeaderName,
+        );
       case McpAuthMethod.OAUTH: {
         if (credentials !== undefined || authHeaderName !== undefined) {
           throw new McpValidationFailedError(
@@ -189,5 +171,57 @@ export class UpdateMcpIntegrationUseCase {
         return;
       }
     }
+  }
+
+  private async rotateBearerToken(
+    integration: McpIntegration,
+    credentials?: string,
+    authHeaderName?: string,
+  ): Promise<void> {
+    if (authHeaderName !== undefined) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'Bearer token integrations always use the Authorization header.',
+      );
+    }
+
+    if (credentials === undefined) {
+      return;
+    }
+
+    const encryptedToken = await this.credentialEncryption.encrypt(credentials);
+    (integration.auth as BearerMcpIntegrationAuth).setToken(encryptedToken);
+  }
+
+  private async rotateCustomHeader(
+    integration: McpIntegration,
+    credentials?: string,
+    authHeaderName?: string,
+  ): Promise<void> {
+    const customAuth = integration.auth as CustomHeaderMcpIntegrationAuth;
+
+    if (credentials !== undefined) {
+      const encryptedSecret =
+        await this.credentialEncryption.encrypt(credentials);
+      const headerNameToUse = authHeaderName ?? customAuth.getAuthHeaderName();
+      customAuth.setSecret(encryptedSecret, headerNameToUse);
+      return;
+    }
+
+    if (authHeaderName === undefined) {
+      return;
+    }
+
+    const currentSecret = customAuth.secret;
+    if (!currentSecret) {
+      throw new McpValidationFailedError(
+        integration.id,
+        integration.name,
+        'Credentials must be configured before updating the header name.',
+      );
+    }
+
+    customAuth.setSecret(currentSecret, authHeaderName);
   }
 }

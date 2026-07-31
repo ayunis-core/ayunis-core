@@ -7,6 +7,7 @@ import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
@@ -21,6 +22,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
   let repository: McpIntegrationsRepositoryPort;
   let userConfigRepository: McpIntegrationUserConfigRepositoryPort;
   let contextService: ContextService;
+  let capabilityCache: McpCapabilityCacheService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
@@ -51,6 +53,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteMcpIntegrationUseCase,
+        McpCapabilityCacheService,
         {
           provide: McpIntegrationsRepositoryPort,
           useValue: {
@@ -83,6 +86,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
       McpIntegrationUserConfigRepositoryPort,
     );
     contextService = module.get<ContextService>(ContextService);
+    capabilityCache = module.get<McpCapabilityCacheService>(
+      McpCapabilityCacheService,
+    );
 
     // Spy on logger methods
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -91,6 +97,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    capabilityCache.clear();
   });
 
   describe('execute', () => {
@@ -136,6 +143,30 @@ describe('DeleteMcpIntegrationUseCase', () => {
       expect(userConfigRepository.deleteByIntegrationId).toHaveBeenCalledWith(
         mockIntegrationId,
       );
+    });
+
+    it('should invalidate cached capabilities when deleting an integration', async () => {
+      // Arrange
+      const mockIntegration = buildIntegration();
+
+      jest.spyOn(contextService, 'get').mockReturnValue(mockOrgId);
+      jest.spyOn(repository, 'findById').mockResolvedValue(mockIntegration);
+      jest.spyOn(repository, 'delete').mockResolvedValue(undefined);
+
+      const loader = jest.fn().mockResolvedValue({
+        tools: [],
+        resources: [],
+        resourceTemplates: [],
+        prompts: [],
+      });
+      await capabilityCache.getOrLoad(mockIntegrationId, undefined, loader);
+
+      // Act
+      await useCase.execute(new DeleteMcpIntegrationCommand(mockIntegrationId));
+
+      // Assert
+      await capabilityCache.getOrLoad(mockIntegrationId, undefined, loader);
+      expect(loader).toHaveBeenCalledTimes(2);
     });
 
     it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
@@ -219,8 +250,8 @@ describe('DeleteMcpIntegrationUseCase', () => {
         UnexpectedMcpError,
       );
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unexpected error deleting integration',
-        { error: unexpectedError },
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
 

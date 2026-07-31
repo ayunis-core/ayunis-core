@@ -9,6 +9,7 @@ import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
   McpNotMarketplaceIntegrationError,
@@ -16,6 +17,7 @@ import {
   McpIntegrationAccessDeniedError,
   McpInvalidConfigKeysError,
   McpMissingRequiredConfigError,
+  UnexpectedMcpError,
 } from '../../mcp.errors';
 import type { UUID } from 'crypto';
 import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
@@ -27,6 +29,7 @@ describe('SetUserMcpConfigUseCase', () => {
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
   let contextService: jest.Mocked<ContextService>;
   let marketplaceConfigService: MarketplaceConfigService;
+  let capabilityCache: McpCapabilityCacheService;
 
   const userId = '770e8400-e29b-41d4-a716-446655440001' as UUID;
   const orgId = '660e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -101,11 +104,14 @@ describe('SetUserMcpConfigUseCase', () => {
       credentialEncryption,
     );
 
+    capabilityCache = new McpCapabilityCacheService();
+
     useCase = new SetUserMcpConfigUseCase(
       integrationRepository,
       userConfigRepository,
       contextService,
       marketplaceConfigService,
+      capabilityCache,
     );
   });
 
@@ -142,6 +148,94 @@ describe('SetUserMcpConfigUseCase', () => {
       tenantId: 'my-tenant-123',
     });
     expect(userConfigRepository.save).toHaveBeenCalled();
+  });
+
+  it('should wrap unexpected errors in UnexpectedMcpError', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+    userConfigRepository.save.mockRejectedValue(
+      new Error('Database connection failed'),
+    );
+
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, {
+          personalToken: 'my-personal-token',
+        }),
+      ),
+    ).rejects.toThrow(UnexpectedMcpError);
+  });
+
+  it('should invalidate cached capabilities after saving user config', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    const loader = jest.fn().mockResolvedValue({
+      tools: [],
+      resources: [],
+      resourceTemplates: [],
+      prompts: [],
+    });
+    await capabilityCache.getOrLoad(integrationId, userId, loader);
+
+    await useCase.execute(
+      new SetUserMcpConfigCommand(integrationId, {
+        personalToken: 'my-personal-token',
+      }),
+    );
+
+    await capabilityCache.getOrLoad(integrationId, userId, loader);
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
+  it('should keep other users cached capabilities when one user saves config', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret' as const,
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: false,
+      },
+    ]);
+    integrationRepository.findById.mockResolvedValue(integration);
+
+    const otherUserId = '880e8400-e29b-41d4-a716-446655440002' as UUID;
+    const loader = jest.fn().mockResolvedValue({
+      tools: [],
+      resources: [],
+      resourceTemplates: [],
+      prompts: [],
+    });
+    await capabilityCache.getOrLoad(integrationId, otherUserId, loader);
+
+    await useCase.execute(
+      new SetUserMcpConfigCommand(integrationId, {
+        personalToken: 'my-personal-token',
+      }),
+    );
+
+    await capabilityCache.getOrLoad(integrationId, otherUserId, loader);
+    expect(loader).toHaveBeenCalledTimes(1);
   });
 
   it('should update existing user config and return masked result', async () => {
