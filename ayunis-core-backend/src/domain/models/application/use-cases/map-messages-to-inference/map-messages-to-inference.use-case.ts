@@ -2,6 +2,7 @@ import type { Message as InferenceMessage } from '@ayunis/inference';
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
+import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 import { toInferenceMessages } from '../../mappers/message.mapper';
 import { UnexpectedModelError } from '../../models.errors';
 import { MapMessagesToInferenceCommand } from './map-messages-to-inference.command';
@@ -25,8 +26,9 @@ export class MapMessagesToInferenceUseCase {
     this.logger.log('Mapping thread messages to inference', {
       count: command.messages.length,
     });
+    const messages = stripReplayedToolNulls(command.messages, command.tools);
     return toInferenceMessages(
-      command.messages,
+      messages,
       command.orgId,
       this.imageContentService,
     );

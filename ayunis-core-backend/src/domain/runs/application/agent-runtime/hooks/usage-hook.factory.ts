@@ -20,6 +20,15 @@ export class UsageHookFactory {
       name: 'ayunis-usage',
       afterModelCall: (ctx) => {
         const usage = ctx.usage;
+        const hasReportedUsage = [
+          usage.inputTokens,
+          usage.outputTokens,
+          usage.cacheReadInputTokens,
+          usage.cacheWriteInputTokens,
+        ].some((value) => value !== undefined);
+        if (!hasReportedUsage) {
+          return;
+        }
         this.inferenceUsageGuard.collectUsage(
           params.model,
           {
