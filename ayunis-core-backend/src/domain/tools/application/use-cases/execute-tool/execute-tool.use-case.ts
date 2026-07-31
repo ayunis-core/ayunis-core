@@ -3,6 +3,7 @@ import { ToolHandlerRegistry } from '../../tool-handler.registry';
 import { ToolExecutionFailedError } from '../../tools.errors';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 
 @Injectable()
 export class ExecuteToolUseCase {
@@ -21,7 +22,7 @@ export class ExecuteToolUseCase {
       const handler = this.toolHandlerRegistry.getHandler(command.tool);
       return await handler.execute({
         tool: command.tool,
-        input: command.input,
+        input: stripDisallowedNulls(command.input, command.tool.parameters),
         context: command.context,
       });
     } catch (error) {

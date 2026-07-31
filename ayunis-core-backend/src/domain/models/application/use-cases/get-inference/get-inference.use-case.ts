@@ -10,6 +10,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -42,7 +43,7 @@ export class GetInferenceUseCase {
       return await inferenceHandler.answer(
         new InferenceInput({
           model: command.model,
-          messages: command.messages,
+          messages: stripReplayedToolNulls(command.messages, command.tools),
           systemPrompt: command.instructions,
           tools: command.tools,
           toolChoice: command.toolChoice,

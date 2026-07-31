@@ -17,11 +17,14 @@ export {
   ToolNameCodec,
   convertDraft04ExclusiveBoundsNode,
   isRecord,
+  schemaAllowsNull,
 } from './tool-normalizer';
 export type {
   JsonObject,
   JsonValue,
   MutableSchema,
+  SchemaAllowsNullOptions,
+  SchemaBranchResolver,
   VisitNode,
 } from './tool-normalizer';
 export type {

@@ -1,8 +1,10 @@
-import type { JsonSchema, MutableSchema } from '@ayunis/inference';
+import type { JsonSchema, JsonValue, MutableSchema } from '@ayunis/inference';
 import {
   CombinatorFlattener,
   SchemaWalker,
   convertDraft04ExclusiveBoundsNode,
+  isRecord,
+  schemaAllowsNull,
 } from '@ayunis/inference';
 
 // Hand-maintained — the SDK doesn't type them.
@@ -44,12 +46,111 @@ function normalizeObjectType(schema: MutableSchema): void {
   // Strict mode requires additionalProperties:false on every object — force it
   // even when the source schema set it to `true`, which OpenAI rejects.
   schema.additionalProperties = false;
-  if (schema.properties && typeof schema.properties === 'object') {
+  if (isRecord(schema.properties)) {
+    schema.properties = withNullableOptionals(
+      schema.properties,
+      schema.required,
+    );
     schema.required = Object.keys(schema.properties);
   } else {
     schema.properties = {};
     schema.required = [];
   }
+}
+
+// Strict mode also forces every property into `required`. Originally-optional
+// properties get a null escape hatch instead (OpenAI's documented optionality
+// pattern) — otherwise the model must fabricate a value for fields the user
+// never asked about.
+function withNullableOptionals(
+  properties: MutableSchema,
+  required: JsonValue | undefined,
+): MutableSchema {
+  const originallyRequired = new Set(Array.isArray(required) ? required : []);
+  return Object.fromEntries(
+    Object.entries(properties).map(([key, child]): [string, JsonValue] => {
+      if (!isRecord(child)) {
+        return [key, child];
+      }
+      const collapsed = collapseSingleAllOf(child);
+      return [
+        key,
+        originallyRequired.has(key) ? collapsed : withNullAllowed(collapsed),
+      ];
+    }),
+  );
+}
+
+// Strict mode rejects `allOf`, and it cannot take a null branch either — AND
+// semantics would leave the property unsatisfiable. A lone branch is
+// equivalent to that branch plus the sibling keywords, so inline it and let
+// the normal hatch rules apply (Pydantic v1 emits this for a nested-model
+// field with a description or default). Multiple branches would need a real
+// constraint merge and are left alone.
+function collapseSingleAllOf(schema: MutableSchema): MutableSchema {
+  const branches = schema.allOf;
+  if (!Array.isArray(branches) || branches.length !== 1) {
+    return schema;
+  }
+  const [branch] = branches;
+  if (!isRecord(branch)) {
+    return schema;
+  }
+  const siblings = { ...schema };
+  delete siblings.allOf;
+  return { ...branch, ...siblings };
+}
+
+function withNullAllowed(child: MutableSchema): MutableSchema {
+  if (schemaAllowsNull(child)) {
+    return child;
+  }
+  const copy = { ...child };
+  if (extendWithNull(copy)) {
+    return copy;
+  }
+  // A bare $ref carries no type/enum/combinator to extend — wrap it instead
+  // (OpenAI's documented optionality pattern for refs).
+  if (typeof copy.$ref === 'string') {
+    return { anyOf: [child, { type: 'null' }] };
+  }
+  return child;
+}
+
+function extendWithNull(copy: MutableSchema): boolean {
+  let changed = extendTypeAndEnumWithNull(copy);
+  if (!changed && Array.isArray(copy.anyOf)) {
+    copy.anyOf = [...copy.anyOf, { type: 'null' }];
+    changed = true;
+  }
+  if (!changed && Array.isArray(copy.oneOf)) {
+    copy.oneOf = [...copy.oneOf, { type: 'null' }];
+    changed = true;
+  }
+  // Type-less object schemas (`properties` without `type`, common in
+  // MCP-style schemas) have nothing above to extend — declare them nullable
+  // objects.
+  if (!changed && !('type' in copy) && isRecord(copy.properties)) {
+    copy.type = ['object', 'null'];
+    changed = true;
+  }
+  return changed;
+}
+
+function extendTypeAndEnumWithNull(copy: MutableSchema): boolean {
+  let changed = false;
+  if (typeof copy.type === 'string') {
+    copy.type = [copy.type, 'null'];
+    changed = true;
+  } else if (Array.isArray(copy.type)) {
+    copy.type = [...copy.type, 'null'];
+    changed = true;
+  }
+  if (Array.isArray(copy.enum)) {
+    copy.enum = [...copy.enum, null];
+    changed = true;
+  }
+  return changed;
 }
 
 export function normalizeSchemaForOpenAI(schema: JsonSchema): JsonSchema {

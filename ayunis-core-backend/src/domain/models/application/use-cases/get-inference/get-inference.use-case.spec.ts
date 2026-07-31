@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
 import {
@@ -9,8 +10,12 @@ import {
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
+import type { InferenceInput } from '../../ports/inference.handler';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
+import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
+import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
 const model = {
   name: 'mistral-large-latest',
@@ -97,5 +102,57 @@ describe('GetInferenceUseCase error mapping', () => {
     await expect(
       useCaseWithFailingHandler(new Error('boom')).execute(makeCommand()),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+});
+
+describe('GetInferenceUseCase replayed message sanitation', () => {
+  it('strips schema-disallowed nulls from replayed tool calls before dispatch', async () => {
+    const tool: ToolSchema = {
+      name: 'search',
+      description: 'Search',
+      parameters: {
+        type: 'object',
+        properties: { name: { type: 'string' }, date: { type: 'string' } },
+      },
+    };
+    const history = new AssistantMessage({
+      threadId: randomUUID(),
+      content: [
+        new ToolUseMessageContent('call-1', 'search', {
+          name: 'x',
+          date: null,
+        }),
+      ],
+    });
+    let received: InferenceInput | undefined;
+    const registry = {
+      getHandler: () => ({
+        answer: (input: InferenceInput) => {
+          received = input;
+          return Promise.resolve({ content: [] });
+        },
+      }),
+    };
+    const contextService = { get: () => randomUUID() };
+    const useCase = new GetInferenceUseCase(
+      registry as never,
+      contextService as never,
+    );
+
+    await useCase.execute(
+      new GetInferenceCommand({
+        model: { name: 'claude-sonnet-4' } as unknown as LanguageModel,
+        messages: [history],
+        tools: [tool],
+        toolChoice: ModelToolChoice.AUTO,
+      }),
+    );
+
+    const receivedToolUse = (received?.messages[0] as AssistantMessage)
+      .content[0] as ToolUseMessageContent;
+    expect(receivedToolUse.params).toEqual({ name: 'x' });
+    expect(history.content[0]).toMatchObject({
+      params: { name: 'x', date: null },
+    });
   });
 });
