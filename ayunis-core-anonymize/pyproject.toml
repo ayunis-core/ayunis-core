@@ -10,8 +10,25 @@ dependencies = [
     "presidio-analyzer[gliner]>=2.2.360",
     "pydantic>=2.13.4",
     "pyyaml>=6.0.3",
+    # Pulled in by presidio's gliner extra, but declared here so the CPU index
+    # below can be bound to it — uv sources only apply to direct dependencies.
+    # Pinned to the version the gliner extra already resolved to, so switching
+    # to the CPU wheel does not also smuggle in a torch upgrade.
+    "torch==2.11.0",
     "uvicorn[standard]>=0.49.0",
 ]
 
+# This service does CPU-only inference, but PyPI's torch drags in the whole
+# CUDA 13 stack: its nvidia-*/triton dependencies are gated on
+# sys_platform == 'linux' with no platform_machine constraint, so they installed
+# on arm64 staging as well — ~2.3 GB of wheels for hardware with no GPU, in an
+# image that has to fit on the host twice during a deploy.
+# explicit = true confines this index to the packages that name it below.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.uv.sources]
 de-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl" }
+torch = { index = "pytorch-cpu" }
