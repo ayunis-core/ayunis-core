@@ -16,6 +16,13 @@ export class ChapterProgressResponseDto {
   passed: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether the pass is recent enough to still count toward a completion. False once it has aged out of the certificate validity period.',
+  })
+  passValid: boolean;
+
+  @ApiProperty({
     type: 'integer',
     description: 'Score of the most recent attempt, as a percentage',
     example: 80,
@@ -46,4 +53,13 @@ export class AcademyProgressResponseDto {
       'When the user last completed the whole academy, or null if never',
   })
   academyCompletedAt: Date | null;
+
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+    description:
+      'When the completion stops being valid, or null if the academy was never completed. Only enforced by orgs requiring annual recertification.',
+  })
+  academyCompletionExpiresAt: Date | null;
 }

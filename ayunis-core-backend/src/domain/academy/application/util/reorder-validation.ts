@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import { InvalidReorderError } from './academy.errors';
+import { InvalidReorderError } from '../academy.errors';
 
 /**
  * Ensures the submitted ids are exactly the current set of ids

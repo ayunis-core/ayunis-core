@@ -6,7 +6,7 @@ import {
   QuizQuestionNotFoundError,
   UnexpectedAcademyError,
 } from '../../academy.errors';
-import { assertValidQuizOptions } from '../../quiz-question-validation';
+import { assertValidQuizOptions } from '../../util/quiz-question-validation';
 import { UpdateQuizQuestionCommand } from './update-quiz-question.command';
 
 @Injectable()

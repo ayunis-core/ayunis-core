@@ -17,7 +17,7 @@ progress toward whole-academy completion.
   link (`https://loom.com/(share|embed)/...`).
 - `AcademyQuizQuestion` — `{ id, chapterId, text, options[], position }`,
   cascade-deleted with its chapter. `options` is jsonb `{ text, isCorrect }[]`
-  with 2–6 options, exactly one correct (`quiz-question-validation.ts`).
+  with 2–6 options, exactly one correct (`util/quiz-question-validation.ts`).
 
 ## Quiz-taking & progress
 
@@ -30,12 +30,30 @@ the client:
   (ceil), enforces the drawn answer count (the drawn set itself is not
   persisted), upserts `AcademyChapterProgress` (one row per user+chapter:
   `passedAt` refreshed on each pass, `lastScore`), and — when every
-  `quizEnabled` chapter has a passing row — stamps the single per-user
-  `AcademyCompletion.completedAt` snapshot. That snapshot is the anchor
-  for the future access gate: it is only ever written on full completion, never
-  cleared by content changes, so adding a chapter never revokes a completion.
+  `quizEnabled` chapter has a passing row **inside the validity window** —
+  stamps the single per-user `AcademyCompletion.completedAt` snapshot. That
+  snapshot is the anchor for the access gate (`src/iam/academy-access`): it is
+  only ever written on full completion, never cleared by content changes, so
+  adding a chapter never revokes a completion.
 - `GetAcademyProgressUseCase` returns per-chapter pass state + the completion
-  date. Unlimited retries; each retry re-draws.
+  date and its expiry. Unlimited retries; each retry re-draws.
+
+## Certificate validity
+
+`util/certificate-validity.ts` owns `CERTIFICATE_VALIDITY_MONTHS` (12) and derives
+`certificateExpiresAt` (month-end clamped, so 29 Feb + 12 months is 28 Feb) and
+`isPassWithinValidity`. Two consequences:
+
+- Renewal means re-passing the **whole** academy. A chapter pass that has itself
+  aged out no longer counts toward a completion, so a lapsed learner cannot
+  refresh their certificate by re-taking one chapter's quiz.
+- `ChapterProgressView.passValid` distinguishes "ever passed" (`passed`, true
+  forever) from "still counts" — a lapsed learner needs it to see what to redo.
+
+Only the academy knows the period. `GetAcademyCompletionUseCase` exports
+`{ completedAt, expiresAt }` so gating consumers never import the constant
+across a module boundary. Recomputation is forward-only: an existing
+`AcademyCompletion` row is never re-derived under the newer rule.
 
 ## Certificate
 
@@ -60,7 +78,7 @@ and are freely sortable:
 - Creates append at `max(position) + 1`; reads order by
   `position ASC, createdAt ASC`.
 - Reorder use cases require the submitted ids to be exactly the current set
-  (set equality, validated via `reorder-validation.ts`) and rewrite positions
+  (set equality, validated via `util/reorder-validation.ts`) and rewrite positions
   `0..n-1` in a single transaction. Mismatches throw `InvalidReorderError`
   (400) with `missing`/`extra` metadata.
 - Concurrent reorders are last-write-wins (acceptable for a super-admin-only
@@ -101,7 +119,8 @@ Super-admin only (`@SystemRoles(SUPER_ADMIN)`) under `super-admin/academy`:
 
 Standard hexagonal: `domain/` (chapter, courseModule, quizQuestion, chapter
 progress + completion entities), `application/` (repository ports, use-cases,
-errors, reorder + quiz-question validation, `quiz.constants.ts`),
+errors, `quiz.constants.ts`, and pure helpers in `util/` — reorder +
+quiz-question validation, certificate validity),
 `infrastructure/` (Postgres records + mapper + repositories), `presenters/http/`
 (super-admin + learner controllers, DTOs, response mapper). The learner DTOs
 deliberately omit `isCorrect`; grading is server-side.
