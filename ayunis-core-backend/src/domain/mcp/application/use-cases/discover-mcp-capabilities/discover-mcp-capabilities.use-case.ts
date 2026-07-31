@@ -7,6 +7,10 @@ import {
   McpPrompt as McpPromptDto,
 } from '../../ports/mcp-client.port';
 import { McpClientService } from '../../services/mcp-client.service';
+import {
+  DiscoveredCapabilities,
+  McpCapabilityCacheService,
+} from '../../services/mcp-capability-cache.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -14,7 +18,8 @@ import {
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { McpIntegration } from '../../../domain/mcp-integration.entity';
 import { McpTool } from '../../../domain/mcp-tool.entity';
 import {
   McpResource,
@@ -35,7 +40,9 @@ export interface CapabilitiesResult {
 
 /**
  * Use case for discovering capabilities from an MCP server.
- * Connects to the MCP server and retrieves available tools, resources, and prompts.
+ * Connects to the MCP server and retrieves available tools, resources, and
+ * prompts. Results are served from a short-lived cache so message sends do
+ * not re-query every MCP server; access and enabled checks always run fresh.
  */
 @Injectable()
 export class DiscoverMcpCapabilitiesUseCase {
@@ -45,101 +52,113 @@ export class DiscoverMcpCapabilitiesUseCase {
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly mcpClientService: McpClientService,
     private readonly contextService: ContextService,
+    private readonly capabilityCache: McpCapabilityCacheService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     query: DiscoverMcpCapabilitiesQuery,
   ): Promise<CapabilitiesResult> {
     this.logger.log('discoverMcpCapabilities', { id: query.integrationId });
 
-    try {
-      // Get current user's organization
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+    const integration = await this.getAuthorizedIntegration(
+      query.integrationId,
+    );
+    const userId = this.contextService.get('userId');
 
-      // Fetch integration
-      const integration = await this.repository.findById(query.integrationId);
-      if (!integration) {
-        throw new McpIntegrationNotFoundError(query.integrationId);
-      }
+    const capabilities = await this.capabilityCache.getOrLoad(
+      query.integrationId,
+      userId,
+      () => this.fetchCapabilities(query.integrationId, userId),
+    );
 
-      // Verify organization access
-      if (integration.orgId !== orgId) {
-        throw new McpIntegrationAccessDeniedError(
-          query.integrationId,
-          integration.name,
-        );
-      }
+    return this.buildResult(integration, capabilities);
+  }
 
-      // Verify integration is enabled
-      if (!integration.enabled) {
-        throw new McpIntegrationDisabledError(
-          query.integrationId,
-          integration.name,
-        );
-      }
+  private async getAuthorizedIntegration(
+    integrationId: UUID,
+  ): Promise<McpIntegration> {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
 
-      // Discover capabilities from MCP server
-      const userId = this.contextService.get('userId');
-      const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-        this.mcpClientService.listTools(integration, userId),
-        this.mcpClientService.listResources(integration, userId),
-        this.mcpClientService.listResourceTemplates(integration, userId),
-        this.mcpClientService.listPrompts(integration, userId),
-      ]);
+    const integration = await this.repository.findById(integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(integrationId);
+    }
 
-      // Map to domain entities
-      const mcpTools = tools.map((tool) =>
-        this.mapToMcpTool(tool, query.integrationId),
-      );
-      const mcpResources = resources.map((resource) =>
-        this.mapToMcpResource(resource, query.integrationId),
-      );
-      const mcpResourceTemplates = resourceTemplates.map((resourceTemplate) =>
-        this.mapToMcpResource(resourceTemplate, query.integrationId),
-      );
-      const mcpPrompts = prompts.map((prompt) =>
-        this.mapToMcpPrompt(prompt, query.integrationId),
-      );
-
-      this.logger.log('discoverMcpCapabilitiesSucceeded', {
-        id: query.integrationId,
-        name: integration.name,
-        tools: mcpTools.length,
-        resources: mcpResources.length + mcpResourceTemplates.length,
-        prompts: mcpPrompts.length,
-      });
-
-      return {
-        tools: mcpTools,
-        resources: mcpResources.concat(mcpResourceTemplates),
-        prompts: mcpPrompts,
-        returnsPii: integration.returnsPii,
-      };
-    } catch (error) {
-      // Re-throw expected errors
-      if (
-        error instanceof ApplicationError ||
-        error instanceof UnauthorizedException
-      ) {
-        this.logger.warn('discoverMcpCapabilitiesFailed', {
-          id: query.integrationId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        throw error;
-      }
-
-      // Wrap unexpected errors
-      this.logger.error('discoverMcpCapabilitiesUnexpectedError', {
-        id: query.integrationId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new UnexpectedMcpError(
-        error instanceof Error ? error.message : 'Unknown error',
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(
+        integrationId,
+        integration.name,
       );
     }
+
+    if (!integration.enabled) {
+      throw new McpIntegrationDisabledError(integrationId, integration.name);
+    }
+
+    return integration;
+  }
+
+  private async fetchCapabilities(
+    integrationId: UUID,
+    userId: UUID | undefined,
+  ): Promise<DiscoveredCapabilities> {
+    // Re-read the integration inside the cache's miss path: an update that
+    // commits and invalidates between the access-check read and the cache
+    // insert would otherwise leave a discovery built from the pre-update
+    // snapshot in the cache until the TTL expires.
+    const integration = await this.repository.findById(integrationId);
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(integrationId);
+    }
+
+    const [tools, resources, resourceTemplates, prompts] = await Promise.all([
+      this.mcpClientService.listTools(integration, userId),
+      this.mcpClientService.listResources(integration, userId),
+      this.mcpClientService.listResourceTemplates(integration, userId),
+      this.mcpClientService.listPrompts(integration, userId),
+    ]);
+
+    return { tools, resources, resourceTemplates, prompts };
+  }
+
+  private buildResult(
+    integration: McpIntegration,
+    capabilities: DiscoveredCapabilities,
+  ): CapabilitiesResult {
+    const integrationId = integration.id;
+
+    const mcpTools = capabilities.tools.map((tool) =>
+      this.mapToMcpTool(tool, integrationId),
+    );
+    const mcpResources = capabilities.resources.map((resource) =>
+      this.mapToMcpResource(resource, integrationId),
+    );
+    const mcpResourceTemplates = capabilities.resourceTemplates.map(
+      (resourceTemplate) =>
+        this.mapToMcpResource(resourceTemplate, integrationId),
+    );
+    const mcpPrompts = capabilities.prompts.map((prompt) =>
+      this.mapToMcpPrompt(prompt, integrationId),
+    );
+
+    this.logger.log('discoverMcpCapabilitiesSucceeded', {
+      id: integrationId,
+      name: integration.name,
+      tools: mcpTools.length,
+      resources: mcpResources.length + mcpResourceTemplates.length,
+      prompts: mcpPrompts.length,
+    });
+
+    return {
+      tools: mcpTools,
+      resources: mcpResources.concat(mcpResourceTemplates),
+      prompts: mcpPrompts,
+      returnsPii: integration.returnsPii,
+    };
   }
 
   /**

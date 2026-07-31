@@ -6,6 +6,7 @@ MCP integrations connect external tool servers to the platform using the Model C
 The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined, custom, and marketplace subtypes), `McpIntegrationUserConfig` (per-user configuration values for marketplace integrations), `McpTool`, `McpResource`, and `McpPrompt`—the latter three are ephemeral entities fetched from remote servers, not persisted locally. Authentication is handled through a hierarchy supporting bearer tokens, custom headers, OAuth, and no-auth. `MarketplaceMcpIntegration` adds a marketplace identifier, a typed config schema (org-level and user-level fields), and org-level config values.
 
 **Use Cases:**
+
 - `CreateMcpIntegrationUseCase` — Creates predefined or custom integrations
 - `InstallMarketplaceIntegrationUseCase` — Installs a marketplace integration by identifier, persisting org-level config values and config schema
 - `GetMcpIntegrationUseCase` — Fetches a single integration by ID
@@ -24,17 +25,21 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
 
 **Services:**
+
 - `McpClientService` — Handles actual server communication via the MCP SDK
+- `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
 
 **Ports:**
+
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
 - `McpIntegrationUserConfigRepository` — Persistence port for per-user config values
 - `McpClientPort` — Abstract port for MCP server communication
 - `McpCredentialEncryptionPort` — Abstract port for credential encryption/decryption
 
 **Presenters:**
+
 - `McpIntegrationsController` — REST controller exposing:
   - `POST /mcp-integrations/predefined` — Create predefined integration (admin)
   - `POST /mcp-integrations/custom` — Create custom integration (admin)
@@ -52,8 +57,10 @@ The MCP module manages connections to external Model Context Protocol servers at
   - `PATCH /mcp-integrations/:id/user-config` — Set user config (user, admin)
 
 **Module Dependencies:**
+
 - **marketplace** — `InstallMarketplaceIntegrationUseCase` uses `GetMarketplaceIntegrationUseCase` to fetch integration metadata from the marketplace
 
 **Dependent Modules:**
+
 - **agents** — Uses MCP integration assignment for agent tool access
 - **tools** — Wraps discovered MCP tools, resources, and prompts as executable tool entities

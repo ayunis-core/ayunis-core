@@ -10,13 +10,16 @@ import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketpl
 import { ConfigField } from '../../../domain/value-objects/integration-config-schema';
 import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpNotMarketplaceIntegrationError,
   McpNoUserFieldsError,
   McpInvalidConfigKeysError,
+  UnexpectedMcpError,
 } from '../../mcp.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class SetUserMcpConfigUseCase {
@@ -27,8 +30,10 @@ export class SetUserMcpConfigUseCase {
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
     private readonly marketplaceConfigService: MarketplaceConfigService,
+    private readonly capabilityCache: McpCapabilityCacheService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(
     command: SetUserMcpConfigCommand,
   ): Promise<UserMcpConfigResult> {
@@ -44,26 +49,13 @@ export class SetUserMcpConfigUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    const integration = await this.integrationRepository.findById(
+    const marketplaceIntegration = await this.getMarketplaceIntegrationOrThrow(
       command.integrationId,
+      orgId,
     );
-
-    if (!integration) {
-      throw new McpIntegrationNotFoundError(command.integrationId);
-    }
-
-    if (integration.orgId !== orgId) {
-      throw new McpIntegrationAccessDeniedError(command.integrationId);
-    }
-
-    if (!integration.isMarketplace()) {
-      throw new McpNotMarketplaceIntegrationError(command.integrationId);
-    }
-
-    const marketplaceIntegration = integration as MarketplaceMcpIntegration;
     const { userFields } = marketplaceIntegration.configSchema;
 
-    if (!userFields || userFields.length === 0) {
+    if (userFields.length === 0) {
       throw new McpNoUserFieldsError(command.integrationId);
     }
 
@@ -92,7 +84,31 @@ export class SetUserMcpConfigUseCase {
       existing,
     );
 
+    this.capabilityCache.invalidate(command.integrationId, userId);
+
     return this.maskResult(saved.configValues, userFields);
+  }
+
+  private async getMarketplaceIntegrationOrThrow(
+    integrationId: UUID,
+    orgId: UUID,
+  ): Promise<MarketplaceMcpIntegration> {
+    const integration =
+      await this.integrationRepository.findById(integrationId);
+
+    if (!integration) {
+      throw new McpIntegrationNotFoundError(integrationId);
+    }
+
+    if (integration.orgId !== orgId) {
+      throw new McpIntegrationAccessDeniedError(integrationId);
+    }
+
+    if (!integration.isMarketplace()) {
+      throw new McpNotMarketplaceIntegrationError(integrationId);
+    }
+
+    return integration as MarketplaceMcpIntegration;
   }
 
   private validateConfigKeys(
@@ -114,8 +130,10 @@ export class SetUserMcpConfigUseCase {
    * - If field is missing from new values → keep existing value
    */
   private async mergeUserConfigValues(
-    existingValues: Record<string, string>,
-    providedValues: Record<string, string>,
+    // Values are typed as possibly undefined because record lookups of
+    // missing keys yield undefined at runtime.
+    existingValues: Record<string, string | undefined>,
+    providedValues: Record<string, string | undefined>,
     userFields: ConfigField[],
   ): Promise<Record<string, string>> {
     const merged: Record<string, string> = {};

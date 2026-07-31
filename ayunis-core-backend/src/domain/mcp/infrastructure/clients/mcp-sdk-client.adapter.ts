@@ -18,31 +18,28 @@ import {
  * Uses on-demand connection strategy:
  * - Creates new connection for each operation
  * - Closes connection immediately after operation completes
- * - Enforces 30-second timeout on all operations
+ * - Enforces a 30-second timeout via the SDK's per-request options, so the
+ *   SDK aborts its own request cleanly instead of leaving it in flight
  *
  * Uses Streamable HTTP transport for HTTP-based connections (MCP protocol 2024-11-05+).
  */
 @Injectable()
 export class McpSdkClientAdapter extends McpClientPort {
   private readonly logger = new Logger(McpSdkClientAdapter.name);
-  private readonly TIMEOUT_MS = 30000; // 30 seconds
+  private readonly requestOptions = { timeout: 30000 };
 
   /**
    * List all tools available on the MCP server
    */
   async listTools(config: McpConnectionConfig): Promise<McpTool[]> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
-      const result = await this.withTimeout(client.listTools());
+      const result = await client.listTools(undefined, this.requestOptions);
 
       return result.tools;
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -50,18 +47,14 @@ export class McpSdkClientAdapter extends McpClientPort {
    * List all resources available on the MCP server
    */
   async listResources(config: McpConnectionConfig): Promise<McpResource[]> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
-      const result = await this.withTimeout(client.listResources());
+      const result = await client.listResources(undefined, this.requestOptions);
 
       return result.resources;
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -71,11 +64,13 @@ export class McpSdkClientAdapter extends McpClientPort {
   async listResourceTemplates(
     config: McpConnectionConfig,
   ): Promise<McpResource[]> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-      const result = await this.withTimeout(client.listResourceTemplates());
+      const result = await client.listResourceTemplates(
+        undefined,
+        this.requestOptions,
+      );
 
       return result.resourceTemplates.map((resourceTemplate) => ({
         uri: resourceTemplate.uriTemplate,
@@ -84,9 +79,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         mimeType: resourceTemplate.mimeType,
       }));
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -94,18 +87,14 @@ export class McpSdkClientAdapter extends McpClientPort {
    * List all prompt templates available on the MCP server
    */
   async listPrompts(config: McpConnectionConfig): Promise<McpPrompt[]> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
-      const result = await this.withTimeout(client.listPrompts());
+      const result = await client.listPrompts(undefined, this.requestOptions);
 
       return result.prompts;
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -116,16 +105,16 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     call: McpToolCall,
   ): Promise<McpToolResult> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
-      const result = await this.withTimeout(
-        client.callTool({
+      const result = await client.callTool(
+        {
           name: call.toolName,
           arguments: call.parameters,
-        }),
+        },
+        undefined,
+        this.requestOptions,
       );
 
       return {
@@ -133,9 +122,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         isError: Boolean(result.isError),
       };
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -147,14 +134,12 @@ export class McpSdkClientAdapter extends McpClientPort {
     uri: string,
     parameters?: Record<string, unknown>,
   ): Promise<{ content: unknown; mimeType: string }> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
       const request = parameters ? { uri, arguments: parameters } : { uri };
 
-      const result = await this.withTimeout(client.readResource(request));
+      const result = await client.readResource(request, this.requestOptions);
 
       // MCP resources can have text or blob content
       const firstContent = result.contents[0];
@@ -166,9 +151,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         mimeType: firstContent.mimeType || 'text/plain',
       };
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -180,25 +163,22 @@ export class McpSdkClientAdapter extends McpClientPort {
     name: string,
     args: Record<string, string>,
   ): Promise<{ messages: unknown[] }> {
-    let client: Client | null = null;
+    const client = await this.createClient(config);
 
     try {
-      client = await this.createClient(config);
-
-      const result = await this.withTimeout(
-        client.getPrompt({
+      const result = await client.getPrompt(
+        {
           name,
           arguments: args,
-        }),
+        },
+        this.requestOptions,
       );
 
       return {
         messages: result.messages,
       };
     } finally {
-      if (client) {
-        await client.close();
-      }
+      await this.closeQuietly(client);
     }
   }
 
@@ -215,9 +195,9 @@ export class McpSdkClientAdapter extends McpClientPort {
       client = await this.createClient(config);
 
       // Try to list all capabilities to validate connection
-      await this.withTimeout(client.listTools());
-      await this.withTimeout(client.listResources());
-      await this.withTimeout(client.listPrompts());
+      await client.listTools(undefined, this.requestOptions);
+      await client.listResources(undefined, this.requestOptions);
+      await client.listPrompts(undefined, this.requestOptions);
 
       return { valid: true };
     } catch (error) {
@@ -232,7 +212,7 @@ export class McpSdkClientAdapter extends McpClientPort {
       };
     } finally {
       if (client) {
-        await client.close();
+        await this.closeQuietly(client);
       }
     }
   }
@@ -256,23 +236,25 @@ export class McpSdkClientAdapter extends McpClientPort {
     // Create client with capabilities
     const client = new Client({ name: 'ayunis-core', version: '1.0.0' });
 
-    // Connect to server
-    await client.connect(transport);
+    // Connect to server (covers the initialize handshake with the same timeout)
+    await client.connect(transport, this.requestOptions);
 
     return client;
   }
 
   /**
-   * Wrap a promise with timeout enforcement
+   * close() aborts the transport, which can itself reject (e.g. AbortError
+   * from an in-flight SSE stream). Running in a finally block, that rejection
+   * would replace the operation's actual result or error — so it is only
+   * logged, never rethrown.
    */
-  private async withTimeout<T>(promise: Promise<T>): Promise<T> {
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error('MCP request timeout')),
-        this.TIMEOUT_MS,
-      ),
-    );
-
-    return Promise.race([promise, timeoutPromise]);
+  private async closeQuietly(client: Client): Promise<void> {
+    try {
+      await client.close();
+    } catch (error) {
+      this.logger.warn('Failed to close MCP client', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }

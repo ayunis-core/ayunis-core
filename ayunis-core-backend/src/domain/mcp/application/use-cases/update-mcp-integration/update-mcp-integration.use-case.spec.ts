@@ -7,6 +7,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { MarketplaceConfigService } from '../../services/marketplace-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
@@ -29,6 +30,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
   let marketplaceConfigService: MarketplaceConfigService;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let connectionValidationService: ConnectionValidationService;
+  let capabilityCache: McpCapabilityCacheService;
   let useCase: UpdateMcpIntegrationUseCase;
 
   beforeEach(() => {
@@ -60,12 +62,15 @@ describe('UpdateMcpIntegrationUseCase', () => {
       repository,
     );
 
+    capabilityCache = new McpCapabilityCacheService();
+
     useCase = new UpdateMcpIntegrationUseCase(
       repository,
       context,
       encryption,
       marketplaceConfigService,
       connectionValidationService,
+      capabilityCache,
     );
     context.get.mockReturnValue(orgId);
     repository.save.mockImplementation(async (integration) => integration);
@@ -107,6 +112,32 @@ describe('UpdateMcpIntegrationUseCase', () => {
       'encrypted-new',
     );
     expect(repository.save).toHaveBeenCalledWith(integration);
+  });
+
+  it('invalidates cached capabilities after an update', async () => {
+    const integration = new CustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Old Name',
+      serverUrl: 'https://example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    const loader = jest.fn().mockResolvedValue({
+      tools: [],
+      resources: [],
+      resourceTemplates: [],
+      prompts: [],
+    });
+    await capabilityCache.getOrLoad(integrationId, undefined, loader);
+
+    await useCase.execute(
+      new UpdateMcpIntegrationCommand({ integrationId, name: 'New Name' }),
+    );
+
+    await capabilityCache.getOrLoad(integrationId, undefined, loader);
+    expect(loader).toHaveBeenCalledTimes(2);
   });
 
   it('updates custom header name without encrypting when only header changes', async () => {
@@ -204,6 +235,52 @@ describe('UpdateMcpIntegrationUseCase', () => {
       expect(marketplace.orgConfigValues.endpointUrl).toBe(
         'https://new-endpoint.de/oparl/v1',
       );
+    });
+
+    it('invalidates cached capabilities before connection validation completes', async () => {
+      const integration = createMarketplaceIntegration();
+      repository.findById.mockResolvedValue(integration);
+
+      const loader = jest.fn().mockResolvedValue({
+        tools: [],
+        resources: [],
+        resourceTemplates: [],
+        prompts: [],
+      });
+      await capabilityCache.getOrLoad(integrationId, undefined, loader);
+
+      let resolveValidation!: (value: {
+        isValid: boolean;
+        toolCount: number;
+        resourceCount: number;
+        promptCount: number;
+      }) => void;
+      validateUseCase.execute.mockReturnValue(
+        new Promise((resolve) => {
+          resolveValidation = resolve;
+        }),
+      );
+
+      const pending = useCase.execute(
+        new UpdateMcpIntegrationCommand({
+          integrationId,
+          orgConfigValues: { endpointUrl: 'https://new-endpoint.de/oparl/v1' },
+        }),
+      );
+
+      // Let execute progress up to the in-flight connection validation.
+      await new Promise((resolve) => setImmediate(resolve));
+
+      await capabilityCache.getOrLoad(integrationId, undefined, loader);
+      expect(loader).toHaveBeenCalledTimes(2);
+
+      resolveValidation({
+        isValid: true,
+        toolCount: 3,
+        resourceCount: 0,
+        promptCount: 0,
+      });
+      await pending;
     });
 
     it('retains existing encrypted value for omitted secret fields', async () => {

@@ -6,6 +6,7 @@ import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpClientService } from '../../services/mcp-client.service';
+import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -24,8 +25,8 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
   let contextService: jest.Mocked<ContextService>;
+  let capabilityCache: McpCapabilityCacheService;
   let loggerLogSpy: jest.SpyInstance;
-  let loggerWarnSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
@@ -83,6 +84,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DiscoverMcpCapabilitiesUseCase,
+        McpCapabilityCacheService,
         {
           provide: McpIntegrationsRepositoryPort,
           useValue: {
@@ -111,14 +113,16 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     repository = module.get(McpIntegrationsRepositoryPort);
     mcpClientService = module.get(McpClientService);
     contextService = module.get(ContextService);
+    capabilityCache = module.get(McpCapabilityCacheService);
 
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    capabilityCache.clear();
   });
 
   const arrangeSuccessfulClientCalls = () => {
@@ -232,10 +236,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(McpIntegrationNotFoundError);
 
       expect(mcpClientService.listTools).not.toHaveBeenCalled();
-      expect(loggerWarnSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesFailed',
-        expect.objectContaining({ id: mockIntegrationId }),
-      );
+      expect(loggerErrorSpy).not.toHaveBeenCalled();
     });
 
     it('throws McpIntegrationAccessDeniedError for different organization', async () => {
@@ -274,24 +275,126 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(repository.findById).not.toHaveBeenCalled();
     });
 
-    it('wraps unexpected errors in UnexpectedMcpError', async () => {
+    it('serves repeated discoveries from the cache without re-contacting the server', async () => {
       const integration = buildPredefinedIntegration();
-      const unexpectedError = new Error('Connection timeout');
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById.mockResolvedValue(integration);
+
+      const first = await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
+      );
+      const second = await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
+      );
+
+      expect(second.tools).toHaveLength(first.tools.length);
+      expect(second.resources).toHaveLength(first.resources.length);
+      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.listResources).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.listResourceTemplates).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.listPrompts).toHaveBeenCalledTimes(1);
+    });
+
+    it('serves a cached discovery failure without re-contacting the server', async () => {
+      const integration = buildPredefinedIntegration();
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.listTools.mockRejectedValue(
+        new Error('This operation was aborted'),
+      );
+
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(UnexpectedMcpError);
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(UnexpectedMcpError);
+
+      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+    });
+
+    it('discovers with the integration state read at load time, not the access-check snapshot', async () => {
+      const staleIntegration = buildPredefinedIntegration({
+        name: 'Before Update',
+      });
+      const updatedIntegration = buildPredefinedIntegration({
+        name: 'After Update',
+      });
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById
+        .mockResolvedValueOnce(staleIntegration)
+        .mockResolvedValueOnce(updatedIntegration);
+
+      await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
+      );
+
+      expect(mcpClientService.listTools).toHaveBeenCalledWith(
+        updatedIntegration,
+        mockUserId,
+      );
+      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
+        updatedIntegration,
+        mockUserId,
+      );
+    });
+
+    it('re-checks access and enabled state even on a cache hit', async () => {
+      const integration = buildPredefinedIntegration();
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById.mockResolvedValue(integration);
+
+      await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
+      );
+
+      repository.findById.mockResolvedValue(
+        buildPredefinedIntegration({ enabled: false }),
+      );
+
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(McpIntegrationDisabledError);
+    });
+
+    it('wraps unexpected errors in UnexpectedMcpError without leaking internals', async () => {
+      const integration = buildPredefinedIntegration();
+      const unexpectedError = new Error(
+        'connect ECONNREFUSED internal-db:5432',
+      );
 
       contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
       mcpClientService.listTools.mockRejectedValue(unexpectedError);
 
-      await expect(
-        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
-      ).rejects.toThrow(UnexpectedMcpError);
+      const rejection = await useCase
+        .execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId))
+        .then(
+          () => {
+            throw new Error('expected execute to reject');
+          },
+          (error: unknown) => error,
+        );
 
+      expect(rejection).toBeInstanceOf(UnexpectedMcpError);
+      // The client-facing message and serialized metadata must stay generic;
+      // the original error travels on the non-serialized `cause`.
+      expect((rejection as UnexpectedMcpError).message).toBe(
+        'Unexpected error occurred',
+      );
+      expect((rejection as UnexpectedMcpError).cause).toBe(unexpectedError);
+      expect((rejection as UnexpectedMcpError).metadata).toBeUndefined();
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesUnexpectedError',
-        expect.objectContaining({
-          id: mockIntegrationId,
-          error: 'Connection timeout',
-        }),
+        'Unexpected use-case error',
+        expect.any(String),
       );
     });
   });
