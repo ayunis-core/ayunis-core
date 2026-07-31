@@ -15,8 +15,10 @@ import { AddMcpIntegrationToThreadUseCase } from '../../application/use-cases/ad
 import { AddMcpIntegrationToThreadCommand } from '../../application/use-cases/add-mcp-integration-to-thread/add-mcp-integration-to-thread.command';
 import { RemoveMcpIntegrationFromThreadUseCase } from '../../application/use-cases/remove-mcp-integration-from-thread/remove-mcp-integration-from-thread.use-case';
 import { RemoveMcpIntegrationFromThreadCommand } from '../../application/use-cases/remove-mcp-integration-from-thread/remove-mcp-integration-from-thread.command';
+import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
+@RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadMcpIntegrationsController {
   private readonly logger = new Logger(ThreadMcpIntegrationsController.name);

@@ -68,6 +68,7 @@ import {
 } from 'src/domain/sources/application/sources.errors';
 import { SourceNotFoundError as SourceNotFoundInThreadError } from '../../application/threads.errors';
 import { Thread } from '../../domain/thread.entity';
+import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 const SUPPORTED_FILE_TYPES = [
   'PDF',
@@ -84,6 +85,7 @@ const SUPPORTED_FILE_TYPES = [
 ];
 
 @ApiTags('threads')
+@RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadSourcesController {
   private readonly logger = new Logger(ThreadSourcesController.name);

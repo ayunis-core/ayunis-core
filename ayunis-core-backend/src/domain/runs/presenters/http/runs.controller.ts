@@ -62,6 +62,7 @@ import {
 } from './send-message.swagger';
 import { RunSsePresenter } from './sse/run-sse.presenter';
 import { SendMessageRequestValidator } from './validation/send-message-request.validator';
+import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('runs')
 @ApiExtraModels(
@@ -84,6 +85,7 @@ import { SendMessageRequestValidator } from './validation/send-message-request.v
   TextInput,
   ToolResultInput,
 )
+@RequireAcademyCertificate()
 @Controller('runs')
 export class RunsController {
   private readonly logger = new Logger(RunsController.name);
