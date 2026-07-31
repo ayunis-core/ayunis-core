@@ -15,7 +15,7 @@ import {
   QuizNotAvailableError,
   UnexpectedAcademyError,
 } from '../../academy.errors';
-import { isPassWithinValidity } from '../../certificate-validity';
+import { isPassWithinValidity } from '../../util/certificate-validity';
 import { DRAWN_QUESTION_COUNT, requiredCorrect } from '../../quiz.constants';
 import {
   QuizAnswerSubmission,

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
 import { UnexpectedAcademyError } from '../../academy.errors';
-import { certificateExpiresAt } from '../../certificate-validity';
+import { certificateExpiresAt } from '../../util/certificate-validity';
 import { GetAcademyCompletionQuery } from './get-academy-completion.query';
 
 export interface AcademyCompletionView {

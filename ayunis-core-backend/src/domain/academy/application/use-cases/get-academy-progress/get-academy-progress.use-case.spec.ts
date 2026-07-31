@@ -8,7 +8,7 @@ import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-pr
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
 import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
-import { certificateExpiresAt } from '../../certificate-validity';
+import { certificateExpiresAt } from '../../util/certificate-validity';
 
 describe('GetAcademyProgressUseCase', () => {
   let useCase: GetAcademyProgressUseCase;

@@ -40,7 +40,7 @@ the client:
 
 ## Certificate validity
 
-`certificate-validity.ts` owns `CERTIFICATE_VALIDITY_MONTHS` (12) and derives
+`util/certificate-validity.ts` owns `CERTIFICATE_VALIDITY_MONTHS` (12) and derives
 `certificateExpiresAt` (month-end clamped, so 29 Feb + 12 months is 28 Feb) and
 `isPassWithinValidity`. Two consequences:
 
@@ -120,7 +120,7 @@ Super-admin only (`@SystemRoles(SUPER_ADMIN)`) under `super-admin/academy`:
 Standard hexagonal: `domain/` (chapter, courseModule, quizQuestion, chapter
 progress + completion entities), `application/` (repository ports, use-cases,
 errors, reorder + quiz-question validation, `quiz.constants.ts`,
-`certificate-validity.ts`),
+`util/certificate-validity.ts`),
 `infrastructure/` (Postgres records + mapper + repositories), `presenters/http/`
 (super-admin + learner controllers, DTOs, response mapper). The learner DTOs
 deliberately omit `isCorrect`; grading is server-side.

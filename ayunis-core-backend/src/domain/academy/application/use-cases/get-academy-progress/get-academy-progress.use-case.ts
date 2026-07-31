@@ -7,7 +7,7 @@ import { UnexpectedAcademyError } from '../../academy.errors';
 import {
   certificateExpiresAt,
   isPassWithinValidity,
-} from '../../certificate-validity';
+} from '../../util/certificate-validity';
 import { GetAcademyProgressQuery } from './get-academy-progress.query';
 
 export interface ChapterProgressView {
