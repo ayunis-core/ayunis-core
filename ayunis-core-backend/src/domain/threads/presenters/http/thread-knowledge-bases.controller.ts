@@ -17,9 +17,11 @@ import { AddKnowledgeBaseToThreadUseCase } from '../../application/use-cases/add
 import { AddKnowledgeBaseToThreadCommand } from '../../application/use-cases/add-knowledge-base-to-thread/add-knowledge-base-to-thread.command';
 import { RemoveKnowledgeBaseFromThreadUseCase } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.use-case';
 import { RemoveKnowledgeBaseFromThreadCommand } from '../../application/use-cases/remove-knowledge-base-from-thread/remove-knowledge-base-from-thread.command';
+import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 
 @ApiTags('threads')
 @RequireFeature(FeatureFlag.KnowledgeBases)
+@RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadKnowledgeBasesController {
   private readonly logger = new Logger(ThreadKnowledgeBasesController.name);

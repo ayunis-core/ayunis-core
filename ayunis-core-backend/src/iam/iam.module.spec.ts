@@ -10,6 +10,7 @@ import { SubscriptionGuard } from './authorization/application/guards/subscripti
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
+import { AcademyCertificateGuard } from './academy-access/application/guards/academy-certificate.guard';
 
 type GuardRef = abstract new (...args: never[]) => unknown;
 
@@ -53,6 +54,7 @@ describe('IamModule global guard order', () => {
       AddonGuard,
       SubscriptionGuard,
       UsageBasedSubscriptionGuard,
+      AcademyCertificateGuard,
       RateLimitGuard,
     ]);
   });
@@ -63,6 +65,27 @@ describe('IamModule global guard order', () => {
     expect(order.indexOf(JwtAuthGuard)).toBeGreaterThanOrEqual(0);
     expect(order.indexOf(JwtAuthGuard)).toBeLessThan(
       order.indexOf(IpAllowlistGuard),
+    );
+  });
+
+  // Up to three DB round-trips, so every cheaper denial should short-circuit
+  // ahead of it. RateLimitGuard stays terminal.
+  it('runs AcademyCertificateGuard after the cheaper authorization gates', () => {
+    const order = appGuardOrder();
+
+    for (const cheaper of [
+      JwtAuthGuard,
+      EmailConfirmGuard,
+      RolesGuard,
+      AddonGuard,
+      SubscriptionGuard,
+    ]) {
+      expect(order.indexOf(cheaper)).toBeLessThan(
+        order.indexOf(AcademyCertificateGuard),
+      );
+    }
+    expect(order.indexOf(AcademyCertificateGuard)).toBeLessThan(
+      order.indexOf(RateLimitGuard),
     );
   });
 });

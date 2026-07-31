@@ -21,6 +21,7 @@ import { CreditLimitsModule } from './credit-limits/credit-limits.module';
 import { BudgetAlertsModule } from './budget-alerts/budget-alerts.module';
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { AddonsModule } from './addons/addons.module';
+import { AcademyAccessModule } from './academy-access/academy-access.module';
 import { IpAllowlistModule } from './ip-allowlist/ip-allowlist.module';
 import { ApiKeysModule } from './api-keys/api-keys.module';
 import { MfaModule } from './mfa/mfa.module';
@@ -33,6 +34,7 @@ import { SubscriptionGuard } from './authorization/application/guards/subscripti
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
+import { AcademyCertificateGuard } from './academy-access/application/guards/academy-certificate.guard';
 
 // Feature modules re-exported by IamModule. Listed once and spread into both
 // `imports` and `exports` so the two cannot drift out of sync.
@@ -54,6 +56,7 @@ const IAM_FEATURE_MODULES = [
   IpAllowlistModule,
   ApiKeysModule,
   AddonsModule,
+  AcademyAccessModule,
   MfaModule,
 ];
 
@@ -84,6 +87,13 @@ const GLOBAL_GUARD_PROVIDERS = [
   { provide: APP_GUARD, useExisting: AddonGuard },
   { provide: APP_GUARD, useExisting: SubscriptionGuard },
   { provide: APP_GUARD, useExisting: UsageBasedSubscriptionGuard },
+  // Last of the authorization gates: it reads request.user (so it must follow
+  // JwtAuthGuard) and is the most expensive of them, costing up to three DB
+  // round-trips. Guards short-circuit on the first denial, so a request that
+  // would fail any cheaper check — unauthenticated, IP-blocked, unverified
+  // email, wrong role, add-on inactive, no subscription — never pays for it.
+  // RateLimitGuard stays terminal.
+  { provide: APP_GUARD, useExisting: AcademyCertificateGuard },
   { provide: APP_GUARD, useExisting: RateLimitGuard },
 ];
 

@@ -4676,6 +4676,48 @@ export interface CreateApiKeyResponseDto {
   secret: string;
 }
 
+/**
+ * The certificate requirement configured for the user's org
+ */
+export type AcademyAccessMode = typeof AcademyAccessMode[keyof typeof AcademyAccessMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AcademyAccessMode = {
+  unrestricted: 'unrestricted',
+  required_once: 'required_once',
+  required_annually: 'required_annually',
+} as const;
+
+export interface AcademyAccessStatusResponseDto {
+  /** The certificate requirement configured for the user's org */
+  mode: AcademyAccessMode;
+  /** Whether the gate applies to this user at all. False for unrestricted orgs and for orgs without the academy add-on. */
+  required: boolean;
+  /** Whether the user may currently use Ayunis Core chat */
+  allowed: boolean;
+  /**
+   * When the user last completed the academy. Null when the gate does not apply — read GET /academy/progress for the completion date in that case.
+   * @nullable
+   */
+  completedAt: string | null;
+  /**
+   * When the certificate stops being valid. Only populated when the org requires annual renewal.
+   * @nullable
+   */
+  expiresAt: string | null;
+}
+
+export interface OrgAcademyAccessSettingsResponseDto {
+  /** The certificate requirement configured for the org */
+  mode: AcademyAccessMode;
+}
+
+export interface UpsertOrgAcademyAccessSettingsDto {
+  /** The certificate requirement to apply to the org */
+  mode: AcademyAccessMode;
+}
+
 export interface MfaStatusResponseDto {
   /** Whether the user has confirmed TOTP two-factor auth. */
   enabled: boolean;

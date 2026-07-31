@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcademyAccessStatusResponseDto,
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
   AcceptInviteDto,
@@ -119,6 +120,7 @@ import type {
   ModelWithConfigResponseDto,
   ModelsControllerUpdatePermittedModel200,
   OnboardingResponseDto,
+  OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
   OrgMfaRequirementResponseDto,
   OrgSystemPromptResponseDto,
@@ -224,6 +226,7 @@ import type {
   UpdateTrialRequestDto,
   UpdateUserNameDto,
   UpdateUserRoleDto,
+  UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
   UpsertUserSystemPromptDto,
@@ -20433,6 +20436,256 @@ export const useApiKeysControllerRevokeApiKey = <TError = void,
       > => {
 
       const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Whether the current user may use Ayunis Core chat, and why not
+ */
+export const academyAccessControllerGetStatus = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<AcademyAccessStatusResponseDto>(
+      {url: `/academy-access/status`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyAccessControllerGetStatusQueryKey = () => {
+    return [
+    `/academy-access/status`
+    ] as const;
+    }
+
+    
+export const getAcademyAccessControllerGetStatusQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetStatusQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>> = ({ signal }) => academyAccessControllerGetStatus(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerGetStatusQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>>
+export type AcademyAccessControllerGetStatusQueryError = void
+
+
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Whether the current user may use Ayunis Core chat, and why not
+ */
+
+export function useAcademyAccessControllerGetStatus<TData = Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerGetStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get the org's academy certificate requirement
+ */
+export const academyAccessControllerGetOrgSettings = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
+      {url: `/academy-access/org-settings`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyAccessControllerGetOrgSettingsQueryKey = () => {
+    return [
+    `/academy-access/org-settings`
+    ] as const;
+    }
+
+    
+export const getAcademyAccessControllerGetOrgSettingsQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerGetOrgSettingsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>> = ({ signal }) => academyAccessControllerGetOrgSettings(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerGetOrgSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>>
+export type AcademyAccessControllerGetOrgSettingsQueryError = unknown
+
+
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the org's academy certificate requirement
+ */
+
+export function useAcademyAccessControllerGetOrgSettings<TData = Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerGetOrgSettings>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerGetOrgSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set the org's academy certificate requirement
+ */
+export const academyAccessControllerUpsertOrgSettings = (
+    upsertOrgAcademyAccessSettingsDto: UpsertOrgAcademyAccessSettingsDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgAcademyAccessSettingsResponseDto>(
+      {url: `/academy-access/org-settings`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: upsertOrgAcademyAccessSettingsDto
+    },
+      );
+    }
+  
+
+
+export const getAcademyAccessControllerUpsertOrgSettingsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,{data: UpsertOrgAcademyAccessSettingsDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,{data: UpsertOrgAcademyAccessSettingsDto}, TContext> => {
+
+const mutationKey = ['academyAccessControllerUpsertOrgSettings'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, {data: UpsertOrgAcademyAccessSettingsDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  academyAccessControllerUpsertOrgSettings(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcademyAccessControllerUpsertOrgSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>>
+    export type AcademyAccessControllerUpsertOrgSettingsMutationBody = UpsertOrgAcademyAccessSettingsDto
+    export type AcademyAccessControllerUpsertOrgSettingsMutationError = unknown
+
+    /**
+ * @summary Set the org's academy certificate requirement
+ */
+export const useAcademyAccessControllerUpsertOrgSettings = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>, TError,{data: UpsertOrgAcademyAccessSettingsDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof academyAccessControllerUpsertOrgSettings>>,
+        TError,
+        {data: UpsertOrgAcademyAccessSettingsDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAcademyAccessControllerUpsertOrgSettingsMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

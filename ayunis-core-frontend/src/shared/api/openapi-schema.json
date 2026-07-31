@@ -9864,6 +9864,77 @@
         "tags": ["api-keys"]
       }
     },
+    "/academy-access/status": {
+      "get": {
+        "operationId": "AcademyAccessController_getStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcademyAccessStatusResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        },
+        "summary": "Whether the current user may use Ayunis Core chat, and why not",
+        "tags": ["Academy Access"]
+      }
+    },
+    "/academy-access/org-settings": {
+      "get": {
+        "operationId": "AcademyAccessController_getOrgSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgAcademyAccessSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the org's academy certificate requirement",
+        "tags": ["Academy Access"]
+      },
+      "put": {
+        "operationId": "AcademyAccessController_upsertOrgSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrgAcademyAccessSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgAcademyAccessSettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the org's academy certificate requirement",
+        "tags": ["Academy Access"]
+      }
+    },
     "/mfa/status": {
       "get": {
         "operationId": "MfaController_getStatus",
@@ -17318,6 +17389,73 @@
           "createdAt",
           "secret"
         ]
+      },
+      "AcademyAccessMode": {
+        "type": "string",
+        "enum": ["unrestricted", "required_once", "required_annually"],
+        "description": "The certificate requirement configured for the user's org"
+      },
+      "AcademyAccessStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "The certificate requirement configured for the user's org",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcademyAccessMode"
+              }
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the gate applies to this user at all. False for unrestricted orgs and for orgs without the academy add-on."
+          },
+          "allowed": {
+            "type": "boolean",
+            "description": "Whether the user may currently use Ayunis Core chat"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the user last completed the academy. Null when the gate does not apply — read GET /academy/progress for the completion date in that case."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the certificate stops being valid. Only populated when the org requires annual renewal."
+          }
+        },
+        "required": ["mode", "required", "allowed", "completedAt", "expiresAt"]
+      },
+      "OrgAcademyAccessSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "The certificate requirement configured for the org",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcademyAccessMode"
+              }
+            ]
+          }
+        },
+        "required": ["mode"]
+      },
+      "UpsertOrgAcademyAccessSettingsDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "description": "The certificate requirement to apply to the org",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcademyAccessMode"
+              }
+            ]
+          }
+        },
+        "required": ["mode"]
       },
       "MfaStatusResponseDto": {
         "type": "object",
