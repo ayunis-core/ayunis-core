@@ -1,0 +1,23 @@
+{
+  "requirement": {
+    "title": "AI certificate requirement",
+    "description": "Decide whether members of your organization need to pass the AI certificate (KI-Führerschein) in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
+    "saved": "Certificate requirement updated",
+    "error": "Could not update the certificate requirement",
+    "errorUnexpected": "Something went wrong while saving. Please try again.",
+    "modes": {
+      "unrestricted": {
+        "label": "Not required",
+        "description": "Everyone can use chat straight away. The Academy stays available on a voluntary basis."
+      },
+      "requiredOnce": {
+        "label": "Required once",
+        "description": "Members must pass the certificate before using chat. Once passed, it never expires."
+      },
+      "requiredAnnually": {
+        "label": "Required every year",
+        "description": "Members must pass the certificate before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
+      }
+    }
+  }
+}

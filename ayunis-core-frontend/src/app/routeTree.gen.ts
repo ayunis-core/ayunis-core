@@ -44,6 +44,7 @@ import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './ro
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
+import { Route as AuthenticatedAdminSettingsAcademyRouteImport } from './routes/_authenticated/admin-settings.academy'
 import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_authenticated/academy.$chapterId'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
@@ -259,6 +260,12 @@ const AuthenticatedAdminSettingsAnonymizationRoute =
     path: '/admin-settings/anonymization',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsAcademyRoute =
+  AuthenticatedAdminSettingsAcademyRouteImport.update({
+    id: '/admin-settings/academy',
+    path: '/admin-settings/academy',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAcademyChapterIdRoute =
   AuthenticatedAcademyChapterIdRouteImport.update({
     id: '/academy/$chapterId',
@@ -381,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
@@ -435,6 +443,7 @@ export interface FileRoutesByTo {
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
@@ -491,6 +500,7 @@ export interface FileRoutesById {
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
   '/_authenticated/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
+  '/_authenticated/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
@@ -547,6 +557,7 @@ export interface FileRouteTypes {
     | '/password/forgot'
     | '/password/reset'
     | '/academy/$chapterId'
+    | '/admin-settings/academy'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
@@ -601,6 +612,7 @@ export interface FileRouteTypes {
     | '/password/forgot'
     | '/password/reset'
     | '/academy/$chapterId'
+    | '/admin-settings/academy'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
@@ -656,6 +668,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
     | '/_authenticated/academy/$chapterId'
+    | '/_authenticated/admin-settings/academy'
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/instructions'
@@ -959,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsAnonymizationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/academy': {
+      id: '/_authenticated/admin-settings/academy'
+      path: '/admin-settings/academy'
+      fullPath: '/admin-settings/academy'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsAcademyRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/academy/$chapterId': {
       id: '/_authenticated/academy/$chapterId'
       path: '/academy/$chapterId'
@@ -1091,6 +1111,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
+  AuthenticatedAdminSettingsAcademyRoute: typeof AuthenticatedAdminSettingsAcademyRoute
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
@@ -1135,6 +1156,8 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
+  AuthenticatedAdminSettingsAcademyRoute:
+    AuthenticatedAdminSettingsAcademyRoute,
   AuthenticatedAdminSettingsAnonymizationRoute:
     AuthenticatedAdminSettingsAnonymizationRoute,
   AuthenticatedAdminSettingsApiKeysRoute:

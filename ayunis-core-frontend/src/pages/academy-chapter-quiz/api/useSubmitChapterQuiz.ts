@@ -6,6 +6,7 @@ import {
   useAcademyQuizControllerSubmitChapterQuiz,
   getAcademyQuizControllerGetProgressQueryKey,
   getAcademyChaptersControllerGetChaptersQueryKey,
+  getAcademyAccessControllerGetStatusQueryKey,
   type SubmitQuizRequestDto,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -23,6 +24,12 @@ export function useSubmitChapterQuiz() {
         });
         await queryClient.invalidateQueries({
           queryKey: getAcademyChaptersControllerGetChaptersQueryKey(),
+        });
+        // Passing the last chapter has to unlock chat immediately. router
+        // .invalidate() alone re-runs loaders against a still-fresh cache
+        // entry, so the gate would stay closed for the query's staleTime.
+        await queryClient.invalidateQueries({
+          queryKey: getAcademyAccessControllerGetStatusQueryKey(),
         });
       },
       onError: (error: unknown) => {

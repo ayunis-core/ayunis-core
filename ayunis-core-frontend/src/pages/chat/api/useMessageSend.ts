@@ -233,6 +233,11 @@ export function useMessageSend(params: UseMessageSendParams) {
                   })
                 : t('chat.errorQuotaExceeded'),
             );
+          } else if (error.message.includes('ACADEMY_CERTIFICATE_REQUIRED')) {
+            // Must precede the generic 403 branch, which would otherwise tell a
+            // blocked user to upgrade to Pro. The thrown message interpolates
+            // the response body, so the error code is present in it.
+            showError(t('chat.academyCertificateRequiredError'));
           } else if (error.message.includes('403')) {
             showError(t('chat.upgradeToProError'));
           } else {

@@ -60,6 +60,8 @@ import enSuperAdminSettingsAppAlerts from './shared/locales/en/super-admin-setti
 import deSuperAdminSettingsAppAlerts from './shared/locales/de/super-admin-settings-app-alerts.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
+import enAdminSettingsAcademy from './shared/locales/en/admin-settings-academy.json';
+import deAdminSettingsAcademy from './shared/locales/de/admin-settings-academy.json';
 import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
 import deAdminSettingsAnonymization from './shared/locales/de/admin-settings-anonymization.json';
 import enAdminSettingsRetention from './shared/locales/en/admin-settings-retention.json';
@@ -106,6 +108,7 @@ const resources = {
     'super-admin-settings-platform-config': enSuperAdminSettingsPlatformConfig,
     'super-admin-settings-app-alerts': enSuperAdminSettingsAppAlerts,
     'admin-settings-security': enAdminSettingsSecurity,
+    'admin-settings-academy': enAdminSettingsAcademy,
     'admin-settings-anonymization': enAdminSettingsAnonymization,
     'admin-settings-retention': enAdminSettingsRetention,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
@@ -144,6 +147,7 @@ const resources = {
     'super-admin-settings-platform-config': deSuperAdminSettingsPlatformConfig,
     'super-admin-settings-app-alerts': deSuperAdminSettingsAppAlerts,
     'admin-settings-security': deAdminSettingsSecurity,
+    'admin-settings-academy': deAdminSettingsAcademy,
     'admin-settings-anonymization': deAdminSettingsAnonymization,
     'admin-settings-retention': deAdminSettingsRetention,
     'admin-settings-letterheads': deAdminSettingsLetterheads,

@@ -45,6 +45,7 @@ import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import {
   useIsAcademyAddonActive,
+  useAcademyAccessStatus,
   ACADEMY_LANDING_PAGE_URL,
 } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
@@ -59,8 +60,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const featureToggles = useFeatureToggles();
   const marketplace = useMarketplaceConfig();
   const academyAddonActive = useIsAcademyAddonActive();
+  const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const location = useLocation();
   useKeyboardShortcut(['j', 'Meta'], () => {
+    // Mirrors the disabled "New chat" item below — otherwise the shortcut
+    // bypasses the gate entirely.
+    if (isAcademyGated) return;
     void navigate({ to: '/chat' });
   });
 
@@ -70,6 +75,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t('sidebar.newChat'),
       url: '/chat',
       icon: Plus,
+      // Starting a conversation is a write, so it is blocked without a
+      // certificate. Existing chats stay reachable.
+      disabled: isAcademyGated,
     },
     ...(featureToggles.skillsEnabled
       ? [
@@ -123,7 +131,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       : location.pathname.startsWith(item.url)
                   }
                 >
-                  <Link to={item.url}>
+                  <Link
+                    to={item.url}
+                    // `disabled` is inert on an anchor; the sidebar variants
+                    // style aria-disabled and block pointer events for us.
+                    aria-disabled={item.disabled}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>

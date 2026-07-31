@@ -14,7 +14,8 @@
     "retention": "Data retention",
     "instructions": "Chat",
     "letterheads": "Letterheads",
-    "apiKeys": "API Keys"
+    "apiKeys": "API Keys",
+    "academy": "AI certificate"
   },
   "groups": {
     "membersAccess": "Members & Access",

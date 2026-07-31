@@ -58,10 +58,18 @@
     "completed": {
       "title": "Academy abgeschlossen!",
       "description": "Du hast jedes Kapitel bestanden."
-    }
+    },
+    "renewalDue": "Erneuerung fällig"
   },
   "certificate": {
     "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuche es erneut.",
     "download": "Zertifikat herunterladen"
+  },
+  "gate": {
+    "title": "Zertifikat erforderlich",
+    "description": "Deine Organisation setzt den KI-Führerschein voraus, bevor du den Ayunis Core Chat nutzen kannst. Schließe die Academy ab, um ihn freizuschalten — deine bisherigen Chats bleiben in der Zwischenzeit lesbar.",
+    "action": "Zur Academy",
+    "emptyTitle": "Noch keine Academy-Inhalte",
+    "emptyDescription": "Der Chat ist gesperrt, bis du das Zertifikat bestanden hast, aber es wurden noch keine Kapitel veröffentlicht. Bitte wende dich an deine Administration."
   }
 }
