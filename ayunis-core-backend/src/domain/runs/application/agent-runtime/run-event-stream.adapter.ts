@@ -25,6 +25,8 @@ import {
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
+import { reconstructRuntimeModelError } from './runtime-model-error';
+import type { RunExecutionOutcome } from '../run-execution-outcome';
 
 const logger = new Logger('RunEventStreamAdapter');
 
@@ -55,11 +57,13 @@ export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
   integrations?: RuntimeToolIntegrationRegistry,
-): AsyncGenerator<RunStreamItem, void, void> {
+): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
   let pendingError: ApplicationError | null = null;
+  let outcome: RunExecutionOutcome | undefined;
 
   for await (const event of events) {
+    outcome = readOutcome(event) ?? outcome;
     const streamed = assistant.consume(event);
     if (streamed) {
       yield streamed;
@@ -80,6 +84,19 @@ export async function* adaptRunEventsToStream(
   if (pendingError) {
     throw pendingError;
   }
+  if (!outcome) {
+    throw new RunExecutionFailedError(
+      'Agent runtime ended without a terminal outcome',
+    );
+  }
+  return outcome;
+}
+
+function readOutcome(event: RunEvent): RunExecutionOutcome | undefined {
+  if (event.type !== 'run_end') return undefined;
+  return event.status === 'completed' || event.status === 'aborted'
+    ? event.status
+    : undefined;
 }
 
 /** Maps the assistant-turn events (deltas + the authoritative message). */
@@ -223,6 +240,10 @@ function toStreamingToolUseContent(
 function mapRunError(
   event: Extract<RunEvent, { type: 'error' }>,
 ): ApplicationError {
+  const runtimeModelError = reconstructRuntimeModelError(event.details);
+  if (runtimeModelError instanceof ApplicationError) {
+    return runtimeModelError;
+  }
   if (event.code === 'MAX_ITERATIONS_REACHED') {
     const max = event.details?.maxIterations;
     return new RunMaxIterationsReachedError(

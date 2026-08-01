@@ -34,12 +34,16 @@ const contextService = {
   get: jest.fn(),
 };
 
-function commandWith(consumeTrialMessage: boolean): SendMessageCommand {
+function commandWith(
+  consumeTrialMessage: boolean,
+  signal?: AbortSignal,
+): SendMessageCommand {
   return new SendMessageCommand({
     threadId: THREAD_ID,
     input: new RunUserInput('Wie beantrage ich einen Pass?', []),
     streaming: true,
     consumeTrialMessage,
+    signal,
   });
 }
 
@@ -76,6 +80,16 @@ describe('SendMessageUseCase', () => {
         input: expect.any(RunUserInput) as RunUserInput,
         streaming: true,
       }),
+    );
+  });
+
+  it('forwards the request cancellation signal to run execution', async () => {
+    const controller = new AbortController();
+
+    await collect(useCase.execute(commandWith(false, controller.signal)));
+
+    expect(executeRunAndSetTitleUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ signal: controller.signal }),
     );
   });
 

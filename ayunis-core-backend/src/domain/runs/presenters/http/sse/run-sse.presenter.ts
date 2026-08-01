@@ -17,6 +17,8 @@ interface SseConnection {
   cleanup: () => void;
 }
 
+type RunEventSource = (signal: AbortSignal) => AsyncIterable<RunEvent>;
+
 /**
  * Owns the SSE transport for run streams: headers, event framing,
  * heartbeats, disconnect tracking, error framing, and connection teardown.
@@ -32,13 +34,22 @@ export class RunSsePresenter {
   async stream(
     response: Response,
     threadId: UUID,
-    events: AsyncIterable<RunEvent>,
+    eventSource: RunEventSource,
   ): Promise<void> {
     this.openConnection(response);
-    const connection = this.trackConnection(response, threadId);
+    const abortController = new AbortController();
+    const connection = this.trackConnection(
+      response,
+      threadId,
+      abortController,
+    );
 
     try {
-      await this.forwardEvents(response, events, connection.state);
+      await this.forwardEvents(
+        response,
+        eventSource(abortController.signal),
+        connection.state,
+      );
     } catch (error) {
       this.writeExecutionError(response, threadId, error);
     } finally {
@@ -87,12 +98,17 @@ export class RunSsePresenter {
    * before 'close'; without an 'error' listener it becomes an uncaught
    * exception.
    */
-  private trackConnection(response: Response, threadId: UUID): SseConnection {
+  private trackConnection(
+    response: Response,
+    threadId: UUID,
+    abortController: AbortController,
+  ): SseConnection {
     // Object wrapper so TS recognises async mutation from the handlers
     const state: ConnectionState = { disconnected: false };
     const disconnectHandler = () => {
       this.logger.log('Client disconnected from SSE stream', { threadId });
       state.disconnected = true;
+      abortController.abort();
     };
     const errorHandler = (err: Error) => {
       this.logger.warn('SSE response stream error', {
@@ -100,11 +116,17 @@ export class RunSsePresenter {
         error: err.message,
       });
       state.disconnected = true;
+      abortController.abort(err);
     };
 
     response.on('close', disconnectHandler);
     response.on('error', errorHandler);
-    const heartbeatInterval = this.startHeartbeat(response, threadId, state);
+    const heartbeatInterval = this.startHeartbeat(
+      response,
+      threadId,
+      state,
+      abortController,
+    );
 
     return {
       state,
@@ -128,6 +150,7 @@ export class RunSsePresenter {
     response: Response,
     threadId: UUID,
     state: ConnectionState,
+    abortController: AbortController,
   ): NodeJS.Timeout {
     return setInterval(() => {
       if (state.disconnected || response.writableEnded) {
@@ -137,6 +160,7 @@ export class RunSsePresenter {
         response.write(': heartbeat\n\n');
       } catch (err) {
         state.disconnected = true;
+        abortController.abort(err);
         this.logger.warn('SSE heartbeat write failed', {
           threadId,
           error: err instanceof Error ? err.message : String(err),

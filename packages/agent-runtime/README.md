@@ -32,6 +32,23 @@ Design principles:
   agent/skill definitions, persistence, and multi-tenancy live in the host
   (via hooks and the opaque `RunContext`), not in the runtime.
 
+## Model provider failures and cancellation
+
+`ModelProvider.stream()` receives the run's optional `AbortSignal` on every
+model call. Hosts may decorate a resolved provider to add cancellation relay,
+timeouts, metrics, or provider-specific error classification without changing
+the runtime loop or the provider's streamed chunks.
+
+Generic exceptions from a model provider become `PROVIDER_FAILED`. If a host
+provider boundary throws an `AgentRuntimeError`, the runtime preserves its
+stable `code`, `message`, and serializable `details` in the emitted error event
+instead. An abort-triggered provider rejection still ends the run with
+`run_end { status: 'aborted' }` and does not emit an error event.
+Once a terminal assistant turn and its `afterModelCall` hooks have completed,
+an external signal arrives too late to cancel that completed run. Explicit
+hook cancellation through `ctx.abort()` remains authoritative at every hook
+phase.
+
 Tracked in Linear: AYC-148. See the repo's `ARCHITECTURE.md` for how Ayunis
 Core consumes this package as one host among others.
 

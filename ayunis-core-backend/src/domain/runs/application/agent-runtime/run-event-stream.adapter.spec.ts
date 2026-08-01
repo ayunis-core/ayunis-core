@@ -5,6 +5,16 @@ import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-resu
 import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import {
+  ProviderConnectionError,
+  ProviderServerError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
+import {
+  InferenceFailedError,
+  InferenceImageTooLargeError,
+  InferenceStreamStalledError,
+} from 'src/domain/models/application/models.errors';
+import {
   RunPiiMasksUpdate,
   type RunStreamItem,
 } from '../../domain/run-pii-masks-update.entity';
@@ -47,7 +57,28 @@ async function collect(
   return items;
 }
 
+async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
+  const generator = adaptRunEventsToStream(events, threadId);
+  const items: RunStreamItem[] = [];
+  for (;;) {
+    const next = await generator.next();
+    if (next.done) return { items, outcome: next.value };
+    items.push(next.value);
+  }
+}
+
 describe('adaptRunEventsToStream', () => {
+  it('returns the aborted terminal outcome without mapping it to an error', async () => {
+    const result = await collectWithOutcome(
+      eventsFrom([
+        { type: 'run_start', maxIterations: 20 },
+        { type: 'run_end', status: 'aborted', usage: {} },
+      ]),
+    );
+
+    expect(result).toEqual({ items: [], outcome: 'aborted' });
+  });
+
   it('accumulates text deltas into a growing assistant message with a stable id', async () => {
     const items = await collect(
       eventsFrom([
@@ -115,6 +146,7 @@ describe('adaptRunEventsToStream', () => {
             ],
           },
         },
+        { type: 'run_end', status: 'completed', usage: {} },
       ]),
     );
 
@@ -208,6 +240,7 @@ describe('adaptRunEventsToStream', () => {
             status: 'streaming',
           },
         },
+        { type: 'run_end', status: 'completed', usage: {} },
       ]),
     );
 
@@ -237,6 +270,7 @@ describe('adaptRunEventsToStream', () => {
             ],
           },
         },
+        { type: 'run_end', status: 'completed', usage: {} },
       ]),
     );
 
@@ -250,6 +284,7 @@ describe('adaptRunEventsToStream', () => {
       eventsFrom([
         { type: 'custom', name: THREAD_PII_MASKS_EVENT, data: masks },
         { type: 'custom', name: 'unrelated', data: {} },
+        { type: 'run_end', status: 'completed', usage: {} },
       ]),
     );
 
@@ -295,6 +330,120 @@ describe('adaptRunEventsToStream', () => {
       message: 'Run execution failed: Agent runtime failed',
     });
   });
+
+  it.each([
+    [
+      'provider connection error',
+      'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
+      {
+        type: 'provider_connection',
+        context: {
+          provider: 'anthropic',
+          modelId: 'claude-3-7-sonnet',
+          underlyingCode: 'ECONNREFUSED',
+          causeMessage: 'connect ECONNREFUSED',
+        },
+      },
+      ProviderConnectionError,
+      502,
+      {
+        provider: 'anthropic',
+        modelId: 'claude-3-7-sonnet',
+        underlyingCode: 'ECONNREFUSED',
+        causeMessage: 'connect ECONNREFUSED',
+      },
+    ],
+    [
+      'provider timeout error',
+      'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+      {
+        type: 'provider_timeout',
+        context: {
+          provider: 'anthropic',
+          modelId: 'claude-3-7-sonnet',
+          underlyingCode: 'ETIMEDOUT',
+        },
+      },
+      ProviderTimeoutError,
+      504,
+      {
+        provider: 'anthropic',
+        modelId: 'claude-3-7-sonnet',
+        underlyingCode: 'ETIMEDOUT',
+      },
+    ],
+    [
+      'provider server error',
+      'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
+      {
+        type: 'provider_server',
+        context: {
+          provider: 'anthropic',
+          modelId: 'claude-3-7-sonnet',
+          upstreamStatus: 503,
+        },
+      },
+      ProviderServerError,
+      502,
+      {
+        provider: 'anthropic',
+        modelId: 'claude-3-7-sonnet',
+        upstreamStatus: 503,
+      },
+    ],
+    [
+      'oversized image error',
+      'INFERENCE_IMAGE_TOO_LARGE',
+      {
+        type: 'inference_image_too_large',
+        context: { status: 400 },
+      },
+      InferenceImageTooLargeError,
+      400,
+      { status: 400 },
+    ],
+    [
+      'stalled stream error',
+      'INFERENCE_TIMEOUT',
+      {
+        type: 'inference_stream_stalled',
+        context: { idleMs: 45_000 },
+      },
+      InferenceStreamStalledError,
+      504,
+      undefined,
+    ],
+    [
+      'generic inference error',
+      'INFERENCE_FAILED',
+      {
+        type: 'inference_failed',
+        context: { reason: 'Provider inference failed', status: 429 },
+      },
+      InferenceFailedError,
+      500,
+      { status: 429 },
+    ],
+  ])(
+    'reconstructs a classified %s',
+    async (_label, code, hostError, ErrorType, statusCode, metadata) => {
+      const result = collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code,
+            message: 'Serialized host error',
+            details: { hostError },
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      );
+
+      const error: unknown = await result.catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ErrorType);
+      expect(error).toMatchObject({ code, statusCode, metadata });
+    },
+  );
 
   it('maps anonymization failures to the privacy-safe run error', async () => {
     await expect(

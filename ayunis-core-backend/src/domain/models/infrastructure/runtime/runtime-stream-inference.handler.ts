@@ -15,7 +15,7 @@ import { applyChunkTransform } from './chunk-transform';
 import {
   StreamIdleWatchdog,
   STREAM_IDLE_TIMEOUT_MS,
-} from './stream-idle-watchdog';
+} from 'src/common/streaming/stream-idle-watchdog';
 import { InferenceStreamStalledError } from '../../application/models.errors';
 
 /**

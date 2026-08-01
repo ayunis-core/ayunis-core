@@ -3,7 +3,7 @@ import type { ImageContentService } from 'src/domain/messages/application/servic
 import type { StreamInferenceInput } from '../../application/ports/stream-inference.handler';
 import { InferenceStreamStalledError } from '../../application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
-import { STREAM_IDLE_TIMEOUT_MS } from './stream-idle-watchdog';
+import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {

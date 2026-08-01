@@ -1,0 +1,232 @@
+import { AgentRuntimeError, RunAbortedError } from '@ayunis/agent-runtime';
+import type {
+  Message,
+  MessageContent,
+  ModelProvider,
+  ProviderChunk,
+  ProviderRequest,
+  ToolSchema,
+} from '@ayunis/inference';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { UUID } from 'crypto';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import {
+  STREAM_IDLE_TIMEOUT_MS,
+  StreamIdleWatchdog,
+} from 'src/common/streaming/stream-idle-watchdog';
+import {
+  InferenceAbortedError,
+  InferenceFailedError,
+  InferenceImageTooLargeError,
+  InferenceStreamStalledError,
+} from 'src/domain/models/application/models.errors';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { InferenceCompletedEvent } from '../events/inference-completed.event';
+import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
+import { serializeRuntimeModelError } from './runtime-model-error';
+
+interface RuntimeModelCallContext {
+  readonly userId: UUID;
+  readonly orgId: UUID;
+  readonly model: LanguageModel;
+}
+
+interface CallState {
+  readonly controller: AbortController;
+  readonly watchdog: StreamIdleWatchdog;
+  readonly stopRelayingAbort: () => void;
+}
+
+@Injectable()
+export class RuntimeModelProviderDecorator {
+  private readonly logger = new Logger(RuntimeModelProviderDecorator.name);
+
+  constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  decorate(
+    provider: ModelProvider,
+    context: RuntimeModelCallContext,
+  ): ModelProvider {
+    return {
+      name: provider.name,
+      stream: (request) => this.stream(provider, request, context),
+    };
+  }
+
+  private async *stream(
+    provider: ModelProvider,
+    request: ProviderRequest,
+    context: RuntimeModelCallContext,
+  ): AsyncIterable<ProviderChunk> {
+    const startedAt = Date.now();
+    const state = createCallState(request.signal);
+    let mappedError: ApplicationError | undefined;
+    try {
+      const sanitizedRequest = sanitizeReplayedToolInputs(request);
+      for await (const chunk of provider.stream({
+        ...sanitizedRequest,
+        signal: state.controller.signal,
+      })) {
+        state.watchdog.notifyChunk();
+        yield chunk;
+      }
+    } catch (error) {
+      mappedError = mapProviderError(error, request, state.controller, context);
+      if (
+        mappedError instanceof InferenceAbortedError &&
+        request.signal?.aborted
+      ) {
+        throw new RunAbortedError('Run aborted during model call');
+      }
+      throw toRuntimeError(mappedError, error);
+    } finally {
+      state.watchdog.stop();
+      state.stopRelayingAbort();
+      if (!mappedError && request.signal?.aborted) {
+        mappedError = new InferenceAbortedError();
+      }
+      this.emitCompletion(context, startedAt, mappedError);
+    }
+  }
+
+  private emitCompletion(
+    context: RuntimeModelCallContext,
+    startedAt: number,
+    error: ApplicationError | undefined,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        InferenceCompletedEvent.EVENT_NAME,
+        new InferenceCompletedEvent(
+          context.userId,
+          context.orgId,
+          context.model.name,
+          context.model.provider,
+          true,
+          Date.now() - startedAt,
+          error ? extractInferenceErrorInfo(error) : undefined,
+        ),
+      )
+      .catch((emitError: unknown) => {
+        this.logger.error('Failed to emit InferenceCompletedEvent', {
+          error:
+            emitError instanceof Error ? emitError.message : 'Unknown error',
+        });
+      });
+  }
+}
+
+function sanitizeReplayedToolInputs(request: ProviderRequest): ProviderRequest {
+  const parametersByName = new Map<string, ToolSchema['parameters']>(
+    request.tools.map((tool) => [tool.name, tool.parameters]),
+  );
+  const messages = request.messages.map((message) =>
+    sanitizeAssistantToolInputs(message, parametersByName),
+  );
+  return messages.every((message, index) => message === request.messages[index])
+    ? request
+    : { ...request, messages };
+}
+
+function sanitizeAssistantToolInputs(
+  message: Message,
+  parametersByName: ReadonlyMap<string, ToolSchema['parameters']>,
+): Message {
+  if (message.role !== 'assistant') return message;
+  const content = message.content.map((item) =>
+    sanitizeToolInput(item, parametersByName),
+  );
+  return content.every((item, index) => item === message.content[index])
+    ? message
+    : { ...message, content };
+}
+
+function sanitizeToolInput(
+  content: MessageContent,
+  parametersByName: ReadonlyMap<string, ToolSchema['parameters']>,
+): MessageContent {
+  if (content.type !== 'tool_use') return content;
+  const parameters = parametersByName.get(content.name);
+  if (!parameters) return content;
+  const input = stripDisallowedNulls(content.input, parameters);
+  return input === content.input ? content : { ...content, input };
+}
+
+function createCallState(sourceSignal: AbortSignal | undefined): CallState {
+  const controller = new AbortController();
+  const stopRelayingAbort = relayAbort(sourceSignal, controller);
+  const watchdog = new StreamIdleWatchdog(STREAM_IDLE_TIMEOUT_MS, () => {
+    controller.abort(new InferenceStreamStalledError(STREAM_IDLE_TIMEOUT_MS));
+  });
+  return { controller, watchdog, stopRelayingAbort };
+}
+
+function relayAbort(
+  source: AbortSignal | undefined,
+  target: AbortController,
+): () => void {
+  if (!source) return () => undefined;
+  const abort = () => target.abort(source.reason);
+  if (source.aborted) {
+    abort();
+    return () => undefined;
+  }
+  source.addEventListener('abort', abort, { once: true });
+  return () => source.removeEventListener('abort', abort);
+}
+
+function mapProviderError(
+  error: unknown,
+  request: ProviderRequest,
+  controller: AbortController,
+  context: RuntimeModelCallContext,
+): ApplicationError {
+  const abortReason: unknown = controller.signal.reason;
+  if (abortReason instanceof InferenceStreamStalledError) return abortReason;
+  if (request.signal?.aborted && error === request.signal.reason) {
+    return new InferenceAbortedError();
+  }
+  if (error instanceof ApplicationError) return error;
+  const providerError = wrapProviderFailure(error, {
+    provider: context.model.provider,
+    modelId: context.model.name,
+  });
+  if (providerError) return providerError;
+  return mapUnclassifiedProviderError(error, request);
+}
+
+function mapUnclassifiedProviderError(
+  error: unknown,
+  request: ProviderRequest,
+): ApplicationError {
+  const status = extractUpstreamStatus(error);
+  const message = error instanceof Error ? error.message : String(error);
+  if (/image exceeds .* maximum/i.test(message)) {
+    return new InferenceImageTooLargeError({ status });
+  }
+  if (request.signal?.aborted || isAbortError(error)) {
+    return new InferenceAbortedError();
+  }
+  return new InferenceFailedError('Provider inference failed', { status });
+}
+
+function toRuntimeError(
+  mappedError: ApplicationError,
+  cause: unknown,
+): AgentRuntimeError {
+  return new AgentRuntimeError(mappedError.code, mappedError.message, {
+    details: serializeRuntimeModelError(mappedError, STREAM_IDLE_TIMEOUT_MS),
+    cause,
+  });
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof Error || error instanceof DOMException) &&
+    error.name === 'AbortError'
+  );
+}

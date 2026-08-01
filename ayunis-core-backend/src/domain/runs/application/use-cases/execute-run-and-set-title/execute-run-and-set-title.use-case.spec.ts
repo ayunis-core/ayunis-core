@@ -133,6 +133,93 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     });
   });
 
+  it('forwards the request cancellation signal to ExecuteRunUseCase', async () => {
+    const controller = new AbortController();
+    executeRunUseCase.execute.mockResolvedValue(
+      (async function* (): AsyncGenerator<Message> {
+        for (const message of [] as Message[]) {
+          yield message;
+        }
+      })(),
+    );
+
+    await drain(
+      useCase.execute(
+        new ExecuteRunAndSetTitleCommand({
+          threadId,
+          input: new RunUserInput('hello', []),
+          streaming: true,
+          signal: controller.signal,
+        }),
+      ),
+    );
+
+    expect(executeRunUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ signal: controller.signal }),
+    );
+  });
+
+  it('does not generate a title after an aborted first run', async () => {
+    const controller = new AbortController();
+    const thread = {
+      ...makeThread(),
+      model: { model: { name: 'claude-3-7-sonnet' } },
+    } as unknown as Thread;
+    findThreadUseCase.execute.mockResolvedValue({
+      thread,
+      isLongChat: false,
+    });
+    executeRunUseCase.execute.mockResolvedValue(
+      (async function* (): AsyncGenerator<Message, 'aborted', void> {
+        controller.abort();
+        for (const message of [] as Message[]) yield message;
+        return 'aborted';
+      })(),
+    );
+
+    await drain(
+      useCase.execute(
+        new ExecuteRunAndSetTitleCommand({
+          threadId,
+          input: new RunUserInput('Summarize the budget amendment', []),
+          streaming: true,
+          signal: controller.signal,
+        }),
+      ),
+    );
+
+    expect(generateAndSetThreadTitleUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('closes the active run when its event consumer returns early', async () => {
+    const runClosed = jest.fn();
+    const assistantMessage = { id: randomUUID() } as unknown as Message;
+    executeRunUseCase.execute.mockResolvedValue(
+      (async function* () {
+        try {
+          yield assistantMessage;
+          yield { id: randomUUID() } as unknown as Message;
+          return 'completed' as const;
+        } finally {
+          runClosed();
+        }
+      })(),
+    );
+    const events = useCase.execute(
+      new ExecuteRunAndSetTitleCommand({
+        threadId,
+        input: new RunUserInput('Summarize the budget amendment', []),
+        streaming: true,
+      }),
+    );
+
+    await events.next();
+    await events.next();
+    await events.return(undefined);
+
+    expect(runClosed).toHaveBeenCalledTimes(1);
+  });
+
   describe('SSE error event conversion', () => {
     const command = (): ExecuteRunAndSetTitleCommand =>
       new ExecuteRunAndSetTitleCommand({

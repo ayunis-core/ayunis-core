@@ -45,6 +45,7 @@ import { RunExecutedEvent } from '../../events/run-executed.event';
 import { ConfigService } from '@nestjs/config';
 import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
+import type { RunExecutionOutcome } from '../../run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -70,7 +71,7 @@ export class ExecuteRunUseCase {
 
   async execute(
     command: ExecuteRunCommand,
-  ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
+  ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
     this.logger.log('executeRun', {
       threadId: command.threadId,
       streaming: command.streaming,

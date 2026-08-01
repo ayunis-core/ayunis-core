@@ -485,6 +485,44 @@ describe('the agent loop', () => {
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
   });
 
+  it('preserves classified AgentRuntimeError failures from model providers', async () => {
+    const model = new MockProvider([]);
+    model.stream = () => {
+      throw new AgentRuntimeError(
+        'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+        'Provider anthropic request timed out',
+        {
+          details: {
+            hostError: {
+              type: 'provider_timeout',
+              context: {
+                provider: 'anthropic',
+                modelId: 'claude-3-7-sonnet',
+              },
+            },
+          },
+        },
+      );
+    };
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+      message: 'Provider anthropic request timed out',
+      details: {
+        hostError: {
+          type: 'provider_timeout',
+          context: {
+            provider: 'anthropic',
+            modelId: 'claude-3-7-sonnet',
+          },
+        },
+      },
+    });
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
   it('preserves reported usage when rejecting metadata-only output', async () => {
     const afterModelCall = vi.fn();
     const model = new MockProvider([

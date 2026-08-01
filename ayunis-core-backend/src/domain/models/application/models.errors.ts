@@ -245,7 +245,7 @@ export class InferenceInputInvalidError extends ModelError {
   }
 }
 
-/** A provider stream that went silent mid-response — see stream-idle-watchdog.ts. */
+/** A provider stream that went silent mid-response — see common/streaming/stream-idle-watchdog.ts. */
 export class InferenceStreamStalledError extends ModelError {
   constructor(idleMs: number, metadata?: ErrorMetadata) {
     super(

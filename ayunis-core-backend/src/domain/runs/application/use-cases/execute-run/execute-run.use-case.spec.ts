@@ -454,7 +454,7 @@ describe('ExecuteRunUseCase', () => {
     }
 
     async function drainGenerator(
-      generator: AsyncGenerator<unknown, void, void>,
+      generator: AsyncIterator<unknown>,
     ): Promise<void> {
       let result = await generator.next();
       while (!result.done) {

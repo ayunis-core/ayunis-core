@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
 import { ExecuteRunCommand } from '../execute-run/execute-run.command';
@@ -14,7 +15,10 @@ import {
   RunErrorEvent,
   RunSessionEvent,
 } from '../../run-events';
-import { RunPiiMasksUpdate } from '../../../domain/run-pii-masks-update.entity';
+import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from '../../../domain/run-pii-masks-update.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   RunInput,
@@ -27,6 +31,7 @@ import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/ap
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
+import type { RunExecutionOutcome } from '../../run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -44,78 +49,82 @@ export class ExecuteRunAndSetTitleUseCase {
     command: ExecuteRunAndSetTitleCommand,
   ): AsyncGenerator<RunEvent> {
     try {
-      const streamingStartEvent: RunSessionEvent = {
-        type: 'session',
-        streaming: true,
-        threadId: command.threadId,
-        timestamp: new Date().toISOString(),
-      };
-      yield streamingStartEvent;
-
-      const { thread } = await this.findThreadUseCase.execute(
-        new FindThreadQuery(command.threadId),
-      );
-
-      // If thread has no messages, we should generate a title after the first message
-      const shouldGenerateTitle = thread.messages.length === 0;
-
-      // Execute the run and stream messages. Tier-aware fair-use + credit
-      // budget gates are enforced inside `ExecuteRunUseCase` after the model
-      // is resolved — see the call to `checkQuotaUseCase.execute` there.
-      const messageGenerator = await this.executeRunUseCase.execute(
-        new ExecuteRunCommand({
-          threadId: command.threadId,
-          input: command.input,
-          streaming: command.streaming,
-        }),
-      );
-
-      for await (const item of messageGenerator) {
-        yield this.toStreamEvent(item, command.threadId);
-      }
-      if (shouldGenerateTitle) {
-        const titleEvent = await this.generateTitle(command, thread);
-        if (titleEvent) {
-          yield titleEvent;
-        }
-      }
+      yield this.sessionEvent(command.threadId, true);
+      yield* this.executeRun(command);
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
-
-      // Preserve error code from domain errors (e.g., RUN_NO_MODEL_FOUND,
-      // QUOTA_EXCEEDED) so the SSE consumer can branch on it. The metadata
-      // spread below also forwards `retryAfterSeconds` for QuotaExceededError.
-      const errorCode =
-        error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR';
-
-      // Yield error event
-      const errorEvent: RunErrorEvent = {
-        type: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'An error occurred while executing the run',
-        threadId: command.threadId,
-        timestamp: new Date().toISOString(),
-        code: errorCode,
-        details: {
-          error: error instanceof Error ? error.toString() : 'Unknown error',
-          stack: error instanceof Error ? error.stack : 'Unknown error',
-          // Include metadata from ApplicationError (e.g., retryAfterSeconds for quota errors)
-          ...(error instanceof ApplicationError && error.metadata),
-        },
-      };
-
-      yield errorEvent;
+      yield this.toErrorEvent(error, command.threadId);
     } finally {
-      const streamingEndEvent: RunSessionEvent = {
-        type: 'session',
-        streaming: false,
-        threadId: command.threadId,
-        timestamp: new Date().toISOString(),
-      };
-      yield streamingEndEvent;
+      yield this.sessionEvent(command.threadId, false);
     }
+  }
+
+  private async *executeRun(
+    command: ExecuteRunAndSetTitleCommand,
+  ): AsyncGenerator<RunEvent> {
+    const { thread } = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
+    const shouldGenerateTitle = thread.messages.length === 0;
+    const messages = await this.executeRunUseCase.execute(
+      new ExecuteRunCommand({
+        threadId: command.threadId,
+        input: command.input,
+        streaming: command.streaming,
+        signal: command.signal,
+      }),
+    );
+    const outcome = yield* this.streamRunItems(messages, command.threadId);
+    if (shouldGenerateTitle && outcome !== 'aborted') {
+      const titleEvent = await this.generateTitle(command, thread);
+      if (titleEvent) yield titleEvent;
+    }
+  }
+
+  private async *streamRunItems(
+    messages: AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>,
+    threadId: UUID,
+  ): AsyncGenerator<RunEvent, RunExecutionOutcome | void, void> {
+    let completed = false;
+    try {
+      for (;;) {
+        const next = await messages.next();
+        if (next.done) {
+          completed = true;
+          return next.value;
+        }
+        yield this.toStreamEvent(next.value, threadId);
+      }
+    } finally {
+      if (!completed) await messages.return(undefined);
+    }
+  }
+
+  private sessionEvent(threadId: UUID, streaming: boolean): RunSessionEvent {
+    return {
+      type: 'session',
+      streaming,
+      threadId,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  private toErrorEvent(error: unknown, threadId: UUID): RunErrorEvent {
+    return {
+      type: 'error',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while executing the run',
+      threadId,
+      timestamp: new Date().toISOString(),
+      code: error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR',
+      details: {
+        error: error instanceof Error ? error.toString() : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'Unknown error',
+        ...(error instanceof ApplicationError && error.metadata),
+      },
+    };
   }
 
   private toStreamEvent(

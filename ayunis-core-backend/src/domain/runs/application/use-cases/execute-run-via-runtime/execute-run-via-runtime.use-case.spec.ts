@@ -39,6 +39,7 @@ import { ToolUsedEvent } from '../../events/tool-used.event';
 import { RunMaxIterationsReachedError } from '../../runs.errors';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
+import type { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -69,6 +70,7 @@ interface Harness {
   activateOnThread: jest.Mock;
   createUser: jest.Mock;
   provider: MockProvider;
+  providerSignal: () => AbortSignal | undefined;
   countTokens: jest.Mock;
 }
 
@@ -210,11 +212,20 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     execute: countTokens,
   } as unknown as CountTokensUseCase);
   const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
+  let providerSignal: AbortSignal | undefined;
+  const streamProvider = provider.stream.bind(provider);
+  provider.stream = (providerRequest) => {
+    providerSignal = providerRequest.signal;
+    return streamProvider(providerRequest);
+  };
   const resolveModelProviderUseCase = {
     execute: overrides.providerRejects
       ? jest.fn().mockRejectedValue(new Error('provider down'))
       : jest.fn().mockResolvedValue(provider),
   } as unknown as ResolveModelProviderUseCase;
+  const runtimeModelProviderDecorator = {
+    decorate: jest.fn((resolvedProvider) => resolvedProvider),
+  } as unknown as RuntimeModelProviderDecorator;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
     cleanupTrailingNonAssistantMessages: cleanup,
@@ -258,6 +269,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     addMessageToThreadUseCase,
     mapMessagesToInferenceUseCase,
     resolveModelProviderUseCase,
+    runtimeModelProviderDecorator,
     messageCleanupService,
     persistenceHookFactory,
     usageHookFactory,
@@ -281,12 +293,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     activateOnThread,
     createUser,
     provider,
+    providerSignal: () => providerSignal,
     countTokens,
   };
 }
 
 async function drain(
-  gen: AsyncGenerator<RunStreamItem, void, void>,
+  gen: AsyncIterable<RunStreamItem>,
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
   for await (const item of gen) {
@@ -354,8 +367,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       drain(await useCase.execute(userCommand())),
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_FAILED',
-      message:
-        'Run execution failed: Model provider returned an empty response',
+      message: 'Run execution failed: Agent runtime failed',
     });
     expect(save).not.toHaveBeenCalled();
     expect(collectUsage).toHaveBeenCalledTimes(1);
@@ -385,6 +397,53 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       { inputTokens: 23, outputTokens: 5 },
       expect.any(String),
     );
+  });
+
+  it('passes the request cancellation signal to the runtime provider call', async () => {
+    const controller = new AbortController();
+    const { useCase, providerSignal } = buildHarness();
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(providerSignal()).toBe(controller.signal);
+  });
+
+  it('cleans up an orphaned tool-use message when cancellation follows persistence', async () => {
+    const controller = new AbortController();
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('record found'),
+    };
+    const { useCase, save, cleanup } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns: [
+        toolCallTurn({
+          id: 'records-1',
+          name: lookupTool.name,
+          input: { query: '2026 budget amendment' },
+        }),
+      ],
+    });
+    save.mockImplementationOnce(async (saveCommand) => {
+      controller.abort();
+      return saveCommand.message;
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Find the budget amendment'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 
   it('executes a tool in-loop and persists the grouped tool result', async () => {

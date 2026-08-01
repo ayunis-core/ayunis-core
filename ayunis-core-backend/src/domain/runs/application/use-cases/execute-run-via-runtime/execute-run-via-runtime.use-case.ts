@@ -63,7 +63,9 @@ import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-acti
 import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
+import { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
+import type { RunExecutionOutcome } from '../../run-execution-outcome';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 
 const RUNTIME_MAX_ITERATIONS = 20;
@@ -122,6 +124,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly mapMessagesToInferenceUseCase: MapMessagesToInferenceUseCase,
     private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
+    private readonly runtimeModelProviderDecorator: RuntimeModelProviderDecorator,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly persistenceHookFactory: PersistenceHookFactory,
     private readonly usageHookFactory: UsageHookFactory,
@@ -135,10 +138,10 @@ export class ExecuteRunViaRuntimeUseCase {
   @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
-  ): Promise<AsyncGenerator<RunStreamItem, void, void>> {
+  ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
     this.logger.log('executeRunViaRuntime', { threadId: command.threadId });
     const prepared = await this.prepareRun(command);
-    return this.streamRun(prepared, command.input);
+    return this.streamRun(prepared, command.input, command.signal);
   }
 
   private async prepareRun(
@@ -237,7 +240,8 @@ export class ExecuteRunViaRuntimeUseCase {
   private async *streamRun(
     prepared: PreparedRuntimeRun,
     input: RunInput,
-  ): AsyncGenerator<RunStreamItem, void, void> {
+    signal?: AbortSignal,
+  ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     let cleanupRequired = true;
     try {
       const seeded = await this.seedInput(prepared, input);
@@ -246,12 +250,13 @@ export class ExecuteRunViaRuntimeUseCase {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield seeded.message;
-      yield* adaptRunEventsToStream(
-        await this.startRun(prepared),
+      const outcome = yield* adaptRunEventsToStream(
+        await this.startRun(prepared, signal),
         prepared.thread.id,
         prepared.toolIntegrations,
       );
-      cleanupRequired = false;
+      cleanupRequired = outcome === 'aborted';
+      return outcome;
     } catch (error) {
       if (error instanceof RunMaxIterationsReachedError) {
         cleanupRequired = false;
@@ -284,7 +289,7 @@ export class ExecuteRunViaRuntimeUseCase {
     throw new RunInvalidInputError('Invalid run input');
   }
 
-  private async startRun(prepared: PreparedRuntimeRun) {
+  private async startRun(prepared: PreparedRuntimeRun, signal?: AbortSignal) {
     const messages = await this.mapMessagesToInferenceUseCase.execute(
       new MapMessagesToInferenceCommand(
         prepared.thread.messages,
@@ -295,6 +300,14 @@ export class ExecuteRunViaRuntimeUseCase {
     const provider = await this.resolveModelProviderUseCase.execute(
       new ResolveModelProviderQuery(prepared.model),
     );
+    const guardedProvider = this.runtimeModelProviderDecorator.decorate(
+      provider,
+      {
+        userId: prepared.userId,
+        orgId: prepared.orgId,
+        model: prepared.model,
+      },
+    );
     const context = RunContext.create({
       orgId: prepared.orgId,
       userId: prepared.userId,
@@ -303,13 +316,14 @@ export class ExecuteRunViaRuntimeUseCase {
     });
     return run({
       instructions: prepared.instructions,
-      model: provider,
+      model: guardedProvider,
       messages,
       tools: prepared.tools,
       ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
       hooks: this.buildHooks(prepared),
       context,
       maxIterations: RUNTIME_MAX_ITERATIONS,
+      ...(signal ? { signal } : {}),
     });
   }
 
