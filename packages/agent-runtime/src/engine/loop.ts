@@ -49,6 +49,11 @@ async function* runIteration(
   const result = yield* streamModelCall({
     model: state.model,
     request: assembleRequest(state),
+    onInterrupted: (interruption) =>
+      state.hookRunner.modelCallInterrupted({
+        iteration,
+        ...interruption,
+      }),
   });
   addUsage(state, result.usage);
   await state.hookRunner.afterModelCall({

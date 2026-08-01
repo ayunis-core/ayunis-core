@@ -56,6 +56,13 @@ describe('abort handling', () => {
 
   it('preserves a classified provider failure when cancellation races with it', async () => {
     const controller = new AbortController();
+    const interruptionReasons: string[] = [];
+    const observer: Hook = {
+      name: 'observer',
+      modelCallInterrupted: (ctx) => {
+        interruptionReasons.push(ctx.reason);
+      },
+    };
     const model = new MockProvider([]);
     model.stream = async function* (): AsyncIterable<ProviderChunk> {
       controller.abort();
@@ -68,9 +75,10 @@ describe('abort handling', () => {
     };
 
     const events = await collectEvents(
-      baseInput(model, { signal: controller.signal }),
+      baseInput(model, { hooks: [observer], signal: controller.signal }),
     );
 
+    expect(interruptionReasons).toEqual(['error']);
     expect(events.find((event) => event.type === 'error')).toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
     });

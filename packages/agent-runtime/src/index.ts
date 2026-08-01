@@ -33,6 +33,8 @@ export type {
   BeforeToolCallContext,
   Hook,
   HookApi,
+  ModelCallInterruptedContext,
+  ModelCallInterruptionReason,
   RunEndContext,
   RunStartContext,
 } from './contracts/hook';

@@ -6,6 +6,8 @@ import type {
   AfterToolCallContext,
   Hook,
   HookApi,
+  ModelCallInterruptedContext,
+  ModelCallInterruptionReason,
 } from '../contracts/hook';
 import type { AssistantMessage, Message } from '../contracts/message';
 import type { FinishReason, Usage } from '../contracts/provider';
@@ -82,6 +84,19 @@ export class HookRunner {
     for (const hook of this.deps.hooks) {
       await this.invoke(hook, 'afterModelCall', () =>
         hook.afterModelCall?.(ctx),
+      );
+    }
+  }
+
+  async modelCallInterrupted(info: {
+    iteration: number;
+    message: AssistantMessage;
+    reason: ModelCallInterruptionReason;
+  }): Promise<void> {
+    const ctx: ModelCallInterruptedContext = { ...this.api(), ...info };
+    for (const hook of this.deps.hooks) {
+      await this.invoke(hook, 'modelCallInterrupted', () =>
+        hook.modelCallInterrupted?.(ctx),
       );
     }
   }

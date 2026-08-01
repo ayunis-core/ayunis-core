@@ -3,8 +3,9 @@ import {
   ProviderError,
   RunAbortedError,
 } from '../contracts/errors';
-import type { RunEventPayload } from '../contracts/event';
-import type { ToolCallSnapshot } from '../contracts/event';
+import type { RunEventPayload, ToolCallSnapshot } from '../contracts/event';
+import type { ModelCallInterruptionReason } from '../contracts/hook';
+import type { AssistantMessage } from '../contracts/message';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -21,10 +22,17 @@ import { ChunkAccumulator } from './accumulator';
 export async function* streamModelCall(params: {
   model: ModelProvider;
   request: ProviderRequest;
+  onInterrupted: (interruption: {
+    message: AssistantMessage;
+    reason: ModelCallInterruptionReason;
+  }) => Promise<void>;
 }): AsyncGenerator<RunEventPayload, ModelCallResult> {
   const accumulator = new ChunkAccumulator();
-  const stream = openStream(params.model, params.request);
+  let completed = false;
+  let interruptionError: AgentRuntimeError | undefined;
+  let interruptionReason: ModelCallInterruptionReason = 'consumer_abandoned';
   try {
+    const stream = openStream(params.model, params.request);
     for await (const chunk of stream) {
       const toolCallSnapshots = accumulator.accept(chunk);
       yield* deltaEvents(chunk, toolCallSnapshots);
@@ -32,17 +40,20 @@ export async function* streamModelCall(params: {
         throw new RunAbortedError('Run aborted during model call');
       }
     }
+    completed = true;
   } catch (error) {
-    if (error instanceof RunAbortedError) {
-      throw error;
-    }
-    if (error instanceof AgentRuntimeError) {
-      throw error;
-    }
-    if (params.request.signal?.aborted) {
-      throw new RunAbortedError('Run aborted during model call');
-    }
-    throw toProviderError(error);
+    const interruption = classifyInterruption(error, params.request.signal);
+    interruptionError = interruption.error;
+    interruptionReason = interruption.reason;
+    throw interruption.error;
+  } finally {
+    await notifyInterruptedPreservingOutcome(
+      params,
+      accumulator,
+      completed,
+      interruptionReason,
+      interruptionError,
+    );
   }
   const result = accumulator.finalize();
   for (const toolCall of result.invalidToolCallSnapshots) {
@@ -50,6 +61,58 @@ export async function* streamModelCall(params: {
   }
   return result;
 }
+
+const classifyInterruption = (
+  error: unknown,
+  signal?: AbortSignal,
+): { error: AgentRuntimeError; reason: ModelCallInterruptionReason } => {
+  if (error instanceof RunAbortedError) {
+    return {
+      error,
+      reason: 'aborted',
+    };
+  }
+  if (error instanceof AgentRuntimeError) {
+    return { error, reason: 'error' };
+  }
+  if (signal?.aborted) {
+    return {
+      error: new RunAbortedError('Run aborted during model call'),
+      reason: 'aborted',
+    };
+  }
+  return { error: toProviderError(error), reason: 'error' };
+};
+
+const notifyInterrupted = async (
+  params: Parameters<typeof streamModelCall>[0],
+  accumulator: ChunkAccumulator,
+  completed: boolean,
+  reason: ModelCallInterruptionReason,
+): Promise<void> => {
+  if (completed) return;
+  await params.onInterrupted({
+    message: accumulator.partialMessage(),
+    reason:
+      reason === 'consumer_abandoned' && params.request.signal?.aborted
+        ? 'aborted'
+        : reason,
+  });
+};
+
+const notifyInterruptedPreservingOutcome = async (
+  params: Parameters<typeof streamModelCall>[0],
+  accumulator: ChunkAccumulator,
+  completed: boolean,
+  reason: ModelCallInterruptionReason,
+  interruptionError: AgentRuntimeError | undefined,
+): Promise<void> => {
+  try {
+    await notifyInterrupted(params, accumulator, completed, reason);
+  } catch (error) {
+    if (!interruptionError) throw error;
+  }
+};
 
 const openStream = (
   model: ModelProvider,

@@ -48,6 +48,16 @@ export interface AfterModelCallContext extends HookApi {
   readonly finishReason: FinishReason;
 }
 
+export type ModelCallInterruptionReason =
+  'aborted' | 'error' | 'consumer_abandoned';
+
+export interface ModelCallInterruptedContext extends HookApi {
+  readonly iteration: number;
+  /** Partial display content only; unexecuted tool calls are excluded. */
+  readonly message: AssistantMessage;
+  readonly reason: ModelCallInterruptionReason;
+}
+
 export interface BeforeToolCallContext extends HookApi {
   readonly iteration: number;
   readonly toolCall: ToolCallSummary;
@@ -87,6 +97,7 @@ export interface Hook {
   runStart?(ctx: RunStartContext): void | Promise<void>;
   beforeModelCall?(ctx: BeforeModelCallContext): void | Promise<void>;
   afterModelCall?(ctx: AfterModelCallContext): void | Promise<void>;
+  modelCallInterrupted?(ctx: ModelCallInterruptedContext): void | Promise<void>;
   beforeToolCall?(ctx: BeforeToolCallContext): void | Promise<void>;
   afterToolCall?(ctx: AfterToolCallContext): void | Promise<void>;
   runEnd?(ctx: RunEndContext): void | Promise<void>;

@@ -1,5 +1,10 @@
-import type { Hook, RunContext } from '@ayunis/agent-runtime';
+import type {
+  AssistantMessage as RuntimeAssistantMessage,
+  Hook,
+  RunContext,
+} from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { SaveAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.use-case';
 import { SaveAssistantMessageCommand } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.command';
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
@@ -44,23 +49,20 @@ export class PersistenceHookFactory {
   }): Hook {
     return {
       name: 'ayunis-persistence',
-      afterModelCall: async (ctx) => {
-        if (ctx.message.content.length === 0) {
-          return;
-        }
-        const message = toBackendAssistantMessage(
+      afterModelCall: (ctx) =>
+        this.persistAssistantMessage(
           ctx.message,
-          params.thread.id,
+          params.thread,
           assistantMessageId(ctx.context.runId, ctx.iteration),
           params.integrations,
-        );
-        const saved = await this.saveAssistantMessageUseCase.execute(
-          new SaveAssistantMessageCommand(message),
-        );
-        this.addMessageToThreadUseCase.execute(
-          new AddMessageCommand(params.thread, saved),
-        );
-      },
+        ),
+      modelCallInterrupted: (ctx) =>
+        this.persistAssistantMessage(
+          ctx.message,
+          params.thread,
+          assistantMessageId(ctx.context.runId, ctx.iteration),
+          params.integrations,
+        ),
       afterToolCall: async (ctx) => {
         const pending = ctx.context.get<PendingToolResults>(
           PENDING_TOOL_RESULTS,
@@ -82,6 +84,29 @@ export class PersistenceHookFactory {
         this.flushToolResults(ctx.context, params.thread),
       runEnd: (ctx) => this.flushToolResults(ctx.context, params.thread),
     };
+  }
+
+  private async persistAssistantMessage(
+    message: RuntimeAssistantMessage,
+    thread: Thread,
+    id: UUID,
+    integrations: RuntimeToolIntegrationRegistry,
+  ): Promise<void> {
+    if (message.content.length === 0) {
+      return;
+    }
+    const backendMessage = toBackendAssistantMessage(
+      message,
+      thread.id,
+      id,
+      integrations,
+    );
+    const saved = await this.saveAssistantMessageUseCase.execute(
+      new SaveAssistantMessageCommand(backendMessage),
+    );
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(thread, saved),
+    );
   }
 
   private async flushToolResults(
