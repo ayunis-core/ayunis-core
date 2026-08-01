@@ -59,6 +59,13 @@ export type RunEventPayload =
       message: string;
       details?: Readonly<Record<string, unknown>>;
     }
+  | {
+      type: 'finalization_error';
+      hookName: string;
+      message: string;
+      critical: boolean;
+      outcome: RunStatus;
+    }
   | { type: 'run_end'; status: RunStatus; usage: Usage };
 
 export type RunEvent = RunEventEnvelope & RunEventPayload;

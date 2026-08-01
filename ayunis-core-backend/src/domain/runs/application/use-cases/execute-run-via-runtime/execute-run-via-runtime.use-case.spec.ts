@@ -636,6 +636,45 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it('cleans up the final tool-use turn when its max-iteration flush fails', async () => {
+    const execute = jest.fn().mockResolvedValue('municipal record found');
+    const lookupTool = {
+      name: 'search_municipal_records',
+      description: 'Search municipal records',
+      parameters: { type: 'object' },
+      execute,
+    };
+    const turns = Array.from({ length: 20 }, (_, iteration) =>
+      toolCallTurn({
+        id: `records-${iteration}`,
+        name: lookupTool.name,
+        input: { query: `budget amendment ${iteration + 1}` },
+      }),
+    );
+    const { useCase, createToolResult, cleanup } = buildHarness({
+      runtimeTools: [lookupTool],
+      turns,
+    });
+    createToolResult.mockImplementation(async (createCommand) => {
+      if (createToolResult.mock.calls.length === 20) {
+        throw new Error('database unavailable');
+      }
+      return new ToolResultMessage({
+        id: createCommand.id,
+        threadId: createCommand.threadId,
+        content: createCommand.content,
+      });
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow(
+      'Run execution failed',
+    );
+
+    expect(execute).toHaveBeenCalledTimes(20);
+    expect(createToolResult).toHaveBeenCalledTimes(21);
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
   it('includes MCP integration metadata in streamed and persisted tool calls', async () => {
     const toolName = 'search_municipal_records';
     const integration = {

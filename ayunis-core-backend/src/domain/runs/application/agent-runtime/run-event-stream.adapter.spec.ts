@@ -314,6 +314,61 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
+  it('surfaces a critical finalization failure over the preserved max outcome', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'MAX_ITERATIONS_REACHED',
+          message: 'too many',
+          details: { maxIterations: 7 },
+        },
+        {
+          type: 'finalization_error',
+          hookName: 'ayunis-persistence',
+          message: 'database unavailable',
+          critical: true,
+          outcome: 'max_iterations',
+        },
+        { type: 'run_end', status: 'max_iterations', usage: {} },
+      ]),
+    );
+
+    await expect(result).rejects.toMatchObject<
+      Partial<RunExecutionFailedError>
+    >({
+      code: 'RUN_EXECUTION_FAILED',
+      metadata: {
+        hookName: 'ayunis-persistence',
+        phase: 'runEnd',
+        originalOutcome: 'max_iterations',
+      },
+    });
+  });
+
+  it('preserves the max outcome for a best-effort finalization failure', async () => {
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'MAX_ITERATIONS_REACHED',
+            message: 'too many',
+            details: { maxIterations: 7 },
+          },
+          {
+            type: 'finalization_error',
+            hookName: 'telemetry',
+            message: 'collector unavailable',
+            critical: false,
+            outcome: 'max_iterations',
+          },
+          { type: 'run_end', status: 'max_iterations', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
+  });
+
   it('maps other error events to a client-safe run error', async () => {
     await expect(
       collect(

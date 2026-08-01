@@ -422,4 +422,121 @@ describe('hook lifecycle', () => {
       'runEnd:aborted',
     ]);
   });
+
+  it('reports critical runEnd failures without replacing the original outcome', async () => {
+    const broken: Hook = {
+      name: 'critical-persistence',
+      runEnd: () => {
+        throw new Error('database unavailable');
+      },
+    };
+    const events = await collectEvents(
+      baseInput(new MockProvider([textTurn('Done')]), { hooks: [broken] }),
+    );
+
+    expect(
+      events.find((event) => event.type === 'finalization_error'),
+    ).toMatchObject({
+      hookName: 'critical-persistence',
+      message:
+        "Hook 'critical-persistence' failed in runEnd: database unavailable",
+      critical: true,
+      outcome: 'completed',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('preserves max-iterations while reporting a critical finalization failure', async () => {
+    const broken: Hook = {
+      name: 'critical-persistence',
+      runEnd: () => {
+        throw new Error('final tool result was not saved');
+      },
+    };
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'echo', input: { value: 'x' } }),
+    ]);
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [broken],
+        tools: [echoTool()],
+        maxIterations: 1,
+      }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'MAX_ITERATIONS_REACHED',
+    });
+    expect(
+      events.find((event) => event.type === 'finalization_error'),
+    ).toMatchObject({
+      hookName: 'critical-persistence',
+      critical: true,
+      outcome: 'max_iterations',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'max_iterations',
+    });
+  });
+
+  it('allows non-critical runEnd hooks to opt into best-effort finalization', async () => {
+    const phases: string[] = [];
+    const bestEffort: Hook = {
+      name: 'telemetry',
+      runEndFailureMode: 'best_effort',
+      runEnd: () => {
+        phases.push('telemetry');
+        throw new Error('collector unavailable');
+      },
+    };
+    const later: Hook = {
+      name: 'later',
+      runEnd: () => {
+        phases.push('later');
+      },
+    };
+    const events = await collectEvents(
+      baseInput(new MockProvider([textTurn('Done')]), {
+        hooks: [bestEffort, later],
+      }),
+    );
+
+    expect(phases).toEqual(['telemetry', 'later']);
+    expect(
+      events.find((event) => event.type === 'finalization_error'),
+    ).toMatchObject({
+      hookName: 'telemetry',
+      critical: false,
+      outcome: 'completed',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('rejects consumer abandonment when critical finalization fails', async () => {
+    const broken: Hook = {
+      name: 'critical-persistence',
+      runEnd: () => {
+        throw new Error('database unavailable');
+      },
+    };
+    const consumeUntilFirstDelta = async (): Promise<void> => {
+      const model = new MockProvider([textTurn('Hello there')]);
+      const { run } = await import('./run');
+      for await (const event of run(baseInput(model, { hooks: [broken] }))) {
+        if (event.type === 'text_delta') break;
+      }
+    };
+
+    await expect(consumeUntilFirstDelta()).rejects.toMatchObject({
+      code: 'HOOK_FAILED',
+      details: { hookName: 'critical-persistence', phase: 'runEnd' },
+    });
+  });
 });
