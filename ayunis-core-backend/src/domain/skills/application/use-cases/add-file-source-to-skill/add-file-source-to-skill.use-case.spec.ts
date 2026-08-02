@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 
@@ -11,35 +10,33 @@ jest.mock('@nestjs-cls/transactional', () => ({
 import { AddFileSourceToSkillUseCase } from './add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command';
 import type { AddSourceToSkillUseCase } from '../add-source-to-skill/add-source-to-skill.use-case';
-import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import type { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
+import type { StartFileSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-file-source-processing/start-file-source-processing.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { SkillRepository } from '../../ports/skill.repository';
-import {
-  SkillSourceLimitExceededError,
-  UnsupportedFileTypeError,
-} from '../../skills.errors';
+import { SkillSourceLimitExceededError } from '../../skills.errors';
 import { SkillsConstants } from '../../../domain/skills.constants';
 import type { Skill } from '../../../domain/skill.entity';
-import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 describe('AddFileSourceToSkillUseCase', () => {
   const skillId = randomUUID();
   const userId = randomUUID();
   const updatedSkill = { id: skillId } as Skill;
+  const file = {
+    originalname: 'vereine.csv',
+    mimetype: 'text/csv',
+    path: '/uploads/upload-1',
+  };
 
   let skillRepository: jest.Mocked<SkillRepository>;
   let addSourceToSkill: jest.Mocked<AddSourceToSkillUseCase>;
-  let startDocumentProcessing: jest.Mocked<StartDocumentProcessingUseCase>;
-  let startDataSourceProcessing: jest.Mocked<StartDataSourceProcessingUseCase>;
+  let startFileSourceProcessing: jest.Mocked<StartFileSourceProcessingUseCase>;
   let deleteSources: jest.Mocked<DeleteSourcesUseCase>;
   let useCase: AddFileSourceToSkillUseCase;
-  let readFile: jest.SpyInstance;
 
-  function dataSource(id: UUID = randomUUID()): CSVDataSource {
-    return { id } as CSVDataSource;
+  function source(id: UUID = randomUUID()): Source {
+    return { id } as Source;
   }
 
   beforeEach(() => {
@@ -49,19 +46,12 @@ describe('AddFileSourceToSkillUseCase', () => {
     addSourceToSkill = {
       execute: jest.fn().mockResolvedValue(updatedSkill),
     } as unknown as jest.Mocked<AddSourceToSkillUseCase>;
-    startDocumentProcessing = {
+    startFileSourceProcessing = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<StartDocumentProcessingUseCase>;
-    startDataSourceProcessing = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<StartDataSourceProcessingUseCase>;
+    } as unknown as jest.Mocked<StartFileSourceProcessingUseCase>;
     deleteSources = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteSourcesUseCase>;
-    readFile = jest
-      .spyOn(fs.promises, 'readFile')
-      .mockResolvedValue(Buffer.from('file-bytes'));
-
     const contextService = {
       get: jest.fn().mockReturnValue(userId),
     } as unknown as ContextService;
@@ -69,15 +59,10 @@ describe('AddFileSourceToSkillUseCase', () => {
     useCase = new AddFileSourceToSkillUseCase(
       skillRepository,
       addSourceToSkill,
-      startDocumentProcessing,
-      startDataSourceProcessing,
+      startFileSourceProcessing,
       deleteSources,
       contextService,
     );
-  });
-
-  afterEach(() => {
-    readFile.mockRestore();
   });
 
   it('rejects a skill at the source cap before any processing starts', async () => {
@@ -87,17 +72,11 @@ describe('AddFileSourceToSkillUseCase', () => {
         randomUUID(),
       ),
     } as unknown as Skill);
-    const file = {
-      originalname: 'bericht.pdf',
-      mimetype: 'application/pdf',
-      path: '/uploads/upload-0',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
     ).rejects.toBeInstanceOf(SkillSourceLimitExceededError);
-    expect(startDocumentProcessing.execute).not.toHaveBeenCalled();
-    expect(startDataSourceProcessing.execute).not.toHaveBeenCalled();
+    expect(startFileSourceProcessing.execute).not.toHaveBeenCalled();
   });
 
   it('passes a capacity check that accounts for every sheet of a workbook', async () => {
@@ -108,18 +87,12 @@ describe('AddFileSourceToSkillUseCase', () => {
       ),
     } as unknown as Skill);
     // One slot left, workbook has two sheets — the callback must throw.
-    startDataSourceProcessing.execute.mockImplementation(
+    startFileSourceProcessing.execute.mockImplementation(
       (command: { ensureCapacityFor?: (count: number) => void }) => {
         command.ensureCapacityFor?.(2);
-        return Promise.resolve([dataSource(), dataSource()]);
+        return Promise.resolve([source(), source()]);
       },
     );
-    const file = {
-      originalname: 'haushalt.xlsx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      path: '/uploads/upload-7',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
@@ -127,49 +100,18 @@ describe('AddFileSourceToSkillUseCase', () => {
     expect(addSourceToSkill.execute).not.toHaveBeenCalled();
   });
 
-  it('starts async CSV processing and attaches the source', async () => {
-    const created = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([created]);
-    const file = {
-      originalname: 'vereine.csv',
-      mimetype: 'text/csv',
-      path: '/uploads/upload-1',
-    };
+  it('starts processing, attaches every created source, and returns the skill', async () => {
+    const first = source();
+    const second = source();
+    startFileSourceProcessing.execute.mockResolvedValue([first, second]);
 
     const result = await useCase.execute(
       new AddFileSourceToSkillCommand({ skillId, file }),
     );
 
     expect(result).toBe(updatedSkill);
-    expect(startDataSourceProcessing.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ fileName: 'vereine.csv', kind: 'csv' }),
-    );
-    expect(addSourceToSkill.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ skillId, sourceId: created.id }),
-    );
-  });
-
-  it('attaches every pre-created sheet source of a spreadsheet', async () => {
-    const first = dataSource();
-    const second = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([first, second]);
-    const file = {
-      originalname: 'gebuehren.xlsx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      path: '/uploads/upload-2',
-    };
-
-    const result = await useCase.execute(
-      new AddFileSourceToSkillCommand({ skillId, file }),
-    );
-
-    expect(result).toBe(updatedSkill);
-    expect(startDataSourceProcessing.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fileName: 'gebuehren.xlsx',
-        kind: 'spreadsheet',
-      }),
+    expect(startFileSourceProcessing.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ file }),
     );
     expect(addSourceToSkill.execute).toHaveBeenCalledTimes(2);
     expect(addSourceToSkill.execute).toHaveBeenLastCalledWith(
@@ -177,36 +119,12 @@ describe('AddFileSourceToSkillUseCase', () => {
     );
   });
 
-  it('starts document processing for a PDF and attaches the source', async () => {
-    const created = { id: randomUUID() } as FileSource;
-    startDocumentProcessing.execute.mockResolvedValue(created);
-    const file = {
-      originalname: 'satzung.pdf',
-      mimetype: 'application/pdf',
-      path: '/uploads/upload-5',
-    };
-
-    const result = await useCase.execute(
-      new AddFileSourceToSkillCommand({ skillId, file }),
-    );
-
-    expect(result).toBe(updatedSkill);
-    expect(addSourceToSkill.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ skillId, sourceId: created.id }),
-    );
-  });
-
   it('deletes the pre-created sources when attaching to the skill fails', async () => {
-    const created = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([created]);
+    const created = source();
+    startFileSourceProcessing.execute.mockResolvedValue([created]);
     addSourceToSkill.execute.mockRejectedValue(
       new Error('max sources exceeded'),
     );
-    const file = {
-      originalname: 'vereine.csv',
-      mimetype: 'text/csv',
-      path: '/uploads/upload-6',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
@@ -215,19 +133,5 @@ describe('AddFileSourceToSkillUseCase', () => {
     expect(deleteSources.execute).toHaveBeenCalledWith(
       expect.objectContaining({ sourceIds: [created.id] }),
     );
-  });
-
-  it('rejects unsupported file types without touching the skill', async () => {
-    const file = {
-      originalname: 'video.mp4',
-      mimetype: 'video/mp4',
-      path: '/uploads/upload-4',
-    };
-
-    await expect(
-      useCase.execute(new AddFileSourceToSkillCommand({ skillId, file })),
-    ).rejects.toThrow(UnsupportedFileTypeError);
-    expect(addSourceToSkill.execute).not.toHaveBeenCalled();
-    expect(startDataSourceProcessing.execute).not.toHaveBeenCalled();
   });
 });

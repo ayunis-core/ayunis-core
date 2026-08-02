@@ -23,6 +23,7 @@ export class MarkSourceFailedUseCase {
 
       source.status = SourceStatus.FAILED;
       source.processingError = command.errorMessage;
+      source.processingProgress = null;
       await this.sourceRepository.save(source);
 
       this.logger.warn('Source marked as failed', {

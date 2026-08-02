@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingProgressDto } from 'src/domain/sources/presenters/http/dto/source-processing-progress.dto';
 
 export class SkillResponseDto {
   @ApiProperty({
@@ -126,6 +127,12 @@ export class SkillSourceResponseDto {
     example: 'OCR extraction timed out',
   })
   processingError?: string;
+
+  @ApiPropertyOptional({
+    description: 'Stage and page progress while the source is processing',
+    type: SourceProcessingProgressDto,
+  })
+  processingProgress?: SourceProcessingProgressDto;
 
   @ApiProperty({
     description: 'The date and time when the source was created',

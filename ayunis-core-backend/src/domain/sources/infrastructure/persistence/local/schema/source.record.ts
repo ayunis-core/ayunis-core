@@ -17,6 +17,7 @@ import {
 } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import type { SourceProcessingProgress } from 'src/domain/sources/domain/source-processing-progress';
 import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
@@ -46,6 +47,9 @@ export abstract class SourceRecord extends BaseRecord {
 
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  processingProgress: SourceProcessingProgress | null;
 
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;

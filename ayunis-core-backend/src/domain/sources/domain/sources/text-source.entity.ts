@@ -4,6 +4,7 @@ import type { FileType } from '../source-type.enum';
 import { SourceType, TextType } from '../source-type.enum';
 import type { SourceCreator } from '../source-creator.enum';
 import type { SourceStatus } from '../source-status.enum';
+import type { SourceProcessingProgress } from '../source-processing-progress';
 
 export abstract class TextSource extends Source {
   textType: TextType;
@@ -16,6 +17,7 @@ export abstract class TextSource extends Source {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -37,6 +39,7 @@ export class FileSource extends TextSource {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
@@ -61,6 +64,7 @@ export class UrlSource extends TextSource {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;

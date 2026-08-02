@@ -107,8 +107,19 @@ class Bootstrap {
       origin: this.determineAllowedOrigins(configService, isProduction),
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       credentials: true,
-      allowedHeaders: 'Content-Type, Accept, Authorization, cache-control',
-      exposedHeaders: ['Set-Cookie'],
+      // The Tus-/Upload- headers carry the tus resumable-upload protocol;
+      // without them cross-origin setups fail the upload preflight.
+      allowedHeaders:
+        'Content-Type, Accept, Authorization, cache-control, Tus-Resumable, Upload-Length, Upload-Metadata, Upload-Offset, Upload-Defer-Length, Upload-Concat, X-HTTP-Method-Override',
+      // tus clients must be able to read the upload URL and offset.
+      exposedHeaders: [
+        'Set-Cookie',
+        'Location',
+        'Tus-Resumable',
+        'Upload-Offset',
+        'Upload-Length',
+        'Upload-Expires',
+      ],
     };
 
     app.enableCors(corsOptions);

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SourcesModule } from '../sources/sources.module';
+import { UploadsModule } from '../uploads/uploads.module';
 import { McpModule } from '../mcp/mcp.module';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
 import { LocalSkillRepositoryModule } from './infrastructure/persistence/local/local-skill-repository.module';
@@ -75,6 +76,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
     ]),
     LocalSkillRepositoryModule,
     SourcesModule,
+    UploadsModule,
     McpModule,
     forwardRef(() => KnowledgeBasesModule),
     MarketplaceModule,

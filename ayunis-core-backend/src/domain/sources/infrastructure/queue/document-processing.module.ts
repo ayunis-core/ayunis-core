@@ -12,6 +12,7 @@ import { DocumentProcessingPort } from '../../application/ports/document-process
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DocumentProcessingProducer } from './document-processing.producer';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
+import { ExtractionCheckpointStore } from './extraction-checkpoint.store';
 import { StaleProcessingCleanupTask } from '../tasks/stale-processing-cleanup.task';
 
 @Module({
@@ -36,6 +37,7 @@ import { StaleProcessingCleanupTask } from '../tasks/stale-processing-cleanup.ta
     StaleProcessingCleanupTask,
     MarkSourceFailedUseCase,
     SourceProcessingHelper,
+    ExtractionCheckpointStore,
   ],
   exports: [DocumentProcessingPort],
 })

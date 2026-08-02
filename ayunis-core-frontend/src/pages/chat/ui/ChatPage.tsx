@@ -276,10 +276,6 @@ export default function ChatPage({
     },
   });
 
-  const hasProcessingSources = thread.sources.some(
-    (s) => s.status === SourceResponseDtoStatus.processing,
-  );
-
   usePendingMessage({
     sendTextMessage,
     onSendStart: (text, images) => {
@@ -289,12 +285,11 @@ export default function ChatPage({
     },
   });
 
-  // Send is gated while a fresh upload is in flight or while server-side
-  // processing of an attached source hasn't finished — both are reasons we
-  // want the user to wait before they can submit a message. The academy gate
-  // adds a third: the org requires a certificate this user does not hold.
-  const isSendDisabled =
-    isCreatingFileSource || hasProcessingSources || isAcademyGated;
+  // Send is gated while a fresh upload is in flight, or while the org
+  // requires an academy certificate this user does not hold. Sources that are
+  // still processing server-side no longer block the chat: the system prompt
+  // tells the model which attachments are pending (AYC-94 superseded).
+  const isSendDisabled = isCreatingFileSource || isAcademyGated;
 
   async function handleSend(
     message: string,

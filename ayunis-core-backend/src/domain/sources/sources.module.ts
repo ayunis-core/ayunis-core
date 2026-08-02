@@ -29,6 +29,7 @@ import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueu
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
+import { StartFileSourceProcessingUseCase } from './application/use-cases/start-file-source-processing/start-file-source-processing.use-case';
 import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
@@ -67,6 +68,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
     StartDataSourceProcessingUseCase,
+    StartFileSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,
@@ -95,6 +97,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
     StartDataSourceProcessingUseCase,
+    StartFileSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,

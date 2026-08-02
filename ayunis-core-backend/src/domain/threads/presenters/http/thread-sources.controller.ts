@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { UUID } from 'crypto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   removeUploadedFile,
   UploadedSourceFile,
@@ -50,8 +50,16 @@ import {
   SourceNotReadyError,
 } from 'src/domain/sources/application/sources.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { TusUploadService } from 'src/domain/uploads/application/services/tus-upload.service';
+import {
+  CurrentUser,
+  UserProperty,
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { SourceNotFoundError as SourceNotFoundInThreadError } from '../../application/threads.errors';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+
+type ThreadSourceDto =
+  FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -66,6 +74,7 @@ export class ThreadSourcesController {
     private readonly getThreadSourcesUseCase: GetThreadSourcesUseCase,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly sourceDtoMapper: SourceDtoMapper,
+    private readonly tusUploadService: TusUploadService,
   ) {}
 
   @Get(':id/sources')
@@ -76,9 +85,7 @@ export class ThreadSourcesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async getThreadSources(
     @Param('id', ParseUUIDPipe) threadId: UUID,
-  ): Promise<
-    (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
-  > {
+  ): Promise<ThreadSourceDto[]> {
     this.logger.log('getThreadSources', { threadId });
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId),
@@ -93,9 +100,7 @@ export class ThreadSourcesController {
   async addFileSource(
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @UploadedFile() file: UploadedSourceFile | undefined,
-  ): Promise<
-    (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
-  > {
+  ): Promise<ThreadSourceDto[]> {
     if (!file) {
       throw new BadRequestException('No file was provided in the request');
     }
@@ -114,6 +119,40 @@ export class ThreadSourcesController {
       throw error;
     } finally {
       removeUploadedFile(file.path);
+    }
+  }
+
+  @Post(':id/sources/uploads/:uploadId')
+  @ApiOperation({
+    summary: 'Attach a completed resumable (tus) upload as a file source',
+  })
+  @ApiThreadIdParam()
+  @ApiParam({ name: 'uploadId', description: 'The tus upload id' })
+  @ApiSourceListResponse(
+    201,
+    'The file source has been successfully added to the thread',
+  )
+  @ApiResponse({ status: 404, description: 'Thread or upload not found' })
+  @ApiResponse({ status: 409, description: 'Upload not finished yet' })
+  async finalizeUpload(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Param('id', ParseUUIDPipe) threadId: UUID,
+    @Param('uploadId') uploadId: string,
+  ): Promise<ThreadSourceDto[]> {
+    this.logger.log('finalizeUpload', { threadId, uploadId });
+    const file = await this.tusUploadService.resolveCompletedUpload(
+      uploadId,
+      userId,
+    );
+    try {
+      const sources = await this.addFileSourceToThreadUseCase.execute(
+        new AddFileSourceToThreadCommand({ threadId, file }),
+      );
+      return sources.map((source) =>
+        this.sourceDtoMapper.toDto(source, threadId),
+      );
+    } finally {
+      this.tusUploadService.cleanupUpload(uploadId);
     }
   }
 

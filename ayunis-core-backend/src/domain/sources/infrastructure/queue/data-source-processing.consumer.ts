@@ -15,6 +15,7 @@ import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-case
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { DataSourceFileKind } from 'src/domain/sources/domain/data-source-file-kind.type';
+import { SourceProcessingStage } from 'src/domain/sources/domain/source-processing-progress';
 import type {
   DataSourceProcessingJobData,
   DataSourceProcessingTarget,
@@ -123,12 +124,13 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         throw new Error(`Source ${target.sourceId} is not a CSVDataSource`);
       }
 
-      // Reset processingStartedAt on every attempt so the stale-cleanup
-      // cron doesn't race with BullMQ retries on long-running jobs. Guarded
-      // UPDATE, not save(): save() would re-insert a row deleted since the
-      // findById above.
-      const alive = await this.sourceRepository.refreshProcessingHeartbeat(
+      // Sets the parsing stage and resets processingStartedAt on every
+      // attempt so the stale-cleanup cron doesn't race with BullMQ retries
+      // on long-running jobs. Guarded UPDATE, not save(): save() would
+      // re-insert a row deleted since the findById above.
+      const alive = await this.sourceRepository.updateProcessingProgress(
         target.sourceId,
+        { stage: SourceProcessingStage.PARSING },
       );
       if (!alive) {
         this.logger.warn('Source deleted mid-load, skipping', {
@@ -198,7 +200,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       sourceId,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
-      { processingError: null },
+      { processingError: null, processingProgress: null },
     );
     if (!updated) {
       this.logger.warn(

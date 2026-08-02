@@ -4180,7 +4180,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (max 25 MB)"
+                    "description": "The file to upload (max 50 MB; CSV/XLSX max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -4213,10 +4213,69 @@
             }
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the upload limit (50 MB; CSV/XLSX 25 MB)"
           }
         },
         "summary": "Add a file source to a thread",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{id}/sources/uploads/{uploadId}": {
+      "post": {
+        "operationId": "ThreadSourcesController_finalizeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The tus upload id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The file source has been successfully added to the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/FileSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/UrlSourceResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/CSVDataSourceResponseDto"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread or upload not found"
+          },
+          "409": {
+            "description": "Upload not finished yet"
+          }
+        },
+        "summary": "Attach a completed resumable (tus) upload as a file source",
         "tags": ["threads"]
       }
     },
@@ -4694,7 +4753,7 @@
     },
     "/knowledge-bases/{id}/documents": {
       "get": {
-        "operationId": "KnowledgeBasesController_listDocuments",
+        "operationId": "KnowledgeBaseDocumentsController_listDocuments",
         "parameters": [
           {
             "name": "id",
@@ -4726,7 +4785,7 @@
         "tags": ["knowledge-bases"]
       },
       "post": {
-        "operationId": "KnowledgeBasesController_addDocument",
+        "operationId": "KnowledgeBaseDocumentsController_addDocument",
         "parameters": [
           {
             "name": "id",
@@ -4749,7 +4808,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)"
+                    "description": "The file to upload (PDF, DOCX, PPTX, TXT, max 50 MB)"
                   }
                 },
                 "required": ["file"]
@@ -4772,16 +4831,62 @@
             "description": "Knowledge base not found"
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the 50 MB upload limit"
           }
         },
         "summary": "Add a document to a knowledge base",
         "tags": ["knowledge-bases"]
       }
     },
+    "/knowledge-bases/{id}/documents/uploads/{uploadId}": {
+      "post": {
+        "operationId": "KnowledgeBaseDocumentsController_finalizeDocumentUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The tus upload id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "The document has been accepted and is being processed in the background",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base or upload not found"
+          },
+          "409": {
+            "description": "Upload not finished yet"
+          }
+        },
+        "summary": "Attach a completed resumable (tus) upload as a document",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/knowledge-bases/{id}/urls": {
       "post": {
-        "operationId": "KnowledgeBasesController_addUrl",
+        "operationId": "KnowledgeBaseDocumentsController_addUrl",
         "parameters": [
           {
             "name": "id",
@@ -4825,7 +4930,7 @@
     },
     "/knowledge-bases/{id}/documents/{documentId}": {
       "delete": {
-        "operationId": "KnowledgeBasesController_removeDocument",
+        "operationId": "KnowledgeBaseDocumentsController_removeDocument",
         "parameters": [
           {
             "name": "id",
@@ -5356,7 +5461,7 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to upload (max 25 MB)"
+                    "description": "The file to upload (max 50 MB; CSV/XLSX max 25 MB)"
                   }
                 },
                 "required": ["file"]
@@ -5382,10 +5487,56 @@
             "description": "Skill not found"
           },
           "413": {
-            "description": "File exceeds the 25 MB upload limit"
+            "description": "File exceeds the upload limit (50 MB; CSV/XLSX 25 MB)"
           }
         },
         "summary": "Add a file source to a skill",
+        "tags": ["skills"]
+      }
+    },
+    "/skills/{id}/sources/uploads/{uploadId}": {
+      "post": {
+        "operationId": "SkillSourcesController_finalizeUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the skill",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "description": "The tus upload id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The file source has been successfully added to the skill",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Skill or upload not found"
+          },
+          "409": {
+            "description": "Upload not finished yet"
+          }
+        },
+        "summary": "Attach a completed resumable (tus) upload as a file source",
         "tags": ["skills"]
       }
     },
@@ -13018,6 +13169,25 @@
           "isReasoning"
         ]
       },
+      "SourceProcessingProgressDto": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "description": "Current processing stage",
+            "enum": ["extracting", "indexing", "parsing"]
+          },
+          "processedPages": {
+            "type": "number",
+            "description": "Pages extracted so far (documents only)"
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total page count (documents only)"
+          }
+        },
+        "required": ["stage"]
+      },
       "SourceResponseDto": {
         "type": "object",
         "properties": {
@@ -13051,6 +13221,14 @@
           "processingError": {
             "type": "string",
             "description": "Error message if processing failed"
+          },
+          "processingProgress": {
+            "description": "Stage and page progress while the source is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -13105,6 +13283,14 @@
           "processingError": {
             "type": "string",
             "description": "Error message if processing failed"
+          },
+          "processingProgress": {
+            "description": "Stage and page progress while the source is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -13172,6 +13358,14 @@
             "type": "string",
             "description": "Error message if processing failed"
           },
+          "processingProgress": {
+            "description": "Stage and page progress while the source is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "description": "Creation timestamp"
@@ -13236,6 +13430,14 @@
           "processingError": {
             "type": "string",
             "description": "Error message if processing failed"
+          },
+          "processingProgress": {
+            "description": "Stage and page progress while the source is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -13693,6 +13895,14 @@
             "description": "Error message if processing failed (only present when status is failed)",
             "example": "OCR extraction timed out"
           },
+          "processingProgress": {
+            "description": "Stage and page progress while the document is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
+          },
           "textType": {
             "type": "string",
             "description": "The text source subtype (e.g. file, web)",
@@ -14023,6 +14233,14 @@
             "type": "string",
             "description": "Error message if processing failed",
             "example": "OCR extraction timed out"
+          },
+          "processingProgress": {
+            "description": "Stage and page progress while the source is processing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceProcessingProgressDto"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",

@@ -59,6 +59,7 @@ export class SkillDtoMapper {
       type: source.type,
       status: source.status,
       processingError: source.processingError ?? undefined,
+      processingProgress: source.processingProgress ?? undefined,
       createdAt: source.createdAt.toISOString(),
     };
   }

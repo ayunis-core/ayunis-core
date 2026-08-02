@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingProgressDto } from 'src/domain/sources/presenters/http/dto/source-processing-progress.dto';
 import {
   SourceType,
   TextType,
@@ -35,6 +36,13 @@ export abstract class SourceResponseDto {
     required: false,
   })
   processingError?: string;
+
+  @ApiProperty({
+    description: 'Stage and page progress while the source is processing',
+    type: SourceProcessingProgressDto,
+    required: false,
+  })
+  processingProgress?: SourceProcessingProgressDto;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;

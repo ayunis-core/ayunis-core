@@ -99,9 +99,9 @@ import type {
   IsCloudResponseDto,
   KnowledgeBaseDocumentListResponseDto,
   KnowledgeBaseDocumentResponseDto,
+  KnowledgeBaseDocumentsControllerAddDocumentBody,
   KnowledgeBaseListResponseDto,
   KnowledgeBaseResponseDto,
-  KnowledgeBasesControllerAddDocumentBody,
   LanguageModelResponseDto,
   LetterheadResponseDto,
   LoginDto,
@@ -193,6 +193,7 @@ import type {
   TeamsControllerListTeamMembersParams,
   ThreadSourcesControllerAddFileSource201Item,
   ThreadSourcesControllerAddFileSourceBody,
+  ThreadSourcesControllerFinalizeUpload201Item,
   ThreadSourcesControllerGetThreadSources200Item,
   ThreadsControllerFindAllParams,
   TranscriptionResponseDto,
@@ -8373,6 +8374,70 @@ export const useThreadSourcesControllerAddFileSource = <TError = void,
     }
     
 /**
+ * @summary Attach a completed resumable (tus) upload as a file source
+ */
+export const threadSourcesControllerFinalizeUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ThreadSourcesControllerFinalizeUpload201Item[]>(
+      {url: `/threads/${id}/sources/uploads/${uploadId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getThreadSourcesControllerFinalizeUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext> => {
+
+const mutationKey = ['threadSourcesControllerFinalizeUpload'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>, {id: string;uploadId: string}> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  threadSourcesControllerFinalizeUpload(id,uploadId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadSourcesControllerFinalizeUploadMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>>
+    
+    export type ThreadSourcesControllerFinalizeUploadMutationError = void
+
+    /**
+ * @summary Attach a completed resumable (tus) upload as a file source
+ */
+export const useThreadSourcesControllerFinalizeUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadSourcesControllerFinalizeUpload>>,
+        TError,
+        {id: string;uploadId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadSourcesControllerFinalizeUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Remove a source from a thread
  */
 export const threadSourcesControllerRemoveSource = (
@@ -9378,7 +9443,7 @@ export const useKnowledgeBasesControllerDelete = <TError = void,
 /**
  * @summary List all documents in a knowledge base
  */
-export const knowledgeBasesControllerListDocuments = (
+export const knowledgeBaseDocumentsControllerListDocuments = (
     id: string,
  signal?: AbortSignal
 ) => {
@@ -9393,69 +9458,69 @@ export const knowledgeBasesControllerListDocuments = (
 
 
 
-export const getKnowledgeBasesControllerListDocumentsQueryKey = (id?: string,) => {
+export const getKnowledgeBaseDocumentsControllerListDocumentsQueryKey = (id?: string,) => {
     return [
     `/knowledge-bases/${id}/documents`
     ] as const;
     }
 
     
-export const getKnowledgeBasesControllerListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+export const getKnowledgeBaseDocumentsControllerListDocumentsQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBasesControllerListDocumentsQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseDocumentsControllerListDocumentsQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>> = ({ signal }) => knowledgeBasesControllerListDocuments(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>> = ({ signal }) => knowledgeBaseDocumentsControllerListDocuments(id, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type KnowledgeBasesControllerListDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>>
-export type KnowledgeBasesControllerListDocumentsQueryError = void
+export type KnowledgeBaseDocumentsControllerListDocumentsQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>>
+export type KnowledgeBaseDocumentsControllerListDocumentsQueryError = void
 
 
-export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>> & Pick<
+export function useKnowledgeBaseDocumentsControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>,
+          Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>,
           TError,
-          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>
+          Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>> & Pick<
+export function useKnowledgeBaseDocumentsControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>,
+          Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>,
           TError,
-          Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>
+          Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+export function useKnowledgeBaseDocumentsControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List all documents in a knowledge base
  */
 
-export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBasesControllerListDocuments>>, TError, TData>>, }
+export function useKnowledgeBaseDocumentsControllerListDocuments<TData = Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerListDocuments>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getKnowledgeBasesControllerListDocumentsQueryOptions(id,options)
+  const queryOptions = getKnowledgeBaseDocumentsControllerListDocumentsQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -9471,14 +9536,14 @@ export function useKnowledgeBasesControllerListDocuments<TData = Awaited<ReturnT
 /**
  * @summary Add a document to a knowledge base
  */
-export const knowledgeBasesControllerAddDocument = (
+export const knowledgeBaseDocumentsControllerAddDocument = (
     id: string,
-    knowledgeBasesControllerAddDocumentBody: KnowledgeBasesControllerAddDocumentBody,
+    knowledgeBaseDocumentsControllerAddDocumentBody: KnowledgeBaseDocumentsControllerAddDocumentBody,
  signal?: AbortSignal
 ) => {
       
       const formData = new FormData();
-formData.append(`file`, knowledgeBasesControllerAddDocumentBody.file)
+formData.append(`file`, knowledgeBaseDocumentsControllerAddDocumentBody.file)
 
       return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
       {url: `/knowledge-bases/${id}/documents`, method: 'POST',
@@ -9490,11 +9555,11 @@ formData.append(`file`, knowledgeBasesControllerAddDocumentBody.file)
   
 
 
-export const getKnowledgeBasesControllerAddDocumentMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext> => {
+export const getKnowledgeBaseDocumentsControllerAddDocumentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>, TError,{id: string;data: KnowledgeBaseDocumentsControllerAddDocumentBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>, TError,{id: string;data: KnowledgeBaseDocumentsControllerAddDocumentBody}, TContext> => {
 
-const mutationKey = ['knowledgeBasesControllerAddDocument'];
+const mutationKey = ['knowledgeBaseDocumentsControllerAddDocument'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9504,10 +9569,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, {id: string;data: KnowledgeBasesControllerAddDocumentBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>, {id: string;data: KnowledgeBaseDocumentsControllerAddDocumentBody}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  knowledgeBasesControllerAddDocument(id,data,)
+          return  knowledgeBaseDocumentsControllerAddDocument(id,data,)
         }
 
         
@@ -9515,23 +9580,87 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type KnowledgeBasesControllerAddDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>>
-    export type KnowledgeBasesControllerAddDocumentMutationBody = KnowledgeBasesControllerAddDocumentBody
-    export type KnowledgeBasesControllerAddDocumentMutationError = void
+    export type KnowledgeBaseDocumentsControllerAddDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>>
+    export type KnowledgeBaseDocumentsControllerAddDocumentMutationBody = KnowledgeBaseDocumentsControllerAddDocumentBody
+    export type KnowledgeBaseDocumentsControllerAddDocumentMutationError = void
 
     /**
  * @summary Add a document to a knowledge base
  */
-export const useKnowledgeBasesControllerAddDocument = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>, TError,{id: string;data: KnowledgeBasesControllerAddDocumentBody}, TContext>, }
+export const useKnowledgeBaseDocumentsControllerAddDocument = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>, TError,{id: string;data: KnowledgeBaseDocumentsControllerAddDocumentBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof knowledgeBasesControllerAddDocument>>,
+        Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddDocument>>,
         TError,
-        {id: string;data: KnowledgeBasesControllerAddDocumentBody},
+        {id: string;data: KnowledgeBaseDocumentsControllerAddDocumentBody},
         TContext
       > => {
 
-      const mutationOptions = getKnowledgeBasesControllerAddDocumentMutationOptions(options);
+      const mutationOptions = getKnowledgeBaseDocumentsControllerAddDocumentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Attach a completed resumable (tus) upload as a document
+ */
+export const knowledgeBaseDocumentsControllerFinalizeDocumentUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
+      {url: `/knowledge-bases/${id}/documents/uploads/${uploadId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getKnowledgeBaseDocumentsControllerFinalizeDocumentUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>, TError,{id: string;uploadId: string}, TContext> => {
+
+const mutationKey = ['knowledgeBaseDocumentsControllerFinalizeDocumentUpload'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>, {id: string;uploadId: string}> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  knowledgeBaseDocumentsControllerFinalizeDocumentUpload(id,uploadId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseDocumentsControllerFinalizeDocumentUploadMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>>
+    
+    export type KnowledgeBaseDocumentsControllerFinalizeDocumentUploadMutationError = void
+
+    /**
+ * @summary Attach a completed resumable (tus) upload as a document
+ */
+export const useKnowledgeBaseDocumentsControllerFinalizeDocumentUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerFinalizeDocumentUpload>>,
+        TError,
+        {id: string;uploadId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeBaseDocumentsControllerFinalizeDocumentUploadMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9539,7 +9668,7 @@ export const useKnowledgeBasesControllerAddDocument = <TError = void,
 /**
  * @summary Add a URL source to a knowledge base
  */
-export const knowledgeBasesControllerAddUrl = (
+export const knowledgeBaseDocumentsControllerAddUrl = (
     id: string,
     addUrlToKnowledgeBaseDto: AddUrlToKnowledgeBaseDto,
  signal?: AbortSignal
@@ -9556,11 +9685,11 @@ export const knowledgeBasesControllerAddUrl = (
   
 
 
-export const getKnowledgeBasesControllerAddUrlMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext> => {
+export const getKnowledgeBaseDocumentsControllerAddUrlMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext> => {
 
-const mutationKey = ['knowledgeBasesControllerAddUrl'];
+const mutationKey = ['knowledgeBaseDocumentsControllerAddUrl'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9570,10 +9699,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, {id: string;data: AddUrlToKnowledgeBaseDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>, {id: string;data: AddUrlToKnowledgeBaseDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  knowledgeBasesControllerAddUrl(id,data,)
+          return  knowledgeBaseDocumentsControllerAddUrl(id,data,)
         }
 
         
@@ -9581,23 +9710,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type KnowledgeBasesControllerAddUrlMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>>
-    export type KnowledgeBasesControllerAddUrlMutationBody = AddUrlToKnowledgeBaseDto
-    export type KnowledgeBasesControllerAddUrlMutationError = void
+    export type KnowledgeBaseDocumentsControllerAddUrlMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>>
+    export type KnowledgeBaseDocumentsControllerAddUrlMutationBody = AddUrlToKnowledgeBaseDto
+    export type KnowledgeBaseDocumentsControllerAddUrlMutationError = void
 
     /**
  * @summary Add a URL source to a knowledge base
  */
-export const useKnowledgeBasesControllerAddUrl = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
+export const useKnowledgeBaseDocumentsControllerAddUrl = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>, TError,{id: string;data: AddUrlToKnowledgeBaseDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>,
+        Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerAddUrl>>,
         TError,
         {id: string;data: AddUrlToKnowledgeBaseDto},
         TContext
       > => {
 
-      const mutationOptions = getKnowledgeBasesControllerAddUrlMutationOptions(options);
+      const mutationOptions = getKnowledgeBaseDocumentsControllerAddUrlMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -9605,7 +9734,7 @@ export const useKnowledgeBasesControllerAddUrl = <TError = void,
 /**
  * @summary Remove a document from a knowledge base
  */
-export const knowledgeBasesControllerRemoveDocument = (
+export const knowledgeBaseDocumentsControllerRemoveDocument = (
     id: string,
     documentId: string,
  ) => {
@@ -9619,11 +9748,11 @@ export const knowledgeBasesControllerRemoveDocument = (
   
 
 
-export const getKnowledgeBasesControllerRemoveDocumentMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext> => {
+export const getKnowledgeBaseDocumentsControllerRemoveDocumentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext> => {
 
-const mutationKey = ['knowledgeBasesControllerRemoveDocument'];
+const mutationKey = ['knowledgeBaseDocumentsControllerRemoveDocument'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9633,10 +9762,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, {id: string;documentId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>, {id: string;documentId: string}> = (props) => {
           const {id,documentId} = props ?? {};
 
-          return  knowledgeBasesControllerRemoveDocument(id,documentId,)
+          return  knowledgeBaseDocumentsControllerRemoveDocument(id,documentId,)
         }
 
         
@@ -9644,23 +9773,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type KnowledgeBasesControllerRemoveDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>>
+    export type KnowledgeBaseDocumentsControllerRemoveDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>>
     
-    export type KnowledgeBasesControllerRemoveDocumentMutationError = void
+    export type KnowledgeBaseDocumentsControllerRemoveDocumentMutationError = void
 
     /**
  * @summary Remove a document from a knowledge base
  */
-export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+export const useKnowledgeBaseDocumentsControllerRemoveDocument = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof knowledgeBasesControllerRemoveDocument>>,
+        Awaited<ReturnType<typeof knowledgeBaseDocumentsControllerRemoveDocument>>,
         TError,
         {id: string;documentId: string},
         TContext
       > => {
 
-      const mutationOptions = getKnowledgeBasesControllerRemoveDocumentMutationOptions(options);
+      const mutationOptions = getKnowledgeBaseDocumentsControllerRemoveDocumentMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -10675,6 +10804,70 @@ export const useSkillSourcesControllerAddFileSource = <TError = void,
       > => {
 
       const mutationOptions = getSkillSourcesControllerAddFileSourceMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Attach a completed resumable (tus) upload as a file source
+ */
+export const skillSourcesControllerFinalizeUpload = (
+    id: string,
+    uploadId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SkillResponseDto>(
+      {url: `/skills/${id}/sources/uploads/${uploadId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSkillSourcesControllerFinalizeUploadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext> => {
+
+const mutationKey = ['skillSourcesControllerFinalizeUpload'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>, {id: string;uploadId: string}> = (props) => {
+          const {id,uploadId} = props ?? {};
+
+          return  skillSourcesControllerFinalizeUpload(id,uploadId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SkillSourcesControllerFinalizeUploadMutationResult = NonNullable<Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>>
+    
+    export type SkillSourcesControllerFinalizeUploadMutationError = void
+
+    /**
+ * @summary Attach a completed resumable (tus) upload as a file source
+ */
+export const useSkillSourcesControllerFinalizeUpload = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>, TError,{id: string;uploadId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof skillSourcesControllerFinalizeUpload>>,
+        TError,
+        {id: string;uploadId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSkillSourcesControllerFinalizeUploadMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

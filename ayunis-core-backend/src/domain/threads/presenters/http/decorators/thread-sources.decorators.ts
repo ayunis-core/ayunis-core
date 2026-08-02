@@ -69,7 +69,7 @@ export function ApiFileSourceUpload() {
     UseInterceptors(FileInterceptor('file', SOURCE_FILE_UPLOAD_OPTIONS)),
     ApiResponse({
       status: 413,
-      description: 'File exceeds the 25 MB upload limit',
+      description: 'File exceeds the upload limit (50 MB; CSV/XLSX 25 MB)',
     }),
     ApiSourceListResponse(
       201,

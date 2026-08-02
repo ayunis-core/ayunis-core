@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { LocalKnowledgeBaseRepositoryModule } from './infrastructure/persistence/local/local-knowledge-base-repository.module';
 import { SourcesModule } from '../sources/sources.module';
+import { UploadsModule } from '../uploads/uploads.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 import { ContextModule } from 'src/common/context/context.module';
 import { StorageModule } from '../storage/storage.module';
@@ -30,12 +31,14 @@ import { GetKnowledgeBasesByIdsUseCase } from './application/use-cases/get-knowl
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
+import { KnowledgeBaseDocumentsController } from './presenters/http/knowledge-base-documents.controller';
 import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base-dto.mapper';
 
 @Module({
   imports: [
     LocalKnowledgeBaseRepositoryModule,
     SourcesModule,
+    UploadsModule,
     IndexersModule,
     ContextModule,
     StorageModule,
@@ -71,7 +74,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
       useExisting: KnowledgeBaseShareAuthorizationStrategy,
     },
   ],
-  controllers: [KnowledgeBasesController],
+  controllers: [KnowledgeBasesController, KnowledgeBaseDocumentsController],
   exports: [
     LocalKnowledgeBaseRepositoryModule,
     KnowledgeBaseAccessService,

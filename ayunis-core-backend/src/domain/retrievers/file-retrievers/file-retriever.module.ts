@@ -8,15 +8,18 @@ import { FileRetrieverType } from './domain/value-objects/file-retriever-type.en
 import { NpmPdfParseFileRetrieverHandler } from './infrastructure/adapters/npm-pdf-parse-file-retriever.handler';
 import { GotenbergConverterService } from './infrastructure/adapters/gotenberg-converter.service';
 import { DocumentConverterPort } from './application/ports/document-converter.port';
+import { PageOcrPort } from './application/ports/page-ocr.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.module';
+import { PdfTextParsingModule } from './infrastructure/parsing/pdf-text-parsing.module';
 
 @Module({
   imports: [
     ConfigModule.forFeature(retrievalConfig),
     ConfigModule.forFeature(gotenbergConfig),
     TranscriptionsModule,
+    PdfTextParsingModule,
   ],
   providers: [
     FileRetrieverRegistry,
@@ -28,6 +31,10 @@ import { TranscriptionsModule } from 'src/domain/transcriptions/transcriptions.m
     {
       provide: DocumentConverterPort,
       useExisting: GotenbergConverterService,
+    },
+    {
+      provide: PageOcrPort,
+      useExisting: MistralFileRetrieverHandler,
     },
     {
       provide: FileRetrieverRegistry,

@@ -2,9 +2,9 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PreflightCheckCommand } from './preflight-check.command';
 import { TooManyPagesError } from '../../file-retriever.errors';
+import { PdfTextExtractorPort } from '../../ports/pdf-text-extractor.port';
 import { detectFileType } from 'src/common/util/file-type';
 import retrievalConfig from 'src/config/retrieval.config';
-import PdfParse from 'pdf-parse';
 
 @Injectable()
 export class PreflightCheckUseCase {
@@ -13,6 +13,7 @@ export class PreflightCheckUseCase {
   constructor(
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
+    private readonly pdfTextExtractor: PdfTextExtractorPort,
   ) {}
 
   async execute(command: PreflightCheckCommand): Promise<void> {
@@ -34,15 +35,10 @@ export class PreflightCheckUseCase {
 
     let pageCount: number;
     try {
-      // pdf-parse reads metadata including page count without full text extraction
-      const pdf = await PdfParse(fileData, {
-        // Only read first page to get metadata quickly
-        max: 1,
-      });
-      pageCount = pdf.numpages;
+      pageCount = await this.pdfTextExtractor.countPages(fileData);
     } catch (error) {
-      // If pdf-parse fails to read metadata, let it through — the actual
-      // processing step will handle or fail on the content itself
+      // If the metadata read fails, let it through — the actual processing
+      // step will handle or fail on the content itself
       this.logger.warn(
         `Could not read PDF metadata for preflight: ${(error as Error).message}`,
       );

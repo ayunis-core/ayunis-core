@@ -4,7 +4,12 @@ import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 
-export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+// Matches Mistral's OCR file-size limit — a scanned document above this
+// could never be OCR'd anyway.
+export const MAX_SOURCE_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+// Parsed rows are stored as a single jsonb value, which caps how much
+// tabular data one source can safely hold.
+export const MAX_TABULAR_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 /** Shape multer produces for disk-stored source uploads (no buffer — disk storage only sets path). */
 export interface UploadedSourceFile {
@@ -52,7 +57,7 @@ export const SOURCE_FILE_API_BODY = {
       file: {
         type: 'string',
         format: 'binary',
-        description: 'The file to upload (max 25 MB)',
+        description: 'The file to upload (max 50 MB; CSV/XLSX max 25 MB)',
       },
     },
     required: ['file'],

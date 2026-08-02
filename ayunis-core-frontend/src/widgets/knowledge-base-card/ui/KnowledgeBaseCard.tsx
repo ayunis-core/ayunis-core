@@ -31,11 +31,18 @@ import { showError } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/shadcn/utils';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 
+export interface SourceProcessingProgress {
+  stage: 'extracting' | 'indexing' | 'parsing';
+  processedPages?: number;
+  totalPages?: number;
+}
+
 export interface Source {
   id: string;
   name: string;
   status?: string;
   processingError?: string;
+  processingProgress?: SourceProcessingProgress;
   createdAt?: string;
 }
 
@@ -229,6 +236,7 @@ function SourceItem({
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
           processingError={source.processingError}
+          processingProgress={source.processingProgress}
           t={t}
         />
       </ItemContent>
@@ -271,18 +279,39 @@ function SourceItemIcon({
   return <FileText className="h-3.5 w-3.5 shrink-0" />;
 }
 
+function processingLabel(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  isProcessingSlow: boolean,
+  progress?: SourceProcessingProgress,
+): string {
+  if (progress?.stage === 'extracting' && progress.totalPages) {
+    return t('additionalDocuments.statusExtractingPages', {
+      current: progress.processedPages ?? 0,
+      total: progress.totalPages,
+    });
+  }
+  if (progress?.stage === 'indexing') {
+    return t('additionalDocuments.statusIndexing');
+  }
+  return isProcessingSlow
+    ? t('additionalDocuments.statusProcessingSlow')
+    : t('additionalDocuments.statusProcessing');
+}
+
 function SourceItemDescription({
   isProcessing,
   isProcessingSlow,
   isFailed,
   processingError,
+  processingProgress,
   t,
 }: Readonly<{
   isProcessing: boolean;
   isProcessingSlow: boolean;
   isFailed: boolean;
   processingError: string | undefined;
-  t: (key: string) => string;
+  processingProgress?: SourceProcessingProgress;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }>) {
   if (isProcessing) {
     return (
@@ -291,9 +320,7 @@ function SourceItemDescription({
           isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
         }
       >
-        {isProcessingSlow
-          ? t('additionalDocuments.statusProcessingSlow')
-          : t('additionalDocuments.statusProcessing')}
+        {processingLabel(t, isProcessingSlow, processingProgress)}
       </ItemDescription>
     );
   }

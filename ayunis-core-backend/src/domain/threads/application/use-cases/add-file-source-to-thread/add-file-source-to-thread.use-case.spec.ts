@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 
@@ -12,31 +11,32 @@ import { AddFileSourceToThreadUseCase } from './add-file-source-to-thread.use-ca
 import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.command';
 import type { FindThreadUseCase } from '../find-thread/find-thread.use-case';
 import type { AddSourceToThreadUseCase } from '../add-source-to-thread/add-source-to-thread.use-case';
-import type { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
-import type { StartDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
+import type { StartFileSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/start-file-source-processing/start-file-source-processing.use-case';
 import type { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
-import { UnsupportedFileTypeError } from 'src/domain/sources/application/sources.errors';
 import { ThreadsConstants } from '../../../domain/threads.constants';
 import { ThreadSourceLimitExceededError } from '../../threads.errors';
 import type { SourceAssignment } from '../../../domain/thread-source-assignment.entity';
 import type { Thread } from '../../../domain/thread.entity';
-import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 describe('AddFileSourceToThreadUseCase', () => {
   const threadId = randomUUID();
   const thread = { id: threadId } as Thread;
+  const file = {
+    originalname: 'haushalt.xlsx',
+    mimetype:
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    path: '/uploads/upload-1',
+  };
 
   let findThread: jest.Mocked<FindThreadUseCase>;
   let addSourceToThread: jest.Mocked<AddSourceToThreadUseCase>;
-  let startDocumentProcessing: jest.Mocked<StartDocumentProcessingUseCase>;
-  let startDataSourceProcessing: jest.Mocked<StartDataSourceProcessingUseCase>;
+  let startFileSourceProcessing: jest.Mocked<StartFileSourceProcessingUseCase>;
   let deleteSources: jest.Mocked<DeleteSourcesUseCase>;
   let useCase: AddFileSourceToThreadUseCase;
-  let readFile: jest.SpyInstance;
 
-  function dataSource(id: UUID = randomUUID()): CSVDataSource {
-    return { id } as CSVDataSource;
+  function source(id: UUID = randomUUID()): Source {
+    return { id } as Source;
   }
 
   beforeEach(() => {
@@ -46,30 +46,19 @@ describe('AddFileSourceToThreadUseCase', () => {
     addSourceToThread = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<AddSourceToThreadUseCase>;
-    startDocumentProcessing = {
+    startFileSourceProcessing = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<StartDocumentProcessingUseCase>;
-    startDataSourceProcessing = {
-      execute: jest.fn(),
-    } as unknown as jest.Mocked<StartDataSourceProcessingUseCase>;
+    } as unknown as jest.Mocked<StartFileSourceProcessingUseCase>;
     deleteSources = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<DeleteSourcesUseCase>;
-    readFile = jest
-      .spyOn(fs.promises, 'readFile')
-      .mockResolvedValue(Buffer.from('file-bytes'));
 
     useCase = new AddFileSourceToThreadUseCase(
       findThread,
       addSourceToThread,
-      startDocumentProcessing,
-      startDataSourceProcessing,
+      startFileSourceProcessing,
       deleteSources,
     );
-  });
-
-  afterEach(() => {
-    readFile.mockRestore();
   });
 
   it('rejects a thread at the source cap before any processing starts', async () => {
@@ -84,17 +73,11 @@ describe('AddFileSourceToThreadUseCase', () => {
       thread: fullThread,
       isLongChat: false,
     });
-    const file = {
-      originalname: 'bericht.pdf',
-      mimetype: 'application/pdf',
-      path: '/uploads/upload-0',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToThreadCommand({ threadId, file })),
     ).rejects.toBeInstanceOf(ThreadSourceLimitExceededError);
-    expect(startDocumentProcessing.execute).not.toHaveBeenCalled();
-    expect(startDataSourceProcessing.execute).not.toHaveBeenCalled();
+    expect(startFileSourceProcessing.execute).not.toHaveBeenCalled();
   });
 
   it('passes a capacity check that accounts for every sheet of a workbook', async () => {
@@ -110,18 +93,12 @@ describe('AddFileSourceToThreadUseCase', () => {
       isLongChat: false,
     });
     // One slot left, workbook has two sheets — the callback must throw.
-    startDataSourceProcessing.execute.mockImplementation(
+    startFileSourceProcessing.execute.mockImplementation(
       (command: { ensureCapacityFor?: (count: number) => void }) => {
         command.ensureCapacityFor?.(2);
-        return Promise.resolve([dataSource(), dataSource()]);
+        return Promise.resolve([source(), source()]);
       },
     );
-    const file = {
-      originalname: 'haushalt.xlsx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      path: '/uploads/upload-7',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToThreadCommand({ threadId, file })),
@@ -129,83 +106,30 @@ describe('AddFileSourceToThreadUseCase', () => {
     expect(addSourceToThread.execute).not.toHaveBeenCalled();
   });
 
-  it('starts async CSV processing and attaches the source to the thread', async () => {
-    const created = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([created]);
-    const file = {
-      originalname: 'einwohner.csv',
-      mimetype: 'text/csv',
-      path: '/uploads/upload-1',
-    };
-
-    const result = await useCase.execute(
-      new AddFileSourceToThreadCommand({ threadId, file }),
-    );
-
-    expect(result).toEqual([created]);
-    expect(startDataSourceProcessing.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ fileName: 'einwohner.csv', kind: 'csv' }),
-    );
-    expect(addSourceToThread.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ thread, source: created }),
-    );
-  });
-
-  it('attaches every pre-created sheet source of a spreadsheet upload', async () => {
-    const first = dataSource();
-    const second = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([first, second]);
-    const file = {
-      originalname: 'haushalt.xlsx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      path: '/uploads/upload-2',
-    };
+  it('starts processing and attaches every created source to the thread', async () => {
+    const first = source();
+    const second = source();
+    startFileSourceProcessing.execute.mockResolvedValue([first, second]);
 
     const result = await useCase.execute(
       new AddFileSourceToThreadCommand({ threadId, file }),
     );
 
     expect(result).toEqual([first, second]);
-    expect(startDataSourceProcessing.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fileName: 'haushalt.xlsx',
-        kind: 'spreadsheet',
-      }),
+    expect(startFileSourceProcessing.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ file }),
     );
     expect(addSourceToThread.execute).toHaveBeenCalledTimes(2);
-  });
-
-  it('starts document processing for a PDF and attaches the source', async () => {
-    const created = { id: randomUUID() } as FileSource;
-    startDocumentProcessing.execute.mockResolvedValue(created);
-    const file = {
-      originalname: 'satzung.pdf',
-      mimetype: 'application/pdf',
-      path: '/uploads/upload-4',
-    };
-
-    const result = await useCase.execute(
-      new AddFileSourceToThreadCommand({ threadId, file }),
-    );
-
-    expect(result).toEqual([created]);
     expect(addSourceToThread.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ thread, source: created }),
+      expect.objectContaining({ thread, source: first }),
     );
   });
 
   it('deletes the pre-created sources when attaching to the thread fails', async () => {
-    const first = dataSource();
-    const second = dataSource();
-    startDataSourceProcessing.execute.mockResolvedValue([first, second]);
+    const first = source();
+    const second = source();
+    startFileSourceProcessing.execute.mockResolvedValue([first, second]);
     addSourceToThread.execute.mockRejectedValue(new Error('thread gone'));
-    const file = {
-      originalname: 'haushalt.xlsx',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      path: '/uploads/upload-6',
-    };
 
     await expect(
       useCase.execute(new AddFileSourceToThreadCommand({ threadId, file })),
@@ -216,17 +140,12 @@ describe('AddFileSourceToThreadUseCase', () => {
     );
   });
 
-  it('rejects unsupported file types without touching the thread', async () => {
-    const file = {
-      originalname: 'video.mp4',
-      mimetype: 'video/mp4',
-      path: '/uploads/upload-5',
-    };
+  it('does not start processing when the thread does not exist', async () => {
+    findThread.execute.mockRejectedValue(new Error('thread not found'));
 
     await expect(
       useCase.execute(new AddFileSourceToThreadCommand({ threadId, file })),
-    ).rejects.toThrow(UnsupportedFileTypeError);
-    expect(addSourceToThread.execute).not.toHaveBeenCalled();
-    expect(startDataSourceProcessing.execute).not.toHaveBeenCalled();
+    ).rejects.toThrow();
+    expect(startFileSourceProcessing.execute).not.toHaveBeenCalled();
   });
 });

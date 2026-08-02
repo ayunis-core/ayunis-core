@@ -1,12 +1,13 @@
 import {
-  useSkillSourcesControllerAddFileSource,
+  skillSourcesControllerFinalizeUpload,
   useSkillSourcesControllerGetSkillSources,
   useSkillSourcesControllerRemoveSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
-import { useQueryClient } from '@tanstack/react-query';
+import { uploadFileResumable } from '@/shared/lib/upload-file-resumable';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 
@@ -35,18 +36,21 @@ export default function useSkillSources({
       },
     });
 
-  const addFileSourceMutation = useSkillSourcesControllerAddFileSource({
-    mutation: {
-      retry: 0,
-      onSuccess: () => {
-        void queryClient.invalidateQueries({
-          queryKey: [`/skills/${skill.id}/sources`],
-        });
-        showSuccess(t('sources.addedSuccessfully'));
-      },
-      onError: (error: unknown) => {
-        handleSourceUploadError(error, t);
-      },
+  const addFileSourceMutation = useMutation({
+    retry: 0,
+    // Resumable chunked upload (tus), then finalize to validate and attach.
+    mutationFn: async ({ id, data }: { id: string; data: { file: File } }) => {
+      const uploadId = await uploadFileResumable(data.file);
+      return skillSourcesControllerFinalizeUpload(id, uploadId);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [`/skills/${skill.id}/sources`],
+      });
+      showSuccess(t('sources.addedSuccessfully'));
+    },
+    onError: (error: unknown) => {
+      handleSourceUploadError(error, t);
     },
   });
 

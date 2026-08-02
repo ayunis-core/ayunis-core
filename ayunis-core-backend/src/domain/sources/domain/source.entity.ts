@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { SourceType } from './source-type.enum';
+import type { SourceProcessingProgress } from './source-processing-progress';
 import { SourceCreator } from './source-creator.enum';
 import { SourceStatus } from './source-status.enum';
 
@@ -13,6 +14,7 @@ export abstract class Source {
   status: SourceStatus;
   processingError: string | null;
   processingStartedAt: Date | null;
+  processingProgress: SourceProcessingProgress | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -25,6 +27,7 @@ export abstract class Source {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -36,6 +39,7 @@ export abstract class Source {
     this.status = params.status ?? SourceStatus.READY;
     this.processingError = params.processingError ?? null;
     this.processingStartedAt = params.processingStartedAt ?? null;
+    this.processingProgress = params.processingProgress ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

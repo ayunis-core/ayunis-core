@@ -5,6 +5,7 @@ import {
 } from 'src/domain/sources/domain/source-type.enum';
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceProcessingProgressDto } from 'src/domain/sources/presenters/http/dto/source-processing-progress.dto';
 
 export class KnowledgeBaseDocumentResponseDto {
   @ApiProperty({
@@ -64,6 +65,12 @@ export class KnowledgeBaseDocumentResponseDto {
     example: 'OCR extraction timed out',
   })
   processingError?: string;
+
+  @ApiPropertyOptional({
+    description: 'Stage and page progress while the document is processing',
+    type: SourceProcessingProgressDto,
+  })
+  processingProgress?: SourceProcessingProgressDto;
 
   @ApiPropertyOptional({
     description: 'The text source subtype (e.g. file, web)',

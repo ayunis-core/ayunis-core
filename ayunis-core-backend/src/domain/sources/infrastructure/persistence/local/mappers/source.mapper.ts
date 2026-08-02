@@ -61,6 +61,7 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          processingProgress: record.processingProgress,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -76,6 +77,7 @@ export class SourceMapper {
           status: record.status,
           processingError: record.processingError,
           processingStartedAt: record.processingStartedAt,
+          processingProgress: record.processingProgress,
           createdAt: record.createdAt,
           updatedAt: record.updatedAt,
           createdBy: record.createdBy,
@@ -95,6 +97,7 @@ export class SourceMapper {
       status: record.status,
       processingError: record.processingError,
       processingStartedAt: record.processingStartedAt,
+      processingProgress: record.processingProgress,
       createdBy: record.createdBy,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -157,6 +160,7 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    record.processingProgress = source.processingProgress;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.textType = source.textType;
     record.fileType = source instanceof FileSource ? source.fileType : null;
@@ -236,6 +240,7 @@ export class SourceMapper {
     record.status = source.status;
     record.processingError = source.processingError;
     record.processingStartedAt = source.processingStartedAt;
+    record.processingProgress = source.processingProgress;
     record.knowledgeBaseId = source.knowledgeBaseId;
     record.dataType = source.dataType;
     record.createdAt = source.createdAt;

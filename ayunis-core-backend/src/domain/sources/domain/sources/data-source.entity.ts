@@ -3,6 +3,7 @@ import { Source } from '../source.entity';
 import { DataType, SourceType } from '../source-type.enum';
 import type { SourceCreator } from '../source-creator.enum';
 import type { SourceStatus } from '../source-status.enum';
+import type { SourceProcessingProgress } from '../source-processing-progress';
 
 export abstract class DataSource extends Source {
   dataType: DataType;
@@ -16,6 +17,7 @@ export abstract class DataSource extends Source {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdBy?: SourceCreator;
   }) {
     super({ ...params, type: SourceType.DATA });
@@ -37,6 +39,7 @@ export class CSVDataSource extends DataSource {
     status?: SourceStatus;
     processingError?: string | null;
     processingStartedAt?: Date | null;
+    processingProgress?: SourceProcessingProgress | null;
     createdBy?: SourceCreator;
     createdAt?: Date;
     updatedAt?: Date;
