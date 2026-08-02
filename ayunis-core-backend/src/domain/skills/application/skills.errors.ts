@@ -17,7 +17,6 @@ export enum SkillErrorCode {
   KNOWLEDGE_BASE_NOT_ASSIGNED = 'KNOWLEDGE_BASE_NOT_ASSIGNED',
   MISSING_FILE = 'MISSING_FILE',
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
-  EMPTY_FILE_DATA = 'EMPTY_FILE_DATA',
   MARKETPLACE_INSTALL_FAILED = 'MARKETPLACE_INSTALL_FAILED',
   SKILL_NOT_ACTIVE = 'SKILL_NOT_ACTIVE',
   SKILL_NAME_RESOLUTION_FAILED = 'SKILL_NAME_RESOLUTION_FAILED',
@@ -200,17 +199,6 @@ export class UnsupportedFileTypeError extends SkillError {
       SkillErrorCode.UNSUPPORTED_FILE_TYPE,
       400,
       metadata,
-    );
-  }
-}
-
-export class EmptyFileDataError extends SkillError {
-  constructor(fileName: string, metadata?: ErrorMetadata) {
-    super(
-      `The file '${fileName}' contains no processable data`,
-      SkillErrorCode.EMPTY_FILE_DATA,
-      400,
-      { fileName, ...metadata },
     );
   }
 }

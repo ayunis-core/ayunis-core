@@ -7,9 +7,10 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { randomUUID } from 'crypto';
-import { extname } from 'path';
+import {
+  SOURCE_FILE_API_BODY,
+  SOURCE_FILE_UPLOAD_OPTIONS,
+} from 'src/common/util/source-file-upload';
 import { SkillResponseDto } from '../dto/skill-response.dto';
 
 export function ApiSkillIdParam() {
@@ -26,20 +27,7 @@ export function ApiSkillIdParam() {
 // preserves the emitted OpenAPI (parameter order, response key order) exactly.
 export function ApiSkillFileSourceUpload() {
   return applyDecorators(
-    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-    UseInterceptors(
-      FileInterceptor('file', {
-        storage: diskStorage({
-          destination: './uploads',
-          filename: (req, file, cb) => {
-            const randomName = randomUUID();
-            cb(null, `${randomName}${extname(file.originalname)}`);
-          },
-        }),
-        limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
-      }),
-    ),
-    /* eslint-enable sonarjs/content-length */
+    UseInterceptors(FileInterceptor('file', SOURCE_FILE_UPLOAD_OPTIONS)),
     ApiResponse({
       status: 413,
       description: 'File exceeds the 25 MB upload limit',
@@ -54,19 +42,7 @@ export function ApiSkillFileSourceUpload() {
       description: 'The file source has been successfully added to the skill',
       type: SkillResponseDto,
     }),
-    ApiBody({
-      schema: {
-        type: 'object',
-        properties: {
-          file: {
-            type: 'string',
-            format: 'binary',
-            description: 'The file to upload (max 25 MB)',
-          },
-        },
-        required: ['file'],
-      },
-    }),
+    ApiBody(SOURCE_FILE_API_BODY),
     ApiConsumes('multipart/form-data'),
     ApiSkillIdParam(),
     ApiOperation({ summary: 'Add a file source to a skill' }),

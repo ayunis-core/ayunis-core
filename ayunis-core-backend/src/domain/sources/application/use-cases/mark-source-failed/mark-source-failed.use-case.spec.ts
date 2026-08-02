@@ -4,6 +4,7 @@ import type { UUID } from 'crypto';
 import { MarkSourceFailedUseCase } from './mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from './mark-source-failed.command';
 import { SourceRepository } from '../../ports/source.repository';
+import { createMockSourceRepository } from '../../testing/source.fixtures';
 import { SourceNotFoundError } from '../../sources.errors';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -16,20 +17,7 @@ describe('MarkSourceFailedUseCase', () => {
   const sourceId = '44444444-4444-4444-4444-444444444444' as UUID;
 
   beforeEach(async () => {
-    mockSourceRepository = {
-      findById: jest.fn(),
-      findByIds: jest.fn(),
-      findByKnowledgeBaseId: jest.fn(),
-      findStaleProcessingSourceIds: jest.fn(),
-      save: jest.fn().mockImplementation(async (source) => source),
-      saveTextSource: jest.fn(),
-      extractTextLines: jest.fn(),
-      findContentChunksByIds: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      updateStatusConditionally: jest.fn(),
-      findUnreferencedIds: jest.fn(),
-    };
+    mockSourceRepository = createMockSourceRepository();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

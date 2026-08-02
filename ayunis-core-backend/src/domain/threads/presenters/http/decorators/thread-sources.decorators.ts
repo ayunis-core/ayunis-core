@@ -9,9 +9,10 @@ import {
   ApiResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { randomUUID } from 'crypto';
-import { extname } from 'path';
+import {
+  SOURCE_FILE_API_BODY,
+  SOURCE_FILE_UPLOAD_OPTIONS,
+} from 'src/common/util/source-file-upload';
 import {
   CSVDataSourceResponseDto,
   FileSourceResponseDto,
@@ -65,22 +66,7 @@ export function ApiSourceListResponse(status: number, description: string) {
 // preserves the emitted OpenAPI (parameter order, response key order) exactly.
 export function ApiFileSourceUpload() {
   return applyDecorators(
-    /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-    UseInterceptors(
-      FileInterceptor('file', {
-        storage: diskStorage({
-          // eslint-disable-next-line sonarjs/todo-tag -- pre-existing, tracked separately
-          // TODO: Move this to a separate service
-          destination: './uploads',
-          filename: (req, file, cb) => {
-            const randomName = randomUUID();
-            cb(null, `${randomName}${extname(file.originalname)}`);
-          },
-        }),
-        limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB
-      }),
-    ),
-    /* eslint-enable sonarjs/content-length */
+    UseInterceptors(FileInterceptor('file', SOURCE_FILE_UPLOAD_OPTIONS)),
     ApiResponse({
       status: 413,
       description: 'File exceeds the 25 MB upload limit',
@@ -89,19 +75,7 @@ export function ApiFileSourceUpload() {
       201,
       'The file source has been successfully added to the thread',
     ),
-    ApiBody({
-      schema: {
-        type: 'object',
-        properties: {
-          file: {
-            type: 'string',
-            format: 'binary',
-            description: 'The file to upload (max 25 MB)',
-          },
-        },
-        required: ['file'],
-      },
-    }),
+    ApiBody(SOURCE_FILE_API_BODY),
     ApiConsumes('multipart/form-data'),
     ApiThreadIdParam(),
     ApiOperation({ summary: 'Add a file source to a thread' }),
@@ -110,6 +84,10 @@ export function ApiFileSourceUpload() {
 
 export function ApiSourceCsvDownload() {
   return applyDecorators(
+    ApiResponse({
+      status: 409,
+      description: 'Source is still processing and has no data yet',
+    }),
     ApiResponse({
       status: 400,
       description: 'Source is not a CSV data source',

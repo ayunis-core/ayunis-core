@@ -4299,6 +4299,9 @@
           },
           "404": {
             "description": "Thread or source not found"
+          },
+          "409": {
+            "description": "Source is still processing and has no data yet"
           }
         },
         "summary": "Download a data source as CSV",

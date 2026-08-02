@@ -8,9 +8,7 @@ import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retriever
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
 import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
-import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
-import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
@@ -20,6 +18,10 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
+import {
+  cleanupMinioProcessingFile,
+  downloadMinioFile,
+} from '../../application/util/minio-processing-file.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -202,30 +204,14 @@ export class DocumentProcessingConsumer extends WorkerHost {
   }
 
   private async downloadFile(minioPath: string): Promise<Buffer> {
-    const stream = await this.downloadObjectUseCase.execute(
-      new DownloadObjectCommand(minioPath),
-    );
-    return this.streamToBuffer(stream);
-  }
-
-  private async streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-    return Buffer.concat(chunks);
+    return downloadMinioFile(this.downloadObjectUseCase, minioPath);
   }
 
   private async cleanupMinioFile(minioPath: string): Promise<void> {
-    try {
-      await this.deleteObjectUseCase.execute(
-        new DeleteObjectCommand(minioPath),
-      );
-    } catch (err) {
-      this.logger.warn('Failed to clean up MinIO processing file', {
-        minioPath,
-        error: err as Error,
-      });
-    }
+    await cleanupMinioProcessingFile(
+      this.deleteObjectUseCase,
+      this.logger,
+      minioPath,
+    );
   }
 }

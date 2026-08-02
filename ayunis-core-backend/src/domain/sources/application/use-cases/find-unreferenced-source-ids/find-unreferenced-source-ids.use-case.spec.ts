@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { FindUnreferencedSourceIdsUseCase } from './find-unreferenced-source-ids.use-case';
 import { FindUnreferencedSourceIdsQuery } from './find-unreferenced-source-ids.query';
 import type { SourceRepository } from '../../ports/source.repository';
+import { createMockSourceRepository } from '../../testing/source.fixtures';
 import { UnexpectedSourceError } from '../../sources.errors';
 
 describe('FindUnreferencedSourceIdsUseCase', () => {
@@ -10,20 +11,7 @@ describe('FindUnreferencedSourceIdsUseCase', () => {
   let sourceRepository: jest.Mocked<SourceRepository>;
 
   beforeEach(() => {
-    sourceRepository = {
-      findById: jest.fn(),
-      findByIds: jest.fn(),
-      findByKnowledgeBaseId: jest.fn(),
-      saveTextSource: jest.fn(),
-      findStaleProcessingSourceIds: jest.fn(),
-      save: jest.fn(),
-      extractTextLines: jest.fn(),
-      findContentChunksByIds: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      updateStatusConditionally: jest.fn(),
-      findUnreferencedIds: jest.fn(),
-    };
+    sourceRepository = createMockSourceRepository();
 
     useCase = new FindUnreferencedSourceIdsUseCase(sourceRepository);
   });

@@ -1,5 +1,8 @@
 import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
+import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
 import { ToolAssemblyService } from './tool-assembly.service';
@@ -262,6 +265,39 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(
       getPermittedImageGenerationModelUseCase.execute,
     ).not.toHaveBeenCalled();
+  });
+
+  it('passes only READY data sources to the code execution tool', async () => {
+    const { service, assembleToolsUseCase } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      imageModelExecute: jest.fn().mockResolvedValue({}),
+    });
+
+    const csvSource = (status: SourceStatus) =>
+      new CSVDataSource({
+        name: `${status}.csv`,
+        data: { headers: [], rows: [] },
+        status,
+      });
+    const readySource = csvSource(SourceStatus.READY);
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+      mcpIntegrationIds: [],
+      sourceAssignments: [
+        readySource,
+        csvSource(SourceStatus.PROCESSING),
+        csvSource(SourceStatus.FAILED),
+      ].map((source) => new SourceAssignment({ source })),
+    });
+
+    await service.assembleTools(thread, [], new Map());
+
+    const codeExecutionCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([cmd]: [{ type: ToolType }]) => cmd.type === ToolType.CODE_EXECUTION,
+    );
+    expect(codeExecutionCall).toBeDefined();
+    expect(codeExecutionCall[0].context).toEqual([readySource]);
   });
 
   it('should include website content and internet search when internet access is enabled', async () => {

@@ -14,6 +14,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { convertCSVToString, parseCSV } from 'src/common/util/csv';
 import { CreateDataSourceUseCase } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.use-case';
 import { CreateCSVDataSourceCommand } from 'src/domain/sources/application/use-cases/create-data-source/create-data-source.command';
@@ -87,15 +88,40 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
 
     for (const sourceId of dataSourceIds) {
       const csvSource = await this.loadCsvSource(sourceId as UUID, toolName);
-      if (csvSource instanceof CSVDataSource) {
-        executionFiles[`${sourceId}.csv`] = this.encodeCsvToBase64(
-          csvSource,
-          sourceId as UUID,
-          toolName,
-        );
+      if (!(csvSource instanceof CSVDataSource)) {
+        continue;
       }
+      this.assertSourceReady(csvSource, sourceId as UUID, toolName);
+      executionFiles[`${sourceId}.csv`] = this.encodeCsvToBase64(
+        csvSource,
+        sourceId as UUID,
+        toolName,
+      );
     }
     return executionFiles;
+  }
+
+  private assertSourceReady(
+    csvSource: CSVDataSource,
+    sourceId: UUID,
+    toolName: string,
+  ): void {
+    if (csvSource.status === SourceStatus.READY) {
+      return;
+    }
+    // FAILED is terminal — the message must not invite the model to retry.
+    let message = `Data source ${sourceId} is still processing and not available yet — wait for it to finish before running code on it`;
+    if (csvSource.status === SourceStatus.FAILED) {
+      const detail = csvSource.processingError
+        ? ` (${csvSource.processingError})`
+        : '';
+      message = `Data source ${sourceId} failed to process and cannot be used${detail} — do not retry; tell the user the file could not be processed`;
+    }
+    throw new ToolExecutionFailedError({
+      toolName,
+      message,
+      exposeToLLM: true,
+    });
   }
 
   private async loadCsvSource(sourceId: UUID, toolName: string) {

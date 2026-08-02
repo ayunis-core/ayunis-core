@@ -6,6 +6,7 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
 import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.use-case';
@@ -249,8 +250,12 @@ export class ToolAssemblyService {
   private async assembleCodeExecutionTool(thread: Thread): Promise<Tool> {
     const threadSources =
       thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+    // Match the system prompt's partitioning: PROCESSING/FAILED data sources
+    // are announced there as pending/failed, so advertising them here as
+    // available would contradict it and steer the model into doomed calls.
     const codeExecutionSources = threadSources.filter(
-      (source) => source.type === SourceType.DATA,
+      (source) =>
+        source.type === SourceType.DATA && source.status === SourceStatus.READY,
     );
     return this.assembleToolsUseCase.execute(
       new AssembleToolCommand({

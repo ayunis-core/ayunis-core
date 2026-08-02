@@ -6,7 +6,9 @@ import { RetrieverModule } from '../retrievers/retriever.module';
 import { IndexersModule } from '../rag/indexers/indexers.module';
 import { StorageModule } from '../storage/storage.module';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
+import { DataSourceProcessingModule } from './infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from './infrastructure/queue/url-crawl.module';
+import { SpreadsheetParsingModule } from './infrastructure/parsing/spreadsheet-parsing.module';
 
 // Import all use cases
 import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-source-by-id/get-text-source-by-id.use-case';
@@ -21,12 +23,13 @@ import { GetSourcesByIdsUseCase } from './application/use-cases/get-sources-by-i
 import { FindContentChunksByIdsUseCase } from './application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { ExtractTextLinesUseCase } from './application/use-cases/extract-text-lines/extract-text-lines.use-case';
 import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-sources-by-knowledge-base-id/get-sources-by-knowledge-base-id.use-case';
-import { CreateSourcesFromFileUseCase } from './application/use-cases/create-sources-from-file/create-sources-from-file.use-case';
 import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
+import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
+import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
@@ -40,7 +43,9 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     IndexersModule,
     StorageModule,
     DocumentProcessingModule,
+    DataSourceProcessingModule,
     UrlCrawlModule,
+    SpreadsheetParsingModule,
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   providers: [
@@ -57,11 +62,12 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
-    CreateSourcesFromFileUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    StartDataSourceProcessingUseCase,
+    EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
@@ -70,6 +76,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
   exports: [
     LocalSourceRepositoryModule,
     DocumentProcessingModule,
+    DataSourceProcessingModule,
     UrlCrawlModule,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
@@ -83,11 +90,12 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     FindContentChunksByIdsUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
-    CreateSourcesFromFileUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
     StartDocumentProcessingUseCase,
+    StartDataSourceProcessingUseCase,
+    EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
