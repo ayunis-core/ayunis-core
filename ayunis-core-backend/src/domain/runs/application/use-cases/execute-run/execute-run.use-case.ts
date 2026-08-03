@@ -44,6 +44,7 @@ import type { RunParams } from './run-params.interface';
 import { RunExecutedEvent } from '../../events/run-executed.event';
 import { ConfigService } from '@nestjs/config';
 import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
+import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -319,16 +320,6 @@ export class ExecuteRunUseCase {
     params.skillInstructions = instructions;
   }
 
-  private appendSkillActivatedNote(
-    instructions: string | undefined,
-    skillName: string,
-  ): string {
-    const note = `<already_activated_skill>
-Skill "${skillName}" has already been activated on this thread. Do not call activate_skill for this skill.
-</already_activated_skill>`;
-    return instructions ? `${instructions}\n\n${note}` : note;
-  }
-
   private async refreshRunContext(params: RunParams): Promise<void> {
     const { thread: refreshedThread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(params.thread.id),
@@ -344,7 +335,7 @@ Skill "${skillName}" has already been activated on this thread. Do not call acti
     params.instructions = refreshed.instructions;
 
     if (params.activatedSkillName) {
-      params.instructions = this.appendSkillActivatedNote(
+      params.instructions = appendSkillActivatedNote(
         params.instructions,
         params.activatedSkillName,
       );

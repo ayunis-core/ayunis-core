@@ -8,6 +8,9 @@ type ToolOp =
   | { kind: 'remove'; names: string[] }
   | { kind: 'set'; tools: Tool[] };
 
+type InstructionOp =
+  { kind: 'add'; text: string } | { kind: 'set'; text: string };
+
 export interface MutableRunConfig {
   messages: Message[];
   tools: Tool[];
@@ -21,7 +24,7 @@ export interface MutableRunConfig {
 export class PendingMutations {
   private messageTransforms: MessageTransform[] = [];
   private toolOps: ToolOp[] = [];
-  private instructionAdditions: string[] = [];
+  private instructionOps: InstructionOp[] = [];
 
   transformMessages(fn: MessageTransform): void {
     this.messageTransforms.push(fn);
@@ -40,7 +43,11 @@ export class PendingMutations {
   }
 
   addInstructions(text: string): void {
-    this.instructionAdditions.push(text);
+    this.instructionOps.push({ kind: 'add', text });
+  }
+
+  setInstructions(text: string): void {
+    this.instructionOps.push({ kind: 'set', text });
   }
 
   apply(config: MutableRunConfig): MutableRunConfig {
@@ -53,12 +60,12 @@ export class PendingMutations {
       tools = applyToolOp(tools, op);
     }
     let instructions = config.instructions;
-    for (const addition of this.instructionAdditions) {
-      instructions = instructions ? `${instructions}\n\n${addition}` : addition;
+    for (const op of this.instructionOps) {
+      instructions = applyInstructionOp(instructions, op);
     }
     this.messageTransforms = [];
     this.toolOps = [];
-    this.instructionAdditions = [];
+    this.instructionOps = [];
     return { messages, tools, instructions };
   }
 }
@@ -77,4 +84,14 @@ const applyToolOp = (tools: Tool[], op: ToolOp): Tool[] => {
     case 'set':
       return [...op.tools];
   }
+};
+
+const applyInstructionOp = (
+  instructions: string,
+  op: InstructionOp,
+): string => {
+  if (op.kind === 'set') {
+    return op.text;
+  }
+  return instructions ? `${instructions}\n\n${op.text}` : op.text;
 };

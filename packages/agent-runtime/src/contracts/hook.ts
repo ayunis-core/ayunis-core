@@ -21,6 +21,8 @@ export interface HookApi {
   /** Full-replace escape hatch (e.g. re-assembling the whole tool set). */
   setTools(tools: Tool[]): void;
   addInstructions(text: string): void;
+  /** Full-replace escape hatch for a rebuilt system prompt. */
+  setInstructions(text: string): void;
   /** Ends the run with status 'aborted' before the next loop step. */
   abort(reason?: string): void;
   /** Emits a `custom` RunEvent into the run's event stream. */

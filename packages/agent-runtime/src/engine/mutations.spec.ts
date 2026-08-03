@@ -116,6 +116,24 @@ describe('hook mutations', () => {
     );
   });
 
+  it('replaces instructions while preserving later additions', async () => {
+    const replacer: Hook = {
+      name: 'replacer',
+      afterToolCall: (ctx) => {
+        ctx.setInstructions('Refreshed system prompt.');
+        ctx.addInstructions('Activated skill note.');
+      },
+    };
+    const model = twoIterationModel();
+    await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [replacer] }),
+    );
+
+    expect(model.requests[1].instructions).toBe(
+      'Refreshed system prompt.\n\nActivated skill note.',
+    );
+  });
+
   it('replaces a tool when adding one with an existing name', async () => {
     const upgraded = echoTool({ description: 'Upgraded echo' });
     const upgrader: Hook = {

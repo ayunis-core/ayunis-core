@@ -30,11 +30,13 @@ import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
 import { ToolUsedEvent } from '../../events/tool-used.event';
 import { RunMaxIterationsReachedError } from '../../runs.errors';
+import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -61,6 +63,9 @@ interface Harness {
   createSeedToolResult: jest.Mock;
   emitAsync: jest.Mock;
   anonymize: jest.Mock;
+  activateOnThread: jest.Mock;
+  createUser: jest.Mock;
+  provider: MockProvider;
 }
 
 interface HarnessOptions {
@@ -68,6 +73,8 @@ interface HarnessOptions {
   turns?: readonly (readonly ProviderChunk[])[];
   runtimeTools?: RuntimeTool[];
   backendTools?: BackendTool[];
+  rebuiltRuntimeTools?: RuntimeTool[];
+  rebuiltBackendTools?: BackendTool[];
   lastMessage?: Message;
   toolResultCollector?: ToolResultCollectorService;
 }
@@ -111,15 +118,46 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     preflight: jest.fn().mockResolvedValue(undefined),
     collectUsage: jest.fn(),
   } as unknown as jest.Mocked<InferenceUsageGuard>;
+  const initialRunContext = {
+    tools: overrides.backendTools ?? [],
+    instructions: 'system prompt',
+  };
+  const buildRunContext = jest.fn().mockResolvedValue(initialRunContext);
+  if (overrides.rebuiltBackendTools) {
+    buildRunContext
+      .mockResolvedValueOnce(initialRunContext)
+      .mockResolvedValueOnce({
+        tools: overrides.rebuiltBackendTools,
+        instructions: 'activated skill prompt',
+      });
+  }
   const toolAssemblyService = {
-    buildRunContext: jest.fn().mockResolvedValue({
-      tools: overrides.backendTools ?? [],
-      instructions: 'system prompt',
-    }),
+    buildRunContext,
+    findActiveSkills: jest.fn().mockResolvedValue([]),
   } as unknown as ToolAssemblyService;
+  const toRuntimeTools = jest
+    .fn()
+    .mockReturnValue(overrides.runtimeTools ?? []);
+  if (overrides.rebuiltRuntimeTools) {
+    toRuntimeTools
+      .mockReturnValueOnce(overrides.runtimeTools ?? [])
+      .mockReturnValueOnce(overrides.rebuiltRuntimeTools);
+  }
   const backendToolAdapter = {
-    toRuntimeTools: jest.fn().mockReturnValue(overrides.runtimeTools ?? []),
+    toRuntimeTools,
   } as unknown as BackendToolAdapter;
+  const activateOnThread = jest.fn().mockResolvedValue({
+    instructions: 'Be a helpful clerk',
+    skillName: 'Clerk',
+  });
+  const skillActivationService = {
+    activateOnThread,
+  } as unknown as SkillActivationService;
+  const skillActivationHookFactory = new SkillActivationHookFactory(
+    findThreadUseCase,
+    toolAssemblyService,
+    backendToolAdapter,
+  );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
     masks: [{ token: '{{pii:PERSON_1}}' }],
@@ -144,8 +182,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     threadId,
     content: [],
   });
+  const createUser = jest.fn().mockResolvedValue(userMessage);
   const createUserMessageUseCase = {
-    execute: jest.fn().mockResolvedValue(userMessage),
+    execute: createUser,
   } as unknown as CreateUserMessageUseCase;
   const addMessageToThreadUseCase = new AddMessageToThreadUseCase(
     contextService,
@@ -158,12 +197,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
+  const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
   const resolveModelProviderUseCase = {
-    execute: jest
-      .fn()
-      .mockResolvedValue(
-        new MockProvider(overrides.turns ?? [textTurn('Hello')]),
-      ),
+    execute: jest.fn().mockResolvedValue(provider),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
@@ -201,6 +237,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     inferenceUsageGuard,
     toolAssemblyService,
     backendToolAdapter,
+    skillActivationService,
     anonymizeTextForThreadUseCase,
     createUserMessageUseCase,
     createToolResultMessageUseCase,
@@ -210,6 +247,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     messageCleanupService,
     persistenceHookFactory,
     usageHookFactory,
+    skillActivationHookFactory,
     eventEmitter,
     toolResultCollector as ToolResultCollectorService,
     toolUsageHookFactory,
@@ -225,6 +263,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     createSeedToolResult: createToolResult,
     emitAsync,
     anonymize,
+    activateOnThread,
+    createUser,
+    provider,
   };
 }
 
@@ -515,6 +556,75 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     ]).toEqual([integration, integration]);
   });
 
+  it('includes metadata for an MCP tool added by skill activation', async () => {
+    const toolName = 'search_procurement_system';
+    const integration = {
+      id: integrationId,
+      name: 'Procurement System',
+      logoUrl: 'https://example.com/procurement-system.svg',
+    };
+    const activateBackendTool = {
+      name: 'activate_skill',
+    } as unknown as BackendTool;
+    const activatedBackendTool = new McpIntegrationTool(
+      new McpTool(
+        toolName,
+        'Search procurement notices',
+        { type: 'object' },
+        integrationId,
+      ),
+      false,
+      integration.name,
+      integration.logoUrl,
+    );
+    const activateRuntimeTool = {
+      name: 'activate_skill',
+      description: 'Activate a skill',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Skill activated'),
+    };
+    const activatedRuntimeTool = {
+      name: toolName,
+      description: 'Search procurement notices',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('Notice found'),
+    };
+    const { useCase, save } = buildHarness({
+      backendTools: [activateBackendTool],
+      runtimeTools: [activateRuntimeTool],
+      rebuiltBackendTools: [activateBackendTool, activatedBackendTool],
+      rebuiltRuntimeTools: [activateRuntimeTool, activatedRuntimeTool],
+      turns: [
+        toolCallTurn({ id: 'activate-1', name: 'activate_skill', input: {} }),
+        toolCallTurn({ id: 'procurement-1', name: toolName, input: {} }),
+        textTurn('I found the procurement notice.'),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    const streamedToolUse = items
+      .filter(
+        (item): item is AssistantMessage => item instanceof AssistantMessage,
+      )
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent && content.name === toolName,
+      );
+    const persistedToolUse = save.mock.calls
+      .map((call) => call[0].message as AssistantMessage)
+      .flatMap((message) => message.content)
+      .find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent && content.name === toolName,
+      );
+    expect([
+      streamedToolUse?.integration,
+      persistedToolUse?.integration,
+    ]).toEqual([integration, integration]);
+  });
+
   it('executes an executable sibling when continuing a display-only tool call', async () => {
     const displayTool = { name: 'bar_chart' } as unknown as BackendTool;
     const searchTool = { name: 'internet_search' } as unknown as BackendTool;
@@ -660,13 +770,36 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(items[1]).toMatchObject({ id: 'user-msg' });
   });
 
-  it('rejects skill activation (not yet supported on the runtime path)', async () => {
-    const { useCase } = buildHarness();
+  it('activates a requested skill before the run and folds in its instructions', async () => {
+    const { useCase, activateOnThread, createUser, provider } = buildHarness();
+
     const command = userCommand(
       new RunUserInput('Hi', [], 'skill-1' as unknown as UUID),
     );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      /does not yet support skill/i,
+    await drain(await useCase.execute(command));
+
+    expect(activateOnThread).toHaveBeenCalledWith('skill-1', expect.anything());
+    // the skill instructions are folded into the created user message
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      skillInstructions: 'Be a helpful clerk',
+    });
+    expect(provider.requests[0].instructions).toContain(
+      'Skill "Clerk" has already been activated on this thread.',
     );
+  });
+
+  it('accepts a skill-only quick action without text or images', async () => {
+    const { useCase, createUser } = buildHarness();
+    const command = userCommand(
+      new RunUserInput('', [], 'skill-1' as unknown as UUID),
+    );
+
+    await drain(await useCase.execute(command));
+
+    expect(createUser.mock.calls[0][0]).toMatchObject({
+      text: '',
+      pendingImages: [],
+      skillInstructions: 'Be a helpful clerk',
+    });
   });
 });
