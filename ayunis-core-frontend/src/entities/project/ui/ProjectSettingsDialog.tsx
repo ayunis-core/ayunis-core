@@ -126,12 +126,6 @@ export function ProjectSettingsDialog({
 
           <div className="min-h-[300px] py-1">
             <TabsContent value="general" className="mt-4 flex flex-col gap-5">
-              <ProjectAppearancePicker
-                icon={icon}
-                color={color}
-                onIconChange={setIcon}
-                onColorChange={setColor}
-              />
               <div className="flex flex-col gap-2">
                 <Label htmlFor="settings-project-name">Name</Label>
                 <Input
@@ -152,6 +146,12 @@ export function ProjectSettingsDialog({
                   rows={3}
                 />
               </div>
+              <ProjectAppearancePicker
+                icon={icon}
+                color={color}
+                onIconChange={setIcon}
+                onColorChange={setColor}
+              />
               {isOwner && (
                 <Item variant="outline" size="sm">
                   <ItemContent>
