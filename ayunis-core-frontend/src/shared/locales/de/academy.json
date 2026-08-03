@@ -27,7 +27,7 @@
     "title": "Quiz",
     "questionCounter": "Frage {{current}} von {{total}}",
     "submit": "Antworten absenden",
-    "answerAll": "Beantworte alle Fragen, um abzusenden",
+    "answerAll": "Beantworten Sie alle Fragen, um abzusenden",
     "retry": "Erneut versuchen",
     "backToAcademy": "Zurück zur Academy",
     "passed": {
@@ -37,32 +37,32 @@
       "title": "Noch nicht ganz"
     },
     "result": {
-      "score": "Du hast {{correct}} von {{total}} richtig ({{score}} %)",
-      "required": "Du brauchst {{required}} richtige Antworten zum Bestehen."
+      "score": "Sie haben {{correct}} von {{total}} richtig ({{score}} %)",
+      "required": "Sie brauchen {{required}} richtige Antworten zum Bestehen."
     },
     "completed": {
       "title": "Academy abgeschlossen!",
-      "description": "Du hast jedes Kapitel bestanden. Glückwunsch!"
+      "description": "Sie haben jedes Kapitel bestanden. Glückwunsch!"
     },
     "errors": {
       "loadFailed": "Das Quiz konnte nicht geladen werden.",
-      "loadFailedDescription": "Bitte versuche es erneut.",
+      "loadFailedDescription": "Bitte versuchen Sie es erneut.",
       "notAvailable": "Dieses Quiz ist nicht verfügbar.",
       "notAvailableDescription": "Dieses Kapitel hat derzeit kein Quiz.",
-      "invalidSubmission": "Deine Eingabe war ungültig. Bitte versuche es erneut.",
-      "submitFailed": "Deine Antworten konnten nicht gesendet werden. Bitte versuche es erneut."
+      "invalidSubmission": "Ihre Eingabe war ungültig. Bitte versuchen Sie es erneut.",
+      "submitFailed": "Ihre Antworten konnten nicht gesendet werden. Bitte versuchen Sie es erneut."
     }
   },
   "progress": {
     "passed": "Bestanden",
     "completed": {
       "title": "Academy abgeschlossen!",
-      "description": "Du hast jedes Kapitel bestanden."
+      "description": "Sie haben jedes Kapitel bestanden."
     },
     "renewalDue": "Erneuerung fällig"
   },
   "certificate": {
-    "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuche es erneut.",
+    "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "download": "Zertifikat herunterladen"
   },
   "gate": {
