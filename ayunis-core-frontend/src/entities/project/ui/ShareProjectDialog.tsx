@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Users, X, Building2 } from 'lucide-react';
+import { ChevronRight, Users, X, Building2, RotateCcw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,11 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/shadcn/tooltip';
 import { cn } from '@/shared/lib/shadcn/utils';
 import {
   CURRENT_USER,
@@ -50,7 +55,7 @@ import {
   removeTeamFromProject,
   setProjectVisibility,
 } from '../model/store';
-import { RoleSelect, type RoleSelectValue } from './RoleSelect';
+import { RoleSelect } from './RoleSelect';
 
 interface ShareProjectDialogProps {
   open: boolean;
@@ -145,10 +150,7 @@ export function ShareProjectDialog({
                 )}
               </SelectContent>
             </Select>
-            <RoleSelect
-              value={role}
-              onChange={(next) => next !== 'none' && setRole(next)}
-            />
+            <RoleSelect value={role} onChange={setRole} />
             <Button
               className="shrink-0"
               onClick={handleInvite}
@@ -267,9 +269,7 @@ function MemberRoleControls({
     <>
       <RoleSelect
         value={member.role}
-        onChange={(next) =>
-          next !== 'none' && updateCollaboratorRole(project.id, member.id, next)
-        }
+        onChange={(next) => updateCollaboratorRole(project.id, member.id, next)}
       />
       <Button
         variant="ghost"
@@ -322,9 +322,7 @@ function TeamRow({
         </button>
         <RoleSelect
           value={team.role}
-          onChange={(next) =>
-            next !== 'none' && updateTeamRole(project.id, team.id, next)
-          }
+          onChange={(next) => updateTeamRole(project.id, team.id, next)}
         />
         <Button
           variant="ghost"
@@ -361,22 +359,27 @@ function TeamMemberRow({
   teamRole: ProjectRole;
 }>) {
   const override = project.collaborators.find((c) => c.id === person.id);
-  const value: RoleSelectValue = override?.blocked
-    ? 'none'
-    : (override?.role ?? teamRole);
-  const isCustom = value !== teamRole;
+  const isBlocked = override?.blocked ?? false;
+  const value = override?.role ?? teamRole;
+  const isCustom = isBlocked || value !== teamRole;
 
-  function handleChange(next: RoleSelectValue) {
-    if (next === 'none') {
-      setTeamMemberOverride(project.id, person, {
-        role: teamRole,
-        blocked: true,
-      });
-    } else if (next === teamRole) {
+  function handleRoleChange(next: ProjectRole) {
+    if (next === teamRole) {
       setTeamMemberOverride(project.id, person, null);
     } else {
       setTeamMemberOverride(project.id, person, { role: next });
     }
+  }
+
+  function handleBlock() {
+    setTeamMemberOverride(project.id, person, {
+      role: teamRole,
+      blocked: true,
+    });
+  }
+
+  function handleRestore() {
+    setTeamMemberOverride(project.id, person, null);
   }
 
   return (
@@ -390,21 +393,53 @@ function TeamMemberRow({
         <span
           className={cn(
             'truncate text-sm',
-            value === 'none' && 'text-muted-foreground line-through',
+            isBlocked && 'text-muted-foreground line-through',
           )}
         >
           {person.name}
         </span>
         {isCustom && (
-          <span className="text-xs text-muted-foreground">Angepasst</span>
+          <span className="text-xs text-muted-foreground">
+            {isBlocked ? 'Kein Zugriff' : 'Angepasst'}
+          </span>
         )}
       </div>
-      <RoleSelect
-        value={value}
-        onChange={handleChange}
-        showNoAccess
-        triggerClassName="h-8 w-40 shrink-0"
-      />
+      {isBlocked ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleRestore}
+              aria-label={`${person.name} wieder Zugriff geben`}
+            >
+              <RotateCcw />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zugriff wiederherstellen</TooltipContent>
+        </Tooltip>
+      ) : (
+        <>
+          <RoleSelect
+            value={value}
+            onChange={handleRoleChange}
+            triggerClassName="h-8 w-40 shrink-0"
+          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleBlock}
+                aria-label={`${person.name} keinen Zugriff geben`}
+              >
+                <X />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Diese Person ausschließen</TooltipContent>
+          </Tooltip>
+        </>
+      )}
     </div>
   );
 }

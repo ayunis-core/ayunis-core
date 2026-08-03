@@ -277,7 +277,7 @@ function TeamOption({
         {selected ? (
           <RoleSelect
             value={role}
-            onChange={(next) => next !== 'none' && onRoleChange(next)}
+            onChange={onRoleChange}
             triggerClassName="h-8 w-40 shrink-0"
           />
         ) : (

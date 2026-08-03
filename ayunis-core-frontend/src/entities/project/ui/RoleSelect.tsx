@@ -3,7 +3,6 @@ import { CheckIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
@@ -14,26 +13,13 @@ import {
   type ProjectRole,
 } from '../model/mock';
 
-export type RoleSelectValue = ProjectRole | 'none';
-
 interface RoleSelectProps {
-  value: RoleSelectValue;
-  onChange: (role: RoleSelectValue) => void;
+  value: ProjectRole;
+  onChange: (role: ProjectRole) => void;
   triggerClassName?: string;
-  showNoAccess?: boolean;
 }
 
-const LABELS: Record<RoleSelectValue, string> = {
-  ...PROJECT_ROLE_LABELS,
-  none: 'Kein Zugriff',
-};
-
-const DESCRIPTIONS: Record<RoleSelectValue, string> = {
-  ...PROJECT_ROLE_DESCRIPTIONS,
-  none: 'Sieht und nutzt dieses Projekt nicht',
-};
-
-function RoleItem({ role }: Readonly<{ role: RoleSelectValue }>) {
+function RoleItem({ role }: Readonly<{ role: ProjectRole }>) {
   return (
     <SelectPrimitive.Item
       value={role}
@@ -45,10 +31,12 @@ function RoleItem({ role }: Readonly<{ role: RoleSelectValue }>) {
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>
-        <span className="text-sm leading-none">{LABELS[role]}</span>
+        <span className="text-sm leading-none">
+          {PROJECT_ROLE_LABELS[role]}
+        </span>
       </SelectPrimitive.ItemText>
       <span className="text-xs leading-snug text-muted-foreground">
-        {DESCRIPTIONS[role]}
+        {PROJECT_ROLE_DESCRIPTIONS[role]}
       </span>
     </SelectPrimitive.Item>
   );
@@ -58,12 +46,11 @@ export function RoleSelect({
   value,
   onChange,
   triggerClassName = 'w-40 shrink-0',
-  showNoAccess = false,
 }: Readonly<RoleSelectProps>) {
   return (
     <Select
       value={value}
-      onValueChange={(next) => onChange(next as RoleSelectValue)}
+      onValueChange={(next) => onChange(next as ProjectRole)}
     >
       <SelectTrigger className={triggerClassName}>
         <SelectValue />
@@ -72,12 +59,6 @@ export function RoleSelect({
         {PROJECT_ROLE_ORDER.map((role) => (
           <RoleItem key={role} role={role} />
         ))}
-        {showNoAccess && (
-          <>
-            <SelectSeparator />
-            <RoleItem role="none" />
-          </>
-        )}
       </SelectContent>
     </Select>
   );
