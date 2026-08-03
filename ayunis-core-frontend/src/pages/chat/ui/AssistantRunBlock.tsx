@@ -19,7 +19,7 @@ export default function AssistantRunBlock({
   onOpenArtifact,
 }: Readonly<AssistantRunBlockProps>) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const hasFinalText = unit.finalText.length > 0;
+  const hasText = unit.blocks.some((block) => block.kind === 'text');
 
   return (
     <div
@@ -40,7 +40,7 @@ export default function AssistantRunBlock({
             onOpenArtifact={onOpenArtifact}
           />
         </div>
-        {hasFinalText && <CopyAssistantTextButton contentRef={contentRef} />}
+        {hasText && <CopyAssistantTextButton contentRef={contentRef} />}
       </div>
     </div>
   );

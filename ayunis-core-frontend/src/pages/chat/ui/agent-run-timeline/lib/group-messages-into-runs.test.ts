@@ -57,10 +57,189 @@ function toolResultMessage(toolId: string, result: string): Message {
 }
 
 describe('groupMessagesIntoRuns', () => {
+  it('preserves text, tool, and later text in chronological render order', () => {
+    const messages = [
+      userMessage('find it'),
+      assistantMessage([
+        { type: 'text', text: 'I will search.' },
+        { type: 'tool_use', id: 't1', name: 'internet_search' },
+      ]),
+      toolResultMessage('t1', 'search results'),
+      assistantMessage([{ type: 'text', text: 'Here is the answer.' }]),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: false,
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    expect(run.blocks.map((block) => block.kind)).toEqual([
+      'text',
+      'activity',
+      'text',
+    ]);
+    const activity = run.blocks[1];
+    if (activity.kind !== 'activity') throw new Error('expected activity');
+    expect(activity.steps[0]).toMatchObject({
+      kind: 'tool',
+      result: 'search results',
+      status: 'done',
+    });
+  });
+
+  it('keeps a rich tool inline between surrounding assistant text', () => {
+    const messages = [
+      userMessage('chart it'),
+      assistantMessage([
+        { type: 'text', text: 'Building the chart.' },
+        { type: 'tool_use', id: 'chart-1', name: 'bar_chart' },
+      ]),
+      assistantMessage([{ type: 'text', text: 'The chart is ready.' }]),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: false,
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    expect(run.blocks.map((block) => block.kind)).toEqual([
+      'text',
+      'rich-tool',
+      'text',
+    ]);
+  });
+
+  it('keeps a stable inline block while a streamed tool name resolves to a rich tool', () => {
+    const user = userMessage('chart it');
+    const partialToolCall = assistantMessage([
+      {
+        type: 'tool_use',
+        id: 'chart-1',
+        name: '',
+        stream: { status: 'streaming', argumentsJson: '{"title":' },
+      },
+    ]);
+    const resolvedToolCall = {
+      ...partialToolCall,
+      content: [
+        {
+          ...partialToolCall.content[0],
+          name: 'bar_chart',
+        },
+      ],
+    } as Message;
+
+    const partialUnits = groupMessagesIntoRuns([user, partialToolCall], {
+      isStreaming: true,
+    });
+    const resolvedUnits = groupMessagesIntoRuns([user, resolvedToolCall], {
+      isStreaming: true,
+    });
+
+    const partialRun = partialUnits[1];
+    const resolvedRun = resolvedUnits[1];
+    if (partialRun.kind !== 'agent-run' || resolvedRun.kind !== 'agent-run') {
+      throw new Error('expected agent-runs');
+    }
+    const partialBlock = partialRun.blocks[0];
+    const resolvedBlock = resolvedRun.blocks[0];
+    expect(partialBlock.kind).toBe('pending-tool');
+    expect(resolvedBlock.kind).toBe('rich-tool');
+    expect(resolvedBlock.key).toBe(partialBlock.key);
+  });
+
+  it('updates a tool result in place without changing its render key', () => {
+    const toolCall = assistantMessage([
+      { type: 'tool_use', id: 't1', name: 'internet_search' },
+    ]);
+    const streaming = groupMessagesIntoRuns([userMessage('go'), toolCall], {
+      isStreaming: true,
+    });
+    const completed = groupMessagesIntoRuns(
+      [userMessage('go'), toolCall, toolResultMessage('t1', 'done')],
+      {
+        isStreaming: true,
+      },
+    );
+
+    const streamingRun = streaming[1];
+    const completedRun = completed[1];
+    if (
+      streamingRun.kind !== 'agent-run' ||
+      completedRun.kind !== 'agent-run'
+    ) {
+      throw new Error('expected agent-runs');
+    }
+    const streamingBlock = streamingRun.blocks[0];
+    const completedBlock = completedRun.blocks[0];
+    expect(completedBlock.key).toBe(streamingBlock.key);
+    if (
+      streamingBlock.kind !== 'activity' ||
+      completedBlock.kind !== 'activity'
+    ) {
+      throw new Error('expected activity blocks');
+    }
+    expect(streamingBlock.steps[0].status).toBe('in_progress');
+    expect(completedBlock.steps[0]).toMatchObject({
+      status: 'done',
+      result: 'done',
+    });
+  });
+
+  it('keeps unresolved parallel tools in progress after a sibling result arrives', () => {
+    const messages = [
+      userMessage('check both'),
+      assistantMessage([
+        { type: 'tool_use', id: 't1', name: 'internet_search' },
+        { type: 'tool_use', id: 't2', name: 'read_document' },
+      ]),
+      toolResultMessage('t1', 'search results'),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: true,
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    const block = run.blocks[0];
+    if (block.kind !== 'activity') throw new Error('expected activity');
+    expect(block.steps).toHaveLength(2);
+    expect(block.steps[0]).toMatchObject({
+      kind: 'tool',
+      result: 'search results',
+      status: 'done',
+    });
+    expect(block.steps[1]).toMatchObject({
+      kind: 'tool',
+      status: 'in_progress',
+    });
+  });
+
+  it('settles a display-only rich tool when the run stops without a result', () => {
+    const messages = [
+      userMessage('draft an email'),
+      assistantMessage([
+        { type: 'tool_use', id: 'email-1', name: 'send_email' },
+      ]),
+    ];
+
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: false,
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    const block = run.blocks[0];
+    if (block.kind !== 'rich-tool') throw new Error('expected rich tool');
+    expect(block.step.status).toBe('done');
+  });
+
   it('returns empty array for empty input', () => {
     const result = groupMessagesIntoRuns([], {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(result).toEqual([]);
   });
@@ -69,30 +248,29 @@ describe('groupMessagesIntoRuns', () => {
     const messages = [userMessage('hello'), userMessage('world')];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(2);
     expect(units[0].kind).toBe('user');
     expect(units[1].kind).toBe('user');
   });
 
-  it('groups assistant text reply as a single agent-run with finalText', () => {
+  it('groups an assistant text reply as a single text block', () => {
     const messages = [
       userMessage('hi'),
       assistantMessage([{ type: 'text', text: 'hello!' }]),
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(2);
     expect(units[0].kind).toBe('user');
     const run = units[1];
     expect(run.kind).toBe('agent-run');
     if (run.kind !== 'agent-run') return;
-    expect(run.steps).toHaveLength(0);
-    expect(run.finalText).toHaveLength(1);
-    expect(run.finalText[0].text).toBe('hello!');
+    expect(run.blocks).toHaveLength(1);
+    expect(run.blocks[0].kind).toBe('text');
+    if (run.blocks[0].kind !== 'text') return;
+    expect(run.blocks[0].content.text).toBe('hello!');
     expect(run.isStreaming).toBe(false);
   });
 
@@ -110,18 +288,21 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: { t1: 'search results', t2: 'doc body' },
     });
     expect(units).toHaveLength(2);
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps).toHaveLength(3); // thinking + 2 tool calls
-    expect(run.steps[0].kind).toBe('thinking');
-    expect(run.steps[1].kind).toBe('tool');
-    expect(run.steps[2].kind).toBe('tool');
-    expect(run.steps[1].status).toBe('done');
-    expect(run.steps[2].status).toBe('done');
-    expect(run.finalText[0].text).toBe('done!');
+    expect(run.blocks.map((block) => block.kind)).toEqual(['activity', 'text']);
+    const activity = run.blocks[0];
+    const text = run.blocks[1];
+    if (activity.kind !== 'activity' || text.kind !== 'text') {
+      throw new Error('expected activity and text blocks');
+    }
+    expect(activity.steps).toHaveLength(3); // thinking + 2 tool calls
+    expect(activity.steps[0].kind).toBe('thinking');
+    expect(activity.steps[1]).toMatchObject({ kind: 'tool', status: 'done' });
+    expect(activity.steps[2]).toMatchObject({ kind: 'tool', status: 'done' });
+    expect(text.content.text).toBe('done!');
   });
 
   it('marks tool steps without results as in_progress', () => {
@@ -131,16 +312,19 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps[0].kind).toBe('tool');
-    expect(run.steps[0].status).toBe('in_progress');
+    const block = run.blocks[0];
+    if (block.kind !== 'activity') throw new Error('expected activity');
+    expect(block.steps[0]).toMatchObject({
+      kind: 'tool',
+      status: 'in_progress',
+    });
     expect(run.isStreaming).toBe(true);
   });
 
-  it('marks invalid tool calls as errors and does not create rich cards', () => {
+  it('marks invalid rich tool calls as ordinary error activity', () => {
     const messages = [
       userMessage('chart it'),
       assistantMessage([
@@ -158,31 +342,32 @@ describe('groupMessagesIntoRuns', () => {
 
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
 
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps[0].status).toBe('error');
-    expect(run.richCards).toHaveLength(0);
+    expect(run.blocks).toHaveLength(1);
+    const block = run.blocks[0];
+    if (block.kind !== 'activity') throw new Error('expected activity');
+    expect(block.steps[0].status).toBe('error');
   });
 
-  it('promotes streaming text without tool_use to finalText (so it renders outside the timeline)', () => {
+  it('emits streaming assistant text as a text block', () => {
     const messages = [
       userMessage('go'),
       assistantMessage([{ type: 'text', text: 'still typing' }]),
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.finalText).toHaveLength(1);
-    expect(run.finalText[0].text).toBe('still typing');
+    expect(run.blocks[0].kind).toBe('text');
+    if (run.blocks[0].kind !== 'text') return;
+    expect(run.blocks[0].content.text).toBe('still typing');
   });
 
-  it('routes text out of the timeline even when the same message has a tool_use', () => {
+  it('keeps text before a tool from the same assistant message', () => {
     const messages = [
       userMessage('go'),
       assistantMessage([
@@ -192,17 +377,16 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.finalText).toHaveLength(1);
-    expect(run.finalText[0].text).toBe('Let me search...');
-    expect(run.steps).toHaveLength(1);
-    expect(run.steps[0].kind).toBe('tool');
+    expect(run.blocks.map((block) => block.kind)).toEqual(['text', 'activity']);
+    const text = run.blocks[0];
+    if (text.kind !== 'text') throw new Error('expected text');
+    expect(text.content.text).toBe('Let me search...');
   });
 
-  it('extracts rich-tool calls into richCards', () => {
+  it('keeps a rich tool inline while grouping adjacent ordinary activity', () => {
     const messages = [
       userMessage('chart it'),
       assistantMessage([
@@ -215,13 +399,18 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: { t1: '{}', t2: 'results' },
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps).toHaveLength(2);
-    expect(run.richCards).toHaveLength(1);
-    expect(run.richCards[0].toolUse.name).toBe('bar_chart');
+    expect(run.blocks.map((block) => block.kind)).toEqual([
+      'rich-tool',
+      'activity',
+      'text',
+    ]);
+    const richTool = run.blocks[0];
+    if (richTool.kind !== 'rich-tool') throw new Error('expected rich tool');
+    expect(richTool.step.toolUse.name).toBe('bar_chart');
+    expect(richTool.step.result).toBe('{}');
   });
 
   it('keeps run separate when followed by another user message', () => {
@@ -233,7 +422,6 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(units.map((u) => u.kind)).toEqual([
       'user',
@@ -250,12 +438,49 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
       hasPendingUserTurn: true,
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
     expect(run.isStreaming).toBe(false);
+  });
+
+  it('does not reactivate a completed display tool while a new user turn is pending', () => {
+    const messages = [
+      userMessage('first'),
+      assistantMessage([
+        { type: 'tool_use', id: 'email-1', name: 'send_email' },
+      ]),
+    ];
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: true,
+      hasPendingUserTurn: true,
+    });
+
+    const run = units[1];
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    const block = run.blocks[0];
+    if (block.kind !== 'rich-tool') throw new Error('expected rich tool');
+    expect(block.step.status).toBe('done');
+  });
+
+  it('does not reactivate a prior tool while a streamed user turn awaits its assistant message', () => {
+    const messages = [
+      userMessage('first'),
+      assistantMessage([
+        { type: 'tool_use', id: 'email-1', name: 'send_email' },
+      ]),
+      userMessage('second'),
+    ];
+    const units = groupMessagesIntoRuns(messages, {
+      isStreaming: true,
+    });
+
+    const priorRun = units[1];
+    if (priorRun.kind !== 'agent-run') throw new Error('expected agent-run');
+    const block = priorRun.blocks[0];
+    if (block.kind !== 'rich-tool') throw new Error('expected rich tool');
+    expect(block.step.status).toBe('done');
   });
 
   it('marks only the last agent-run as streaming when isStreaming is true', () => {
@@ -267,7 +492,6 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     const firstRun = units[1];
     const secondRun = units[3];
@@ -289,22 +513,22 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps).toHaveLength(2);
-    expect(run.steps[0].kind).toBe('thinking');
-    if (run.steps[0].kind !== 'thinking') return;
-    expect(run.steps[0].transcript).toContain('first part');
-    expect(run.steps[0].transcript).toContain('second part');
+    const block = run.blocks[0];
+    if (block.kind !== 'activity') throw new Error('expected activity');
+    expect(block.steps).toHaveLength(2);
+    expect(block.steps[0].kind).toBe('thinking');
+    if (block.steps[0].kind !== 'thinking') return;
+    expect(block.steps[0].transcript).toContain('first part');
+    expect(block.steps[0].transcript).toContain('second part');
   });
 
   it('does not synthesize a pending agent-run when streaming has started but no assistant message arrived', () => {
     const messages = [userMessage('go')];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(1);
     expect(units[0].kind).toBe('user');
@@ -314,7 +538,6 @@ describe('groupMessagesIntoRuns', () => {
     const messages = [userMessage('go')];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(1);
     expect(units[0].kind).toBe('user');
@@ -335,16 +558,21 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: false,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(2);
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps).toHaveLength(1);
-    expect(run.steps[0].kind).toBe('skill_instruction');
-    if (run.steps[0].kind !== 'skill_instruction') return;
-    expect(run.steps[0].text).toBe('You are a poet.');
-    expect(run.finalText[0].text).toBe('Cherry blossoms fall');
+    expect(run.blocks.map((block) => block.kind)).toEqual(['activity', 'text']);
+    const activity = run.blocks[0];
+    const text = run.blocks[1];
+    if (activity.kind !== 'activity' || text.kind !== 'text') {
+      throw new Error('expected activity and text');
+    }
+    expect(activity.steps[0]).toMatchObject({
+      kind: 'skill_instruction',
+      text: 'You are a poet.',
+    });
+    expect(text.content.text).toBe('Cherry blossoms fall');
   });
 
   it('handles assistant message with empty content (mid-stream)', () => {
@@ -359,13 +587,11 @@ describe('groupMessagesIntoRuns', () => {
     ];
     const units = groupMessagesIntoRuns(messages, {
       isStreaming: true,
-      toolResultsByToolId: {},
     });
     expect(units).toHaveLength(2);
     const run = units[1];
     if (run.kind !== 'agent-run') throw new Error('expected agent-run');
-    expect(run.steps).toHaveLength(0);
-    expect(run.finalText).toHaveLength(0);
+    expect(run.blocks).toHaveLength(0);
     expect(run.isStreaming).toBe(true);
   });
 });

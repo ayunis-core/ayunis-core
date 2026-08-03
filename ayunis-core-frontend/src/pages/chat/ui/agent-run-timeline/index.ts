@@ -4,5 +4,7 @@ export type {
   RenderUnit,
   UserUnit,
   AgentRunUnit,
+  AgentRunBlock,
   TimelineStep,
+  ToolTimelineStep,
 } from './model/types';

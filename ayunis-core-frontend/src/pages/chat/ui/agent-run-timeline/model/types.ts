@@ -27,18 +27,41 @@ export type TimelineStep =
       status: StepStatus;
     };
 
-export interface RichCard {
+export type ToolTimelineStep = Extract<TimelineStep, { kind: 'tool' }>;
+
+export interface ActivityRunBlock {
+  kind: 'activity';
   key: string;
-  toolUse: ToolUseMessageContent;
-  result?: string;
+  steps: TimelineStep[];
 }
+
+export interface RichToolRunBlock {
+  kind: 'rich-tool';
+  key: string;
+  step: ToolTimelineStep;
+}
+
+export interface PendingToolRunBlock {
+  kind: 'pending-tool';
+  key: string;
+  step: ToolTimelineStep;
+}
+
+export type InlineToolRunBlock = RichToolRunBlock | PendingToolRunBlock;
+
+export interface TextRunBlock {
+  kind: 'text';
+  key: string;
+  content: TextMessageContent;
+}
+
+export type AgentRunBlock =
+  ActivityRunBlock | InlineToolRunBlock | TextRunBlock;
 
 export interface AgentRunUnit {
   kind: 'agent-run';
   key: string;
-  steps: TimelineStep[];
-  richCards: RichCard[];
-  finalText: TextMessageContent[];
+  blocks: AgentRunBlock[];
   isStreaming: boolean;
 }
 
