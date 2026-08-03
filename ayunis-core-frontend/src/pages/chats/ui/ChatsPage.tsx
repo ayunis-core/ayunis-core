@@ -58,7 +58,8 @@ export default function ChatsPage({
           />
         }
         contentArea={
-          <>
+          <div className="flex flex-col gap-4 pt-2">
+            <h1 className="text-2xl font-semibold">{t('page.title')}</h1>
             <ChatsFilters search={search} />
             {chats.length === 0 ? (
               <ChatsEmptyState hasFilters={hasFilters} />
@@ -74,7 +75,7 @@ export default function ChatsPage({
               totalPages={totalPages}
               search={search}
             />
-          </>
+          </div>
         }
       />
     </AppLayout>

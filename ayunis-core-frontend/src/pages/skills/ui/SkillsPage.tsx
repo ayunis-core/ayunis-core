@@ -86,51 +86,54 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
-            </TabsList>
-            <MarketplacePromoCard />
-            <TabsContent value="personal" className="mt-4">
-              {personalSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={t('emptyState.personal.description')}
-                  action={
-                    <CreateSkillDialog
-                      buttonText={t('createDialog.buttonTextFirst')}
-                      showIcon={true}
-                    />
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {personalSkills.map((skill) => (
-                    <SkillCard
-                      key={skill.id}
-                      skill={skill}
-                      pinTourTarget={skill.id === pinTargetSkillId}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="shared" className="mt-4">
-              {sharedSkills.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedSkills.map((skill) => (
-                    <SkillCard key={skill.id} skill={skill} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <div className="flex flex-col gap-4 pt-2">
+            <h1 className="text-2xl font-semibold">{t('page.title')}</h1>
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList>
+                <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
+                <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              </TabsList>
+              <MarketplacePromoCard />
+              <TabsContent value="personal" className="mt-4">
+                {personalSkills.length === 0 ? (
+                  <EmptyState
+                    title={t('emptyState.personal.title')}
+                    description={t('emptyState.personal.description')}
+                    action={
+                      <CreateSkillDialog
+                        buttonText={t('createDialog.buttonTextFirst')}
+                        showIcon={true}
+                      />
+                    }
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {personalSkills.map((skill) => (
+                      <SkillCard
+                        key={skill.id}
+                        skill={skill}
+                        pinTourTarget={skill.id === pinTargetSkillId}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="shared" className="mt-4">
+                {sharedSkills.length === 0 ? (
+                  <EmptyState
+                    title={t('emptyState.shared.title')}
+                    description={t('emptyState.shared.description')}
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {sharedSkills.map((skill) => (
+                      <SkillCard key={skill.id} skill={skill} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         }
       />
     </AppLayout>

@@ -70,46 +70,49 @@ export default function KnowledgeBasesPage({
           />
         }
         contentArea={
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList>
-              <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
-              <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="personal" className="mt-4">
-              {personalKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.personal.title')}
-                  description={t('emptyState.personal.description')}
-                  action={
-                    <CreateKnowledgeBaseDialog
-                      buttonText={t('createDialog.buttonTextFirst')}
-                      showIcon={true}
-                    />
-                  }
-                />
-              ) : (
-                <div className="space-y-3">
-                  {personalKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="shared" className="mt-4">
-              {sharedKnowledgeBases.length === 0 ? (
-                <EmptyState
-                  title={t('emptyState.shared.title')}
-                  description={t('emptyState.shared.description')}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {sharedKnowledgeBases.map((kb) => (
-                    <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <div className="flex flex-col gap-4 pt-2">
+            <h1 className="text-2xl font-semibold">{t('page.title')}</h1>
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList>
+                <TabsTrigger value="personal">{t('tabs.personal')}</TabsTrigger>
+                <TabsTrigger value="shared">{t('tabs.shared')}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="personal" className="mt-4">
+                {personalKnowledgeBases.length === 0 ? (
+                  <EmptyState
+                    title={t('emptyState.personal.title')}
+                    description={t('emptyState.personal.description')}
+                    action={
+                      <CreateKnowledgeBaseDialog
+                        buttonText={t('createDialog.buttonTextFirst')}
+                        showIcon={true}
+                      />
+                    }
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {personalKnowledgeBases.map((kb) => (
+                      <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="shared" className="mt-4">
+                {sharedKnowledgeBases.length === 0 ? (
+                  <EmptyState
+                    title={t('emptyState.shared.title')}
+                    description={t('emptyState.shared.description')}
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {sharedKnowledgeBases.map((kb) => (
+                      <KnowledgeBaseCard key={kb.id} knowledgeBase={kb} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         }
       />
     </AppLayout>
