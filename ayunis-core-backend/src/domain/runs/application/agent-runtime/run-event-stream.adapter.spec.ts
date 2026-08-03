@@ -11,9 +11,9 @@ import {
 import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
-  RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
+import type { RunExecutionFailedError } from '../runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 
@@ -279,19 +279,21 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
-  it('maps other error events to RunExecutionFailedError', async () => {
+  it('maps other error events to a client-safe run error', async () => {
     await expect(
       collect(
         eventsFrom([
           {
             type: 'error',
             code: 'PROVIDER_FAILED',
-            message: 'upstream 500',
+            message: 'upstream exposed internal provider details',
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
       ),
-    ).rejects.toBeInstanceOf(RunExecutionFailedError);
+    ).rejects.toMatchObject<Partial<RunExecutionFailedError>>({
+      message: 'Run execution failed: Agent runtime failed',
+    });
   });
 
   it('maps anonymization failures to the privacy-safe run error', async () => {

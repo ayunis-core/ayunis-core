@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
+import { Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -24,6 +25,8 @@ import {
 } from './inference-message.mapper';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
+
+const logger = new Logger('RunEventStreamAdapter');
 
 /** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
@@ -232,5 +235,10 @@ function mapRunError(
   if (event.code === 'CONTEXT_BUDGET_EXCEEDED') {
     return new RunContextBudgetExceededError();
   }
-  return new RunExecutionFailedError(event.message);
+  logger.error('Agent runtime failed', {
+    code: event.code,
+    runtimeMessage: event.message,
+    details: event.details,
+  });
+  return new RunExecutionFailedError('Agent runtime failed');
 }

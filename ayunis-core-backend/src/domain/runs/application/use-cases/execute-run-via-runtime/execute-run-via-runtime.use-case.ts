@@ -289,6 +289,7 @@ export class ExecuteRunViaRuntimeUseCase {
       new MapMessagesToInferenceCommand(
         prepared.thread.messages,
         prepared.orgId,
+        prepared.backendTools,
       ),
     );
     const provider = await this.resolveModelProviderUseCase.execute(
