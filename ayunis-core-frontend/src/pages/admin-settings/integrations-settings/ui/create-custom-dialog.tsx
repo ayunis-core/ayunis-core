@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,23 +18,24 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/shadcn/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/shadcn/select';
 import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
 import { Button } from '@/shared/ui/shadcn/button';
 import type { CreateCustomIntegrationFormData } from '../model/types';
 import { useCreateCustomIntegration } from '../api/useCreateCustomIntegration';
+import { buildCustomIntegrationPayload } from '../lib/build-custom-integration-payload';
+import { findDuplicateHeaderIndexes } from '../lib/custom-config-field-validation';
+import { CustomConfigFieldEditor } from './custom-config-field-editor';
 
 interface CreateCustomDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const DEFAULT_VALUES: CreateCustomIntegrationFormData = {
+  name: '',
+  serverUrl: '',
+  fields: [],
+};
 
 export function CreateCustomDialog({
   open,
@@ -42,83 +43,53 @@ export function CreateCustomDialog({
 }: Readonly<CreateCustomDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreateCustomIntegrationFormData>({
-    defaultValues: {
-      name: '',
-      serverUrl: '',
-      authMethod: 'NO_AUTH',
-      authHeaderName: '',
-      credentials: '',
-    },
+    defaultValues: DEFAULT_VALUES,
+  });
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'fields',
   });
   const { createCustomIntegration, isCreating } = useCreateCustomIntegration(
+    form,
     () => {
       onOpenChange(false);
-      form.reset();
+      form.reset(DEFAULT_VALUES);
     },
   );
 
-  const selectedAuthMethod = useWatch({
-    control: form.control,
-    name: 'authMethod',
-  });
-
-  const previousAuthMethod =
-    useRef<typeof selectedAuthMethod>(selectedAuthMethod);
-
-  useEffect(() => {
-    if (previousAuthMethod.current === selectedAuthMethod) {
-      return;
-    }
-
-    if (!selectedAuthMethod || selectedAuthMethod === 'NO_AUTH') {
-      form.setValue('credentials', '');
-      form.setValue('authHeaderName', '');
-    }
-
-    if (selectedAuthMethod === 'BEARER_TOKEN') {
-      form.setValue('authHeaderName', '');
-    }
-
-    previousAuthMethod.current = selectedAuthMethod;
-  }, [form, selectedAuthMethod]);
-
-  const handleSubmit = (data: CreateCustomIntegrationFormData) => {
-    const payload: CreateCustomIntegrationFormData = {
-      name: data.name,
-      serverUrl: data.serverUrl,
-      authMethod: data.authMethod,
-    };
-
-    if (data.authMethod && data.authMethod !== 'NO_AUTH') {
-      const trimmedCredentials = data.credentials?.trim();
-      if (trimmedCredentials) {
-        payload.credentials = trimmedCredentials;
-      }
-
-      if (data.authMethod === 'CUSTOM_HEADER') {
-        const trimmedHeaderName = data.authHeaderName?.trim();
-        if (trimmedHeaderName) {
-          payload.authHeaderName = trimmedHeaderName;
-        }
-      }
-    } else {
-      payload.authMethod =
-        data.authMethod === 'NO_AUTH' ? 'NO_AUTH' : undefined;
-    }
-
-    createCustomIntegration(payload);
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && !isCreating) form.reset(DEFAULT_VALUES);
+    onOpenChange(newOpen);
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !isCreating) {
-      form.reset();
+  const addField = () => {
+    append({
+      key: `field_${crypto.randomUUID().replaceAll('-', '')}`,
+      scope: 'organization',
+      label: '',
+      type: 'secret',
+      headerName: '',
+      prefix: '',
+      required: true,
+      help: '',
+      value: '',
+    });
+  };
+
+  const submit = (data: CreateCustomIntegrationFormData) => {
+    const duplicateIndexes = findDuplicateHeaderIndexes(data.fields);
+    for (const index of duplicateIndexes) {
+      form.setError(`fields.${index}.headerName`, {
+        message: t('integrations.createCustomDialog.headerDuplicate'),
+      });
     }
-    onOpenChange(newOpen);
+    if (duplicateIndexes.length > 0) return;
+    createCustomIntegration(buildCustomIntegrationPayload(data));
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[525px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {t('integrations.createCustomDialog.title')}
@@ -129,12 +100,13 @@ export function CreateCustomDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={(e) => void form.handleSubmit(handleSubmit)(e)}
+            onSubmit={(event) => void form.handleSubmit(submit)(event)}
             className="space-y-4"
           >
             <FormField
               control={form.control}
               name="name"
+              rules={{ required: true }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -160,6 +132,7 @@ export function CreateCustomDialog({
             <FormField
               control={form.control}
               name="serverUrl"
+              rules={{ required: true }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -167,6 +140,7 @@ export function CreateCustomDialog({
                   </FormLabel>
                   <FormControl>
                     <Input
+                      type="url"
                       placeholder={t(
                         'integrations.createCustomDialog.serverUrlPlaceholder',
                       )}
@@ -182,136 +156,33 @@ export function CreateCustomDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="authMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('integrations.createCustomDialog.authMethod')}
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value)}
-                    value={field.value ?? undefined}
-                    disabled={isCreating}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            'integrations.createCustomDialog.authMethodNone',
-                          )}
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="NO_AUTH">
-                        {t('integrations.createCustomDialog.authMethodNone')}
-                      </SelectItem>
-                      <SelectItem value="CUSTOM_HEADER">
-                        {t('integrations.createCustomDialog.authMethodApiKey')}
-                      </SelectItem>
-                      <SelectItem value="BEARER_TOKEN">
-                        {t(
-                          'integrations.createCustomDialog.authMethodBearerToken',
-                        )}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    {t('integrations.createCustomDialog.authMethodDescription')}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium">
+                  {t('integrations.createCustomDialog.credentials')}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t('integrations.createCustomDialog.credentialsDescription')}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addField}
+                disabled={isCreating || fields.length >= 20}
+              >
+                <Plus className="h-4 w-4" />
+                {t('integrations.createCustomDialog.addField')}
+              </Button>
+            </div>
+
+            <CustomConfigFieldEditor
+              form={form}
+              fields={fields}
+              remove={remove}
+              disabled={isCreating}
             />
-
-            {selectedAuthMethod === 'CUSTOM_HEADER' && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="authHeaderName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('integrations.createCustomDialog.headerName')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'integrations.createCustomDialog.headerNamePlaceholder',
-                          )}
-                          {...field}
-                          disabled={isCreating}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {t(
-                          'integrations.createCustomDialog.headerNameDescription',
-                        )}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="credentials"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('integrations.createCustomDialog.credentials')}
-                      </FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder={t(
-                            'integrations.createCustomDialog.credentialsPlaceholder',
-                          )}
-                          {...field}
-                          disabled={isCreating}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        {t(
-                          'integrations.createCustomDialog.credentialsDescriptionApiKey',
-                        )}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-
-            {selectedAuthMethod === 'BEARER_TOKEN' && (
-              <FormField
-                control={form.control}
-                name="credentials"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t('integrations.createCustomDialog.credentials')}
-                    </FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder={t(
-                          'integrations.createCustomDialog.credentialsPlaceholder',
-                        )}
-                        {...field}
-                        disabled={isCreating}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {t(
-                        'integrations.createCustomDialog.credentialsDescriptionBearerToken',
-                      )}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <DialogFooter>
               <Button

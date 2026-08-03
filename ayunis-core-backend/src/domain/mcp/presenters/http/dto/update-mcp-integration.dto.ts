@@ -67,7 +67,7 @@ export class UpdateMcpIntegrationDto {
 
   @ApiPropertyOptional({
     description:
-      'Org-level config values for marketplace integrations. ' +
+      'Organization-level config values for schema-configured integrations. ' +
       'For secret fields, omit or send empty string to keep the existing value.',
     example: { endpointUrl: 'https://example.com/api' },
   })

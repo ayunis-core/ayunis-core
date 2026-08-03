@@ -1,7 +1,8 @@
 import { ConnectionValidationService } from './connection-validation.service';
 import type { ValidateMcpIntegrationUseCase } from '../use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import type { McpIntegrationsRepositoryPort } from '../ports/mcp-integrations.repository.port';
-import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
+import type { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from '../testing/mcp-integration.fixtures';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
 
@@ -14,7 +15,7 @@ describe('ConnectionValidationService', () => {
   let service: ConnectionValidationService;
 
   function createIntegration(): CustomMcpIntegration {
-    return new CustomMcpIntegration({
+    return aCustomMcpIntegration({
       id: integrationId,
       orgId,
       name: 'Test Integration',

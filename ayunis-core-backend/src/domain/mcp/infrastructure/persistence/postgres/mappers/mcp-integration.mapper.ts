@@ -36,9 +36,6 @@ export class McpIntegrationMapper {
   ) {}
 
   toDomain(record: McpIntegrationRecord): McpIntegration {
-    if (!record.auth) {
-      throw new Error('MCP integration record must have auth information');
-    }
     const auth = this.authFromRecord(record.auth);
     const base = this.extractBaseFromRecord(record, auth);
 
@@ -46,7 +43,7 @@ export class McpIntegrationMapper {
       return this.predefinedToDomain(base, record);
     }
     if (record instanceof CustomMcpIntegrationRecord) {
-      return this.customToDomain(base);
+      return this.customToDomain(base, record);
     }
     if (record instanceof MarketplaceMcpIntegrationRecord) {
       return this.marketplaceToDomain(base, record);
@@ -107,10 +104,13 @@ export class McpIntegrationMapper {
 
   private customToDomain(
     base: ReturnType<McpIntegrationMapper['extractBaseFromRecord']>,
+    record: CustomMcpIntegrationRecord,
   ): McpIntegration {
     return this.integrationFactory.createIntegration({
       kind: McpIntegrationKind.CUSTOM,
       ...base,
+      configSchema: this.requiredCustomConfigSchema(record),
+      orgConfigValues: record.orgConfigValues ?? {},
     });
   }
 
@@ -122,10 +122,26 @@ export class McpIntegrationMapper {
       kind: McpIntegrationKind.MARKETPLACE,
       ...base,
       marketplaceIdentifier: record.marketplaceIdentifier,
-      configSchema: record.configSchema,
-      orgConfigValues: record.orgConfigValues,
+      configSchema: this.requiredMarketplaceConfigSchema(record),
+      orgConfigValues: record.orgConfigValues ?? {},
       logoUrl: record.logoUrl,
     });
+  }
+
+  private requiredMarketplaceConfigSchema(
+    record: MarketplaceMcpIntegrationRecord,
+  ) {
+    if (!record.configSchema) {
+      throw new Error('Marketplace integration record requires config schema');
+    }
+    return record.configSchema;
+  }
+
+  private requiredCustomConfigSchema(record: CustomMcpIntegrationRecord) {
+    if (!record.configSchema) {
+      throw new Error('Custom integration record requires config schema');
+    }
+    return record.configSchema;
   }
 
   private applyBaseToRecord(
@@ -165,6 +181,8 @@ export class McpIntegrationMapper {
   ): CustomMcpIntegrationRecord {
     const record = new CustomMcpIntegrationRecord();
     this.applyBaseToRecord(record, entity, authRecord);
+    record.configSchema = entity.configSchema;
+    record.orgConfigValues = entity.orgConfigValues;
     return record;
   }
 

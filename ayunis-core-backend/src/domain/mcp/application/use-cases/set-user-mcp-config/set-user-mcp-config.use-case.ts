@@ -6,15 +6,15 @@ import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repo
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegrationUserConfig } from '../../../domain/mcp-integration-user-config.entity';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
 import { ConfigField } from '../../../domain/value-objects/integration-config-schema';
 import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
-import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
   McpNoUserFieldsError,
   McpInvalidConfigKeysError,
   UnexpectedMcpError,
@@ -29,7 +29,7 @@ export class SetUserMcpConfigUseCase {
     private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
-    private readonly marketplaceConfigService: MarketplaceConfigService,
+    private readonly configService: McpConfigService,
     private readonly capabilityCache: McpCapabilityCacheService,
   ) {}
 
@@ -49,11 +49,12 @@ export class SetUserMcpConfigUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    const marketplaceIntegration = await this.getMarketplaceIntegrationOrThrow(
-      command.integrationId,
-      orgId,
-    );
-    const { userFields } = marketplaceIntegration.configSchema;
+    const configurableIntegration =
+      await this.getConfigurableIntegrationOrThrow(
+        command.integrationId,
+        orgId,
+      );
+    const { userFields } = configurableIntegration.configSchema;
 
     if (userFields.length === 0) {
       throw new McpNoUserFieldsError(command.integrationId);
@@ -72,10 +73,7 @@ export class SetUserMcpConfigUseCase {
       userFields,
     );
 
-    this.marketplaceConfigService.validateRequiredFields(
-      userFields,
-      mergedValues,
-    );
+    this.configService.validateRequiredFields(userFields, mergedValues);
 
     const saved = await this.saveConfig(
       command.integrationId,
@@ -89,10 +87,10 @@ export class SetUserMcpConfigUseCase {
     return this.maskResult(saved.configValues, userFields);
   }
 
-  private async getMarketplaceIntegrationOrThrow(
+  private async getConfigurableIntegrationOrThrow(
     integrationId: UUID,
     orgId: UUID,
-  ): Promise<MarketplaceMcpIntegration> {
+  ): Promise<SchemaConfiguredMcpIntegration> {
     const integration =
       await this.integrationRepository.findById(integrationId);
 
@@ -104,11 +102,11 @@ export class SetUserMcpConfigUseCase {
       throw new McpIntegrationAccessDeniedError(integrationId);
     }
 
-    if (!integration.isMarketplace()) {
-      throw new McpNotMarketplaceIntegrationError(integrationId);
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(integrationId);
     }
 
-    return integration as MarketplaceMcpIntegration;
+    return integration;
   }
 
   private validateConfigKeys(
@@ -149,7 +147,7 @@ export class SetUserMcpConfigUseCase {
       } else if (provided !== undefined) {
         merged[field.key] =
           field.type === 'secret'
-            ? await this.marketplaceConfigService
+            ? await this.configService
                 .encryptSecretFields([field], { [field.key]: provided })
                 .then((r) => r[field.key])
             : provided;

@@ -6,11 +6,13 @@ import type { ContextService } from 'src/common/context/services/context.service
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
 } from '../../mcp.errors';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 import type { UUID } from 'crypto';
@@ -133,6 +135,44 @@ describe('GetUserMcpConfigUseCase', () => {
     expect(result.configValues).toEqual({});
   });
 
+  it('returns user config for a schema-configured custom integration', async () => {
+    const customIntegration = aCustomMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Council Records',
+      serverUrl: 'https://custom.example.com/mcp',
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [
+          {
+            key: 'personalToken',
+            label: 'Personal token',
+            type: 'secret',
+            headerName: 'Authorization',
+            required: true,
+          },
+        ],
+      },
+      orgConfigValues: {},
+    });
+    integrationRepository.findById.mockResolvedValue(customIntegration);
+    userConfigRepository.findByIntegrationAndUser.mockResolvedValue(
+      new McpIntegrationUserConfig({
+        integrationId,
+        userId,
+        configValues: { personalToken: 'encrypted-token' },
+      }),
+    );
+
+    const result = await useCase.execute(
+      new GetUserMcpConfigQuery(integrationId),
+    );
+
+    expect(result.configValues).toEqual({ personalToken: SECRET_MASK });
+  });
+
   it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
     integrationRepository.findById.mockResolvedValue(null);
 
@@ -152,19 +192,20 @@ describe('GetUserMcpConfigUseCase', () => {
     ).rejects.toThrow(McpIntegrationAccessDeniedError);
   });
 
-  it('should throw McpNotMarketplaceIntegrationError when integration is not a marketplace type', async () => {
-    const customIntegration = new CustomMcpIntegration({
+  it('rejects integrations without schema-defined configuration', async () => {
+    const predefinedIntegration = new PredefinedMcpIntegration({
       id: integrationId,
       orgId,
-      name: 'Custom Integration',
-      serverUrl: 'https://custom.example.com/mcp',
+      name: 'Predefined Integration',
+      serverUrl: 'https://predefined.example.com/mcp',
+      slug: PredefinedMcpIntegrationSlug.TEST,
       auth: new NoAuthMcpIntegrationAuth({}),
     });
-    integrationRepository.findById.mockResolvedValue(customIntegration);
+    integrationRepository.findById.mockResolvedValue(predefinedIntegration);
 
     await expect(
       useCase.execute(new GetUserMcpConfigQuery(integrationId)),
-    ).rejects.toThrow(McpNotMarketplaceIntegrationError);
+    ).rejects.toThrow(McpIntegrationNotConfigurableError);
   });
 
   it('should throw when user is not authenticated', async () => {

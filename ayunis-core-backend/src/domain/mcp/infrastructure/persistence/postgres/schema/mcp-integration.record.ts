@@ -10,6 +10,7 @@ import { BaseRecord } from 'src/common/db/base-record';
 import { McpIntegrationAuthRecord } from './mcp-integration-auth.record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UUID } from 'crypto';
+import { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 
 @Entity('mcp_integrations')
 @TableInheritance({ column: { type: 'varchar', name: 'integration_type' } })
@@ -44,6 +45,17 @@ export abstract class McpIntegrationRecord extends BaseRecord {
 
   @Column({ type: 'text', nullable: true })
   description?: string;
+
+  @Column({ name: 'config_schema', type: 'jsonb', nullable: true })
+  configSchema?: IntegrationConfigSchema;
+
+  @Column({
+    name: 'org_config_values',
+    type: 'jsonb',
+    nullable: true,
+    default: '{}',
+  })
+  orgConfigValues?: Record<string, string>;
 
   @OneToOne(() => McpIntegrationAuthRecord, (auth) => auth.integration, {
     cascade: ['insert', 'update'],

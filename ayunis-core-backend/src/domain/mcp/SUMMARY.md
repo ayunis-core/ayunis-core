@@ -3,11 +3,11 @@ Model Context Protocol server connections and capability discovery
 
 MCP integrations connect external tool servers to the platform using the Model Context Protocol. Organizations configure predefined, custom, or marketplace integrations with authentication, then discover available tools, resources, and prompts.
 
-The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined, custom, and marketplace subtypes), `McpIntegrationUserConfig` (per-user configuration values for marketplace integrations), `McpTool`, `McpResource`, and `McpPrompt`—the latter three are ephemeral entities fetched from remote servers, not persisted locally. Authentication is handled through a hierarchy supporting bearer tokens, custom headers, OAuth, and no-auth. `MarketplaceMcpIntegration` adds a marketplace identifier, a typed config schema (org-level and user-level fields), and org-level config values.
+The MCP module manages connections to external Model Context Protocol servers at the organization level. Core entities include `McpIntegration` (abstract base with predefined, custom, and marketplace subtypes), `SchemaConfiguredMcpIntegration` (shared org/user configuration schema behavior for custom and marketplace integrations), `McpIntegrationUserConfig` (per-user configuration values), `McpTool`, `McpResource`, and `McpPrompt`—the latter three are ephemeral entities fetched from remote servers, not persisted locally. Predefined integrations use the authentication entity hierarchy; custom and marketplace integrations map typed organization/user config fields to HTTP headers. Migration `1785752072933-BackfillLegacyCustomMcpIntegrations` converts supported legacy custom authentication rows into the schema-configured representation; unsupported or malformed legacy rows fail the migration instead of being silently changed.
 
 **Use Cases:**
 
-- `CreateMcpIntegrationUseCase` — Creates predefined or custom integrations
+- `CreateMcpIntegrationUseCase` — Creates predefined integrations or schema-configured custom integrations
 - `InstallMarketplaceIntegrationUseCase` — Installs a marketplace integration by identifier, persisting org-level config values and config schema
 - `GetMcpIntegrationUseCase` — Fetches a single integration by ID
 - `ListOrgMcpIntegrationsUseCase` — Lists all integrations for the current org
@@ -21,14 +21,14 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `ExecuteMcpToolUseCase` — Executes a tool on a remote MCP server
 - `RetrieveMcpResourceUseCase` — Retrieves a resource from a remote MCP server
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
-- `SetUserMcpConfigUseCase` — Saves per-user config values for a marketplace integration
+- `SetUserMcpConfigUseCase` — Saves per-user config values for a schema-configured integration
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
 
 **Services:**
 
 - `McpClientService` — Handles actual server communication via the MCP SDK
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
-- `MarketplaceConfigService` — Resolves effective server URL and auth headers by merging org-level and user-level config values against the integration's config schema
+- `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
 
 **Ports:**

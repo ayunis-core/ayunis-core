@@ -7,6 +7,7 @@ import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-in
 import { McpIntegrationResponseDto } from '../dto/mcp-integration-response.dto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   ConfigField,
   isSystemFixedField,
@@ -54,8 +55,15 @@ export class McpIntegrationDtoMapper {
     };
 
     // Add type-specific fields
-    if (integration instanceof MarketplaceMcpIntegration) {
-      this.applyMarketplaceFields(baseDto, integration, userAuthorized);
+    if (integration instanceof SchemaConfiguredMcpIntegration) {
+      this.applyConfigFields(baseDto, integration, userAuthorized);
+      if (integration instanceof MarketplaceMcpIntegration) {
+        baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
+        baseDto.logoUrl = integration.logoUrl;
+        baseDto.serverUrl = undefined;
+      } else {
+        baseDto.serverUrl = integration.serverUrl;
+      }
     } else if (integration instanceof PredefinedMcpIntegration) {
       baseDto.slug = integration.slug;
       baseDto.serverUrl = undefined; // Not exposed for predefined
@@ -67,12 +75,11 @@ export class McpIntegrationDtoMapper {
     return baseDto;
   }
 
-  private applyMarketplaceFields(
+  private applyConfigFields(
     baseDto: McpIntegrationResponseDto,
-    integration: MarketplaceMcpIntegration,
+    integration: SchemaConfiguredMcpIntegration,
     userAuthorized?: boolean,
   ): void {
-    baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
     baseDto.configSchema = {
       authType: integration.configSchema.authType,
       orgFields: integration.configSchema.orgFields,
@@ -85,8 +92,6 @@ export class McpIntegrationDtoMapper {
       integration.configSchema.orgFields,
       integration.orgConfigValues,
     );
-    baseDto.logoUrl = integration.logoUrl;
-    baseDto.serverUrl = undefined; // Not exposed for marketplace
     baseDto.slug = undefined;
   }
 

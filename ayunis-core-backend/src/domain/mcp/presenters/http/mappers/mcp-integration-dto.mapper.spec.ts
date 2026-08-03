@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { McpIntegrationDtoMapper } from './mcp-integration-dto.mapper';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
@@ -28,7 +28,7 @@ describe('McpIntegrationDtoMapper', () => {
       secret: 'encrypted-secret',
       headerName: 'X-API-Key',
     });
-    const integration = new CustomMcpIntegration({
+    const integration = aCustomMcpIntegration({
       ...baseParams,
       auth,
     });
@@ -60,7 +60,7 @@ describe('McpIntegrationDtoMapper', () => {
   });
 
   it('maps no-auth integrations without credentials', () => {
-    const integration = new CustomMcpIntegration({
+    const integration = aCustomMcpIntegration({
       ...baseParams,
       auth: new NoAuthMcpIntegrationAuth(),
     });
@@ -69,6 +69,45 @@ describe('McpIntegrationDtoMapper', () => {
 
     expect(dto.hasCredentials).toBe(false);
     expect(dto.authHeaderName).toBeUndefined();
+  });
+
+  it('maps schema-configured custom integration fields and authorization', () => {
+    const configSchema: IntegrationConfigSchema = {
+      authType: 'CUSTOM',
+      orgFields: [
+        {
+          key: 'apiKey',
+          label: 'API key',
+          type: 'secret',
+          headerName: 'X-API-Key',
+          required: true,
+        },
+      ],
+      userFields: [
+        {
+          key: 'personalToken',
+          label: 'Personal token',
+          type: 'secret',
+          headerName: 'Authorization',
+          required: true,
+        },
+      ],
+    };
+    const integration = aCustomMcpIntegration({
+      ...baseParams,
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema,
+      orgConfigValues: { apiKey: 'encrypted-key' },
+    });
+
+    const dto = mapper.toDto(integration, false);
+
+    expect(dto.type).toBe('custom');
+    expect(dto.serverUrl).toBe(baseParams.serverUrl);
+    expect(dto.configSchema).toEqual(configSchema);
+    expect(dto.orgConfigValues).toEqual({ apiKey: SECRET_MASK });
+    expect(dto.userAuthorizationRequired).toBe(true);
+    expect(dto.userAuthorized).toBe(false);
   });
 
   it('maps marketplace integration with config schema and identifier', () => {

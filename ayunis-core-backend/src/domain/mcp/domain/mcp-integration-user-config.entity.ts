@@ -2,7 +2,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
 /**
- * Per-user configuration for a marketplace MCP integration.
+ * Per-user configuration for a schema-configured MCP integration.
  * Stores user-level config values (e.g. personal access tokens)
  * that override org-level values for matching header names at runtime.
  *

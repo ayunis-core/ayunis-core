@@ -6,7 +6,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -16,8 +16,8 @@ import { McpAuthMethod } from '../../../domain/value-objects/mcp-auth-method.enu
 import { BearerMcpIntegrationAuth } from '../../../domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from '../../../domain/auth/custom-header-mcp-integration-auth.entity';
 import { McpValidationFailedError } from '../../mcp.errors';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 
@@ -29,7 +29,7 @@ export class UpdateMcpIntegrationUseCase {
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
-    private readonly marketplaceConfigService: MarketplaceConfigService,
+    private readonly configService: McpConfigService,
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly capabilityCache: McpCapabilityCacheService,
   ) {}
@@ -121,11 +121,11 @@ export class UpdateMcpIntegrationUseCase {
     integration: McpIntegration,
     orgConfigValues: Record<string, string>,
   ): Promise<void> {
-    if (!(integration instanceof MarketplaceMcpIntegration)) {
-      throw new McpNotMarketplaceIntegrationError(integration.id);
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(integration.id);
     }
 
-    const mergedValues = await this.marketplaceConfigService.mergeForUpdate(
+    const mergedValues = await this.configService.mergeForUpdate(
       integration.orgConfigValues,
       orgConfigValues,
       integration.configSchema.orgFields,

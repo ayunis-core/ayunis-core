@@ -3,7 +3,7 @@ import { IsObject } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
 /**
- * DTO for setting per-user configuration on a marketplace MCP integration.
+ * DTO for setting per-user configuration on a schema-configured MCP integration.
  */
 export class SetUserConfigDto {
   @ApiProperty({

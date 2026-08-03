@@ -11,6 +11,15 @@ import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-m
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 
+const customConfig = {
+  configSchema: {
+    authType: 'CUSTOM',
+    orgFields: [],
+    userFields: [],
+  } satisfies IntegrationConfigSchema,
+  orgConfigValues: {},
+};
+
 describe('McpIntegrationFactory', () => {
   const orgId = randomUUID();
   const name = 'Test Integration';
@@ -30,6 +39,7 @@ describe('McpIntegrationFactory', () => {
         name,
         serverUrl,
         auth,
+        ...customConfig,
       });
 
       expect(integration).toBeInstanceOf(CustomMcpIntegration);
@@ -46,6 +56,7 @@ describe('McpIntegrationFactory', () => {
         name,
         serverUrl,
         auth,
+        ...customConfig,
         slug: PredefinedMcpIntegrationSlug.TEST,
       });
 
@@ -78,6 +89,7 @@ describe('McpIntegrationFactory', () => {
         name,
         serverUrl,
         auth,
+        ...customConfig,
       });
 
       expect(integration.auth).toBeInstanceOf(BearerMcpIntegrationAuth);
@@ -97,6 +109,7 @@ describe('McpIntegrationFactory', () => {
         name,
         serverUrl,
         auth,
+        ...customConfig,
       });
 
       expect(integration.auth).toBeInstanceOf(CustomHeaderMcpIntegrationAuth);
@@ -116,6 +129,7 @@ describe('McpIntegrationFactory', () => {
         name,
         serverUrl,
         auth,
+        ...customConfig,
       });
 
       expect(integration.auth).toBeInstanceOf(OAuthMcpIntegrationAuth);

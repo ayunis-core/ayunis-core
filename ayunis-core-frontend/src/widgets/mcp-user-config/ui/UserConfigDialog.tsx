@@ -17,7 +17,7 @@ interface UserConfigDialogProps {
 
 /**
  * Dialog wrapper around {@link UserConfigForm} for setting the current user's
- * personal credentials for a marketplace MCP integration.
+ * personal credentials for a schema-configured MCP integration.
  */
 export function UserConfigDialog({
   integration,

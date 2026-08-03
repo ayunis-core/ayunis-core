@@ -15,7 +15,8 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import type { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
@@ -64,7 +65,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ConstructorParameters<typeof CustomMcpIntegration>[0]
     > = {},
   ) =>
-    new CustomMcpIntegration({
+    aCustomMcpIntegration({
       id: overrides.id ?? mockIntegrationId,
       name: overrides.name ?? 'Custom Integration',
       orgId: overrides.orgId ?? mockOrgId,

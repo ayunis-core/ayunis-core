@@ -124,7 +124,3 @@ export abstract class McpIntegration {
     this.updatedAt = new Date();
   }
 }
-
-export { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
-export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
-export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';

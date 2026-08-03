@@ -16,8 +16,7 @@ export function useUserIntegrations() {
     useMcpIntegrationsControllerListAvailable();
 
   const integrations: McpIntegrationResponseDto[] = (data ?? []).filter(
-    (integration) =>
-      integration.type === 'marketplace' && hasUserEditableFields(integration),
+    (integration) => hasUserEditableFields(integration),
   );
 
   return {

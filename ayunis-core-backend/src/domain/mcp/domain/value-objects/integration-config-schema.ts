@@ -1,5 +1,5 @@
 /**
- * Defines a single configuration field for a marketplace MCP integration.
+ * Defines a single configuration field for a schema-configured MCP integration.
  * Each field with a `headerName` maps to an HTTP header sent on every MCP request.
  * Fields without `headerName` are internal config consumed by ayunis-core (e.g. OAuth credentials).
  */
@@ -35,7 +35,7 @@ export interface OAuthConfig {
 }
 
 /**
- * Configuration schema for a marketplace MCP integration.
+ * Configuration schema for a marketplace or custom MCP integration.
  * Declares what fields are needed, at which level (org vs user),
  * their header mappings, and whether they're secret.
  */

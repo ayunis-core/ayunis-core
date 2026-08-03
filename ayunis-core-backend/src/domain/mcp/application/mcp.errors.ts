@@ -19,7 +19,7 @@ export enum McpErrorCode {
   MCP_OAUTH_NOT_SUPPORTED = 'MCP_OAUTH_NOT_SUPPORTED',
   MCP_MISSING_REQUIRED_CONFIG = 'MCP_MISSING_REQUIRED_CONFIG',
   MCP_MARKETPLACE_INTEGRATION_NOT_FOUND = 'MCP_MARKETPLACE_INTEGRATION_NOT_FOUND',
-  MCP_NOT_MARKETPLACE_INTEGRATION = 'MCP_NOT_MARKETPLACE_INTEGRATION',
+  MCP_INTEGRATION_NOT_CONFIGURABLE = 'MCP_INTEGRATION_NOT_CONFIGURABLE',
   MCP_NO_USER_FIELDS = 'MCP_NO_USER_FIELDS',
   MCP_INVALID_CONFIG_KEYS = 'MCP_INVALID_CONFIG_KEYS',
   MCP_USER_AUTHORIZATION_REQUIRED = 'MCP_USER_AUTHORIZATION_REQUIRED',
@@ -320,11 +320,11 @@ export class McpMarketplaceIntegrationNotFoundError extends McpError {
   }
 }
 
-export class McpNotMarketplaceIntegrationError extends McpError {
+export class McpIntegrationNotConfigurableError extends McpError {
   constructor(integrationId: string, metadata?: ErrorMetadata) {
     super(
-      `MCP integration ${integrationId} is not a marketplace integration`,
-      McpErrorCode.MCP_NOT_MARKETPLACE_INTEGRATION,
+      `MCP integration ${integrationId} does not use schema-defined configuration`,
+      McpErrorCode.MCP_INTEGRATION_NOT_CONFIGURABLE,
       400,
       metadata,
     );

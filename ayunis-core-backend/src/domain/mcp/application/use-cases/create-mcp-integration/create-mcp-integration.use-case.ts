@@ -8,13 +8,13 @@ import { McpIntegrationFactory } from '../../factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.factory';
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { McpAuthMethod } from 'src/domain/mcp/domain';
 import { McpIntegrationKind } from 'src/domain/mcp/domain';
 import {
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
   UnexpectedMcpError,
-  McpAuthNotImplementedError,
   DuplicateMcpIntegrationError,
   McpValidationFailedError,
 } from '../../mcp.errors';
@@ -39,6 +39,7 @@ export class CreateMcpIntegrationUseCase {
     private readonly factory: McpIntegrationFactory,
     private readonly authFactory: McpIntegrationAuthFactory,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
+    private readonly configService: McpConfigService,
     private readonly connectionValidationService: ConnectionValidationService,
   ) {}
 
@@ -190,18 +191,28 @@ export class CreateMcpIntegrationUseCase {
         throw new InvalidServerUrlError(command.serverUrl);
       }
 
-      // Default to NO_AUTH if not provided; OAUTH is not implemented yet
-      const authType = command.authMethod ?? McpAuthMethod.NO_AUTH;
-      if (authType === McpAuthMethod.OAUTH) {
-        throw new McpAuthNotImplementedError(McpAuthMethod.OAUTH);
-      }
+      this.configService.validateCustomSchema(
+        command.configSchema,
+        command.orgConfigValues,
+        command.name,
+      );
+      this.configService.validateRequiredFields(
+        command.configSchema.orgFields,
+        command.orgConfigValues,
+      );
+      const encryptedValues = await this.configService.encryptSecretFields(
+        command.configSchema.orgFields,
+        command.orgConfigValues,
+      );
 
       const integration = this.factory.createIntegration({
         kind: McpIntegrationKind.CUSTOM,
         orgId,
         name: command.name,
         serverUrl: command.serverUrl,
-        auth: await this.buildCustomAuth(authType, command),
+        auth: this.authFactory.createAuth({ method: McpAuthMethod.NO_AUTH }),
+        configSchema: command.configSchema,
+        orgConfigValues: encryptedValues,
         returnsPii: command.returnsPii,
       });
 
@@ -209,45 +220,6 @@ export class CreateMcpIntegrationUseCase {
     } catch (error) {
       return this.rethrowOrWrap(error, 'custom');
     }
-  }
-
-  private async buildCustomAuth(
-    authType: McpAuthMethod,
-    command: CreateCustomMcpIntegrationCommand,
-  ): Promise<McpIntegrationAuth> {
-    if (authType === McpAuthMethod.BEARER_TOKEN) {
-      return this.authFactory.createAuth({
-        method: McpAuthMethod.BEARER_TOKEN,
-        authToken: await this.encryptRequiredCredentials(
-          command,
-          'Bearer token credentials are required',
-        ),
-      });
-    }
-
-    if (authType === McpAuthMethod.CUSTOM_HEADER) {
-      return this.authFactory.createAuth({
-        method: McpAuthMethod.CUSTOM_HEADER,
-        secret: await this.encryptRequiredCredentials(
-          command,
-          'Header credentials are required',
-        ),
-        headerName: command.authHeaderName ?? 'X-API-Key',
-      });
-    }
-
-    // NO_AUTH doesn't need any credentials
-    return this.authFactory.createAuth({ method: McpAuthMethod.NO_AUTH });
-  }
-
-  private async encryptRequiredCredentials(
-    command: CreateCustomMcpIntegrationCommand,
-    message: string,
-  ): Promise<string> {
-    if (!command.credentials) {
-      throw new McpValidationFailedError('', command.name, message);
-    }
-    return this.credentialEncryption.encrypt(command.credentials);
   }
 
   /** Persist first (validation needs the ID), then probe the connection without failing creation. */

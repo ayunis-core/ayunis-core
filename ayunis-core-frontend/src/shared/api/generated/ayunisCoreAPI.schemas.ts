@@ -2803,12 +2803,12 @@ export const McpIntegrationResponseDtoConnectionStatus = {
 } as const;
 
 /**
- * Configuration schema from marketplace (only for marketplace integrations)
+ * Configuration schema for marketplace and schema-configured custom integrations
  */
 export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
 
 /**
- * Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••".
+ * Current org-level config values for schema-configured integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••".
  */
 export type McpIntegrationResponseDtoOrgConfigValues = { [key: string]: unknown };
 
@@ -2847,15 +2847,15 @@ export interface McpIntegrationResponseDto {
   returnsPii: boolean;
   /** Marketplace integration identifier (only for marketplace integrations) */
   marketplaceIdentifier?: string;
-  /** Configuration schema from marketplace (only for marketplace integrations) */
+  /** Configuration schema for marketplace and schema-configured custom integrations */
   configSchema?: McpIntegrationResponseDtoConfigSchema;
-  /** Whether this marketplace integration has user-level config fields */
+  /** Whether this integration has user-level config fields */
   hasUserFields?: boolean;
-  /** Whether this marketplace integration requires each individual user to provide their own credentials before they can use it (has required user-level fields). */
+  /** Whether this integration requires each individual user to provide their own credentials before they can use it (has required user-level fields). */
   userAuthorizationRequired?: boolean;
   /** Whether the current user has satisfied the per-user authorization requirement. Only populated on per-user endpoints (e.g. the available integrations list); undefined elsewhere. */
   userAuthorized?: boolean;
-  /** Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
+  /** Current org-level config values for schema-configured integrations. Non-secret fields contain plaintext values. Secret fields are masked with "••••••". */
   orgConfigValues?: McpIntegrationResponseDtoOrgConfigValues;
   /**
    * Logo URL for marketplace integrations
@@ -2908,40 +2908,38 @@ export interface CreatePredefinedIntegrationDto {
   returnsPii?: boolean;
 }
 
-/**
- * Authentication method for the MCP server
- * @nullable
- */
-export type CreateCustomIntegrationDtoAuthMethod = typeof CreateCustomIntegrationDtoAuthMethod[keyof typeof CreateCustomIntegrationDtoAuthMethod] | null;
+export type CustomMcpConfigFieldDtoType = typeof CustomMcpConfigFieldDtoType[keyof typeof CustomMcpConfigFieldDtoType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CreateCustomIntegrationDtoAuthMethod = {
-  NO_AUTH: 'NO_AUTH',
-  BEARER_TOKEN: 'BEARER_TOKEN',
-  CUSTOM_HEADER: 'CUSTOM_HEADER',
-  OAUTH: 'OAUTH',
+export const CustomMcpConfigFieldDtoType = {
+  text: 'text',
+  url: 'url',
+  secret: 'secret',
 } as const;
 
+export interface CustomMcpConfigFieldDto {
+  key: string;
+  label: string;
+  type: CustomMcpConfigFieldDtoType;
+  headerName: string;
+  prefix?: string;
+  required: boolean;
+  help?: string;
+}
+
+export interface CustomMcpConfigSchemaDto {
+  orgFields: CustomMcpConfigFieldDto[];
+  userFields: CustomMcpConfigFieldDto[];
+}
+
+export type CreateCustomIntegrationDtoOrgConfigValues = {[key: string]: string};
+
 export interface CreateCustomIntegrationDto {
-  /**
-   * The name for this integration instance
-   * @minLength 1
-   * @maxLength 255
-   */
   name: string;
-  /** The URL of the custom MCP server */
   serverUrl: string;
-  /**
-   * Authentication method for the MCP server
-   * @nullable
-   */
-  authMethod?: CreateCustomIntegrationDtoAuthMethod;
-  /** Custom auth header name (e.g., X-API-Key). Required for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header). */
-  authHeaderName?: string;
-  /** Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods. */
-  credentials?: string;
-  /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety. */
+  configSchema: CustomMcpConfigSchemaDto;
+  orgConfigValues: CreateCustomIntegrationDtoOrgConfigValues;
   returnsPii?: boolean;
 }
 
@@ -2999,7 +2997,7 @@ export interface PredefinedConfigResponseDto {
 }
 
 /**
- * Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.
+ * Organization-level config values for schema-configured integrations. For secret fields, omit or send empty string to keep the existing value.
  */
 export type UpdateMcpIntegrationDtoOrgConfigValues = { [key: string]: unknown };
 
@@ -3016,7 +3014,7 @@ export interface UpdateMcpIntegrationDto {
   authHeaderName?: string;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode. */
   returnsPii?: boolean;
-  /** Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value. */
+  /** Organization-level config values for schema-configured integrations. For secret fields, omit or send empty string to keep the existing value. */
   orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
 }
 

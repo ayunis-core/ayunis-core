@@ -27,7 +27,7 @@ const FAILURE_TTL_MS = 30 * 1000;
  * HTTP connections per integration, so serving repeat lookups from memory
  * keeps message sends from re-querying every MCP server each time.
  *
- * Entries are keyed per integration and user because marketplace integrations
+ * Entries are keyed per integration and user because schema-configured integrations
  * resolve per-user credentials. The cache is per-instance; cross-instance
  * invalidation is intentionally not handled — the short TTLs bound staleness.
  */

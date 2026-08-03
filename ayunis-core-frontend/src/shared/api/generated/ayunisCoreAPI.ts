@@ -12003,7 +12003,7 @@ export const useMcpIntegrationsControllerInstallFromMarketplace = <TError = void
     }
     
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get current user config for an MCP integration
  */
 export const mcpIntegrationsControllerGetUserConfig = (
     id: string,
@@ -12074,7 +12074,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get current user config for a marketplace MCP integration
+ * @summary Get current user config for an MCP integration
  */
 
 export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<ReturnType<typeof mcpIntegrationsControllerGetUserConfig>>, TError = unknown>(
@@ -12096,7 +12096,7 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
 
 
 /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set current user config for an MCP integration
  */
 export const mcpIntegrationsControllerSetUserConfig = (
     id: string,
@@ -12144,7 +12144,7 @@ const {mutation: mutationOptions} = options ?
     export type McpIntegrationsControllerSetUserConfigMutationError = void
 
     /**
- * @summary Set current user config for a marketplace MCP integration
+ * @summary Set current user config for an MCP integration
  */
 export const useMcpIntegrationsControllerSetUserConfig = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerSetUserConfig>>, TError,{id: string;data: SetUserConfigDto}, TContext>, }

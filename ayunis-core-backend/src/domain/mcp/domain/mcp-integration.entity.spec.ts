@@ -1,16 +1,16 @@
 import { randomUUID } from 'crypto';
-import { CustomMcpIntegration } from './integrations/custom-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from './auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from './auth/bearer-mcp-integration-auth.entity';
 import { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
 import { McpIntegrationKind } from './value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from './value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from './value-objects/mcp-auth-method.enum';
+import { aCustomMcpIntegration } from '../application/testing/mcp-integration.fixtures';
 
 describe('McpIntegration (Base Class)', () => {
   describe('Common base class behavior', () => {
     it('should generate a UUID when id is not provided', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -26,7 +26,7 @@ describe('McpIntegration (Base Class)', () => {
     it('should use provided UUID when id is provided', () => {
       const providedId = randomUUID();
       const orgId = randomUUID();
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         id: providedId,
         name: 'Test Integration',
         orgId,
@@ -39,7 +39,7 @@ describe('McpIntegration (Base Class)', () => {
 
     it('should set default values correctly', () => {
       const orgId = randomUUID();
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId,
         serverUrl: 'http://localhost:3000',
@@ -58,7 +58,7 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should disable the integration and update timestamp', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -77,7 +77,7 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should enable the integration and update timestamp', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -96,7 +96,7 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should update name and timestamp', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Old Name',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -114,7 +114,7 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should update connection status with error', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -134,7 +134,7 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should update connection status to connected without error', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Test Integration',
         orgId: randomUUID(),
         serverUrl: 'http://localhost:3000',
@@ -169,24 +169,24 @@ describe('McpIntegration (Base Class)', () => {
     });
 
     it('should identify custom integration correctly', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Custom Integration',
         orgId: randomUUID(),
-        serverUrl: 'http://custom-server:3000',
+        serverUrl: 'https://custom-server.example.com',
         auth: new BearerMcpIntegrationAuth({ authToken: 'token' }),
       });
 
       expect(integration.kind).toBe(McpIntegrationKind.CUSTOM);
       expect(integration.isPredefined()).toBe(false);
       expect(integration.isCustom()).toBe(true);
-      expect(integration.serverUrl).toBe('http://custom-server:3000');
+      expect(integration.serverUrl).toBe('https://custom-server.example.com');
     });
 
     it('allows replacing authentication strategy', () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         name: 'Custom Integration',
         orgId: randomUUID(),
-        serverUrl: 'http://custom-server:3000',
+        serverUrl: 'https://custom-server.example.com',
         auth: new NoAuthMcpIntegrationAuth(),
       });
 

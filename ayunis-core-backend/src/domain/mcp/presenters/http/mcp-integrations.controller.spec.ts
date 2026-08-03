@@ -17,10 +17,8 @@ import { ListPredefinedMcpIntegrationConfigsUseCase } from '../../application/us
 import { InstallMarketplaceIntegrationUseCase } from '../../application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
 import { SetUserMcpConfigUseCase } from '../../application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
 import { GetUserMcpConfigUseCase } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
-import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from '../../domain/mcp-integration.entity';
+import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
+import { aCustomMcpIntegration } from '../../application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegrationSlug } from '../../domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from '../../domain/value-objects/mcp-auth-method.enum';
 import type { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
@@ -254,24 +252,37 @@ describe('McpIntegrationsController', () => {
   });
 
   describe('createCustom', () => {
-    it('should forward credentials when creating custom integration', async () => {
+    it('forwards schema-configured credentials when creating custom integration', async () => {
       const dto: CreateCustomIntegrationDto = {
         name: 'Custom Server',
         serverUrl: 'https://custom.com/mcp',
-        authMethod: McpAuthMethod.CUSTOM_HEADER,
-        authHeaderName: 'X-API-Key',
-        credentials: 'plain-api-key',
+        configSchema: {
+          orgFields: [
+            {
+              key: 'apiKey',
+              label: 'API key',
+              type: 'secret',
+              headerName: 'X-API-Key',
+              required: true,
+            },
+          ],
+          userFields: [],
+        },
+        orgConfigValues: { apiKey: 'plain-api-key' },
       };
 
-      const mockIntegration = new CustomMcpIntegration({
+      const mockIntegration = aCustomMcpIntegration({
         id: '123e4567-e89b-12d3-a456-426614174000',
         name: 'Custom Server',
         orgId: '123e4567-e89b-12d3-a456-426614174001',
         serverUrl: 'https://custom.com/mcp',
-        auth: new CustomHeaderMcpIntegrationAuth({
-          secret: 'encrypted-api-key',
-          headerName: 'X-API-Key',
-        }),
+        auth: new NoAuthMcpIntegrationAuth(),
+        configSchema: {
+          authType: 'CUSTOM',
+          orgFields: dto.configSchema.orgFields,
+          userFields: [],
+        },
+        orgConfigValues: { apiKey: 'encrypted-api-key' },
         enabled: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -285,7 +296,12 @@ describe('McpIntegrationsController', () => {
         expect.objectContaining({
           name: 'Custom Server',
           serverUrl: 'https://custom.com/mcp',
-          credentials: 'plain-api-key',
+          configSchema: {
+            authType: 'CUSTOM',
+            orgFields: dto.configSchema.orgFields,
+            userFields: [],
+          },
+          orgConfigValues: { apiKey: 'plain-api-key' },
         }),
       );
       expect(result.type).toBe('custom');
@@ -308,7 +324,7 @@ describe('McpIntegrationsController', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         }),
-        new CustomMcpIntegration({
+        aCustomMcpIntegration({
           id: '123e4567-e89b-12d3-a456-426614174002',
           name: 'Custom',
           orgId,
@@ -427,7 +443,7 @@ describe('McpIntegrationsController', () => {
       };
 
       updateUseCase.execute.mockResolvedValue(
-        new CustomMcpIntegration({
+        aCustomMcpIntegration({
           id: '123e4567-e89b-12d3-a456-426614174000',
           name: 'Custom',
           orgId: randomUUID(),

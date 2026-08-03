@@ -4,7 +4,7 @@ import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repo
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
-import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
 
@@ -82,7 +82,7 @@ export class ListAvailableMcpIntegrationsUseCase {
 
   /**
    * Loads the user's stored config values keyed by integration ID, for the
-   * marketplace integrations in the list. Returns an empty map when there is
+   * schema-configured integrations in the list. Returns an empty map when there is
    * no user context.
    */
   private async loadUserConfigValues(
@@ -94,15 +94,17 @@ export class ListAvailableMcpIntegrationsUseCase {
       return result;
     }
 
-    const marketplaceIds = integrations
-      .filter((i) => i instanceof MarketplaceMcpIntegration)
+    const configurableIds = integrations
+      .filter(
+        (integration) => integration instanceof SchemaConfiguredMcpIntegration,
+      )
       .map((i) => i.id);
-    if (marketplaceIds.length === 0) {
+    if (configurableIds.length === 0) {
       return result;
     }
 
     const configs = await this.userConfigRepository.findByIntegrationIdsAndUser(
-      marketplaceIds,
+      configurableIds,
       userId,
     );
     for (const config of configs) {
@@ -115,7 +117,7 @@ export class ListAvailableMcpIntegrationsUseCase {
     integration: McpIntegration,
     userConfigValues: Map<UUID, Record<string, string>>,
   ): boolean {
-    if (!(integration instanceof MarketplaceMcpIntegration)) {
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
       return true;
     }
     return integration.isUserAuthorized(

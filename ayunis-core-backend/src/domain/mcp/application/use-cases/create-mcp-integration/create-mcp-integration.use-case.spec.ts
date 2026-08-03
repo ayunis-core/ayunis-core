@@ -13,14 +13,13 @@ import { McpIntegrationAuthFactory } from '../../factories/mcp-integration-auth.
 import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
-import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from 'src/domain/mcp/domain/mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
@@ -33,8 +32,7 @@ import {
   DuplicateMcpIntegrationError,
   InvalidPredefinedSlugError,
   InvalidServerUrlError,
-  McpAuthNotImplementedError,
-  McpValidationFailedError,
+  McpMissingRequiredConfigError,
 } from '../../mcp.errors';
 
 describe('CreateMcpIntegrationUseCase', () => {
@@ -140,6 +138,10 @@ describe('CreateMcpIntegrationUseCase', () => {
         { provide: McpIntegrationAuthFactory, useValue: authFactory },
         { provide: McpCredentialEncryptionPort, useValue: encryption },
         {
+          provide: McpConfigService,
+          useValue: new McpConfigService(encryption),
+        },
+        {
           provide: ConnectionValidationService,
           useValue: connectionValidationService,
         },
@@ -238,13 +240,33 @@ describe('CreateMcpIntegrationUseCase', () => {
   });
 
   describe('custom integrations', () => {
-    it('creates custom integration with bearer auth', async () => {
+    it('creates a custom integration with schema-configured credentials', async () => {
+      const configSchema = {
+        authType: 'CUSTOM',
+        orgFields: [
+          {
+            key: 'tenantId',
+            label: 'Tenant ID',
+            type: 'text' as const,
+            headerName: 'X-Tenant-ID',
+            required: true,
+          },
+          {
+            key: 'apiToken',
+            label: 'API token',
+            type: 'secret' as const,
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+        userFields: [],
+      };
       const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
+        'Council Records',
         'https://example.com/mcp',
-        McpAuthMethod.BEARER_TOKEN,
-        undefined,
-        'plaintext-token',
+        configSchema,
+        { tenantId: 'council-42', apiToken: 'plaintext-token' },
       );
 
       context.get.mockReturnValue(orgId);
@@ -254,65 +276,57 @@ describe('CreateMcpIntegrationUseCase', () => {
 
       expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-token');
       expect(authSpy).toHaveBeenCalledWith({
-        method: McpAuthMethod.BEARER_TOKEN,
-        authToken: 'encrypted-token',
+        method: McpAuthMethod.NO_AUTH,
       });
       expect(factorySpy).toHaveBeenCalledWith({
         kind: McpIntegrationKind.CUSTOM,
         orgId,
         name: command.name,
         serverUrl: command.serverUrl,
-        auth: expect.any(BearerMcpIntegrationAuth),
-      });
-      expect(result).toBeInstanceOf(CustomMcpIntegration);
-      expect(result.getAuthType()).toBe(McpAuthMethod.BEARER_TOKEN);
-    });
-
-    it('creates custom integration with custom header auth', async () => {
-      const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
-        'https://example.com/mcp',
-        McpAuthMethod.CUSTOM_HEADER,
-        'X-API-Key',
-        'plaintext-secret',
-      );
-
-      context.get.mockReturnValue(orgId);
-      encryption.encrypt.mockResolvedValue('encrypted-secret');
-
-      const result = await useCase.execute(command);
-
-      expect(encryption.encrypt).toHaveBeenCalledWith('plaintext-secret');
-      expect(authSpy).toHaveBeenCalledWith({
-        method: McpAuthMethod.CUSTOM_HEADER,
-        secret: 'encrypted-secret',
-        headerName: 'X-API-Key',
-      });
-      expect(result).toBeInstanceOf(CustomMcpIntegration);
-      expect(result.getAuthType()).toBe(McpAuthMethod.CUSTOM_HEADER);
-    });
-
-    it('creates custom integration without auth when method omitted', async () => {
-      const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
-        'https://example.com/mcp',
-      );
-
-      context.get.mockReturnValue(orgId);
-
-      const result = await useCase.execute(command);
-
-      expect(authSpy).toHaveBeenCalledWith({
-        method: McpAuthMethod.NO_AUTH,
+        auth: expect.any(NoAuthMcpIntegrationAuth),
+        configSchema,
+        orgConfigValues: {
+          tenantId: 'council-42',
+          apiToken: 'encrypted-token',
+        },
       });
       expect(result).toBeInstanceOf(CustomMcpIntegration);
       expect(result.getAuthType()).toBe(McpAuthMethod.NO_AUTH);
+    });
+
+    it('rejects missing required organization config values', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'Custom',
+        'https://example.com/mcp',
+        {
+          authType: 'CUSTOM',
+          orgFields: [
+            {
+              key: 'apiToken',
+              label: 'API token',
+              type: 'secret',
+              headerName: 'Authorization',
+              required: true,
+            },
+          ],
+          userFields: [],
+        },
+        {},
+      );
+
+      context.get.mockReturnValue(orgId);
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        McpMissingRequiredConfigError,
+      );
     });
 
     it('rejects invalid server URLs', async () => {
       const command = new CreateCustomMcpIntegrationCommand(
         'Custom',
         'not-a-valid-url',
+        { authType: 'CUSTOM', orgFields: [], userFields: [] },
+        {},
       );
 
       context.get.mockReturnValue(orgId);
@@ -321,54 +335,14 @@ describe('CreateMcpIntegrationUseCase', () => {
         InvalidServerUrlError,
       );
     });
-
-    it('rejects missing credentials for bearer auth', async () => {
-      const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
-        'https://example.com/mcp',
-        McpAuthMethod.BEARER_TOKEN,
-      );
-
-      context.get.mockReturnValue(orgId);
-
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        McpValidationFailedError,
-      );
-    });
-
-    it('rejects missing credentials for custom header auth', async () => {
-      const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
-        'https://example.com/mcp',
-        McpAuthMethod.CUSTOM_HEADER,
-      );
-
-      context.get.mockReturnValue(orgId);
-
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        McpValidationFailedError,
-      );
-    });
-
-    it('throws not implemented error for oauth', async () => {
-      const command = new CreateCustomMcpIntegrationCommand(
-        'Custom',
-        'https://example.com/mcp',
-        McpAuthMethod.OAUTH,
-      );
-
-      context.get.mockReturnValue(orgId);
-
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        McpAuthNotImplementedError,
-      );
-    });
   });
 
   it('throws UnauthorizedException when context lacks orgId', async () => {
     const command = new CreateCustomMcpIntegrationCommand(
       'Custom',
       'https://example.com/mcp',
+      { authType: 'CUSTOM', orgFields: [], userFields: [] },
+      {},
     );
 
     context.get.mockReturnValue(undefined);
