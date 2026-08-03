@@ -1,6 +1,7 @@
 import type { RunEventPayload } from '../contracts/event';
 import type { Message, ToolUseContent } from '../contracts/message';
 import type { ProviderRequest, Usage } from '../contracts/provider';
+import { ProviderError } from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
 import { getToolUseContents, shouldExitLoop } from './exit-conditions';
@@ -49,16 +50,17 @@ async function* runIteration(
     model: state.model,
     request: assembleRequest(state),
   });
-  state.messages.push(result.message);
   addUsage(state, result.usage);
-  const toolCalls = getToolUseContents(result.message);
-  yield* assistantEvents(result, toolCalls);
   await state.hookRunner.afterModelCall({
     iteration,
     message: result.message,
     usage: result.usage,
     finishReason: result.finishReason,
   });
+  assertProviderReturnedContent(result);
+  state.messages.push(result.message);
+  const toolCalls = getToolUseContents(result.message);
+  yield* assistantEvents(result, toolCalls);
   yield* drainEmits(state);
   if (isAborted(state)) {
     return { status: 'aborted' };
@@ -131,4 +133,10 @@ const assembleRequest = (state: RunState): ProviderRequest => {
 const addUsage = (state: RunState, usage: Usage): void => {
   state.usage.inputTokens += usage.inputTokens ?? 0;
   state.usage.outputTokens += usage.outputTokens ?? 0;
+};
+
+const assertProviderReturnedContent = (result: ModelCallResult): void => {
+  if (result.message.content.length === 0) {
+    throw new ProviderError('Model provider returned an empty response');
+  }
 };

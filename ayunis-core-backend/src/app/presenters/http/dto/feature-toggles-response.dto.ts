@@ -18,4 +18,10 @@ export class FeatureTogglesResponseDto {
     example: false,
   })
   skillsEnabled: boolean;
+
+  @ApiProperty({
+    description: 'Whether runs use the independent agent runtime',
+    example: false,
+  })
+  agentRuntimeEnabled: boolean;
 }

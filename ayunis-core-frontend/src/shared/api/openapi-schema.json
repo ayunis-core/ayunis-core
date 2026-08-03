@@ -10155,12 +10155,18 @@
             "type": "boolean",
             "description": "Whether the skills feature is enabled",
             "example": false
+          },
+          "agentRuntimeEnabled": {
+            "type": "boolean",
+            "description": "Whether runs use the independent agent runtime",
+            "example": false
           }
         },
         "required": [
           "knowledgeBasesEnabled",
           "letterheadsEnabled",
-          "skillsEnabled"
+          "skillsEnabled",
+          "agentRuntimeEnabled"
         ]
       },
       "UserResponseDto": {

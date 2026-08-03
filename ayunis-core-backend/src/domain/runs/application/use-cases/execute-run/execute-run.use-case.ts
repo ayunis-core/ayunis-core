@@ -42,6 +42,8 @@ import { MessageCleanupService } from '../../services/message-cleanup.service';
 import { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
 import type { RunParams } from './run-params.interface';
 import { RunExecutedEvent } from '../../events/run-executed.event';
+import { ConfigService } from '@nestjs/config';
+import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -61,6 +63,8 @@ export class ExecuteRunUseCase {
     private readonly inferenceOrchestratorService: InferenceOrchestratorService,
     private readonly skillActivationService: SkillActivationService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly configService: ConfigService,
+    private readonly executeRunViaRuntimeUseCase: ExecuteRunViaRuntimeUseCase,
   ) {}
 
   async execute(
@@ -71,6 +75,9 @@ export class ExecuteRunUseCase {
       streaming: command.streaming,
       inputType: command.input.constructor.name,
     });
+    if (this.configService.get<boolean>('features.agentRuntimeEnabled')) {
+      return this.executeRunViaRuntimeUseCase.execute(command);
+    }
     try {
       const prepared = await this.prepareRun(command);
       return this.orchestrateRun({

@@ -12,6 +12,7 @@ export enum RunErrorCode {
   RUN_TOOL_EXECUTION_FAILED = 'RUN_TOOL_EXECUTION_FAILED',
   RUN_NO_MODEL_FOUND = 'RUN_NO_MODEL_FOUND',
   RUN_ANONYMIZATION_UNAVAILABLE = 'RUN_ANONYMIZATION_UNAVAILABLE',
+  UNEXPECTED_RUN_ERROR = 'UNEXPECTED_RUN_ERROR',
 }
 
 /**
@@ -38,6 +39,20 @@ export class RunExecutionFailedError extends RunError {
       RunErrorCode.RUN_EXECUTION_FAILED,
       500,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedRunError extends RunError {
+  constructor(error: Error, metadata?: ErrorMetadata) {
+    super(
+      'Unexpected error while executing run',
+      RunErrorCode.UNEXPECTED_RUN_ERROR,
+      500,
+      {
+        ...metadata,
+        error,
+      },
     );
   }
 }
