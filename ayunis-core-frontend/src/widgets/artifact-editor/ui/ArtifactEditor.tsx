@@ -21,7 +21,7 @@ interface ArtifactEditorProps {
   readonly onSave: (content: string) => void;
   readonly onRevert: (versionNumber: number) => void;
   readonly onExport: (format: 'docx' | 'pdf', unsavedContent?: string) => void;
-  readonly onClose: () => void;
+  readonly onClose?: () => void;
   readonly onLetterheadChange?: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
 }
@@ -110,14 +110,16 @@ export function ArtifactEditor({
             <Save className="mr-1 size-3.5" />
             {t('editor.save')}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={onClose}
-          >
-            <X className="size-4" />
-          </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={onClose}
+            >
+              <X className="size-4" />
+            </Button>
+          )}
         </div>
       </div>
 
