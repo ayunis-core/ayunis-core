@@ -97,6 +97,7 @@
       "headerName": "Header Name",
       "headerInvalid": "Enter a valid HTTP header name.",
       "headerDuplicate": "This header is already used at the same configuration level.",
+      "oauthHeaderConflict": "OAuth manages the Authorization header; use a different header for this field.",
       "prefix": "Value prefix (optional)",
       "help": "Help text (optional)",
       "required": "Required",
@@ -104,6 +105,24 @@
       "cancel": "Cancel",
       "creating": "Creating...",
       "create": "Create"
+    },
+    "oauth": {
+      "authType": "Authentication",
+      "authTypeDescription": "Choose custom HTTP headers or per-user OAuth authorization.",
+      "customHeaders": "Custom HTTP headers",
+      "oauth": "OAuth 2.1",
+      "registration": "Client registration",
+      "registrationAutomatic": "Automatic (CIMD or dynamic registration)",
+      "registrationStatic": "Static client credentials",
+      "registrationDescription": "Automatic registration uses the server's discovered capabilities. Static credentials must be pre-registered with the authorization server.",
+      "scopes": "Fallback scopes (optional)",
+      "scopesDescription": "Separate scopes with spaces or commas. Server-requested scopes take precedence.",
+      "callbackUri": "Callback URI",
+      "callbackUriDescription": "Register this exact URI with the authorization server.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret (optional)",
+      "clientSecretDescription": "Leave empty for a public OAuth client.",
+      "replaceClientDescription": "Enter a client ID to replace the configured static client. Existing user connections will be reset."
     },
     "validation": {
       "invalid": "Please check the highlighted fields."

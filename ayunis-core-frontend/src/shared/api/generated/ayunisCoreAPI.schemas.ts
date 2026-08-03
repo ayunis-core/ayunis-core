@@ -2849,6 +2849,8 @@ export interface McpIntegrationResponseDto {
   marketplaceIdentifier?: string;
   /** Configuration schema for marketplace and schema-configured custom integrations */
   configSchema?: McpIntegrationResponseDtoConfigSchema;
+  /** Whether a static OAuth client has been configured */
+  oauthClientConfigured?: boolean;
   /** Whether this integration has user-level config fields */
   hasUserFields?: boolean;
   /** Whether this integration requires each individual user to provide their own credentials before they can use it (has required user-level fields). */
@@ -2864,6 +2866,21 @@ export interface McpIntegrationResponseDto {
   logoUrl?: string | null;
   /** Human-readable description of the integration (populated from marketplace shortDescription or predefined config description) */
   description?: string;
+}
+
+export interface McpOAuthAuthorizationUrlDto {
+  authorizationUrl: string;
+}
+
+export interface CompleteMcpOAuthDto {
+  state: string;
+  code?: string;
+  iss?: string;
+  error?: string;
+}
+
+export interface McpOAuthCompleteResponseDto {
+  integrationId: string;
 }
 
 /**
@@ -2928,9 +2945,39 @@ export interface CustomMcpConfigFieldDto {
   help?: string;
 }
 
+export type CustomMcpOAuthConfigDtoClientRegistration = typeof CustomMcpOAuthConfigDtoClientRegistration[keyof typeof CustomMcpOAuthConfigDtoClientRegistration];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomMcpOAuthConfigDtoClientRegistration = {
+  automatic: 'automatic',
+  static: 'static',
+} as const;
+
+export interface CustomMcpOAuthConfigDto {
+  clientRegistration: CustomMcpOAuthConfigDtoClientRegistration;
+  scopes?: string[];
+}
+
+export type CustomMcpConfigSchemaDtoAuthType = typeof CustomMcpConfigSchemaDtoAuthType[keyof typeof CustomMcpConfigSchemaDtoAuthType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CustomMcpConfigSchemaDtoAuthType = {
+  CUSTOM: 'CUSTOM',
+  OAUTH: 'OAUTH',
+} as const;
+
 export interface CustomMcpConfigSchemaDto {
+  authType: CustomMcpConfigSchemaDtoAuthType;
   orgFields: CustomMcpConfigFieldDto[];
   userFields: CustomMcpConfigFieldDto[];
+  oauth?: CustomMcpOAuthConfigDto;
+}
+
+export interface McpOAuthClientDto {
+  clientId: string;
+  clientSecret?: string;
 }
 
 export type CreateCustomIntegrationDtoOrgConfigValues = {[key: string]: string};
@@ -2939,6 +2986,7 @@ export interface CreateCustomIntegrationDto {
   name: string;
   serverUrl: string;
   configSchema: CustomMcpConfigSchemaDto;
+  oauthClient?: McpOAuthClientDto;
   orgConfigValues: CreateCustomIntegrationDtoOrgConfigValues;
   returnsPii?: boolean;
 }
@@ -3016,6 +3064,7 @@ export interface UpdateMcpIntegrationDto {
   returnsPii?: boolean;
   /** Organization-level config values for schema-configured integrations. For secret fields, omit or send empty string to keep the existing value. */
   orgConfigValues?: UpdateMcpIntegrationDtoOrgConfigValues;
+  oauthClient?: McpOAuthClientDto;
 }
 
 /**
@@ -3030,6 +3079,7 @@ export interface InstallMarketplaceIntegrationDto {
   orgConfigValues: InstallMarketplaceIntegrationDtoOrgConfigValues;
   /** Whether tools from this integration may return PII data that should be anonymized in anonymous mode */
   returnsPii?: boolean;
+  oauthClient?: McpOAuthClientDto;
 }
 
 /**
@@ -3066,6 +3116,50 @@ export interface ValidationResponseDto {
   capabilities: ValidationResponseDtoCapabilities;
   /** Error message if validation failed */
   error?: string;
+}
+
+export type McpOAuthClientMetadataDtoGrantTypesItem = typeof McpOAuthClientMetadataDtoGrantTypesItem[keyof typeof McpOAuthClientMetadataDtoGrantTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpOAuthClientMetadataDtoGrantTypesItem = {
+  authorization_code: 'authorization_code',
+  refresh_token: 'refresh_token',
+} as const;
+
+export type McpOAuthClientMetadataDtoResponseTypesItem = typeof McpOAuthClientMetadataDtoResponseTypesItem[keyof typeof McpOAuthClientMetadataDtoResponseTypesItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpOAuthClientMetadataDtoResponseTypesItem = {
+  code: 'code',
+} as const;
+
+export type McpOAuthClientMetadataDtoTokenEndpointAuthMethod = typeof McpOAuthClientMetadataDtoTokenEndpointAuthMethod[keyof typeof McpOAuthClientMetadataDtoTokenEndpointAuthMethod];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpOAuthClientMetadataDtoTokenEndpointAuthMethod = {
+  none: 'none',
+} as const;
+
+export type McpOAuthClientMetadataDtoApplicationType = typeof McpOAuthClientMetadataDtoApplicationType[keyof typeof McpOAuthClientMetadataDtoApplicationType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const McpOAuthClientMetadataDtoApplicationType = {
+  web: 'web',
+} as const;
+
+export interface McpOAuthClientMetadataDto {
+  client_id: string;
+  client_name: string;
+  client_uri: string;
+  redirect_uris: string[];
+  grant_types: McpOAuthClientMetadataDtoGrantTypesItem[];
+  response_types: McpOAuthClientMetadataDtoResponseTypesItem[];
+  token_endpoint_auth_method: McpOAuthClientMetadataDtoTokenEndpointAuthMethod;
+  application_type: McpOAuthClientMetadataDtoApplicationType;
 }
 
 export interface MarketplaceConfigResponseDto {

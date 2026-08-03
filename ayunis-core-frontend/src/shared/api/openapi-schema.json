@@ -5678,6 +5678,84 @@
         "tags": ["skills"]
       }
     },
+    "/mcp-integrations/{id}/oauth/authorize": {
+      "post": {
+        "operationId": "McpIntegrationsController_authorizeOAuth",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpOAuthAuthorizationUrlDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/oauth/complete": {
+      "post": {
+        "operationId": "McpIntegrationsController_completeOAuth",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteMcpOAuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpOAuthCompleteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/{id}/oauth/authorization": {
+      "delete": {
+        "operationId": "McpIntegrationsController_disconnectOAuth",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["mcp-integrations"]
+      }
+    },
     "/mcp-integrations/predefined": {
       "post": {
         "operationId": "McpIntegrationsController_createPredefined",
@@ -6009,7 +6087,7 @@
             }
           },
           "400": {
-            "description": "Missing required config fields or OAuth not supported"
+            "description": "Missing or invalid integration configuration"
           },
           "404": {
             "description": "Marketplace integration not found"
@@ -6123,6 +6201,26 @@
           }
         },
         "summary": "Validate MCP integration connection",
+        "tags": ["mcp-integrations"]
+      }
+    },
+    "/mcp-integrations/oauth/client-metadata.json": {
+      "get": {
+        "operationId": "McpOAuthMetadataController_getClientMetadata",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpOAuthClientMetadataDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get MCP OAuth client metadata",
         "tags": ["mcp-integrations"]
       }
     },
@@ -14162,6 +14260,10 @@
             "type": "object",
             "description": "Configuration schema for marketplace and schema-configured custom integrations"
           },
+          "oauthClientConfigured": {
+            "type": "boolean",
+            "description": "Whether a static OAuth client has been configured"
+          },
           "hasUserFields": {
             "type": "boolean",
             "description": "Whether this integration has user-level config fields",
@@ -14208,6 +14310,44 @@
           "updatedAt",
           "returnsPii"
         ]
+      },
+      "McpOAuthAuthorizationUrlDto": {
+        "type": "object",
+        "properties": {
+          "authorizationUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["authorizationUrl"]
+      },
+      "CompleteMcpOAuthDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "iss": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["state"]
+      },
+      "McpOAuthCompleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "integrationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["integrationId"]
       },
       "ConfigValueDto": {
         "type": "object",
@@ -14292,9 +14432,32 @@
         },
         "required": ["key", "label", "type", "headerName", "required"]
       },
+      "CustomMcpOAuthConfigDto": {
+        "type": "object",
+        "properties": {
+          "clientRegistration": {
+            "type": "string",
+            "enum": ["automatic", "static"],
+            "example": "automatic"
+          },
+          "scopes": {
+            "example": ["documents:read"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["clientRegistration"]
+      },
       "CustomMcpConfigSchemaDto": {
         "type": "object",
         "properties": {
+          "authType": {
+            "type": "string",
+            "enum": ["CUSTOM", "OAUTH"],
+            "example": "CUSTOM"
+          },
           "orgFields": {
             "type": "array",
             "items": {
@@ -14306,9 +14469,26 @@
             "items": {
               "$ref": "#/components/schemas/CustomMcpConfigFieldDto"
             }
+          },
+          "oauth": {
+            "$ref": "#/components/schemas/CustomMcpOAuthConfigDto"
           }
         },
-        "required": ["orgFields", "userFields"]
+        "required": ["authType", "orgFields", "userFields"]
+      },
+      "McpOAuthClientDto": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "example": "ayunis-core-client"
+          },
+          "clientSecret": {
+            "type": "string",
+            "example": "client-secret"
+          }
+        },
+        "required": ["clientId"]
       },
       "CreateCustomIntegrationDto": {
         "type": "object",
@@ -14323,6 +14503,9 @@
           },
           "configSchema": {
             "$ref": "#/components/schemas/CustomMcpConfigSchemaDto"
+          },
+          "oauthClient": {
+            "$ref": "#/components/schemas/McpOAuthClientDto"
           },
           "orgConfigValues": {
             "type": "object",
@@ -14438,6 +14621,9 @@
             "example": {
               "endpointUrl": "https://example.com/api"
             }
+          },
+          "oauthClient": {
+            "$ref": "#/components/schemas/McpOAuthClientDto"
           }
         }
       },
@@ -14463,6 +14649,9 @@
             "type": "boolean",
             "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode",
             "example": false
+          },
+          "oauthClient": {
+            "$ref": "#/components/schemas/McpOAuthClientDto"
           }
         },
         "required": ["identifier", "orgConfigValues"]
@@ -14528,6 +14717,61 @@
           }
         },
         "required": ["valid", "capabilities"]
+      },
+      "McpOAuthClientMetadataDto": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "format": "uri"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "client_uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "redirect_uris": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "grant_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["authorization_code", "refresh_token"]
+            }
+          },
+          "response_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["code"]
+            }
+          },
+          "token_endpoint_auth_method": {
+            "type": "string",
+            "enum": ["none"]
+          },
+          "application_type": {
+            "type": "string",
+            "enum": ["web"]
+          }
+        },
+        "required": [
+          "client_id",
+          "client_name",
+          "client_uri",
+          "redirect_uris",
+          "grant_types",
+          "response_types",
+          "token_endpoint_auth_method",
+          "application_type"
+        ]
       },
       "MarketplaceConfigResponseDto": {
         "type": "object",

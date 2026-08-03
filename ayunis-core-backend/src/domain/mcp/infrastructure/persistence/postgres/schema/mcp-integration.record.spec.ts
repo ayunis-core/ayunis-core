@@ -7,6 +7,9 @@ import {
   McpIntegrationAuthRecord,
   McpIntegrationRecord,
   McpIntegrationUserConfigRecord,
+  McpOAuthClientRegistrationRecord,
+  McpOAuthPendingSessionRecord,
+  McpOAuthUserTokenRecord,
   NoAuthMcpIntegrationAuthRecord,
   OAuthMcpIntegrationAuthRecord,
   PredefinedMcpIntegrationRecord,
@@ -144,5 +147,18 @@ describe('MCP Integration Persistence Records', () => {
     expect(record.configValues).toEqual({
       personalToken: 'encrypted-user-token',
     });
+  });
+
+  it('instantiates the OAuth persistence records with their encrypted values', () => {
+    const registration = new McpOAuthClientRegistrationRecord();
+    registration.encryptedClientSecret = 'encrypted-client-secret';
+    const token = new McpOAuthUserTokenRecord();
+    token.encryptedAccessToken = 'encrypted-access-token';
+    const session = new McpOAuthPendingSessionRecord();
+    session.encryptedCodeVerifier = 'encrypted-code-verifier';
+
+    expect(registration.encryptedClientSecret).toBe('encrypted-client-secret');
+    expect(token.encryptedAccessToken).toBe('encrypted-access-token');
+    expect(session.encryptedCodeVerifier).toBe('encrypted-code-verifier');
   });
 });

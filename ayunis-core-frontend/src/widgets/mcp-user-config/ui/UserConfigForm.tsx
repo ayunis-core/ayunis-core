@@ -20,13 +20,18 @@ import { isUserEditableField } from '@/shared/lib/config-field';
 export function UserConfigForm({
   integration,
   onClose,
+  onSaved,
 }: Readonly<{
   integration: McpIntegrationResponseDto;
   onClose: () => void;
+  onSaved?: () => void;
 }>) {
   const { t } = useTranslation('mcp-user-config');
   const { userConfig, isLoadingUserConfig } = useGetUserConfig(integration.id);
-  const { setUserConfig, isSaving } = useSetUserConfig(integration.id, onClose);
+  const { setUserConfig, isSaving } = useSetUserConfig(integration.id, () => {
+    onClose();
+    onSaved?.();
+  });
   const [formValues, setFormValues] = useState<Record<string, string>>({});
 
   const userFields = getUserFields(integration);

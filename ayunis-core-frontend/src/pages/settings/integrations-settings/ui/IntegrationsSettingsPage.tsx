@@ -15,12 +15,41 @@ import {
 import { UserConfigDialog } from '@/widgets/mcp-user-config';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useUserIntegrations } from '../api/useUserIntegrations';
+import {
+  useAuthorizeMcpOAuth,
+  useDisconnectMcpOAuth,
+} from '../api/useMcpOAuth';
+import {
+  canDisconnectOAuth,
+  resolveIntegrationOAuthAction,
+} from '../lib/resolve-integration-oauth-action';
 
 export default function IntegrationsSettingsPage() {
   const { t } = useTranslation('settings');
   const { integrations, isLoading, isError, refetch } = useUserIntegrations();
   const [activeIntegration, setActiveIntegration] =
     useState<McpIntegrationResponseDto | null>(null);
+  const authorizeOAuth = useAuthorizeMcpOAuth();
+  const disconnectOAuth = useDisconnectMcpOAuth();
+
+  const connect = (integration: McpIntegrationResponseDto) => {
+    const action = resolveIntegrationOAuthAction(integration);
+    if (action === 'configure' || action === 'configureThenConnect') {
+      setActiveIntegration(integration);
+      return;
+    }
+    authorizeOAuth.mutate(integration.id);
+  };
+
+  const continueAfterUserConfig = () => {
+    if (
+      activeIntegration &&
+      resolveIntegrationOAuthAction(activeIntegration) ===
+        'configureThenConnect'
+    ) {
+      authorizeOAuth.mutate(activeIntegration.id);
+    }
+  };
 
   return (
     <SettingsLayout title={t('layout.integrations')}>
@@ -30,7 +59,9 @@ export default function IntegrationsSettingsPage() {
           isError={isError}
           integrations={integrations}
           onRetry={() => void refetch()}
-          onAuthorize={setActiveIntegration}
+          onAuthorize={connect}
+          onDisconnect={(integration) => disconnectOAuth.mutate(integration.id)}
+          isOAuthPending={authorizeOAuth.isPending || disconnectOAuth.isPending}
         />
       </div>
 
@@ -38,6 +69,7 @@ export default function IntegrationsSettingsPage() {
         integration={activeIntegration}
         open={!!activeIntegration}
         onOpenChange={(open) => !open && setActiveIntegration(null)}
+        onSaved={continueAfterUserConfig}
       />
     </SettingsLayout>
   );
@@ -49,12 +81,16 @@ function IntegrationsContent({
   integrations,
   onRetry,
   onAuthorize,
+  onDisconnect,
+  isOAuthPending,
 }: Readonly<{
   isLoading: boolean;
   isError: boolean;
   integrations: McpIntegrationResponseDto[];
   onRetry: () => void;
   onAuthorize: (integration: McpIntegrationResponseDto) => void;
+  onDisconnect: (integration: McpIntegrationResponseDto) => void;
+  isOAuthPending: boolean;
 }>) {
   const { t } = useTranslation('settings');
 
@@ -96,6 +132,8 @@ function IntegrationsContent({
           key={integration.id}
           integration={integration}
           onAuthorize={onAuthorize}
+          onDisconnect={onDisconnect}
+          isOAuthPending={isOAuthPending}
         />
       ))}
     </div>
@@ -105,12 +143,25 @@ function IntegrationsContent({
 function IntegrationRow({
   integration,
   onAuthorize,
+  onDisconnect,
+  isOAuthPending,
 }: Readonly<{
   integration: McpIntegrationResponseDto;
   onAuthorize: (integration: McpIntegrationResponseDto) => void;
+  onDisconnect: (integration: McpIntegrationResponseDto) => void;
+  isOAuthPending: boolean;
 }>) {
   const { t } = useTranslation('settings');
   const status = resolveStatus(integration);
+  const oauthAction = resolveIntegrationOAuthAction(integration);
+  const usesOAuth = oauthAction !== 'configure';
+  const oauthActionKey =
+    oauthAction === 'reconnect'
+      ? 'integrations.oauth.reconnect'
+      : 'integrations.oauth.connect';
+  const actionLabel = usesOAuth
+    ? t(oauthActionKey)
+    : t(`integrations.action.${status.key}`);
 
   return (
     <Item variant="outline">
@@ -128,9 +179,20 @@ function IntegrationRow({
           variant={status.key === 'actionRequired' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onAuthorize(integration)}
+          disabled={isOAuthPending}
         >
-          {t(`integrations.action.${status.key}`)}
+          {actionLabel}
         </Button>
+        {canDisconnectOAuth(integration) && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDisconnect(integration)}
+            disabled={isOAuthPending}
+          >
+            {t('integrations.oauth.disconnect')}
+          </Button>
+        )}
       </ItemActions>
     </Item>
   );

@@ -21,6 +21,24 @@
       "actionRequired": "Autorisieren",
       "connected": "Aktualisieren",
       "optional": "Konfigurieren"
+    },
+    "oauth": {
+      "connect": "Verbinden",
+      "reconnect": "Neu verbinden",
+      "disconnect": "Trennen",
+      "connectError": "Die sichere Verbindung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+      "disconnectSuccess": "OAuth-Verbindung wurde entfernt.",
+      "disconnectError": "Die OAuth-Verbindung konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
+      "notFound": "Diese Integration ist nicht mehr verfügbar.",
+      "callback": {
+        "pendingTitle": "Verbindung wird abgeschlossen",
+        "pendingDescription": "Bitte warten Sie, während die sichere Verbindung abgeschlossen wird.",
+        "successTitle": "Integration verbunden",
+        "successDescription": "Ihre OAuth-Autorisierung wurde erfolgreich gespeichert.",
+        "errorTitle": "Verbindung fehlgeschlagen",
+        "errorDescription": "Die sichere Verbindung konnte nicht abgeschlossen werden. Kehren Sie zu den Integrationen zurück und versuchen Sie es erneut.",
+        "back": "Zurück zu Integrationen"
+      }
     }
   },
   "account": {

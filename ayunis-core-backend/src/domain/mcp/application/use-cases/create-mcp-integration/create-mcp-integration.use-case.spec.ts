@@ -14,6 +14,7 @@ import { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encrypti
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpConfigService } from '../../services/mcp-config.service';
+import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
 import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -45,6 +46,10 @@ describe('CreateMcpIntegrationUseCase', () => {
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let connectionValidationService: ConnectionValidationService;
+  let oauthClientConfiguration: {
+    validate: jest.Mock;
+    initialize: jest.Mock;
+  };
   let factorySpy: jest.SpyInstance;
   let authSpy: jest.SpyInstance;
   let savedIntegrations: McpIntegration[];
@@ -128,6 +133,11 @@ describe('CreateMcpIntegrationUseCase', () => {
       repository,
     );
 
+    oauthClientConfiguration = {
+      validate: jest.fn(),
+      initialize: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateMcpIntegrationUseCase,
@@ -144,6 +154,10 @@ describe('CreateMcpIntegrationUseCase', () => {
         {
           provide: ConnectionValidationService,
           useValue: connectionValidationService,
+        },
+        {
+          provide: McpOAuthClientConfigurationService,
+          useValue: oauthClientConfiguration,
         },
       ],
     }).compile();
@@ -334,6 +348,30 @@ describe('CreateMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         InvalidServerUrlError,
       );
+    });
+
+    it('removes an OAuth integration when client initialization fails', async () => {
+      const command = new CreateCustomMcpIntegrationCommand(
+        'OAuth server',
+        'https://example.com/mcp',
+        {
+          authType: 'OAUTH',
+          orgFields: [],
+          userFields: [],
+          oauth: { clientRegistration: 'static' },
+        },
+        {},
+        false,
+        { clientId: 'static-client' },
+      );
+      context.get.mockReturnValue(orgId);
+      oauthClientConfiguration.initialize.mockRejectedValue(
+        new Error('encryption failed'),
+      );
+
+      await expect(useCase.execute(command)).rejects.toThrow();
+
+      expect(repository.delete).toHaveBeenCalledWith(savedIntegrations[0].id);
     });
   });
 

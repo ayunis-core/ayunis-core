@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { findDuplicateHeaderIndexes } from './custom-config-field-validation';
+import {
+  findDuplicateHeaderIndexes,
+  findOAuthAuthorizationHeaderIndexes,
+} from './custom-config-field-validation';
 import type { CustomConfigFieldFormData } from '../model/types';
 
 function field(
@@ -37,5 +40,16 @@ describe('findDuplicateHeaderIndexes', () => {
     ];
 
     expect(findDuplicateHeaderIndexes(fields)).toEqual([]);
+  });
+});
+
+describe('findOAuthAuthorizationHeaderIndexes', () => {
+  it('finds case-insensitive Authorization mappings for OAuth schemas', () => {
+    expect(
+      findOAuthAuthorizationHeaderIndexes([
+        field('X-Tenant', 'organization'),
+        field(' authorization ', 'user'),
+      ]),
+    ).toEqual([1]);
   });
 });

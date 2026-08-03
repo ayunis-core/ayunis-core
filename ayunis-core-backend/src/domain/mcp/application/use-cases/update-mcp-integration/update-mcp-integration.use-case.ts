@@ -20,6 +20,7 @@ import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/sch
 import { McpConfigService } from '../../services/mcp-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -32,6 +33,7 @@ export class UpdateMcpIntegrationUseCase {
     private readonly configService: McpConfigService,
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly capabilityCache: McpCapabilityCacheService,
+    private readonly oauthClientConfiguration: McpOAuthClientConfigurationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
@@ -42,9 +44,20 @@ export class UpdateMcpIntegrationUseCase {
       command.integrationId as UUID,
     );
 
-    await this.applyUpdates(integration, command);
+    const oauthIntegration = this.validateOAuthClientUpdate(
+      integration,
+      command.oauthClient,
+    );
 
+    await this.applyUpdates(integration, command);
     const saved = await this.repository.save(integration);
+
+    if (oauthIntegration && command.oauthClient) {
+      await this.oauthClientConfiguration.initialize(
+        oauthIntegration,
+        command.oauthClient,
+      );
+    }
 
     // Invalidate as soon as the new config is committed — the connection
     // validation below runs live MCP requests that can take tens of seconds,
@@ -53,6 +66,18 @@ export class UpdateMcpIntegrationUseCase {
     this.capabilityCache.invalidate(command.integrationId as UUID);
 
     return this.validateConnectionIfNeeded(saved, command);
+  }
+
+  private validateOAuthClientUpdate(
+    integration: McpIntegration,
+    oauthClient: UpdateMcpIntegrationCommand['oauthClient'],
+  ): SchemaConfiguredMcpIntegration | undefined {
+    if (oauthClient === undefined) return undefined;
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(integration.id);
+    }
+    this.oauthClientConfiguration.validate(integration, oauthClient);
+    return integration;
   }
 
   private async getAuthorizedIntegration(
@@ -108,7 +133,13 @@ export class UpdateMcpIntegrationUseCase {
     integration: McpIntegration,
     command: UpdateMcpIntegrationCommand,
   ): Promise<McpIntegration> {
-    if (command.orgConfigValues !== undefined) {
+    if (
+      command.orgConfigValues !== undefined &&
+      !(
+        integration instanceof SchemaConfiguredMcpIntegration &&
+        integration.configSchema.oauth
+      )
+    ) {
       return this.connectionValidationService.validateAndUpdateStatus(
         integration,
       );

@@ -8,6 +8,7 @@ import type {
 import {
   fieldRequiresInput,
   isConfigValuePresent,
+  normalizeIntegrationConfigSchema,
 } from '../value-objects/integration-config-schema';
 
 export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
@@ -31,7 +32,7 @@ export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
     description?: string;
   }) {
     super(params);
-    this.configSchema = params.configSchema;
+    this.configSchema = normalizeIntegrationConfigSchema(params.configSchema);
     this._orgConfigValues = { ...params.orgConfigValues };
   }
 
@@ -45,7 +46,10 @@ export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
   }
 
   get requiresUserAuthorization(): boolean {
-    return this.userFieldsRequiringInput.length > 0;
+    return (
+      Boolean(this.configSchema.oauth) ||
+      this.userFieldsRequiringInput.length > 0
+    );
   }
 
   isUserAuthorized(userConfigValues: Record<string, string> | null): boolean {

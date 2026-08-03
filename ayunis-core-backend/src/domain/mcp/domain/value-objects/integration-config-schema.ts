@@ -22,16 +22,9 @@ export interface ConfigField {
   value?: string;
 }
 
-/**
- * OAuth configuration for future OAuth support.
- * Core rejects OAUTH authType at install in v1.
- */
 export interface OAuthConfig {
-  authorizationUrl: string;
-  tokenUrl: string;
-  scopes: string[];
-  /** Whether admin authorizes once (org) or each user authorizes separately (user) */
-  level: 'org' | 'user';
+  clientRegistration: 'automatic' | 'static';
+  scopes?: string[];
 }
 
 /**
@@ -46,8 +39,71 @@ export interface IntegrationConfigSchema {
   orgFields: ConfigField[];
   /** Fields configured by individual users (optional, per-user overrides) */
   userFields: ConfigField[];
-  /** Future OAuth configuration */
+  /** Per-user OAuth configuration */
   oauth?: OAuthConfig;
+}
+
+const OAUTH_AUTH_TYPE = 'OAUTH';
+
+export function normalizeIntegrationConfigSchema(
+  schema: IntegrationConfigSchema,
+): IntegrationConfigSchema {
+  validateOAuthPresence(schema);
+
+  if (!schema.oauth) {
+    return schema;
+  }
+
+  validateOAuthClientRegistration(schema.oauth);
+  validateOAuthHeaderMappings(schema);
+
+  return {
+    ...cloneSchema(schema),
+    oauth: {
+      clientRegistration: schema.oauth.clientRegistration,
+      scopes: normalizeScopes(schema.oauth.scopes),
+    },
+  };
+}
+
+function validateOAuthClientRegistration(oauth: OAuthConfig): void {
+  if (!['automatic', 'static'].includes(oauth.clientRegistration)) {
+    throw new Error('OAuth clientRegistration must be automatic or static');
+  }
+}
+
+function validateOAuthPresence(schema: IntegrationConfigSchema): void {
+  const hasOAuthAuthType = schema.authType === OAUTH_AUTH_TYPE;
+  const hasOAuthConfig = schema.oauth !== undefined;
+
+  if (hasOAuthAuthType !== hasOAuthConfig) {
+    throw new Error(
+      'OAuth configuration must be present if and only if authType is OAUTH',
+    );
+  }
+}
+
+function validateOAuthHeaderMappings(schema: IntegrationConfigSchema): void {
+  const fields = [...schema.orgFields, ...schema.userFields];
+  const mapsAuthorization = fields.some(
+    (field) => field.headerName?.trim().toLowerCase() === 'authorization',
+  );
+
+  if (mapsAuthorization) {
+    throw new Error('OAuth configuration fields cannot map to Authorization');
+  }
+}
+
+function cloneSchema(schema: IntegrationConfigSchema): IntegrationConfigSchema {
+  return {
+    ...schema,
+    orgFields: schema.orgFields.map((field) => ({ ...field })),
+    userFields: schema.userFields.map((field) => ({ ...field })),
+  };
+}
+
+export function normalizeScopes(scopes: string[] = []): string[] {
+  return [...new Set(scopes.map((scope) => scope.trim()).filter(Boolean))];
 }
 
 /**

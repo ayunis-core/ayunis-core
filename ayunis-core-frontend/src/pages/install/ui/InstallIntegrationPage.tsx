@@ -21,19 +21,31 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/ui/shadcn/card';
-import { Form } from '@/shared/ui/shadcn/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/shadcn/form';
 import { useMarketplaceConfig } from '@/features/marketplace';
-
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
+import { Input } from '@/shared/ui/shadcn/input';
+import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+import {
+  hasOAuthConfiguration,
+  type McpOAuthConfig,
+  type McpSchemaWithOAuth,
+} from '@/shared/lib/mcp-oauth';
+import { useMcpOAuthClientMetadata } from '@/features/mcp-oauth';
 import { AcceptanceCheckboxField } from './AcceptanceCheckboxField';
+import type { InstallIntegrationFormFields } from '../model/types';
+import { buildMarketplaceIntegrationPayload } from '../lib/build-marketplace-integration-payload';
 
 interface InstallIntegrationPageProps {
   readonly integrationIdentifier: string | undefined;
-}
-
-interface InstallIntegrationFormFields {
-  legalAccepted: boolean;
-  termsAccepted: boolean;
 }
 
 export default function InstallIntegrationPage({
@@ -81,7 +93,12 @@ function InstallIntegrationContent({
   const installMutation = useInstallIntegrationFromMarketplace();
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const form = useForm<InstallIntegrationFormFields>({
-    defaultValues: { legalAccepted: false, termsAccepted: false },
+    defaultValues: {
+      legalAccepted: false,
+      termsAccepted: false,
+      oauthClientId: '',
+      oauthClientSecret: '',
+    },
   });
 
   if (isLoading) {
@@ -100,11 +117,17 @@ function InstallIntegrationContent({
   }
 
   const handleInstall = () => {
+    const values = form.getValues();
     installMutation.mutate({
-      data: {
-        identifier: integrationIdentifier,
-        orgConfigValues: formValues,
-      },
+      data: buildMarketplaceIntegrationPayload(
+        integrationIdentifier,
+        formValues,
+        integration.configSchema,
+        {
+          clientId: values.oauthClientId,
+          clientSecret: values.oauthClientSecret,
+        },
+      ),
     });
   };
 
@@ -146,6 +169,11 @@ function InstallIntegrationCard({
     editableFields,
     formValues,
   );
+  const schema = integration.configSchema as McpSchemaWithOAuth;
+  const oauth = hasOAuthConfiguration(schema) ? schema.oauth : undefined;
+  const staticClientReady =
+    oauth?.clientRegistration !== 'static' ||
+    form.watch('oauthClientId').trim().length > 0;
   const termsOfServiceUrl = marketplace.url
     ? `${marketplace.url.replace(/\/$/, '')}/nutzungsbedingungen`
     : null;
@@ -156,6 +184,8 @@ function InstallIntegrationCard({
       editableFields={editableFields}
       isZeroConfig={isZeroConfig}
       allRequiredFilled={allRequiredFilled}
+      oauth={oauth}
+      staticClientReady={staticClientReady}
       formValues={formValues}
       onFormValuesChange={onFormValuesChange}
       onInstall={onInstall}
@@ -189,6 +219,8 @@ interface InstallIntegrationCardViewProps {
   readonly editableFields: MarketplaceIntegrationConfigFieldDto[];
   readonly isZeroConfig: boolean;
   readonly allRequiredFilled: boolean;
+  readonly oauth?: McpOAuthConfig;
+  readonly staticClientReady: boolean;
   readonly formValues: Record<string, string>;
   readonly onFormValuesChange: (values: Record<string, string>) => void;
   readonly onInstall: () => void;
@@ -203,6 +235,8 @@ function InstallIntegrationCardView({
   editableFields,
   isZeroConfig,
   allRequiredFilled,
+  oauth,
+  staticClientReady,
   formValues,
   onFormValuesChange,
   onInstall,
@@ -259,6 +293,15 @@ function InstallIntegrationCardView({
                 disabled={isInstalling}
               />
             ))}
+
+            {oauth && (
+              <MarketplaceOAuthFields
+                oauth={oauth}
+                form={form}
+                disabled={isInstalling}
+                t={t}
+              />
+            )}
 
             {hasLegalText && (
               <AcceptanceCheckboxField
@@ -320,7 +363,9 @@ function InstallIntegrationCardView({
             <Button
               type="submit"
               className="flex-1"
-              disabled={isInstalling || !allRequiredFilled}
+              disabled={
+                isInstalling || !allRequiredFilled || !staticClientReady
+              }
             >
               {isInstalling ? t('action.installing') : t('action.install')}
             </Button>
@@ -328,5 +373,89 @@ function InstallIntegrationCardView({
         </Card>
       </form>
     </Form>
+  );
+}
+
+function MarketplaceOAuthFields({
+  oauth,
+  form,
+  disabled,
+  t,
+}: Readonly<{
+  oauth: McpOAuthConfig;
+  form: UseFormReturn<InstallIntegrationFormFields>;
+  disabled: boolean;
+  t: TFunction;
+}>) {
+  const { callbackUri } = useMcpOAuthClientMetadata();
+  return (
+    <div className="space-y-4 rounded-md border p-4">
+      <div>
+        <p className="font-medium">{t('oauth.title')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t(`oauth.registration.${oauth.clientRegistration}`)}
+        </p>
+      </div>
+      {oauth.scopes && oauth.scopes.length > 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t('oauth.scopes', { scopes: oauth.scopes.join(' ') })}
+        </p>
+      )}
+      <div>
+        <p className="text-sm font-medium">{t('oauth.callbackUri')}</p>
+        <code className="break-all text-xs">{callbackUri}</code>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('oauth.callbackUriDescription')}
+        </p>
+      </div>
+      {oauth.clientRegistration === 'static' && (
+        <StaticOAuthClientFields form={form} disabled={disabled} t={t} />
+      )}
+    </div>
+  );
+}
+
+function StaticOAuthClientFields({
+  form,
+  disabled,
+  t,
+}: Readonly<{
+  form: UseFormReturn<InstallIntegrationFormFields>;
+  disabled: boolean;
+  t: TFunction;
+}>) {
+  return (
+    <>
+      <FormField
+        control={form.control}
+        name="oauthClientId"
+        rules={{ required: true }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('oauth.clientId')}</FormLabel>
+            <FormControl>
+              <Input {...field} disabled={disabled} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="oauthClientSecret"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('oauth.clientSecret')}</FormLabel>
+            <FormControl>
+              <PasswordInput {...field} disabled={disabled} />
+            </FormControl>
+            <FormDescription>
+              {t('oauth.clientSecretDescription')}
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
   );
 }

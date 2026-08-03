@@ -5,5 +5,6 @@
   "saving": "Saving…",
   "cancel": "Cancel",
   "success": "Your credentials were saved successfully",
-  "error": "Failed to save your credentials. Please try again."
+  "error": "Failed to save your credentials. Please try again.",
+  "notFound": "This integration is no longer available."
 }

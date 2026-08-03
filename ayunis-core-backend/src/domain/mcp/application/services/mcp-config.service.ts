@@ -5,6 +5,7 @@ import {
   fieldRequiresInput,
   isConfigValuePresent,
   isSystemFixedField,
+  normalizeIntegrationConfigSchema,
 } from '../../domain/value-objects/integration-config-schema';
 import { McpMissingRequiredConfigError } from '../mcp.errors';
 import {
@@ -29,6 +30,15 @@ export class McpConfigService {
     orgConfigValues: Record<string, string>,
     integrationName: string,
   ): void {
+    try {
+      normalizeIntegrationConfigSchema(schema);
+    } catch (error) {
+      throw new McpValidationFailedError(
+        '',
+        integrationName,
+        error instanceof Error ? error.message : 'Invalid OAuth schema.',
+      );
+    }
     const allFields = [...schema.orgFields, ...schema.userFields];
     const keys = allFields.map((field) => field.key);
     if (new Set(keys).size !== keys.length) {
@@ -60,7 +70,9 @@ export class McpConfigService {
     integrationName: string,
     scope: string,
   ): void {
-    const headerNames = fields.map((field) => field.headerName?.toLowerCase());
+    const headerNames = fields
+      .map((field) => field.headerName?.toLowerCase())
+      .filter((headerName): headerName is string => Boolean(headerName));
     if (new Set(headerNames).size !== headerNames.length) {
       throw new McpValidationFailedError(
         '',

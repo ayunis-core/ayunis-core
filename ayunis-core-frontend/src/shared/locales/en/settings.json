@@ -21,6 +21,24 @@
       "actionRequired": "Authorize",
       "connected": "Update",
       "optional": "Configure"
+    },
+    "oauth": {
+      "connect": "Connect",
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect",
+      "connectError": "Could not start the secure connection. Please try again.",
+      "disconnectSuccess": "OAuth connection removed.",
+      "disconnectError": "Could not remove the OAuth connection. Please try again.",
+      "notFound": "This integration is no longer available.",
+      "callback": {
+        "pendingTitle": "Completing connection",
+        "pendingDescription": "Please wait while the secure connection is completed.",
+        "successTitle": "Integration connected",
+        "successDescription": "Your OAuth authorization was saved successfully.",
+        "errorTitle": "Connection failed",
+        "errorDescription": "The secure connection could not be completed. Return to integrations and try again.",
+        "back": "Back to integrations"
+      }
     }
   },
   "account": {

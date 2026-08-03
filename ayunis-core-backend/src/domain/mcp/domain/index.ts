@@ -4,6 +4,9 @@ export { CustomMcpIntegration } from './integrations/custom-mcp-integration.enti
 export { PredefinedMcpIntegration } from './integrations/predefined-mcp-integration.entity';
 export { MarketplaceMcpIntegration } from './integrations/marketplace-mcp-integration.entity';
 export { McpIntegrationUserConfig } from './mcp-integration-user-config.entity';
+export { McpOAuthClientRegistration } from './mcp-oauth-client-registration.entity';
+export { McpOAuthUserToken } from './mcp-oauth-user-token.entity';
+export { McpOAuthPendingSession } from './mcp-oauth-pending-session.entity';
 
 export { McpIntegrationAuth } from './auth/mcp-integration-auth.entity';
 export { NoAuthMcpIntegrationAuth } from './auth/no-auth-mcp-integration-auth.entity';
@@ -18,4 +21,8 @@ export type {
   IntegrationConfigSchema,
   ConfigField,
   OAuthConfig,
+} from './value-objects/integration-config-schema';
+export {
+  normalizeIntegrationConfigSchema,
+  normalizeScopes,
 } from './value-objects/integration-config-schema';

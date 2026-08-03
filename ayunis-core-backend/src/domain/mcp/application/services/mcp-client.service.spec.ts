@@ -314,7 +314,7 @@ describe('McpClientService', () => {
 
     it('skips fields without headerName', async () => {
       const schema: IntegrationConfigSchema = {
-        authType: 'OAUTH',
+        authType: 'CUSTOM',
         orgFields: [
           {
             key: 'clientId',
@@ -629,6 +629,29 @@ describe('McpClientService', () => {
       const config = await service.buildConnectionConfig(integration);
 
       expect(config.headers).toEqual({});
+    });
+
+    it('allows org-level validation to build an OAuth config without a user grant', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        ...baseIntegrationParams,
+        auth: new NoAuthMcpIntegrationAuth(),
+        marketplaceIdentifier: 'oauth-server',
+        configSchema: {
+          authType: 'OAUTH',
+          orgFields: [],
+          userFields: [],
+          oauth: { clientRegistration: 'automatic' },
+        },
+        orgConfigValues: {},
+      });
+
+      await expect(service.buildConnectionConfig(integration)).resolves.toEqual(
+        {
+          serverUrl: integration.serverUrl,
+          headers: {},
+          oauth: undefined,
+        },
+      );
     });
   });
 });

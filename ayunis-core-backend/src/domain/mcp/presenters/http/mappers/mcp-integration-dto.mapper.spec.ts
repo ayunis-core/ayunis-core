@@ -110,6 +110,23 @@ describe('McpIntegrationDtoMapper', () => {
     expect(dto.userAuthorized).toBe(false);
   });
 
+  it('maps the persisted static OAuth client status', () => {
+    const integration = aCustomMcpIntegration({
+      ...baseParams,
+      auth: new NoAuthMcpIntegrationAuth(),
+      configSchema: {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: { clientRegistration: 'static' },
+      },
+    });
+
+    const dto = mapper.toDto(integration, undefined, false);
+
+    expect(dto.oauthClientConfigured).toBe(false);
+  });
+
   it('maps marketplace integration with config schema and identifier', () => {
     const configSchema: IntegrationConfigSchema = {
       authType: 'BEARER_TOKEN',

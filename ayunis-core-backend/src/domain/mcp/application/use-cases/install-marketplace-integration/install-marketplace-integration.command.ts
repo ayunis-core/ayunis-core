@@ -3,5 +3,9 @@ export class InstallMarketplaceIntegrationCommand {
     public readonly identifier: string,
     public readonly orgConfigValues: Record<string, string>,
     public readonly returnsPii?: boolean,
+    public readonly oauthClient?: {
+      clientId: string;
+      clientSecret?: string;
+    },
   ) {}
 }

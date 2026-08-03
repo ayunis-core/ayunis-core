@@ -1,4 +1,9 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Optional,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UUID } from 'crypto';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
@@ -7,6 +12,7 @@ import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedMcpError } from '../../mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from '../../ports/mcp-oauth-user-token.repository.port';
 
 /**
  * An enabled integration paired with whether the current user has satisfied
@@ -32,6 +38,8 @@ export class ListAvailableMcpIntegrationsUseCase {
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
+    @Optional()
+    private readonly oauthTokens?: McpOAuthUserTokenRepositoryPort,
   ) {}
 
   /**
@@ -59,13 +67,16 @@ export class ListAvailableMcpIntegrationsUseCase {
         userId,
       );
 
-      return integrations.map((integration) => ({
-        integration,
-        userAuthorized: this.resolveUserAuthorized(
+      return Promise.all(
+        integrations.map(async (integration) => ({
           integration,
-          userConfigValues,
-        ),
-      }));
+          userAuthorized: await this.resolveUserAuthorized(
+            integration,
+            userConfigValues,
+            userId,
+          ),
+        })),
+      );
     } catch (error) {
       if (
         error instanceof ApplicationError ||
@@ -113,15 +124,27 @@ export class ListAvailableMcpIntegrationsUseCase {
     return result;
   }
 
-  private resolveUserAuthorized(
+  private async resolveUserAuthorized(
     integration: McpIntegration,
     userConfigValues: Map<UUID, Record<string, string>>,
-  ): boolean {
+    userId?: UUID,
+  ): Promise<boolean> {
     if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
       return true;
     }
-    return integration.isUserAuthorized(
+    const fieldsAuthorized = integration.isUserAuthorized(
       userConfigValues.get(integration.id) ?? null,
+    );
+    if (!fieldsAuthorized || !integration.configSchema.oauth) {
+      return fieldsAuthorized;
+    }
+    if (!userId || !this.oauthTokens) return false;
+    const token = await this.oauthTokens.findByIntegrationAndUser(
+      integration.id,
+      userId,
+    );
+    return Boolean(
+      token && (!token.isExpired() || token.encryptedRefreshToken),
     );
   }
 }

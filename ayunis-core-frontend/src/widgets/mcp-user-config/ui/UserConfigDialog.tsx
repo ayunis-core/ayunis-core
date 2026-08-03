@@ -13,6 +13,7 @@ interface UserConfigDialogProps {
   readonly integration: McpIntegrationResponseDto | null;
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
+  readonly onSaved?: () => void;
 }
 
 /**
@@ -23,6 +24,7 @@ export function UserConfigDialog({
   integration,
   open,
   onOpenChange,
+  onSaved,
 }: Readonly<UserConfigDialogProps>) {
   const { t } = useTranslation('mcp-user-config');
 
@@ -39,6 +41,7 @@ export function UserConfigDialog({
           key={integration.id}
           integration={integration}
           onClose={() => onOpenChange(false)}
+          onSaved={onSaved}
         />
       </DialogContent>
     </Dialog>

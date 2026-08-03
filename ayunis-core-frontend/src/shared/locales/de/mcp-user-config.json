@@ -5,5 +5,6 @@
   "saving": "Wird gespeichert…",
   "cancel": "Abbrechen",
   "success": "Ihre Zugangsdaten wurden erfolgreich gespeichert",
-  "error": "Ihre Zugangsdaten konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+  "error": "Ihre Zugangsdaten konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  "notFound": "Diese Integration ist nicht mehr verfügbar."
 }

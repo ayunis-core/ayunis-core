@@ -6,6 +6,12 @@ export interface McpConnectionConfig {
   serverUrl: string;
   /** Optional headers to send with every MCP request (auth + config fields) */
   headers?: Record<string, string>;
+  /** Per-user OAuth context resolved by the infrastructure adapter. */
+  oauth?: {
+    integrationId: string;
+    userId: string;
+    orgId: string;
+  };
 }
 
 /**

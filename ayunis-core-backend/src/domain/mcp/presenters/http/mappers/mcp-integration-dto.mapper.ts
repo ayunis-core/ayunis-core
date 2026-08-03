@@ -30,6 +30,7 @@ export class McpIntegrationDtoMapper {
   toDto(
     integration: McpIntegration,
     userAuthorized?: boolean,
+    oauthClientConfigured?: boolean,
   ): McpIntegrationResponseDto {
     const type = this.resolveType(integration);
 
@@ -56,7 +57,12 @@ export class McpIntegrationDtoMapper {
 
     // Add type-specific fields
     if (integration instanceof SchemaConfiguredMcpIntegration) {
-      this.applyConfigFields(baseDto, integration, userAuthorized);
+      this.applyConfigFields(
+        baseDto,
+        integration,
+        userAuthorized,
+        oauthClientConfigured,
+      );
       if (integration instanceof MarketplaceMcpIntegration) {
         baseDto.marketplaceIdentifier = integration.marketplaceIdentifier;
         baseDto.logoUrl = integration.logoUrl;
@@ -79,12 +85,15 @@ export class McpIntegrationDtoMapper {
     baseDto: McpIntegrationResponseDto,
     integration: SchemaConfiguredMcpIntegration,
     userAuthorized?: boolean,
+    oauthClientConfigured?: boolean,
   ): void {
     baseDto.configSchema = {
       authType: integration.configSchema.authType,
       orgFields: integration.configSchema.orgFields,
       userFields: integration.configSchema.userFields,
+      oauth: integration.configSchema.oauth,
     };
+    baseDto.oauthClientConfigured = oauthClientConfigured ?? false;
     baseDto.hasUserFields = integration.configSchema.userFields.length > 0;
     baseDto.userAuthorizationRequired = integration.requiresUserAuthorization;
     baseDto.userAuthorized = userAuthorized;

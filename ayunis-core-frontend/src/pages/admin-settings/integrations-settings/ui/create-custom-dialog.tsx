@@ -23,8 +23,12 @@ import { Button } from '@/shared/ui/shadcn/button';
 import type { CreateCustomIntegrationFormData } from '../model/types';
 import { useCreateCustomIntegration } from '../api/useCreateCustomIntegration';
 import { buildCustomIntegrationPayload } from '../lib/build-custom-integration-payload';
-import { findDuplicateHeaderIndexes } from '../lib/custom-config-field-validation';
+import {
+  findDuplicateHeaderIndexes,
+  findOAuthAuthorizationHeaderIndexes,
+} from '../lib/custom-config-field-validation';
 import { CustomConfigFieldEditor } from './custom-config-field-editor';
+import { CustomOAuthFields } from './custom-oauth-fields';
 
 interface CreateCustomDialogProps {
   open: boolean;
@@ -34,6 +38,11 @@ interface CreateCustomDialogProps {
 const DEFAULT_VALUES: CreateCustomIntegrationFormData = {
   name: '',
   serverUrl: '',
+  authType: 'CUSTOM',
+  oauthClientRegistration: 'automatic',
+  oauthScopes: '',
+  oauthClientId: '',
+  oauthClientSecret: '',
   fields: [],
 };
 
@@ -83,7 +92,16 @@ export function CreateCustomDialog({
         message: t('integrations.createCustomDialog.headerDuplicate'),
       });
     }
-    if (duplicateIndexes.length > 0) return;
+    const oauthHeaderIndexes =
+      data.authType === 'OAUTH'
+        ? findOAuthAuthorizationHeaderIndexes(data.fields)
+        : [];
+    for (const index of oauthHeaderIndexes) {
+      form.setError(`fields.${index}.headerName`, {
+        message: t('integrations.createCustomDialog.oauthHeaderConflict'),
+      });
+    }
+    if (duplicateIndexes.length > 0 || oauthHeaderIndexes.length > 0) return;
     createCustomIntegration(buildCustomIntegrationPayload(data));
   };
 
@@ -155,6 +173,8 @@ export function CreateCustomDialog({
                 </FormItem>
               )}
             />
+
+            <CustomOAuthFields form={form} disabled={isCreating} />
 
             <div className="flex items-center justify-between gap-4">
               <div>
