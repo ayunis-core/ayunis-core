@@ -1,0 +1,471 @@
+import { CURRENT_USER, type MockProject } from './mock';
+import { GENERATED_CONTENTS } from './generated-contents';
+
+export const initialProjects: MockProject[] = [
+  {
+    id: 'buergeranfragen',
+    name: 'Bürgeranfragen',
+    createdAt: '2026-03-10T09:00:00.000Z',
+    updatedAt: '2026-07-29T14:20:00.000Z',
+    icon: 'landmark',
+    color: 'blue',
+    ownerId: 'u1',
+    visibility: 'private',
+    starred: true,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions:
+      'Antworte freundlich und verweise auf das passende Formular oder die zuständige Stelle.',
+    skills: [
+      { id: 'sk1', name: 'Antwortentwurf' },
+      { id: 'sk2', name: 'Formular finden' },
+    ],
+    knowledgeBases: [
+      { id: 'kb1', name: 'Satzungen & Gebühren', documentCount: 8 },
+    ],
+    documents: [{ id: 'd1', name: 'Öffnungszeiten.pdf' }],
+    generatedDocuments: GENERATED_CONTENTS.buergeranfragen,
+    teams: [],
+    collaborators: [
+      CURRENT_USER,
+      {
+        id: 'u2',
+        name: 'Tim Krause',
+        initials: 'TK',
+        email: 'tim@musterstadt.de',
+        role: 'edit',
+      },
+      {
+        id: 'u3',
+        name: 'Lena Berg',
+        initials: 'LB',
+        email: 'lena@musterstadt.de',
+        role: 'use',
+      },
+    ],
+    chats: [
+      {
+        id: 'c1',
+        title: 'Antwort Sperrmüll-Termin',
+        messages: [
+          {
+            id: 'm1',
+            role: 'user',
+            text: 'Ein Bürger fragt, wann der nächste Sperrmüll-Termin in der Lindenstraße ist. Kannst du eine Antwort entwerfen?',
+          },
+          {
+            id: 'm2',
+            role: 'assistant',
+            text: 'Gerne. Laut Abfuhrkalender ist der nächste Termin am 18. Juli. Hier ein Entwurf:\n\n„Sehr geehrte:r …, der nächste Sperrmüll-Termin in Ihrer Straße ist am 18. Juli. Bitte stellen Sie die Gegenstände bis 7 Uhr bereit."',
+          },
+        ],
+      },
+      {
+        id: 'c2',
+        title: 'Anfrage Hundesteuer',
+        messages: [
+          {
+            id: 'm3',
+            role: 'user',
+            text: 'Wie hoch ist die Hundesteuer für den zweiten Hund?',
+          },
+        ],
+      },
+      {
+        id: 'c7',
+        title: 'Beschwerde Straßenbeleuchtung',
+        messages: [
+          {
+            id: 'm7',
+            role: 'user',
+            text: 'In der Gartenstraße sind seit zwei Wochen drei Laternen ausgefallen. Wie antworte ich der Anwohnerin?',
+          },
+          {
+            id: 'm8',
+            role: 'assistant',
+            text: 'Hier ein Entwurf: „Vielen Dank für Ihren Hinweis. Die Störung ist beim Bauhof gemeldet, die Reparatur ist für diese Woche eingeplant."',
+          },
+        ],
+      },
+      {
+        id: 'c8',
+        title: 'Anmeldung Wochenmarkt',
+        messages: [
+          {
+            id: 'm9',
+            role: 'user',
+            text: 'Ein Händler möchte einen Stand auf dem Wochenmarkt. Welche Unterlagen braucht er?',
+          },
+        ],
+      },
+      {
+        id: 'c9',
+        title: 'Frage zu Anwohnerparken',
+        messages: [
+          {
+            id: 'm10',
+            role: 'user',
+            text: 'Was kostet der Anwohnerparkausweis und wo beantragt man ihn?',
+          },
+          {
+            id: 'm11',
+            role: 'assistant',
+            text: 'Der Ausweis kostet laut Gebührensatzung 30 € pro Jahr und kann online oder im Bürgerbüro beantragt werden.',
+          },
+        ],
+      },
+      {
+        id: 'c10',
+        title: 'Lärmbeschwerde Baustelle',
+        messages: [
+          {
+            id: 'm12',
+            role: 'user',
+            text: 'Mehrere Beschwerden zur Baustelle am Rathausplatz — gibt es eine Ausnahmegenehmigung für Nachtarbeiten?',
+          },
+        ],
+      },
+      {
+        id: 'c11',
+        title: 'Sondernutzung Gehweg Café',
+        messages: [
+          {
+            id: 'm13',
+            role: 'user',
+            text: 'Das Café Sonnenblick will Tische auf den Gehweg stellen. Entwurf für die Antwort mit Verweis auf die Satzung?',
+          },
+        ],
+      },
+      {
+        id: 'c12',
+        title: 'Baumfällung Nachbargrundstück',
+        messages: [
+          {
+            id: 'm14',
+            role: 'user',
+            text: 'Ein Bürger fragt, ob der Nachbar eine alte Eiche fällen darf. Was sagt die Baumschutzsatzung?',
+          },
+          {
+            id: 'm15',
+            role: 'assistant',
+            text: 'Laut Baumschutzsatzung sind Eichen ab 80 cm Stammumfang geschützt — eine Fällung braucht eine Ausnahmegenehmigung der Unteren Naturschutzbehörde.',
+          },
+        ],
+      },
+      {
+        id: 'c13',
+        title: 'Fundbüro Fahrrad abgeben',
+        messages: [
+          {
+            id: 'm16',
+            role: 'user',
+            text: 'Jemand hat ein Fahrrad gefunden — wie läuft die Abgabe im Fundbüro?',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'personal',
+    name: 'Personalabteilung',
+    createdAt: '2026-04-02T10:00:00.000Z',
+    updatedAt: '2026-04-02T10:00:00.000Z',
+    icon: 'users',
+    color: 'teal',
+    ownerId: 'u1',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions: 'Halte dich an die geltenden Dienstvereinbarungen.',
+    skills: [
+      { id: 'sk3', name: 'Bewerbung sichten' },
+      { id: 'sk4', name: 'Urlaubsregeln' },
+    ],
+    knowledgeBases: [
+      { id: 'kb2', name: 'Dienstvereinbarungen', documentCount: 34 },
+      { id: 'kb3', name: 'Stellenprofile', documentCount: 18 },
+    ],
+    documents: [],
+    teams: [],
+    collaborators: [
+      CURRENT_USER,
+      {
+        id: 'u4',
+        name: 'Petra Sommer',
+        initials: 'PS',
+        email: 'petra@musterstadt.de',
+        role: 'edit',
+      },
+    ],
+    chats: [
+      {
+        id: 'c4',
+        title: 'Bewerbung Sachbearbeitung',
+        messages: [
+          {
+            id: 'm4',
+            role: 'user',
+            text: 'Passt die angehängte Bewerbung zum Profil der Sachbearbeitung?',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'notizen',
+    name: 'Persönliche Notizen',
+    createdAt: '2026-05-12T08:30:00.000Z',
+    updatedAt: '2026-07-27T11:00:00.000Z',
+    icon: 'file',
+    color: 'violet',
+    ownerId: 'u1',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions: 'Persönliche Vorbereitung für Rücksprachen und Termine.',
+    skills: [{ id: 'sk10', name: 'Protokoll zusammenfassen' }],
+    knowledgeBases: [],
+    documents: [],
+    teams: [],
+    collaborators: [CURRENT_USER],
+    chats: [
+      {
+        id: 'c14',
+        title: 'Vorbereitung Ratssitzung',
+        messages: [
+          {
+            id: 'm17',
+            role: 'user',
+            text: 'Fasse mir die wichtigsten Punkte für die Ratssitzung am Montag zusammen.',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'vergabe',
+    name: 'Vergabe 2026',
+    createdAt: '2026-07-20T08:00:00.000Z',
+    updatedAt: '2026-07-29T16:45:00.000Z',
+    icon: 'package',
+    color: 'amber',
+    ownerId: 'u1',
+    visibility: 'private',
+    starred: true,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    skills: [{ id: 'sk5', name: 'Angebote vergleichen' }],
+    knowledgeBases: [{ id: 'kb4', name: 'Vergaberecht', documentCount: 41 }],
+    documents: [{ id: 'd2', name: 'Angebote.xlsx' }],
+    generatedDocuments: GENERATED_CONTENTS.vergabe,
+    teams: [],
+    collaborators: [
+      CURRENT_USER,
+      {
+        id: 'u5',
+        name: 'Ralf Stein',
+        initials: 'RS',
+        email: 'ralf@musterstadt.de',
+        role: 'use',
+      },
+    ],
+    chats: [
+      {
+        id: 'c6',
+        title: 'Angebote Büromöbel vergleichen',
+        messages: [
+          {
+            id: 'm6',
+            role: 'user',
+            text: 'Welches der drei Angebote erfüllt alle Kriterien der Ausschreibung?',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'basiswissen',
+    createdAt: '2026-02-15T11:00:00.000Z',
+    updatedAt: '2026-02-20T09:30:00.000Z',
+    name: 'Musterstadt Basiswissen',
+    icon: 'tree',
+    color: 'green',
+    ownerId: 'u6',
+    visibility: 'org',
+    starred: false,
+    allowMemberContent: false,
+    allowPrivateChats: true,
+    instructions:
+      'Allgemeines Verwaltungswissen der Stadt für alle Mitarbeitenden.',
+    skills: [{ id: 'sk6', name: 'Protokoll zusammenfassen' }],
+    knowledgeBases: [{ id: 'kb5', name: 'Organigramm', documentCount: 3 }],
+    documents: [],
+    teams: [],
+    collaborators: [
+      {
+        id: 'u6',
+        name: 'Meike Pohl',
+        initials: 'MP',
+        email: 'meike@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+  {
+    id: 'website',
+    createdAt: '2026-05-05T13:00:00.000Z',
+    updatedAt: '2026-06-10T15:00:00.000Z',
+    name: 'Website-Relaunch',
+    icon: 'idea',
+    color: 'violet',
+    ownerId: 'u2',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: false,
+    allowPrivateChats: true,
+    instructions: 'Texte für die neue Website der Stadt vorbereiten.',
+    skills: [{ id: 'sk7', name: 'Text übersetzen' }],
+    knowledgeBases: [],
+    documents: [{ id: 'd3', name: 'Styleguide.pdf' }],
+    teams: [
+      { id: 't1', name: 'Personalabteilung', memberCount: 6, role: 'use' },
+    ],
+    collaborators: [
+      {
+        id: 'u2',
+        name: 'Tim Krause',
+        initials: 'TK',
+        email: 'tim@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+  {
+    id: 'rathaussanierung',
+    createdAt: '2026-06-01T09:00:00.000Z',
+    updatedAt: '2026-07-15T10:00:00.000Z',
+    name: 'Ausschreibung Rathaussanierung',
+    icon: 'building',
+    color: 'amber',
+    ownerId: 'u5',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions:
+      'Vergabeunterlagen für die Sanierung des Rathauses vorbereiten und Angebote prüfen.',
+    skills: [{ id: 'sk8', name: 'Angebote vergleichen' }],
+    knowledgeBases: [{ id: 'kb6', name: 'Vergaberecht', documentCount: 41 }],
+    documents: [],
+    teams: [{ id: 't2', name: 'Beschaffung', memberCount: 3, role: 'use' }],
+    collaborators: [
+      {
+        id: 'u5',
+        name: 'Ralf Stein',
+        initials: 'RS',
+        email: 'ralf@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+  {
+    id: 'onboarding',
+    name: 'Onboarding neue Mitarbeitende',
+    icon: 'users',
+    color: 'teal',
+    createdAt: '2026-01-20T09:00:00.000Z',
+    updatedAt: '2026-01-22T09:00:00.000Z',
+    ownerId: 'u4',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions:
+      'Begleitet neue Kolleginnen und Kollegen durch die ersten Wochen.',
+    skills: [{ id: 'sk9', name: 'Urlaubsregeln' }],
+    knowledgeBases: [
+      { id: 'kb7', name: 'Dienstvereinbarungen', documentCount: 34 },
+    ],
+    documents: [{ id: 'd4', name: 'Checkliste-erster-Tag.pdf' }],
+    teams: [
+      { id: 't1', name: 'Personalabteilung', memberCount: 6, role: 'edit' },
+    ],
+    collaborators: [
+      {
+        id: 'u4',
+        name: 'Petra Sommer',
+        initials: 'PS',
+        email: 'petra@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+  {
+    id: 'onboarding',
+    name: 'Onboarding neue Mitarbeitende',
+    icon: 'archive',
+    color: 'blue',
+    createdAt: '2026-01-25T09:00:00.000Z',
+    updatedAt: '2026-05-01T09:00:00.000Z',
+    ownerId: 'u4',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions:
+      'Begleitet neue Kolleginnen und Kollegen durch die ersten Wochen.',
+    skills: [{ id: 'sk8', name: 'Urlaubsregeln' }],
+    knowledgeBases: [
+      { id: 'kb6', name: 'Dienstvereinbarungen', documentCount: 34 },
+    ],
+    documents: [],
+    teams: [
+      { id: 't1', name: 'Personalabteilung', memberCount: 6, role: 'use' },
+    ],
+    collaborators: [
+      {
+        id: 'u4',
+        name: 'Petra Sommer',
+        initials: 'PS',
+        email: 'petra@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+  {
+    id: 'reinigung',
+    createdAt: '2026-03-01T09:00:00.000Z',
+    updatedAt: '2026-03-20T09:00:00.000Z',
+    name: 'Ausschreibung Gebäudereinigung',
+    icon: 'receipt',
+    color: 'rose',
+    ownerId: 'u5',
+    visibility: 'private',
+    starred: false,
+    allowMemberContent: true,
+    allowPrivateChats: true,
+    instructions:
+      'Vergabeunterlagen für die Neuausschreibung der Gebäudereinigung.',
+    skills: [{ id: 'sk9', name: 'Angebote vergleichen' }],
+    knowledgeBases: [{ id: 'kb7', name: 'Vergaberecht', documentCount: 41 }],
+    documents: [],
+    teams: [{ id: 't2', name: 'Beschaffung', memberCount: 3, role: 'edit' }],
+    collaborators: [
+      {
+        id: 'u5',
+        name: 'Ralf Stein',
+        initials: 'RS',
+        email: 'ralf@musterstadt.de',
+        role: 'full',
+      },
+    ],
+    chats: [],
+  },
+];

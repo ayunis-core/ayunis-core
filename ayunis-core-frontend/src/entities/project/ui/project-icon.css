@@ -1,0 +1,15 @@
+[data-project-color='custom'] {
+  color: color-mix(in oklab, var(--project-color) 74%, black);
+}
+
+.dark [data-project-color='custom'] {
+  color: color-mix(in oklab, var(--project-color) 70%, white);
+}
+
+[data-project-color='custom'][data-project-tint] {
+  background-color: color-mix(in oklab, var(--project-color) 10%, transparent);
+}
+
+.dark [data-project-color='custom'][data-project-tint] {
+  background-color: color-mix(in oklab, var(--project-color) 16%, transparent);
+}
