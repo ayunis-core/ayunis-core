@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Users, X, Building2, RotateCcw } from 'lucide-react';
+import { ChevronRight, Users, Building2, RotateCcw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,11 +28,6 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
 import { cn } from '@/shared/lib/shadcn/utils';
 import {
   CURRENT_USER,
@@ -266,20 +261,11 @@ function MemberRoleControls({
     );
   }
   return (
-    <>
-      <RoleSelect
-        value={member.role}
-        onChange={(next) => updateCollaboratorRole(project.id, member.id, next)}
-      />
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => removeCollaboratorFromProject(project.id, member.id)}
-        aria-label={`${member.name} entfernen`}
-      >
-        <X />
-      </Button>
-    </>
+    <RoleSelect
+      value={member.role}
+      onChange={(next) => updateCollaboratorRole(project.id, member.id, next)}
+      onRemove={() => removeCollaboratorFromProject(project.id, member.id)}
+    />
   );
 }
 
@@ -323,15 +309,8 @@ function TeamRow({
         <RoleSelect
           value={team.role}
           onChange={(next) => updateTeamRole(project.id, team.id, next)}
+          onRemove={() => removeTeamFromProject(project.id, team.id)}
         />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => removeTeamFromProject(project.id, team.id)}
-          aria-label={`${team.name} entfernen`}
-        >
-          <X />
-        </Button>
       </div>
       {expanded && (
         <div className="mt-0.5 mb-1 ml-11 flex max-h-56 flex-col gap-0.5 overflow-y-auto">
@@ -405,40 +384,18 @@ function TeamMemberRow({
         )}
       </div>
       {isBlocked ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleRestore}
-              aria-label={`${person.name} wieder Zugriff geben`}
-            >
-              <RotateCcw />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Zugriff wiederherstellen</TooltipContent>
-        </Tooltip>
+        <Button variant="ghost" size="sm" onClick={handleRestore}>
+          <RotateCcw />
+          Zugriff geben
+        </Button>
       ) : (
-        <>
-          <RoleSelect
-            value={value}
-            onChange={handleRoleChange}
-            triggerClassName="h-8 w-40 shrink-0"
-          />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleBlock}
-                aria-label={`${person.name} keinen Zugriff geben`}
-              >
-                <X />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Diese Person ausschließen</TooltipContent>
-          </Tooltip>
-        </>
+        <RoleSelect
+          value={value}
+          onChange={handleRoleChange}
+          onRemove={handleBlock}
+          removeLabel="Zugriff entziehen"
+          triggerClassName="h-8 w-40 shrink-0"
+        />
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { CheckIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/shadcn/select';
@@ -13,9 +14,13 @@ import {
   type ProjectRole,
 } from '../model/mock';
 
+const REMOVE_VALUE = '__remove';
+
 interface RoleSelectProps {
   value: ProjectRole;
   onChange: (role: ProjectRole) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
   triggerClassName?: string;
 }
 
@@ -45,13 +50,20 @@ function RoleItem({ role }: Readonly<{ role: ProjectRole }>) {
 export function RoleSelect({
   value,
   onChange,
+  onRemove,
+  removeLabel = 'Entfernen',
   triggerClassName = 'w-40 shrink-0',
 }: Readonly<RoleSelectProps>) {
+  function handleValueChange(next: string) {
+    if (next === REMOVE_VALUE) {
+      onRemove?.();
+      return;
+    }
+    onChange(next as ProjectRole);
+  }
+
   return (
-    <Select
-      value={value}
-      onValueChange={(next) => onChange(next as ProjectRole)}
-    >
+    <Select value={value} onValueChange={handleValueChange}>
       <SelectTrigger className={triggerClassName}>
         <SelectValue />
       </SelectTrigger>
@@ -59,6 +71,17 @@ export function RoleSelect({
         {PROJECT_ROLE_ORDER.map((role) => (
           <RoleItem key={role} role={role} />
         ))}
+        {onRemove && (
+          <>
+            <SelectSeparator />
+            <SelectPrimitive.Item
+              value={REMOVE_VALUE}
+              className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pr-8 pl-2 text-sm leading-none text-destructive outline-hidden focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
+            >
+              <SelectPrimitive.ItemText>{removeLabel}</SelectPrimitive.ItemText>
+            </SelectPrimitive.Item>
+          </>
+        )}
       </SelectContent>
     </Select>
   );
