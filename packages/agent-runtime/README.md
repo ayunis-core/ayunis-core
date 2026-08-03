@@ -14,7 +14,7 @@ for await (const event of run({
   messages,
   hooks, // the single extension mechanism
 })) {
-  // streamed RunEvent union: deltas, tool calls, message boundaries, run_end
+  // streamed RunEvent union: text/thinking/tool-call snapshots, boundaries, run_end
 }
 ```
 
@@ -45,6 +45,16 @@ Core consumes this package as one host among others.
 | `beforeToolCall` | approval gates, rewriting a tool call |
 | `afterToolCall` | injecting tools/instructions, persisting tool results |
 | `runEnd` | finalization, flushing |
+
+`afterToolCall` receives `isLastToolCall`, allowing persistence hooks to flush
+the complete grouped result before the runtime exposes its message event.
+Executable tools may return either a string for success or
+`{ result, isError }` when the host needs to report an explicit failure status.
+The runtime accumulates providers' incremental tool-call fields and exposes
+`tool_call_snapshot` events containing the raw arguments received so far plus
+a best-effort parsed input. A terminal `invalid` snapshot preserves malformed
+arguments for presentation, while only finalized valid `tool_call` events are
+executed or persisted.
 
 Buffered mutations (`addTools`/`removeTools`/`setTools`, `addInstructions`,
 `transformMessages`) apply at the next request assembly: `runStart`/

@@ -66,6 +66,7 @@ export interface AfterToolCallContext extends HookApi {
   readonly toolCall: ToolCallSummary;
   readonly result: string;
   readonly isError: boolean;
+  readonly isLastToolCall: boolean;
 }
 
 export interface RunEndContext extends HookApi {

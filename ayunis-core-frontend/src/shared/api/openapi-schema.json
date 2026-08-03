@@ -12863,6 +12863,23 @@
         },
         "required": ["id", "name"]
       },
+      "ToolUseStreamDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Transient lifecycle state of a streamed tool call",
+            "enum": ["streaming", "invalid"],
+            "example": "streaming"
+          },
+          "argumentsJson": {
+            "type": "string",
+            "description": "Accumulated raw JSON arguments received from the model",
+            "example": "{\"location\":\"New York\"}"
+          }
+        },
+        "required": ["status", "argumentsJson"]
+      },
       "ToolUseMessageContentResponseDto": {
         "type": "object",
         "properties": {
@@ -12895,6 +12912,14 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToolUseIntegrationDto"
+              }
+            ]
+          },
+          "stream": {
+            "description": "Presentation-only stream state; absent from finalized valid tool calls",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolUseStreamDto"
               }
             ]
           }

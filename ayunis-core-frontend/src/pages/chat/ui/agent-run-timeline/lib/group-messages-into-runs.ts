@@ -5,7 +5,12 @@ import type {
   ToolUseMessageContent,
   TextMessageContent,
 } from '@/pages/chat/model/openapi';
-import type { RenderUnit, AgentRunUnit, TimelineStep } from '../model/types';
+import type {
+  RenderUnit,
+  AgentRunUnit,
+  TimelineStep,
+  StepStatus,
+} from '../model/types';
 import { isRichTool } from './tool-classification';
 
 interface GroupingOptions {
@@ -104,6 +109,14 @@ interface AppendOptions {
   toolResultsByToolId: Readonly<Record<string, string>>;
 }
 
+function getToolStatus(
+  toolUse: ToolUseMessageContent,
+  hasResult: boolean,
+): StepStatus {
+  if (toolUse.stream?.status === 'invalid') return 'error';
+  return hasResult ? 'done' : 'in_progress';
+}
+
 function appendAssistantMessage(
   run: AgentRunUnit,
   message: AssistantMessage,
@@ -145,7 +158,7 @@ function appendAssistantMessage(
       const toolUse = block as ToolUseMessageContent;
       const hasResult = toolUse.id in toolResultsByToolId;
       const result = hasResult ? toolResultsByToolId[toolUse.id] : undefined;
-      const status: 'in_progress' | 'done' = hasResult ? 'done' : 'in_progress';
+      const status = getToolStatus(toolUse, hasResult);
       run.steps.push({
         kind: 'tool',
         key: `${message.id}-tool-${toolUse.id}`,
@@ -153,7 +166,7 @@ function appendAssistantMessage(
         result,
         status,
       });
-      if (isRichTool(toolUse.name)) {
+      if (status !== 'error' && isRichTool(toolUse.name)) {
         run.richCards.push({
           key: `${message.id}-card-${toolUse.id}`,
           toolUse,

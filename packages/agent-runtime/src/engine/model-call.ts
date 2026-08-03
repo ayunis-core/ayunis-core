@@ -1,5 +1,6 @@
 import { ProviderError, RunAbortedError } from '../contracts/errors';
 import type { RunEventPayload } from '../contracts/event';
+import type { ToolCallSnapshot } from '../contracts/event';
 import type {
   ModelProvider,
   ProviderChunk,
@@ -21,8 +22,8 @@ export async function* streamModelCall(params: {
   const stream = openStream(params.model, params.request);
   try {
     for await (const chunk of stream) {
-      accumulator.accept(chunk);
-      yield* deltaEvents(chunk);
+      const toolCallSnapshots = accumulator.accept(chunk);
+      yield* deltaEvents(chunk, toolCallSnapshots);
       if (params.request.signal?.aborted) {
         throw new RunAbortedError('Run aborted during model call');
       }
@@ -33,7 +34,11 @@ export async function* streamModelCall(params: {
     }
     throw toProviderError(error);
   }
-  return accumulator.finalize();
+  const result = accumulator.finalize();
+  for (const toolCall of result.invalidToolCallSnapshots) {
+    yield { type: 'tool_call_snapshot', toolCall };
+  }
+  return result;
 }
 
 const openStream = (
@@ -47,12 +52,18 @@ const openStream = (
   }
 };
 
-function* deltaEvents(chunk: ProviderChunk): Generator<RunEventPayload> {
+function* deltaEvents(
+  chunk: ProviderChunk,
+  toolCallSnapshots: readonly ToolCallSnapshot[],
+): Generator<RunEventPayload> {
   if (chunk.thinkingDelta) {
     yield { type: 'thinking_delta', delta: chunk.thinkingDelta };
   }
   if (chunk.textDelta) {
     yield { type: 'text_delta', delta: chunk.textDelta };
+  }
+  for (const toolCall of toolCallSnapshots) {
+    yield { type: 'tool_call_snapshot', toolCall };
   }
 }
 

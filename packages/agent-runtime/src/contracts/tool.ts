@@ -23,6 +23,13 @@ export interface ToolExecutionContext {
   runChild(input: ChildRunInput): AsyncIterable<RunEvent>;
 }
 
+export interface ToolExecutionResult {
+  result: string;
+  isError: boolean;
+}
+
+export type ToolExecutionOutput = string | ToolExecutionResult;
+
 /**
  * A concrete, executable tool. Tools are pure signals: they never inject
  * instructions or tools — only hooks do.
@@ -34,5 +41,5 @@ export interface Tool extends ToolSchema {
   execute?(
     input: Record<string, unknown>,
     ctx: ToolExecutionContext,
-  ): string | Promise<string>;
+  ): ToolExecutionOutput | Promise<ToolExecutionOutput>;
 }

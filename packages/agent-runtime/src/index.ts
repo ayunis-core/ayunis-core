@@ -13,6 +13,8 @@ export type {
   JsonSchema,
   Tool,
   ToolExecutionContext,
+  ToolExecutionOutput,
+  ToolExecutionResult,
   ToolSchema,
 } from './contracts/tool';
 export type {
@@ -40,6 +42,7 @@ export type {
   RunEventEnvelope,
   RunEventPayload,
   RunStatus,
+  ToolCallSnapshot,
   ToolCallSummary,
 } from './contracts/event';
 export type { ChildRunInput, RunInput } from './contracts/run-input';

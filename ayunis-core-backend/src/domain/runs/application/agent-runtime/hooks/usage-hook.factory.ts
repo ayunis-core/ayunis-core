@@ -2,7 +2,7 @@ import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import { assistantMessageId } from '../assistant-message-id';
+import { assistantMessageId } from '../message-id';
 
 /**
  * Builds the usage-metering hook: after each model call it records billed

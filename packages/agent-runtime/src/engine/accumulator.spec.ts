@@ -3,6 +3,65 @@ import { describe, expect, it } from 'vitest';
 import { ChunkAccumulator } from './accumulator';
 
 describe('ChunkAccumulator', () => {
+  it('exposes accumulated tool input snapshots while arguments stream', () => {
+    const accumulator = new ChunkAccumulator();
+
+    const [partial] = accumulator.accept({
+      toolCallDeltas: [
+        {
+          index: 0,
+          id: 'call-1',
+          name: 'internet_search',
+          argumentsDelta: '{"query":',
+        },
+      ],
+    });
+    const [complete] = accumulator.accept({
+      toolCallDeltas: [{ index: 0, argumentsDelta: '"Berlin"}' }],
+    });
+
+    expect(partial).toMatchObject({
+      index: 0,
+      id: 'call-1',
+      name: 'internet_search',
+      argumentsJson: '{"query":',
+      input: null,
+      status: 'streaming',
+    });
+    expect(complete).toMatchObject({
+      argumentsJson: '{"query":"Berlin"}',
+      input: { query: 'Berlin' },
+      status: 'streaming',
+    });
+  });
+
+  it('reports malformed terminal tool calls as invalid snapshots', () => {
+    const accumulator = new ChunkAccumulator();
+    accumulator.accept({
+      toolCallDeltas: [
+        {
+          index: 0,
+          id: 'call-1',
+          name: 'internet_search',
+          argumentsDelta: '{"query":',
+        },
+      ],
+    });
+
+    const result = accumulator.finalize();
+
+    expect(result.invalidToolCallSnapshots).toEqual([
+      expect.objectContaining({
+        index: 0,
+        id: 'call-1',
+        name: 'internet_search',
+        argumentsJson: '{"query":',
+        input: null,
+        status: 'invalid',
+      }),
+    ]);
+  });
+
   it('reassembles tool arguments split across deltas', () => {
     const accumulator = new ChunkAccumulator();
     accumulator.accept({
@@ -42,7 +101,7 @@ describe('ChunkAccumulator', () => {
     ]);
   });
 
-  it('falls back to an empty object for malformed argument JSON', () => {
+  it('discards a tool call with malformed argument JSON', () => {
     const accumulator = new ChunkAccumulator();
     accumulator.accept({
       toolCallDeltas: [
@@ -51,7 +110,26 @@ describe('ChunkAccumulator', () => {
     });
 
     const { message } = accumulator.finalize();
-    expect(message.content[0]).toMatchObject({ input: {} });
+    expect(message.content).toEqual([]);
+  });
+
+  it('repairs known literal and escaped null corruption in arguments', () => {
+    const accumulator = new ChunkAccumulator();
+    accumulator.accept({
+      toolCallDeltas: [
+        {
+          index: 0,
+          id: 'c1',
+          name: 'search',
+          argumentsDelta: '{"query":"safe\u0000 escaped\\u0000 text"}',
+        },
+      ],
+    });
+
+    const { message } = accumulator.finalize();
+    expect(message.content[0]).toMatchObject({
+      input: { query: 'safe escaped text' },
+    });
   });
 
   it('assembles thinking with id and an accumulated signature', () => {

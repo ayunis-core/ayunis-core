@@ -4,6 +4,7 @@ import type {
   ThinkingContent,
   ToolUseContent,
 } from '../contracts/message';
+import type { ToolCallSnapshot } from '../contracts/event';
 import type { FinishReason, ProviderChunk, Usage } from '../contracts/provider';
 
 interface AccumulatingToolCall {
@@ -17,6 +18,12 @@ export interface ModelCallResult {
   message: AssistantMessage;
   usage: Usage;
   finishReason: FinishReason;
+  invalidToolCallSnapshots: ToolCallSnapshot[];
+}
+
+interface FinalizedToolCalls {
+  contents: ToolUseContent[];
+  invalidSnapshots: ToolCallSnapshot[];
 }
 
 /** Assembles streamed ProviderChunks into a complete assistant message. */
@@ -30,11 +37,12 @@ export class ChunkAccumulator {
   private usage: Usage = {};
   private finishReason: FinishReason = null;
 
-  accept(chunk: ProviderChunk): void {
+  accept(chunk: ProviderChunk): ToolCallSnapshot[] {
     this.acceptThinking(chunk);
     this.acceptText(chunk);
-    this.acceptToolCalls(chunk);
+    const toolCallSnapshots = this.acceptToolCalls(chunk);
     this.acceptMeta(chunk);
+    return toolCallSnapshots;
   }
 
   private acceptThinking(chunk: ProviderChunk): void {
@@ -58,7 +66,8 @@ export class ChunkAccumulator {
     }
   }
 
-  private acceptToolCalls(chunk: ProviderChunk): void {
+  private acceptToolCalls(chunk: ProviderChunk): ToolCallSnapshot[] {
+    const snapshots: ToolCallSnapshot[] = [];
     for (const delta of chunk.toolCallDeltas ?? []) {
       const call = this.toolCalls.get(delta.index) ?? {
         id: null,
@@ -72,7 +81,9 @@ export class ChunkAccumulator {
         call.providerMetadata = delta.providerMetadata;
       }
       this.toolCalls.set(delta.index, call);
+      snapshots.push(this.toSnapshot(delta.index, call, 'streaming'));
     }
+    return snapshots;
   }
 
   private acceptMeta(chunk: ProviderChunk): void {
@@ -99,11 +110,13 @@ export class ChunkAccumulator {
           : {}),
       });
     }
-    content.push(...this.finalizeToolCalls());
+    const toolCalls = this.finalizeToolCalls();
+    content.push(...toolCalls.contents);
     return {
       message: { role: 'assistant', content },
       usage: this.usage,
       finishReason: this.finishReason,
+      invalidToolCallSnapshots: toolCalls.invalidSnapshots,
     };
   }
 
@@ -119,24 +132,60 @@ export class ChunkAccumulator {
     };
   }
 
-  private finalizeToolCalls(): ToolUseContent[] {
+  private finalizeToolCalls(): FinalizedToolCalls {
     const entries = [...this.toolCalls.entries()].sort((a, b) => a[0] - b[0]);
-    return entries.map(([index, call]) => ({
-      type: 'tool_use',
-      id: call.id ?? `call_${index}`,
-      name: call.name ?? '',
-      input: safeParseJsonObject(call.argumentsJson),
+    const contents: ToolUseContent[] = [];
+    const invalidSnapshots: ToolCallSnapshot[] = [];
+    for (const [index, call] of entries) {
+      const input = parseJsonObject(call.argumentsJson);
+      if (!isNonEmpty(call.id) || !isNonEmpty(call.name) || input === null) {
+        invalidSnapshots.push(this.toSnapshot(index, call, 'invalid', input));
+        continue;
+      }
+      contents.push({
+        type: 'tool_use',
+        id: call.id,
+        name: call.name,
+        input,
+        ...(call.providerMetadata
+          ? { providerMetadata: call.providerMetadata }
+          : {}),
+      });
+    }
+    return { contents, invalidSnapshots };
+  }
+
+  private toSnapshot(
+    index: number,
+    call: AccumulatingToolCall,
+    status: ToolCallSnapshot['status'],
+    input: Record<string, unknown> | null = parseJsonObject(call.argumentsJson),
+  ): ToolCallSnapshot {
+    return {
+      index,
+      id: call.id,
+      name: call.name,
+      argumentsJson: call.argumentsJson,
+      input,
       ...(call.providerMetadata
         ? { providerMetadata: call.providerMetadata }
         : {}),
-    }));
+      status,
+    };
   }
 }
 
-const safeParseJsonObject = (json: string): Record<string, unknown> => {
+const isNonEmpty = (value: string | null): value is string =>
+  value !== null && value.trim().length > 0;
+
+const parseJsonObject = (json: string): Record<string, unknown> | null => {
   if (!json) {
     return {};
   }
+  return tryParseJsonObject(json) ?? tryParseJsonObject(sanitizeJson(json));
+};
+
+const tryParseJsonObject = (json: string): Record<string, unknown> | null => {
   try {
     const parsed: unknown = JSON.parse(json);
     if (
@@ -146,8 +195,31 @@ const safeParseJsonObject = (json: string): Record<string, unknown> => {
     ) {
       return parsed as Record<string, unknown>;
     }
-    return {};
+    return null;
   } catch {
-    return {};
+    return null;
   }
 };
+
+const sanitizeJson = (json: string): string => {
+  let current = json;
+  let sanitized = sanitizeJsonOnce(current);
+  while (sanitized !== current) {
+    current = sanitized;
+    sanitized = sanitizeJsonOnce(current);
+  }
+  return sanitized;
+};
+
+const sanitizeJsonOnce = (json: string): string =>
+  json
+    .replace(/\\u000[\s"'}),\].]/g, '\\u0000')
+    .replace(/\\u00[\s"'}),\].]/g, '\\u0000')
+    .replace(/\\u0[\s"'}),\].]/g, '\\u0000')
+    .replace(/\\u[\s"'}),\].]/g, '\\u0000')
+    .replace(/\\u000$/, '')
+    .replace(/\\u00$/, '')
+    .replace(/\\u0$/, '')
+    .replace(/\\u$/, '')
+    .replace(/\\u0000/g, '')
+    .replaceAll(String.fromCharCode(0), '');

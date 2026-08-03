@@ -1,4 +1,4 @@
-import type { AssistantMessage, Message } from './message';
+import type { AssistantMessage, Message, ProviderMetadata } from './message';
 import type { Usage } from './provider';
 
 /**
@@ -27,10 +27,21 @@ export interface ToolCallSummary {
   input: Record<string, unknown>;
 }
 
+export interface ToolCallSnapshot {
+  index: number;
+  id: string | null;
+  name: string | null;
+  argumentsJson: string;
+  input: Record<string, unknown> | null;
+  providerMetadata?: ProviderMetadata;
+  status: 'streaming' | 'invalid';
+}
+
 export type RunEventPayload =
   | { type: 'run_start'; maxIterations: number }
   | { type: 'text_delta'; delta: string }
   | { type: 'thinking_delta'; delta: string }
+  | { type: 'tool_call_snapshot'; toolCall: ToolCallSnapshot }
   | { type: 'tool_call'; toolCall: ToolCallSummary }
   | { type: 'assistant_message'; message: AssistantMessage; usage?: Usage }
   | {

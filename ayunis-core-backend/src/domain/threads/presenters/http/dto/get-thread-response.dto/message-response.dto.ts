@@ -49,6 +49,21 @@ export class ToolUseIntegrationDto {
   logoUrl: string | null;
 }
 
+export class ToolUseStreamDto {
+  @ApiProperty({
+    description: 'Transient lifecycle state of a streamed tool call',
+    enum: ['streaming', 'invalid'],
+    example: 'streaming',
+  })
+  status: 'streaming' | 'invalid';
+
+  @ApiProperty({
+    description: 'Accumulated raw JSON arguments received from the model',
+    example: '{"location":"New York"}',
+  })
+  argumentsJson: string;
+}
+
 export class ToolUseMessageContentResponseDto extends MessageContentResponseDto {
   @ApiProperty({
     description: 'Unique identifier for the tool call',
@@ -74,6 +89,13 @@ export class ToolUseMessageContentResponseDto extends MessageContentResponseDto 
     type: ToolUseIntegrationDto,
   })
   integration?: ToolUseIntegrationDto;
+
+  @ApiPropertyOptional({
+    description:
+      'Presentation-only stream state; absent from finalized valid tool calls',
+    type: ToolUseStreamDto,
+  })
+  stream?: ToolUseStreamDto;
 }
 
 export class ToolResultMessageContentResponseDto extends MessageContentResponseDto {

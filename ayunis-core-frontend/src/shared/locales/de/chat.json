@@ -42,6 +42,8 @@
     "timeline": {
       "working": "Arbeite…",
       "thoughtProcess": "Gedankengang",
+      "preparingToolCall": "Werkzeugaufruf wird vorbereitet…",
+      "invalidToolCall": "Ungültiger Werkzeugaufruf",
       "summary_one": "{{count}} Schritt",
       "summary_other": "{{count}} Schritte",
       "errorStep": "Abgebrochen",

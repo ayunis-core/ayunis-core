@@ -209,6 +209,7 @@ export class MessageDtoMapper {
       name: content.name,
       params: content.params,
       ...(content.integration && { integration: content.integration }),
+      ...(content.stream && { stream: content.stream }),
     };
   }
 
