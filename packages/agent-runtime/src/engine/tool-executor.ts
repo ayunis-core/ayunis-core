@@ -1,4 +1,5 @@
 import type { RunEventPayload, ToolCallSummary } from '../contracts/event';
+import { AgentRuntimeError } from '../contracts/errors';
 import type { ToolResultContent, ToolUseContent } from '../contracts/message';
 import type {
   Tool,
@@ -14,6 +15,12 @@ export const MAX_TOOL_RESULT_LENGTH = 20_000;
 interface ToolOutcome {
   result: string;
   isError: boolean;
+  fatalError?: AgentRuntimeError;
+}
+
+interface ToolPhaseOutcome {
+  results: ToolResultContent[];
+  fatalError?: AgentRuntimeError;
 }
 
 /**
@@ -30,8 +37,9 @@ export async function* executeToolCalls(
   state: RunState,
   iteration: number,
   calls: readonly ToolUseContent[],
-): AsyncGenerator<RunEventPayload, ToolResultContent[]> {
+): AsyncGenerator<RunEventPayload, ToolPhaseOutcome> {
   const results: ToolResultContent[] = [];
+  let fatalError: AgentRuntimeError | undefined;
   for (const [callIndex, call] of calls.entries()) {
     const requested: ToolCallSummary = {
       id: call.id,
@@ -40,7 +48,7 @@ export async function* executeToolCalls(
     };
     let toolCall = requested;
     let outcome: ToolOutcome;
-    if (isAborted(state)) {
+    if (fatalError || isAborted(state)) {
       outcome = abortedOutcome();
     } else {
       toolCall = await state.hookRunner.beforeToolCall({
@@ -53,6 +61,7 @@ export async function* executeToolCalls(
         ? abortedOutcome()
         : await runTool(state, findTool(state, toolCall.name), toolCall);
     }
+    fatalError ??= outcome.fatalError;
     await state.hookRunner.afterToolCall({
       iteration,
       toolCall,
@@ -65,7 +74,7 @@ export async function* executeToolCalls(
     results.push(result);
     yield result;
   }
-  return results;
+  return { results, ...(fatalError ? { fatalError } : {}) };
 }
 
 const buildToolResult = (
@@ -112,9 +121,7 @@ const runTool = async (
     );
     return normalizeToolOutput(value);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Tool execution failed';
-    return { result: message, isError: true };
+    return failedOutcome(error);
   }
 };
 
@@ -123,6 +130,15 @@ const normalizeToolOutput = (output: ToolExecutionOutput): ToolOutcome => {
     return { result: clampResult(output), isError: false };
   }
   return { result: clampResult(output.result), isError: output.isError };
+};
+
+const failedOutcome = (error: unknown): ToolOutcome => {
+  if (error instanceof AgentRuntimeError) {
+    return { result: error.message, isError: true, fatalError: error };
+  }
+  const message =
+    error instanceof Error ? error.message : 'Tool execution failed';
+  return { result: message, isError: true };
 };
 
 const buildToolContext = (

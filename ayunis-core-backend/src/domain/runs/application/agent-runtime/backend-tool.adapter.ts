@@ -4,6 +4,7 @@ import type {
   ToolExecutionContext as RuntimeToolContext,
   ToolExecutionResult as RuntimeToolResult,
 } from '@ayunis/agent-runtime';
+import { AgentRuntimeError } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
@@ -15,6 +16,9 @@ import {
 } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { THREAD_PII_MASKS_EVENT } from './masks-event';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -35,13 +39,15 @@ interface ToolExecutionOutcome {
  *   surfaces the call — the client renders it and continues with a tool-result
  *   input (handled by the orchestrator).
  *
- * PII redaction of tool output is applied by the anonymization hook, not here.
+ * In anonymous threads, PII-returning tool output is redacted at production and
+ * the mask dictionary streamed via the run's `emit`, matching the legacy loop.
  */
 @Injectable()
 export class BackendToolAdapter {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
   ) {}
 
   toRuntimeTools(tools: BackendTool[]): RuntimeTool[] {
@@ -78,15 +84,42 @@ export class BackendToolAdapter {
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
     };
     const outcome = await this.runTool(tool, input, context);
-    const result =
+    let result =
       outcome.result.length > MAX_TOOL_RESULT_LENGTH
         ? truncate(outcome.result)
         : outcome.result;
+    if (context.isAnonymous && tool.returnsPii) {
+      result = await this.redact(result, context, ctx);
+    }
     return {
       result:
         capabilities.isDisplayable && outcome.succeeded ? DISPLAY_ACK : result,
       isError: !outcome.succeeded,
     };
+  }
+
+  private async redact(
+    result: string,
+    context: { orgId: UUID; threadId: UUID },
+    ctx: RuntimeToolContext,
+  ): Promise<string> {
+    const anonymized = await this.anonymizeTextForThreadUseCase
+      .execute(
+        new AnonymizeTextForThreadCommand(
+          result,
+          context.orgId,
+          context.threadId,
+        ),
+      )
+      .catch((error: unknown) => {
+        throw new AgentRuntimeError(
+          'ANONYMIZATION_UNAVAILABLE',
+          'Anonymization is currently unavailable',
+          { cause: error },
+        );
+      });
+    ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: anonymized.masks });
+    return anonymized.anonymizedText;
   }
 
   private async runTool(

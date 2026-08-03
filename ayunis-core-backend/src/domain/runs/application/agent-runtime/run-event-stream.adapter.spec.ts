@@ -9,6 +9,7 @@ import {
   type RunStreamItem,
 } from '../../domain/run-pii-masks-update.entity';
 import {
+  RunAnonymizationUnavailableError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
 } from '../runs.errors';
@@ -290,5 +291,20 @@ describe('adaptRunEventsToStream', () => {
         ]),
       ),
     ).rejects.toBeInstanceOf(RunExecutionFailedError);
+  });
+
+  it('maps anonymization failures to the privacy-safe run error', async () => {
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'ANONYMIZATION_UNAVAILABLE',
+            message: 'Anonymization is unavailable',
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(RunAnonymizationUnavailableError);
   });
 });
