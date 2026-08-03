@@ -118,12 +118,20 @@ async function* stampedLoop(
   stamp: Stamper,
 ): AsyncGenerator<RunEvent, LoopCompletion> {
   const generator = executeLoop(state);
-  for (;;) {
-    const next = await generator.next();
-    if (next.done) {
-      return next.value;
+  let completed = false;
+  try {
+    for (;;) {
+      const next = await generator.next();
+      if (next.done) {
+        completed = true;
+        return next.value;
+      }
+      yield stamp(next.value);
     }
-    yield stamp(next.value);
+  } finally {
+    if (!completed) {
+      await generator.return({ status: 'aborted' });
+    }
   }
 }
 

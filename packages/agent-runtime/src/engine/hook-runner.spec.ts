@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AgentRuntimeError } from '../contracts/errors';
 import type { Hook } from '../contracts/hook';
+import type { ModelProvider } from '../contracts/provider';
 import {
   MockProvider,
   textTurn,
@@ -10,7 +11,7 @@ import {
 import { baseInput, collectEvents, echoTool, eventTypes } from './test-helpers';
 
 describe('hook lifecycle', () => {
-  it('fires all six phases in order across a tool-call run', async () => {
+  it('fires the standard phases in order across a tool-call run', async () => {
     const phases: string[] = [];
     const recorder: Hook = {
       name: 'recorder',
@@ -283,5 +284,142 @@ describe('hook lifecycle', () => {
     }
 
     expect(statuses).toEqual(['aborted']);
+  });
+
+  it('exposes partial text and thinking when a model call fails', async () => {
+    const interruptions: unknown[] = [];
+    const observer: Hook = {
+      name: 'observer',
+      modelCallInterrupted: (ctx) => {
+        interruptions.push({
+          iteration: ctx.iteration,
+          message: ctx.message,
+          reason: ctx.reason,
+        });
+      },
+    };
+    const model: ModelProvider = {
+      name: 'failing',
+      async *stream() {
+        yield {
+          thinkingDelta: 'Working',
+          textDelta: 'Partial answer',
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'call-1',
+              name: 'echo',
+              argumentsDelta: '{"value":',
+            },
+          ],
+        };
+        throw new Error('provider disconnected');
+      },
+    };
+
+    const events = await collectEvents(baseInput(model, { hooks: [observer] }));
+
+    expect(interruptions).toEqual([
+      {
+        iteration: 0,
+        reason: 'error',
+        message: {
+          role: 'assistant',
+          content: [
+            {
+              type: 'thinking',
+              thinking: 'Working',
+              id: null,
+              signature: null,
+            },
+            { type: 'text', text: 'Partial answer' },
+          ],
+        },
+      },
+    ]);
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_FAILED',
+    });
+  });
+
+  it('preserves a provider failure when an interruption hook also fails', async () => {
+    const brokenPersistence: Hook = {
+      name: 'persistence',
+      modelCallInterrupted: () => {
+        throw new Error('database unavailable');
+      },
+    };
+    const model: ModelProvider = {
+      name: 'classified-failure',
+      async *stream() {
+        yield { textDelta: 'Partial answer' };
+        throw new AgentRuntimeError(
+          'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+          'Provider anthropic request timed out',
+        );
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(model, { hooks: [brokenPersistence] }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+    });
+  });
+
+  it('preserves an aborted outcome when an interruption hook fails', async () => {
+    const controller = new AbortController();
+    const brokenPersistence: Hook = {
+      name: 'persistence',
+      modelCallInterrupted: () => {
+        throw new Error('database unavailable');
+      },
+    };
+    const model: ModelProvider = {
+      name: 'cancelled',
+      async *stream() {
+        yield { textDelta: 'Partial answer' };
+        controller.abort();
+        throw new DOMException('The operation was aborted', 'AbortError');
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [brokenPersistence],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'aborted' });
+  });
+
+  it('exposes partial content before runEnd when the consumer disconnects', async () => {
+    const phases: string[] = [];
+    const observer: Hook = {
+      name: 'observer',
+      modelCallInterrupted: (ctx) => {
+        phases.push(`interrupted:${ctx.reason}:${ctx.message.content.length}`);
+      },
+      runEnd: (ctx) => {
+        phases.push(`runEnd:${ctx.status}`);
+      },
+    };
+    const model = new MockProvider([textTurn('Hello there')]);
+    const { run } = await import('./run');
+
+    for await (const event of run(baseInput(model, { hooks: [observer] }))) {
+      if (event.type === 'text_delta') {
+        break;
+      }
+    }
+
+    expect(phases).toEqual([
+      'interrupted:consumer_abandoned:1',
+      'runEnd:aborted',
+    ]);
   });
 });

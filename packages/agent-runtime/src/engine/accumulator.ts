@@ -96,6 +96,18 @@ export class ChunkAccumulator {
   }
 
   finalize(): ModelCallResult {
+    const message = this.partialMessage();
+    const toolCalls = this.finalizeToolCalls();
+    message.content.push(...toolCalls.contents);
+    return {
+      message,
+      usage: this.usage,
+      finishReason: this.finishReason,
+      invalidToolCallSnapshots: toolCalls.invalidSnapshots,
+    };
+  }
+
+  partialMessage(): AssistantMessage {
     const content: AssistantMessage['content'] = [];
     const thinking = this.finalizeThinking();
     if (thinking) {
@@ -110,14 +122,7 @@ export class ChunkAccumulator {
           : {}),
       });
     }
-    const toolCalls = this.finalizeToolCalls();
-    content.push(...toolCalls.contents);
-    return {
-      message: { role: 'assistant', content },
-      usage: this.usage,
-      finishReason: this.finishReason,
-      invalidToolCallSnapshots: toolCalls.invalidSnapshots,
-    };
+    return { role: 'assistant', content };
   }
 
   private finalizeThinking(): ThinkingContent | null {

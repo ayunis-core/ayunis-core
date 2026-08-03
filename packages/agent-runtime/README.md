@@ -23,11 +23,11 @@ Design principles:
 - **Bare core.** The runtime owns the loop, the `ModelProvider` port (with
   shipped Anthropic + mock implementations), and the `Tool`/`Hook`/
   `RunContext`/`RunEvent` contracts — nothing else.
-- **Hooks are the single extension mechanism.** Six lifecycle phases
-  (`runStart`, `beforeModelCall`, `afterModelCall`, `beforeToolCall`,
-  `afterToolCall`, `runEnd`). Tools are pure signals; only hooks inject
-  tools/instructions, transform messages, persist state, or emit custom
-  events.
+- **Hooks are the single extension mechanism.** Seven lifecycle phases
+  (`runStart`, `beforeModelCall`, `afterModelCall`, `modelCallInterrupted`,
+  `beforeToolCall`, `afterToolCall`, `runEnd`). Tools are pure signals; only
+  hooks inject tools/instructions, transform messages, persist state, or emit
+  custom events.
 - **Host concerns stay host-side.** Model selection + credentials,
   agent/skill definitions, persistence, and multi-tenancy live in the host
   (via hooks and the opaque `RunContext`), not in the runtime.
@@ -54,14 +54,15 @@ Core consumes this package as one host among others.
 
 ## Hook phases
 
-| Phase | Typical use |
-| --- | --- |
-| `runStart` | guards (quota), seeding instructions/tools, persisting input |
-| `beforeModelCall` | message transforms (anonymization), trimming |
-| `afterModelCall` | usage collection, persisting the assistant message |
-| `beforeToolCall` | approval gates, rewriting a tool call |
-| `afterToolCall` | injecting tools/instructions, persisting tool results |
-| `runEnd` | finalization, flushing |
+| Phase                  | Typical use                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| `runStart`             | guards (quota), seeding instructions/tools, persisting input   |
+| `beforeModelCall`      | message transforms (anonymization), trimming                   |
+| `afterModelCall`       | usage collection, persisting the assistant message             |
+| `modelCallInterrupted` | persisting partial text/thinking after failure or cancellation |
+| `beforeToolCall`       | approval gates, rewriting a tool call                          |
+| `afterToolCall`        | injecting tools/instructions, persisting tool results          |
+| `runEnd`               | finalization, flushing                                         |
 
 `afterToolCall` receives `isLastToolCall`, allowing persistence hooks to flush
 the complete grouped result before the runtime exposes its message event.

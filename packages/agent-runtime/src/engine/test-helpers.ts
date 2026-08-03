@@ -2,7 +2,7 @@ import type { RunEvent } from '../contracts/event';
 import type { Message } from '../contracts/message';
 import type { RunInput } from '../contracts/run-input';
 import type { Tool } from '../contracts/tool';
-import type { MockProvider } from '../providers/mock/mock-provider';
+import type { ModelProvider } from '../contracts/provider';
 import { run } from './run';
 
 export const userMessage = (text: string): Message => ({
@@ -34,7 +34,7 @@ export const eventTypes = (events: readonly RunEvent[]): string[] => {
 };
 
 export const baseInput = (
-  model: MockProvider,
+  model: ModelProvider,
   overrides: Partial<RunInput> = {},
 ): RunInput => {
   return {

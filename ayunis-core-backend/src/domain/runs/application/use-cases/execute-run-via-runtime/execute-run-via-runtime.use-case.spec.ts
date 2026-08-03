@@ -1,5 +1,8 @@
 import { MockProvider, textTurn, toolCallTurn } from '@ayunis/agent-runtime';
-import type { Tool as RuntimeTool } from '@ayunis/agent-runtime';
+import type {
+  ProviderRequest,
+  Tool as RuntimeTool,
+} from '@ayunis/agent-runtime';
 import type { ProviderChunk } from '@ayunis/inference';
 import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
@@ -85,6 +88,7 @@ interface HarnessOptions {
   lastMessage?: Message;
   toolResultCollector?: ToolResultCollectorService;
   providerRejects?: boolean;
+  providerStream?: (request: ProviderRequest) => AsyncIterable<ProviderChunk>;
   tokensPerMessage?: number;
 }
 
@@ -216,6 +220,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     completeTurnSelector,
   );
   const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
+  if (overrides.providerStream) {
+    provider.stream = overrides.providerStream;
+  }
   let providerSignal: AbortSignal | undefined;
   const streamProvider = provider.stream.bind(provider);
   provider.stream = (providerRequest) => {
@@ -447,6 +454,56 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
 
     await drain(await useCase.execute(command));
 
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+  });
+
+  it('persists partial text before cleanup when the provider fails', async () => {
+    const order: string[] = [];
+    const { useCase, save, cleanup } = buildHarness({
+      providerStream: async function* () {
+        yield { textDelta: 'Partial answer' };
+        throw new Error('provider disconnected');
+      },
+    });
+    save.mockImplementation(async (saveCommand) => {
+      order.push('save');
+      return saveCommand.message;
+    });
+    cleanup.mockImplementation(async () => {
+      order.push('cleanup');
+    });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].message.content).toMatchObject([
+      { text: 'Partial answer' },
+    ]);
+    expect(cleanup).toHaveBeenCalledWith(threadId);
+    expect(order).toEqual(['save', 'cleanup']);
+  });
+
+  it('persists partial text when client cancellation interrupts the model', async () => {
+    const controller = new AbortController();
+    const { useCase, save, cleanup } = buildHarness({
+      providerStream: async function* () {
+        controller.abort();
+        yield { textDelta: 'Partial answer' };
+        yield { textDelta: 'not retained' };
+      },
+    });
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunUserInput('Hi there'),
+      signal: controller.signal,
+    });
+
+    await drain(await useCase.execute(command));
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].message.content).toMatchObject([
+      { text: 'Partial answer' },
+    ]);
     expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 
