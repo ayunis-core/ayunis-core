@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { AgentRuntimeError } from '../contracts/errors';
 import type { Hook } from '../contracts/hook';
 import {
   MockProvider,
@@ -143,6 +144,26 @@ describe('hook lifecycle', () => {
       details: { hookName: 'broken', phase: 'beforeModelCall' },
     });
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
+  });
+
+  it('preserves an intentional runtime error thrown by a hook', async () => {
+    const guard: Hook = {
+      name: 'context-budget',
+      beforeModelCall: () => {
+        throw new AgentRuntimeError(
+          'CONTEXT_BUDGET_EXCEEDED',
+          'The latest turn exceeds the context budget',
+        );
+      },
+    };
+    const model = new MockProvider([textTurn('never')]);
+
+    const events = await collectEvents(baseInput(model, { hooks: [guard] }));
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'CONTEXT_BUDGET_EXCEEDED',
+    });
+    expect(model.requests).toHaveLength(0);
   });
 
   it('streams hook emits as custom events in order', async () => {

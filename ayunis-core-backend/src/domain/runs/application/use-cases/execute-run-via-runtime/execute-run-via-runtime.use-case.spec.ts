@@ -22,6 +22,7 @@ import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-ca
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
+import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -37,6 +38,7 @@ import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.
 import { ToolUsedEvent } from '../../events/tool-used.event';
 import { RunMaxIterationsReachedError } from '../../runs.errors';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
@@ -46,6 +48,7 @@ import {
   RunToolResultInput,
 } from '../../../domain/run-input.entity';
 import { ExecuteRunCommand } from '../execute-run/execute-run.command';
+import { RunContextBudgetExceededError } from '../../runs.errors';
 import { ExecuteRunViaRuntimeUseCase } from './execute-run-via-runtime.use-case';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -66,6 +69,7 @@ interface Harness {
   activateOnThread: jest.Mock;
   createUser: jest.Mock;
   provider: MockProvider;
+  countTokens: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -77,6 +81,8 @@ interface HarnessOptions {
   rebuiltBackendTools?: BackendTool[];
   lastMessage?: Message;
   toolResultCollector?: ToolResultCollectorService;
+  providerRejects?: boolean;
+  tokensPerMessage?: number;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -197,9 +203,17 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
   } as unknown as MapMessagesToInferenceUseCase;
+  const countTokens = jest
+    .fn()
+    .mockReturnValue(overrides.tokensPerMessage ?? 1);
+  const contextBudgetHookFactory = new ContextBudgetHookFactory({
+    execute: countTokens,
+  } as unknown as CountTokensUseCase);
   const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
   const resolveModelProviderUseCase = {
-    execute: jest.fn().mockResolvedValue(provider),
+    execute: overrides.providerRejects
+      ? jest.fn().mockRejectedValue(new Error('provider down'))
+      : jest.fn().mockResolvedValue(provider),
   } as unknown as ResolveModelProviderUseCase;
   const cleanup = jest.fn().mockResolvedValue(undefined);
   const messageCleanupService = {
@@ -251,6 +265,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     eventEmitter,
     toolResultCollector as ToolResultCollectorService,
     toolUsageHookFactory,
+    contextBudgetHookFactory,
   );
 
   return {
@@ -266,6 +281,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     activateOnThread,
     createUser,
     provider,
+    countTokens,
   };
 }
 
@@ -698,6 +714,43 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       ToolUsedEvent.EVENT_NAME,
       new ToolUsedEvent(userId, orgId, 'internet_search'),
     );
+  });
+
+  it('re-applies the context budget before every inference iteration', async () => {
+    const echo = {
+      name: 'echo',
+      description: 'echo',
+      parameters: { type: 'object' },
+      execute: jest.fn().mockResolvedValue('echoed'),
+    };
+    const { useCase, countTokens, provider } = buildHarness({
+      runtimeTools: [echo],
+      turns: [
+        toolCallTurn({ id: 'echo-1', name: 'echo', input: { value: 'hi' } }),
+        textTurn('Done'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(2);
+    expect(countTokens).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not call the provider when the latest turn exceeds the budget', async () => {
+    const { useCase, provider } = buildHarness({ tokensPerMessage: 80_001 });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toBeInstanceOf(RunContextBudgetExceededError);
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('cleans up trailing non-assistant messages when the run fails', async () => {
+    const { useCase, cleanup } = buildHarness({ providerRejects: true });
+
+    await expect(drain(await useCase.execute(userCommand()))).rejects.toThrow();
+    expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 
   it('rejects a tool-result input with no pending tool call', async () => {
