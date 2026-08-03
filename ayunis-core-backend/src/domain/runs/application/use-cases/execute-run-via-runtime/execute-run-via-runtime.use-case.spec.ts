@@ -848,6 +848,77 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(executeTool).toHaveBeenCalledTimes(1);
   });
 
+  it('does not execute stale pending tools when accepting a new user message', async () => {
+    const displayTool = { name: 'bar_chart' } as unknown as BackendTool;
+    const searchTool = { name: 'internet_search' } as unknown as BackendTool;
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+        new ToolUseMessageContent('search-1', 'internet_search', {
+          query: 'Berlin budget 2026',
+        }),
+      ],
+    } as unknown as Message;
+    const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
+    const collector = new ToolResultCollectorService(
+      { execute: executeTool } as never,
+      {
+        execute: jest.fn(({ tool }: { tool: BackendTool }) => ({
+          isDisplayable: tool.name === 'bar_chart',
+          isExecutable: tool.name === 'internet_search',
+        })),
+      } as never,
+      { execute: jest.fn() } as never,
+      { get: jest.fn().mockReturnValue(userId) } as never,
+      { emitAsync: jest.fn().mockResolvedValue([]) } as never,
+    );
+    const { useCase } = buildHarness({
+      backendTools: [displayTool, searchTool],
+      lastMessage,
+      toolResultCollector: collector,
+    });
+
+    const items = await drain(
+      await useCase.execute(userCommand(new RunUserInput('What comes next?'))),
+    );
+
+    expect(executeTool).not.toHaveBeenCalled();
+    expect(items[0]).toBeInstanceOf(UserMessage);
+  });
+
+  it('persists a display acknowledgement in the originating run', async () => {
+    const displayTool = {
+      name: 'bar_chart',
+      description: 'Display a bar chart',
+      parameters: { type: 'object' },
+    };
+    const { useCase, provider } = buildHarness({
+      backendTools: [displayTool as unknown as BackendTool],
+      runtimeTools: [displayTool],
+      turns: [
+        toolCallTurn({
+          id: 'chart-1',
+          name: 'bar_chart',
+          input: { title: 'Budget' },
+        }),
+      ],
+    });
+
+    const items = await drain(await useCase.execute(userCommand()));
+
+    const toolResult = items.find(
+      (item): item is ToolResultMessage => item instanceof ToolResultMessage,
+    );
+    expect(toolResult?.content).toEqual([
+      expect.objectContaining({
+        toolId: 'chart-1',
+        toolName: 'bar_chart',
+        result: 'Tool has been displayed successfully',
+      }),
+    ]);
+    expect(provider.requests).toHaveLength(1);
+  });
+
   it('emits tool usage for an executable tool invocation', async () => {
     const executableTool = {
       name: 'internet_search',

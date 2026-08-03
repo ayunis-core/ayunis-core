@@ -9,19 +9,11 @@ export const getToolUseContents = (
   );
 };
 
-/**
- * The loop exits when the model requests no tool calls, or when any
- * requested tool is display-only (no `execute`) — the call is surfaced to
- * the consumer instead of being executed.
- */
-export const shouldExitLoop = (
+export const hasDisplayOnlyToolCall = (
   message: AssistantMessage,
   tools: readonly Tool[],
 ): boolean => {
   const calls = getToolUseContents(message);
-  if (calls.length === 0) {
-    return true;
-  }
   return calls.some((call) => {
     const tool = tools.find((candidate) => candidate.name === call.name);
     return tool !== undefined && tool.execute === undefined;

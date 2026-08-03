@@ -34,8 +34,8 @@ export type ToolExecutionOutput = string | ToolExecutionResult;
  * A concrete, executable tool. Tools are pure signals: they never inject
  * instructions or tools — only hooks do.
  *
- * A tool without `execute` is display-only: the model calling it ends the
- * loop (the call is surfaced to the consumer instead of being executed).
+ * A tool without `execute` is display-only: it receives a synthetic display
+ * acknowledgement and ends the loop after the current tool phase.
  */
 export interface Tool extends ToolSchema {
   execute?(

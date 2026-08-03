@@ -173,7 +173,7 @@ describe('the agent loop', () => {
     });
   });
 
-  it('exits without executing when a display-only tool is called', async () => {
+  it('acknowledges a display-only tool before exiting', async () => {
     const displayOnly = echoTool({ name: 'show_chart', execute: undefined });
     const model = new MockProvider([
       toolCallTurn({ id: 'call-1', name: 'show_chart', input: { value: 'x' } }),
@@ -182,11 +182,66 @@ describe('the agent loop', () => {
       baseInput(model, { tools: [displayOnly] }),
     );
 
-    expect(eventTypes(events)).not.toContain('tool_result');
+    expect(events.find((event) => event.type === 'tool_result')).toMatchObject({
+      toolCallId: 'call-1',
+      result: 'Tool has been displayed successfully',
+      isError: false,
+    });
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'completed',
     });
+    expect(model.requests).toHaveLength(1);
+  });
+
+  it('settles executable siblings in the originating display-only turn', async () => {
+    const executeLookup = vi.fn(() => 'Berlin budget results');
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'chart-1',
+              name: 'show_chart',
+              argumentsDelta: '{"value":"budget"}',
+            },
+            {
+              index: 1,
+              id: 'lookup-1',
+              name: 'budget_lookup',
+              argumentsDelta: '{"value":"Berlin"}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({ name: 'show_chart', execute: undefined }),
+          echoTool({ name: 'budget_lookup', execute: executeLookup }),
+        ],
+      }),
+    );
+
+    expect(events.filter((event) => event.type === 'tool_result')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          toolCallId: 'chart-1',
+          result: 'Tool has been displayed successfully',
+          isError: false,
+        }),
+        expect.objectContaining({
+          toolCallId: 'lookup-1',
+          result: 'Berlin budget results',
+          isError: false,
+        }),
+      ]),
+    );
+    expect(executeLookup).toHaveBeenCalledOnce();
     expect(model.requests).toHaveLength(1);
   });
 
