@@ -32,7 +32,11 @@ export function ProjectMenuGroups({
               key={project.id}
               onClick={() => onSelect(project)}
             >
-              <ProjectIcon icon={project.icon} color={project.color} />
+              <ProjectIcon
+                icon={project.icon}
+                color={project.color}
+                variant="plain"
+              />
               <span className="flex-1">{project.name}</span>
               {project.id === selectedProjectId && <Check className="size-4" />}
             </DropdownMenuItem>
