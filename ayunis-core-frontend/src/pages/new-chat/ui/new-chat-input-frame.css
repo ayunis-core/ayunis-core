@@ -1,0 +1,9 @@
+.new-chat-input-frame .chat-input-shell {
+  padding: 0;
+  margin: -1px -1px 0;
+}
+
+.new-chat-input-frame .chat-input-shell,
+.new-chat-input-frame .chat-input-shell__card {
+  border-radius: 1rem;
+}

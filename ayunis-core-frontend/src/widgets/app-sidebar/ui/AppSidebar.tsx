@@ -9,6 +9,7 @@ import {
   Sparkles,
   Store,
   GraduationCap,
+  FolderOpen,
 } from 'lucide-react';
 
 import {
@@ -28,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
+import { ProjectsSidebarGroup } from './ProjectsSidebarGroup';
+import { useProjects } from '@/entities/project';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
@@ -46,6 +49,22 @@ import { useMarketplaceConfig } from '@/features/marketplace';
 import { useAcademyActive } from '@/features/academy';
 import { OnboardingCard } from './OnboardingCard';
 
+function isNavItemActive(
+  url: string,
+  pathname: string,
+  starredProjectIds: string[],
+) {
+  if (url === '/chat') {
+    return pathname === '/chat';
+  }
+  if (url === '/projects') {
+    if (pathname === '/projects') return true;
+    const projectId = /^\/projects\/([^/]+)/.exec(pathname)?.[1];
+    return projectId !== undefined && !starredProjectIds.includes(projectId);
+  }
+  return pathname.startsWith(url);
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
@@ -57,6 +76,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const marketplace = useMarketplaceConfig();
   const academyActive = useAcademyActive();
   const location = useLocation();
+  const projects = useProjects();
+  const starredProjectIds = projects.filter((p) => p.starred).map((p) => p.id);
   useKeyboardShortcut(['j', 'Meta'], () => {
     void navigate({ to: '/chat' });
   });
@@ -86,6 +107,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ]
       : []),
+    {
+      title: 'Projekte',
+      url: '/projects',
+      icon: FolderOpen,
+    },
   ];
 
   return (
@@ -114,11 +140,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   asChild
-                  isActive={
-                    item.url === '/chat'
-                      ? location.pathname === '/chat'
-                      : location.pathname.startsWith(item.url)
-                  }
+                  isActive={isNavItemActive(
+                    item.url,
+                    location.pathname,
+                    starredProjectIds,
+                  )}
                 >
                   <Link to={item.url}>
                     <item.icon />
@@ -156,6 +182,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             )}
           </SidebarMenu>
         </SidebarGroup>
+
+        <ProjectsSidebarGroup pinnedOnly />
 
         <ChatsSidebarGroup />
       </SidebarContent>

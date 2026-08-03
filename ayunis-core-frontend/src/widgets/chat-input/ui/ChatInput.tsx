@@ -91,13 +91,12 @@ interface ChatInputProps {
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) => void;
-  /** Fired when the user clicks the cancel button while in-flight. */
   onCancel: () => void;
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
-  /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
   /** Callback when anonymous mode is toggled. If not provided, toggle is hidden. */
   onAnonymousChange?: (isAnonymous: boolean) => void;
@@ -142,6 +141,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      onSkillSelect,
       initialMessage,
     },
     ref,
@@ -412,6 +412,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                       <PlusButton
                         onFileUpload={onFileUpload}
                         onImageSelect={handleImageSelect}
+                        onSkillSelect={onSkillSelect}
+                        selectedSkillId={selectedSkillId}
                         isFileSourceDisabled={
                           !isEmbeddingModelEnabled || isSubmitting
                         }

@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -25,13 +24,19 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { PinnedSkills } from './PinnedSkills';
+import { ProjectPicker } from './ProjectPicker';
+import './new-chat-input-frame.css';
 import { PersonalizationCard } from './PersonalizationCard';
 import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
 import { useSkipPersonalization } from '../api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { useRouter } from '@tanstack/react-router';
+import { useNavigate, useRouter } from '@tanstack/react-router';
+import { addChatToProject } from '@/entities/project';
+import {
+  useAttachedProjectId,
+  setAttachedProject,
+} from '@/features/useAttachedProject';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -65,6 +70,8 @@ export default function NewChatPage({
   }, [isSystemPromptError, t]);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigate = useNavigate();
+  const attachedProjectId = useAttachedProjectId();
   const chatInputRef = useRef<ChatInputRef>(null);
 
   useEffect(() => {
@@ -167,6 +174,23 @@ export default function NewChatPage({
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
   ) {
+    if (attachedProjectId) {
+      const chat = {
+        id: crypto.randomUUID(),
+        title: message.trim().slice(0, 60) || 'Neuer Chat',
+        messages: [
+          { id: crypto.randomUUID(), role: 'user' as const, text: message },
+        ],
+      };
+      addChatToProject(attachedProjectId, chat);
+      setAttachedProject(null);
+      void navigate({
+        to: '/projects/$projectId/chats/$chatId',
+        params: { projectId: attachedProjectId, chatId: chat.id },
+      });
+      return;
+    }
+
     if (!modelId) {
       showError(t('newChat.noModelOrAgentError'));
       return;
@@ -253,64 +277,73 @@ export default function NewChatPage({
               {t('chat.inputDisclaimer')}
             </p>
 
-            <ChatInput
-              ref={chatInputRef}
-              modelId={modelId}
-              sources={sources}
-              knowledgeBases={selectedKnowledgeBases}
-              mcpIntegrations={selectedIntegrations}
-              submissionState={isCreating ? 'submitting' : 'idle'}
-              onModelChange={handleModelChange}
-              onSend={handleSend}
-              onCancel={handleCancel}
-              onFileUpload={handleFileUpload}
-              onRemoveSource={handleRemoveSource}
-              onDownloadSource={() => null}
-              onAddKnowledgeBase={(kb) => {
-                setSelectedKnowledgeBases((prev) => [...prev, kb]);
-              }}
-              onRemoveKnowledgeBase={(kbId) => {
-                setSelectedKnowledgeBases((prev) =>
-                  prev.filter((kb) => kb.id !== kbId),
-                );
-              }}
-              onAddIntegration={(integration) => {
-                setSelectedIntegrations((prev) => [...prev, integration]);
-              }}
-              onRemoveIntegration={(integrationId) => {
-                setSelectedIntegrations((prev) =>
-                  prev.filter(
-                    (integration) => integration.id !== integrationId,
-                  ),
-                );
-              }}
-              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-              isAnonymous={isAnonymous}
-              onAnonymousChange={setIsAnonymous}
-              isAnonymousEnforced={isAnonymousEnforced}
-              isVisionEnabled={isVisionEnabled}
-              selectedSkillId={selectedSkillId}
-              selectedSkillName={selectedSkillName}
-              onSkillRemove={handleSkillRemove}
-            />
+            <div
+              className={cn(
+                'new-chat-input-frame rounded-2xl border border-border/60 bg-background/50 backdrop-blur-md transition-colors [&_[data-slot=card]]:shadow-[0_2px_12px_rgba(0,0,0,0.06)]',
+                isCreating &&
+                  'border-transparent bg-transparent backdrop-blur-none',
+              )}
+            >
+              <ChatInput
+                ref={chatInputRef}
+                modelId={modelId}
+                sources={sources}
+                knowledgeBases={selectedKnowledgeBases}
+                mcpIntegrations={selectedIntegrations}
+                submissionState={isCreating ? 'submitting' : 'idle'}
+                onModelChange={handleModelChange}
+                onSend={handleSend}
+                onCancel={handleCancel}
+                onFileUpload={handleFileUpload}
+                onRemoveSource={handleRemoveSource}
+                onDownloadSource={() => null}
+                onAddKnowledgeBase={(kb) => {
+                  setSelectedKnowledgeBases((prev) => [...prev, kb]);
+                }}
+                onRemoveKnowledgeBase={(kbId) => {
+                  setSelectedKnowledgeBases((prev) =>
+                    prev.filter((kb) => kb.id !== kbId),
+                  );
+                }}
+                onAddIntegration={(integration) => {
+                  setSelectedIntegrations((prev) => [...prev, integration]);
+                }}
+                onRemoveIntegration={(integrationId) => {
+                  setSelectedIntegrations((prev) =>
+                    prev.filter(
+                      (integration) => integration.id !== integrationId,
+                    ),
+                  );
+                }}
+                isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                isAnonymous={isAnonymous}
+                onAnonymousChange={setIsAnonymous}
+                isAnonymousEnforced={isAnonymousEnforced}
+                isVisionEnabled={isVisionEnabled}
+                selectedSkillId={selectedSkillId}
+                selectedSkillName={selectedSkillName}
+                onSkillRemove={handleSkillRemove}
+                onSkillSelect={handleSkillSelect}
+              />
+              <div
+                className={cn(
+                  'flex items-center p-1.5 transition-opacity',
+                  isCreating && 'pointer-events-none opacity-0',
+                )}
+                aria-hidden={isCreating}
+              >
+                <ProjectPicker />
+              </div>
+            </div>
           </div>
 
           <div
             className={cn(
-              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              'new-chat-dock-extras mt-2 flex flex-col overflow-hidden',
               isCreating && 'new-chat-dock-extras--collapsed',
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>

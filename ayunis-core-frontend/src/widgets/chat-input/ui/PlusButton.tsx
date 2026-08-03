@@ -15,7 +15,7 @@ import {
   TooltipContent,
 } from '@/shared/ui/shadcn/tooltip';
 import { Badge } from '@/shared/ui/shadcn/badge';
-import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
+import { Brain, Loader2, Paperclip, Plus, Sparkles } from 'lucide-react';
 import { Input } from '@/shared/ui/shadcn/input';
 import { useRef } from 'react';
 import { useKnowledgeBases } from '../api/useKnowledgeBases';
@@ -30,7 +30,11 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { useIsKnowledgeBasesEnabled } from '@/features/feature-toggles';
+import {
+  useIsKnowledgeBasesEnabled,
+  useIsSkillsEnabled,
+} from '@/features/feature-toggles';
+import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
 
 interface PlusButtonProps {
@@ -42,6 +46,8 @@ interface PlusButtonProps {
   attachedKnowledgeBaseIds?: string[];
   onIntegrationSelect?: (integration: IntegrationSummary) => void;
   attachedIntegrationIds?: string[];
+  onSkillSelect?: (skillId: string, skillName: string) => void;
+  selectedSkillId?: string;
 }
 
 export default function PlusButton({
@@ -53,11 +59,17 @@ export default function PlusButton({
   attachedKnowledgeBaseIds = [],
   onIntegrationSelect,
   attachedIntegrationIds = [],
+  onSkillSelect,
+  selectedSkillId,
 }: Readonly<PlusButtonProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const knowledgeBasesEnabled = useIsKnowledgeBasesEnabled();
+  const skillsEnabled = useIsSkillsEnabled();
+  const { data: skills } = useSkillsControllerFindAll({
+    query: { enabled: skillsEnabled && !!onSkillSelect },
+  });
   const {
     knowledgeBases,
     isLoading: isLoadingKBs,
@@ -129,6 +141,35 @@ export default function PlusButton({
               <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          {onSkillSelect && skillsEnabled && (
+            <DropdownMenuGroup>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Sparkles className="h-4 w-4" />
+                  Fähigkeit aktivieren
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent collisionPadding={12}>
+                  {(skills ?? []).length === 0 && (
+                    <DropdownMenuItem disabled>
+                      Keine Fähigkeiten vorhanden
+                    </DropdownMenuItem>
+                  )}
+                  {[...(skills ?? [])]
+                    .sort((a, b) => Number(b.isPinned) - Number(a.isPinned))
+                    .map((skill) => (
+                      <DropdownMenuItem
+                        key={skill.id}
+                        disabled={skill.id === selectedSkillId}
+                        onClick={() => onSkillSelect(skill.id, skill.name)}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        {skill.name}
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuGroup>
+          )}
           {onKnowledgeBaseSelect && knowledgeBasesEnabled && (
             <DropdownMenuGroup>
               <DropdownMenuSub>
