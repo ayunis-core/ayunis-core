@@ -60,7 +60,7 @@ export function ProjectIcon({
         className,
       )}
     >
-      <Icon />
+      <Icon className="text-current" />
     </span>
   );
 }
