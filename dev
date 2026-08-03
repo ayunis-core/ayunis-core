@@ -70,6 +70,8 @@ export GOTENBERG_HOST_PORT=$((3100 + OFFSET))
 
 BACKEND_PORT=$((3000 + OFFSET))
 FRONTEND_PORT=$((3001 + OFFSET))
+BACKEND_HEALTH_URL="http://localhost:$BACKEND_PORT/api/health"
+FRONTEND_URL="http://localhost:$FRONTEND_PORT"
 
 PROJECT_NAME="ayunis-dev-${SLOT}"
 STATE_DIR="$REPO_DIR/.dev/slot-${SLOT}"
@@ -107,8 +109,19 @@ _infisical_preflight() {
     warn ".infisical.json missing — using local .env files"
     return
   fi
+  if ! (cd "$REPO_DIR" && infisical login status --silent >/dev/null 2>&1); then
+    local domain
+    local -a login_args=()
+    domain="$(sed -n 's/.*"domain"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPO_DIR/.infisical.json" | head -n 1)"
+    [ -n "$domain" ] && login_args+=("--domain=$domain")
+    info "Infisical session expired — starting login …"
+    if ! (cd "$REPO_DIR" && infisical login "${login_args[@]}"); then
+      warn "Infisical login failed — using local .env files"
+      return
+    fi
+  fi
   if ! (cd "$REPO_DIR" && infisical export --env=dev --path=/backend --format=dotenv >/dev/null 2>&1); then
-    warn "Infisical login expired or no project access — run: infisical login  (using local .env files)"
+    warn "Infisical dev /backend is unavailable — using local .env files"
     return
   fi
   INFISICAL_OK=true
@@ -276,10 +289,14 @@ EOF
   (cd "$REPO_DIR/ayunis-core-backend" && ${BACKEND_SECRETS_PREFIX}pnpm run migration:run:dev 2>&1) | tail -3
 
   # -- 4. Backend (native) ------------------------------------------------
-  if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
+  if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
     info "Backend already running (PID $(cat "$STATE_DIR/backend.pid"))"
   else
-    _kill_port "$BACKEND_PORT" "Backend (stale)"
+    _refuse_unmanaged_listener "$STATE_DIR/backend.pid" "$BACKEND_PORT" "Backend"
+    if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
+      warn "Restarting unhealthy Backend (PID $(cat "$STATE_DIR/backend.pid")) …"
+      _kill_pid "$STATE_DIR/backend.pid" "Backend" "$BACKEND_PORT" "$BACKEND_SESSION"
+    fi
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
     _start_detached \
@@ -290,10 +307,14 @@ EOF
   fi
 
   # -- 5. Frontend (native) -----------------------------------------------
-  if _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
+  if _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
     info "Frontend already running (PID $(cat "$STATE_DIR/frontend.pid"))"
   else
-    _kill_port "$FRONTEND_PORT" "Frontend (stale)"
+    _refuse_unmanaged_listener "$STATE_DIR/frontend.pid" "$FRONTEND_PORT" "Frontend"
+    if _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
+      warn "Restarting unhealthy Frontend (PID $(cat "$STATE_DIR/frontend.pid")) …"
+      _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT" "$FRONTEND_SESSION"
+    fi
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
     _start_detached \
@@ -305,10 +326,9 @@ EOF
 
   # -- 6. Wait for backend health -----------------------------------------
   info "Waiting for backend to become healthy …"
-  local url="http://localhost:$BACKEND_PORT/api/health"
   local attempts=0
   local max_attempts=90
-  while ! curl -sf "$url" > /dev/null 2>&1; do
+  while ! _url_healthy "$BACKEND_HEALTH_URL"; do
     attempts=$((attempts + 1))
     if [ $attempts -ge $max_attempts ]; then
       echo ""
@@ -373,15 +393,19 @@ cmd_status() {
   echo ""
 
   # Backend
-  if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
+  if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
     echo "  Backend:   running  PID $(cat "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
+  elif _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
+    echo "  Backend:   unhealthy  PID $(cat "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
   else
     echo "  Backend:   stopped"
   fi
 
   # Frontend
-  if _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
+  if _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
     echo "  Frontend:  running  PID $(cat "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
+  elif _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
+    echo "  Frontend:  unhealthy  PID $(cat "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
   else
     echo "  Frontend:  stopped"
   fi
@@ -438,6 +462,58 @@ _pid_alive() {
     return 0
   fi
   [ -n "$session" ] && _tmux_session_alive "$session"
+}
+
+_url_healthy() {
+  curl --fail --silent --max-time 2 "$1" > /dev/null 2>&1
+}
+
+_process_belongs_to_tree() {
+  local process_pid="$1"
+  local root_pid="$2"
+  local parent_pid
+
+  while [[ "$process_pid" =~ ^[0-9]+$ ]] && [ "$process_pid" -gt 1 ]; do
+    [ "$process_pid" = "$root_pid" ] && return 0
+    parent_pid="$(ps -o ppid= -p "$process_pid" 2>/dev/null | tr -d '[:space:]')"
+    [ -n "$parent_pid" ] || return 1
+    process_pid="$parent_pid"
+  done
+  return 1
+}
+
+_port_owned_by_pidfile() {
+  local pidfile="$1"
+  local port="$2"
+  local root_pid listener_pid
+  [ -f "$pidfile" ] || return 1
+  root_pid="$(cat "$pidfile")"
+
+  while IFS= read -r listener_pid; do
+    _process_belongs_to_tree "$listener_pid" "$root_pid" && return 0
+  done < <(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
+  return 1
+}
+
+_refuse_unmanaged_listener() {
+  local pidfile="$1"
+  local port="$2"
+  local label="$3"
+  local listener_pids
+  listener_pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | paste -sd, - || true)"
+  [ -z "$listener_pids" ] && return 0
+  _port_owned_by_pidfile "$pidfile" "$port" && return 0
+  die "$label port $port is occupied by PID $listener_pids not managed by this checkout. Stop it or use another slot."
+}
+
+_service_healthy() {
+  local pidfile="$1"
+  local session="$2"
+  local url="$3"
+  local port="$4"
+  _pid_alive "$pidfile" "$session" \
+    && _port_owned_by_pidfile "$pidfile" "$port" \
+    && _url_healthy "$url"
 }
 
 _kill_pid() {
