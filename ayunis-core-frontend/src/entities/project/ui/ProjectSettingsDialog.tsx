@@ -153,18 +153,25 @@ export function ProjectSettingsDialog({
                 onColorChange={setColor}
               />
               {isOwner && (
-                <div className="flex items-center justify-between gap-4 rounded-lg border border-destructive/20 p-4">
-                  <div>
-                    <div className="font-medium">Projekt löschen</div>
-                    <div className="text-sm text-muted-foreground">
+                <Item variant="outline" size="sm">
+                  <ItemContent>
+                    <ItemTitle>Projekt löschen</ItemTitle>
+                    <ItemDescription>
                       Entfernt das Projekt und seine Chats endgültig
-                    </div>
-                  </div>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    <Trash2 />
-                    Löschen
-                  </Button>
-                </div>
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      onClick={handleDelete}
+                      aria-label="Projekt löschen"
+                    >
+                      <Trash2 />
+                    </Button>
+                  </ItemActions>
+                </Item>
               )}
             </TabsContent>
 
