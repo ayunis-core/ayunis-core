@@ -9,6 +9,7 @@ import type { RunEvent, RunEventPayload, RunStatus } from '../contracts/event';
 import { DEFAULT_MAX_ITERATIONS, type RunInput } from '../contracts/run-input';
 import { EmitBuffer, drainEmits } from './event-queue';
 import { HookRunner } from './hook-runner';
+import type { RunEndFailure } from './hook-runner';
 import type { LoopCompletion } from './loop';
 import { executeLoop } from './loop';
 import { PendingMutations } from './mutations';
@@ -71,8 +72,9 @@ async function* executeRun(input: RunInput): AsyncGenerator<RunEvent> {
       yield stamp(errorPayload(outcome.error));
     }
     runEndFired = true;
-    await fireRunEnd(state, outcome);
+    const failures = await fireRunEnd(state, outcome);
     yield* stampedEmits(state, stamp);
+    yield* stampedFinalizationErrors(failures, outcome.status, stamp);
     yield stamp({
       type: 'run_end',
       status: outcome.status,
@@ -80,8 +82,7 @@ async function* executeRun(input: RunInput): AsyncGenerator<RunEvent> {
     });
   } finally {
     if (!runEndFired) {
-      // Consumer abandoned the stream (early return); still notify hooks.
-      await fireRunEnd(state, { status: 'aborted' });
+      await finalizeAbandonedRun(state);
     }
   }
 }
@@ -138,6 +139,24 @@ async function* stampedLoop(
 function* stampedEmits(state: RunState, stamp: Stamper): Generator<RunEvent> {
   for (const payload of drainEmits(state)) {
     yield stamp(payload);
+  }
+}
+
+function* stampedFinalizationErrors(
+  failures: readonly RunEndFailure[],
+  outcome: RunStatus,
+  stamp: Stamper,
+): Generator<RunEvent> {
+  for (const failure of failures) {
+    const details = failure.error.details;
+    yield stamp({
+      type: 'finalization_error',
+      hookName:
+        typeof details?.hookName === 'string' ? details.hookName : 'unknown',
+      message: failure.error.message,
+      critical: failure.critical,
+      outcome,
+    });
   }
 }
 
@@ -198,15 +217,18 @@ const errorPayload = (error: AgentRuntimeError): RunEventPayload => {
 const fireRunEnd = async (
   state: RunState,
   outcome: RunOutcome,
-): Promise<void> => {
-  try {
-    await state.hookRunner.runEnd({
-      messages: state.messages,
-      status: outcome.status,
-      error: outcome.error,
-    });
-  } catch {
-    // runEnd hook failures must not mask the run's outcome.
+): Promise<RunEndFailure[]> =>
+  state.hookRunner.runEnd({
+    messages: state.messages,
+    status: outcome.status,
+    error: outcome.error,
+  });
+
+const finalizeAbandonedRun = async (state: RunState): Promise<void> => {
+  const failures = await fireRunEnd(state, { status: 'aborted' });
+  const criticalError = failures.find((failure) => failure.critical)?.error;
+  if (criticalError) {
+    throw criticalError;
   }
 };
 

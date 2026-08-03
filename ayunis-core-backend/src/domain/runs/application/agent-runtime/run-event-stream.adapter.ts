@@ -183,7 +183,31 @@ function toSideStreamItem(
   if (event.type === 'error') {
     return mapRunError(event);
   }
+  if (event.type === 'finalization_error') {
+    return mapFinalizationError(event);
+  }
   return null;
+}
+
+function mapFinalizationError(
+  event: Extract<RunEvent, { type: 'finalization_error' }>,
+): ApplicationError | null {
+  const context = {
+    hookName: event.hookName,
+    phase: 'runEnd',
+    originalOutcome: event.outcome,
+    runtimeMessage: event.message,
+  };
+  if (!event.critical) {
+    logger.warn('Best-effort agent runtime finalization hook failed', context);
+    return null;
+  }
+  logger.error('Critical agent runtime finalization hook failed', context);
+  return new RunExecutionFailedError('Agent runtime finalization failed', {
+    hookName: event.hookName,
+    phase: 'runEnd',
+    originalOutcome: event.outcome,
+  });
 }
 
 function buildStreamingMessage(

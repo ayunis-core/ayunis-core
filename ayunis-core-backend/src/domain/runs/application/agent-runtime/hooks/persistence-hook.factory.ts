@@ -49,6 +49,7 @@ export class PersistenceHookFactory {
   }): Hook {
     return {
       name: 'ayunis-persistence',
+      runEndFailureMode: 'critical',
       afterModelCall: (ctx) =>
         this.persistAssistantMessage(
           ctx.message,

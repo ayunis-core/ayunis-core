@@ -24,6 +24,11 @@ interface HookRunnerDeps {
   abortState: AbortState;
 }
 
+export interface RunEndFailure {
+  error: HookFailedError;
+  critical: boolean;
+}
+
 /**
  * Fires hook phases in registration order, awaited sequentially. Builds
  * the shared mutation API each phase context extends.
@@ -161,10 +166,23 @@ export class HookRunner {
     messages: readonly Message[];
     status: RunStatus;
     error?: AgentRuntimeError;
-  }): Promise<void> {
+  }): Promise<RunEndFailure[]> {
     const ctx = { ...this.api(), ...info };
+    const failures: RunEndFailure[] = [];
     for (const hook of this.deps.hooks) {
-      await this.invoke(hook, 'runEnd', () => hook.runEnd?.(ctx));
+      try {
+        await hook.runEnd?.(ctx);
+      } catch (cause) {
+        failures.push({
+          error: new HookFailedError({
+            hookName: hook.name,
+            phase: 'runEnd',
+            cause,
+          }),
+          critical: hook.runEndFailureMode !== 'best_effort',
+        });
+      }
     }
+    return failures;
   }
 }

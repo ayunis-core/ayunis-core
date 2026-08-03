@@ -94,6 +94,8 @@ export interface RunEndContext extends HookApi {
  */
 export interface Hook {
   readonly name: string;
+  /** Defaults to `critical`; applies only when `runEnd` throws. */
+  readonly runEndFailureMode?: 'critical' | 'best_effort';
   runStart?(ctx: RunStartContext): void | Promise<void>;
   beforeModelCall?(ctx: BeforeModelCallContext): void | Promise<void>;
   afterModelCall?(ctx: AfterModelCallContext): void | Promise<void>;

@@ -80,6 +80,14 @@ Buffered mutations (`addTools`/`removeTools`/`setTools`, `addInstructions`,
 `afterToolCall` mutations the next iteration. `abort` and `emit` are
 immediate.
 
+`runEnd` failures do not replace the run's original status. They produce a
+`finalization_error` event with hook attribution before the terminal
+`run_end`. Finalization is critical by default; set
+`runEndFailureMode: 'best_effort'` on a non-critical hook to report its failure
+without asking the host to fail the operation. If a consumer abandons the
+stream before events can be delivered, a critical finalization failure rejects
+the iterator close instead.
+
 ## Extending the runtime
 
 Hooks are the only extension point. Concrete hook implementations (logging,
