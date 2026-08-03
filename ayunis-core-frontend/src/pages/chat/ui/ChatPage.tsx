@@ -359,6 +359,7 @@ export default function ChatPage({
 
   const chatHeader = (
     <ChatHeader
+      threadId={thread.id}
       threadTitle={threadTitle}
       isAnonymous={thread.isAnonymous}
       onRename={handleRenameThread}

@@ -6,6 +6,9 @@ import {
   ChevronDown,
   Search,
   Pencil,
+  FolderOpen,
+  Star,
+  Plus,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
@@ -23,8 +26,23 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
+import {
+  addProject,
+  addChatToProject,
+  CreateProjectDialog,
+  ProjectMenuGroups,
+} from '@/entities/project';
+import {
+  usePinnedThreadIds,
+  toggleThreadPinned,
+} from '@/features/usePinnedThreads';
+import { cn } from '@/shared/lib/shadcn/utils';
 import { useThreads } from '../api';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
@@ -41,12 +59,17 @@ import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
   const { threads, isLoading, hasMore } = useThreads();
+  const pinnedThreadIds = usePinnedThreadIds();
   const { confirm } = useConfirmation();
   const { deleteChat } = useDeleteThread({});
   const params = useParams({ strict: false });
   const navigate = useNavigate();
 
   const [isOpen, setOpen] = useChatsSidebarOpen();
+
+  const [createForThread, setCreateForThread] = useState<{
+    title: string;
+  } | null>(null);
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -82,6 +105,97 @@ export function ChatsSidebarGroup() {
       },
     });
   };
+
+  const pinnedThreads = threads.filter((thread) =>
+    pinnedThreadIds.includes(thread.id),
+  );
+  const otherThreads = threads.filter(
+    (thread) => !pinnedThreadIds.includes(thread.id),
+  );
+
+  const renderThread = (thread: (typeof threads)[number]) => (
+    <SidebarMenuItem key={thread.id} data-testid="chat">
+      <SidebarMenuButton asChild isActive={params.threadId === thread.id}>
+        <Link to={'/chats/$threadId'} params={{ threadId: thread.id }}>
+          <MessageCircle />
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate">
+              {thread.title ?? t('sidebar.untitled')}
+            </span>
+          </div>
+        </Link>
+      </SidebarMenuButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger data-testid="dropdown-menu-trigger" asChild>
+          <SidebarMenuAction showOnHover>
+            <MoreHorizontal />
+            <span className="sr-only">{t('sidebar.more')}</span>
+          </SidebarMenuAction>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="rounded-lg"
+          side="bottom"
+          align="end"
+          data-testid="chat-dropdown"
+        >
+          <DropdownMenuItem
+            onClick={() => handleRenameClick(thread.id, thread.title ?? null)}
+            data-testid="rename"
+          >
+            <Pencil />
+            <span>{t('sidebar.renameChat')}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => toggleThreadPinned(thread.id)}>
+            <Star
+              className={cn(
+                pinnedThreadIds.includes(thread.id) && 'fill-brand text-brand',
+              )}
+            />
+            <span>
+              {pinnedThreadIds.includes(thread.id)
+                ? 'Nicht mehr anheften'
+                : 'Anheften'}
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <FolderOpen />
+              <span>Zu Projekt hinzufügen</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent collisionPadding={12}>
+              <ProjectMenuGroups
+                onSelect={(project) =>
+                  addChatToProject(project.id, {
+                    id: crypto.randomUUID(),
+                    title: thread.title ?? t('sidebar.untitled'),
+                    messages: [],
+                  })
+                }
+              />
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  const title = thread.title ?? t('sidebar.untitled');
+                  setTimeout(() => setCreateForThread({ title }), 0);
+                }}
+              >
+                <Plus />
+                <span>Neues Projekt</span>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => handleDeleteClick(thread.id)}
+            data-testid="delete"
+          >
+            <Trash />
+            <span>{t('sidebar.deleteChat')}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
 
   if (isLoading) {
     return (
@@ -169,6 +283,14 @@ export function ChatsSidebarGroup() {
 
   return (
     <>
+      {pinnedThreads.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Angeheftet</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{pinnedThreads.map(renderThread)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
       <Collapsible
         open={isOpen}
         onOpenChange={setOpen}
@@ -190,61 +312,7 @@ export function ChatsSidebarGroup() {
           <CollapsibleContent>
             <SidebarGroupContent>
               <SidebarMenu>
-                {threads.map((thread) => (
-                  <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton
-                      asChild
-                      isActive={params.threadId === thread.id}
-                    >
-                      <Link
-                        to={'/chats/$threadId'}
-                        params={{ threadId: thread.id }}
-                      >
-                        <MessageCircle />
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate">
-                            {thread.title ?? t('sidebar.untitled')}
-                          </span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        data-testid="dropdown-menu-trigger"
-                        asChild
-                      >
-                        <SidebarMenuAction showOnHover>
-                          <MoreHorizontal />
-                          <span className="sr-only">{t('sidebar.more')}</span>
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        className="rounded-lg"
-                        side="bottom"
-                        align="end"
-                        data-testid="chat-dropdown"
-                      >
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleRenameClick(thread.id, thread.title ?? null)
-                          }
-                          data-testid="rename"
-                        >
-                          <Pencil />
-                          <span>{t('sidebar.renameChat')}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => handleDeleteClick(thread.id)}
-                          data-testid="delete"
-                        >
-                          <Trash />
-                          <span>{t('sidebar.deleteChat')}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </SidebarMenuItem>
-                ))}
+                {otherThreads.map(renderThread)}
                 {hasMore && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
@@ -259,6 +327,23 @@ export function ChatsSidebarGroup() {
           </CollapsibleContent>
         </SidebarGroup>
       </Collapsible>
+
+      <CreateProjectDialog
+        open={createForThread !== null}
+        onOpenChange={(open) => {
+          if (!open) setCreateForThread(null);
+        }}
+        onCreate={(project) => {
+          addProject(project);
+          if (createForThread) {
+            addChatToProject(project.id, {
+              id: crypto.randomUUID(),
+              title: createForThread.title,
+              messages: [],
+            });
+          }
+        }}
+      />
 
       {threadToRename && (
         <RenameThreadDialog

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
+import { MoreVertical, ShieldCheck, Trash2, Pencil, Star } from 'lucide-react';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Button } from '@/shared/ui/shadcn/button';
 import {
@@ -14,8 +14,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/shared/ui/shadcn/tooltip';
+import {
+  usePinnedThreadIds,
+  toggleThreadPinned,
+} from '@/features/usePinnedThreads';
+import { cn } from '@/shared/lib/shadcn/utils';
 
 interface ChatHeaderProps {
+  readonly threadId: string;
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
   readonly onRename: (openDialog?: boolean) => void;
@@ -23,14 +29,16 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({
+  threadId,
   threadTitle,
   isAnonymous,
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
   const { t } = useTranslation('chat');
+  const pinnedThreadIds = usePinnedThreadIds();
+  const isPinned = pinnedThreadIds.includes(threadId);
 
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled"
   const displayTitle = threadTitle || t('chat.untitled');
 
   const anonymousBadge = isAnonymous ? (
@@ -57,6 +65,28 @@ export default function ChatHeader({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                onClick={() => toggleThreadPinned(threadId)}
+                variant="ghost"
+                size="icon"
+                aria-label={isPinned ? 'Nicht mehr anheften' : 'Anheften'}
+              >
+                <Star
+                  className={cn(
+                    'h-3.5 w-3.5',
+                    isPinned
+                      ? 'fill-brand text-brand'
+                      : 'text-muted-foreground',
+                  )}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isPinned ? 'Nicht mehr anheften' : 'Anheften'}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
                 onClick={() => onRename()}
                 variant="ghost"
                 size="icon"
@@ -77,6 +107,12 @@ export default function ChatHeader({
               <DropdownMenuItem onClick={() => onRename(true)}>
                 <Pencil className="h-4 w-4" />
                 <span>{t('chat.renameThread')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toggleThreadPinned(threadId)}>
+                <Star
+                  className={cn('h-4 w-4', isPinned && 'fill-brand text-brand')}
+                />
+                <span>{isPinned ? 'Nicht mehr anheften' : 'Anheften'}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete} variant="destructive">
                 <Trash2 />
