@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
-import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
+import { SendEmailWidget } from '@/widgets/email-draft';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';

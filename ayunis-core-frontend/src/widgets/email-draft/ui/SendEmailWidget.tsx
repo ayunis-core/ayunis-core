@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import { Label } from '@/shared/ui/shadcn/label';
 import { Input } from '@/shared/ui/shadcn/input';
