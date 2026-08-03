@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Git tag or branch to deploy'
+        description: 'Published Git tag or branch to deploy'
         required: false
         default: 'main'
 
@@ -21,136 +21,24 @@ jobs:
         uses: appleboy/ssh-action@v1.2.5
         env:
           RELEASE_TAG: ${{ inputs.tag }}
+          DEPLOY_WORKFLOW_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.INTERNAL_HOST }}
           username: ${{ secrets.INTERNAL_USER }}
           key: ${{ secrets.INTERNAL_SSH_KEY }}
-          envs: RELEASE_TAG
+          envs: RELEASE_TAG,DEPLOY_WORKFLOW_SHA
           script: |
-            # `script_stop` is not an input of appleboy/ssh-action v1.2.5 — it
-            # was accepted here for years and silently ignored, so the script
-            # has to abort on error itself.
             set -e
             cd /home/ayunis/apps/ayunis-core
-            # The checkout still supplies the compose files, the .env files and
-            # postgres/init.sql — only the build is gone (AYC-589).
             git fetch --all --tags
+            DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)
             if git show-ref --tags --verify --quiet "refs/tags/$RELEASE_TAG"; then
-              git checkout -f "$RELEASE_TAG"
+              git checkout -f --detach "refs/tags/$RELEASE_TAG"
               CORE_TAG="$RELEASE_TAG"
             else
-              git checkout -f "$RELEASE_TAG"
-              git reset --hard "origin/$RELEASE_TAG"
-              # A branch has no version tag — run the sha- image built for the
-              # commit it points at (the input defaults to main). Plain
-              # truncation, not `git rev-parse --short=7`: --short is a
-              # *minimum* and git lengthens it when the prefix is ambiguous,
-              # while metadata-action's type=sha is an unconditional
-              # sha.substring(0, 7).
+              git checkout -f --detach "origin/$RELEASE_TAG"
               CORE_TAG="sha-$(git rev-parse HEAD | cut -c1-7)"
             fi
             export CORE_TAG
-            export COMPOSE_FILE=docker-compose.yml:compose.release.yml
             echo "Deploying $CORE_TAG"
-
-            # Reclaiming runs before the pull, not only after a successful
-            # swap. A pull that exhausts the disk exits before the trailing
-            # cleanup, so nothing is freed and every later deploy fails the
-            # same way until the host is cleaned by hand — staging wedged
-            # exactly like this before the ordering was fixed.
-            reclaim_images() {
-              # $1 = "keep-sandbox"; see the call site before the pull.
-              #
-              # This host built its images until this change, so it still
-              # carries a BuildKit cache that will never be reused again, plus
-              # the unprefixed `ayunis-core-*` tags those builds produced. The
-              # ghcr.io filter below reaches neither, and `prune -f` skips the
-              # tags because they are tagged, not dangling. On the first
-              # pull-based deploy the legacy tags are still in use by the
-              # running containers, so rmi refuses them — they are collected by
-              # the post-swap call once the GHCR images have taken over.
-              docker builder prune -af || true
-              docker images --filter "reference=ayunis-core-*" --format '{{.Repository}}:{{.Tag}}' \
-                | xargs -r docker rmi || true
-              # Superseded Core tags. `prune -a` is the wrong tool: the sandbox
-              # image is referenced only by ephemeral per-execution containers,
-              # so it always looks unused, and an `until=` cut-off can't save it
-              # either — a cache-hit rebuild keeps the original Created date.
-              # The pattern is `ayunis-core-*`, not `*`: the hosts run other
-              # images from this org namespace (ayunis-backup).
-              #
-              # Before the swap this is safe for the compose services because
-              # `docker rmi` refuses an image a running container uses — that
-              # refusal is what spares the generation still serving traffic, so
-              # the `|| true` is load-bearing rather than defensive. The sandbox
-              # is the one image that refusal cannot protect, hence keep-sandbox.
-              victims=$(docker images --filter "reference=ghcr.io/ayunis-core/ayunis-core-*" --format '{{.Repository}}:{{.Tag}}' \
-                | grep -v ":${CORE_TAG}$" || true)
-              if [ "${1:-}" = "keep-sandbox" ]; then
-                victims=$(printf '%s\n' "$victims" | grep -v 'ayunis-core-python-sandbox' || true)
-              fi
-              printf '%s\n' "$victims" | grep -v '^$' | xargs -r docker rmi || true
-              docker image prune -f
-            }
-
-            # Spare the sandbox here. Nothing long-lived holds that image — the
-            # per-execution containers are transient — so `docker rmi` would
-            # happily delete the tag the *running* code-execution service still
-            # points DOCKER_IMAGE at. It pulls the sandbox only when it is
-            # constructed (executor.py:28), and the execution path uses
-            # containers.create, which never pulls. Deleting it here and then
-            # failing the pull would leave code execution broken for as long as
-            # the deploy stays aborted — defeating the point of keeping the
-            # current containers up.
-            reclaim_images keep-sandbox
-
-            # Fail here rather than mid-blob: a full disk otherwise surfaces as
-            # `GetImageBlob...: no space left on device` buried in pull
-            # progress. The headroom has to cover a second copy of every Core
-            # image while the current ones still serve traffic.
-            #
-            # Sized against this host as measured 2026-07-31: 38 G total, 7.5 G
-            # free — and that is *before* the first pull-based deploy reclaims
-            # the BuildKit cache and the legacy build-on-host images, so it is
-            # the tightest this will ever be. A full new generation is ~5 G with
-            # the CPU-only anonymize, so 6 leaves margin while still catching a
-            # genuinely full disk. Deliberately below production's 9: this does
-            # not cover a rollback to a release tag from before the CPU-only
-            # torch change (~6 GB anonymize, ~9 G for two generations). Such a
-            # rollback would fail on the pull instead — which aborts before the
-            # swap and reclaims on the next run, so it degrades safely. Raise
-            # this toward 9 once the host has settled after its first deploy.
-            MIN_FREE_GB=6
-            FREE_GB=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
-            echo "Free disk: ${FREE_GB:-0}G (need ${MIN_FREE_GB}G)"
-            if [ "${FREE_GB:-0}" -lt "$MIN_FREE_GB" ]; then
-              echo "::error::only ${FREE_GB:-0}G free, need ${MIN_FREE_GB}G — not deploying"
-              exit 1
-            fi
-
-            # Pull while the old containers still serve traffic, and abort
-            # BEFORE touching them if anything is missing. Scoped to the Core
-            # services: a bare `compose pull` would also refresh
-            # minio/dozzle/redis/gotenberg, which are deliberately only pulled
-            # when first started.
-            if ! docker compose pull app code-execution anonymize; then
-              echo "::error::image pull failed — keeping current containers, not deploying"
-              exit 1
-            fi
-            # The sandbox is not a compose service; code-execution pulls it
-            # through the docker-socket-proxy on first use. Pulling it here
-            # keeps that first execution fast and proves the tag exists.
-            if ! docker pull "ghcr.io/ayunis-core/ayunis-core-python-sandbox:$CORE_TAG"; then
-              echo "::error::sandbox image pull failed — keeping current containers, not deploying"
-              exit 1
-            fi
-            docker compose down
-            docker compose up -d --no-build
-            sleep 60
-            docker compose ps
-            # Drop the generation just replaced, sandbox included: the new
-            # containers are up on CORE_TAG, which the filter spares, so the
-            # stale sandbox tag is now genuinely unreferenced. This is also the
-            # call that collects the legacy build-on-host images, which the
-            # pre-pull call could not touch while they were still running.
-            reclaim_images
+            printf '%s\n' "$DEPLOY_SCRIPT" | MIN_FREE_GB=6 PRUNE_BUILD_CACHE=true bash
