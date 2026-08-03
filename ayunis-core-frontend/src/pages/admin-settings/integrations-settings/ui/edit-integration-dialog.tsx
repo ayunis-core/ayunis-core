@@ -45,7 +45,7 @@ function getEditableOrgFields(
   );
 }
 
-function buildMarketplacePayload(
+function buildConfigPayload(
   payload: UpdateIntegrationFormData,
   editableFields: MarketplaceIntegrationConfigFieldDto[],
   configFormValues: Record<string, string>,
@@ -74,7 +74,7 @@ function buildMarketplacePayload(
   }
 }
 
-function buildCustomPayload(
+function buildAuthPayload(
   payload: UpdateIntegrationFormData,
   data: UpdateIntegrationFormData,
   integration: McpIntegration,
@@ -109,9 +109,9 @@ export function EditIntegrationDialog({
     },
   });
 
-  const isMarketplace = integration?.type === 'marketplace';
+  const isSchemaConfigured = integration?.configSchema !== undefined;
   const editableFields =
-    integration && isMarketplace ? getEditableOrgFields(integration) : [];
+    integration && isSchemaConfigured ? getEditableOrgFields(integration) : [];
   const currentOrgValues = (integration?.orgConfigValues ?? {}) as Record<
     string,
     string
@@ -133,12 +133,12 @@ export function EditIntegrationDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integration, open]);
 
-  // Initialize the marketplace config form when the dialog opens for an
+  // Initialize the schema-configured form when the dialog opens for an
   // integration. Done during render (keyed on the integration) rather than in
   // an effect to avoid the extra commit pass flagged by
   // react-hooks/set-state-in-effect.
   const configKey =
-    open && integration && isMarketplace ? integration.id : null;
+    open && integration && isSchemaConfigured ? integration.id : null;
   const [configKeyState, setConfigKeyState] = useState<string | null>(null);
   if (configKey !== configKeyState) {
     setConfigKeyState(configKey);
@@ -162,15 +162,15 @@ export function EditIntegrationDialog({
       payload.name = data.name;
     }
 
-    if (isMarketplace) {
-      buildMarketplacePayload(
+    if (isSchemaConfigured) {
+      buildConfigPayload(
         payload,
         editableFields,
         configFormValues,
         currentOrgValues,
       );
     } else {
-      buildCustomPayload(payload, data, integration);
+      buildAuthPayload(payload, data, integration);
     }
 
     if (Object.keys(payload).length === 0) {
@@ -226,7 +226,7 @@ export function EditIntegrationDialog({
                 )}
               />
 
-              {isMarketplace && editableFields.length > 0 && (
+              {isSchemaConfigured && editableFields.length > 0 && (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     {t('integrations.editDialog.configDescription')}
@@ -253,7 +253,7 @@ export function EditIntegrationDialog({
                 </div>
               )}
 
-              {!isMarketplace && authMethod === 'CUSTOM_HEADER' && (
+              {!isSchemaConfigured && authMethod === 'CUSTOM_HEADER' && (
                 <>
                   <FormField
                     control={form.control}
@@ -305,7 +305,7 @@ export function EditIntegrationDialog({
                 </>
               )}
 
-              {!isMarketplace && authMethod === 'BEARER_TOKEN' && (
+              {!isSchemaConfigured && authMethod === 'BEARER_TOKEN' && (
                 <FormField
                   control={form.control}
                   name="credentials"
@@ -329,7 +329,7 @@ export function EditIntegrationDialog({
                 />
               )}
 
-              {!isMarketplace && authMethod === 'NO_AUTH' && (
+              {!isSchemaConfigured && authMethod === 'NO_AUTH' && (
                 <FormDescription>
                   {t('integrations.editDialog.noCredentialsMessage')}
                 </FormDescription>

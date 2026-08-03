@@ -8,7 +8,7 @@ import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-co
 
 /**
  * PostgreSQL implementation of the MCP integration user config repository.
- * Handles persistence of per-user configuration for marketplace integrations.
+ * Handles persistence of per-user configuration for schema-configured integrations.
  */
 @Injectable()
 export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {

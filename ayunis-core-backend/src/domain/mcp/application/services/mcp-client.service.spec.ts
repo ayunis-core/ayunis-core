@@ -5,7 +5,7 @@ import { McpClientPort } from '../ports/mcp-client.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { randomUUID } from 'crypto';
-import { CustomMcpIntegration } from '../../domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from '../testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from '../../domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegrationUserConfig } from '../../domain/mcp-integration-user-config.entity';
@@ -85,8 +85,54 @@ describe('McpClientService', () => {
   });
 
   describe('buildConnectionConfig', () => {
+    it('resolves schema-configured custom integration headers', async () => {
+      const integration = aCustomMcpIntegration({
+        ...baseIntegrationParams,
+        auth: new NoAuthMcpIntegrationAuth(),
+        configSchema: {
+          authType: 'CUSTOM',
+          orgFields: [
+            {
+              key: 'tenantId',
+              label: 'Tenant ID',
+              type: 'text',
+              headerName: 'X-Tenant-ID',
+              required: true,
+            },
+          ],
+          userFields: [
+            {
+              key: 'personalToken',
+              label: 'Personal token',
+              type: 'secret',
+              headerName: 'Authorization',
+              prefix: 'Bearer ',
+              required: true,
+            },
+          ],
+        },
+        orgConfigValues: { tenantId: 'council-42' },
+      });
+      const userId = randomUUID();
+      userConfigRepo.findByIntegrationAndUser.mockResolvedValue(
+        new McpIntegrationUserConfig({
+          integrationId: integration.id,
+          userId,
+          configValues: { personalToken: 'encrypted-personal-token' },
+        }),
+      );
+      encryption.decrypt.mockResolvedValue('personal-token');
+
+      const config = await service.buildConnectionConfig(integration, userId);
+
+      expect(config.headers).toEqual({
+        'X-Tenant-ID': 'council-42',
+        Authorization: 'Bearer personal-token',
+      });
+    });
+
     it('returns base config with empty headers for no-auth integrations', async () => {
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         ...baseIntegrationParams,
         auth: new NoAuthMcpIntegrationAuth(),
       });
@@ -120,13 +166,14 @@ describe('McpClientService', () => {
       });
     });
 
-    it('builds config with custom header for custom header auth', async () => {
+    it('builds config with custom header for legacy auth strategies', async () => {
       const auth = new CustomHeaderMcpIntegrationAuth({
         secret: 'encrypted-secret',
         headerName: 'X-API-Key',
       });
-      const integration = new CustomMcpIntegration({
+      const integration = new PredefinedMcpIntegration({
         ...baseIntegrationParams,
+        slug: PredefinedMcpIntegrationSlug.TEST,
         auth,
       });
 
@@ -147,8 +194,9 @@ describe('McpClientService', () => {
         accessToken: 'encrypted-token',
         tokenExpiresAt: new Date(Date.now() + 60_000),
       });
-      const integration = new CustomMcpIntegration({
+      const integration = new PredefinedMcpIntegration({
         ...baseIntegrationParams,
+        slug: PredefinedMcpIntegrationSlug.TEST,
         auth,
       });
 
@@ -164,8 +212,9 @@ describe('McpClientService', () => {
 
     it('throws if bearer auth token missing', async () => {
       const auth = new BearerMcpIntegrationAuth();
-      const integration = new CustomMcpIntegration({
+      const integration = new PredefinedMcpIntegration({
         ...baseIntegrationParams,
+        slug: PredefinedMcpIntegrationSlug.TEST,
         auth,
       });
 
@@ -179,8 +228,9 @@ describe('McpClientService', () => {
         accessToken: 'encrypted-token',
         tokenExpiresAt: new Date(Date.now() - 60_000),
       });
-      const integration = new CustomMcpIntegration({
+      const integration = new PredefinedMcpIntegration({
         ...baseIntegrationParams,
+        slug: PredefinedMcpIntegrationSlug.TEST,
         auth,
       });
 

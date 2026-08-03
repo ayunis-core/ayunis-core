@@ -6,7 +6,7 @@ import { McpClientPort } from './application/ports/mcp-client.port';
 import { McpCapabilityCacheService } from './application/services/mcp-capability-cache.service';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
 import { McpClientService } from './application/services/mcp-client.service';
-import { MarketplaceConfigService } from './application/services/marketplace-config.service';
+import { McpConfigService } from './application/services/mcp-config.service';
 import { ConnectionValidationService } from './application/services/connection-validation.service';
 import { PredefinedMcpIntegrationRegistry } from './application/registries/predefined-mcp-integration-registry.service';
 import { McpIntegrationsRepositoryPort } from './application/ports/mcp-integrations.repository.port';
@@ -97,7 +97,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     McpIntegrationAuthFactory,
     McpClientService,
     McpCapabilityCacheService,
-    MarketplaceConfigService,
+    McpConfigService,
     ConnectionValidationService,
     PredefinedMcpIntegrationRegistry,
     ValidateIntegrationAccessService,

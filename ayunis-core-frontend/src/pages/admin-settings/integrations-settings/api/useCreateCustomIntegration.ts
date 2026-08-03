@@ -6,9 +6,15 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreateCustomIntegrationFormData } from '../model/types';
+import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
+import type { UseFormReturn } from 'react-hook-form';
+import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 
-export function useCreateCustomIntegration(onSuccess?: () => void) {
+export function useCreateCustomIntegration(
+  form: UseFormReturn<CreateCustomIntegrationFormData>,
+  onSuccess?: () => void,
+) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-integrations');
 
@@ -22,9 +28,12 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        console.error('Create custom integration failed:', error);
         try {
-          const { code } = extractErrorData(error);
+          const { code, errors } = extractErrorData(error);
+          if (code === 'VALIDATION_ERROR' && errors) {
+            setValidationErrors(form, errors, t, 'integrations.validation');
+            return;
+          }
           switch (code) {
             case 'INVALID_SERVER_URL':
               showError(
@@ -47,7 +56,7 @@ export function useCreateCustomIntegration(onSuccess?: () => void) {
     },
   });
 
-  function createCustomIntegration(data: CreateCustomIntegrationFormData) {
+  function createCustomIntegration(data: CreateCustomIntegrationDto) {
     mutation.mutate({ data });
   }
 

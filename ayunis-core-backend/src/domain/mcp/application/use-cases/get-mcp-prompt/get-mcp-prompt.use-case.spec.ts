@@ -14,10 +14,8 @@ import {
   McpIntegrationDisabledError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
-import {
-  PredefinedMcpIntegration,
-  CustomMcpIntegration,
-} from 'src/domain/mcp/domain/mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
@@ -168,7 +166,7 @@ describe('GetMcpPromptUseCase', () => {
 
     it('should successfully retrieve prompt without arguments', async () => {
       // Arrange
-      const mockIntegration = new CustomMcpIntegration({
+      const mockIntegration = aCustomMcpIntegration({
         id: mockIntegrationId,
         name: 'Custom Integration',
         orgId: mockOrgId,
@@ -209,7 +207,7 @@ describe('GetMcpPromptUseCase', () => {
 
     it('should handle prompt with authentication from custom integration', async () => {
       // Arrange
-      const mockIntegration = new CustomMcpIntegration({
+      const mockIntegration = aCustomMcpIntegration({
         id: mockIntegrationId,
         name: 'Custom Integration',
         orgId: mockOrgId,

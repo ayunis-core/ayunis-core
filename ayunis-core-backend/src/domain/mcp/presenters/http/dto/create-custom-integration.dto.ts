@@ -1,43 +1,86 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsNotEmpty,
-  IsUrl,
-  IsEnum,
-  IsOptional,
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
+  IsDefined,
+  IsIn,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUrl,
   Length,
-  MinLength,
+  Matches,
+  MaxLength,
+  ValidateNested,
 } from 'class-validator';
-import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-method.enum';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 
-/**
- * DTO for creating a custom MCP integration.
- * Used when creating an integration with a custom server URL.
- *
- * Validation Rules:
- * - name: Required, 1-255 characters
- * - serverUrl: Required, valid HTTP/HTTPS URL
- * - authMethod: Optional, must be valid enum value if provided
- * - credentials: Optional, but required if authMethod is CUSTOM_HEADER or BEARER_TOKEN
- * - authHeaderName: Optional, recommended for CUSTOM_HEADER auth method
- */
+export class CustomMcpConfigFieldDto {
+  @ApiProperty({ example: 'personalToken' })
+  @IsString()
+  @Matches(/^[A-Za-z][A-Za-z0-9_-]{0,99}$/)
+  key: string;
+
+  @ApiProperty({ example: 'Personal access token' })
+  @IsString()
+  @IsNotEmpty()
+  @Length(1, 255)
+  label: string;
+
+  @ApiProperty({ enum: ['text', 'url', 'secret'], example: 'secret' })
+  @IsIn(['text', 'url', 'secret'])
+  type: 'text' | 'url' | 'secret';
+
+  @ApiProperty({ example: 'Authorization' })
+  @IsString()
+  @Matches(/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/)
+  @MaxLength(255)
+  headerName: string;
+
+  @ApiPropertyOptional({ example: 'Bearer ' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  prefix?: string;
+
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  required: boolean;
+
+  @ApiPropertyOptional({ example: 'Create a token in your profile.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  help?: string;
+}
+
+export class CustomMcpConfigSchemaDto {
+  @ApiProperty({ type: [CustomMcpConfigFieldDto] })
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => CustomMcpConfigFieldDto)
+  orgFields: CustomMcpConfigFieldDto[];
+
+  @ApiProperty({ type: [CustomMcpConfigFieldDto] })
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => CustomMcpConfigFieldDto)
+  userFields: CustomMcpConfigFieldDto[];
+}
+
 export class CreateCustomIntegrationDto {
-  @ApiProperty({
-    description: 'The name for this integration instance',
-    example: 'My Custom MCP Server',
-    minLength: 1,
-    maxLength: 255,
-  })
+  @ApiProperty({ example: 'My Custom MCP Server' })
   @IsString()
   @IsNotEmpty()
   @Length(1, 255)
   name: string;
 
-  @ApiProperty({
-    description: 'The URL of the custom MCP server',
-    example: 'https://my-mcp-server.example.com/mcp',
-  })
+  @ApiProperty({ example: 'https://my-mcp-server.example.com/mcp' })
   @IsUrl({
     protocols: ['http', 'https'],
     require_protocol: true,
@@ -46,45 +89,22 @@ export class CreateCustomIntegrationDto {
   @IsNotEmpty()
   serverUrl: string;
 
-  @ApiProperty({
-    description: 'Authentication method for the MCP server',
-    enum: McpAuthMethod,
-    example: McpAuthMethod.CUSTOM_HEADER,
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsEnum(McpAuthMethod)
-  authMethod?: McpAuthMethod;
+  @ApiProperty({ type: CustomMcpConfigSchemaDto })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => CustomMcpConfigSchemaDto)
+  configSchema: CustomMcpConfigSchemaDto;
 
   @ApiProperty({
-    description:
-      'Custom auth header name (e.g., X-API-Key). Required for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header).',
-    example: 'X-API-Key',
-    required: false,
+    type: 'object',
+    additionalProperties: { type: 'string' },
+    example: { tenantId: 'council-42' },
   })
-  @IsOptional()
-  @IsString()
-  @Length(1, 255)
-  authHeaderName?: string;
+  @IsObject()
+  @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
+  orgConfigValues: Record<string, string>;
 
-  @ApiProperty({
-    description:
-      'Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods.',
-    example: 'my-secret-value-12345',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  credentials?: string;
-
-  @ApiPropertyOptional({
-    description:
-      'Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.',
-    example: true,
-    default: true,
-  })
+  @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;

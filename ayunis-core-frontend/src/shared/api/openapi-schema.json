@@ -6045,7 +6045,7 @@
             }
           }
         },
-        "summary": "Get current user config for a marketplace MCP integration",
+        "summary": "Get current user config for an MCP integration",
         "tags": ["mcp-integrations"]
       },
       "patch": {
@@ -6089,7 +6089,7 @@
             "description": "Integration not found"
           }
         },
-        "summary": "Set current user config for a marketplace MCP integration",
+        "summary": "Set current user config for an MCP integration",
         "tags": ["mcp-integrations"]
       }
     },
@@ -14160,16 +14160,16 @@
           },
           "configSchema": {
             "type": "object",
-            "description": "Configuration schema from marketplace (only for marketplace integrations)"
+            "description": "Configuration schema for marketplace and schema-configured custom integrations"
           },
           "hasUserFields": {
             "type": "boolean",
-            "description": "Whether this marketplace integration has user-level config fields",
+            "description": "Whether this integration has user-level config fields",
             "example": false
           },
           "userAuthorizationRequired": {
             "type": "boolean",
-            "description": "Whether this marketplace integration requires each individual user to provide their own credentials before they can use it (has required user-level fields).",
+            "description": "Whether this integration requires each individual user to provide their own credentials before they can use it (has required user-level fields).",
             "example": true
           },
           "userAuthorized": {
@@ -14179,7 +14179,7 @@
           },
           "orgConfigValues": {
             "type": "object",
-            "description": "Current org-level config values for marketplace integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
+            "description": "Current org-level config values for schema-configured integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
             "example": {
               "endpointUrl": "https://example.com/api",
               "apiToken": "••••••"
@@ -14257,46 +14257,89 @@
         },
         "required": ["slug", "configValues"]
       },
+      "CustomMcpConfigFieldDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "personalToken"
+          },
+          "label": {
+            "type": "string",
+            "example": "Personal access token"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text", "url", "secret"],
+            "example": "secret"
+          },
+          "headerName": {
+            "type": "string",
+            "example": "Authorization"
+          },
+          "prefix": {
+            "type": "string",
+            "example": "Bearer "
+          },
+          "required": {
+            "type": "boolean",
+            "example": true
+          },
+          "help": {
+            "type": "string",
+            "example": "Create a token in your profile."
+          }
+        },
+        "required": ["key", "label", "type", "headerName", "required"]
+      },
+      "CustomMcpConfigSchemaDto": {
+        "type": "object",
+        "properties": {
+          "orgFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomMcpConfigFieldDto"
+            }
+          },
+          "userFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomMcpConfigFieldDto"
+            }
+          }
+        },
+        "required": ["orgFields", "userFields"]
+      },
       "CreateCustomIntegrationDto": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "The name for this integration instance",
-            "example": "My Custom MCP Server",
-            "minLength": 1,
-            "maxLength": 255
+            "example": "My Custom MCP Server"
           },
           "serverUrl": {
             "type": "string",
-            "description": "The URL of the custom MCP server",
             "example": "https://my-mcp-server.example.com/mcp"
           },
-          "authMethod": {
-            "type": "string",
-            "description": "Authentication method for the MCP server",
-            "enum": ["NO_AUTH", "BEARER_TOKEN", "CUSTOM_HEADER", "OAUTH"],
-            "example": "CUSTOM_HEADER",
-            "nullable": true
+          "configSchema": {
+            "$ref": "#/components/schemas/CustomMcpConfigSchemaDto"
           },
-          "authHeaderName": {
-            "type": "string",
-            "description": "Custom auth header name (e.g., X-API-Key). Required for CUSTOM_HEADER auth method. Ignored for BEARER_TOKEN (always uses Authorization header).",
-            "example": "X-API-Key"
-          },
-          "credentials": {
-            "type": "string",
-            "description": "Authentication credentials (will be encrypted). Required for CUSTOM_HEADER and BEARER_TOKEN auth methods.",
-            "example": "my-secret-value-12345"
+          "orgConfigValues": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "tenantId": "council-42"
+            }
           },
           "returnsPii": {
             "type": "boolean",
-            "description": "Whether tools from this integration may return PII data that should be anonymized in anonymous mode. Defaults to true for safety.",
             "example": true,
             "default": true
           }
         },
-        "required": ["name", "serverUrl"]
+        "required": ["name", "serverUrl", "configSchema", "orgConfigValues"]
       },
       "CredentialFieldDto": {
         "type": "object",
@@ -14391,7 +14434,7 @@
           },
           "orgConfigValues": {
             "type": "object",
-            "description": "Org-level config values for marketplace integrations. For secret fields, omit or send empty string to keep the existing value.",
+            "description": "Organization-level config values for schema-configured integrations. For secret fields, omit or send empty string to keep the existing value.",
             "example": {
               "endpointUrl": "https://example.com/api"
             }

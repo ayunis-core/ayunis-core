@@ -4,15 +4,16 @@ import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations
 import type { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
-import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import {
   McpIntegrationNotFoundError,
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
   McpNoUserFieldsError,
   McpIntegrationAccessDeniedError,
   McpInvalidConfigKeysError,
@@ -28,7 +29,7 @@ describe('SetUserMcpConfigUseCase', () => {
   let userConfigRepository: jest.Mocked<McpIntegrationUserConfigRepositoryPort>;
   let credentialEncryption: jest.Mocked<McpCredentialEncryptionPort>;
   let contextService: jest.Mocked<ContextService>;
-  let marketplaceConfigService: MarketplaceConfigService;
+  let configService: McpConfigService;
   let capabilityCache: McpCapabilityCacheService;
 
   const userId = '770e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -100,9 +101,7 @@ describe('SetUserMcpConfigUseCase', () => {
     userConfigRepository.save.mockImplementation(async (config) => config);
     userConfigRepository.findByIntegrationAndUser.mockResolvedValue(null);
 
-    marketplaceConfigService = new MarketplaceConfigService(
-      credentialEncryption,
-    );
+    configService = new McpConfigService(credentialEncryption);
 
     capabilityCache = new McpCapabilityCacheService();
 
@@ -110,7 +109,7 @@ describe('SetUserMcpConfigUseCase', () => {
       integrationRepository,
       userConfigRepository,
       contextService,
-      marketplaceConfigService,
+      configService,
       capabilityCache,
     );
   });
@@ -385,15 +384,16 @@ describe('SetUserMcpConfigUseCase', () => {
     ).rejects.toThrow(McpIntegrationNotFoundError);
   });
 
-  it('should throw when integration is not a marketplace integration', async () => {
-    const customIntegration = new CustomMcpIntegration({
+  it('rejects integrations without schema-defined configuration', async () => {
+    const predefinedIntegration = new PredefinedMcpIntegration({
       id: integrationId,
       orgId,
-      name: 'Custom Integration',
-      serverUrl: 'https://custom.example.com/mcp',
+      name: 'Predefined Integration',
+      serverUrl: 'https://predefined.example.com/mcp',
+      slug: PredefinedMcpIntegrationSlug.TEST,
       auth: new NoAuthMcpIntegrationAuth({}),
     });
-    integrationRepository.findById.mockResolvedValue(customIntegration);
+    integrationRepository.findById.mockResolvedValue(predefinedIntegration);
 
     await expect(
       useCase.execute(
@@ -401,7 +401,7 @@ describe('SetUserMcpConfigUseCase', () => {
           personalToken: 'token',
         }),
       ),
-    ).rejects.toThrow(McpNotMarketplaceIntegrationError);
+    ).rejects.toThrow(McpIntegrationNotConfigurableError);
   });
 
   it('should throw when integration has no user fields', async () => {

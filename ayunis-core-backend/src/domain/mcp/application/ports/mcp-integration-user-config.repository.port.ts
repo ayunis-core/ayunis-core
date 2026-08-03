@@ -3,7 +3,7 @@ import type { McpIntegrationUserConfig } from '../../domain/mcp-integration-user
 
 /**
  * Repository port for MCP integration user-level configuration.
- * Manages per-user config values for marketplace integrations.
+ * Manages per-user config values for schema-configured integrations.
  */
 export abstract class McpIntegrationUserConfigRepositoryPort {
   /**

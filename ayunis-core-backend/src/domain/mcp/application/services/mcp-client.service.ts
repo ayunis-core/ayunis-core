@@ -12,7 +12,7 @@ import {
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
 import { McpIntegration } from '../../domain/mcp-integration.entity';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
 import {
   ConfigField,
   isSystemFixedField,
@@ -42,12 +42,11 @@ export class McpClientService {
 
   /**
    * Builds MCP connection configuration from integration entity.
-   * For marketplace integrations, resolves config fields to headers with
-   * optional per-user overrides. For legacy integrations, delegates auth
-   * header generation to the auth entity hierarchy.
+   * Schema-configured integrations resolve organization and user fields.
+   * Other integrations delegate header generation to their auth entity.
    *
    * @param integration The MCP integration entity
-   * @param userId Optional user ID for per-user config resolution (marketplace only)
+   * @param userId Optional user ID for per-user config resolution
    * @returns Connection configuration for MCP client
    * @throws McpAuthenticationError if authentication configuration fails
    */
@@ -56,78 +55,89 @@ export class McpClientService {
     integration: McpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
-    if (integration instanceof MarketplaceMcpIntegration) {
-      return this.buildMarketplaceConnectionConfig(integration, userId);
+    if (integration instanceof SchemaConfiguredMcpIntegration) {
+      return this.buildSchemaConfiguredConnectionConfig(integration, userId);
     }
-    return this.buildLegacyConnectionConfig(integration);
+    return this.buildAuthConnectionConfig(integration);
   }
 
   /**
-   * Builds connection config for marketplace integrations by resolving
+   * Builds connection config for schema-configured integrations by resolving
    * config schema fields to HTTP headers, with optional user-level overrides.
    */
-  private async buildMarketplaceConnectionConfig(
-    integration: MarketplaceMcpIntegration,
+  private async buildSchemaConfiguredConnectionConfig(
+    integration: SchemaConfiguredMcpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
-    const { configSchema, orgConfigValues } = integration;
-
-    // Resolve the per-user config and enforce authorization *before* the
-    // header-building try/catch below, so the specific authorization error is
-    // not masked as a generic McpAuthenticationError. Enforcement only applies
-    // when acting on behalf of a user — org-level operations (userId
-    // undefined, e.g. admin connection validation) build with org config only.
-    const userConfig =
-      userId && configSchema.userFields.length > 0
-        ? await this.userConfigRepository.findByIntegrationAndUser(
-            integration.id,
-            userId,
-          )
-        : null;
-
-    if (
-      userId &&
-      !integration.isUserAuthorized(userConfig?.configValues ?? null)
-    ) {
-      throw new McpUserAuthorizationRequiredError(
-        integration.id,
-        integration.name,
-      );
-    }
+    const userConfigValues = await this.loadUserConfigValues(
+      integration,
+      userId,
+    );
+    this.assertUserAuthorized(integration, userId, userConfigValues);
 
     try {
-      const headers: Record<string, string> = {};
-
-      // Apply org-level fields to headers
-      await this.applyConfigFieldHeaders(
-        headers,
-        configSchema.orgFields,
-        orgConfigValues,
+      return await this.buildSchemaConfiguredHeaders(
+        integration,
+        userId,
+        userConfigValues,
       );
-
-      // Apply user-level fields when acting on behalf of a user. System-fixed
-      // user values come from the schema; per-user overrides come from the
-      // stored user config (which may be absent when every required user field
-      // has a fixed value).
-      if (userId) {
-        await this.applyConfigFieldHeaders(
-          headers,
-          configSchema.userFields,
-          userConfig?.configValues ?? {},
-        );
-      }
-
-      return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         throw error;
       }
-      this.logger.error('Failed to build marketplace connection config', {
+      this.logger.error('Failed to build schema-configured connection config', {
         error: error as Error,
         integrationId: integration.id,
       });
       throw new McpAuthenticationError('Authentication configuration failed');
     }
+  }
+
+  private async loadUserConfigValues(
+    integration: SchemaConfiguredMcpIntegration,
+    userId?: UUID,
+  ): Promise<Record<string, string> | null> {
+    if (!userId || integration.configSchema.userFields.length === 0) {
+      return null;
+    }
+    const config = await this.userConfigRepository.findByIntegrationAndUser(
+      integration.id,
+      userId,
+    );
+    return config?.configValues ?? null;
+  }
+
+  private assertUserAuthorized(
+    integration: SchemaConfiguredMcpIntegration,
+    userId: UUID | undefined,
+    userConfigValues: Record<string, string> | null,
+  ): void {
+    if (!userId || integration.isUserAuthorized(userConfigValues)) return;
+    throw new McpUserAuthorizationRequiredError(
+      integration.id,
+      integration.name,
+    );
+  }
+
+  private async buildSchemaConfiguredHeaders(
+    integration: SchemaConfiguredMcpIntegration,
+    userId: UUID | undefined,
+    userConfigValues: Record<string, string> | null,
+  ): Promise<McpConnectionConfig> {
+    const headers: Record<string, string> = {};
+    await this.applyConfigFieldHeaders(
+      headers,
+      integration.configSchema.orgFields,
+      integration.orgConfigValues,
+    );
+    if (userId) {
+      await this.applyConfigFieldHeaders(
+        headers,
+        integration.configSchema.userFields,
+        userConfigValues ?? {},
+      );
+    }
+    return { serverUrl: integration.serverUrl, headers };
   }
 
   /**
@@ -168,14 +178,13 @@ export class McpClientService {
   }
 
   /**
-   * Builds connection config for legacy (Custom/Predefined) integrations
-   * using the auth entity hierarchy.
+   * Builds connection config for integrations using the auth entity hierarchy.
    */
-  private async buildLegacyConnectionConfig(
+  private async buildAuthConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
     try {
-      const headers = await this.buildLegacyAuthHeaders(integration);
+      const headers = await this.buildAuthHeaders(integration);
       return { serverUrl: integration.serverUrl, headers };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
@@ -190,7 +199,7 @@ export class McpClientService {
     }
   }
 
-  private async buildLegacyAuthHeaders(
+  private async buildAuthHeaders(
     integration: McpIntegration,
   ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {};

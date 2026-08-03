@@ -126,7 +126,7 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description:
-      'Configuration schema from marketplace (only for marketplace integrations)',
+      'Configuration schema for marketplace and schema-configured custom integrations',
     required: false,
   })
   configSchema?: {
@@ -136,8 +136,7 @@ export class McpIntegrationResponseDto {
   };
 
   @ApiProperty({
-    description:
-      'Whether this marketplace integration has user-level config fields',
+    description: 'Whether this integration has user-level config fields',
     required: false,
     example: false,
   })
@@ -145,7 +144,7 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description:
-      'Whether this marketplace integration requires each individual user to ' +
+      'Whether this integration requires each individual user to ' +
       'provide their own credentials before they can use it (has required ' +
       'user-level fields).',
     required: false,
@@ -165,7 +164,7 @@ export class McpIntegrationResponseDto {
 
   @ApiProperty({
     description:
-      'Current org-level config values for marketplace integrations. ' +
+      'Current org-level config values for schema-configured integrations. ' +
       'Non-secret fields contain plaintext values. Secret fields are masked with "••••••".',
     required: false,
     example: { endpointUrl: 'https://example.com/api', apiToken: '••••••' },

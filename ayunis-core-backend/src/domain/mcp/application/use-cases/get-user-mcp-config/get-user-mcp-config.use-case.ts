@@ -6,10 +6,9 @@ import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
 } from '../../mcp.errors';
-import { MarketplaceMcpIntegration } from '../../../domain/integrations/marketplace-mcp-integration.entity';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from '../../../domain/integrations/schema-configured-mcp-integration.entity';
 import { SECRET_MASK } from '../../../domain/value-objects/secret-mask.constant';
 
 export interface UserMcpConfigResult {
@@ -53,8 +52,8 @@ export class GetUserMcpConfigUseCase {
       throw new McpIntegrationAccessDeniedError(query.integrationId);
     }
 
-    if (!integration.isMarketplace()) {
-      throw new McpNotMarketplaceIntegrationError(query.integrationId);
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
+      throw new McpIntegrationNotConfigurableError(query.integrationId);
     }
 
     const config = await this.userConfigRepository.findByIntegrationAndUser(
@@ -76,14 +75,13 @@ export class GetUserMcpConfigUseCase {
     return { hasConfig: true, configValues: maskedValues };
   }
 
-  private getSecretKeys(integration: McpIntegration): Set<string> {
-    if (integration instanceof MarketplaceMcpIntegration) {
-      return new Set(
-        (integration.configSchema.userFields ?? [])
-          .filter((f) => f.type === 'secret')
-          .map((f) => f.key),
-      );
-    }
-    return new Set();
+  private getSecretKeys(
+    integration: SchemaConfiguredMcpIntegration,
+  ): Set<string> {
+    return new Set(
+      integration.configSchema.userFields
+        .filter((field) => field.type === 'secret')
+        .map((field) => field.key),
+    );
   }
 }

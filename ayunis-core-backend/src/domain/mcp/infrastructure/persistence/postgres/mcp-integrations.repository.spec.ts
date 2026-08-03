@@ -8,7 +8,7 @@ import type { MarketplaceMcpIntegrationRecord } from './schema/marketplace-mcp-i
 import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
 import { McpIntegrationFactory } from 'src/domain/mcp/application/factories/mcp-integration.factory';
 import { McpIntegrationAuthFactory } from 'src/domain/mcp/application/factories/mcp-integration-auth.factory';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
@@ -77,7 +77,7 @@ describe('McpIntegrationsRepository', () => {
   });
 
   const buildCustomIntegration = () =>
-    new CustomMcpIntegration({
+    aCustomMcpIntegration({
       id: randomUUID(),
       orgId: randomUUID(),
       name: 'Custom Integration',

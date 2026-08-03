@@ -45,11 +45,9 @@ export function IntegrationCard({
 }: Readonly<IntegrationCardProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const isMarketplace = integration.type === 'marketplace';
-  // Marketplace integrations that need each user to supply their own
-  // credentials can't be validated by the org-level test — see
-  // TestConnectionButton.
-  const requiresUserConfig =
-    isMarketplace && integration.userAuthorizationRequired === true;
+  // Integrations with required user credentials cannot be validated by the
+  // organization-level connection test.
+  const requiresUserConfig = integration.userAuthorizationRequired === true;
 
   return (
     <Item variant="outline">

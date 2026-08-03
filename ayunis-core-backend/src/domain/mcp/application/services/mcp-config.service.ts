@@ -7,17 +7,68 @@ import {
   isSystemFixedField,
 } from '../../domain/value-objects/integration-config-schema';
 import { McpMissingRequiredConfigError } from '../mcp.errors';
+import {
+  McpInvalidConfigKeysError,
+  McpValidationFailedError,
+} from '../mcp.errors';
+import type { IntegrationConfigSchema } from '../../domain/value-objects/integration-config-schema';
 
 /**
- * Shared service for marketplace integration config processing.
+ * Shared service for schema-configured integration processing.
  * Handles merging fixed values, validating required fields, encrypting secrets,
  * and merging values during updates (with secret retention).
  */
 @Injectable()
-export class MarketplaceConfigService {
+export class McpConfigService {
   constructor(
     private readonly credentialEncryption: McpCredentialEncryptionPort,
   ) {}
+
+  validateCustomSchema(
+    schema: IntegrationConfigSchema,
+    orgConfigValues: Record<string, string>,
+    integrationName: string,
+  ): void {
+    const allFields = [...schema.orgFields, ...schema.userFields];
+    const keys = allFields.map((field) => field.key);
+    if (new Set(keys).size !== keys.length) {
+      throw new McpValidationFailedError(
+        '',
+        integrationName,
+        'Configuration field keys must be unique.',
+      );
+    }
+
+    this.validateUniqueHeaders(
+      schema.orgFields,
+      integrationName,
+      'organization',
+    );
+    this.validateUniqueHeaders(schema.userFields, integrationName, 'user');
+
+    const allowedOrgKeys = new Set(schema.orgFields.map((field) => field.key));
+    const invalidKeys = Object.keys(orgConfigValues).filter(
+      (key) => !allowedOrgKeys.has(key),
+    );
+    if (invalidKeys.length > 0) {
+      throw new McpInvalidConfigKeysError(invalidKeys);
+    }
+  }
+
+  private validateUniqueHeaders(
+    fields: ConfigField[],
+    integrationName: string,
+    scope: string,
+  ): void {
+    const headerNames = fields.map((field) => field.headerName?.toLowerCase());
+    if (new Set(headerNames).size !== headerNames.length) {
+      throw new McpValidationFailedError(
+        '',
+        integrationName,
+        `Configuration headers must be unique within the ${scope} scope.`,
+      );
+    }
+  }
 
   /**
    * Merges fixed (system-controlled) values from the config schema into user-provided values.

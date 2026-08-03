@@ -17,6 +17,8 @@ export class McpIntegrationFactory {
     name: string;
     serverUrl: string;
     auth: McpIntegrationAuth;
+    configSchema: IntegrationConfigSchema;
+    orgConfigValues: Record<string, string>;
     id?: UUID;
     enabled?: boolean;
     createdAt?: Date;
@@ -73,7 +75,11 @@ export class McpIntegrationFactory {
       case McpIntegrationKind.MARKETPLACE:
         return this.createMarketplace(base, params);
       case McpIntegrationKind.CUSTOM:
-        return new CustomMcpIntegration(base);
+        return new CustomMcpIntegration({
+          ...base,
+          configSchema: this.requiredCustomConfigSchema(params),
+          orgConfigValues: params.orgConfigValues ?? {},
+        });
       default:
         throw new Error(
           `Unknown MCP integration kind: ${params.kind as string}`,
@@ -126,6 +132,15 @@ export class McpIntegrationFactory {
       orgConfigValues: params.orgConfigValues ?? {},
       logoUrl: params.logoUrl,
     });
+  }
+
+  private requiredCustomConfigSchema(
+    params: CreateIntegrationParams,
+  ): IntegrationConfigSchema {
+    if (!params.configSchema) {
+      throw new Error('Custom integrations require a config schema');
+    }
+    return params.configSchema;
   }
 }
 

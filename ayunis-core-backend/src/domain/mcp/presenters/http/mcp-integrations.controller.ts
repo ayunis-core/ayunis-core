@@ -165,9 +165,12 @@ export class McpIntegrationsController {
     const command = new CreateCustomMcpIntegrationCommand(
       dto.name,
       dto.serverUrl,
-      dto.authMethod,
-      dto.authHeaderName,
-      dto.credentials,
+      {
+        authType: 'CUSTOM',
+        orgFields: dto.configSchema.orgFields,
+        userFields: dto.configSchema.userFields,
+      },
+      dto.orgConfigValues,
       dto.returnsPii,
     );
 
@@ -380,7 +383,7 @@ export class McpIntegrationsController {
   @Get(':id/user-config')
   @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Get current user config for a marketplace MCP integration',
+    summary: 'Get current user config for an MCP integration',
   })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiResponse({
@@ -406,7 +409,7 @@ export class McpIntegrationsController {
   @Patch(':id/user-config')
   @Roles(UserRole.USER, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Set current user config for a marketplace MCP integration',
+    summary: 'Set current user config for an MCP integration',
   })
   @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
   @ApiBody({ type: SetUserConfigDto })

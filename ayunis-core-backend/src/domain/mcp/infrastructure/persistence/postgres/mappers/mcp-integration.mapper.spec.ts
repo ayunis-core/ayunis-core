@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { McpIntegrationMapper } from './mcp-integration.mapper';
 import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { McpIntegrationKind } from 'src/domain/mcp/domain/value-objects/mcp-integration-kind.enum';
@@ -46,7 +47,7 @@ describe('McpIntegrationMapper', () => {
   describe('toRecord', () => {
     it('maps custom integration with no auth', () => {
       const auth = new NoAuthMcpIntegrationAuth();
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         ...baseParams,
         auth,
       });
@@ -59,6 +60,33 @@ describe('McpIntegrationMapper', () => {
       const authRecord = record.auth;
       expect(authRecord.integration).toBe(record);
       expect(authRecord.integrationId).toBeUndefined();
+    });
+
+    it('maps schema-configured custom integration values', () => {
+      const configSchema: IntegrationConfigSchema = {
+        authType: 'CUSTOM',
+        orgFields: [
+          {
+            key: 'tenantId',
+            label: 'Tenant ID',
+            type: 'text',
+            headerName: 'X-Tenant-ID',
+            required: true,
+          },
+        ],
+        userFields: [],
+      };
+      const integration = aCustomMcpIntegration({
+        ...baseParams,
+        auth: new NoAuthMcpIntegrationAuth(),
+        configSchema,
+        orgConfigValues: { tenantId: 'council-42' },
+      });
+
+      const record = mapper.toRecord(integration);
+
+      expect(record.configSchema).toEqual(configSchema);
+      expect(record.orgConfigValues).toEqual({ tenantId: 'council-42' });
     });
 
     it('maps predefined integration with bearer auth and slug', () => {
@@ -90,7 +118,7 @@ describe('McpIntegrationMapper', () => {
         secret: 'encrypted-secret',
         headerName: 'X-API-Key',
       });
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         ...baseParams,
         auth,
       });
@@ -111,7 +139,7 @@ describe('McpIntegrationMapper', () => {
         accessToken: 'access',
         tokenExpiresAt: expiresAt,
       });
-      const integration = new CustomMcpIntegration({
+      const integration = aCustomMcpIntegration({
         ...baseParams,
         auth,
       });
@@ -139,6 +167,12 @@ describe('McpIntegrationMapper', () => {
       record.connectionStatus = baseParams.connectionStatus;
       record.createdAt = baseParams.createdAt;
       record.updatedAt = baseParams.updatedAt;
+      record.configSchema = {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [],
+      };
+      record.orgConfigValues = {};
 
       const authRecord = new NoAuthMcpIntegrationAuthRecord();
       authRecord.id = randomUUID();
@@ -186,7 +220,7 @@ describe('McpIntegrationMapper', () => {
       );
     });
 
-    it('maps custom integration with custom header auth', () => {
+    it('rejects custom integration records without a config schema', () => {
       const record = new CustomMcpIntegrationRecord();
       record.id = randomUUID();
       record.orgId = baseParams.orgId;
@@ -196,21 +230,16 @@ describe('McpIntegrationMapper', () => {
       record.createdAt = baseParams.createdAt;
       record.updatedAt = baseParams.updatedAt;
 
-      const authRecord = new CustomHeaderMcpIntegrationAuthRecord();
+      const authRecord = new NoAuthMcpIntegrationAuthRecord();
       authRecord.id = randomUUID();
       authRecord.integrationId = record.id;
-      authRecord.secret = 'encrypted-secret';
-      authRecord.headerName = 'X-API-Key';
       authRecord.integration = record;
       authRecord.createdAt = baseParams.createdAt;
       authRecord.updatedAt = baseParams.updatedAt;
       record.auth = authRecord;
 
-      const domain = mapper.toDomain(record);
-
-      expect(domain.auth).toBeInstanceOf(CustomHeaderMcpIntegrationAuth);
-      expect((domain.auth as CustomHeaderMcpIntegrationAuth).secret).toBe(
-        'encrypted-secret',
+      expect(() => mapper.toDomain(record)).toThrow(
+        'Custom integration record requires config schema',
       );
     });
   });
@@ -220,7 +249,7 @@ describe('McpIntegrationMapper', () => {
       secret: 'encrypted-secret',
       headerName: 'X-API-Key',
     });
-    const original = new CustomMcpIntegration({
+    const original = aCustomMcpIntegration({
       ...baseParams,
       auth,
     });

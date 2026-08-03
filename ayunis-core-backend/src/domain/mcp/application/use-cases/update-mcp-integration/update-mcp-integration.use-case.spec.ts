@@ -5,17 +5,19 @@ import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-encryption.port';
-import { MarketplaceConfigService } from '../../services/marketplace-config.service';
+import { McpConfigService } from '../../services/mcp-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
-import { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
+import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
+import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
+import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import {
-  McpNotMarketplaceIntegrationError,
+  McpIntegrationNotConfigurableError,
   McpMissingRequiredConfigError,
 } from '../../mcp.errors';
 import type { IntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
@@ -27,7 +29,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let context: jest.Mocked<ContextService>;
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
-  let marketplaceConfigService: MarketplaceConfigService;
+  let configService: McpConfigService;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let connectionValidationService: ConnectionValidationService;
   let capabilityCache: McpCapabilityCacheService;
@@ -56,7 +58,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<ValidateMcpIntegrationUseCase>;
 
-    marketplaceConfigService = new MarketplaceConfigService(encryption);
+    configService = new McpConfigService(encryption);
     connectionValidationService = new ConnectionValidationService(
       validateUseCase,
       repository,
@@ -68,7 +70,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       repository,
       context,
       encryption,
-      marketplaceConfigService,
+      configService,
       connectionValidationService,
       capabilityCache,
     );
@@ -87,7 +89,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
 
   it('updates name and rotates bearer token credentials', async () => {
     const auth = new BearerMcpIntegrationAuth({ authToken: 'encrypted-old' });
-    const integration = new CustomMcpIntegration({
+    const integration = aCustomMcpIntegration({
       id: integrationId,
       orgId,
       name: 'Old Name',
@@ -115,7 +117,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
   });
 
   it('invalidates cached capabilities after an update', async () => {
-    const integration = new CustomMcpIntegration({
+    const integration = aCustomMcpIntegration({
       id: integrationId,
       orgId,
       name: 'Old Name',
@@ -145,7 +147,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       secret: 'encrypted-existing',
       headerName: 'X-OLD',
     });
-    const integration = new CustomMcpIntegration({
+    const integration = aCustomMcpIntegration({
       id: integrationId,
       orgId,
       name: 'With Header',
@@ -321,12 +323,13 @@ describe('UpdateMcpIntegrationUseCase', () => {
       expect(encryption.encrypt).toHaveBeenCalledWith('new-secret-token');
     });
 
-    it('rejects orgConfigValues for non-marketplace integrations', async () => {
-      const integration = new CustomMcpIntegration({
+    it('rejects orgConfigValues for integrations without a schema', async () => {
+      const integration = new PredefinedMcpIntegration({
         id: integrationId,
         orgId,
-        name: 'Custom Integration',
+        name: 'Predefined Integration',
         serverUrl: 'https://example.com/mcp',
+        slug: PredefinedMcpIntegrationSlug.TEST,
         auth: new NoAuthMcpIntegrationAuth(),
       });
       repository.findById.mockResolvedValue(integration);
@@ -337,7 +340,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       });
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        McpNotMarketplaceIntegrationError,
+        McpIntegrationNotConfigurableError,
       );
     });
 

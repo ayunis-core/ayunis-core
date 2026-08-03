@@ -1,10 +1,14 @@
-import { MarketplaceConfigService } from './marketplace-config.service';
+import { McpConfigService } from './mcp-config.service';
 import type { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import type { ConfigField } from '../../domain/value-objects/integration-config-schema';
-import { McpMissingRequiredConfigError } from '../mcp.errors';
+import {
+  McpInvalidConfigKeysError,
+  McpMissingRequiredConfigError,
+  McpValidationFailedError,
+} from '../mcp.errors';
 
-describe('MarketplaceConfigService', () => {
-  let service: MarketplaceConfigService;
+describe('McpConfigService', () => {
+  let service: McpConfigService;
   let encryption: jest.Mocked<McpCredentialEncryptionPort>;
 
   beforeEach(() => {
@@ -17,7 +21,62 @@ describe('MarketplaceConfigService', () => {
       async (plaintext) => `encrypted:${plaintext}`,
     );
 
-    service = new MarketplaceConfigService(encryption);
+    service = new McpConfigService(encryption);
+  });
+
+  describe('validateCustomSchema', () => {
+    const field = {
+      key: 'apiKey',
+      label: 'API key',
+      type: 'secret' as const,
+      headerName: 'Authorization',
+      required: true,
+    };
+
+    it('rejects duplicate keys across organization and user fields', () => {
+      expect(() =>
+        service.validateCustomSchema(
+          {
+            authType: 'CUSTOM',
+            orgFields: [field],
+            userFields: [{ ...field, headerName: 'X-User-Key' }],
+          },
+          { apiKey: 'token' },
+          'Records',
+        ),
+      ).toThrow(McpValidationFailedError);
+    });
+
+    it('rejects case-insensitive duplicate headers within a scope', () => {
+      expect(() =>
+        service.validateCustomSchema(
+          {
+            authType: 'CUSTOM',
+            orgFields: [
+              field,
+              {
+                ...field,
+                key: 'secondKey',
+                headerName: 'authorization',
+              },
+            ],
+            userFields: [],
+          },
+          { apiKey: 'token', secondKey: 'token-2' },
+          'Records',
+        ),
+      ).toThrow(McpValidationFailedError);
+    });
+
+    it('rejects organization values not declared by the schema', () => {
+      expect(() =>
+        service.validateCustomSchema(
+          { authType: 'CUSTOM', orgFields: [field], userFields: [] },
+          { apiKey: 'token', unknown: 'value' },
+          'Records',
+        ),
+      ).toThrow(McpInvalidConfigKeysError);
+    });
   });
 
   describe('mergeFixedValues', () => {

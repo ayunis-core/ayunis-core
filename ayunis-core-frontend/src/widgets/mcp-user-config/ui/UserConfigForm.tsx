@@ -13,7 +13,7 @@ import { SECRET_MASK } from '@/shared/constants/secret-mask';
 import { isUserEditableField } from '@/shared/lib/config-field';
 
 /**
- * Per-user credential form for a marketplace MCP integration. Renders the
+ * Per-user credential form for a schema-configured MCP integration. Renders the
  * integration's `userFields` and lets the current user save their own values.
  * Shared by the admin integrations page and the user Settings → Integrations page.
  */
