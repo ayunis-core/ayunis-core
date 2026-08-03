@@ -21,7 +21,6 @@ import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
-import type { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
 import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
@@ -39,6 +38,8 @@ import { ToolUsedEvent } from '../../events/tool-used.event';
 import { RunMaxIterationsReachedError } from '../../runs.errors';
 import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
+import { CompleteTurnSelector } from '../../agent-runtime/complete-turn-selector';
+import type { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
 import type { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
 import {
   RunPiiMasksUpdate,
@@ -198,19 +199,22 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     contextService,
     eventEmitter,
   );
-  const mapMessagesToInferenceUseCase = {
-    execute: jest
+  const runtimeHistoryMaterializer = {
+    materialize: jest
       .fn()
       .mockResolvedValue([
         { role: 'user', content: [{ type: 'text', text: 'hi' }] },
       ]),
-  } as unknown as MapMessagesToInferenceUseCase;
+  } as unknown as RuntimeHistoryMaterializer;
   const countTokens = jest
     .fn()
     .mockReturnValue(overrides.tokensPerMessage ?? 1);
-  const contextBudgetHookFactory = new ContextBudgetHookFactory({
+  const completeTurnSelector = new CompleteTurnSelector({
     execute: countTokens,
   } as unknown as CountTokensUseCase);
+  const contextBudgetHookFactory = new ContextBudgetHookFactory(
+    completeTurnSelector,
+  );
   const provider = new MockProvider(overrides.turns ?? [textTurn('Hello')]);
   let providerSignal: AbortSignal | undefined;
   const streamProvider = provider.stream.bind(provider);
@@ -267,7 +271,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     createUserMessageUseCase,
     createToolResultMessageUseCase,
     addMessageToThreadUseCase,
-    mapMessagesToInferenceUseCase,
+    runtimeHistoryMaterializer,
     resolveModelProviderUseCase,
     runtimeModelProviderDecorator,
     messageCleanupService,

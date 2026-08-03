@@ -1,5 +1,6 @@
 import type { Message } from '@ayunis/agent-runtime';
 import type { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
+import { CompleteTurnSelector } from '../complete-turn-selector';
 import { ContextBudgetHookFactory } from './context-budget-hook.factory';
 
 const textMessage = (role: Message['role'], text: string): Message => ({
@@ -9,9 +10,10 @@ const textMessage = (role: Message['role'], text: string): Message => ({
 
 function buildHook(maxTokens: number, tokensPerContent = 20) {
   const countTokens = jest.fn().mockReturnValue(tokensPerContent);
-  const factory = new ContextBudgetHookFactory({
+  const selector = new CompleteTurnSelector({
     execute: countTokens,
   } as unknown as CountTokensUseCase);
+  const factory = new ContextBudgetHookFactory(selector);
   return {
     hook: factory.create({ maxTokens }),
     countTokens,

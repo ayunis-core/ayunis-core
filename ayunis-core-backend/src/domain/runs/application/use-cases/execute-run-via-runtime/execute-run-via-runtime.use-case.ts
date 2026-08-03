@@ -29,8 +29,6 @@ import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-ca
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
-import { MapMessagesToInferenceUseCase } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.use-case';
-import { MapMessagesToInferenceCommand } from 'src/domain/models/application/use-cases/map-messages-to-inference/map-messages-to-inference.command';
 import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
 import {
@@ -64,6 +62,7 @@ import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budg
 import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
 import { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
+import { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
@@ -122,7 +121,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
-    private readonly mapMessagesToInferenceUseCase: MapMessagesToInferenceUseCase,
+    private readonly runtimeHistoryMaterializer: RuntimeHistoryMaterializer,
     private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
     private readonly runtimeModelProviderDecorator: RuntimeModelProviderDecorator,
     private readonly messageCleanupService: MessageCleanupService,
@@ -290,13 +289,12 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   private async startRun(prepared: PreparedRuntimeRun, signal?: AbortSignal) {
-    const messages = await this.mapMessagesToInferenceUseCase.execute(
-      new MapMessagesToInferenceCommand(
-        prepared.thread.messages,
-        prepared.orgId,
-        prepared.backendTools,
-      ),
-    );
+    const messages = await this.runtimeHistoryMaterializer.materialize({
+      messages: prepared.thread.messages,
+      orgId: prepared.orgId,
+      tools: prepared.backendTools,
+      maxTokens: MAX_CONTEXT_TOKENS,
+    });
     const provider = await this.resolveModelProviderUseCase.execute(
       new ResolveModelProviderQuery(prepared.model),
     );
