@@ -22,6 +22,7 @@ import { Route as onboardingAcceptInviteRouteImport } from './routes/(onboarding
 import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedGettingStartedIndexRouteImport } from './routes/_authenticated/getting-started.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
@@ -56,12 +57,14 @@ import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
 import { Route as AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport } from './routes/_authenticated/super-admin-settings.app-alerts.index'
 import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
+import { Route as AuthenticatedProjectsProjectIdIndexRouteImport } from './routes/_authenticated/projects.$projectId.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
+import { Route as AuthenticatedProjectsProjectIdChatsChatIdRouteImport } from './routes/_authenticated/projects.$projectId.chats.$chatId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -128,6 +131,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProjectsIndexRoute =
+  AuthenticatedProjectsIndexRouteImport.update({
+    id: '/projects/',
+    path: '/projects/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedKnowledgeBasesIndexRoute =
@@ -330,6 +339,12 @@ const AuthenticatedSuperAdminSettingsAcademyIndexRoute =
     path: '/super-admin-settings/academy/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProjectsProjectIdIndexRoute =
+  AuthenticatedProjectsProjectIdIndexRouteImport.update({
+    id: '/projects/$projectId/',
+    path: '/projects/$projectId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsTeamsIndexRoute =
   AuthenticatedAdminSettingsTeamsIndexRouteImport.update({
     id: '/admin-settings/teams/',
@@ -364,6 +379,12 @@ const AuthenticatedAcademyChapterIdQuizRoute =
   AuthenticatedAcademyChapterIdQuizRouteImport.update({
     id: '/academy/$chapterId_/quiz',
     path: '/academy/$chapterId/quiz',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProjectsProjectIdChatsChatIdRoute =
+  AuthenticatedProjectsProjectIdChatsChatIdRouteImport.update({
+    id: '/projects/$projectId/chats/$chatId',
+    path: '/projects/$projectId/chats/$chatId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -403,6 +424,7 @@ export interface FileRoutesByFullPath {
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -412,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -420,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/projects/$projectId/chats/$chatId': typeof AuthenticatedProjectsProjectIdChatsChatIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -457,6 +481,7 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/projects': typeof AuthenticatedProjectsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -466,6 +491,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/projects/$projectId': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/super-admin-settings/app-alerts': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -474,6 +500,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/projects/$projectId/chats/$chatId': typeof AuthenticatedProjectsProjectIdChatsChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -513,6 +540,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -522,6 +550,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  '/_authenticated/projects/$projectId/': typeof AuthenticatedProjectsProjectIdIndexRoute
   '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   '/_authenticated/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -530,6 +559,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/_authenticated/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/_authenticated/projects/$projectId/chats/$chatId': typeof AuthenticatedProjectsProjectIdChatsChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -569,6 +599,7 @@ export interface FileRouteTypes {
     | '/chats/'
     | '/getting-started/'
     | '/knowledge-bases/'
+    | '/projects/'
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
@@ -578,6 +609,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/orgs/$id'
     | '/admin-settings/letterheads/'
     | '/admin-settings/teams/'
+    | '/projects/$projectId/'
     | '/super-admin-settings/academy/'
     | '/super-admin-settings/app-alerts/'
     | '/super-admin-settings/models-catalog/'
@@ -586,6 +618,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills/'
     | '/super-admin-settings/super-admins/'
     | '/super-admin-settings/users/'
+    | '/projects/$projectId/chats/$chatId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -623,6 +656,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/getting-started'
     | '/knowledge-bases'
+    | '/projects'
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
@@ -632,6 +666,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/orgs/$id'
     | '/admin-settings/letterheads'
     | '/admin-settings/teams'
+    | '/projects/$projectId'
     | '/super-admin-settings/academy'
     | '/super-admin-settings/app-alerts'
     | '/super-admin-settings/models-catalog'
@@ -640,6 +675,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
     | '/super-admin-settings/users'
+    | '/projects/$projectId/chats/$chatId'
   id:
     | '__root__'
     | '/'
@@ -678,6 +714,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/'
     | '/_authenticated/getting-started/'
     | '/_authenticated/knowledge-bases/'
+    | '/_authenticated/projects/'
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
@@ -687,6 +724,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/orgs/$id'
     | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/teams/'
+    | '/_authenticated/projects/$projectId/'
     | '/_authenticated/super-admin-settings/academy/'
     | '/_authenticated/super-admin-settings/app-alerts/'
     | '/_authenticated/super-admin-settings/models-catalog/'
@@ -695,6 +733,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
     | '/_authenticated/super-admin-settings/users/'
+    | '/_authenticated/projects/$projectId/chats/$chatId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -803,6 +842,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/projects/': {
+      id: '/_authenticated/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof AuthenticatedProjectsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/knowledge-bases/': {
@@ -1043,6 +1089,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/projects/$projectId/': {
+      id: '/_authenticated/projects/$projectId/'
+      path: '/projects/$projectId'
+      fullPath: '/projects/$projectId/'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/teams/': {
       id: '/_authenticated/admin-settings/teams/'
       path: '/admin-settings/teams'
@@ -1085,6 +1138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcademyChapterIdQuizRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/projects/$projectId/chats/$chatId': {
+      id: '/_authenticated/projects/$projectId/chats/$chatId'
+      path: '/projects/$projectId/chats/$chatId'
+      fullPath: '/projects/$projectId/chats/$chatId'
+      preLoaderRoute: typeof AuthenticatedProjectsProjectIdChatsChatIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1113,6 +1173,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
@@ -1122,6 +1183,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
+  AuthenticatedProjectsProjectIdIndexRoute: typeof AuthenticatedProjectsProjectIdIndexRoute
   AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute: typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -1130,6 +1192,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   AuthenticatedSuperAdminSettingsUsersIndexRoute: typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  AuthenticatedProjectsProjectIdChatsChatIdRoute: typeof AuthenticatedProjectsProjectIdChatsChatIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1164,6 +1227,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
@@ -1180,6 +1244,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminSettingsLetterheadsIndexRoute,
   AuthenticatedAdminSettingsTeamsIndexRoute:
     AuthenticatedAdminSettingsTeamsIndexRoute,
+  AuthenticatedProjectsProjectIdIndexRoute:
+    AuthenticatedProjectsProjectIdIndexRoute,
   AuthenticatedSuperAdminSettingsAcademyIndexRoute:
     AuthenticatedSuperAdminSettingsAcademyIndexRoute,
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute:
@@ -1196,6 +1262,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute,
   AuthenticatedSuperAdminSettingsUsersIndexRoute:
     AuthenticatedSuperAdminSettingsUsersIndexRoute,
+  AuthenticatedProjectsProjectIdChatsChatIdRoute:
+    AuthenticatedProjectsProjectIdChatsChatIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
