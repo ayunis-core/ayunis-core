@@ -10,24 +10,25 @@ import type {
   AgentRunUnit,
   TimelineStep,
   StepStatus,
+  ToolTimelineStep,
 } from '../model/types';
 import { isRichTool } from './tool-classification';
 
 interface GroupingOptions {
   isStreaming: boolean;
-  toolResultsByToolId: Readonly<Record<string, string>>;
   /** New user turn is pending outside `messages` (optimistic bubble only). */
   hasPendingUserTurn?: boolean;
 }
 
 export function groupMessagesIntoRuns(
   messages: readonly Message[],
-  {
-    isStreaming,
-    toolResultsByToolId,
-    hasPendingUserTurn = false,
-  }: GroupingOptions,
+  { isStreaming, hasPendingUserTurn = false }: GroupingOptions,
 ): RenderUnit[] {
+  const toolResultsByToolId = indexToolResults(messages);
+  const isStreamingCurrentMessages = isStreaming && !hasPendingUserTurn;
+  const activeAssistantMessageIndex = isStreamingCurrentMessages
+    ? findActiveAssistantMessageIndex(messages)
+    : -1;
   const units: RenderUnit[] = [];
   let currentRun: AgentRunUnit | null = null;
   let pendingSkillSteps: TimelineStep[] = [];
@@ -61,23 +62,21 @@ export function groupMessagesIntoRuns(
     const run: AgentRunUnit = (currentRun ??= {
       kind: 'agent-run',
       key: `run-${message.id}`,
-      steps: pendingSkillSteps,
-      richCards: [],
-      finalText: [],
+      blocks: [],
       isStreaming: false,
     });
+    pendingSkillSteps.forEach((step) => appendActivityStep(run, step));
     pendingSkillSteps = [];
 
     appendAssistantMessage(run, message, {
-      isStreaming,
-      isLastMessage: i === messages.length - 1,
+      isActiveAssistantMessage: i === activeAssistantMessageIndex,
       toolResultsByToolId,
     });
   }
 
   closeRun();
 
-  if (isStreaming && !hasPendingUserTurn && units.length > 0) {
+  if (isStreamingCurrentMessages && units.length > 0) {
     const lastUnit = units[units.length - 1];
     if (lastUnit.kind === 'agent-run') {
       lastUnit.isStreaming = true;
@@ -85,6 +84,30 @@ export function groupMessagesIntoRuns(
   }
 
   return units;
+}
+
+function findActiveAssistantMessageIndex(messages: readonly Message[]): number {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const role = messages[index].role;
+    if (role === 'assistant') return index;
+    if (role === 'user' || role === 'system') return -1;
+  }
+  return -1;
+}
+
+function indexToolResults(
+  messages: readonly Message[],
+): Readonly<Record<string, string>> {
+  const results: Record<string, string> = {};
+  for (const message of messages) {
+    if (message.role !== 'tool') continue;
+    for (const content of message.content) {
+      if (content.type === 'tool_result') {
+        results[content.toolId] = content.result;
+      }
+    }
+  }
+  return results;
 }
 
 function collectSkillInstructionSteps(message: Message): TimelineStep[] {
@@ -104,31 +127,30 @@ function collectSkillInstructionSteps(message: Message): TimelineStep[] {
 }
 
 interface AppendOptions {
-  isStreaming: boolean;
-  isLastMessage: boolean;
+  isActiveAssistantMessage: boolean;
   toolResultsByToolId: Readonly<Record<string, string>>;
 }
 
 function getToolStatus(
   toolUse: ToolUseMessageContent,
   hasResult: boolean,
+  isStreaming: boolean,
 ): StepStatus {
   if (toolUse.stream?.status === 'invalid') return 'error';
-  return hasResult ? 'done' : 'in_progress';
+  return hasResult || !isStreaming ? 'done' : 'in_progress';
 }
 
 function appendAssistantMessage(
   run: AgentRunUnit,
   message: AssistantMessage,
-  { isStreaming, isLastMessage, toolResultsByToolId }: AppendOptions,
+  { isActiveAssistantMessage, toolResultsByToolId }: AppendOptions,
 ): void {
   const content = message.content;
-  const isStreamingThisMessage = isStreaming && isLastMessage;
 
   let pendingThinking: { transcript: string; key: string } | null = null;
   const flushThinking = (status: 'in_progress' | 'done') => {
     if (pendingThinking) {
-      run.steps.push({
+      appendActivityStep(run, {
         kind: 'thinking',
         key: pendingThinking.key,
         transcript: pendingThinking.transcript,
@@ -158,28 +180,59 @@ function appendAssistantMessage(
       const toolUse = block as ToolUseMessageContent;
       const hasResult = toolUse.id in toolResultsByToolId;
       const result = hasResult ? toolResultsByToolId[toolUse.id] : undefined;
-      const status = getToolStatus(toolUse, hasResult);
-      run.steps.push({
+      const status = getToolStatus(
+        toolUse,
+        hasResult,
+        isActiveAssistantMessage,
+      );
+      const step: ToolTimelineStep = {
         kind: 'tool',
         key: `${message.id}-tool-${toolUse.id}`,
         toolUse,
         result,
         status,
-      });
-      if (status !== 'error' && isRichTool(toolUse.name)) {
-        run.richCards.push({
-          key: `${message.id}-card-${toolUse.id}`,
-          toolUse,
-          result,
+      };
+      const isPendingTool =
+        toolUse.name.length === 0 && toolUse.stream?.status === 'streaming';
+      if (status !== 'error' && isPendingTool) {
+        run.blocks.push({
+          kind: 'pending-tool',
+          key: step.key,
+          step,
         });
+      } else if (status !== 'error' && isRichTool(toolUse.name)) {
+        run.blocks.push({
+          kind: 'rich-tool',
+          key: step.key,
+          step,
+        });
+      } else {
+        appendActivityStep(run, step);
       }
       return;
     }
 
     if (block.type === 'text') {
-      run.finalText.push(block as TextMessageContent);
+      run.blocks.push({
+        kind: 'text',
+        key: `${message.id}-text-${index}`,
+        content: block as TextMessageContent,
+      });
     }
   });
 
-  flushThinking(isStreamingThisMessage ? 'in_progress' : 'done');
+  flushThinking(isActiveAssistantMessage ? 'in_progress' : 'done');
+}
+
+function appendActivityStep(run: AgentRunUnit, step: TimelineStep): void {
+  const lastBlock = run.blocks.at(-1);
+  if (lastBlock?.kind === 'activity') {
+    lastBlock.steps.push(step);
+    return;
+  }
+  run.blocks.push({
+    kind: 'activity',
+    key: `activity-${step.key}`,
+    steps: [step],
+  });
 }

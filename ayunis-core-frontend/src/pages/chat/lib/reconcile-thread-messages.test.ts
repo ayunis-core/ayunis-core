@@ -71,6 +71,33 @@ describe('reconcileMessages', () => {
     expect(result[1].content).toEqual([invalidToolCall]);
   });
 
+  it('keeps a missing invalid-only message before later persisted turns', () => {
+    const current = [
+      message('user-1', 'user', [{ type: 'text', text: 'chart it' }]),
+      message('assistant-invalid', 'assistant', [invalidToolCall]),
+      message('user-2', 'user', [{ type: 'text', text: 'try again' }]),
+      message('assistant-2', 'assistant', [
+        { type: 'text', text: 'Here is the new reply.' },
+      ]),
+    ];
+    const persisted = [
+      message('user-1', 'user', [{ type: 'text', text: 'chart it' }]),
+      message('user-2', 'user', [{ type: 'text', text: 'try again' }]),
+      message('assistant-2', 'assistant', [
+        { type: 'text', text: 'Here is the new reply.' },
+      ]),
+    ];
+
+    const result = reconcile(current, persisted);
+
+    expect(result.map(({ id }) => id)).toEqual([
+      'user-1',
+      'assistant-invalid',
+      'user-2',
+      'assistant-2',
+    ]);
+  });
+
   it('does not retain in-progress tool calls', () => {
     const streamingToolCall = {
       ...invalidToolCall,

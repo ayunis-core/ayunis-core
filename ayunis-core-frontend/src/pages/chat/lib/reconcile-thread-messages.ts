@@ -35,6 +35,34 @@ function mergeInvalidToolCalls(
     : { ...message, content: [...message.content, ...missing] };
 }
 
+function toInvalidOnlyMessage(message: Message): Message | null {
+  const invalidToolCalls = getInvalidToolCalls(message);
+  return invalidToolCalls.length === 0
+    ? null
+    : ({ ...message, content: invalidToolCalls } as Message);
+}
+
+function interleaveMissingInvalidMessages(
+  reconciledMessages: readonly Message[],
+  currentMessages: readonly Message[],
+  persistedIds: ReadonlySet<string>,
+): Message[] {
+  const missingBeforeId = new Map<string, Message[]>();
+  let pending: Message[] = [];
+  for (const message of currentMessages) {
+    if (persistedIds.has(message.id)) {
+      if (pending.length > 0) missingBeforeId.set(message.id, pending);
+      pending = [];
+      continue;
+    }
+    const invalidOnlyMessage = toInvalidOnlyMessage(message);
+    if (invalidOnlyMessage) pending.push(invalidOnlyMessage);
+  }
+  return reconciledMessages
+    .flatMap((message) => [...(missingBeforeId.get(message.id) ?? []), message])
+    .concat(pending);
+}
+
 export function reconcileMessages(
   currentMessages: readonly Message[],
   previousThread: Pick<Thread, 'id'>,
@@ -54,13 +82,9 @@ export function reconcileMessages(
   const reconciled = persistedMessages.map((message) =>
     mergeInvalidToolCalls(message, invalidByMessageId.get(message.id) ?? []),
   );
-  const missing = currentMessages
-    .filter((message) => !persistedIds.has(message.id))
-    .flatMap((message) => {
-      const invalidToolCalls = getInvalidToolCalls(message);
-      return invalidToolCalls.length === 0
-        ? []
-        : [{ ...message, content: invalidToolCalls } as Message];
-    });
-  return [...reconciled, ...missing];
+  return interleaveMissingInvalidMessages(
+    reconciled,
+    currentMessages,
+    persistedIds,
+  );
 }

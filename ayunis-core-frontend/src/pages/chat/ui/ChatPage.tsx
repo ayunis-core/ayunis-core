@@ -162,23 +162,6 @@ export default function ChatPage({
     threadId: thread.id,
   });
 
-  const sortedMessages = useMemo(() => {
-    return [...messages].sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
-  }, [messages]);
-
-  const toolResultsByToolId = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const message of sortedMessages) {
-      if (message.role !== 'tool') continue;
-      for (const content of message.content) {
-        if (content.type === 'tool_result') {
-          map[content.toolId] = content.result;
-        }
-      }
-    }
-    return map;
-  }, [sortedMessages]);
-
   const { deleteChat } = useDeleteThread({
     onSuccess: () => {
       void navigate({ to: '/chat' });
@@ -392,12 +375,11 @@ export default function ChatPage({
 
   const renderUnits = useMemo(
     () =>
-      groupMessagesIntoRuns(sortedMessages, {
+      groupMessagesIntoRuns(messages, {
         isStreaming,
-        toolResultsByToolId,
         hasPendingUserTurn: pendingSubmission !== null,
       }),
-    [sortedMessages, isStreaming, toolResultsByToolId, pendingSubmission],
+    [messages, isStreaming, pendingSubmission],
   );
 
   const lastUnitKind =
