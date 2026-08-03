@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.21.1](https://github.com/ayunis-core/ayunis-core/compare/v2.21.0...v2.21.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **agent-runtime:** acknowledge displayed tools before user input (AYC-000) ([#1227](https://github.com/ayunis-core/ayunis-core/issues/1227)) ([6cdaba1](https://github.com/ayunis-core/ayunis-core/commit/6cdaba11fda6d5ba41c61dc30fa0f0c68050bf51))
+* **chat-input:** render source filenames correctly (AYC-000) ([#1228](https://github.com/ayunis-core/ayunis-core/issues/1228)) ([ff2ac85](https://github.com/ayunis-core/ayunis-core/commit/ff2ac85911219d6ea6f45b1cca60c19cbedd5b5c))
+
 ## [2.21.0](https://github.com/ayunis-core/ayunis-core/compare/v2.20.1...v2.21.0) (2026-08-03)
 
 
