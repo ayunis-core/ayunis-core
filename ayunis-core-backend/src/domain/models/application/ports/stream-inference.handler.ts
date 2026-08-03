@@ -1,3 +1,4 @@
+import type { ModelProvider } from '@ayunis/inference';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { Model } from '../../domain/model.entity';
@@ -119,4 +120,12 @@ export abstract class StreamInferenceHandler {
   abstract answer(
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk>;
+
+  /**
+   * Resolves the credentialed `@ayunis/inference` provider for a model. This
+   * is the seam the agent runtime consumes: `run()` drives the provider's
+   * `stream()` directly, so the returned provider must apply the same
+   * per-chunk transforms (e.g. `<think>`-tag splitting) that `answer()` does.
+   */
+  abstract resolveProvider(model: Model): ModelProvider;
 }
