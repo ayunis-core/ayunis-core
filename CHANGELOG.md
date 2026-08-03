@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.21.0](https://github.com/ayunis-core/ayunis-core/compare/v2.20.1...v2.21.0) (2026-08-03)
+
+
+### Features
+
+* **academy:** open landing page from sidebar when add-on inactive (AYC-596) ([#1202](https://github.com/ayunis-core/ayunis-core/issues/1202)) ([2dc5dc4](https://github.com/ayunis-core/ayunis-core/commit/2dc5dc48e093869399582f16b317eb513b76527e))
+* **academy:** require the AI certificate for core chat (AYC-597) ([#1208](https://github.com/ayunis-core/ayunis-core/issues/1208)) ([7d853db](https://github.com/ayunis-core/ayunis-core/commit/7d853db7628b7b316b74beadb5ef5715951d6f82))
+
+
+### Bug Fixes
+
+* **academy:** use formal German address in certificate gate copy (AYC-597) ([#1224](https://github.com/ayunis-core/ayunis-core/issues/1224)) ([5d1c324](https://github.com/ayunis-core/ayunis-core/commit/5d1c324e7666fb89eaf93976740619aa31bec2b4))
+* **admin-settings:** rename the academy sidebar item to Academy (AYC-000) ([#1210](https://github.com/ayunis-core/ayunis-core/issues/1210)) ([56394ea](https://github.com/ayunis-core/ayunis-core/commit/56394eaa3dbf1a7e0d2c602abf0517e6708c23fc))
+* **anonymize:** install cpu-only torch (AYC-589) ([#1205](https://github.com/ayunis-core/ayunis-core/issues/1205)) ([ddb2044](https://github.com/ayunis-core/ayunis-core/commit/ddb2044f5f01898a965385ea252ec4fedc802f14))
+* **chat:** preserve chronological timeline order (AYC-634) ([#1223](https://github.com/ayunis-core/ayunis-core/issues/1223)) ([6d32127](https://github.com/ayunis-core/ayunis-core/commit/6d32127165746ae3d98e5a561dc23966acadf0f1))
+* **dev:** harden local stack startup (AYC-000) ([#1225](https://github.com/ayunis-core/ayunis-core/issues/1225)) ([6003f94](https://github.com/ayunis-core/ayunis-core/commit/6003f941a6cd5c9ca69293e83ea4126a5350bfbc))
+* **mcp:** stop aborted mcp requests and cache capability discovery (AYC-000) ([#1201](https://github.com/ayunis-core/ayunis-core/issues/1201)) ([0a9031f](https://github.com/ayunis-core/ayunis-core/commit/0a9031f67a967eab82503d83813e5a0f21a4b8a4))
+* **openai-compat:** strip strict-mode nulls from outbound tool calls (AYC-000) ([#1178](https://github.com/ayunis-core/ayunis-core/issues/1178)) ([4cc9126](https://github.com/ayunis-core/ayunis-core/commit/4cc9126bd44fcfc6f3523019dc8927162316181e))
+* **sources:** surface distinct error when no embedding model is permitted (AYC-603) ([#1209](https://github.com/ayunis-core/ayunis-core/issues/1209)) ([6fbdb9c](https://github.com/ayunis-core/ayunis-core/commit/6fbdb9cb82a08eba9f15c1bbcb3e91dfc2b1cdb4))
+* **tools:** prevent fabricated optional params in strict tool calling (AYC-413) ([#1030](https://github.com/ayunis-core/ayunis-core/issues/1030)) ([dc61a63](https://github.com/ayunis-core/ayunis-core/commit/dc61a63229f2e7c2fcd55ce2ef6a68b6ef661524))
+
+
+### Performance Improvements
+
+* **sources:** move xlsx parsing off the event loop (AYC-491) ([#1096](https://github.com/ayunis-core/ayunis-core/issues/1096)) ([16f7ff4](https://github.com/ayunis-core/ayunis-core/commit/16f7ff47bdf2fde7d2fc87f726f55655d40d056e))
+
+
+### Documentation
+
+* record why the ghcr cleanup action version is load-bearing (AYC-589) ([#1200](https://github.com/ayunis-core/ayunis-core/issues/1200)) ([0c131c9](https://github.com/ayunis-core/ayunis-core/commit/0c131c935167a7e4030ad58538c4d4f4f3a9b25a))
+
+
+### CI/CD
+
+* make deploy scripts actually abort on error (AYC-589) ([#1196](https://github.com/ayunis-core/ayunis-core/issues/1196)) ([bbf4d4a](https://github.com/ayunis-core/ayunis-core/commit/bbf4d4aa6248aacb6925d197f34eacf0a20d033a))
+* move image build cache from gha to ghcr (AYC-589) ([#1204](https://github.com/ayunis-core/ayunis-core/issues/1204)) ([820e545](https://github.com/ayunis-core/ayunis-core/commit/820e545aba395f7b7126d9e8e5a68da9e75be64f))
+* narrow deploy image cleanup to the core repositories (AYC-589) ([#1199](https://github.com/ayunis-core/ayunis-core/issues/1199)) ([0e52ffe](https://github.com/ayunis-core/ayunis-core/commit/0e52ffea04c2fb6e383b51ea512eb5f1f545a97d))
+* publish multi-arch core images for amd64 and arm64 (AYC-589) ([#1198](https://github.com/ayunis-core/ayunis-core/issues/1198)) ([578b1c3](https://github.com/ayunis-core/ayunis-core/commit/578b1c3f3d1fd419225e1b1be03dab3caa2fbee7))
+* reclaim disk before pulling images on staging (AYC-589) ([#1203](https://github.com/ayunis-core/ayunis-core/issues/1203)) ([68f647d](https://github.com/ayunis-core/ayunis-core/commit/68f647dc6e25914c75296a6c6b4e0d9a8413e4a6))
+* switch staging deploys to ghcr image pulls (AYC-589) ([#1193](https://github.com/ayunis-core/ayunis-core/issues/1193)) ([28ba734](https://github.com/ayunis-core/ayunis-core/commit/28ba7349e21e35dbfb9ab21ea601a3fad53d1c12))
+
 ## [2.20.1](https://github.com/ayunis-core/ayunis-core/compare/v2.20.0...v2.20.1) (2026-07-30)
 
 
