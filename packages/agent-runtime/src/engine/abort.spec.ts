@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { AgentRuntimeError } from '../contracts/errors';
 import type { Hook } from '../contracts/hook';
 import type { ProviderChunk, ProviderRequest } from '../contracts/provider';
 import {
@@ -26,6 +27,56 @@ describe('abort handling', () => {
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'aborted',
+    });
+  });
+
+  it('ends as aborted when the provider rejects because the signal fired', async () => {
+    const controller = new AbortController();
+    const model = new MockProvider([]);
+    model.stream = async function* (
+      request: ProviderRequest,
+    ): AsyncIterable<ProviderChunk> {
+      yield { textDelta: 'first' };
+      controller.abort();
+      if (request.signal?.aborted) {
+        throw new DOMException('The operation was aborted', 'AbortError');
+      }
+    };
+
+    const events = await collectEvents(
+      baseInput(model, { signal: controller.signal }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+  });
+
+  it('preserves a classified provider failure when cancellation races with it', async () => {
+    const controller = new AbortController();
+    const model = new MockProvider([]);
+    model.stream = async function* (): AsyncIterable<ProviderChunk> {
+      controller.abort();
+      yield await Promise.reject(
+        new AgentRuntimeError(
+          'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+          'Provider anthropic request timed out',
+        ),
+      );
+    };
+
+    const events = await collectEvents(
+      baseInput(model, { signal: controller.signal }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
     });
   });
 
@@ -153,6 +204,57 @@ describe('abort handling', () => {
       baseInput(model, { hooks: [abortAtEnd] }),
     );
 
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+  });
+
+  it('completes a final turn when the external signal aborts after the model call', async () => {
+    const controller = new AbortController();
+    const disconnectAfterFinalTurn: Hook = {
+      name: 'disconnect-after-final-turn',
+      afterModelCall: () => controller.abort(),
+    };
+    const model = new MockProvider([textTurn('Final answer')]);
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [disconnectAfterFinalTurn],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('stops before executable tools when the external signal aborts after the model call', async () => {
+    const controller = new AbortController();
+    let toolExecuted = false;
+    const disconnectBeforeTools: Hook = {
+      name: 'disconnect-before-tools',
+      afterModelCall: () => controller.abort(),
+    };
+    const tool = echoTool({
+      execute: () => {
+        toolExecuted = true;
+        return 'should not run';
+      },
+    });
+    const model = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'echo', input: { value: 'budget' } }),
+    ]);
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [disconnectBeforeTools],
+        signal: controller.signal,
+        tools: [tool],
+      }),
+    );
+
+    expect(toolExecuted).toBe(false);
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'aborted',

@@ -5,6 +5,7 @@ export class SendMessageCommand {
   public readonly threadId: UUID;
   public readonly input: RunInput;
   public readonly streaming: boolean;
+  public readonly signal?: AbortSignal;
   /**
    * True when the requesting org has no subscription and is consuming one
    * of its remaining trial messages. Decided at the HTTP boundary (from the
@@ -18,10 +19,12 @@ export class SendMessageCommand {
     input: RunInput;
     streaming: boolean;
     consumeTrialMessage: boolean;
+    signal?: AbortSignal;
   }) {
     this.threadId = params.threadId;
     this.input = params.input;
     this.streaming = params.streaming;
     this.consumeTrialMessage = params.consumeTrialMessage;
+    this.signal = params.signal;
   }
 }

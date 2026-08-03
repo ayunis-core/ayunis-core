@@ -27,6 +27,7 @@ export class SendMessageUseCase {
         threadId: command.threadId,
         input: command.input,
         streaming: command.streaming,
+        signal: command.signal,
       }),
     );
   }

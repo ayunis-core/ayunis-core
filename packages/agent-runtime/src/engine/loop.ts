@@ -7,7 +7,7 @@ import { drainEmits } from './event-queue';
 import { getToolUseContents, shouldExitLoop } from './exit-conditions';
 import { streamModelCall } from './model-call';
 import type { RunState } from './run-state';
-import { isAborted } from './run-state';
+import { isAborted, isHookAborted, isSignalAborted } from './run-state';
 import { executeToolCalls } from './tool-executor';
 
 export interface LoopCompletion {
@@ -62,11 +62,14 @@ async function* runIteration(
   const toolCalls = getToolUseContents(result.message);
   yield* assistantEvents(result, toolCalls);
   yield* drainEmits(state);
-  if (isAborted(state)) {
+  if (isHookAborted(state)) {
     return { status: 'aborted' };
   }
   if (shouldExitLoop(result.message, state.tools)) {
     return { status: 'completed' };
+  }
+  if (isSignalAborted(state)) {
+    return { status: 'aborted' };
   }
   yield* runToolPhase(state, iteration, toolCalls);
   return isAborted(state) ? { status: 'aborted' } : null;

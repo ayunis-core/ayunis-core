@@ -1,4 +1,8 @@
-import { ProviderError, RunAbortedError } from '../contracts/errors';
+import {
+  AgentRuntimeError,
+  ProviderError,
+  RunAbortedError,
+} from '../contracts/errors';
 import type { RunEventPayload } from '../contracts/event';
 import type { ToolCallSnapshot } from '../contracts/event';
 import type {
@@ -31,6 +35,12 @@ export async function* streamModelCall(params: {
   } catch (error) {
     if (error instanceof RunAbortedError) {
       throw error;
+    }
+    if (error instanceof AgentRuntimeError) {
+      throw error;
+    }
+    if (params.request.signal?.aborted) {
+      throw new RunAbortedError('Run aborted during model call');
     }
     throw toProviderError(error);
   }
@@ -67,8 +77,8 @@ function* deltaEvents(
   }
 }
 
-const toProviderError = (error: unknown): ProviderError => {
-  if (error instanceof ProviderError) {
+const toProviderError = (error: unknown): AgentRuntimeError => {
+  if (error instanceof AgentRuntimeError) {
     return error;
   }
   const message =

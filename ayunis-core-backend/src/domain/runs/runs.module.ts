@@ -17,6 +17,7 @@ import { UsageHookFactory } from './application/agent-runtime/hooks/usage-hook.f
 import { ToolUsageHookFactory } from './application/agent-runtime/hooks/tool-usage-hook.factory';
 import { SkillActivationHookFactory } from './application/agent-runtime/hooks/skill-activation-hook.factory';
 import { ContextBudgetHookFactory } from './application/agent-runtime/hooks/context-budget-hook.factory';
+import { RuntimeModelProviderDecorator } from './application/agent-runtime/runtime-model-provider.decorator';
 import { SystemPromptBuilderService } from './application/services/system-prompt-builder.service';
 import { ToolAssemblyService } from './application/services/tool-assembly.service';
 import { ArtifactToolAssemblerService } from './application/services/artifact-tool-assembler.service';
@@ -78,6 +79,7 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     ToolUsageHookFactory,
     SkillActivationHookFactory,
     ContextBudgetHookFactory,
+    RuntimeModelProviderDecorator,
     ExecuteRunAndSetTitleUseCase,
     SendMessageUseCase,
     RunEventResponseMapper,

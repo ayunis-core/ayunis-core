@@ -125,24 +125,28 @@ export class RunsController {
     });
 
     this.requestValidator.validate(sendMessageDto, uploadedFiles);
-
-    const command = new SendMessageCommand({
-      threadId: sendMessageDto.threadId,
-      input: RunInputMapper.toCommand(
-        sendMessageDto,
-        uploadedFiles,
-        sendMessageDto.skillId,
-      ),
-      streaming: sendMessageDto.streaming ?? true,
-      consumeTrialMessage: Boolean(
-        request.subscriptionContext?.hasRemainingTrialMessages,
-      ),
-    });
+    const input = RunInputMapper.toCommand(
+      sendMessageDto,
+      uploadedFiles,
+      sendMessageDto.skillId,
+    );
+    const consumeTrialMessage = Boolean(
+      request.subscriptionContext?.hasRemainingTrialMessages,
+    );
 
     await this.ssePresenter.stream(
       response,
       sendMessageDto.threadId,
-      this.sendMessageUseCase.execute(command),
+      (signal) =>
+        this.sendMessageUseCase.execute(
+          new SendMessageCommand({
+            threadId: sendMessageDto.threadId,
+            input,
+            streaming: sendMessageDto.streaming ?? true,
+            consumeTrialMessage,
+            signal,
+          }),
+        ),
     );
   }
 }

@@ -55,7 +55,7 @@ describe('RunSsePresenter', () => {
   });
 
   const stream = (events: AsyncGenerator<RunEvent>) =>
-    presenter.stream(response as unknown as Response, THREAD_ID, events);
+    presenter.stream(response as unknown as Response, THREAD_ID, () => events);
 
   it('sends sse headers and a connection comment before any event', async () => {
     await stream(eventsOf());
@@ -89,14 +89,23 @@ describe('RunSsePresenter', () => {
   });
 
   it('stops forwarding events once the client disconnects', async () => {
+    let signal: AbortSignal | undefined;
     async function* disconnectingSource(): AsyncGenerator<RunEvent> {
       yield sessionEvent('t1');
       response.emit('close');
       yield sessionEvent('t2');
     }
 
-    await stream(disconnectingSource());
+    await presenter.stream(
+      response as unknown as Response,
+      THREAD_ID,
+      (sourceSignal) => {
+        signal = sourceSignal;
+        return disconnectingSource();
+      },
+    );
 
+    expect(signal?.aborted).toBe(true);
     expect(
       response.write.mock.calls.filter(([chunk]: [string]) =>
         chunk.startsWith('id: '),
@@ -106,14 +115,25 @@ describe('RunSsePresenter', () => {
   });
 
   it('treats a socket error as a disconnect instead of crashing', async () => {
+    let signal: AbortSignal | undefined;
     async function* erroringSocketSource(): AsyncGenerator<RunEvent> {
       yield sessionEvent('t1');
       response.emit('error', new Error('ECONNRESET'));
       yield sessionEvent('t2');
     }
 
-    await expect(stream(erroringSocketSource())).resolves.toBeUndefined();
+    await expect(
+      presenter.stream(
+        response as unknown as Response,
+        THREAD_ID,
+        (sourceSignal) => {
+          signal = sourceSignal;
+          return erroringSocketSource();
+        },
+      ),
+    ).resolves.toBeUndefined();
 
+    expect(signal?.aborted).toBe(true);
     expect(
       response.write.mock.calls.filter(([chunk]: [string]) =>
         chunk.startsWith('id: '),
@@ -160,6 +180,21 @@ describe('RunSsePresenter', () => {
     expect(payload.code).toBe('EXECUTION_ERROR');
   });
 
+  it('does not abort the event source after normal completion', async () => {
+    let signal: AbortSignal | undefined;
+
+    await presenter.stream(
+      response as unknown as Response,
+      THREAD_ID,
+      (sourceSignal) => {
+        signal = sourceSignal;
+        return eventsOf(sessionEvent('t1'));
+      },
+    );
+
+    expect(signal?.aborted).toBe(false);
+  });
+
   describe('heartbeat', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -198,6 +233,7 @@ describe('RunSsePresenter', () => {
     });
 
     it('contains a heartbeat write failure instead of throwing', async () => {
+      let signal: AbortSignal | undefined;
       let release!: () => void;
       const gate = new Promise<void>((resolve) => {
         release = resolve;
@@ -213,11 +249,19 @@ describe('RunSsePresenter', () => {
         return true;
       });
 
-      const streaming = stream(idleSource());
+      const streaming = presenter.stream(
+        response as unknown as Response,
+        THREAD_ID,
+        (sourceSignal) => {
+          signal = sourceSignal;
+          return idleSource();
+        },
+      );
       await expect(
         jest.advanceTimersByTimeAsync(30_000),
       ).resolves.toBeUndefined();
 
+      expect(signal?.aborted).toBe(true);
       release();
       await streaming;
     });

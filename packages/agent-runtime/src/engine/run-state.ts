@@ -50,6 +50,14 @@ export interface RunState {
 
 export type RunFn = (input: RunInput) => AsyncIterable<RunEvent>;
 
+export const isHookAborted = (state: RunState): boolean => {
+  return state.abortState.aborted;
+};
+
+export const isSignalAborted = (state: RunState): boolean => {
+  return state.signal?.aborted ?? false;
+};
+
 export const isAborted = (state: RunState): boolean => {
-  return state.abortState.aborted || (state.signal?.aborted ?? false);
+  return isHookAborted(state) || isSignalAborted(state);
 };

@@ -111,9 +111,7 @@ describe('RunSsePresenter over real sockets', () => {
       const source = makeRunSource();
       activeSources.push(source);
       activeStreams.push(
-        presenter.stream(
-          res as unknown as Response,
-          THREAD_ID,
+        presenter.stream(res as unknown as Response, THREAD_ID, () =>
           source.events(),
         ),
       );
@@ -173,9 +171,7 @@ describe('RunSsePresenter over real sockets', () => {
       activeSources.push(source);
       activeStreams.push(
         // Empty source completes immediately — the happy-path teardown.
-        presenter.stream(
-          res as unknown as Response,
-          THREAD_ID,
+        presenter.stream(res as unknown as Response, THREAD_ID, () =>
           (async function* (): AsyncGenerator<RunEvent> {
             yield {
               type: 'session',
