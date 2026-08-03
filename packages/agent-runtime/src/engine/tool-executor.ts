@@ -11,6 +11,7 @@ import type { RunState } from './run-state';
 import { isAborted } from './run-state';
 
 export const MAX_TOOL_RESULT_LENGTH = 20_000;
+const DISPLAY_ACK = 'Tool has been displayed successfully';
 
 interface ToolOutcome {
   result: string;
@@ -110,8 +111,8 @@ const runTool = async (
   }
   if (!tool.execute) {
     return {
-      result: `The tool ${call.name} is display-only and cannot be executed.`,
-      isError: true,
+      result: DISPLAY_ACK,
+      isError: false,
     };
   }
   try {

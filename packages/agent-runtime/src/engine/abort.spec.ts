@@ -202,6 +202,27 @@ describe('abort handling', () => {
     expect(model.requests).toHaveLength(1);
   });
 
+  it('preserves a tool-hook abort during a display-only turn', async () => {
+    const gate: Hook = {
+      name: 'gate',
+      beforeToolCall: (ctx) => ctx.abort('blocked'),
+    };
+    const model = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'show_chart', input: { value: 'x' } }),
+    ]);
+    const events = await collectEvents(
+      baseInput(model, {
+        tools: [echoTool({ name: 'show_chart', execute: undefined })],
+        hooks: [gate],
+      }),
+    );
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+  });
+
   it('ends as aborted when afterModelCall aborts on a final turn', async () => {
     const abortAtEnd: Hook = {
       name: 'abort-at-end',

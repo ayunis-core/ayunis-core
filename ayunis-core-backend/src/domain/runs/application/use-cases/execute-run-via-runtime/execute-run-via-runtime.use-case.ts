@@ -1,9 +1,4 @@
-import {
-  run,
-  RunContext,
-  type Hook,
-  type Tool as RuntimeTool,
-} from '@ayunis/agent-runtime';
+import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -11,12 +6,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
-import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
@@ -66,28 +59,13 @@ import { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
+import type {
+  PreparedRuntimeRun,
+  PreparedRuntimeTools,
+} from './execute-run-via-runtime.types';
 
 const RUNTIME_MAX_ITERATIONS = 20;
 const MAX_CONTEXT_TOKENS = 80000;
-
-interface PreparedRuntimeTools {
-  tools: RuntimeTool[];
-  backendTools: BackendTool[];
-  toolIntegrations: RuntimeToolIntegrationRegistry;
-}
-
-interface PreparedRuntimeRun extends PreparedRuntimeTools {
-  thread: Thread;
-  model: LanguageModel;
-  orgId: UUID;
-  userId: UUID;
-  isAnonymous: boolean;
-  instructions: string;
-  activeSkills: Skill[];
-  canUseTools: boolean;
-  skillInstructions?: string;
-  activatedSkillName?: string;
-}
 
 interface SeededInput {
   message: Message;

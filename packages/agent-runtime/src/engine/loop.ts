@@ -4,7 +4,7 @@ import type { ProviderRequest, Usage } from '../contracts/provider';
 import { ProviderError } from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
-import { getToolUseContents, shouldExitLoop } from './exit-conditions';
+import { getToolUseContents, hasDisplayOnlyToolCall } from './exit-conditions';
 import { streamModelCall } from './model-call';
 import type { RunState } from './run-state';
 import { isAborted, isHookAborted, isSignalAborted } from './run-state';
@@ -70,15 +70,23 @@ async function* runIteration(
   if (isHookAborted(state)) {
     return { status: 'aborted' };
   }
-  if (shouldExitLoop(result.message, state.tools)) {
-    return { status: 'completed' };
-  }
-  if (isSignalAborted(state)) {
-    return { status: 'aborted' };
-  }
+  if (toolCalls.length === 0) return { status: 'completed' };
+  const exitAfterToolPhase = hasDisplayOnlyToolCall(
+    result.message,
+    state.tools,
+  );
+  if (isSignalAborted(state)) return { status: 'aborted' };
   yield* runToolPhase(state, iteration, toolCalls);
-  return isAborted(state) ? { status: 'aborted' } : null;
+  return completionAfterToolPhase(state, exitAfterToolPhase);
 }
+
+const completionAfterToolPhase = (
+  state: RunState,
+  exitAfterToolPhase: boolean,
+): LoopCompletion | null => {
+  if (isAborted(state)) return { status: 'aborted' };
+  return exitAfterToolPhase ? { status: 'completed' } : null;
+};
 
 function* assistantEvents(
   result: ModelCallResult,
