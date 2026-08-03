@@ -111,7 +111,7 @@ export function CreateProjectDialog({
         mode === 'teams'
           ? orgTeams
               .filter((t) => teamIds.includes(t.id))
-              .map((t) => ({ ...t, role: teamRoles[t.id] ?? 'user' }))
+              .map((t) => ({ ...t, role: teamRoles[t.id] ?? 'use' }))
           : [],
       collaborators: [CURRENT_USER],
       chats: [],
@@ -201,7 +201,7 @@ export function CreateProjectDialog({
                       key={team.id}
                       team={team}
                       selected={teamIds.includes(team.id)}
-                      role={teamRoles[team.id] ?? 'user'}
+                      role={teamRoles[team.id] ?? 'use'}
                       onToggle={() => toggleTeam(team.id)}
                       onRoleChange={(role) =>
                         setTeamRoles((cur) => ({ ...cur, [team.id]: role }))
