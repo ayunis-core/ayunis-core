@@ -158,7 +158,7 @@ export function SourcesList({
             {isProcessing && <Loader2 className="h-3 w-3 animate-spin" />}
             {isFailed && <AlertCircle className="h-3 w-3" />}
             {!isProcessing && !isFailed && getSourceIcon(source)}
-            {source.name}
+            <span>{source.name}</span>
             {!isProcessing && (
               <div
                 className="cursor-pointer"
