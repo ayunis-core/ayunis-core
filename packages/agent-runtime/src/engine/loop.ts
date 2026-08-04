@@ -1,7 +1,7 @@
 import type { RunEventPayload } from '../contracts/event';
 import type { Message, ToolUseContent } from '../contracts/message';
 import type { ProviderRequest, Usage } from '../contracts/provider';
-import { ProviderError } from '../contracts/errors';
+import { ProviderError, RepeatedToolFailureError } from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
 import { getToolUseContents, hasDisplayOnlyToolCall } from './exit-conditions';
@@ -9,6 +9,7 @@ import { streamModelCall } from './model-call';
 import type { RunState } from './run-state';
 import { isAborted, isHookAborted, isSignalAborted } from './run-state';
 import { executeToolCalls } from './tool-executor';
+import { ToolFailureBreaker } from './tool-failure-breaker';
 
 export interface LoopCompletion {
   status: 'completed' | 'aborted' | 'max_iterations';
@@ -22,8 +23,9 @@ export interface LoopCompletion {
 export async function* executeLoop(
   state: RunState,
 ): AsyncGenerator<RunEventPayload, LoopCompletion> {
+  const breaker = new ToolFailureBreaker();
   for (let iteration = 0; iteration < state.maxIterations; iteration++) {
-    const completion = yield* runIteration(state, iteration);
+    const completion = yield* runIteration(state, iteration, breaker);
     if (completion) {
       return completion;
     }
@@ -35,6 +37,7 @@ export async function* executeLoop(
 async function* runIteration(
   state: RunState,
   iteration: number,
+  breaker: ToolFailureBreaker,
 ): AsyncGenerator<RunEventPayload, LoopCompletion | null> {
   await state.hookRunner.beforeModelCall({
     iteration,
@@ -76,7 +79,7 @@ async function* runIteration(
     state.tools,
   );
   if (isSignalAborted(state)) return { status: 'aborted' };
-  yield* runToolPhase(state, iteration, toolCalls);
+  yield* runToolPhase(state, iteration, toolCalls, breaker);
   return completionAfterToolPhase(state, exitAfterToolPhase);
 }
 
@@ -109,6 +112,7 @@ async function* runToolPhase(
   state: RunState,
   iteration: number,
   toolCalls: readonly ToolUseContent[],
+  breaker: ToolFailureBreaker,
 ): AsyncGenerator<RunEventPayload> {
   const { results, fatalError } = yield* executeToolCalls(
     state,
@@ -123,6 +127,15 @@ async function* runToolPhase(
   yield { type: 'tool_result_message', message: toolResultMessage };
   if (fatalError) {
     throw fatalError;
+  }
+  // An aborted phase fills the remaining calls with one identical synthetic
+  // result — that is a cancellation, not a repeated tool failure.
+  if (isAborted(state)) {
+    return;
+  }
+  const tripped = breaker.record(results);
+  if (tripped) {
+    throw new RepeatedToolFailureError(tripped);
   }
 }
 

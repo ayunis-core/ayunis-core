@@ -362,6 +362,40 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(collectUsage).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves the persisted transcript when the tool-failure breaker trips', async () => {
+    const failingTool = {
+      name: 'create_document',
+      description: 'Creates a document',
+      parameters: { type: 'object', properties: {} },
+      execute: jest
+        .fn()
+        .mockRejectedValue(
+          new Error("Invalid parameters: missing required parameter 'title'"),
+        ),
+    };
+    const failingCall = {
+      id: 'doc-1',
+      name: 'create_document',
+      input: { content: '<h1>Bericht</h1>' },
+    };
+    const { useCase, cleanup } = buildHarness({
+      runtimeTools: [failingTool],
+      turns: [
+        toolCallTurn(failingCall),
+        toolCallTurn(failingCall),
+        toolCallTurn(failingCall),
+      ],
+    });
+
+    await expect(
+      drain(await useCase.execute(userCommand())),
+    ).rejects.toMatchObject({ code: 'RUN_TOOL_EXECUTION_FAILED' });
+
+    // Like max-iterations, the completed tool phases stay — cleanup would
+    // delete the failed turn and re-arm its pending tool calls.
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
   it('fails and cleans up when the provider returns no assistant content', async () => {
     const { useCase, save, collectUsage, cleanup } = buildHarness({
       turns: [

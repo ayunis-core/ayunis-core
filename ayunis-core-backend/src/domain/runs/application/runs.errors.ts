@@ -124,6 +124,21 @@ export class RunToolExecutionFailedError extends RunError {
 }
 
 /**
+ * A tool failed several consecutive times with the identical error, so the
+ * run's feedback loop was not converging and the loop was aborted (AYC-646).
+ * Shares RunToolExecutionFailedError's code and presentation, but the
+ * distinct type tells the run loops to preserve the persisted tool-result
+ * transcript instead of rolling the turn back — the failed attempts are the
+ * record of what happened, and deleting them would re-arm the pending tool
+ * calls for the next run.
+ */
+export class RunToolRepeatedlyFailingError extends RunToolExecutionFailedError {
+  constructor(toolName: string, failureCount: number) {
+    super(toolName, { failureCount, reason: 'repeated identical failures' });
+  }
+}
+
+/**
  * Error thrown when anonymous mode is enabled but the anonymization service
  * is unavailable. The message must not be sent without anonymization.
  */

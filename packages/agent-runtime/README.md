@@ -46,8 +46,14 @@ instead. A completed model call whose tool-call arguments did not arrive
 intact — unparseable JSON, or a token-limit finish while tool calls were being
 emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
 through `modelCallInterrupted`, so hosts can persist its intact text and
-thinking. An abort-triggered provider rejection still ends the run with
-`run_end { status: 'aborted' }` and does not emit an error event.
+thinking. Three consecutive tool *phases* in which one tool fails with the
+identical error text end the run with `TOOL_REPEATEDLY_FAILING` after the
+failing phase's tool-result message is emitted — repetition across phases
+proves the model saw the error and did not adapt, whereas repeats inside a
+single turn precede any feedback and count once. A changed error text, a
+success, or an aborted phase resets that tool's streak. An abort-triggered provider
+rejection still ends the run with `run_end { status: 'aborted' }` and does
+not emit an error event.
 Once a terminal assistant turn and its `afterModelCall` hooks have completed,
 an external signal arrives too late to cancel that completed run. Explicit
 hook cancellation through `ctx.abort()` remains authoritative at every hook

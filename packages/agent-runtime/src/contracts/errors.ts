@@ -69,6 +69,22 @@ export class MalformedToolCallError extends AgentRuntimeError {
 }
 
 /**
+ * A tool failed several consecutive times with the identical error — the
+ * model is not converging on a working call, so the run stops instead of
+ * repeating the attempt until the iteration cap; surfaced as an `error`
+ * event.
+ */
+export class RepeatedToolFailureError extends AgentRuntimeError {
+  constructor(details: { toolName: string; failureCount: number }) {
+    super(
+      'TOOL_REPEATEDLY_FAILING',
+      `Tool '${details.toolName}' failed ${details.failureCount} consecutive times with the same error`,
+      { details },
+    );
+  }
+}
+
+/**
  * Wraps a hook failure with the hook's name and the phase it failed in,
  * so multi-hook runs stay debuggable; surfaced as an `error` event.
  */
