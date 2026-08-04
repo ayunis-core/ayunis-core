@@ -7,12 +7,15 @@ import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-ca
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
+import { ToolFailureBreaker } from '@ayunis/agent-runtime';
+import type { ToolResultOutcome } from '../../services/tool-result-collector.service';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
+  RunToolRepeatedlyFailingError,
 } from '../../runs.errors';
 import {
   RunUserInput,
@@ -187,13 +190,15 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<RunStreamItem, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
     const iterations = 20;
+    const breaker = new ToolFailureBreaker();
     let succeeded = false;
+    let preserveTranscript = false;
     try {
       for (let i = 0; i < iterations; i++) {
         this.logger.debug('iteration', i);
         const { userInput, toolResultInput } = this.parseInput(params.input);
 
-        yield* this.processToolResults(params, toolResultInput);
+        yield* this.processToolResults(params, toolResultInput, breaker);
 
         if (i === 0) {
           yield* this.handleFirstIteration(params, userInput);
@@ -216,6 +221,9 @@ export class ExecuteRunUseCase {
       }
       succeeded = true;
     } catch (error) {
+      // The breaker's tool-result transcript is complete and already
+      // streamed — rolling it back would re-arm the pending tool calls.
+      preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
       if (error instanceof ApplicationError) throw error;
       this.logger.error('Run execution failed', { error: error as Error });
       throw new RunExecutionFailedError(
@@ -229,7 +237,7 @@ export class ExecuteRunUseCase {
       // intentional terminal messages (e.g., display-only tool_use).
       // Using finally (not catch) so cleanup also runs when the generator
       // is early-returned via .return() on client disconnect.
-      if (!succeeded) {
+      if (!succeeded && !preserveTranscript) {
         await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
           params.thread.id,
         );
@@ -272,15 +280,19 @@ export class ExecuteRunUseCase {
   private async *processToolResults(
     params: RunParams,
     toolResultInput: RunToolResultInput | null,
+    breaker: ToolFailureBreaker,
   ): AsyncGenerator<RunStreamItem, void, void> {
-    const { contents: toolResultMessageContent, piiMasks } =
-      await this.toolResultCollectorService.collectToolResults({
-        thread: params.thread,
-        tools: params.tools,
-        input: toolResultInput,
-        orgId: params.orgId,
-        isAnonymous: params.isAnonymous,
-      });
+    const {
+      contents: toolResultMessageContent,
+      outcomes,
+      piiMasks,
+    } = await this.toolResultCollectorService.collectToolResults({
+      thread: params.thread,
+      tools: params.tools,
+      input: toolResultInput,
+      orgId: params.orgId,
+      isAnonymous: params.isAnonymous,
+    });
 
     if (toolResultMessageContent.length === 0) return;
 
@@ -299,12 +311,39 @@ export class ExecuteRunUseCase {
     }
     yield toolResultMessage;
 
+    // After the results are persisted and streamed, so the transcript stays
+    // intact when the breaker aborts the run.
+    this.assertToolFailuresNotRepeating(breaker, outcomes);
+
     const skillWasActivated = toolResultMessageContent.some(
       (content) => content.toolName === (ToolType.ACTIVATE_SKILL as string),
     );
     if (skillWasActivated) {
       await this.refreshRunContext(params);
     }
+  }
+
+  /**
+   * The model repeating one failing tool call and receiving the identical
+   * error back is a feedback loop that is not converging (AYC-646) — abort
+   * with one clear error instead of burning the remaining iterations.
+   */
+  private assertToolFailuresNotRepeating(
+    breaker: ToolFailureBreaker,
+    outcomes: ToolResultOutcome[],
+  ): void {
+    const tripped = breaker.record(
+      outcomes.map((outcome) => ({
+        toolName: outcome.toolName,
+        result: outcome.result,
+        isError: !outcome.succeeded,
+      })),
+    );
+    if (!tripped) return;
+    throw new RunToolRepeatedlyFailingError(
+      tripped.toolName,
+      tripped.failureCount,
+    );
   }
 
   private async activateSkillOnThread(params: RunParams): Promise<void> {

@@ -17,6 +17,7 @@ import {
   RunContextBudgetExceededError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
+  RunToolRepeatedlyFailingError,
 } from '../runs.errors';
 import { assistantMessageId, toolResultMessageId } from './message-id';
 import {
@@ -262,30 +263,52 @@ function toStreamingToolUseContent(
   );
 }
 
-function mapRunError(
-  event: Extract<RunEvent, { type: 'error' }>,
-): ApplicationError {
+type RunErrorEvent = Extract<RunEvent, { type: 'error' }>;
+
+const RUN_ERROR_MAPPERS = new Map<
+  string,
+  (event: RunErrorEvent) => ApplicationError
+>([
+  [
+    'MAX_ITERATIONS_REACHED',
+    (event) => {
+      const max = event.details?.maxIterations;
+      return new RunMaxIterationsReachedError(
+        typeof max === 'number' ? max : DEFAULT_MAX_ITERATIONS,
+      );
+    },
+  ],
+  ['ANONYMIZATION_UNAVAILABLE', () => new RunAnonymizationUnavailableError()],
+  [
+    'MALFORMED_TOOL_CALL',
+    (event) =>
+      new InferenceFailedError(
+        'model emitted a tool call whose arguments did not arrive intact',
+        event.details,
+      ),
+  ],
+  [
+    'TOOL_REPEATEDLY_FAILING',
+    (event) => {
+      const toolName = event.details?.toolName;
+      const failureCount = event.details?.failureCount;
+      return new RunToolRepeatedlyFailingError(
+        typeof toolName === 'string' ? toolName : 'unknown',
+        typeof failureCount === 'number' ? failureCount : 0,
+      );
+    },
+  ],
+  ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
+]);
+
+function mapRunError(event: RunErrorEvent): ApplicationError {
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;
   }
-  if (event.code === 'MAX_ITERATIONS_REACHED') {
-    const max = event.details?.maxIterations;
-    return new RunMaxIterationsReachedError(
-      typeof max === 'number' ? max : DEFAULT_MAX_ITERATIONS,
-    );
-  }
-  if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
-    return new RunAnonymizationUnavailableError();
-  }
-  if (event.code === 'MALFORMED_TOOL_CALL') {
-    return new InferenceFailedError(
-      'model emitted a tool call whose arguments did not arrive intact',
-      event.details,
-    );
-  }
-  if (event.code === 'CONTEXT_BUDGET_EXCEEDED') {
-    return new RunContextBudgetExceededError();
+  const mapper = RUN_ERROR_MAPPERS.get(event.code);
+  if (mapper) {
+    return mapper(event);
   }
   logger.error('Agent runtime failed', {
     code: event.code,

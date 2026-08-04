@@ -22,6 +22,7 @@ import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
   RunMaxIterationsReachedError,
+  RunToolRepeatedlyFailingError,
 } from '../runs.errors';
 import type { RunExecutionFailedError } from '../runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
@@ -521,6 +522,25 @@ describe('adaptRunEventsToStream', () => {
         ]),
       ),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('maps a repeatedly failing tool to the transcript-preserving run error', async () => {
+    // Must be the RunToolRepeatedlyFailingError subclass — the runtime
+    // use case skips transcript cleanup based on that type.
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'TOOL_REPEATEDLY_FAILING',
+            message:
+              "Tool 'create_document' failed 3 consecutive times with the same error",
+            details: { toolName: 'create_document', failureCount: 3 },
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(RunToolRepeatedlyFailingError);
   });
 
   it('maps anonymization failures to the privacy-safe run error', async () => {

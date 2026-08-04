@@ -39,6 +39,7 @@ import {
   RunInvalidInputError,
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
+  RunToolRepeatedlyFailingError,
   UnexpectedRunError,
 } from '../../runs.errors';
 import { RunExecutedEvent } from '../../events/run-executed.event';
@@ -235,7 +236,12 @@ export class ExecuteRunViaRuntimeUseCase {
       cleanupRequired = outcome === 'aborted';
       return outcome;
     } catch (error) {
-      if (error instanceof RunMaxIterationsReachedError) {
+      // Both errors leave a complete, already-streamed tool transcript;
+      // rolling it back would re-arm the turn's pending tool calls.
+      if (
+        error instanceof RunMaxIterationsReachedError ||
+        error instanceof RunToolRepeatedlyFailingError
+      ) {
         cleanupRequired = false;
       }
       if (error instanceof ApplicationError) throw error;

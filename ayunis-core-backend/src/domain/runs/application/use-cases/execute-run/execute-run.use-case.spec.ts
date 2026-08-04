@@ -138,7 +138,7 @@ describe('ExecuteRunUseCase', () => {
       {
         collectToolResults: jest
           .fn()
-          .mockResolvedValue({ contents: [], piiMasks: null }),
+          .mockResolvedValue({ contents: [], outcomes: [], piiMasks: null }),
         exitLoopAfterAgentResponse: jest.fn().mockReturnValue(true),
       } as unknown as ToolResultCollectorService,
       messageCleanupService,
@@ -299,7 +299,7 @@ describe('ExecuteRunUseCase', () => {
           collectCallCount++;
           if (collectCallCount === 1) {
             // First call: no pending results (initial processToolResults)
-            return { contents: [], piiMasks: null };
+            return { contents: [], outcomes: [], piiMasks: null };
           }
           // Second call: activate_skill tool result
           return {
@@ -309,6 +309,13 @@ describe('ExecuteRunUseCase', () => {
                 ToolType.ACTIVATE_SKILL,
                 'Skill activated successfully',
               ),
+            ],
+            outcomes: [
+              {
+                toolName: ToolType.ACTIVATE_SKILL,
+                result: 'Skill activated successfully',
+                succeeded: true,
+              },
             ],
             piiMasks: null,
           };
@@ -563,6 +570,100 @@ describe('ExecuteRunUseCase', () => {
       expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
       expect(
         creditBudgetGuardService.ensureBudgetAvailable,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('repeated identical tool failures', () => {
+    const failureText =
+      "The tool didn't provide any result due to the following error in tool usage: " +
+      "Failed to execute tool create_document: Invalid parameters: missing required parameter 'title'";
+
+    const failingCollectResult = () => ({
+      contents: [
+        new ToolResultMessageContent('tool-1', 'create_document', failureText),
+      ],
+      outcomes: [
+        {
+          toolName: 'create_document',
+          result: failureText,
+          succeeded: false,
+        },
+      ],
+      piiMasks: null,
+    });
+
+    it('aborts the run instead of retrying the identical failing call until the iteration cap (AYC-646)', async () => {
+      const thread = createMockThread();
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+
+      const toolCallMessage = {
+        id: randomUUID(),
+        content: [{ type: 'tool_use', name: 'create_document' }],
+      } as unknown as AssistantMessage;
+
+      const inferenceOrchestratorService = (
+        useCase as unknown as {
+          inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+        }
+      ).inferenceOrchestratorService;
+      inferenceOrchestratorService.runInference = jest
+        .fn()
+        .mockImplementation(() =>
+          (async function* () {
+            yield toolCallMessage;
+            return toolCallMessage;
+          })(),
+        );
+
+      const toolResultCollectorService = (
+        useCase as unknown as {
+          toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
+        }
+      ).toolResultCollectorService;
+      let collectCallCount = 0;
+      toolResultCollectorService.collectToolResults.mockImplementation(
+        async () => {
+          collectCallCount++;
+          if (collectCallCount === 1) {
+            return { contents: [], outcomes: [], piiMasks: null };
+          }
+          return failingCollectResult();
+        },
+      );
+      toolResultCollectorService.exitLoopAfterAgentResponse.mockReturnValue(
+        false,
+      );
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Erstelle den Bericht als Dokument', []),
+        streaming: true,
+      });
+
+      const drain = async () => {
+        const generator = await useCase.execute(command);
+        let next = await generator.next();
+        while (!next.done) {
+          next = await generator.next();
+        }
+      };
+
+      await expect(drain()).rejects.toMatchObject({
+        code: RunErrorCode.RUN_TOOL_EXECUTION_FAILED,
+      });
+      // Three identical failures trip the breaker before a fourth model call.
+      expect(inferenceOrchestratorService.runInference).toHaveBeenCalledTimes(
+        3,
+      );
+      // The persisted tool-result transcript survives the abort — cleanup
+      // would delete the failed turn and re-arm the pending tool calls for
+      // the next run.
+      expect(
+        messageCleanupService.cleanupTrailingNonAssistantMessages,
       ).not.toHaveBeenCalled();
     });
   });

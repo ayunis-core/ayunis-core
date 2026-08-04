@@ -56,8 +56,14 @@ export {
   MalformedToolCallError,
   MaxIterationsError,
   ProviderError,
+  RepeatedToolFailureError,
   RunAbortedError,
 } from './contracts/errors';
+export { ToolFailureBreaker } from './engine/tool-failure-breaker';
+export type {
+  ToolOutcomeSample,
+  TrippedToolFailure,
+} from './engine/tool-failure-breaker';
 export { RunContext } from './context/run-context';
 export { run } from './engine/run';
 export {

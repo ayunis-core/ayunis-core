@@ -26,8 +26,22 @@ import { RunToolResultInput } from '../../domain/run-input.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 
+export interface ToolResultOutcome {
+  toolName: string;
+  result: string;
+  succeeded: boolean;
+}
+
+interface ProcessedToolResult {
+  content: ToolResultMessageContent;
+  succeeded: boolean;
+  piiMasks: ThreadPiiMask[] | null;
+}
+
 export interface CollectedToolResults {
   contents: ToolResultMessageContent[];
+  /** Per-result success flags, in content order — feeds the run loop's repeated-failure breaker (AYC-646). */
+  outcomes: ToolResultOutcome[];
   /** Latest full mask dictionary when any result was anonymized, else null. */
   piiMasks: ThreadPiiMask[] | null;
 }
@@ -62,6 +76,7 @@ export class ToolResultCollectorService {
       : [];
 
     const contents: ToolResultMessageContent[] = [];
+    const outcomes: ToolResultOutcome[] = [];
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
@@ -74,11 +89,16 @@ export class ToolResultCollectorService {
         isAnonymous,
       );
       contents.push(result.content);
+      outcomes.push({
+        toolName: result.content.toolName,
+        result: result.content.result,
+        succeeded: result.succeeded,
+      });
       // Each anonymization returns the full dictionary — the latest wins.
       piiMasks = result.piiMasks ?? piiMasks;
     }
 
-    return { contents, piiMasks };
+    return { contents, outcomes, piiMasks };
   }
 
   private async processToolUse(
@@ -88,10 +108,7 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<{
-    content: ToolResultMessageContent;
-    piiMasks: ThreadPiiMask[] | null;
-  }> {
+  ): Promise<ProcessedToolResult> {
     const tool = tools.find((t) => t.name === content.name);
     if (!tool) {
       return {
@@ -100,68 +117,22 @@ export class ToolResultCollectorService {
           content.name,
           `A tool with the name ${content.name} was not found. Only use tools that are available in your given list of tools.`,
         ),
+        succeeded: false,
         piiMasks: null,
       };
     }
 
-    const userId = this.contextService.get('userId');
-    this.eventEmitter
-      .emitAsync(
-        ToolUsedEvent.EVENT_NAME,
-        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, content.name),
-      )
-      .catch((err: unknown) => {
-        this.logger.error('Failed to emit ToolUsedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          toolName: content.name,
-        });
-      });
+    this.emitToolUsedEvent(orgId, content.name);
 
     try {
-      const capabilities = this.checkToolCapabilitiesUseCase.execute(
-        new CheckToolCapabilitiesQuery(tool),
+      return await this.executeByCapability(
+        tool,
+        content,
+        input,
+        orgId,
+        threadId,
+        isAnonymous,
       );
-
-      if (capabilities.isDisplayable && capabilities.isExecutable) {
-        return await this.processHybridTool(
-          tool,
-          content,
-          input,
-          orgId,
-          threadId,
-          isAnonymous,
-        );
-      }
-
-      if (capabilities.isDisplayable) {
-        return {
-          content: this.handleDisplayableTool(content, input),
-          piiMasks: null,
-        };
-      }
-
-      if (capabilities.isExecutable) {
-        const executionResult = await this.executeBackendTool(
-          tool,
-          content,
-          orgId,
-          threadId,
-          isAnonymous,
-        );
-        return {
-          content: executionResult.content,
-          piiMasks: executionResult.piiMasks,
-        };
-      }
-
-      return {
-        content: new ToolResultMessageContent(
-          content.id,
-          content.name,
-          `Tool ${content.name} has no executable or displayable capability.`,
-        ),
-        piiMasks: null,
-      };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -173,6 +144,73 @@ export class ToolResultCollectorService {
     }
   }
 
+  private emitToolUsedEvent(orgId: UUID, toolName: string): void {
+    const userId = this.contextService.get('userId');
+    this.eventEmitter
+      .emitAsync(
+        ToolUsedEvent.EVENT_NAME,
+        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, toolName),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit ToolUsedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          toolName,
+        });
+      });
+  }
+
+  private async executeByCapability(
+    tool: Tool,
+    content: ToolUseMessageContent,
+    input: RunToolResultInput | null,
+    orgId: UUID,
+    threadId: UUID,
+    isAnonymous: boolean,
+  ): Promise<ProcessedToolResult> {
+    const capabilities = this.checkToolCapabilitiesUseCase.execute(
+      new CheckToolCapabilitiesQuery(tool),
+    );
+
+    if (capabilities.isDisplayable && capabilities.isExecutable) {
+      return this.processHybridTool(
+        tool,
+        content,
+        input,
+        orgId,
+        threadId,
+        isAnonymous,
+      );
+    }
+
+    if (capabilities.isDisplayable) {
+      return {
+        content: this.handleDisplayableTool(content, input),
+        succeeded: true,
+        piiMasks: null,
+      };
+    }
+
+    if (capabilities.isExecutable) {
+      return this.executeBackendTool(
+        tool,
+        content,
+        orgId,
+        threadId,
+        isAnonymous,
+      );
+    }
+
+    return {
+      content: new ToolResultMessageContent(
+        content.id,
+        content.name,
+        `Tool ${content.name} has no executable or displayable capability.`,
+      ),
+      succeeded: false,
+      piiMasks: null,
+    };
+  }
+
   private async processHybridTool(
     tool: Tool,
     content: ToolUseMessageContent,
@@ -180,10 +218,7 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<{
-    content: ToolResultMessageContent;
-    piiMasks: ThreadPiiMask[] | null;
-  }> {
+  ): Promise<ProcessedToolResult> {
     const executionResult = await this.executeBackendTool(
       tool,
       content,
@@ -194,11 +229,13 @@ export class ToolResultCollectorService {
     if (executionResult.succeeded) {
       return {
         content: this.handleDisplayableTool(content, input),
+        succeeded: true,
         piiMasks: executionResult.piiMasks,
       };
     }
     return {
       content: executionResult.content,
+      succeeded: false,
       piiMasks: executionResult.piiMasks,
     };
   }
