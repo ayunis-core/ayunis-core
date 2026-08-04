@@ -137,6 +137,48 @@ describe('MistralFileRetrieverHandler', () => {
       expect(result.pages).toHaveLength(1);
     });
 
+    // A zero-page OCR response is a property of the document, not a defect
+    // of ours: it must surface as the shared "we cannot read this document"
+    // classification (422, terminal in the queue, user-visible message)
+    // instead of alerting as UNEXPECTED_ERROR (AYC-655).
+    it('classifies a zero-page OCR response as an unprocessable document', async () => {
+      mockClient.ocr.process.mockResolvedValue({ pages: [] });
+
+      await expect(handler.processFile(testFile)).rejects.toMatchObject({
+        code: 'UNPROCESSABLE_DOCUMENT',
+        statusCode: 422,
+      });
+    });
+
+    it('gives the zero-page failure a user-presentable message without the raw response', async () => {
+      mockClient.ocr.process.mockResolvedValue({ pages: [] });
+
+      const error: unknown = await handler
+        .processFile(testFile)
+        .then(() => undefined)
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(UnprocessableDocumentError);
+      const documentError = error as UnprocessableDocumentError;
+      expect(documentError.message).toMatch(/no text could be extracted/i);
+      expect(documentError.metadata).not.toHaveProperty('response');
+    });
+
+    // The OCR result is consumed markdown-only; requesting image payloads
+    // inflates the response body Mistral streams back, which is what pushed
+    // large documents into the 120s body-read deadline (AYC-655).
+    it('requests OCR without image payloads', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [{ markdown: '# Content', index: 0 }],
+      });
+
+      await handler.processFile(testFile);
+
+      expect(mockClient.ocr.process).toHaveBeenCalledWith(
+        expect.objectContaining({ includeImageBase64: false }),
+      );
+    });
+
     it('should retry when OCR cannot see the just-uploaded file yet', async () => {
       const notVisibleYet = createMistralError(
         404,

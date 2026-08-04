@@ -2,6 +2,7 @@ import type { Logger } from '@nestjs/common';
 import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 
 /**
  * Standard retry/retention options shared by the source processing queues:
@@ -63,6 +64,53 @@ export function isExpectedFailure(error: unknown): boolean {
   return error instanceof ApplicationError && error.statusCode < 500;
 }
 
+/**
+ * Rejection statuses where a spaced job retry may still succeed: rate limits
+ * (429) and request timeouts (408) say nothing about the input, and a 404
+ * from the OCR flow is files-API eventual consistency — the handler itself
+ * treats it as transient (isTransientOcrError), so the queue must not call
+ * it deterministic.
+ */
+const RETRYABLE_REJECTION_STATUSES = new Set([404, 408, 429]);
+
+/**
+ * A provider 4xx rejection is normally deterministic — re-sending the same
+ * input yields the same rejection — so retrying only repeats the upstream
+ * call; it still rethrows on settling, so its PROVIDER_UNAVAILABLE_REJECTED_*
+ * incident opens once instead of after two wasted attempts (AYC-655).
+ */
+function isDeterministicProviderRejection(error: unknown): boolean {
+  return (
+    error instanceof ProviderRequestRejectedError &&
+    (error.context.upstreamStatus === undefined ||
+      !RETRYABLE_REJECTION_STATUSES.has(error.context.upstreamStatus))
+  );
+}
+
+/**
+ * BullMQ keeps scheduling attempts for any thrown error except one named
+ * UnrecoverableError (bullmq checks the name, job.ts). A failure settled
+ * before the last attempt must rethrow under that name or the remaining
+ * attempts run against a source the consumer already failed and cleaned up.
+ * The AppSignal grouping survives on `code`, which the queue reporting path
+ * prefers over the name.
+ */
+class JobUnrecoverableError extends Error {
+  readonly code?: string;
+
+  constructor(original: Error) {
+    super(original.message, { cause: original });
+    this.name = 'UnrecoverableError';
+    const code = (original as { code?: unknown }).code;
+    if (typeof code === 'string') {
+      this.code = code;
+    }
+    if (original.stack) {
+      this.stack = original.stack;
+    }
+  }
+}
+
 export interface JobFailureOutcome {
   /** No further attempt will run, so the source must be settled as FAILED. */
   final: boolean;
@@ -85,23 +133,36 @@ export function classifyJobFailure(
   error: unknown,
 ): JobFailureOutcome {
   const expected = isExpectedFailure(error);
-  const retryIsPointless =
-    expected &&
-    !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode);
-  const isUnrecoverable =
-    error instanceof Error && error.name === 'UnrecoverableError';
 
-  if (!isFinalAttempt(job) && !isUnrecoverable && !retryIsPointless) {
+  if (shouldScheduleRetry(job, error, expected)) {
     return { final: false, rethrow: new JobRetryScheduledError(error) };
   }
   if (expected) {
     return { final: true, rethrow: null };
   }
   // AppSignal needs an Error to report; a bare throwable would be dropped.
-  return {
-    final: true,
-    rethrow: error instanceof Error ? error : new Error(String(error)),
-  };
+  const rethrow = error instanceof Error ? error : new Error(String(error));
+  // Settling before the last attempt only sticks when BullMQ also stops
+  // scheduling — rename so the remaining attempts never run.
+  if (!isFinalAttempt(job) && rethrow.name !== 'UnrecoverableError') {
+    return { final: true, rethrow: new JobUnrecoverableError(rethrow) };
+  }
+  return { final: true, rethrow };
+}
+
+function shouldScheduleRetry(
+  job: Job,
+  error: unknown,
+  expected: boolean,
+): boolean {
+  if (isFinalAttempt(job)) return false;
+  if (error instanceof Error && error.name === 'UnrecoverableError') {
+    return false;
+  }
+  const retryIsPointless =
+    expected &&
+    !RETRYABLE_EXPECTED_STATUSES.has((error as ApplicationError).statusCode);
+  return !retryIsPointless && !isDeterministicProviderRejection(error);
 }
 
 /**
