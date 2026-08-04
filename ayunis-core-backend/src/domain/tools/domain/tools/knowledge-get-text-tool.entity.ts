@@ -1,5 +1,5 @@
 import type { JSONSchema } from 'json-schema-to-ts';
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { Tool } from '../tool.entity';
@@ -61,13 +61,10 @@ export class KnowledgeGetTextTool extends Tool {
   validateParams(
     params: Record<string, unknown>,
   ): KnowledgeGetTextToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-    return params as unknown as KnowledgeGetTextToolParameters;
+    return validateToolParams<KnowledgeGetTextToolParameters>(
+      this.parameters,
+      params,
+    );
   }
 
   get returnsPii(): boolean {

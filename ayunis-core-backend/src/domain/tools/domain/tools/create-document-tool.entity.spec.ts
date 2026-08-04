@@ -53,6 +53,14 @@ describe('CreateDocumentTool', () => {
       expect(() => tool.validateParams({})).toThrow();
     });
 
+    it('should name the missing parameter in a message the model can act on', () => {
+      // This text is fed back to the model as the tool result; raw ajv JSON
+      // left models retrying the identical broken call (AYC-646).
+      expect(() => tool.validateParams({})).toThrow(
+        /missing required parameter 'title'/,
+      );
+    });
+
     it('should accept valid parameters with optional letterhead_id', () => {
       const params = {
         title: 'Official Letter',

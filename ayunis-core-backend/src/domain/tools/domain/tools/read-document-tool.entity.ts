@@ -1,4 +1,4 @@
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { Tool } from '../tool.entity';
@@ -33,13 +33,10 @@ export class ReadDocumentTool extends Tool {
   }
 
   validateParams(params: Record<string, unknown>): ReadDocumentToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-    return params as ReadDocumentToolParameters;
+    return validateToolParams<ReadDocumentToolParameters>(
+      this.parameters,
+      params,
+    );
   }
 
   get returnsPii(): boolean {

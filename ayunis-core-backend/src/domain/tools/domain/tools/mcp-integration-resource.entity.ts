@@ -1,4 +1,4 @@
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
@@ -43,13 +43,10 @@ export class McpIntegrationResource extends Tool {
   }
 
   validateParams(params: Record<string, unknown>): McpResourceToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-    return params as McpResourceToolParameters;
+    return validateToolParams<McpResourceToolParameters>(
+      this.parameters,
+      params,
+    );
   }
 
   get returnsPii(): boolean {

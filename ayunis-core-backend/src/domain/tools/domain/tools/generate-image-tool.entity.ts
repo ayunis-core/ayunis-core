@@ -1,4 +1,5 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
+import { formatAjvErrors } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { Tool } from '../tool.entity';
@@ -40,20 +41,17 @@ export class GenerateImageTool extends Tool {
     });
   }
 
+  // Throws ToolExecutionFailedError directly (not a plain Error like the
+  // other entities): the handler's error boundary would otherwise replace
+  // the validation detail with its generic image-generation message.
   validateParams(params: Record<string, unknown>): GenerateImageToolParameters {
-    const ajv = createAjv();
+    const ajv = createAjv({ allErrors: true });
     const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      const details =
-        validate.errors
-          ?.map((e) => `${e.instancePath} ${e.message}`.trim())
-          .join('; ') ?? '';
+    if (!validate(params)) {
       throw new ToolExecutionFailedError({
         toolName: this.name,
-        message: 'Invalid parameters for generate_image tool',
+        message: formatAjvErrors(validate.errors ?? []),
         exposeToLLM: true,
-        metadata: details ? { validationErrors: details } : undefined,
       });
     }
     return params as GenerateImageToolParameters;

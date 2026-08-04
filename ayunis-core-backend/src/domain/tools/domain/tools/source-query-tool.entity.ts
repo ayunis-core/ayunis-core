@@ -1,5 +1,5 @@
 import type { JSONSchema } from 'json-schema-to-ts';
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { Tool } from '../tool.entity';
@@ -41,13 +41,10 @@ export class SourceQueryTool extends Tool {
   }
 
   validateParams(params: Record<string, unknown>): SourceQueryToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-    return params as unknown as SourceQueryToolParameters;
+    return validateToolParams<SourceQueryToolParameters>(
+      this.parameters,
+      params,
+    );
   }
 
   get returnsPii(): boolean {
