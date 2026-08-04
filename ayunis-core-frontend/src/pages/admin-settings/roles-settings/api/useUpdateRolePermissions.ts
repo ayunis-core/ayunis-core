@@ -3,6 +3,7 @@ import {
   getRolePermissionsControllerGetQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import type { RolePermissionsDraft } from '../model/types';
@@ -24,6 +25,10 @@ export function useUpdateRolePermissions(
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-roles');
   const mutation = useRolePermissionsControllerUpdate();
+  // Tracks the whole save (all roles + the awaited refetch), not a single
+  // request — mutation.isPending drops between roles and would re-enable the
+  // controls mid-save, allowing a double-submit.
+  const [isSaving, setIsSaving] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({
@@ -45,6 +50,7 @@ export function useUpdateRolePermissions(
       options?.onSaved?.();
       return;
     }
+    setIsSaving(true);
     try {
       for (const role of changed) {
         await mutation.mutateAsync({
@@ -63,8 +69,10 @@ export function useUpdateRolePermissions(
       // survive. On retry, changedRoles narrows to the roles that still differ.
       await invalidate();
       showError(t('saveError'));
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  return { save, isSaving: mutation.isPending };
+  return { save, isSaving };
 }

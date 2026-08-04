@@ -55,7 +55,8 @@ ayunis-core/
 | Module | Summary | Detail |
 | ------ | ------- | ------ |
 | [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) | User Auth | Login, registration, JWT tokens |
-| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) | Access Control | Role-based guards |
+| [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) | Access Control | Role & permission guards |
+| [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) | RBAC | Per-org role/permission grants (MANAGER/USER configurable) |
 | [users](ayunis-core-backend/src/iam/users/SUMMARY.md) | Accounts | User profiles and credentials |
 | [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md) | Tenants | Multi-tenant organization management |
 | [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md) | Billing | Package and subscription management |
@@ -134,11 +135,54 @@ Routes  Composites  Logic    Primitives
 
 Import rules: layers only depend on layers to their right.
 
+### Authorization & RBAC
+
+Two independent axes gate every request, both bound globally as `APP_GUARD`s in
+[`iam.module.ts`](ayunis-core-backend/src/iam/iam.module.ts) (order is
+load-bearing):
+
+- **Role** — `UserRole` is `ADMIN | MANAGER | USER` (org-level, on the user).
+  `@Roles(...)` + `RolesGuard` do a plain OR-match. `SystemRole`
+  (`super_admin`) is a separate platform axis via `@SystemRoles` +
+  `SystemRolesGuard`.
+- **Permission** — fine-grained capabilities (`manage_teams`,
+  `assign_users_to_teams`, `manage_skills`, `share_skills`,
+  `manage_knowledge_bases`, `share_knowledge_bases`) that org admins grant
+  **per role, per org**. `@RequirePermission(Permission.X)` + `PermissionsGuard`
+  → `HasPermissionUseCase`. **ADMIN implicitly holds every permission**;
+  MANAGER/USER hold what the org's matrix grants (each must keep ≥1). Grants
+  live in the per-org `role_permissions` table; new orgs are seeded and existing
+  orgs backfilled to preserve pre-RBAC access. See
+  [permissions/SUMMARY.md](ayunis-core-backend/src/iam/permissions/SUMMARY.md).
+
+**Reads stay open** — only manage/share (write) endpoints are permission-gated;
+per-entity visibility (ownership + shares) is enforced separately inside the use
+cases, so a member without `manage_*` can still read what's shared with them.
+
+**Frontend enforcement mirrors, never replaces, the backend.** Any authenticated
+user reads their effective permissions from `GET /permissions/me`; the
+[`permissions` feature](ayunis-core-frontend/src/features/permissions) exposes
+`useMyPermissions()` and `<PermissionGate>` to hide controls a member can't use
+(create/edit/delete/share buttons, empty-state CTAs) and to permission-filter
+the admin-settings sidebar + route guard. The backend still 403s regardless.
+
+**Adding a new permission:**
+
+1. Add the value to the `Permission` enum
+   (`permissions/domain/value-objects/permission.enum.ts`). The API returns
+   grants only — labels, grouping and display order are a frontend concern
+   (`roles-settings/lib/catalog.ts` + the `admin-settings-roles` locales).
+2. Generate an enum-alter migration (the column is a Postgres enum) and, if the
+   default should change, update `DEFAULT_ROLE_PERMISSIONS` + the backfill.
+3. Gate the relevant endpoints with `@RequirePermission(Permission.X)`.
+4. (Optional) hide the matching UI controls with `<PermissionGate permission="x">`.
+5. Regenerate the API client so the enum reaches the frontend.
+
 ---
 
 ## Quick Navigation
 
 - **Adding a backend feature**: Start at the relevant domain module's SUMMARY.md
 - **Adding a frontend page**: See [pages/SUMMARY.md](ayunis-core-frontend/src/pages/SUMMARY.md)
-- **Understanding auth**: [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) + [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md)
+- **Understanding auth**: [authentication](ayunis-core-backend/src/iam/authentication/SUMMARY.md) + [authorization](ayunis-core-backend/src/iam/authorization/SUMMARY.md) + [permissions](ayunis-core-backend/src/iam/permissions/SUMMARY.md) (RBAC — see "Authorization & RBAC" above)
 - **AI execution flow**: [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md) → [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md) → [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)
