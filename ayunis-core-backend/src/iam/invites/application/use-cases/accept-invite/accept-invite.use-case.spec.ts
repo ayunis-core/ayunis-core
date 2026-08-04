@@ -7,8 +7,7 @@ import {
   InviteJwtService,
   INVITE_TOKEN_TYPE,
 } from '../../services/invite-jwt.service';
-import { CreateRegularUserUseCase } from 'src/iam/users/application/use-cases/create-regular-user/create-regular-user.use-case';
-import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
 import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
@@ -19,8 +18,7 @@ describe('AcceptInviteUseCase', () => {
   let useCase: AcceptInviteUseCase;
   let mockInvitesRepository: Partial<InvitesRepository>;
   let mockInviteJwtService: Partial<InviteJwtService>;
-  let mockCreateRegularUserUseCase: Partial<CreateRegularUserUseCase>;
-  let mockCreateAdminUserUseCase: Partial<CreateAdminUserUseCase>;
+  let mockCreateUserUseCase: Partial<CreateUserUseCase>;
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
 
@@ -35,8 +33,7 @@ describe('AcceptInviteUseCase', () => {
     mockInviteJwtService = {
       verifyInviteToken: jest.fn(),
     };
-    mockCreateRegularUserUseCase = { execute: jest.fn() };
-    mockCreateAdminUserUseCase = { execute: jest.fn() };
+    mockCreateUserUseCase = { execute: jest.fn() };
     mockIsValidPasswordUseCase = { execute: jest.fn() };
     mockFindUserByEmailUseCase = { execute: jest.fn() };
 
@@ -45,14 +42,7 @@ describe('AcceptInviteUseCase', () => {
         AcceptInviteUseCase,
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: InviteJwtService, useValue: mockInviteJwtService },
-        {
-          provide: CreateRegularUserUseCase,
-          useValue: mockCreateRegularUserUseCase,
-        },
-        {
-          provide: CreateAdminUserUseCase,
-          useValue: mockCreateAdminUserUseCase,
-        },
+        { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },
         {
           provide: IsValidPasswordUseCase,
           useValue: mockIsValidPasswordUseCase,
@@ -71,12 +61,12 @@ describe('AcceptInviteUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should pass department to create-regular-user command', async () => {
+  const acceptInviteWithRole = async (role: UserRole, department?: string) => {
     const invite = new Invite({
       id: inviteId,
-      email: 'user@example.com',
+      email: `${role}@example.com`,
       orgId,
-      role: UserRole.USER,
+      role,
       expiresAt: new Date(Date.now() + 86_400_000),
     });
 
@@ -87,49 +77,33 @@ describe('AcceptInviteUseCase', () => {
     jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
     jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
 
-    const command = new AcceptInviteCommand({
-      inviteToken: 'valid-token',
-      userName: 'Jane Doe',
-      password: 'securePass123',
-      hasAcceptedMarketing: false,
-      department: 'jugendamt',
-    });
-
-    await useCase.execute(command);
-
-    expect(mockCreateRegularUserUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ department: 'jugendamt' }),
+    await useCase.execute(
+      new AcceptInviteCommand({
+        inviteToken: 'valid-token',
+        userName: 'Jane Doe',
+        password: 'securePass123',
+        hasAcceptedMarketing: false,
+        department,
+      }),
     );
-  });
+  };
 
-  it('should pass department to create-admin-user command', async () => {
-    const invite = new Invite({
-      id: inviteId,
-      email: 'admin@example.com',
-      orgId,
-      role: UserRole.ADMIN,
-      expiresAt: new Date(Date.now() + 86_400_000),
-    });
+  it.each([UserRole.USER, UserRole.MANAGER, UserRole.ADMIN])(
+    'creates a user with the invite role %s',
+    async (role) => {
+      await acceptInviteWithRole(role);
 
-    jest
-      .spyOn(mockInviteJwtService, 'verifyInviteToken')
-      .mockReturnValue({ inviteId, type: INVITE_TOKEN_TYPE });
-    jest.spyOn(mockInvitesRepository, 'findOne').mockResolvedValue(invite);
-    jest.spyOn(mockFindUserByEmailUseCase, 'execute').mockResolvedValue(null);
-    jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
+      expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ role }),
+      );
+    },
+  );
 
-    const command = new AcceptInviteCommand({
-      inviteToken: 'valid-token',
-      userName: 'Admin User',
-      password: 'securePass123',
-      hasAcceptedMarketing: true,
-      department: 'other:Wasserwerk',
-    });
+  it('passes department through to user creation', async () => {
+    await acceptInviteWithRole(UserRole.USER, 'jugendamt');
 
-    await useCase.execute(command);
-
-    expect(mockCreateAdminUserUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ department: 'other:Wasserwerk' }),
+    expect(mockCreateUserUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ department: 'jugendamt' }),
     );
   });
 });

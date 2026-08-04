@@ -32,6 +32,7 @@ export type UserResponseDtoRole = typeof UserResponseDtoRole[keyof typeof UserRe
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserResponseDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -80,6 +81,7 @@ export type UpdateUserRoleDtoRole = typeof UpdateUserRoleDtoRole[keyof typeof Up
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateUserRoleDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -170,6 +172,7 @@ export type CreateUserDtoRole = typeof CreateUserDtoRole[keyof typeof CreateUser
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateUserDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -193,6 +196,7 @@ export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const SuperAdminUserResponseDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -244,6 +248,7 @@ export type CreateInviteDtoRole = typeof CreateInviteDtoRole[keyof typeof Create
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateInviteDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -271,6 +276,7 @@ export type CreateBulkInviteItemDtoRole = typeof CreateBulkInviteItemDtoRole[key
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CreateBulkInviteItemDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -299,6 +305,7 @@ export type BulkInviteResultDtoRole = typeof BulkInviteResultDtoRole[keyof typeo
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const BulkInviteResultDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -346,6 +353,7 @@ export type InviteResponseDtoRole = typeof InviteResponseDtoRole[keyof typeof In
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteResponseDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -395,6 +403,7 @@ export type InviteDetailResponseDtoRole = typeof InviteDetailResponseDtoRole[key
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const InviteDetailResponseDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -1651,6 +1660,7 @@ export type TeamMemberResponseDtoUserRole = typeof TeamMemberResponseDtoUserRole
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TeamMemberResponseDtoUserRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
@@ -4656,6 +4666,7 @@ export type MeResponseDtoRole = typeof MeResponseDtoRole[keyof typeof MeResponse
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MeResponseDtoRole = {
   admin: 'admin',
+  manager: 'manager',
   user: 'user',
 } as const;
 
