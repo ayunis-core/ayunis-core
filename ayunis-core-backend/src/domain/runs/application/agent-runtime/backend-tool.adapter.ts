@@ -19,6 +19,9 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
+import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import { serializeRuntimeModelError } from './runtime-model-error';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -112,10 +115,22 @@ export class BackendToolAdapter {
         ),
       )
       .catch((error: unknown) => {
+        // A classified provider failure must survive the runtime round-trip
+        // in `details` — `cause` is process-local and the event stream only
+        // serializes details — so mapRunError can rebuild it and AppSignal
+        // groups under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
         throw new AgentRuntimeError(
           'ANONYMIZATION_UNAVAILABLE',
           'Anonymization is currently unavailable',
-          { cause: error },
+          {
+            cause: error,
+            ...(error instanceof ProviderUnavailableError && {
+              details: serializeRuntimeModelError(
+                error,
+                STREAM_IDLE_TIMEOUT_MS,
+              ),
+            }),
+          },
         );
       });
     ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: anonymized.masks });

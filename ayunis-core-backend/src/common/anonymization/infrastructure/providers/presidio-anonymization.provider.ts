@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AnonymizationPort } from '../../application/ports/anonymization.port';
 import { AnonymizationFailedError } from '../../application/anonymization.errors';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { PiiDetection } from '../../domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
@@ -39,6 +40,18 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       return detections;
     } catch (error: unknown) {
       this.logger.error('PII detection failed', { error: error as Error });
+      // Every caller treats a detect() failure as fatal and fail-closed (the
+      // user's message is blocked rather than sent unmasked), so this catch
+      // is the single classification point. Transport failures and upstream
+      // 5xx group under PROVIDER_UNAVAILABLE_*_ANONYMIZE; a 4xx means we
+      // built a bad request and stays a distinct AnonymizationFailedError
+      // (AYC-654).
+      const providerError = wrapProviderFailure(error, {
+        provider: 'anonymize',
+      });
+      if (providerError) {
+        throw providerError;
+      }
       throw new AnonymizationFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { error: error as Error },

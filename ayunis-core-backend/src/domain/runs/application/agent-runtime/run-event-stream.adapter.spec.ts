@@ -558,6 +558,35 @@ describe('adaptRunEventsToStream', () => {
     ).rejects.toBeInstanceOf(RunAnonymizationUnavailableError);
   });
 
+  // The user keeps the privacy-safe run code, but the classified provider
+  // failure serialized into details must be rebuilt as `cause` so
+  // reportUnexpectedError groups the incident under
+  // PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE (AYC-654).
+  it('rebuilds a classified anonymize outage as the run error cause', async () => {
+    const result = collect(
+      eventsFrom([
+        {
+          type: 'error',
+          code: 'ANONYMIZATION_UNAVAILABLE',
+          message: 'Anonymization is unavailable',
+          details: {
+            hostError: {
+              type: 'provider_timeout',
+              context: { provider: 'anonymize' },
+            },
+          },
+        },
+        { type: 'run_end', status: 'error', usage: {} },
+      ]),
+    );
+
+    const error: unknown = await result.catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(RunAnonymizationUnavailableError);
+    expect((error as Error).cause).toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
+    });
+  });
+
   it('maps an oversized latest turn to a context-budget error', async () => {
     await expect(
       collect(

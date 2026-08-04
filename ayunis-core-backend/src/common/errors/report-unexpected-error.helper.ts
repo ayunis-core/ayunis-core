@@ -1,6 +1,33 @@
 import { HttpException } from '@nestjs/common';
 import { setError } from '@appsignal/nodejs';
 import { ApplicationError } from './base.error';
+import { ProviderUnavailableError } from './provider.errors';
+
+const MAX_CAUSE_DEPTH = 4;
+
+/**
+ * Domain wrappers (e.g. RunAnonymizationUnavailableError) carry the
+ * classified provider failure on `cause` so the user-facing code stays
+ * stable while the incident still groups per provider and failure class
+ * (name === code === PROVIDER_UNAVAILABLE_*, the AYC-538 rate-alerting
+ * contract).
+ */
+function providerUnavailableCause(
+  exception: unknown,
+): ProviderUnavailableError | undefined {
+  let node: unknown = exception;
+  for (
+    let depth = 0;
+    depth < MAX_CAUSE_DEPTH && node instanceof Error;
+    depth++
+  ) {
+    if (node instanceof ProviderUnavailableError) {
+      return node;
+    }
+    node = node.cause;
+  }
+  return undefined;
+}
 
 /**
  * The reporting rule of ApplicationErrorFilter, extracted for response paths
@@ -18,6 +45,12 @@ export function reportUnexpectedError(exception: unknown): void {
     return;
   }
   if (exception instanceof HttpException && exception.getStatus() < 500) {
+    return;
+  }
+
+  const providerFailure = providerUnavailableCause(exception);
+  if (providerFailure) {
+    setError(providerFailure);
     return;
   }
 

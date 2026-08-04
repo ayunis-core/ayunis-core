@@ -278,7 +278,6 @@ const RUN_ERROR_MAPPERS = new Map<
       );
     },
   ],
-  ['ANONYMIZATION_UNAVAILABLE', () => new RunAnonymizationUnavailableError()],
   [
     'MALFORMED_TOOL_CALL',
     (event) =>
@@ -302,6 +301,16 @@ const RUN_ERROR_MAPPERS = new Map<
 ]);
 
 function mapRunError(event: RunErrorEvent): ApplicationError {
+  if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
+    // Checked before the generic reconstruction: the run error keeps the
+    // user-facing code and localized message, while the classified provider
+    // failure serialized into details rides on `cause` so AppSignal groups
+    // under PROVIDER_UNAVAILABLE_*_ANONYMIZE (AYC-654).
+    return new RunAnonymizationUnavailableError(
+      undefined,
+      reconstructRuntimeModelError(event.details),
+    );
+  }
   const runtimeModelError = reconstructRuntimeModelError(event.details);
   if (runtimeModelError instanceof ApplicationError) {
     return runtimeModelError;

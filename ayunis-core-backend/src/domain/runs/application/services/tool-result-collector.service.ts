@@ -350,9 +350,13 @@ export class ToolResultCollectorService {
       );
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
-      throw new RunAnonymizationUnavailableError({
-        originalError: error instanceof Error ? error.message : 'Unknown error',
-      });
+      throw new RunAnonymizationUnavailableError(
+        {
+          originalError:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        error,
+      );
     }
   }
 }

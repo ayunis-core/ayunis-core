@@ -5,6 +5,7 @@ import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { BackendToolAdapter } from './backend-tool.adapter';
 
@@ -160,6 +161,38 @@ describe('BackendToolAdapter', () => {
 
     await expect(tool.execute!({}, ctx)).rejects.toMatchObject({
       code: 'ANONYMIZATION_UNAVAILABLE',
+    });
+  });
+
+  // `cause` is process-local and the runtime error event serializes details
+  // only, so a classified provider failure must ride in `details` to survive
+  // to mapRunError and keep the PROVIDER_UNAVAILABLE_* grouping (AYC-654).
+  it('serializes a classified anonymize outage into the runtime error details', async () => {
+    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
+    execute.mockResolvedValue('call Jane at 555-1234');
+    anonymize.mockRejectedValue(
+      new ProviderTimeoutError({ provider: 'anonymize' }),
+    );
+    const piiTool = {
+      ...fakeTool('lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+    const ctx = {
+      context: RunContext.create({ orgId, threadId, isAnonymous: true }),
+      toolCallId: 'c1',
+      emit: jest.fn(),
+    } as unknown as ToolExecutionContext;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+
+    await expect(tool.execute!({}, ctx)).rejects.toMatchObject({
+      code: 'ANONYMIZATION_UNAVAILABLE',
+      details: {
+        hostError: {
+          type: 'provider_timeout',
+          context: { provider: 'anonymize' },
+        },
+      },
     });
   });
 

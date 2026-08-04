@@ -143,13 +143,22 @@ export class RunToolRepeatedlyFailingError extends RunToolExecutionFailedError {
  * is unavailable. The message must not be sent without anonymization.
  */
 export class RunAnonymizationUnavailableError extends RunError {
-  constructor(metadata?: ErrorMetadata) {
+  /**
+   * `cause` should carry the classified engine failure (typically a
+   * ProviderUnavailableError): reportUnexpectedError prefers it for the
+   * AppSignal incident, so outages group per provider and failure class
+   * while this error keeps the user-facing code and message (AYC-654).
+   */
+  constructor(metadata?: ErrorMetadata, cause?: unknown) {
     super(
       'Anonymization is currently unavailable. Your message was not sent to protect your data.',
       RunErrorCode.RUN_ANONYMIZATION_UNAVAILABLE,
       503,
       metadata,
     );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
   }
 }
 

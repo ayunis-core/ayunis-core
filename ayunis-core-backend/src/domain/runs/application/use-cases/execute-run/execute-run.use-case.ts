@@ -449,9 +449,13 @@ export class ExecuteRunUseCase {
       this.logger.error('Anonymization service unavailable', {
         error: error as Error,
       });
-      throw new RunAnonymizationUnavailableError({
-        originalError: error instanceof Error ? error.message : 'Unknown error',
-      });
+      throw new RunAnonymizationUnavailableError(
+        {
+          originalError:
+            error instanceof Error ? error.message : 'Unknown error',
+        },
+        error,
+      );
     }
   }
 }

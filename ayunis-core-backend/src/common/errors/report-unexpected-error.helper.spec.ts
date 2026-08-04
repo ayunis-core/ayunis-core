@@ -1,6 +1,7 @@
 import { setError } from '@appsignal/nodejs';
 import { BadRequestException, BadGatewayException } from '@nestjs/common';
 import { ApplicationError } from './base.error';
+import { ProviderTimeoutError } from './provider.errors';
 import { reportUnexpectedError } from './report-unexpected-error.helper';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -58,5 +59,26 @@ describe('reportUnexpectedError', () => {
     expect(setError).toHaveBeenCalledWith(expect.any(Error));
     const reported = (setError as jest.Mock).mock.calls[0][0] as Error;
     expect(reported.message).toBe('string failure');
+  });
+
+  // Domain wrappers keep their user-facing code, but the incident must group
+  // under the classified PROVIDER_UNAVAILABLE_* key carried on `cause`.
+  it('reports the classified provider failure carried on the cause chain', () => {
+    const providerFailure = new ProviderTimeoutError({ provider: 'anonymize' });
+    const wrapper = new TestApplicationError(503);
+    wrapper.cause = providerFailure;
+
+    reportUnexpectedError(wrapper);
+
+    expect(setError).toHaveBeenCalledWith(providerFailure);
+  });
+
+  it('does not unwrap the cause of expected (<500) errors', () => {
+    const wrapper = new TestApplicationError(422);
+    wrapper.cause = new ProviderTimeoutError({ provider: 'anonymize' });
+
+    reportUnexpectedError(wrapper);
+
+    expect(setError).not.toHaveBeenCalled();
   });
 });
