@@ -34,6 +34,26 @@ describe('McpIntegrationTool', () => {
       expect(() => tool.validateParams({})).toThrow();
     });
 
+    it('reports every violation in plain language, matching the shared validator', () => {
+      const mcpTool = new McpTool(
+        'create_ticket',
+        'Creates a ticket in the connected system',
+        {
+          type: 'object',
+          properties: {
+            summary: { type: 'string' },
+            priority: { type: 'string' },
+          },
+          required: ['summary', 'priority'],
+        },
+        randomUUID(),
+      );
+      const tool = new McpIntegrationTool(mcpTool, false, 'Integration', null);
+      expect(() => tool.validateParams({})).toThrow(
+        /missing required parameter 'summary'.*missing required parameter 'priority'/,
+      );
+    });
+
     it('passes params through when the server schema does not compile (draft-04 keywords)', () => {
       const mcpTool = new McpTool(
         'search',

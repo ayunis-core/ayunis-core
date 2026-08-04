@@ -267,6 +267,18 @@ describe('GenerateImageToolHandler', () => {
     ).rejects.toThrow(ToolExecutionFailedError);
   });
 
+  it('should name the violated parameter in a message the model can act on', async () => {
+    // Same plain-language format as every other tool's validation error —
+    // raw ajv fragments left models retrying the identical broken call.
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: {},
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(/missing required parameter 'prompt'/);
+  });
+
   it('should collect token usage when the handler returns it', async () => {
     const model = new ImageGenerationModel({
       id: randomUUID(),

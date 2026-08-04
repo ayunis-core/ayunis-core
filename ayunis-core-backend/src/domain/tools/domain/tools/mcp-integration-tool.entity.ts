@@ -1,4 +1,5 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
+import { formatAjvErrors } from 'src/common/validators/tool-params.validator';
 import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
@@ -36,7 +37,7 @@ export class McpIntegrationTool extends Tool {
   // Third-party MCP schemas are runtime data, so no compile-time param type
   // can be derived from them — Record is the honest return type.
   validateParams(params: Record<string, unknown>): Record<string, unknown> {
-    const ajv = createAjv();
+    const ajv = createAjv({ allErrors: true });
     let validate: ReturnType<typeof ajv.compile>;
     try {
       validate = ajv.compile(this.parameters);
@@ -48,7 +49,7 @@ export class McpIntegrationTool extends Tool {
     }
     const valid = validate(params);
     if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
+      throw new Error(formatAjvErrors(validate.errors ?? []));
     }
     return params;
   }

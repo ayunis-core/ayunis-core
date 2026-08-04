@@ -1,5 +1,5 @@
 import type { JSONSchema } from 'json-schema-to-ts';
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { DisplayableTool } from '../displayable-tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
@@ -69,14 +69,7 @@ export class EditSkillTool extends DisplayableTool {
   }
 
   validateParams(params: Record<string, unknown>): EditSkillToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-
-    return params as unknown as EditSkillToolParameters;
+    return validateToolParams<EditSkillToolParameters>(this.parameters, params);
   }
 
   get returnsPii(): boolean {

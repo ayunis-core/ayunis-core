@@ -1,6 +1,6 @@
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from '../value-objects/tool-type.enum';
-import { createAjv } from 'src/common/validators/ajv.factory';
+import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { Tool } from '../tool.entity';
 
 const internetSearchToolParameters = {
@@ -31,13 +31,10 @@ export class InternetSearchTool extends Tool {
   validateParams(
     params: Record<string, unknown>,
   ): InternetSearchToolParameters {
-    const ajv = createAjv();
-    const validate = ajv.compile(this.parameters);
-    const valid = validate(params);
-    if (!valid) {
-      throw new Error(JSON.stringify(validate.errors));
-    }
-    return params as InternetSearchToolParameters;
+    return validateToolParams<InternetSearchToolParameters>(
+      this.parameters,
+      params,
+    );
   }
 
   get returnsPii(): boolean {
