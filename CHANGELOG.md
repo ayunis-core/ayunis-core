@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.22.0](https://github.com/ayunis-core/ayunis-core/compare/v2.21.1...v2.22.0) (2026-08-04)
+
+
+### Features
+
+* **auth:** add roles & permissions admin UI with MANAGER role (AYC-347) ([02a5db6](https://github.com/ayunis-core/ayunis-core/commit/02a5db6c42268ff6c67f5817f72d912c126ae73c))
+* **auth:** add roles & permissions admin UI with MANAGER role (AYC-347) ([#1151](https://github.com/ayunis-core/ayunis-core/issues/1151)) ([c671cad](https://github.com/ayunis-core/ayunis-core/commit/c671cadf1e3af58b2c38cff535c9b0bfc0c23246))
+* **auth:** gate skill & knowledge-base edit/delete/share controls by permission (AYC-347) ([ffa27a4](https://github.com/ayunis-core/ayunis-core/commit/ffa27a42e9c7c3897effd942cee685f73ca850a7))
+* **auth:** gate skill & knowledge-base edit/delete/share controls by permission (AYC-347) ([#1154](https://github.com/ayunis-core/ayunis-core/issues/1154)) ([a3e2943](https://github.com/ayunis-core/ayunis-core/commit/a3e29436da83248133e7bd61daa38a2088328cbb))
+* **auth:** give managers permission-scoped access to settings (AYC-347) ([952e5e9](https://github.com/ayunis-core/ayunis-core/commit/952e5e96c7a4268de76f6555955e57b9048c666a))
+* **auth:** give managers permission-scoped access to settings (AYC-347) ([#1153](https://github.com/ayunis-core/ayunis-core/issues/1153)) ([0189824](https://github.com/ayunis-core/ayunis-core/commit/0189824b33a614153b7618670271b084e5e34bbb))
+* **auth:** hide create controls from members without the permission (AYC-347) ([e6f83a4](https://github.com/ayunis-core/ayunis-core/commit/e6f83a4980ee9219f36efc2a8c1542347477c22c))
+* **auth:** hide create controls from members without the permission (AYC-347) ([#1152](https://github.com/ayunis-core/ayunis-core/issues/1152)) ([3560439](https://github.com/ayunis-core/ayunis-core/commit/356043932f0371d83fa91cedaae6dd924cc77447))
+* **mcp:** add per-user OAuth authorization (AYC-205) ([#1230](https://github.com/ayunis-core/ayunis-core/issues/1230)) ([a5663e3](https://github.com/ayunis-core/ayunis-core/commit/a5663e3da7d9506095b40b2449fd2adea9abbedb))
+
+
+### Bug Fixes
+
+* **runs:** stop endless loops from repeatedly failing tool calls (AYC-646) ([#1236](https://github.com/ayunis-core/ayunis-core/issues/1236)) ([393539e](https://github.com/ayunis-core/ayunis-core/commit/393539e726f318ceaa02e3b7acd215f128ab6e0e))
+
+
+### Documentation
+
+* **architecture:** document the RBAC / permissions approach (AYC-347) ([03e993a](https://github.com/ayunis-core/ayunis-core/commit/03e993a834e56f8411bd839684869262720f1b26))
+* **architecture:** document the RBAC / permissions approach (AYC-347) ([#1155](https://github.com/ayunis-core/ayunis-core/issues/1155)) ([774fe4e](https://github.com/ayunis-core/ayunis-core/commit/774fe4edf1630d173144acefeff4eccc9859f2f1))
+* **skills:** sync agentfiles updates (AYC-000) ([#1232](https://github.com/ayunis-core/ayunis-core/issues/1232)) ([e908f91](https://github.com/ayunis-core/ayunis-core/commit/e908f910c983e05ff2a0c77bda7ad2424b6e7158))
+
 ## [2.21.1](https://github.com/ayunis-core/ayunis-core/compare/v2.21.0...v2.21.1) (2026-08-03)
 
 
