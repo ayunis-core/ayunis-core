@@ -75,7 +75,8 @@ if (providerError) throw providerError; // ProviderUnavailableError family
 ```
 
 - `wrapProviderFailure` returns `ProviderConnectionError` (502) / `ProviderTimeoutError` (504) / `ProviderServerError` (502) for transport failures (errno, undici, TLS codes, SDK wrapper names — cause chains are walked) and upstream 5xx; `undefined` for everything else.
-- **Grouping contract**: each error sets `name === code === PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>` so AppSignal opens one incident per provider+failure-class on both reporting paths (HTTP `setError()` groups by `name`; BullMQ OTel `recordException` prefers `code`). Never add these errors to `ignoreErrors` in `appsignal.cjs` — per-occurrence notifications are disabled AppSignal-side so rate-based anomaly triggers keep working.
+- **Grouping contract**: each error sets `name === code === PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>` so AppSignal opens one incident per provider+failure-class. There is only one reporting path — `setError()` *is* `span.recordException()`, and AppSignal's SpanProcessor forwards every `exception` span event from every span — and OpenTelemetry derives the grouping key `exception.type` as **`code ?? name`** (truthy `code` wins). Setting both to the same string is what makes the key stable no matter which span records it. Never add these errors to `ignoreErrors` in `appsignal.cjs` — per-occurrence notifications are disabled AppSignal-side so rate-based anomaly triggers keep working.
+- **Suppressions are a registry, not a config literal**: every `ignoreErrors` / `ignoreRequestHook` / disabled-instrumentation entry lives in `SUPPRESSIONS` in `appsignal-hooks.cjs` (AYC-563) and must carry a `reason` and an owning `ticket`. The spec asserts each `ignoreErrors` entry against a real instance of its error, because an entry naming a class whose instances carry a `.code` suppresses nothing at all — silently. `appsignal.cjs` only consumes the registry; it decides nothing.
 - Reference choke points: `stream-inference.use-case.ts`, `get-inference.use-case.ts` (models), `embed-text.use-case.ts` (embeddings), `mistral-file-retriever.handler.ts` (OCR, incl. `ProviderRequestRejectedError` for machine-generated 4xx — but not 401/403 auth-config bugs).
 - **Not a provider**: fetching customer-pasted URLs. Keep `UrlRetrieverRetrievalError` (422) and enrich its metadata with `classifyTransportError()` output instead.
 - This hand-written translate-catch at outbound choke points is the sanctioned exception to `use-case-reference`'s "no hand-written try/catch error boundaries" rule.
@@ -90,6 +91,20 @@ if (providerError) throw providerError; // ProviderUnavailableError family
 | OpenAPI spec                | `http://localhost:PORT/api/docs` (when running) |
 
 > [!IMPORTANT] Always update `ARCHITECTURE.md` and the module's `SUMMARY.md` file if necessary!
+
+## Running Tests
+
+Run backend tests with **`pnpm test`** from `ayunis-core-backend/` — never bare `jest` or `npx jest`.
+
+```bash
+cd ayunis-core-backend
+pnpm test                      # full suite
+pnpm test <path-or-pattern>    # a subset
+```
+
+`pnpm test` runs Jest through the project's configured runner (Node ESM flags, module-name mapping). Invoking `jest` / `npx jest` directly bypasses that setup, and the ESM-only `p-queue` dependency then fails to resolve — the `embeddings-throttle` and `ingest-bulk-content` RAG suites blow up with module-resolution errors.
+
+**Those failures are an artifact of the wrong invocation, not a real regression.** Do not report them as "pre-existing failures on main" or hang caveats on a PR summary because of them — re-run with `pnpm test` and they pass. A suite that fails under `pnpm test` is a genuine signal worth investigating.
 
 ## Health Check
 

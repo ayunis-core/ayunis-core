@@ -39,6 +39,31 @@ ln -sf "$REPO_ROOT/ayunis-core-frontend/.env" "$WORKTREE_DIR/ayunis-core-fronten
 # Never `npm install` inside a sub-project — that creates a stray package-lock.json
 # and resolves the wrong tree.
 cd "$WORKTREE_DIR" && pnpm install
+
+# Build the workspace packages so @ayunis/* types resolve (see below).
+cd "$WORKTREE_DIR" && pnpm run build:deps
+```
+
+## Build @ayunis/* deps before trusting a full typecheck
+
+A fresh worktree has `node_modules` (after `pnpm install`) but **not** the built
+`dist/index.d.ts` for the `@ayunis/*` workspace packages — those only exist after
+the `tsup` build. Until you run `pnpm run build:deps`, a full `pnpm exec tsc --noEmit`
+emits ~60 `TS2307 "Cannot find module '@ayunis/…'"` errors **on your branch AND on
+clean HEAD**.
+
+**Never wave those TS2307 errors off as "pre-existing on clean HEAD."** They are a
+missing-build artifact, not a real baseline — and treating them that way hides genuine
+type errors in your own new code behind the noise. In one session this masked a real
+bug (a raw `'mistral'` string passed where an `EmbeddingsProvider` enum was required).
+
+The pre-commit hook (`tsc-files`, staged-only) and `ts-jest` (transpile-only) both have
+blind spots that only a full post-build typecheck covers. So, in any worktree, before
+running or trusting `tsc --noEmit`:
+
+```bash
+cd "$WORKTREE_DIR" && pnpm run build:deps   # builds @ayunis/* dist/*.d.ts
+pnpm exec tsc --noEmit                       # now TS2307 noise is gone; real errors surface
 ```
 
 ## Empty Base Branch Gotcha

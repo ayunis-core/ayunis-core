@@ -92,6 +92,21 @@ gt restack                                             # rebase the stack onto f
 
 This is distinct from the pre-submit fetch check below — that guards against overwriting remote commits when pushing. This one keeps your *base* current so the work you're about to write applies cleanly.
 
+### Choosing the base — stack on a dependency, don't default to main
+
+Before opening a follow-up PR, decide the base *deliberately*. The default is **not** always main. Ask one question: **does this change only make sense once an in-flight, unmerged PR lands?**
+
+- **Yes — it depends on unmerged work** → stack it *on top of that branch*, not main. Typical cases: a cleanup that removes code the open PR replaces, or a follow-up that builds on an API/behaviour the open PR introduces. `gt checkout <parent-branch>` first, then edit so `gt create` stacks the new branch on the dependency.
+- **No — it stands alone against current `main`** → fresh stack off main (the flow below).
+
+Branching a dependent change off main is the common mistake: it can merge *before* its prerequisite and break the build, or land as an out-of-order changelog entry. When you're unsure whether the dependency is real, ask — don't assume main.
+
+If you already branched off main and only then realise the work depends on an unlanded PR, re-parent it — don't rebuild:
+
+```bash
+gt move --onto <parent-branch>   # re-parent the current branch onto its real dependency
+```
+
 ### Starting a new PR — verify the base branch BEFORE editing
 
 Before making **any edit** whose goal is a *new PR* / *new branch off main* / *port to a new PR*, verify that you are actually starting from the intended base. In a Graphite repo the working checkout is almost always mid-stack on some feature branch — being clean is not the same as being on main.
