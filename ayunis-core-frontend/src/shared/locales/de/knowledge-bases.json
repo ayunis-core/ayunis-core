@@ -59,6 +59,7 @@
   "emptyState": {
     "title": "Noch keine Wissenssammlungen",
     "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und nutzen Sie sie in Ihren Chats als Kontext für die KI.",
+    "noAccessDescription": "Bitten Sie einen Administrator, eine Wissenssammlung mit Ihnen zu teilen oder Ihnen die Berechtigung zum Erstellen zu geben.",
     "personal": {
       "title": "Noch keine eigenen Wissenssammlungen",
       "description": "Erstellen Sie Ihre erste Wissenssammlung. Laden Sie Dokumente hoch und verwenden Sie sie als Kontext für die KI in Ihren Chats."

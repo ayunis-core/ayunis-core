@@ -17,6 +17,7 @@ import {
   TabsContent,
 } from '@/shared/ui/shadcn/tabs';
 import { EmptyState } from '@/widgets/empty-state';
+import { useMyPermissions } from '@/features/permissions';
 
 interface SkillsPageProps {
   skills: Skill[];
@@ -24,6 +25,8 @@ interface SkillsPageProps {
 
 export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
+  const { can, isLoading: isLoadingPermissions } = useMyPermissions();
+  const canCreate = isLoadingPermissions || can('manage_skills');
 
   const personalSkills = skills
     .filter((skill) => !skill.isShared)
@@ -96,12 +99,18 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
               {personalSkills.length === 0 ? (
                 <EmptyState
                   title={t('emptyState.personal.title')}
-                  description={t('emptyState.personal.description')}
+                  description={
+                    canCreate
+                      ? t('emptyState.personal.description')
+                      : t('emptyState.noAccessDescription')
+                  }
                   action={
-                    <CreateSkillDialog
-                      buttonText={t('createDialog.buttonTextFirst')}
-                      showIcon={true}
-                    />
+                    canCreate ? (
+                      <CreateSkillDialog
+                        buttonText={t('createDialog.buttonTextFirst')}
+                        showIcon={true}
+                      />
+                    ) : undefined
                   }
                 />
               ) : (

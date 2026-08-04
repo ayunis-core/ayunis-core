@@ -1370,6 +1370,26 @@
         "tags": ["Role Permissions"]
       }
     },
+    "/permissions/me": {
+      "get": {
+        "operationId": "MyPermissionsController_getMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyPermissionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user's effective permissions",
+        "tags": ["Permissions"]
+      }
+    },
     "/subscriptions/active": {
       "get": {
         "operationId": "SubscriptionsController_hasActiveSubscription",
@@ -11075,6 +11095,27 @@
           "permissions": {
             "type": "array",
             "description": "Permissions granted to the role. Must contain at least one permission.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "manage_teams",
+                "assign_users_to_teams",
+                "manage_skills",
+                "share_skills",
+                "manage_knowledge_bases",
+                "share_knowledge_bases"
+              ]
+            }
+          }
+        },
+        "required": ["permissions"]
+      },
+      "MyPermissionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "description": "The current user's effective permissions (admins hold all of them)",
             "items": {
               "type": "string",
               "enum": [

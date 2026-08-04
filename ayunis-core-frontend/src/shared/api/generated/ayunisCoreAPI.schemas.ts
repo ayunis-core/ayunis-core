@@ -538,6 +538,24 @@ export interface UpdateRolePermissionsDto {
   permissions: UpdateRolePermissionsDtoPermissionsItem[];
 }
 
+export type MyPermissionsResponseDtoPermissionsItem = typeof MyPermissionsResponseDtoPermissionsItem[keyof typeof MyPermissionsResponseDtoPermissionsItem];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MyPermissionsResponseDtoPermissionsItem = {
+  manage_teams: 'manage_teams',
+  assign_users_to_teams: 'assign_users_to_teams',
+  manage_skills: 'manage_skills',
+  share_skills: 'share_skills',
+  manage_knowledge_bases: 'manage_knowledge_bases',
+  share_knowledge_bases: 'share_knowledge_bases',
+} as const;
+
+export interface MyPermissionsResponseDto {
+  /** The current user's effective permissions (admins hold all of them) */
+  permissions: MyPermissionsResponseDtoPermissionsItem[];
+}
+
 /**
  * Type of the active subscription. Null when there is no active subscription or on self-hosted deployments.
  * @nullable

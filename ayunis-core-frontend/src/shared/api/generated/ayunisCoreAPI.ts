@@ -123,6 +123,7 @@ import type {
   ModelProviderInfoResponseDto,
   ModelWithConfigResponseDto,
   ModelsControllerUpdatePermittedModel200,
+  MyPermissionsResponseDto,
   OnboardingResponseDto,
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
@@ -2985,6 +2986,99 @@ export const useRolePermissionsControllerUpdate = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Get the current user's effective permissions
+ */
+export const myPermissionsControllerGetMine = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<MyPermissionsResponseDto>(
+      {url: `/permissions/me`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMyPermissionsControllerGetMineQueryKey = () => {
+    return [
+    `/permissions/me`
+    ] as const;
+    }
+
+    
+export const getMyPermissionsControllerGetMineQueryOptions = <TData = Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMyPermissionsControllerGetMineQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>> = ({ signal }) => myPermissionsControllerGetMine(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MyPermissionsControllerGetMineQueryResult = NonNullable<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>>
+export type MyPermissionsControllerGetMineQueryError = unknown
+
+
+export function useMyPermissionsControllerGetMine<TData = Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myPermissionsControllerGetMine>>,
+          TError,
+          Awaited<ReturnType<typeof myPermissionsControllerGetMine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyPermissionsControllerGetMine<TData = Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof myPermissionsControllerGetMine>>,
+          TError,
+          Awaited<ReturnType<typeof myPermissionsControllerGetMine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMyPermissionsControllerGetMine<TData = Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current user's effective permissions
+ */
+
+export function useMyPermissionsControllerGetMine<TData = Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof myPermissionsControllerGetMine>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMyPermissionsControllerGetMineQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Check if the current organization has an active subscription
  */
