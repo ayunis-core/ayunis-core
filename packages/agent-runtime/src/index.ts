@@ -53,6 +53,7 @@ export {
   AgentRuntimeError,
   HookFailedError,
   InvalidRunInputError,
+  MalformedToolCallError,
   MaxIterationsError,
   ProviderError,
   RunAbortedError,

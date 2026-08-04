@@ -26,6 +26,7 @@ import {
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RunExecutionOutcome } from '../run-execution-outcome';
 
 const logger = new Logger('RunEventStreamAdapter');
@@ -276,6 +277,12 @@ function mapRunError(
   }
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     return new RunAnonymizationUnavailableError();
+  }
+  if (event.code === 'MALFORMED_TOOL_CALL') {
+    return new InferenceFailedError(
+      'model emitted a tool call whose arguments did not arrive intact',
+      event.details,
+    );
   }
   if (event.code === 'CONTEXT_BUDGET_EXCEEDED') {
     return new RunContextBudgetExceededError();

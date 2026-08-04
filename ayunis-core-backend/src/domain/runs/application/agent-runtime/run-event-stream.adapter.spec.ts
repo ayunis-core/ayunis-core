@@ -500,6 +500,29 @@ describe('adaptRunEventsToStream', () => {
     },
   );
 
+  it('maps a malformed tool call to the inference-failed error', async () => {
+    // Truncated/unparseable tool-call arguments must surface as one clear
+    // inference failure — matching the legacy loop — instead of a generic
+    // runtime error (AYC-646).
+    await expect(
+      collect(
+        eventsFrom([
+          {
+            type: 'error',
+            code: 'MALFORMED_TOOL_CALL',
+            message:
+              'Model emitted a tool call whose arguments did not arrive intact',
+            details: {
+              toolNames: ['create_document'],
+              reason: 'unparseable_arguments',
+            },
+          },
+          { type: 'run_end', status: 'error', usage: {} },
+        ]),
+      ),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
   it('maps anonymization failures to the privacy-safe run error', async () => {
     await expect(
       collect(
