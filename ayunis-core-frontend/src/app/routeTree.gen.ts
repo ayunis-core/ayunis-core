@@ -63,6 +63,7 @@ import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './rou
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAcademyChapterIdQuizRouteImport } from './routes/_authenticated/academy.$chapterId_.quiz'
+import { Route as AuthenticatedSettingsIntegrationsOauthCallbackRouteImport } from './routes/_authenticated/settings.integrations_.oauth.callback'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -373,6 +374,12 @@ const AuthenticatedAcademyChapterIdQuizRoute =
     path: '/academy/$chapterId/quiz',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSettingsIntegrationsOauthCallbackRoute =
+  AuthenticatedSettingsIntegrationsOauthCallbackRouteImport.update({
+    id: '/settings/integrations_/oauth/callback',
+    path: '/settings/integrations/oauth/callback',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -428,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -483,6 +491,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/super-admin-settings/super-admins': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/super-admin-settings/users': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/settings/integrations/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -540,6 +549,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   '/_authenticated/super-admin-settings/super-admins/': typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   '/_authenticated/super-admin-settings/users/': typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  '/_authenticated/settings/integrations_/oauth/callback': typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills/'
     | '/super-admin-settings/super-admins/'
     | '/super-admin-settings/users/'
+    | '/settings/integrations/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -652,6 +663,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/skills'
     | '/super-admin-settings/super-admins'
     | '/super-admin-settings/users'
+    | '/settings/integrations/oauth/callback'
   id:
     | '__root__'
     | '/'
@@ -708,6 +720,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/skills/'
     | '/_authenticated/super-admin-settings/super-admins/'
     | '/_authenticated/super-admin-settings/users/'
+    | '/_authenticated/settings/integrations_/oauth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1105,6 +1118,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAcademyChapterIdQuizRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/integrations_/oauth/callback': {
+      id: '/_authenticated/settings/integrations_/oauth/callback'
+      path: '/settings/integrations/oauth/callback'
+      fullPath: '/settings/integrations/oauth/callback'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1151,6 +1171,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
   AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute: typeof AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute
   AuthenticatedSuperAdminSettingsUsersIndexRoute: typeof AuthenticatedSuperAdminSettingsUsersIndexRoute
+  AuthenticatedSettingsIntegrationsOauthCallbackRoute: typeof AuthenticatedSettingsIntegrationsOauthCallbackRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1219,6 +1240,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsSuperAdminsIndexRoute,
   AuthenticatedSuperAdminSettingsUsersIndexRoute:
     AuthenticatedSuperAdminSettingsUsersIndexRoute,
+  AuthenticatedSettingsIntegrationsOauthCallbackRoute:
+    AuthenticatedSettingsIntegrationsOauthCallbackRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

@@ -51,11 +51,29 @@ import { DiscoverMcpCapabilitiesUseCase } from './application/use-cases/discover
 import { ExecuteMcpToolUseCase } from './application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { GetMcpPromptUseCase } from './application/use-cases/get-mcp-prompt/get-mcp-prompt.use-case';
 import { ValidateIntegrationAccessService } from './application/services/validate-integration-access.service';
+import { McpOAuthClientRegistrationRepositoryPort } from './application/ports/mcp-oauth-client-registration.repository.port';
+import { McpOAuthPendingSessionRepositoryPort } from './application/ports/mcp-oauth-pending-session.repository.port';
+import { McpOAuthUserTokenRepositoryPort } from './application/ports/mcp-oauth-user-token.repository.port';
+import { McpOAuthClientRegistrationRepository } from './infrastructure/persistence/postgres/mcp-oauth-client-registration.repository';
+import { McpOAuthPendingSessionRepository } from './infrastructure/persistence/postgres/mcp-oauth-pending-session.repository';
+import { McpOAuthUserTokenRepository } from './infrastructure/persistence/postgres/mcp-oauth-user-token.repository';
+import {
+  McpOAuthClientRegistrationRecord,
+  McpOAuthPendingSessionRecord,
+  McpOAuthUserTokenRecord,
+} from './infrastructure/persistence/postgres/schema';
 
 // Controller and Mappers
 import { McpIntegrationsController } from './presenters/http/mcp-integrations.controller';
 import { McpIntegrationDtoMapper } from './presenters/http/mappers/mcp-integration-dto.mapper';
 import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-config-dto.mapper';
+import { McpOAuthClientConfigurationService } from './application/services/mcp-oauth-client-configuration.service';
+import { McpOAuthMetadataController } from './presenters/http/mcp-oauth-metadata.controller';
+import { McpOAuthProviderFactory } from './infrastructure/clients/mcp-oauth-provider.factory';
+import { McpOAuthAuthorizationService } from './application/services/mcp-oauth-authorization.service';
+import { McpOAuthFetchPort } from './application/ports/mcp-oauth-fetch.port';
+import { McpOAuthFetchService } from './infrastructure/clients/mcp-oauth-fetch.service';
+import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-integration-response.mapper';
 
 @Module({
   imports: [
@@ -70,11 +88,14 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       CustomHeaderMcpIntegrationAuthRecord,
       OAuthMcpIntegrationAuthRecord,
       McpIntegrationUserConfigRecord,
+      McpOAuthClientRegistrationRecord,
+      McpOAuthUserTokenRecord,
+      McpOAuthPendingSessionRecord,
     ]),
     SourcesModule, // Import sources module for CreateDataSourceUseCase
     MarketplaceModule,
   ],
-  controllers: [McpIntegrationsController],
+  controllers: [McpIntegrationsController, McpOAuthMetadataController],
   providers: [
     {
       provide: McpCredentialEncryptionPort,
@@ -92,6 +113,22 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
       provide: McpIntegrationUserConfigRepositoryPort,
       useClass: McpIntegrationUserConfigRepository,
     },
+    {
+      provide: McpOAuthClientRegistrationRepositoryPort,
+      useClass: McpOAuthClientRegistrationRepository,
+    },
+    {
+      provide: McpOAuthUserTokenRepositoryPort,
+      useClass: McpOAuthUserTokenRepository,
+    },
+    {
+      provide: McpOAuthPendingSessionRepositoryPort,
+      useClass: McpOAuthPendingSessionRepository,
+    },
+    {
+      provide: McpOAuthFetchPort,
+      useClass: McpOAuthFetchService,
+    },
     McpIntegrationMapper,
     McpIntegrationFactory,
     McpIntegrationAuthFactory,
@@ -101,6 +138,9 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     ConnectionValidationService,
     PredefinedMcpIntegrationRegistry,
     ValidateIntegrationAccessService,
+    McpOAuthClientConfigurationService,
+    McpOAuthProviderFactory,
+    McpOAuthAuthorizationService,
     // Use Cases
     CreateMcpIntegrationUseCase,
     GetMcpIntegrationUseCase,
@@ -122,6 +162,7 @@ import { PredefinedConfigDtoMapper } from './presenters/http/mappers/predefined-
     GetUserMcpConfigUseCase,
     // Mappers
     McpIntegrationDtoMapper,
+    McpIntegrationResponseMapper,
     PredefinedConfigDtoMapper,
   ],
   exports: [

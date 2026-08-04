@@ -1,12 +1,16 @@
 import { Logger } from '@nestjs/common';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
 import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
+import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+import { randomUUID } from 'crypto';
 
-jest.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
+jest.mock('@modelcontextprotocol/client', () => ({
   Client: jest.fn(),
-}));
-jest.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
   StreamableHTTPClientTransport: jest.fn(),
 }));
 
@@ -65,6 +69,75 @@ describe('McpSdkClientAdapter', () => {
   });
 
   describe('listTools', () => {
+    it('negotiates the newest supported MCP protocol revision', async () => {
+      await adapter.listTools(config);
+
+      expect(Client).toHaveBeenCalledWith(
+        { name: 'ayunis-core', version: '1.0.0' },
+        { versionNegotiation: { mode: 'auto' } },
+      );
+    });
+
+    it('passes configured headers to the v2 HTTP transport', async () => {
+      await adapter.listTools(config);
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL(config.serverUrl),
+        {
+          requestInit: { headers: config.headers },
+          authProvider: undefined,
+          onInsufficientScope: 'throw',
+        },
+      );
+    });
+
+    it('uses the guarded fetch boundary for OAuth transport requests', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        orgId: randomUUID(),
+        name: 'Council documents',
+        serverUrl: config.serverUrl,
+        auth: new NoAuthMcpIntegrationAuth(),
+        marketplaceIdentifier: 'council-documents',
+        configSchema: {
+          authType: 'OAUTH',
+          orgFields: [],
+          userFields: [],
+          oauth: { clientRegistration: 'automatic' },
+        },
+        orgConfigValues: {},
+      });
+      const authProvider = { tokens: jest.fn() };
+      const providerFactory = {
+        prepareRuntime: jest.fn().mockResolvedValue(authProvider),
+      };
+      const integrations = {
+        findById: jest.fn().mockResolvedValue(integration),
+      };
+      const oauthFetch = { fetch: jest.fn() };
+      adapter = new McpSdkClientAdapter(
+        providerFactory as never,
+        integrations as never,
+        oauthFetch,
+      );
+
+      await adapter.listTools({
+        serverUrl: config.serverUrl,
+        oauth: {
+          integrationId: integration.id,
+          userId: randomUUID(),
+          orgId: integration.orgId,
+        },
+      });
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL(config.serverUrl),
+        expect.objectContaining({
+          authProvider,
+          fetchFn: oauthFetch.fetch,
+        }),
+      );
+    });
+
     it('returns the tools reported by the server', async () => {
       const tools = [
         {
@@ -153,7 +226,7 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('passes the timeout to callTool after the result schema slot', async () => {
+    it('passes the timeout to callTool', async () => {
       await adapter.callTool(config, {
         toolName: 'search_registry',
         parameters: { query: 'water supply' },
@@ -161,7 +234,6 @@ describe('McpSdkClientAdapter', () => {
 
       expect(clientMock.callTool).toHaveBeenCalledWith(
         { name: 'search_registry', arguments: { query: 'water supply' } },
-        undefined,
         REQUEST_TIMEOUT,
       );
     });

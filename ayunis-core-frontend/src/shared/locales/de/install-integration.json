@@ -18,6 +18,19 @@
     "backToIntegrations": "Zurück zu Integrationen"
   },
   "success": "Integration erfolgreich installiert!",
+  "oauth": {
+    "title": "OAuth-Autorisierung",
+    "registration": {
+      "automatic": "Der OAuth-Client wird automatisch registriert.",
+      "static": "Geben Sie die vorab registrierten OAuth-Client-Zugangsdaten ein."
+    },
+    "scopes": "Fallback-Scopes: {{scopes}}",
+    "callbackUri": "Callback-URI",
+    "callbackUriDescription": "Registrieren Sie genau diese URI beim Autorisierungsserver.",
+    "clientId": "Client-ID",
+    "clientSecret": "Client-Secret (optional)",
+    "clientSecretDescription": "Für einen öffentlichen OAuth-Client leer lassen."
+  },
   "error": {
     "missingIdentifier": {
       "title": "Fehlende Integrations-Kennung",

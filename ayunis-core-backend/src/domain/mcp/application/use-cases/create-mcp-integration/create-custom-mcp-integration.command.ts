@@ -7,5 +7,9 @@ export class CreateCustomMcpIntegrationCommand {
     public readonly configSchema: IntegrationConfigSchema,
     public readonly orgConfigValues: Record<string, string>,
     public readonly returnsPii?: boolean,
+    public readonly oauthClient?: {
+      clientId: string;
+      clientSecret?: string;
+    },
   ) {}
 }

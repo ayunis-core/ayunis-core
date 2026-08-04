@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,6 +24,8 @@ import { Button } from '@/shared/ui/shadcn/button';
 import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
 import { useUpdateIntegration } from '../api/useUpdateIntegration';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
+import { EditOAuthClientFields } from './edit-oauth-client-fields';
 
 interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
@@ -43,6 +45,14 @@ function getEditableOrgFields(
   return schema.orgFields.filter(
     (field) => field.value === null || field.value === undefined,
   );
+}
+
+function resolveEditableOrgFields(
+  integration: McpIntegration | null,
+  isSchemaConfigured: boolean,
+): MarketplaceIntegrationConfigFieldDto[] {
+  if (!integration || !isSchemaConfigured) return [];
+  return getEditableOrgFields(integration);
 }
 
 function buildConfigPayload(
@@ -92,6 +102,83 @@ function buildAuthPayload(
   }
 }
 
+interface BuildUpdatePayloadInput {
+  data: UpdateIntegrationFormData;
+  integration: McpIntegration;
+  isSchemaConfigured: boolean;
+  editableFields: MarketplaceIntegrationConfigFieldDto[];
+  configFormValues: Record<string, string>;
+  currentOrgValues: Record<string, string>;
+  hasStaticOAuthClient: boolean;
+}
+
+function buildUpdatePayload({
+  data,
+  integration,
+  isSchemaConfigured,
+  editableFields,
+  configFormValues,
+  currentOrgValues,
+  hasStaticOAuthClient,
+}: BuildUpdatePayloadInput): UpdateIntegrationFormData {
+  const payload: UpdateIntegrationFormData = {};
+  if (data.name && data.name !== integration.name) payload.name = data.name;
+
+  if (!isSchemaConfigured) {
+    buildAuthPayload(payload, data, integration);
+    return payload;
+  }
+
+  buildConfigPayload(
+    payload,
+    editableFields,
+    configFormValues,
+    currentOrgValues,
+  );
+  const clientId = data.oauthClientId?.trim();
+  if (hasStaticOAuthClient && clientId) {
+    const clientSecret = data.oauthClientSecret?.trim();
+    payload.oauthClient = {
+      clientId,
+      ...(clientSecret ? { clientSecret } : {}),
+    };
+  }
+  return payload;
+}
+
+function OptionalOAuthClientFields({
+  enabled,
+  form,
+  disabled,
+}: Readonly<{
+  enabled: boolean;
+  form: UseFormReturn<UpdateIntegrationFormData>;
+  disabled: boolean;
+}>) {
+  if (!enabled) return null;
+  return <EditOAuthClientFields form={form} disabled={disabled} />;
+}
+
+function useResetEditForm(
+  integration: McpIntegration | null,
+  open: boolean,
+  form: UseFormReturn<UpdateIntegrationFormData>,
+): void {
+  useEffect(() => {
+    if (integration && open) {
+      form.reset({
+        name: integration.name,
+        authHeaderName: '',
+        credentials: '',
+        oauthClientId: '',
+        oauthClientSecret: '',
+      });
+    }
+    // Only reset when the dialog opens with a potentially different integration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [integration, open]);
+}
+
 export function EditIntegrationDialog({
   integration,
   open,
@@ -106,32 +193,31 @@ export function EditIntegrationDialog({
       name: '',
       authHeaderName: '',
       credentials: '',
+      oauthClientId: '',
+      oauthClientSecret: '',
     },
   });
 
   const isSchemaConfigured = integration?.configSchema !== undefined;
-  const editableFields =
-    integration && isSchemaConfigured ? getEditableOrgFields(integration) : [];
+  const editableFields = resolveEditableOrgFields(
+    integration,
+    isSchemaConfigured,
+  );
   const currentOrgValues = (integration?.orgConfigValues ?? {}) as Record<
     string,
     string
   >;
+  const schema = integration?.configSchema as
+    Parameters<typeof hasOAuthConfiguration>[0] | undefined;
+  const hasStaticOAuthClient =
+    hasOAuthConfiguration(schema) &&
+    schema.oauth.clientRegistration === 'static';
+
+  useResetEditForm(integration, open, form);
 
   const [configFormValues, setConfigFormValues] = useState<
     Record<string, string>
   >({});
-
-  useEffect(() => {
-    if (integration && open) {
-      form.reset({
-        name: integration.name,
-        authHeaderName: '',
-        credentials: '',
-      });
-    }
-    // Only reset form when the dialog opens with a (potentially different) integration.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integration, open]);
 
   // Initialize the schema-configured form when the dialog opens for an
   // integration. Done during render (keyed on the integration) rather than in
@@ -155,23 +241,15 @@ export function EditIntegrationDialog({
 
   const handleSubmit = (data: UpdateIntegrationFormData) => {
     if (!integration) return;
-
-    const payload: UpdateIntegrationFormData = {};
-
-    if (data.name && data.name !== integration.name) {
-      payload.name = data.name;
-    }
-
-    if (isSchemaConfigured) {
-      buildConfigPayload(
-        payload,
-        editableFields,
-        configFormValues,
-        currentOrgValues,
-      );
-    } else {
-      buildAuthPayload(payload, data, integration);
-    }
+    const payload = buildUpdatePayload({
+      data,
+      integration,
+      isSchemaConfigured,
+      editableFields,
+      configFormValues,
+      currentOrgValues,
+      hasStaticOAuthClient,
+    });
 
     if (Object.keys(payload).length === 0) {
       onOpenChange(false);
@@ -252,6 +330,12 @@ export function EditIntegrationDialog({
                   ))}
                 </div>
               )}
+
+              <OptionalOAuthClientFields
+                enabled={hasStaticOAuthClient}
+                form={form}
+                disabled={isUpdating}
+              />
 
               {!isSchemaConfigured && authMethod === 'CUSTOM_HEADER' && (
                 <>

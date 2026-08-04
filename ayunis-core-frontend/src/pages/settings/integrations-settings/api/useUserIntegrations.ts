@@ -1,9 +1,6 @@
 import { useMcpIntegrationsControllerListAvailable } from '@/shared/api/generated/ayunisCoreAPI';
-import type {
-  McpIntegrationResponseDto,
-  MarketplaceIntegrationConfigFieldDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { isUserEditableField } from '@/shared/lib/config-field';
+import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { isUserIntegrationVisible } from '../lib/is-user-integration-visible';
 
 /**
  * Lists the enabled org integrations a user can personalize — i.e. those that
@@ -16,7 +13,7 @@ export function useUserIntegrations() {
     useMcpIntegrationsControllerListAvailable();
 
   const integrations: McpIntegrationResponseDto[] = (data ?? []).filter(
-    (integration) => hasUserEditableFields(integration),
+    isUserIntegrationVisible,
   );
 
   return {
@@ -25,12 +22,4 @@ export function useUserIntegrations() {
     isError,
     refetch,
   };
-}
-
-function hasUserEditableFields(
-  integration: McpIntegrationResponseDto,
-): boolean {
-  const schema = integration.configSchema as
-    { userFields?: MarketplaceIntegrationConfigFieldDto[] } | undefined;
-  return (schema?.userFields ?? []).some(isUserEditableField);
 }

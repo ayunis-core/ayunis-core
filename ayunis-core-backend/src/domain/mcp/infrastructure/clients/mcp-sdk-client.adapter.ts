@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
-// MCP SDK imports - using direct subpath exports
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client';
 import {
   McpClientPort,
   McpConnectionConfig,
@@ -11,6 +12,11 @@ import {
   McpToolCall,
   McpToolResult,
 } from '../../application/ports/mcp-client.port';
+import { McpOAuthProviderFactory } from './mcp-oauth-provider.factory';
+import { McpIntegrationsRepositoryPort } from '../../application/ports/mcp-integrations.repository.port';
+import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+import type { UUID } from 'crypto';
+import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
 
 /**
  * Adapter that wraps @modelcontextprotocol/sdk to provide MCP client functionality.
@@ -27,6 +33,14 @@ import {
 export class McpSdkClientAdapter extends McpClientPort {
   private readonly logger = new Logger(McpSdkClientAdapter.name);
   private readonly requestOptions = { timeout: 30000 };
+
+  constructor(
+    @Optional() private readonly oauthProviderFactory?: McpOAuthProviderFactory,
+    @Optional() private readonly integrations?: McpIntegrationsRepositoryPort,
+    @Optional() private readonly oauthFetch?: McpOAuthFetchPort,
+  ) {
+    super();
+  }
 
   /**
    * List all tools available on the MCP server
@@ -113,7 +127,6 @@ export class McpSdkClientAdapter extends McpClientPort {
           name: call.toolName,
           arguments: call.parameters,
         },
-        undefined,
         this.requestOptions,
       );
 
@@ -225,21 +238,54 @@ export class McpSdkClientAdapter extends McpClientPort {
     // Only pass requestInit with headers when we have headers to add
     // Otherwise, let the SDK handle the default headers (Accept, Content-Type, etc.)
     const hasHeaders = config.headers && Object.keys(config.headers).length > 0;
-    const transport = hasHeaders
-      ? new StreamableHTTPClientTransport(new URL(config.serverUrl), {
-          requestInit: {
-            headers: { ...config.headers },
-          },
-        })
-      : new StreamableHTTPClientTransport(new URL(config.serverUrl));
+    const authProvider = await this.buildOAuthProvider(config);
+    const oauthFetch = authProvider ? this.requireOAuthFetch() : undefined;
+    const transport = new StreamableHTTPClientTransport(
+      new URL(config.serverUrl),
+      {
+        requestInit: hasHeaders
+          ? { headers: { ...config.headers } }
+          : undefined,
+        authProvider,
+        onInsufficientScope: 'throw',
+        ...(oauthFetch ? { fetchFn: oauthFetch.fetch } : {}),
+      },
+    );
 
     // Create client with capabilities
-    const client = new Client({ name: 'ayunis-core', version: '1.0.0' });
+    const client = new Client(
+      { name: 'ayunis-core', version: '1.0.0' },
+      { versionNegotiation: { mode: 'auto' } },
+    );
 
     // Connect to server (covers the initialize handshake with the same timeout)
     await client.connect(transport, this.requestOptions);
 
     return client;
+  }
+
+  private async buildOAuthProvider(config: McpConnectionConfig) {
+    if (!config.oauth) return undefined;
+    if (!this.oauthProviderFactory || !this.integrations) {
+      throw new Error('OAuth provider dependencies are unavailable');
+    }
+    const integration = await this.integrations.findById(
+      config.oauth.integrationId as UUID,
+    );
+    if (!(integration instanceof SchemaConfiguredMcpIntegration)) {
+      throw new Error('OAuth integration is unavailable');
+    }
+    return this.oauthProviderFactory.prepareRuntime({
+      integration,
+      userId: config.oauth.userId as UUID,
+      orgId: config.oauth.orgId as UUID,
+    });
+  }
+
+  private requireOAuthFetch(): McpOAuthFetchPort {
+    if (!this.oauthFetch)
+      throw new Error('OAuth fetch dependency is unavailable');
+    return this.oauthFetch;
   }
 
   /**

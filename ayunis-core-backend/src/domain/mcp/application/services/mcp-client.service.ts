@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { UUID } from 'crypto';
 import {
   McpClientPort,
@@ -24,6 +24,9 @@ import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
 } from '../mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+import { McpCapabilityCacheService } from './mcp-capability-cache.service';
+import { handleMcpOperationError } from './mcp-operation-error';
 
 /**
  * Service for executing MCP operations with authentication.
@@ -38,6 +41,10 @@ export class McpClientService {
     private readonly mcpClient: McpClientPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
+    @Optional()
+    private readonly oauthTokens?: McpOAuthUserTokenRepositoryPort,
+    @Optional()
+    private readonly capabilityCache?: McpCapabilityCacheService,
   ) {}
 
   /**
@@ -73,7 +80,7 @@ export class McpClientService {
       integration,
       userId,
     );
-    this.assertUserAuthorized(integration, userId, userConfigValues);
+    await this.assertUserAuthorized(integration, userId, userConfigValues);
 
     try {
       return await this.buildSchemaConfiguredHeaders(
@@ -107,16 +114,23 @@ export class McpClientService {
     return config?.configValues ?? null;
   }
 
-  private assertUserAuthorized(
+  private async assertUserAuthorized(
     integration: SchemaConfiguredMcpIntegration,
     userId: UUID | undefined,
     userConfigValues: Record<string, string> | null,
-  ): void {
-    if (!userId || integration.isUserAuthorized(userConfigValues)) return;
-    throw new McpUserAuthorizationRequiredError(
+  ): Promise<void> {
+    if (!userId) return;
+    const fieldsAuthorized = integration.isUserAuthorized(userConfigValues);
+    if (!fieldsAuthorized) this.rejectUserAuthorization(integration);
+    if (!integration.configSchema.oauth) return;
+    if (!this.oauthTokens) this.rejectUserAuthorization(integration);
+    const token = await this.oauthTokens.findByIntegrationAndUser(
       integration.id,
-      integration.name,
+      userId,
     );
+    if (!token || (token.isExpired() && !token.encryptedRefreshToken)) {
+      this.rejectUserAuthorization(integration);
+    }
   }
 
   private async buildSchemaConfiguredHeaders(
@@ -137,7 +151,27 @@ export class McpClientService {
         userConfigValues ?? {},
       );
     }
-    return { serverUrl: integration.serverUrl, headers };
+    return {
+      serverUrl: integration.serverUrl,
+      headers,
+      oauth:
+        integration.configSchema.oauth && userId
+          ? {
+              integrationId: integration.id,
+              userId,
+              orgId: integration.orgId,
+            }
+          : undefined,
+    };
+  }
+
+  private rejectUserAuthorization(
+    integration: SchemaConfiguredMcpIntegration,
+  ): never {
+    throw new McpUserAuthorizationRequiredError(
+      integration.id,
+      integration.name,
+    );
   }
 
   /**
@@ -177,9 +211,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Builds connection config for integrations using the auth entity hierarchy.
-   */
   private async buildAuthConnectionConfig(
     integration: McpIntegration,
   ): Promise<McpConnectionConfig> {
@@ -269,7 +300,7 @@ export class McpClientService {
       return await this.mcpClient.listTools(config);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
-      this.handleOperationError(error, integration, 'listTools');
+      await this.handleOperationError(error, integration, 'listTools', userId);
       throw error;
     }
   }
@@ -291,7 +322,12 @@ export class McpClientService {
       return await this.mcpClient.listResources(config);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
-      this.handleOperationError(error, integration, 'listResources');
+      await this.handleOperationError(
+        error,
+        integration,
+        'listResources',
+        userId,
+      );
       throw error;
     }
   }
@@ -313,7 +349,12 @@ export class McpClientService {
       return await this.mcpClient.listResourceTemplates(config);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
-      this.handleOperationError(error, integration, 'listResourceTemplates');
+      await this.handleOperationError(
+        error,
+        integration,
+        'listResourceTemplates',
+        userId,
+      );
       throw error;
     }
   }
@@ -335,7 +376,12 @@ export class McpClientService {
       return await this.mcpClient.listPrompts(config);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
-      this.handleOperationError(error, integration, 'listPrompts');
+      await this.handleOperationError(
+        error,
+        integration,
+        'listPrompts',
+        userId,
+      );
       throw error;
     }
   }
@@ -358,7 +404,7 @@ export class McpClientService {
     try {
       return await this.mcpClient.callTool(config, call);
     } catch (error) {
-      this.handleOperationError(error, integration, 'callTool');
+      await this.handleOperationError(error, integration, 'callTool', userId);
       throw error;
     }
   }
@@ -383,7 +429,12 @@ export class McpClientService {
     try {
       return await this.mcpClient.readResource(config, uri, parameters);
     } catch (error) {
-      this.handleOperationError(error, integration, 'readResource');
+      await this.handleOperationError(
+        error,
+        integration,
+        'readResource',
+        userId,
+      );
       throw error;
     }
   }
@@ -408,7 +459,7 @@ export class McpClientService {
     try {
       return await this.mcpClient.getPrompt(config, name, args);
     } catch (error) {
-      this.handleOperationError(error, integration, 'getPrompt');
+      await this.handleOperationError(error, integration, 'getPrompt', userId);
       throw error;
     }
   }
@@ -429,29 +480,20 @@ export class McpClientService {
    * @param integration The integration entity (for updating status)
    * @param operation The operation name (for logging)
    */
-  private handleOperationError(
+  private async handleOperationError(
     error: unknown,
     integration: McpIntegration,
     operation: string,
-  ): void {
-    // Check for 401 authentication errors
-    if ((error as { status?: number }).status === 401) {
-      this.logger.warn(
-        `Authentication failed for MCP operation: ${operation}`,
-        {
-          integrationId: integration.id,
-        },
-      );
-
-      integration.updateConnectionStatus('error', 'Authentication failed');
-
-      throw new McpAuthenticationError('Invalid authentication credentials');
-    }
-    this.logger.error('Failed to execute MCP operation', {
-      error: error as Error,
-      integrationId: integration.id,
-      operation: operation,
+    userId?: UUID,
+  ): Promise<never> {
+    return handleMcpOperationError({
+      error,
+      integration,
+      operation,
+      userId,
+      oauthTokens: this.oauthTokens,
+      capabilityCache: this.capabilityCache,
+      logger: this.logger,
     });
-    throw error;
   }
 }

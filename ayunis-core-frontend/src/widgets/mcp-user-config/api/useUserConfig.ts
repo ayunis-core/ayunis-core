@@ -7,6 +7,7 @@ import {
   getMcpIntegrationsControllerListAvailableQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useGetUserConfig(integrationId: string) {
   const { data, isLoading } =
@@ -39,8 +40,17 @@ export function useSetUserConfig(
         showSuccess(t('success'));
         onSuccess?.();
       },
-      onError: () => {
-        showError(t('error'));
+      onError: (error) => {
+        try {
+          const { code } = extractErrorData(error);
+          if (code === 'MCP_INTEGRATION_NOT_FOUND') {
+            showError(t('notFound'));
+            return;
+          }
+          showError(t('error'));
+        } catch {
+          showError(t('error'));
+        }
       },
     },
   });

@@ -18,6 +18,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { queryOptions } from '@tanstack/react-query';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
 
 const meQueryOptions = () =>
   queryOptions({
@@ -61,7 +62,7 @@ export const Route = createFileRoute('/_authenticated')({
         throw redirect({
           to: '/login',
           search: {
-            redirect: location.pathname,
+            redirect: currentPathWithSearch(location),
           },
         });
       } catch (e) {
@@ -73,7 +74,7 @@ export const Route = createFileRoute('/_authenticated')({
         throw redirect({
           to: '/login',
           search: {
-            redirect: location.pathname,
+            redirect: currentPathWithSearch(location),
           },
         });
       }

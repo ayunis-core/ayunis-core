@@ -133,7 +133,16 @@ export class McpIntegrationResponseDto {
     authType: string;
     orgFields: unknown[];
     userFields: unknown[];
+    oauth?: {
+      clientRegistration: 'automatic' | 'static';
+      scopes?: string[];
+    };
   };
+
+  @ApiPropertyOptional({
+    description: 'Whether a static OAuth client has been configured',
+  })
+  oauthClientConfigured?: boolean;
 
   @ApiProperty({
     description: 'Whether this integration has user-level config fields',

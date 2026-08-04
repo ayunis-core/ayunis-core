@@ -97,6 +97,7 @@
       "headerName": "Header-Name",
       "headerInvalid": "Geben Sie einen gültigen HTTP-Headernamen ein.",
       "headerDuplicate": "Dieser Header wird auf derselben Konfigurationsebene bereits verwendet.",
+      "oauthHeaderConflict": "OAuth verwaltet den Authorization-Header. Verwenden Sie für dieses Feld einen anderen Header.",
       "prefix": "Wertpräfix (optional)",
       "help": "Hilfetext (optional)",
       "required": "Erforderlich",
@@ -104,6 +105,24 @@
       "cancel": "Abbrechen",
       "creating": "Wird erstellt...",
       "create": "Erstellen"
+    },
+    "oauth": {
+      "authType": "Authentifizierung",
+      "authTypeDescription": "Wählen Sie benutzerdefinierte HTTP-Header oder eine persönliche OAuth-Autorisierung.",
+      "customHeaders": "Benutzerdefinierte HTTP-Header",
+      "oauth": "OAuth 2.1",
+      "registration": "Client-Registrierung",
+      "registrationAutomatic": "Automatisch (CIMD oder dynamische Registrierung)",
+      "registrationStatic": "Statische Client-Zugangsdaten",
+      "registrationDescription": "Die automatische Registrierung verwendet die ermittelten Fähigkeiten des Servers. Statische Zugangsdaten müssen beim Autorisierungsserver vorab registriert werden.",
+      "scopes": "Fallback-Scopes (optional)",
+      "scopesDescription": "Trennen Sie Scopes mit Leerzeichen oder Kommas. Vom Server angeforderte Scopes haben Vorrang.",
+      "callbackUri": "Callback-URI",
+      "callbackUriDescription": "Registrieren Sie genau diese URI beim Autorisierungsserver.",
+      "clientId": "Client-ID",
+      "clientSecret": "Client-Secret (optional)",
+      "clientSecretDescription": "Für einen öffentlichen OAuth-Client leer lassen.",
+      "replaceClientDescription": "Geben Sie eine Client-ID ein, um den konfigurierten statischen Client zu ersetzen. Bestehende Benutzerverbindungen werden zurückgesetzt."
     },
     "validation": {
       "invalid": "Bitte überprüfen Sie die markierten Felder."

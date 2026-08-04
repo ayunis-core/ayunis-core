@@ -5,6 +5,7 @@ interface UpdateMcpIntegrationParams {
   authHeaderName?: string;
   returnsPii?: boolean;
   orgConfigValues?: Record<string, string>;
+  oauthClient?: { clientId: string; clientSecret?: string };
 }
 
 export class UpdateMcpIntegrationCommand {
@@ -14,6 +15,7 @@ export class UpdateMcpIntegrationCommand {
   public readonly authHeaderName?: string;
   public readonly returnsPii?: boolean;
   public readonly orgConfigValues?: Record<string, string>;
+  public readonly oauthClient?: { clientId: string; clientSecret?: string };
 
   constructor(params: UpdateMcpIntegrationParams) {
     this.integrationId = params.integrationId;
@@ -22,5 +24,6 @@ export class UpdateMcpIntegrationCommand {
     this.authHeaderName = params.authHeaderName;
     this.returnsPii = params.returnsPii;
     this.orgConfigValues = params.orgConfigValues;
+    this.oauthClient = params.oauthClient;
   }
 }

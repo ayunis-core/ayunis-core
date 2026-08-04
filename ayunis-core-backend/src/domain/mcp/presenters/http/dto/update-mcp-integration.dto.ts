@@ -8,6 +8,9 @@ import {
   MinLength,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { McpOAuthClientDto } from './create-custom-integration.dto';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -75,4 +78,10 @@ export class UpdateMcpIntegrationDto {
   @IsObject()
   @IsStringRecord({ message: 'all values in orgConfigValues must be strings' })
   orgConfigValues?: Record<string, string>;
+
+  @ApiPropertyOptional({ type: McpOAuthClientDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => McpOAuthClientDto)
+  oauthClient?: McpOAuthClientDto;
 }

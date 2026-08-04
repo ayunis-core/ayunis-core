@@ -57,7 +57,25 @@ export class CustomMcpConfigFieldDto {
   help?: string;
 }
 
+export class CustomMcpOAuthConfigDto {
+  @ApiProperty({ enum: ['automatic', 'static'], example: 'automatic' })
+  @IsIn(['automatic', 'static'])
+  clientRegistration: 'automatic' | 'static';
+
+  @ApiPropertyOptional({ type: [String], example: ['documents:read'] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(50)
+  @IsString({ each: true })
+  scopes?: string[];
+}
+
 export class CustomMcpConfigSchemaDto {
+  @ApiProperty({ enum: ['CUSTOM', 'OAUTH'], example: 'CUSTOM' })
+  @IsOptional()
+  @IsIn(['CUSTOM', 'OAUTH'])
+  authType?: 'CUSTOM' | 'OAUTH';
+
   @ApiProperty({ type: [CustomMcpConfigFieldDto] })
   @IsArray()
   @ArrayMaxSize(20)
@@ -71,6 +89,26 @@ export class CustomMcpConfigSchemaDto {
   @ValidateNested({ each: true })
   @Type(() => CustomMcpConfigFieldDto)
   userFields: CustomMcpConfigFieldDto[];
+
+  @ApiPropertyOptional({ type: CustomMcpOAuthConfigDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CustomMcpOAuthConfigDto)
+  oauth?: CustomMcpOAuthConfigDto;
+}
+
+export class McpOAuthClientDto {
+  @ApiProperty({ example: 'ayunis-core-client' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2048)
+  clientId: string;
+
+  @ApiPropertyOptional({ example: 'client-secret' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(4096)
+  clientSecret?: string;
 }
 
 export class CreateCustomIntegrationDto {
@@ -94,6 +132,12 @@ export class CreateCustomIntegrationDto {
   @ValidateNested()
   @Type(() => CustomMcpConfigSchemaDto)
   configSchema: CustomMcpConfigSchemaDto;
+
+  @ApiPropertyOptional({ type: McpOAuthClientDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => McpOAuthClientDto)
+  oauthClient?: McpOAuthClientDto;
 
   @ApiProperty({
     type: 'object',

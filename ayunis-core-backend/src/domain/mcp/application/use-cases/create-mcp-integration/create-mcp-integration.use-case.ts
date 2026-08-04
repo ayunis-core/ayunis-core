@@ -27,6 +27,7 @@ import {
   PredefinedMcpIntegrationConfig,
 } from 'src/domain/mcp/domain/predefined-mcp-integration-config';
 import { McpIntegration, McpIntegrationAuth } from 'src/domain/mcp/domain';
+import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
 
 @Injectable()
 export class CreateMcpIntegrationUseCase {
@@ -41,6 +42,7 @@ export class CreateMcpIntegrationUseCase {
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly configService: McpConfigService,
     private readonly connectionValidationService: ConnectionValidationService,
+    private readonly oauthClientConfiguration: McpOAuthClientConfigurationService,
   ) {}
 
   // Overload signatures
@@ -216,7 +218,16 @@ export class CreateMcpIntegrationUseCase {
         returnsPii: command.returnsPii,
       });
 
-      return await this.saveAndValidate(integration);
+      this.oauthClientConfiguration.validate(integration, command.oauthClient);
+
+      const savedIntegration = await this.repository.save(integration);
+      if (savedIntegration.configSchema.oauth) {
+        return this.initializeOAuthClient(
+          savedIntegration,
+          command.oauthClient,
+        );
+      }
+      return await this.validateSavedIntegration(savedIntegration);
     } catch (error) {
       return this.rethrowOrWrap(error, 'custom');
     }
@@ -227,10 +238,29 @@ export class CreateMcpIntegrationUseCase {
     integration: T,
   ): Promise<T> {
     const savedIntegration = await this.repository.save(integration);
+    return this.validateSavedIntegration(savedIntegration);
+  }
+
+  private async validateSavedIntegration<T extends McpIntegration>(
+    savedIntegration: T,
+  ): Promise<T> {
     await this.connectionValidationService.validateAndUpdateStatus(
       savedIntegration,
     );
     return savedIntegration;
+  }
+
+  private async initializeOAuthClient(
+    integration: CustomMcpIntegration,
+    oauthClient?: { clientId: string; clientSecret?: string },
+  ): Promise<CustomMcpIntegration> {
+    try {
+      await this.oauthClientConfiguration.initialize(integration, oauthClient);
+      return integration;
+    } catch (error) {
+      await this.repository.delete(integration.id);
+      throw error;
+    }
   }
 
   private rethrowOrWrap(error: unknown, kind: 'predefined' | 'custom'): never {

@@ -23,7 +23,6 @@ import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
-// DTOs
 import { CreatePredefinedIntegrationDto } from './dto/create-predefined-integration.dto';
 import { CreateCustomIntegrationDto } from './dto/create-custom-integration.dto';
 import { UpdateMcpIntegrationDto } from './dto/update-mcp-integration.dto';
@@ -34,7 +33,7 @@ import { ValidationResponseDto } from './dto/validation-response.dto';
 import { PredefinedConfigResponseDto } from './dto/predefined-config-response.dto';
 
 // Mappers
-import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
+import { McpIntegrationResponseMapper } from './mappers/mcp-integration-response.mapper';
 import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
 
 // Use Cases
@@ -66,12 +65,13 @@ import { SetUserMcpConfigCommand } from '../../application/use-cases/set-user-mc
 import { GetUserMcpConfigQuery } from '../../application/use-cases/get-user-mcp-config/get-user-mcp-config.query';
 import { CredentialFieldValue } from '../../domain/predefined-mcp-integration-config';
 import { ConfigService } from '@nestjs/config';
+import { McpOAuthAuthorizationService } from '../../application/services/mcp-oauth-authorization.service';
+import {
+  CompleteMcpOAuthDto,
+  McpOAuthAuthorizationUrlDto,
+  McpOAuthCompleteResponseDto,
+} from './dto/mcp-oauth.dto';
 
-/**
- * Controller for managing MCP integrations (organization admin level).
- * Provides CRUD operations for predefined and custom MCP integrations.
- * All endpoints require organization admin role.
- */
 @ApiTags('mcp-integrations')
 @Controller('mcp-integrations')
 export class McpIntegrationsController {
@@ -91,10 +91,36 @@ export class McpIntegrationsController {
     private readonly installMarketplaceIntegrationUseCase: InstallMarketplaceIntegrationUseCase,
     private readonly setUserMcpConfigUseCase: SetUserMcpConfigUseCase,
     private readonly getUserMcpConfigUseCase: GetUserMcpConfigUseCase,
-    private readonly mcpIntegrationDtoMapper: McpIntegrationDtoMapper,
+    private readonly responseMapper: McpIntegrationResponseMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
     private readonly configService: ConfigService,
+    private readonly oauthAuthorization: McpOAuthAuthorizationService,
   ) {}
+
+  @Post(':id/oauth/authorize')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @ApiResponse({ status: 201, type: McpOAuthAuthorizationUrlDto })
+  authorizeOAuth(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<McpOAuthAuthorizationUrlDto> {
+    return this.oauthAuthorization.authorize(id);
+  }
+
+  @Post('oauth/complete')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @ApiResponse({ status: 201, type: McpOAuthCompleteResponseDto })
+  completeOAuth(
+    @Body() dto: CompleteMcpOAuthDto,
+  ): Promise<McpOAuthCompleteResponseDto> {
+    return this.oauthAuthorization.complete(dto);
+  }
+
+  @Delete(':id/oauth/authorization')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  disconnectOAuth(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    return this.oauthAuthorization.disconnect(id);
+  }
 
   @Post('predefined')
   @Roles(UserRole.ADMIN)
@@ -133,7 +159,7 @@ export class McpIntegrationsController {
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Post('custom')
@@ -162,20 +188,23 @@ export class McpIntegrationsController {
       );
     }
 
+    const configSchema = {
+      authType: dto.configSchema.authType ?? 'CUSTOM',
+      orgFields: dto.configSchema.orgFields,
+      userFields: dto.configSchema.userFields,
+      ...(dto.configSchema.oauth ? { oauth: dto.configSchema.oauth } : {}),
+    };
     const command = new CreateCustomMcpIntegrationCommand(
       dto.name,
       dto.serverUrl,
-      {
-        authType: 'CUSTOM',
-        orgFields: dto.configSchema.orgFields,
-        userFields: dto.configSchema.userFields,
-      },
+      configSchema,
       dto.orgConfigValues,
       dto.returnsPii,
+      dto.oauthClient,
     );
 
     const integration = await this.createMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Get()
@@ -191,7 +220,7 @@ export class McpIntegrationsController {
 
     const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
 
-    return this.mcpIntegrationDtoMapper.toDtoArray(integrations);
+    return this.responseMapper.toDtoArray(integrations);
   }
 
   @Get('predefined/available')
@@ -226,8 +255,10 @@ export class McpIntegrationsController {
 
     const available = await this.listAvailableMcpIntegrationsUseCase.execute();
 
-    return available.map(({ integration, userAuthorized }) =>
-      this.mcpIntegrationDtoMapper.toDto(integration, userAuthorized),
+    return Promise.all(
+      available.map(({ integration, userAuthorized }) =>
+        this.responseMapper.toDto(integration, userAuthorized),
+      ),
     );
   }
 
@@ -250,7 +281,7 @@ export class McpIntegrationsController {
       new GetMcpIntegrationQuery(id),
     );
 
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Patch(':id')
@@ -278,10 +309,11 @@ export class McpIntegrationsController {
       authHeaderName: dto.authHeaderName,
       returnsPii: dto.returnsPii,
       orgConfigValues: dto.orgConfigValues,
+      oauthClient: dto.oauthClient,
     });
 
     const integration = await this.updateMcpIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Delete(':id')
@@ -318,7 +350,7 @@ export class McpIntegrationsController {
       new EnableMcpIntegrationCommand(id),
     );
 
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Post(':id/disable')
@@ -340,7 +372,7 @@ export class McpIntegrationsController {
       new DisableMcpIntegrationCommand(id),
     );
 
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Post('install-from-marketplace')
@@ -356,7 +388,7 @@ export class McpIntegrationsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Missing required config fields or OAuth not supported',
+    description: 'Missing or invalid integration configuration',
   })
   @ApiResponse({
     status: 404,
@@ -373,11 +405,12 @@ export class McpIntegrationsController {
       dto.identifier,
       dto.orgConfigValues,
       dto.returnsPii,
+      dto.oauthClient,
     );
 
     const integration =
       await this.installMarketplaceIntegrationUseCase.execute(command);
-    return this.mcpIntegrationDtoMapper.toDto(integration);
+    return this.responseMapper.toDto(integration);
   }
 
   @Get(':id/user-config')

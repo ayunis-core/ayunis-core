@@ -1,8 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { McpOAuthAuthorizationService } from '../../application/services/mcp-oauth-authorization.service';
+import { McpOAuthClientConfigurationService } from '../../application/services/mcp-oauth-client-configuration.service';
 import { McpIntegrationsController } from './mcp-integrations.controller';
 import { McpIntegrationDtoMapper } from './mappers/mcp-integration-dto.mapper';
+import { McpIntegrationResponseMapper } from './mappers/mcp-integration-response.mapper';
 import { PredefinedConfigDtoMapper } from './mappers/predefined-config-dto.mapper';
 import { CreateMcpIntegrationUseCase } from '../../application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { GetMcpIntegrationUseCase } from '../../application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
@@ -40,6 +43,7 @@ describe('McpIntegrationsController', () => {
   let disableUseCase: jest.Mocked<DisableMcpIntegrationUseCase>;
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let listConfigsUseCase: jest.Mocked<ListPredefinedMcpIntegrationConfigsUseCase>;
+  let oauthClientConfiguration: jest.Mocked<McpOAuthClientConfigurationService>;
   beforeEach(async () => {
     const mockCreateUseCase = {
       execute: jest.fn(),
@@ -85,6 +89,7 @@ describe('McpIntegrationsController', () => {
       controllers: [McpIntegrationsController],
       providers: [
         McpIntegrationDtoMapper,
+        McpIntegrationResponseMapper,
         PredefinedConfigDtoMapper,
         {
           provide: CreateMcpIntegrationUseCase,
@@ -144,6 +149,20 @@ describe('McpIntegrationsController', () => {
             get: jest.fn(),
           },
         },
+        {
+          provide: McpOAuthAuthorizationService,
+          useValue: {
+            authorize: jest.fn(),
+            complete: jest.fn(),
+            disconnect: jest.fn(),
+          },
+        },
+        {
+          provide: McpOAuthClientConfigurationService,
+          useValue: {
+            isStaticClientConfigured: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -159,6 +178,7 @@ describe('McpIntegrationsController', () => {
     disableUseCase = module.get(DisableMcpIntegrationUseCase);
     validateUseCase = module.get(ValidateMcpIntegrationUseCase);
     listConfigsUseCase = module.get(ListPredefinedMcpIntegrationConfigsUseCase);
+    oauthClientConfiguration = module.get(McpOAuthClientConfigurationService);
   });
 
   describe('createPredefined', () => {
@@ -306,6 +326,46 @@ describe('McpIntegrationsController', () => {
       );
       expect(result.type).toBe('custom');
       expect(result.serverUrl).toBe('https://custom.com/mcp');
+    });
+
+    it('forwards OAuth schema and static client credentials', async () => {
+      const dto = {
+        name: 'Council Documents',
+        serverUrl: 'https://documents.example.com/mcp',
+        configSchema: {
+          authType: 'OAUTH' as const,
+          orgFields: [],
+          userFields: [],
+          oauth: {
+            clientRegistration: 'static' as const,
+            scopes: ['documents:read'],
+          },
+        },
+        orgConfigValues: {},
+        oauthClient: {
+          clientId: 'ayunis-council-client',
+          clientSecret: 'client-secret',
+        },
+      };
+      createUseCase.execute.mockResolvedValue(
+        aCustomMcpIntegration({
+          name: dto.name,
+          serverUrl: dto.serverUrl,
+          configSchema: dto.configSchema,
+        }),
+      );
+
+      oauthClientConfiguration.isStaticClientConfigured.mockResolvedValue(true);
+
+      const result = await controller.createCustom(dto);
+
+      expect(createUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configSchema: dto.configSchema,
+          oauthClient: dto.oauthClient,
+        }),
+      );
+      expect(result.oauthClientConfigured).toBe(true);
     });
   });
 

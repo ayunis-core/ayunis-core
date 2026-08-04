@@ -10,3 +10,6 @@ export { CustomHeaderMcpIntegrationAuthRecord } from './custom-header-mcp-integr
 export { OAuthMcpIntegrationAuthRecord } from './oauth-mcp-integration-auth.record';
 
 export { McpIntegrationUserConfigRecord } from './mcp-integration-user-config.record';
+export { McpOAuthClientRegistrationRecord } from './mcp-oauth-client-registration.record';
+export { McpOAuthUserTokenRecord } from './mcp-oauth-user-token.record';
+export { McpOAuthPendingSessionRecord } from './mcp-oauth-pending-session.record';

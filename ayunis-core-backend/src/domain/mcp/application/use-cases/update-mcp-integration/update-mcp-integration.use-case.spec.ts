@@ -73,6 +73,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       configService,
       connectionValidationService,
       capabilityCache,
+      { initialize: jest.fn() } as never,
     );
     context.get.mockReturnValue(orgId);
     repository.save.mockImplementation(async (integration) => integration);
@@ -114,6 +115,30 @@ describe('UpdateMcpIntegrationUseCase', () => {
       'encrypted-new',
     );
     expect(repository.save).toHaveBeenCalledWith(integration);
+  });
+
+  it('rejects OAuth client updates before mutating a non-schema integration', async () => {
+    const integration = new PredefinedMcpIntegration({
+      id: integrationId,
+      orgId,
+      name: 'Original name',
+      serverUrl: 'https://example.com/mcp',
+      slug: PredefinedMcpIntegrationSlug.TEST,
+      auth: new NoAuthMcpIntegrationAuth(),
+    });
+    repository.findById.mockResolvedValue(integration);
+
+    await expect(
+      useCase.execute(
+        new UpdateMcpIntegrationCommand({
+          integrationId,
+          name: 'Partially updated name',
+          oauthClient: { clientId: 'invalid-for-this-integration' },
+        }),
+      ),
+    ).rejects.toThrow(McpIntegrationNotConfigurableError);
+    expect(integration.name).toBe('Original name');
+    expect(repository.save).not.toHaveBeenCalled();
   });
 
   it('invalidates cached capabilities after an update', async () => {
@@ -237,6 +262,45 @@ describe('UpdateMcpIntegrationUseCase', () => {
       expect(marketplace.orgConfigValues.endpointUrl).toBe(
         'https://new-endpoint.de/oparl/v1',
       );
+    });
+
+    it('updates OAuth org fields without probing an unauthenticated connection', async () => {
+      const integration = new MarketplaceMcpIntegration({
+        id: integrationId,
+        orgId,
+        name: 'OAuth integration',
+        serverUrl: 'https://mcp.example.com',
+        marketplaceIdentifier: 'oauth-integration',
+        configSchema: {
+          authType: 'OAUTH',
+          orgFields: [
+            {
+              key: 'tenant',
+              label: 'Tenant',
+              type: 'text',
+              headerName: 'X-Tenant',
+              required: true,
+            },
+          ],
+          userFields: [],
+          oauth: { clientRegistration: 'automatic' },
+        },
+        orgConfigValues: { tenant: 'old-tenant' },
+        auth: new NoAuthMcpIntegrationAuth(),
+      });
+      repository.findById.mockResolvedValue(integration);
+
+      const result = await useCase.execute(
+        new UpdateMcpIntegrationCommand({
+          integrationId,
+          orgConfigValues: { tenant: 'new-tenant' },
+        }),
+      );
+
+      expect((result as MarketplaceMcpIntegration).orgConfigValues.tenant).toBe(
+        'new-tenant',
+      );
+      expect(validateUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('invalidates cached capabilities before connection validation completes', async () => {

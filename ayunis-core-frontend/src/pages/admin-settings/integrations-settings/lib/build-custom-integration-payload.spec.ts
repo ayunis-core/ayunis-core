@@ -6,6 +6,11 @@ describe('buildCustomIntegrationPayload', () => {
     const payload = buildCustomIntegrationPayload({
       name: ' Records ',
       serverUrl: ' https://records.example.com/mcp ',
+      authType: 'CUSTOM',
+      oauthClientRegistration: 'automatic',
+      oauthScopes: '',
+      oauthClientId: '',
+      oauthClientSecret: '',
       fields: [
         {
           key: 'tenant',
@@ -36,6 +41,7 @@ describe('buildCustomIntegrationPayload', () => {
       name: 'Records',
       serverUrl: 'https://records.example.com/mcp',
       configSchema: {
+        authType: 'CUSTOM',
         orgFields: [
           {
             key: 'tenant',
@@ -58,6 +64,38 @@ describe('buildCustomIntegrationPayload', () => {
         ],
       },
       orgConfigValues: { tenant: 'council-42' },
+    });
+  });
+
+  it('builds an OAuth schema and trims static client credentials', () => {
+    const payload = buildCustomIntegrationPayload({
+      name: 'Documents',
+      serverUrl: 'https://documents.example.com/mcp',
+      authType: 'OAUTH',
+      oauthClientRegistration: 'static',
+      oauthScopes: ' documents:read, documents:write documents:read ',
+      oauthClientId: ' client-id ',
+      oauthClientSecret: ' client-secret ',
+      fields: [],
+    });
+
+    expect(payload).toEqual({
+      name: 'Documents',
+      serverUrl: 'https://documents.example.com/mcp',
+      configSchema: {
+        authType: 'OAUTH',
+        orgFields: [],
+        userFields: [],
+        oauth: {
+          clientRegistration: 'static',
+          scopes: ['documents:read', 'documents:write'],
+        },
+      },
+      oauthClient: {
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+      },
+      orgConfigValues: {},
     });
   });
 });

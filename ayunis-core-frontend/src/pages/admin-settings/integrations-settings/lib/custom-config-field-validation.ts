@@ -18,3 +18,11 @@ export function findDuplicateHeaderIndexes(
     .filter((indexes) => indexes.length > 1)
     .flat();
 }
+
+export function findOAuthAuthorizationHeaderIndexes(
+  fields: CustomConfigFieldFormData[],
+): number[] {
+  return fields.flatMap((field, index) =>
+    field.headerName.trim().toLowerCase() === 'authorization' ? [index] : [],
+  );
+}

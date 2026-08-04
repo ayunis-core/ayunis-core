@@ -7,6 +7,9 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
+import { McpOAuthClientDto } from './create-custom-integration.dto';
 
 /**
  * DTO for installing a marketplace MCP integration.
@@ -44,4 +47,10 @@ export class InstallMarketplaceIntegrationDto {
   @IsOptional()
   @IsBoolean()
   returnsPii?: boolean;
+
+  @ApiPropertyOptional({ type: McpOAuthClientDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => McpOAuthClientDto)
+  oauthClient?: McpOAuthClientDto;
 }

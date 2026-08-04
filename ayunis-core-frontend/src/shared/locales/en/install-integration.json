@@ -18,6 +18,19 @@
     "backToIntegrations": "Back to Integrations"
   },
   "success": "Integration installed successfully!",
+  "oauth": {
+    "title": "OAuth authorization",
+    "registration": {
+      "automatic": "The OAuth client will be registered automatically.",
+      "static": "Enter the pre-registered OAuth client credentials."
+    },
+    "scopes": "Fallback scopes: {{scopes}}",
+    "callbackUri": "Callback URI",
+    "callbackUriDescription": "Register this exact URI with the authorization server.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret (optional)",
+    "clientSecretDescription": "Leave empty for a public OAuth client."
+  },
   "error": {
     "missingIdentifier": {
       "title": "Missing Integration Identifier",

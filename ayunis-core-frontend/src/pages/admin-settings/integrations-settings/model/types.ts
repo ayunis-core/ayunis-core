@@ -4,6 +4,7 @@ import type {
   CreatePredefinedIntegrationDto,
   UpdateMcpIntegrationDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { McpOAuthClientInput } from '@/shared/lib/mcp-oauth';
 
 export type McpIntegration = McpIntegrationResponseDto;
 export type PredefinedConfig = PredefinedConfigResponseDto;
@@ -26,10 +27,19 @@ export interface CustomConfigFieldFormData {
 export interface CreateCustomIntegrationFormData {
   name: string;
   serverUrl: string;
+  authType: 'CUSTOM' | 'OAUTH';
+  oauthClientRegistration: 'automatic' | 'static';
+  oauthScopes: string;
+  oauthClientId: string;
+  oauthClientSecret: string;
   fields: CustomConfigFieldFormData[];
 }
 
-export type UpdateIntegrationFormData = UpdateMcpIntegrationDto;
+export type UpdateIntegrationFormData = UpdateMcpIntegrationDto & {
+  oauthClient?: McpOAuthClientInput;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+};
 
 export interface ValidationResult {
   isValid: boolean;

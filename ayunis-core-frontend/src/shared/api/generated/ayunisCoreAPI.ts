@@ -43,6 +43,7 @@ import type {
   BulkAddTeamMembersDto,
   ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
+  CompleteMcpOAuthDto,
   ConfirmEmailDto,
   CourseModuleResponseDto,
   CrawlDomainGrantResponseDto,
@@ -110,6 +111,9 @@ import type {
   MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
   McpIntegrationResponseDto,
+  McpOAuthAuthorizationUrlDto,
+  McpOAuthClientMetadataDto,
+  McpOAuthCompleteResponseDto,
   MeResponseDto,
   MfaCodeRequestDto,
   MfaLoginConfirmResponseDto,
@@ -11182,6 +11186,178 @@ export function useSkillKnowledgeBasesControllerListSkillKnowledgeBases<TData = 
 
 
 
+export const mcpIntegrationsControllerAuthorizeOAuth = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpOAuthAuthorizationUrlDto>(
+      {url: `/mcp-integrations/${id}/oauth/authorize`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerAuthorizeOAuthMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerAuthorizeOAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerAuthorizeOAuth(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerAuthorizeOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>>
+    
+    export type McpIntegrationsControllerAuthorizeOAuthMutationError = unknown
+
+    export const useMcpIntegrationsControllerAuthorizeOAuth = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerAuthorizeOAuth>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerAuthorizeOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const mcpIntegrationsControllerCompleteOAuth = (
+    completeMcpOAuthDto: CompleteMcpOAuthDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpOAuthCompleteResponseDto>(
+      {url: `/mcp-integrations/oauth/complete`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: completeMcpOAuthDto, signal
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerCompleteOAuthMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>, TError,{data: CompleteMcpOAuthDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>, TError,{data: CompleteMcpOAuthDto}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerCompleteOAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>, {data: CompleteMcpOAuthDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mcpIntegrationsControllerCompleteOAuth(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerCompleteOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>>
+    export type McpIntegrationsControllerCompleteOAuthMutationBody = CompleteMcpOAuthDto
+    export type McpIntegrationsControllerCompleteOAuthMutationError = unknown
+
+    export const useMcpIntegrationsControllerCompleteOAuth = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>, TError,{data: CompleteMcpOAuthDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerCompleteOAuth>>,
+        TError,
+        {data: CompleteMcpOAuthDto},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerCompleteOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const mcpIntegrationsControllerDisconnectOAuth = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/mcp-integrations/${id}/oauth/authorization`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getMcpIntegrationsControllerDisconnectOAuthMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mcpIntegrationsControllerDisconnectOAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerDisconnectOAuth(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerDisconnectOAuthMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>>
+    
+    export type McpIntegrationsControllerDisconnectOAuthMutationError = unknown
+
+    export const useMcpIntegrationsControllerDisconnectOAuth = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerDisconnectOAuth>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getMcpIntegrationsControllerDisconnectOAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Create a new predefined MCP integration
  */
@@ -12223,6 +12399,99 @@ export const useMcpIntegrationsControllerValidate = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Get MCP OAuth client metadata
+ */
+export const mcpOAuthMetadataControllerGetClientMetadata = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<McpOAuthClientMetadataDto>(
+      {url: `/mcp-integrations/oauth/client-metadata.json`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getMcpOAuthMetadataControllerGetClientMetadataQueryKey = () => {
+    return [
+    `/mcp-integrations/oauth/client-metadata.json`
+    ] as const;
+    }
+
+    
+export const getMcpOAuthMetadataControllerGetClientMetadataQueryOptions = <TData = Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMcpOAuthMetadataControllerGetClientMetadataQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>> = ({ signal }) => mcpOAuthMetadataControllerGetClientMetadata(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type McpOAuthMetadataControllerGetClientMetadataQueryResult = NonNullable<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>>
+export type McpOAuthMetadataControllerGetClientMetadataQueryError = unknown
+
+
+export function useMcpOAuthMetadataControllerGetClientMetadata<TData = Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>,
+          TError,
+          Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpOAuthMetadataControllerGetClientMetadata<TData = Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>,
+          TError,
+          Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMcpOAuthMetadataControllerGetClientMetadata<TData = Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get MCP OAuth client metadata
+ */
+
+export function useMcpOAuthMetadataControllerGetClientMetadata<TData = Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mcpOAuthMetadataControllerGetClientMetadata>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMcpOAuthMetadataControllerGetClientMetadataQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Get marketplace availability and URL
  */

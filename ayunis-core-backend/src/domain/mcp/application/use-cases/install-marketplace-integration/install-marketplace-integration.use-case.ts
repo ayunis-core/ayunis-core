@@ -43,14 +43,18 @@ interface MarketplaceConfigSchemaDto {
     help: string | null;
     value: string | null;
   }>;
+  oauth?: {
+    clientRegistration: 'automatic' | 'static';
+    scopes?: string[];
+  };
 }
 import {
-  McpOAuthNotSupportedError,
   DuplicateMarketplaceMcpIntegrationError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { UUID } from 'crypto';
+import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
 
 @Injectable()
 export class InstallMarketplaceIntegrationUseCase {
@@ -67,6 +71,7 @@ export class InstallMarketplaceIntegrationUseCase {
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly oauthClientConfiguration: McpOAuthClientConfigurationService,
   ) {}
 
   async execute(
@@ -112,11 +117,36 @@ export class InstallMarketplaceIntegrationUseCase {
       orgId,
       marketplaceIntegration,
     );
+    this.oauthClientConfiguration.validate(integration, command.oauthClient);
     const saved = await this.repository.save(integration);
-    const validated =
-      await this.connectionValidationService.validateAndUpdateStatus(saved);
+    const validated = await this.initializeOrValidate(saved, command);
     this.emitInstalled(userId, orgId, marketplaceIntegration.identifier);
-    return validated as MarketplaceMcpIntegration;
+    return validated;
+  }
+
+  private async initializeOrValidate(
+    integration: MarketplaceMcpIntegration,
+    command: InstallMarketplaceIntegrationCommand,
+  ): Promise<MarketplaceMcpIntegration> {
+    if (integration.configSchema.oauth) {
+      return this.initializeOAuthClient(integration, command.oauthClient);
+    }
+    return (await this.connectionValidationService.validateAndUpdateStatus(
+      integration,
+    )) as MarketplaceMcpIntegration;
+  }
+
+  private async initializeOAuthClient(
+    integration: MarketplaceMcpIntegration,
+    oauthClient?: { clientId: string; clientSecret?: string },
+  ): Promise<MarketplaceMcpIntegration> {
+    try {
+      await this.oauthClientConfiguration.initialize(integration, oauthClient);
+      return integration;
+    } catch (error) {
+      await this.repository.delete(integration.id);
+      throw error;
+    }
   }
 
   private async assertNotInstalled(
@@ -138,12 +168,14 @@ export class InstallMarketplaceIntegrationUseCase {
     >,
   ): Promise<MarketplaceMcpIntegration> {
     const configSchema = this.parseConfigSchema(marketplace.configSchema);
-    if (configSchema.authType === (McpAuthMethod.OAUTH as string)) {
-      throw new McpOAuthNotSupportedError();
-    }
     const mergedValues = this.configService.mergeFixedValues(
       command.orgConfigValues,
       configSchema.orgFields,
+    );
+    this.configService.validateCustomSchema(
+      configSchema,
+      mergedValues,
+      marketplace.name,
     );
     this.configService.validateRequiredFields(
       configSchema.orgFields,
@@ -193,6 +225,7 @@ export class InstallMarketplaceIntegrationUseCase {
       authType: schema.authType,
       orgFields: schema.orgFields.map((f) => this.parseConfigField(f)),
       userFields: schema.userFields.map((f) => this.parseConfigField(f)),
+      oauth: schema.oauth,
     };
   }
 
