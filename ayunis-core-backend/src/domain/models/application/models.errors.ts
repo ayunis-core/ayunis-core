@@ -252,7 +252,7 @@ export class InferenceStreamStalledError extends ModelError {
       `Provider stream produced no data for ${idleMs}ms`,
       ModelErrorCode.INFERENCE_TIMEOUT,
       504,
-      metadata,
+      { idleMs, ...metadata },
     );
   }
 }

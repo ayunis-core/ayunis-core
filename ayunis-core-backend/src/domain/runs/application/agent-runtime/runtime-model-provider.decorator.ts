@@ -15,9 +15,11 @@ import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import {
+  STREAM_FIRST_CHUNK_TIMEOUT_MS,
   STREAM_IDLE_TIMEOUT_MS,
   StreamIdleWatchdog,
 } from 'src/common/streaming/stream-idle-watchdog';
+import { relayAbort } from 'src/common/streaming/relay-abort';
 import {
   InferenceAbortedError,
   InferenceFailedError,
@@ -39,6 +41,18 @@ interface CallState {
   readonly controller: AbortController;
   readonly watchdog: StreamIdleWatchdog;
   readonly stopRelayingAbort: () => void;
+}
+
+/**
+ * One retry, and only when the stalled attempt yielded nothing: once a chunk
+ * has reached the runtime accumulator a second attempt would duplicate
+ * content.
+ */
+const MAX_STREAM_ATTEMPTS = 2;
+
+interface StreamAttemptOutcome {
+  stalled?: InferenceStreamStalledError;
+  chunksYielded: number;
 }
 
 @Injectable()
@@ -63,19 +77,12 @@ export class RuntimeModelProviderDecorator {
     context: RuntimeModelCallContext,
   ): AsyncIterable<ProviderChunk> {
     const startedAt = Date.now();
-    const state = createCallState(request.signal);
     let mappedError: ApplicationError | undefined;
     try {
       const sanitizedRequest = sanitizeReplayedToolInputs(request);
-      for await (const chunk of provider.stream({
-        ...sanitizedRequest,
-        signal: state.controller.signal,
-      })) {
-        state.watchdog.notifyChunk();
-        yield chunk;
-      }
+      yield* this.streamWithStallRetry(provider, sanitizedRequest, context);
     } catch (error) {
-      mappedError = mapProviderError(error, request, state.controller, context);
+      mappedError = mapProviderError(error, request, context);
       if (
         mappedError instanceof InferenceAbortedError &&
         request.signal?.aborted
@@ -84,12 +91,37 @@ export class RuntimeModelProviderDecorator {
       }
       throw toRuntimeError(mappedError, error);
     } finally {
-      state.watchdog.stop();
-      state.stopRelayingAbort();
       if (!mappedError && request.signal?.aborted) {
         mappedError = new InferenceAbortedError();
       }
       this.emitCompletion(context, startedAt, mappedError);
+    }
+  }
+
+  private async *streamWithStallRetry(
+    provider: ModelProvider,
+    request: ProviderRequest,
+    context: RuntimeModelCallContext,
+  ): AsyncGenerator<ProviderChunk, void> {
+    for (let attempt = 1; ; attempt++) {
+      const outcome = yield* streamAttempt(provider, request);
+      if (!outcome.stalled) {
+        return;
+      }
+      // No retry once the caller has cancelled — the run is gone, so a
+      // second attempt would only bill tokens nobody reads.
+      if (
+        outcome.chunksYielded > 0 ||
+        attempt >= MAX_STREAM_ATTEMPTS ||
+        request.signal?.aborted === true
+      ) {
+        throw outcome.stalled;
+      }
+      this.logger.warn('Provider stream stalled before the first chunk', {
+        model: context.model.name,
+        provider: context.model.provider,
+        attempt,
+      });
     }
   }
 
@@ -159,34 +191,64 @@ function sanitizeToolInput(
 function createCallState(sourceSignal: AbortSignal | undefined): CallState {
   const controller = new AbortController();
   const stopRelayingAbort = relayAbort(sourceSignal, controller);
-  const watchdog = new StreamIdleWatchdog(STREAM_IDLE_TIMEOUT_MS, () => {
-    controller.abort(new InferenceStreamStalledError(STREAM_IDLE_TIMEOUT_MS));
-  });
+  const watchdog = new StreamIdleWatchdog(
+    STREAM_IDLE_TIMEOUT_MS,
+    (elapsedMs) => {
+      controller.abort(new InferenceStreamStalledError(elapsedMs));
+    },
+  );
   return { controller, watchdog, stopRelayingAbort };
 }
 
-function relayAbort(
-  source: AbortSignal | undefined,
-  target: AbortController,
-): () => void {
-  if (!source) return () => undefined;
-  const abort = () => target.abort(source.reason);
-  if (source.aborted) {
-    abort();
-    return () => undefined;
+/**
+ * One provider attempt on its own controller. A stall is returned rather
+ * than thrown because SDKs disagree on what an abort looks like: some reject
+ * with a generic AbortError, the stainless SDKs (openai, anthropic) swallow
+ * it and end the stream as if it completed — which would otherwise let the
+ * runtime accumulate a silently truncated turn as a success.
+ */
+async function* streamAttempt(
+  provider: ModelProvider,
+  request: ProviderRequest,
+): AsyncGenerator<ProviderChunk, StreamAttemptOutcome> {
+  const state = createCallState(request.signal);
+  let chunksYielded = 0;
+  try {
+    state.watchdog.arm(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+    for await (const chunk of provider.stream({
+      ...request,
+      signal: state.controller.signal,
+    })) {
+      state.watchdog.notifyChunk();
+      chunksYielded += 1;
+      yield chunk;
+    }
+    return { stalled: stalledReason(state.controller.signal), chunksYielded };
+  } catch (error) {
+    const stalled = stalledReason(state.controller.signal);
+    if (stalled) {
+      return { stalled, chunksYielded };
+    }
+    throw error;
+  } finally {
+    state.watchdog.stop();
+    state.stopRelayingAbort();
   }
-  source.addEventListener('abort', abort, { once: true });
-  return () => source.removeEventListener('abort', abort);
+}
+
+function stalledReason(
+  signal: AbortSignal,
+): InferenceStreamStalledError | undefined {
+  return signal.aborted && signal.reason instanceof InferenceStreamStalledError
+    ? signal.reason
+    : undefined;
 }
 
 function mapProviderError(
   error: unknown,
   request: ProviderRequest,
-  controller: AbortController,
   context: RuntimeModelCallContext,
 ): ApplicationError {
-  const abortReason: unknown = controller.signal.reason;
-  if (abortReason instanceof InferenceStreamStalledError) return abortReason;
   if (request.signal?.aborted && error === request.signal.reason) {
     return new InferenceAbortedError();
   }
@@ -219,7 +281,7 @@ function toRuntimeError(
   cause: unknown,
 ): AgentRuntimeError {
   return new AgentRuntimeError(mappedError.code, mappedError.message, {
-    details: serializeRuntimeModelError(mappedError, STREAM_IDLE_TIMEOUT_MS),
+    details: serializeRuntimeModelError(mappedError),
     cause,
   });
 }

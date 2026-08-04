@@ -4,7 +4,7 @@ describe('StreamIdleWatchdog', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('stays disarmed until the first chunk, leaving time-to-first-byte to the SDK', () => {
+  it('stays disarmed until the caller arms it', () => {
     const onStall = jest.fn();
     const watchdog = new StreamIdleWatchdog(1000, onStall);
 
@@ -12,6 +12,30 @@ describe('StreamIdleWatchdog', () => {
 
     expect(onStall).not.toHaveBeenCalled();
     watchdog.stop();
+  });
+
+  it('arms with a one-off budget for the first chunk', () => {
+    const onStall = jest.fn();
+    const watchdog = new StreamIdleWatchdog(1000, onStall);
+
+    watchdog.arm(5000);
+    jest.advanceTimersByTime(4999);
+    expect(onStall).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(1);
+    expect(onStall).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the idle budget once a chunk arrives after the initial arm', () => {
+    const onStall = jest.fn();
+    const watchdog = new StreamIdleWatchdog(1000, onStall);
+
+    watchdog.arm(5000);
+    jest.advanceTimersByTime(4000);
+    watchdog.notifyChunk();
+    jest.advanceTimersByTime(1000);
+
+    expect(onStall).toHaveBeenCalledTimes(1);
   });
 
   it('fires once the gap after a chunk exceeds the idle budget', () => {

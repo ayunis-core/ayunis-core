@@ -3,7 +3,10 @@ import type { ImageContentService } from 'src/domain/messages/application/servic
 import type { StreamInferenceInput } from '../../application/ports/stream-inference.handler';
 import { InferenceStreamStalledError } from '../../application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
-import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import {
+  STREAM_FIRST_CHUNK_TIMEOUT_MS,
+  STREAM_IDLE_TIMEOUT_MS,
+} from 'src/common/streaming/stream-idle-watchdog';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {
@@ -117,6 +120,139 @@ describe('RuntimeStreamInferenceHandler', () => {
     unsubscribe();
 
     expect(signal()?.aborted).toBe(true);
+  });
+
+  // Stainless SDKs (openai, anthropic) swallow their own abort: the stream
+  // ends "normally" after the watchdog fires, which used to persist a
+  // silently truncated message as a success.
+  it('fails the stream when the provider swallows the stall abort', async () => {
+    const provider: ModelProvider = {
+      name: 'test:swallowing',
+      async *stream(request) {
+        yield { textDelta: 'first' };
+        await new Promise<void>((resolve) => {
+          request.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+    const { arrived, failure } = firstChunkOf(new TestHandler(provider));
+
+    await arrived;
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+
+    await expect(failure).resolves.toBeInstanceOf(InferenceStreamStalledError);
+  });
+
+  it('retries once when the stream stalls before the first chunk', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:slow-start',
+      async *stream(request) {
+        calls += 1;
+        if (calls === 1) {
+          await whenAborted(request.signal);
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(2);
+  });
+
+  it('fails with the stall error when the retry also produces no chunk', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:never-starts',
+      async *stream(request) {
+        calls += 1;
+        yield await whenAborted(request.signal);
+      },
+    };
+
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: () => undefined,
+        error: resolve,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    const failure = await failed;
+    expect(failure).toBeInstanceOf(InferenceStreamStalledError);
+    // The error must state the budget that actually elapsed — the
+    // first-chunk one — not the inter-chunk default.
+    expect((failure as Error).message).toContain(
+      String(STREAM_FIRST_CHUNK_TIMEOUT_MS),
+    );
+    expect(calls).toBe(2);
+  });
+
+  it('does not retry a stall once the subscriber has unsubscribed', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:stall-then-cancel',
+      async *stream(request) {
+        calls += 1;
+        // Swallows the abort like a stainless SDK — the stream ends without
+        // emitting — but settles a macrotask later so the cancellation can
+        // win the race against the retry decision.
+        const noChunks = new Promise<[]>((resolve) => {
+          request.signal?.addEventListener(
+            'abort',
+            () => setTimeout(() => resolve([]), 10),
+            { once: true },
+          );
+        });
+        yield* await noChunks;
+      },
+    };
+
+    const subscription = new TestHandler(provider)
+      .answer(makeInput())
+      .subscribe({
+        next: () => undefined,
+        error: () => undefined,
+      });
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+    subscription.unsubscribe();
+    await jest.advanceTimersByTimeAsync(10);
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    expect(calls).toBe(1);
+  });
+
+  it('does not retry a stall that happens after chunks were already emitted', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:mid-stream-stall',
+      async *stream(request) {
+        calls += 1;
+        yield { textDelta: 'first' };
+        await whenAborted(request.signal);
+      },
+    };
+    const { arrived, failure } = firstChunkOf(new TestHandler(provider));
+
+    await arrived;
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+
+    await expect(failure).resolves.toBeInstanceOf(InferenceStreamStalledError);
+    expect(calls).toBe(1);
   });
 
   it('passes chunks through and completes when the provider streams normally', async () => {

@@ -35,10 +35,9 @@ export interface RuntimeModelErrorDetails extends Readonly<
 
 export function serializeRuntimeModelError(
   error: Error,
-  idleMs: number,
 ): RuntimeModelErrorDetails {
   return {
-    hostError: serializeError(error, idleMs),
+    hostError: serializeError(error),
   };
 }
 
@@ -50,15 +49,18 @@ export function reconstructRuntimeModelError(
   return reconstructError(serialized);
 }
 
-function serializeError(
-  error: Error,
-  idleMs: number,
-): SerializedRuntimeModelError {
+function serializeError(error: Error): SerializedRuntimeModelError {
   if (error instanceof ProviderUnavailableError) {
     return serializeProviderError(error);
   }
   if (error instanceof InferenceStreamStalledError) {
-    return { type: 'inference_stream_stalled', context: { idleMs } };
+    // The error's metadata carries the budget that actually elapsed — a
+    // first-chunk stall (90s) must not be reported as the inter-chunk
+    // default (45s).
+    return {
+      type: 'inference_stream_stalled',
+      context: error.metadata ?? {},
+    };
   }
   if (error instanceof InferenceImageTooLargeError) {
     return { type: 'inference_image_too_large', context: error.metadata ?? {} };

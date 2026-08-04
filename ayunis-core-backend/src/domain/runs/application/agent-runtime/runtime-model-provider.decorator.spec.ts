@@ -6,7 +6,10 @@ import type {
 } from '@ayunis/inference';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
-import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import {
+  STREAM_FIRST_CHUNK_TIMEOUT_MS,
+  STREAM_IDLE_TIMEOUT_MS,
+} from 'src/common/streaming/stream-idle-watchdog';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
@@ -303,6 +306,138 @@ describe('RuntimeModelProviderDecorator', () => {
 
     await failure;
     expect(emitAsync).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  // Stainless SDKs swallow their own abort: without a post-loop check the
+  // runtime would accumulate a silently truncated turn as a success.
+  it('fails the call when the provider swallows the stall abort', async () => {
+    jest.useFakeTimers();
+    const provider: ModelProvider = {
+      name: 'test:swallowing',
+      async *stream(providerRequest) {
+        yield { textDelta: 'First chunk' };
+        await new Promise<void>((resolve) => {
+          providerRequest.signal?.addEventListener('abort', () => resolve(), {
+            once: true,
+          });
+        });
+      },
+    };
+    const { decorate } = buildHarness();
+    const iterator = decorate(provider).stream(request)[Symbol.asyncIterator]();
+
+    await expect(iterator.next()).resolves.toMatchObject({
+      value: { textDelta: 'First chunk' },
+    });
+    const failure = expect(iterator.next()).rejects.toMatchObject<
+      Partial<AgentRuntimeError>
+    >({
+      code: 'INFERENCE_TIMEOUT',
+    });
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+
+    await failure;
+    jest.useRealTimers();
+  });
+
+  it('retries once when the stream stalls before the first chunk', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:slow-start',
+      async *stream(providerRequest) {
+        calls += 1;
+        if (calls === 1) {
+          yield await waitForAbort(providerRequest.signal);
+        }
+        yield { textDelta: 'Recovered' };
+      },
+    };
+    const { decorate, emitAsync } = buildHarness();
+
+    const collected = collect(decorate(provider));
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    await expect(collected).resolves.toEqual([{ textDelta: 'Recovered' }]);
+    expect(calls).toBe(2);
+    expect(emitAsync).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('fails with INFERENCE_TIMEOUT when the retry also produces no chunk', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:never-starts',
+      async *stream(providerRequest) {
+        calls += 1;
+        yield await waitForAbort(providerRequest.signal);
+      },
+    };
+    const { decorate } = buildHarness();
+
+    const collected = collect(decorate(provider));
+    const failure = expect(collected).rejects.toMatchObject<
+      Partial<AgentRuntimeError>
+    >({
+      code: 'INFERENCE_TIMEOUT',
+      // The serialized stall must report the budget that actually elapsed —
+      // the first-chunk one — not the inter-chunk default.
+      details: {
+        hostError: {
+          type: 'inference_stream_stalled',
+          context: { idleMs: STREAM_FIRST_CHUNK_TIMEOUT_MS },
+        },
+      },
+    });
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    await failure;
+    expect(calls).toBe(2);
+    jest.useRealTimers();
+  });
+
+  it('does not retry a stall once the run has been cancelled', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const controller = new AbortController();
+    const provider: ModelProvider = {
+      name: 'test:stall-then-cancel',
+      async *stream(providerRequest) {
+        calls += 1;
+        // Swallows the abort like a stainless SDK — the stream ends without
+        // emitting — but settles a macrotask later so the cancellation can
+        // win the race against the retry decision.
+        const noChunks = new Promise<[]>((resolve) => {
+          providerRequest.signal?.addEventListener(
+            'abort',
+            () => setTimeout(() => resolve([]), 10),
+            { once: true },
+          );
+        });
+        yield* await noChunks;
+      },
+    };
+    const { decorate } = buildHarness();
+
+    const collected = collect(decorate(provider), {
+      ...request,
+      signal: controller.signal,
+    });
+    const failure = expect(collected).rejects.toMatchObject<
+      Partial<AgentRuntimeError>
+    >({
+      code: 'INFERENCE_TIMEOUT',
+    });
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+    controller.abort();
+    await jest.advanceTimersByTimeAsync(10);
+    await jest.advanceTimersByTimeAsync(STREAM_FIRST_CHUNK_TIMEOUT_MS);
+
+    await failure;
+    expect(calls).toBe(1);
     jest.useRealTimers();
   });
 

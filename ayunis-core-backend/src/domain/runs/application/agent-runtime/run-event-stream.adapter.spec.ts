@@ -466,7 +466,9 @@ describe('adaptRunEventsToStream', () => {
       },
       InferenceStreamStalledError,
       504,
-      undefined,
+      // The elapsed budget survives the round-trip on metadata so the
+      // reconstructed error reports the wait that actually happened.
+      { idleMs: 45_000 },
     ],
     [
       'generic inference error',
