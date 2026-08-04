@@ -1,5 +1,6 @@
 import {
   AgentRuntimeError,
+  MalformedToolCallError,
   ProviderError,
   RunAbortedError,
 } from '../contracts/errors';
@@ -29,6 +30,7 @@ export async function* streamModelCall(params: {
 }): AsyncGenerator<RunEventPayload, ModelCallResult> {
   const accumulator = new ChunkAccumulator();
   let completed = false;
+  let result: ModelCallResult | null = null;
   let interruptionError: AgentRuntimeError | undefined;
   let interruptionReason: ModelCallInterruptionReason = 'consumer_abandoned';
   try {
@@ -40,6 +42,14 @@ export async function* streamModelCall(params: {
         throw new RunAbortedError('Run aborted during model call');
       }
     }
+    result = accumulator.finalize();
+    for (const toolCall of result.invalidToolCallSnapshots) {
+      yield { type: 'tool_call_snapshot', toolCall };
+    }
+    // Inside the interruption boundary: a malformed turn must still fire
+    // modelCallInterrupted, whose hook persists the turn's intact text and
+    // thinking (tool calls are excluded from the partial message anyway).
+    assertToolCallsIntact(result);
     completed = true;
   } catch (error) {
     const interruption = classifyInterruption(error, params.request.signal);
@@ -55,12 +65,32 @@ export async function* streamModelCall(params: {
       interruptionError,
     );
   }
-  const result = accumulator.finalize();
-  for (const toolCall of result.invalidToolCallSnapshots) {
-    yield { type: 'tool_call_snapshot', toolCall };
-  }
+  // The try block either assigned `result` or threw — TS narrows accordingly.
   return result;
 }
+
+/**
+ * Rejects a completed model call whose tool-call arguments cannot be executed
+ * faithfully. Truncated text answers stay acceptable — only tool calls must
+ * arrive intact, because their input is acted upon (AYC-646).
+ */
+const assertToolCallsIntact = (result: ModelCallResult): void => {
+  if (result.invalidToolCallSnapshots.length > 0) {
+    throw new MalformedToolCallError({
+      toolNames: result.invalidToolCallSnapshots.map((call) => call.name),
+      reason: 'unparseable_arguments',
+    });
+  }
+  const toolNames = result.message.content
+    .filter((content) => content.type === 'tool_use')
+    .map((content) => content.name);
+  if (result.finishReason === 'length' && toolNames.length > 0) {
+    throw new MalformedToolCallError({
+      toolNames,
+      reason: 'token_limit_reached',
+    });
+  }
+};
 
 const classifyInterruption = (
   error: unknown,

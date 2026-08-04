@@ -1,5 +1,22 @@
+import { from } from 'rxjs';
+import type { UUID } from 'crypto';
 import { StreamingInferenceService } from './streaming-inference.service';
-import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
+import {
+  StreamInferenceResponseChunk,
+  StreamInferenceResponseChunkToolCall,
+} from 'src/domain/models/application/ports/stream-inference.handler';
+import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import type { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
+import type { SaveAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.use-case';
+import type { InferenceUsageGuard } from './inference-usage-guard.service';
+import type { ContextService } from 'src/common/context/services/context.service';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
+import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 
 describe('StreamingInferenceService.extractUsageFromChunks', () => {
   // extractUsageFromChunks is a pure method that does not touch `this`, so we
@@ -81,5 +98,225 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
       }),
     ]);
     expect(usage).toEqual({ inputTokens: 3210, outputTokens: 5 });
+  });
+});
+
+describe('StreamingInferenceService.executeStreamingInference — tool-call integrity (AYC-646)', () => {
+  const threadId = '0d6b1a1e-6c2f-4c1e-9e6a-2f4b8c9d0e1f' as UUID;
+  const orgId = '9f8e7d6c-5b4a-3f2e-1d0c-b9a8f7e6d5c4' as UUID;
+
+  const model = new LanguageModel({
+    name: 'gpt-4o',
+    provider: ModelProvider.OPENAI,
+    displayName: 'GPT-4o',
+    canStream: true,
+    canUseTools: true,
+    isReasoning: false,
+    canVision: false,
+    isArchived: false,
+    tier: ModelTier.MEDIUM,
+    inputTokenCost: 1,
+    outputTokenCost: 2,
+  });
+
+  const toolCallChunk = (params: {
+    id?: string | null;
+    name?: string | null;
+    argumentsDelta?: string | null;
+    finishReason?: string | null;
+  }): StreamInferenceResponseChunk =>
+    new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [
+        new StreamInferenceResponseChunkToolCall({
+          index: 0,
+          id: params.id ?? null,
+          name: params.name ?? null,
+          argumentsDelta: params.argumentsDelta ?? null,
+        }),
+      ],
+      finishReason: params.finishReason,
+    });
+
+  const finishChunk = (finishReason: string): StreamInferenceResponseChunk =>
+    new StreamInferenceResponseChunk({
+      thinkingDelta: null,
+      textContentDelta: null,
+      toolCallsDelta: [],
+      finishReason,
+    });
+
+  const buildService = (chunks: StreamInferenceResponseChunk[]) => {
+    const streamInferenceUseCase = {
+      execute: jest.fn().mockReturnValue(from(chunks)),
+    } as unknown as StreamInferenceUseCase;
+    const savedMessages: AssistantMessage[] = [];
+    const saveAssistantMessageUseCase = {
+      execute: jest
+        .fn()
+        .mockImplementation((command: { message: AssistantMessage }) => {
+          savedMessages.push(command.message);
+          return Promise.resolve(command.message);
+        }),
+    } as unknown as SaveAssistantMessageUseCase;
+    const inferenceUsageGuard = {
+      collectUsage: jest.fn(),
+    } as unknown as InferenceUsageGuard;
+    const contextService = {
+      get: jest.fn().mockReturnValue(undefined),
+    } as unknown as ContextService;
+    const eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as EventEmitter2;
+    const service = new StreamingInferenceService(
+      streamInferenceUseCase,
+      saveAssistantMessageUseCase,
+      inferenceUsageGuard,
+      contextService,
+      eventEmitter,
+    );
+    return { service, savedMessages };
+  };
+
+  const consume = async (service: StreamingInferenceService) => {
+    const yielded: AssistantMessage[] = [];
+    for await (const message of service.executeStreamingInference({
+      model,
+      messages: [],
+      tools: [],
+      threadId,
+      orgId,
+    })) {
+      yielded.push(message);
+    }
+    return yielded;
+  };
+
+  it('persists a tool call whose streamed arguments form valid JSON', async () => {
+    const { service, savedMessages } = buildService([
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta: '{"title":"Parkraumkonzept",',
+      }),
+      toolCallChunk({ argumentsDelta: '"content":"<h1>Bericht</h1>"}' }),
+      finishChunk('tool_calls'),
+    ]);
+
+    await consume(service);
+
+    const toolUses = savedMessages[0].content.filter(
+      (block): block is ToolUseMessageContent =>
+        block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(1);
+    expect(toolUses[0].params).toEqual({
+      title: 'Parkraumkonzept',
+      content: '<h1>Bericht</h1>',
+    });
+  });
+
+  it('throws InferenceFailedError instead of executing a tool call whose final arguments are unparseable', async () => {
+    const { service, savedMessages } = buildService([
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta:
+          '{"title":"Bürgerbrief Parkraumkonzept","content":"<h1>Parkraumkonzept</h1><p>Sehr geehrte Damen',
+      }),
+      finishChunk('stop'),
+    ]);
+
+    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+
+    // The broken call must not be persisted with guessed `{}` arguments —
+    // that is what triggered the endless create_document loop (AYC-646).
+    const toolUses = (savedMessages[0]?.content ?? []).filter(
+      (block) => block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(0);
+  });
+
+  it('throws InferenceFailedError when the stream hits the token limit while emitting tool calls', async () => {
+    const { service, savedMessages } = buildService([
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1>"}',
+      }),
+      finishChunk('length'),
+    ]);
+
+    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+
+    // Even parseable arguments from a token-limited turn must not be
+    // persisted — the collector would execute them on the next run.
+    const toolUses = (savedMessages[0]?.content ?? []).filter(
+      (block) => block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(0);
+  });
+
+  it('discards intact sibling tool calls when one call of the turn is corrupted', async () => {
+    const { service, savedMessages } = buildService([
+      new StreamInferenceResponseChunk({
+        thinkingDelta: null,
+        textContentDelta: null,
+        toolCallsDelta: [
+          new StreamInferenceResponseChunkToolCall({
+            index: 0,
+            id: 'call_1',
+            name: 'list_letterheads',
+            argumentsDelta: '{}',
+          }),
+          new StreamInferenceResponseChunkToolCall({
+            index: 1,
+            id: 'call_2',
+            name: 'create_document',
+            argumentsDelta: '{"title":"Bericht","content":"<h1>Unvollst',
+          }),
+        ],
+      }),
+      finishChunk('stop'),
+    ]);
+
+    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+
+    // Persisting the intact sibling would re-execute half the turn on the
+    // next run while the model never saw any results for it.
+    const toolUses = (savedMessages[0]?.content ?? []).filter(
+      (block) => block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(0);
+  });
+
+  it('keeps a truncated text-only answer instead of failing the run', async () => {
+    const { service, savedMessages } = buildService([
+      StreamInferenceResponseChunk.text('Der Bericht beginnt hier und'),
+      finishChunk('length'),
+    ]);
+
+    await consume(service);
+
+    expect(savedMessages).toHaveLength(1);
+    const [text] = savedMessages[0].content;
+    expect(text).toBeInstanceOf(TextMessageContent);
+  });
+
+  it('treats a tool call that streamed no arguments as an empty object', async () => {
+    const { service, savedMessages } = buildService([
+      toolCallChunk({ id: 'call_1', name: 'list_letterheads' }),
+      finishChunk('tool_calls'),
+    ]);
+
+    await consume(service);
+
+    const toolUses = savedMessages[0].content.filter(
+      (block): block is ToolUseMessageContent =>
+        block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(1);
+    expect(toolUses[0].params).toEqual({});
   });
 });

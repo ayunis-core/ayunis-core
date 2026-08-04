@@ -42,7 +42,11 @@ the runtime loop or the provider's streamed chunks.
 Generic exceptions from a model provider become `PROVIDER_FAILED`. If a host
 provider boundary throws an `AgentRuntimeError`, the runtime preserves its
 stable `code`, `message`, and serializable `details` in the emitted error event
-instead. An abort-triggered provider rejection still ends the run with
+instead. A completed model call whose tool-call arguments did not arrive
+intact — unparseable JSON, or a token-limit finish while tool calls were being
+emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
+through `modelCallInterrupted`, so hosts can persist its intact text and
+thinking. An abort-triggered provider rejection still ends the run with
 `run_end { status: 'aborted' }` and does not emit an error event.
 Once a terminal assistant turn and its `afterModelCall` hooks have completed,
 an external signal arrives too late to cancel that completed run. Explicit
@@ -71,8 +75,9 @@ Executable tools may return either a string for success or
 The runtime accumulates providers' incremental tool-call fields and exposes
 `tool_call_snapshot` events containing the raw arguments received so far plus
 a best-effort parsed input. A terminal `invalid` snapshot preserves malformed
-arguments for presentation, while only finalized valid `tool_call` events are
-executed or persisted.
+arguments for presentation and then fails the run with `MALFORMED_TOOL_CALL` —
+executing a tool with guessed input would fail identically on every retry, so
+no call from a corrupted turn ever reaches execution.
 
 Buffered mutations (`addTools`/`removeTools`/`setTools`, `addInstructions`,
 `transformMessages`) apply at the next request assembly: `runStart`/

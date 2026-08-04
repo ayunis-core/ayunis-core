@@ -19,7 +19,10 @@ import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-to
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { resolveIntegration } from '../helpers/resolve-integration.helper';
-import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
+import {
+  assertToolCallArgumentsIntact,
+  parseFinalToolArguments,
+} from '../helpers/tool-call-arguments.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
@@ -42,6 +45,14 @@ interface AccumulatedState {
   thinkingId: string | null;
   thinkingSignature: string | null;
   toolCalls: Map<number, AccumulatedToolCall>;
+  finishReason: string | null;
+  /**
+   * Set when the turn's tool calls failed the integrity check. The whole
+   * tool phase must then be excluded from the saved message — persisting
+   * even the intact sibling calls would let the next run execute half a
+   * turn the model never saw results for.
+   */
+  toolCallsCorrupted: boolean;
 }
 
 const initialAccumulatedState = (): AccumulatedState => ({
@@ -51,6 +62,8 @@ const initialAccumulatedState = (): AccumulatedState => ({
   thinkingId: null,
   thinkingSignature: null,
   toolCalls: new Map(),
+  finishReason: null,
+  toolCallsCorrupted: false,
 });
 
 /**
@@ -196,6 +209,17 @@ export class StreamingInferenceService {
         yield assistantMessage;
       }
     }
+    // Runs only when the stream completed; an interrupted stream throws out
+    // of the loop above and is handled by the caller's error path.
+    try {
+      assertToolCallArgumentsIntact(
+        state.toolCalls.values(),
+        state.finishReason,
+      );
+    } catch (error) {
+      state.toolCallsCorrupted = true;
+      throw error;
+    }
   }
 
   private accumulateChunk(
@@ -226,6 +250,9 @@ export class StreamingInferenceService {
     if (chunk.toolCallsDelta.length > 0) {
       this.accumulateToolCalls(chunk.toolCallsDelta, state.toolCalls);
       shouldUpdate = true;
+    }
+    if (chunk.finishReason) {
+      state.finishReason = chunk.finishReason;
     }
 
     return shouldUpdate;
@@ -283,15 +310,11 @@ export class StreamingInferenceService {
 
     state.toolCalls.forEach((toolCall) => {
       if (toolCall.id && toolCall.name) {
-        const parsedArgs = this.parseToolArguments(
-          toolCall.arguments,
-          toolCall.name,
-        );
         content.push(
           new ToolUseMessageContent(
             toolCall.id,
             toolCall.name,
-            parsedArgs,
+            this.parsePartialToolArguments(toolCall.arguments),
             toolCall.providerMetadata,
             resolveIntegration(toolCall.name, tools),
           ),
@@ -302,23 +325,13 @@ export class StreamingInferenceService {
     return content;
   }
 
-  private parseToolArguments(
-    args: string,
-    toolName: string,
-  ): Record<string, unknown> {
-    if (!args) return {};
-    try {
-      const parsed = safeJsonParse(args, null) as Record<
-        string,
-        unknown
-      > | null;
-      return parsed ?? {};
-    } catch {
-      this.logger.debug(`Incomplete tool call arguments for ${toolName}`, {
-        arguments: args,
-      });
-      return {};
-    }
+  /**
+   * Parses accumulated tool-call arguments for the in-flight partial message.
+   * Mid-stream the JSON is incomplete by definition, so failures coerce to
+   * `{}` — this shape is only yielded for progress display, never executed.
+   */
+  private parsePartialToolArguments(args: string): Record<string, unknown> {
+    return parseFinalToolArguments(args) ?? {};
   }
 
   private async saveAccumulatedMessage(
@@ -340,7 +353,7 @@ export class StreamingInferenceService {
 
     const finalContent = this.buildFinalContent(
       state,
-      streamCompletedSuccessfully,
+      streamCompletedSuccessfully && !state.toolCallsCorrupted,
       tools,
     );
     assistantMessage.content = finalContent;
@@ -385,31 +398,24 @@ export class StreamingInferenceService {
     tools: Tool[],
   ): void {
     toolCalls.forEach((toolCall) => {
-      if (toolCall.id && toolCall.name) {
-        try {
-          const parsedArgs = safeJsonParse(toolCall.arguments, {}) as Record<
-            string,
-            unknown
-          >;
-          content.push(
-            new ToolUseMessageContent(
-              toolCall.id,
-              toolCall.name,
-              parsedArgs,
-              toolCall.providerMetadata,
-              resolveIntegration(toolCall.name, tools),
-            ),
-          );
-        } catch (error) {
-          this.logger.warn(
-            `Failed to parse tool arguments for ${toolCall.name}`,
-            {
-              arguments: toolCall.arguments,
-              error: error as Error,
-            },
-          );
-        }
+      if (!toolCall.id || !toolCall.name) return;
+      const parsedArgs = parseFinalToolArguments(toolCall.arguments);
+      if (parsedArgs === null) {
+        this.logger.warn(
+          `Discarding tool call with unparseable arguments: ${toolCall.name}`,
+          { argumentsLength: toolCall.arguments.length },
+        );
+        return;
       }
+      content.push(
+        new ToolUseMessageContent(
+          toolCall.id,
+          toolCall.name,
+          parsedArgs,
+          toolCall.providerMetadata,
+          resolveIntegration(toolCall.name, tools),
+        ),
+      );
     });
   }
 
