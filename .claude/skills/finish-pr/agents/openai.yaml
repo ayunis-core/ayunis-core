@@ -1,0 +1,4 @@
+interface:
+  display_name: "Finish PR"
+  short_description: "Close the CI and BugBot feedback loop"
+  default_prompt: "Use $finish-pr to wait for CI and BugBot, address findings, and leave the PR green."

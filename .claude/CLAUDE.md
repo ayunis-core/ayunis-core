@@ -46,6 +46,16 @@ Do NOT trust your own assessment of code correctness. Verify through observable 
 
 Only write a comment when it states something the code cannot: a non-obvious constraint, ordering requirement, or "why" (e.g., why an event fires *before* a delete). Never write comments that restate the name or body of the thing they annotate ("Returns the ids of every thread owned by a user" on `findAllIdsByUserId`, "// Delete the thread" above `threadsRepository.delete(...)`), narrate what the next line does, or summarize a well-named class a reader can grasp at a glance. If a comment would just paraphrase the code, improve the naming instead and write nothing.
 
+### 5. Simplest Sufficient Solution
+
+Lead with the solution a senior engineer would reach for, not the first mechanism that occurs to you. Before building bespoke machinery, ask whether this is a standard, already-solved problem — reach for the library/pattern/config that solves it directly.
+
+Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
+
+### 6. A Submitted PR Is Not Complete
+
+When work creates or updates a PR, submitting it is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
+
 ---
 
 ## Forbidden Actions
@@ -95,3 +105,15 @@ The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations
 ## Development Skills
 
 For detailed development workflows, patterns, and validation checklists, load the appropriate skill. Skills are listed with descriptions in the system prompt — pick the one that matches the task.
+
+---
+
+## Communication
+
+Investigation reports, PR summaries, and status write-ups are decision tools, not essays. Default to terse and findings-first:
+
+- Lead with the answer or recommendation; the "why" goes underneath, not before.
+- One tight line per item. For a batch (several PRs, tickets, or findings), give each a one-line verdict — e.g. *fix now / follow-up ticket / close* — rather than a multi-section prose block per item.
+- Skip preamble, restated context, and multi-header scaffolding unless the depth was asked for.
+
+Expand only on request. When the user wants more, they'll say so — then go deep.
