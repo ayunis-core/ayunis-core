@@ -29,6 +29,7 @@ import { Thread } from '../../../../threads/domain/thread.entity';
 import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
@@ -53,6 +54,10 @@ export class ExecuteRunAndSetTitleUseCase {
       yield* this.executeRun(command);
     } catch (error) {
       this.logger.error('Error in executeRunAndSetTitle', error);
+      // The SSE response was committed as 200 before the run started, so the
+      // global exception filter never sees this failure — report it here or
+      // provider outages produce no AppSignal incident at all (AYC-653).
+      reportUnexpectedError(error);
       yield this.toErrorEvent(error, command.threadId);
     } finally {
       yield this.sessionEvent(command.threadId, false);

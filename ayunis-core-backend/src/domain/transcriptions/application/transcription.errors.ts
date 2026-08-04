@@ -7,7 +7,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum TranscriptionErrorCode {
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
   INVALID_AUDIO_FILE = 'INVALID_AUDIO_FILE',
-  TRANSCRIPTION_SERVICE_UNAVAILABLE = 'TRANSCRIPTION_SERVICE_UNAVAILABLE',
 }
 
 /**
@@ -39,19 +38,5 @@ export class InvalidAudioFileError extends TranscriptionError {
     metadata?: ErrorMetadata,
   ) {
     super(message, TranscriptionErrorCode.INVALID_AUDIO_FILE, 400, metadata);
-  }
-}
-
-export class TranscriptionServiceUnavailableError extends TranscriptionError {
-  constructor(
-    message: string = 'Transcription service unavailable',
-    metadata?: ErrorMetadata,
-  ) {
-    super(
-      message,
-      TranscriptionErrorCode.TRANSCRIPTION_SERVICE_UNAVAILABLE,
-      503,
-      metadata,
-    );
   }
 }

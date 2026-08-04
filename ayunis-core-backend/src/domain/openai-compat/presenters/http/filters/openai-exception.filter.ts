@@ -3,6 +3,7 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { OpenAIErrorMapper } from 'src/domain/openai-compat/application/mappers/openai-error.mapper';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 
 /**
  * Wraps OpenAI-compat exceptions into the OpenAI error envelope. Registered
@@ -46,6 +47,12 @@ export class OpenAIExceptionFilter extends BaseExceptionFilter {
       this.applicationErrorFilter.catch(exception, host);
       return;
     }
+
+    // This filter answers with the OpenAI envelope instead of delegating to
+    // ApplicationErrorFilter, so it must also take over the filter's
+    // reporting duty — otherwise 5xx failures on openai-compat routes never
+    // reach AppSignal (AYC-653).
+    reportUnexpectedError(exception);
 
     const response = ctx.getResponse<Response>();
     const mapped = this.errorMapper.toEnvelope(exception);

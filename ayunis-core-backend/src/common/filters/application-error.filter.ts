@@ -1,8 +1,8 @@
-import { Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { Catch, ArgumentsHost } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { setError } from '@appsignal/nodejs';
 import { Request, Response } from 'express';
 import { ApplicationError } from '../errors/base.error';
+import { reportUnexpectedError } from '../errors/report-unexpected-error.helper';
 
 /**
  * Global exception filter that:
@@ -19,7 +19,7 @@ import { ApplicationError } from '../errors/base.error';
 @Catch()
 export class ApplicationErrorFilter extends BaseExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    this.reportUnexpectedError(exception);
+    reportUnexpectedError(exception);
 
     if (exception instanceof ApplicationError) {
       this.handleApplicationError(exception, host);
@@ -28,21 +28,6 @@ export class ApplicationErrorFilter extends BaseExceptionFilter {
 
     // HttpExceptions, raw Errors, and anything else — delegate to NestJS defaults
     super.catch(exception, host);
-  }
-
-  private reportUnexpectedError(exception: unknown): void {
-    if (exception instanceof ApplicationError && exception.statusCode < 500) {
-      return;
-    }
-    if (exception instanceof HttpException && exception.getStatus() < 500) {
-      return;
-    }
-
-    // setError requires an Error-like value; wrap non-Error throwables so
-    // they still reach AppSignal.
-    const error =
-      exception instanceof Error ? exception : new Error(String(exception));
-    setError(error);
   }
 
   private handleApplicationError(

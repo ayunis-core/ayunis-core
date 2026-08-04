@@ -4,6 +4,7 @@ import type { StreamInferenceInput } from '../../application/ports/stream-infere
 import { InferenceStreamStalledError } from '../../application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
 
 /** Rejects the way a provider SDK does when its request signal aborts. */
 function whenAborted(signal: AbortSignal | undefined): Promise<never> {
@@ -117,6 +118,127 @@ describe('RuntimeStreamInferenceHandler', () => {
     unsubscribe();
 
     expect(signal()?.aborted).toBe(true);
+  });
+
+  it('does not retry a stall that happens after chunks were already emitted', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:mid-stream-stall',
+      async *stream(request) {
+        calls += 1;
+        yield { textDelta: 'first' };
+        await whenAborted(request.signal);
+      },
+    };
+    const { arrived, failure } = firstChunkOf(new TestHandler(provider));
+
+    await arrived;
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+
+    await expect(failure).resolves.toBeInstanceOf(InferenceStreamStalledError);
+    expect(calls).toBe(1);
+  });
+
+  it('retries once when a transient connection failure happens before the first chunk', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:flaky-dns',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
+              code: 'EAI_AGAIN',
+            }),
+          );
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(2);
+  });
+
+  it('does not retry a transient failure when the subscriber unsubscribes during the backoff', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:flaky-then-cancel',
+      async *stream() {
+        calls += 1;
+        yield await Promise.reject(
+          Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
+            code: 'EAI_AGAIN',
+          }),
+        );
+      },
+    };
+
+    const subscription = new TestHandler(provider)
+      .answer(makeInput())
+      .subscribe({ next: () => undefined, error: () => undefined });
+    // Let the first attempt fail and the backoff start...
+    await jest.advanceTimersByTimeAsync(0);
+    // ...then disconnect while it is waiting.
+    subscription.unsubscribe();
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    expect(calls).toBe(1);
+  });
+
+  it('does not retry a connection failure after chunks were already emitted', async () => {
+    let calls = 0;
+    const reset = Object.assign(new Error('read ECONNRESET'), {
+      code: 'ECONNRESET',
+    });
+    const provider: ModelProvider = {
+      name: 'test:mid-stream-reset',
+      async *stream() {
+        calls += 1;
+        yield { textDelta: 'first' };
+        throw reset;
+      },
+    };
+    const { arrived, failure } = firstChunkOf(new TestHandler(provider));
+
+    await arrived;
+    await expect(failure).resolves.toBe(reset);
+    expect(calls).toBe(1);
+  });
+
+  it('does not retry non-transport provider failures', async () => {
+    let calls = 0;
+    const rejection = Object.assign(new Error('rate limited'), {
+      status: 429,
+    });
+    const provider: ModelProvider = {
+      name: 'test:rejected',
+      async *stream() {
+        calls += 1;
+        yield await Promise.reject(rejection);
+      },
+    };
+
+    const failed = new Promise<unknown>((resolve) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: () => undefined,
+        error: resolve,
+      });
+    });
+
+    await expect(failed).resolves.toBe(rejection);
+    expect(calls).toBe(1);
   });
 
   it('passes chunks through and completes when the provider streams normally', async () => {

@@ -93,6 +93,26 @@ function collectChain(root: unknown): Record<string, unknown>[] {
   return chain;
 }
 
+/**
+ * Pause before the single setup retry — long enough for a DNS hiccup or a
+ * dropped TLS connection to clear, short enough not to matter for a user
+ * already waiting on inference.
+ */
+export const SETUP_RETRY_BACKOFF_MS = 500;
+
+/**
+ * Transient connection failures worth exactly one retry during request
+ * setup: before a provider has produced any output, resending the request is
+ * idempotent. Timeouts are excluded — retrying them doubles an already-long
+ * wait — as are stalls and aborts, which carry their own semantics.
+ */
+export function isRetryableSetupFailure(error: unknown): boolean {
+  return (
+    classifyTransportError(error)?.failureClass ===
+    ProviderFailureClass.CONNECTION
+  );
+}
+
 function classifyByCode(
   chain: Record<string, unknown>[],
 ): Omit<TransportFailure, 'host'> | undefined {
@@ -116,12 +136,27 @@ function classifyByName(
     const name = typeof node.name === 'string' ? node.name : undefined;
     if (!name) continue;
     if (TIMEOUT_NAMES.has(name)) {
-      return { failureClass: ProviderFailureClass.TIMEOUT };
+      return { failureClass: ProviderFailureClass.TIMEOUT, code: codeOf(node) };
     }
     if (CONNECTION_NAMES.has(name)) {
-      return { failureClass: ProviderFailureClass.CONNECTION };
+      return {
+        failureClass: ProviderFailureClass.CONNECTION,
+        code: codeOf(node),
+      };
     }
   }
+  return undefined;
+}
+
+/**
+ * A name-matched node can still carry a code the code sets do not know —
+ * e.g. a DOMException TimeoutError has the numeric code 23. Preserving it
+ * keeps `underlyingCode` in the incident metadata instead of losing which
+ * deadline fired.
+ */
+function codeOf(node: Record<string, unknown>): string | undefined {
+  if (typeof node.code === 'string') return node.code;
+  if (typeof node.code === 'number') return String(node.code);
   return undefined;
 }
 

@@ -1,4 +1,7 @@
-import { classifyTransportError } from './provider-transport-error.classifier';
+import {
+  classifyTransportError,
+  isRetryableSetupFailure,
+} from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
 
 function errorWithCode(message: string, code: string): Error {
@@ -131,6 +134,51 @@ describe('classifyTransportError', () => {
       expect(classifyTransportError(error)?.failureClass).toBe(
         ProviderFailureClass.CONNECTION,
       );
+    });
+  });
+
+  describe('name-matched nodes with numeric codes', () => {
+    // The exact incident shape from AbortSignal.timeout: DOMException with
+    // name 'TimeoutError' and numeric code 23 (AppSignal incident "23:").
+    it('classifies a DOMException TimeoutError and preserves its code', () => {
+      const error = new DOMException(
+        'The operation was aborted due to timeout',
+        'TimeoutError',
+      );
+
+      const result = classifyTransportError(error);
+
+      expect(result?.failureClass).toBe(ProviderFailureClass.TIMEOUT);
+      expect(result?.code).toBe('23');
+    });
+  });
+
+  describe('isRetryableSetupFailure', () => {
+    it.each(['EAI_AGAIN', 'ECONNRESET'])(
+      'treats %s as retryable during request setup',
+      (code) => {
+        expect(isRetryableSetupFailure(errorWithCode('boom', code))).toBe(true);
+      },
+    );
+
+    it('does not retry timeouts — that would double an already-long wait', () => {
+      expect(
+        isRetryableSetupFailure(
+          errorWithCode('headers timeout', 'UND_ERR_HEADERS_TIMEOUT'),
+        ),
+      ).toBe(false);
+    });
+
+    it('does not retry non-transport errors', () => {
+      expect(isRetryableSetupFailure(new Error('boom'))).toBe(false);
+    });
+
+    it('does not retry client aborts', () => {
+      expect(
+        isRetryableSetupFailure(
+          new DOMException('The operation was aborted', 'AbortError'),
+        ),
+      ).toBe(false);
     });
   });
 

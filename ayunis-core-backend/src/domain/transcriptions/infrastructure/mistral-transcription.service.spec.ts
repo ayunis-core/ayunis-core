@@ -63,6 +63,29 @@ describe('MistralTranscriptionService', () => {
     );
   });
 
+  // A dropped TLS connection must group under the stable provider taxonomy
+  // instead of a hand-rolled availability guess; the retry predicate itself
+  // is covered by mistral-transient-error.spec (AYC-653).
+  it('classifies transport failures under the provider taxonomy', async () => {
+    const service = await createService({
+      'models.mistral.apiKey': 'test-api-key',
+      'models.mistral.transcriptionModel': 'voxtral-mini-2602',
+    });
+    mockClient.audio.transcriptions.complete.mockRejectedValue(
+      Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }),
+    );
+
+    await expect(
+      service.transcribe(
+        Buffer.from('fake audio content'),
+        'buergeranfrage.mp3',
+        'audio/mpeg',
+      ),
+    ).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_CONNECTION_MISTRAL',
+    });
+  });
+
   it('should return the trimmed transcription text', async () => {
     const service = await createService({
       'models.mistral.apiKey': 'test-api-key',
