@@ -7,6 +7,7 @@ import {
   Shield,
   FileText,
   Key,
+  KeyRound,
   ShieldCheck,
   MessageSquareText,
   Trash2,
@@ -38,6 +39,11 @@ export function AdminSettingsSidebar() {
           to: '/admin-settings/teams',
           icon: <Users />,
           label: t('layout.teams'),
+        },
+        {
+          to: '/admin-settings/roles',
+          icon: <KeyRound />,
+          label: t('layout.roles'),
         },
         {
           to: '/admin-settings/api-keys',

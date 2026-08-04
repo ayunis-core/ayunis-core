@@ -21,6 +21,7 @@ import { useInviteDelete } from '../api/useInviteDelete';
 import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
 import { useInviteResend } from '../api/useInviteResend';
 import type { Invite } from '../model/openapi';
+import type { InviteResponseDtoRole } from '@/shared/api';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 
@@ -42,6 +43,12 @@ export default function InvitesSection({
   const { deleteAllInvites, isDeleting } = useDeleteAllInvites();
   const { resendInvite, isResending } = useInviteResend();
   const { confirm } = useConfirmation();
+
+  const roleLabels: Record<InviteResponseDtoRole, string> = {
+    admin: t('users.admin'),
+    manager: t('users.manager'),
+    user: t('users.user'),
+  };
 
   const handleDeleteInvite = (invite: Invite) => {
     confirm({
@@ -118,11 +125,7 @@ export default function InvitesSection({
               {invites.map((invite) => (
                 <TableRow key={invite.id}>
                   <TableCell className="font-medium">{invite.email}</TableCell>
-                  <TableCell>
-                    {invite.role === 'admin'
-                      ? t('users.admin')
-                      : t('users.user')}
-                  </TableCell>
+                  <TableCell>{roleLabels[invite.role]}</TableCell>
                   <TableCell>
                     {(() => {
                       const statusColorMap: Record<string, string> = {

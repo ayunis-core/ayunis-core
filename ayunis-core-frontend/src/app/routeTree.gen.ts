@@ -38,6 +38,7 @@ import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
 import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
+import { Route as AuthenticatedAdminSettingsRolesRouteImport } from './routes/_authenticated/admin-settings.roles'
 import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
 import { Route as AuthenticatedAdminSettingsModelsRouteImport } from './routes/_authenticated/admin-settings.models'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
@@ -225,6 +226,12 @@ const AuthenticatedAdminSettingsSecurityRoute =
     path: '/admin-settings/security',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSettingsRolesRoute =
+  AuthenticatedAdminSettingsRolesRouteImport.update({
+    id: '/admin-settings/roles',
+    path: '/admin-settings/roles',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSettingsRetentionRoute =
   AuthenticatedAdminSettingsRetentionRouteImport.update({
     id: '/admin-settings/retention',
@@ -402,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
+  '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -458,6 +466,7 @@ export interface FileRoutesByTo {
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
+  '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -516,6 +525,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/models': typeof AuthenticatedAdminSettingsModelsRoute
   '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
+  '/_authenticated/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
@@ -574,6 +584,7 @@ export interface FileRouteTypes {
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/retention'
+    | '/admin-settings/roles'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
@@ -630,6 +641,7 @@ export interface FileRouteTypes {
     | '/admin-settings/integrations'
     | '/admin-settings/models'
     | '/admin-settings/retention'
+    | '/admin-settings/roles'
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
@@ -687,6 +699,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/models'
     | '/_authenticated/admin-settings/retention'
+    | '/_authenticated/admin-settings/roles'
     | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
@@ -943,6 +956,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsSecurityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-settings/roles': {
+      id: '/_authenticated/admin-settings/roles'
+      path: '/admin-settings/roles'
+      fullPath: '/admin-settings/roles'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRolesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin-settings/retention': {
       id: '/_authenticated/admin-settings/retention'
       path: '/admin-settings/retention'
@@ -1138,6 +1158,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsModelsRoute: typeof AuthenticatedAdminSettingsModelsRoute
   AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
+  AuthenticatedAdminSettingsRolesRoute: typeof AuthenticatedAdminSettingsRolesRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
@@ -1190,6 +1211,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsModelsRoute: AuthenticatedAdminSettingsModelsRoute,
   AuthenticatedAdminSettingsRetentionRoute:
     AuthenticatedAdminSettingsRetentionRoute,
+  AuthenticatedAdminSettingsRolesRoute: AuthenticatedAdminSettingsRolesRoute,
   AuthenticatedAdminSettingsSecurityRoute:
     AuthenticatedAdminSettingsSecurityRoute,
   AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,

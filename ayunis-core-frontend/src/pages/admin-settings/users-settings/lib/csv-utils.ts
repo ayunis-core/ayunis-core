@@ -1,3 +1,5 @@
+import { CreateInviteDtoRole } from '@/shared/api';
+
 export type CsvErrorCode =
   | 'EMPTY_FILE'
   | 'INVALID_HEADERS'
@@ -17,7 +19,7 @@ export interface CsvError {
 
 export interface ParsedInvite {
   email: string;
-  role: 'admin' | 'user';
+  role: CreateInviteDtoRole;
   rowNumber: number;
   isValid: boolean;
   error?: CsvError;
@@ -30,7 +32,7 @@ export interface CsvParseResult {
 }
 
 const EMAIL_REGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-const VALID_ROLES = ['admin', 'user'];
+const VALID_ROLES: string[] = Object.values(CreateInviteDtoRole);
 
 /**
  * Detects the CSV separator used in the content.
@@ -150,7 +152,7 @@ export function parseInviteCsv(csvContent: string): CsvParseResult {
 
     result.push({
       email: email.trim(),
-      role: normalizedRole as 'admin' | 'user',
+      role: normalizedRole as CreateInviteDtoRole,
       rowNumber,
       isValid,
       error,
@@ -196,7 +198,7 @@ function parseCsvLine(line: string, separator: ',' | ';'): string[] {
 }
 
 export function generateInviteTemplate(): string {
-  return 'email,role\nuser@example.com,user\nadmin@example.com,admin';
+  return 'email,role\nuser@example.com,user\nmanager@example.com,manager\nadmin@example.com,admin';
 }
 
 export function generateUrlsCsv(

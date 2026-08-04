@@ -23,7 +23,11 @@ import {
 import { Trash2, MoreHorizontal, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { UserResponseDto, PaginationDto } from '@/shared/api';
+import type {
+  UserResponseDto,
+  UserResponseDtoRole,
+  PaginationDto,
+} from '@/shared/api';
 import { formatDate } from '@/shared/lib/format-date';
 import { useSuperAdminDeleteUser } from '../api/useSuperAdminDeleteUser';
 import { useSuperAdminTriggerPasswordReset } from '../api/useSuperAdminTriggerPasswordReset';
@@ -49,6 +53,11 @@ export default function UsersTable({
   currentPage,
 }: Readonly<UsersTableProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const roleLabels: Record<UserResponseDtoRole, string> = {
+    admin: t('table.roleAdmin'),
+    manager: t('table.roleManager'),
+    user: t('table.roleUser'),
+  };
   const { deleteUser, isLoading: isDeleting } = useSuperAdminDeleteUser({
     orgId,
   });
@@ -151,9 +160,7 @@ export default function UsersTable({
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell className="capitalize">
-                      {user.role === 'admin'
-                        ? t('table.roleAdmin')
-                        : t('table.roleUser')}
+                      {roleLabels[user.role]}
                     </TableCell>
                     <TableCell className="w-[100px]">
                       <DropdownMenu>

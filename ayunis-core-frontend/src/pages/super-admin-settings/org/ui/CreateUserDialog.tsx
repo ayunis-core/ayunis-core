@@ -168,6 +168,9 @@ export default function CreateUserDialog({
                       <SelectItem value="user">
                         {t('createUser.roleUser')}
                       </SelectItem>
+                      <SelectItem value="manager">
+                        {t('createUser.roleManager')}
+                      </SelectItem>
                       <SelectItem value="admin">
                         {t('createUser.roleAdmin')}
                       </SelectItem>

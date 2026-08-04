@@ -16,6 +16,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 import { Button } from '@/shared/ui/shadcn/button';
@@ -37,7 +42,7 @@ import { useResetUserMfa } from '../api/useResetUserMfa';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import EditUserDialog from './EditUserDialog';
 import { useState, type ReactNode } from 'react';
-import type { User } from '../model/openapi';
+import type { User, UserRole } from '../model/openapi';
 import type { UserResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +52,8 @@ import {
   type CreditLimitInfo,
 } from '../api/useUserCreditLimits';
 import { useHasCreditBudget } from '@/features/credit-limits';
+
+const ROLE_OPTIONS: UserRole[] = ['user', 'manager', 'admin'];
 
 interface UsersSectionProps {
   users: User[];
@@ -97,13 +104,21 @@ export default function UsersSection({
   });
   const { confirm } = useConfirmation();
 
-  const handleRoleToggle = (user: User) => {
-    const newRole = user.role === 'admin' ? 'user' : 'admin';
+  const roleLabels: Record<UserRole, string> = {
+    admin: t('users.admin'),
+    manager: t('users.manager'),
+    user: t('users.user'),
+  };
+
+  const handleRoleChange = (user: User, newRole: UserRole) => {
+    if (user.role === newRole) {
+      return;
+    }
     confirm({
       title: t('confirmations.changeUserRoleTitle'),
       description: t('confirmations.changeUserRoleDescription', {
         name: user.name,
-        role: newRole === 'admin' ? t('users.admin') : t('users.user'),
+        role: roleLabels[newRole],
       }),
       confirmText: t('confirmations.changeRoleText'),
       cancelText: t('confirmations.cancelText'),
@@ -203,9 +218,7 @@ export default function UsersSection({
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.role === 'admin' ? t('users.admin') : t('users.user')}
-                </TableCell>
+                <TableCell>{roleLabels[user.role]}</TableCell>
                 {hasCreditBudget && (
                   <TableCell>
                     {renderCreditLimit(userLimits.get(user.id))}
@@ -230,18 +243,32 @@ export default function UsersSection({
                         <Edit />
                         {t('users.edit')}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleRoleToggle(user)}
-                        disabled={isUserLoading(user.id)}
-                      >
-                        <UserCheck />
-                        {t('users.changeRole', {
-                          role:
-                            user.role === 'admin'
-                              ? t('users.user')
-                              : t('users.admin'),
-                        })}
-                      </DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger
+                          disabled={isUserLoading(user.id)}
+                        >
+                          <UserCheck />
+                          {t('users.changeRoleLabel')}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuRadioGroup
+                            value={user.role}
+                            onValueChange={(value) =>
+                              handleRoleChange(user, value as UserRole)
+                            }
+                          >
+                            {ROLE_OPTIONS.map((role) => (
+                              <DropdownMenuRadioItem
+                                key={role}
+                                value={role}
+                                disabled={isUserLoading(user.id)}
+                              >
+                                {roleLabels[role]}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
                       <DropdownMenuItem
                         onClick={() => handleTriggerPasswordReset(user)}
                         disabled={isUserLoading(user.id)}

@@ -1,0 +1,31 @@
+{
+  "title": "Rollen & Berechtigungen",
+  "description": "Legen Sie fest, was Manager und Benutzer tun dürfen. Administratoren haben immer alle Berechtigungen.",
+  "columns": {
+    "permission": "Berechtigung",
+    "user": "Benutzer",
+    "manager": "Manager",
+    "admin": "Admin"
+  },
+  "groups": {
+    "teams": "Teams",
+    "skills": "Fähigkeiten",
+    "knowledge_bases": "Wissenssammlungen"
+  },
+  "permissions": {
+    "manage_teams": "Teams verwalten",
+    "assign_users_to_teams": "Benutzer zu Teams zuordnen",
+    "manage_skills": "Fähigkeiten verwalten",
+    "share_skills": "Fähigkeiten teilen",
+    "manage_knowledge_bases": "Wissenssammlungen verwalten",
+    "share_knowledge_bases": "Wissenssammlungen teilen"
+  },
+  "adminHint": "Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden.",
+  "save": "Änderungen speichern",
+  "saving": "Speichern…",
+  "saveSuccess": "Berechtigungen aktualisiert",
+  "saveError": "Berechtigungen konnten nicht aktualisiert werden",
+  "minOnePermission": "Jede Rolle muss mindestens eine Berechtigung behalten",
+  "loadError": "Berechtigungen konnten nicht geladen werden",
+  "retry": "Erneut versuchen"
+}
