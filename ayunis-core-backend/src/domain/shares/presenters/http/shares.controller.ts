@@ -203,6 +203,10 @@ export class SharesController {
     return this.shareDtoMapper.toDtoArray(shares, teamNamesMap);
   }
 
+  // Withdrawing a share is managing sharing, so it needs the same permission as
+  // creating one. The route is keyed by share id rather than entity type, so it
+  // accepts either permission; ownership is still enforced in the use case.
+  @RequirePermission(Permission.SHARE_SKILLS, Permission.SHARE_KNOWLEDGE_BASES)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a share' })
   @ApiParam({

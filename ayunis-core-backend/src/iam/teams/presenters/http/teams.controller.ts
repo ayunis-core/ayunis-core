@@ -82,7 +82,9 @@ export class TeamsController {
     private readonly teamMemberDtoMapper: TeamMemberDtoMapper,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_TEAMS)
+  // Reads are open to assigners too: assigning a user to a team is only
+  // reachable by first listing teams and their members.
+  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
   @Get()
   @ApiOperation({
     summary: 'List all teams for the current organization',
@@ -139,7 +141,7 @@ export class TeamsController {
     return this.teamDtoMapper.toDtoList(teams);
   }
 
-  @RequirePermission(Permission.MANAGE_TEAMS)
+  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a team by ID',
@@ -309,7 +311,7 @@ export class TeamsController {
     this.logger.log(`Successfully deleted team with id: ${id}`);
   }
 
-  @RequirePermission(Permission.MANAGE_TEAMS)
+  @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
   @Get(':id/members')
   @ApiOperation({
     summary: 'List members of a team',

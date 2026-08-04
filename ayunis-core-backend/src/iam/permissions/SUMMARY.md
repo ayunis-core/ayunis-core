@@ -27,9 +27,12 @@ hold whatever an org admin grants them.
 
 `@RequirePermission(Permission.X)` + `PermissionsGuard` (both live in the
 **authorization** module, guard bound globally by `IamModule`). The guard reads
-the required permission from route metadata and calls `HasPermissionUseCase`,
+the required permissions from route metadata and calls `HasPermissionUseCase`,
 which short-circuits to `true` for `ADMIN` and otherwise checks
-`RolePermissionsRepository.existsForRole`.
+`RolePermissionsRepository.existsForRole`. The decorator is variadic —
+`@RequirePermission(A, B)` grants access to holders of *any* of the listed
+permissions, used for reads a holder of either permission needs (e.g. the team
+reads, reachable with `MANAGE_TEAMS` or `ASSIGN_USERS_TO_TEAMS`).
 
 ## Seeding
 

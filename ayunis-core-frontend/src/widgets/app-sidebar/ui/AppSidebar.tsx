@@ -44,6 +44,10 @@ import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { useFeatureToggles } from '@/features/feature-toggles';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import {
+  useMyPermissions,
+  allowedSettingsSections,
+} from '@/features/permissions';
+import {
   useIsAcademyAddonActive,
   useAcademyAccessStatus,
   ACADEMY_LANDING_PAGE_URL,
@@ -53,6 +57,11 @@ import { OnboardingCard } from './OnboardingCard';
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
+  const { permissions } = useMyPermissions();
+  // Admins and managers granted a settings-relevant permission (e.g. team
+  // management) get the settings entry point.
+  const canOpenSettings =
+    allowedSettingsSections(user?.role, permissions).length > 0;
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();
@@ -218,7 +227,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     {t('sidebar.accountSettings')}
                   </Link>
                 </DropdownMenuItem>
-                {user?.role === 'admin' && (
+                {canOpenSettings && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin-settings" onClick={closeMobileWithCleanup}>
                       <Settings2 />

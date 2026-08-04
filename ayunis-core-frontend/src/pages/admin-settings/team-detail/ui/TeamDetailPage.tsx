@@ -22,7 +22,9 @@ import { TeamModelsTab } from './TeamModelsTab';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { useHasCreditBudget } from '@/features/credit-limits';
+import { useAuthenticationControllerMe } from '@/shared/api';
 import type { TeamDetail, PaginatedTeamMembers } from '../model/types';
+import { PermissionGate } from '@/features/permissions';
 
 interface TeamDetailPageProps {
   team: TeamDetail;
@@ -37,15 +39,21 @@ export function TeamDetailPage({
   const { t: tCredit } = useTranslation('admin-settings-credit-limits');
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('members');
-  const hasCreditBudget = useHasCreditBudget();
+  const { data: me } = useAuthenticationControllerMe();
+  // Permitted models and credit limits are admin-only endpoints, so managers who
+  // reach this page through a teams permission must not see those tabs.
+  const isAdmin = me?.role === 'admin';
+  const hasCreditBudget = useHasCreditBudget(isAdmin);
 
   const headerActions =
     activeTab === 'members' ? (
-      <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
-        <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
-          {t('teamDetail.addMember.button')}
-        </Button>
-      </OnboardingTourTarget>
+      <PermissionGate permission="assign_users_to_teams">
+        <OnboardingTourTarget name={TOUR_TARGET.addTeamMember}>
+          <Button size="sm" onClick={() => setAddMemberDialogOpen(true)}>
+            {t('teamDetail.addMember.button')}
+          </Button>
+        </OnboardingTourTarget>
+      </PermissionGate>
     ) : null;
 
   return (
@@ -55,10 +63,12 @@ export function TeamDetailPage({
           <TabsTrigger value="members">
             {t('teamDetail.tabs.members')}
           </TabsTrigger>
-          <TabsTrigger value="models">
-            {t('teamDetail.tabs.models')}
-          </TabsTrigger>
-          {hasCreditBudget && (
+          {isAdmin && (
+            <TabsTrigger value="models">
+              {t('teamDetail.tabs.models')}
+            </TabsTrigger>
+          )}
+          {isAdmin && hasCreditBudget && (
             <TabsTrigger value="credit-limit">
               {tCredit('creditLimits.teamCard.title')}
             </TabsTrigger>
@@ -89,15 +99,17 @@ export function TeamDetailPage({
           </Card>
         </TabsContent>
 
-        <TabsContent value="models">
-          <TeamModelsTab
-            teamId={team.id}
-            teamName={team.name}
-            modelOverrideEnabled={team.modelOverrideEnabled}
-          />
-        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="models">
+            <TeamModelsTab
+              teamId={team.id}
+              teamName={team.name}
+              modelOverrideEnabled={team.modelOverrideEnabled}
+            />
+          </TabsContent>
+        )}
 
-        {hasCreditBudget && (
+        {isAdmin && hasCreditBudget && (
           <TabsContent value="credit-limit">
             <TeamCreditLimitCard teamId={team.id} teamName={team.name} />
           </TabsContent>

@@ -20,11 +20,21 @@ import {
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import { useIsAcademyAddonActive } from '@/features/academy';
+import { useAuthenticationControllerMe } from '@/shared/api';
+import {
+  useMyPermissions,
+  allowedSettingsSections,
+} from '@/features/permissions';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
   const academyAddonActive = useIsAcademyAddonActive();
+  const { data: me } = useAuthenticationControllerMe();
+  const { permissions } = useMyPermissions();
+  const allowedSections = allowedSettingsSections(me?.role, permissions);
+  const canSee = (to: string) =>
+    allowedSections.some((path) => to.startsWith(path));
 
   const groups: SidebarMenuGroup[] = [
     {
@@ -122,10 +132,17 @@ export function AdminSettingsSidebar() {
     },
   ];
 
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => canSee(item.to)),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <SettingsSidebarWidget
       translationNamespace="admin-settings-layout"
-      groups={groups}
+      groups={visibleGroups}
     />
   );
 }

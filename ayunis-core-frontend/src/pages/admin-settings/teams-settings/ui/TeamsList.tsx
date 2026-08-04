@@ -12,6 +12,7 @@ import {
 } from '@/shared/ui/shadcn/item';
 import { useDeleteTeam } from '../api/useDeleteTeam';
 import type { Team } from '../model/types';
+import { PermissionGate } from '@/features/permissions';
 
 interface TeamsListProps {
   teams: Team[];
@@ -51,28 +52,30 @@ export function TeamsList({ teams, onEditTeam }: Readonly<TeamsListProps>) {
             </ItemContent>
           </Link>
           <ItemActions>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditTeam(team);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteTeam(team.id);
-              }}
-              disabled={isDeleting}
-            >
-              <Trash2 />
-            </Button>
+            <PermissionGate permission="manage_teams">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditTeam(team);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteTeam(team.id);
+                }}
+                disabled={isDeleting}
+              >
+                <Trash2 />
+              </Button>
+            </PermissionGate>
             <Link
               to="/admin-settings/teams/$id"
               params={{ id: team.id }}
