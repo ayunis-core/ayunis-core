@@ -145,6 +145,21 @@ const SUPPRESSIONS = [
     match: isMcpEventStreamRequest,
   },
   {
+    id: 'abort-signal-cancellation',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-651',
+    reason:
+      'The DOMException Node mints for AbortController.abort() (name ' +
+      'AbortError, numeric code 20, so exceptionType "20"). An abort is ' +
+      'always a cancellation we or an SDK issued deliberately — MCP ' +
+      'transport close after a completed operation, SDK request timeouts, ' +
+      'stream watchdogs, client disconnects — never itself the failure. ' +
+      'Real timeouts surface as classified application errors ' +
+      '(MCP_CONNECTION_TIMEOUT, INFERENCE_TIMEOUT, PROVIDER_UNAVAILABLE_*), ' +
+      'which stay fully reported.',
+    exceptionType: '20',
+  },
+  {
     id: 'bullmq-retry-scheduled',
     lever: 'ignoreErrors',
     ticket: 'AYC-479',

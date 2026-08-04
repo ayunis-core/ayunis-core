@@ -209,6 +209,10 @@ describe('exceptionTypeOf', () => {
 // A real instance of each error an `ignoreErrors` entry claims to suppress.
 // Keyed by suppression id so an entry cannot be added without one.
 const ERROR_SAMPLES: Record<string, () => Error> = {
+  // The exact object Node mints for AbortController.abort(): name
+  // 'AbortError', numeric code 20 — exceptionType stringifies to '20'.
+  'abort-signal-cancellation': () =>
+    new DOMException('This operation was aborted', 'AbortError'),
   'bullmq-retry-scheduled': () =>
     new JobRetryScheduledError(new Error('upstream failed')),
   'oversized-request-body': () =>
