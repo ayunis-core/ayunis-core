@@ -45,6 +45,8 @@ import { ShareDtoMapper } from './mappers/share-dto.mapper';
 import { SharedEntityType } from '../../domain/value-objects/shared-entity-type.enum';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import { TeamShareScope } from '../../domain/share-scope.entity';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('shares')
 @Controller('shares')
@@ -59,6 +61,7 @@ export class SharesController {
     private readonly getTeamUseCase: GetTeamUseCase,
   ) {}
 
+  @RequirePermission(Permission.SHARE_SKILLS)
   @Post('skills')
   @ApiOperation({ summary: 'Create a share for a skill' })
   @ApiBody({
@@ -101,6 +104,7 @@ export class SharesController {
     return this.shareDtoMapper.toDto(share);
   }
 
+  @RequirePermission(Permission.SHARE_KNOWLEDGE_BASES)
   @Post('knowledge-bases')
   @ApiOperation({ summary: 'Create a share for a knowledge base' })
   @ApiBody({

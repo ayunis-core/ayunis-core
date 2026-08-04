@@ -59,6 +59,8 @@ import { SkillDtoMapper } from './mappers/skill.mapper';
 import { InvalidSkillNameError } from '../../domain/skill.entity';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('skills')
 @RequireFeature(FeatureFlag.Skills)
@@ -80,6 +82,7 @@ export class SkillsController {
     private readonly skillCreatorNameService: SkillCreatorNameService,
   ) {}
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post('install-from-marketplace')
   @ApiOperation({ summary: 'Install a skill from the marketplace' })
   @ApiBody({ type: InstallSkillFromMarketplaceDto })
@@ -113,6 +116,7 @@ export class SkillsController {
     });
   }
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post()
   @ApiOperation({ summary: 'Create a new skill' })
   @ApiBody({ type: CreateSkillDto })
@@ -228,6 +232,7 @@ export class SkillsController {
     );
   }
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Put(':id')
   @ApiOperation({ summary: 'Update a skill' })
   @ApiParam({
@@ -280,6 +285,7 @@ export class SkillsController {
     }
   }
 
+  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a skill' })
   @ApiParam({

@@ -22,6 +22,8 @@ import {
   ApiParam,
   ApiBody,
   ApiConsumes,
+  ApiBodyOptions,
+  ApiParamOptions,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -75,6 +77,51 @@ import { KnowledgeBasesConstants } from '../../domain/knowledge-bases.constants'
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+
+interface UploadedDocument {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+  path: string;
+}
+
+const KB_ID_PARAM: ApiParamOptions = {
+  name: 'id',
+  description: 'The UUID of the knowledge base',
+  type: 'string',
+  format: 'uuid',
+};
+
+const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
+  schema: {
+    type: 'object',
+    properties: {
+      file: {
+        type: 'string',
+        format: 'binary',
+        description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
+      },
+    },
+    required: ['file'],
+  },
+};
+
+/* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
+const DocumentUploadInterceptor = FileInterceptor('file', {
+  storage: diskStorage({
+    destination: UPLOADS_DIR,
+    filename: (_req, file, cb) => {
+      cb(null, `${randomUUID()}${extname(file.originalname)}`);
+    },
+  }),
+  limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
+});
+/* eslint-enable sonarjs/content-length */
 
 @ApiTags('knowledge-bases')
 @RequireFeature(FeatureFlag.KnowledgeBases)
@@ -94,6 +141,7 @@ export class KnowledgeBasesController {
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
 
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post()
   @ApiOperation({ summary: 'Create a new knowledge base' })
   @ApiBody({ type: CreateKnowledgeBaseDto })
@@ -170,6 +218,7 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }
 
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Patch(':id')
   @ApiOperation({ summary: 'Update a knowledge base' })
   @ApiParam({
@@ -205,6 +254,7 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
   }
 
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a knowledge base' })
   @ApiParam({
@@ -265,28 +315,12 @@ export class KnowledgeBasesController {
     };
   }
 
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/documents')
   @ApiOperation({ summary: 'Add a document to a knowledge base' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
+  @ApiParam(KB_ID_PARAM)
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB)',
-        },
-      },
-      required: ['file'],
-    },
-  })
+  @ApiBody(DOCUMENT_UPLOAD_API_BODY)
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
     status: 202,
@@ -299,33 +333,11 @@ export class KnowledgeBasesController {
     status: 413,
     description: 'File exceeds the 25 MB upload limit',
   })
-  /* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: UPLOADS_DIR,
-        filename: (_req, file, cb) => {
-          const randomName = randomUUID();
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
-    }),
-  )
-  /* eslint-enable sonarjs/content-length */
+  @UseInterceptors(DocumentUploadInterceptor)
   async addDocument(
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
-    @UploadedFile()
-    file?: {
-      fieldname: string;
-      originalname: string;
-      encoding: string;
-      mimetype: string;
-      size: number;
-      buffer: Buffer;
-      path: string;
-    },
+    @UploadedFile() file?: UploadedDocument,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
     if (!file) {
       throw new MissingFileError();
@@ -336,25 +348,7 @@ export class KnowledgeBasesController {
       fileName: file.originalname,
     });
 
-    const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (
-      !isDocumentFile(detectedType) &&
-      !isPlainTextFile(detectedType) &&
-      !isAudioFile(detectedType)
-    ) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, and audio files (MP3, M4A, WAV, WebM).`,
-      );
-    }
-
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
+    const canonicalMimeType = await this.resolveDocumentMimeType(file);
 
     try {
       const fileData = await fs.promises.readFile(file.path);
@@ -375,6 +369,33 @@ export class KnowledgeBasesController {
     }
   }
 
+  private async resolveDocumentMimeType(
+    file: UploadedDocument,
+  ): Promise<string> {
+    const detectedType = detectFileType(file.mimetype, file.originalname);
+    if (
+      !isDocumentFile(detectedType) &&
+      !isPlainTextFile(detectedType) &&
+      !isAudioFile(detectedType)
+    ) {
+      await this.cleanupTempFile(file.path);
+      throw new BadRequestException(
+        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, and audio files (MP3, M4A, WAV, WebM).`,
+      );
+    }
+
+    const canonicalMimeType = getCanonicalMimeType(detectedType);
+    if (!canonicalMimeType) {
+      await this.cleanupTempFile(file.path);
+      throw new BadRequestException(
+        `Unable to determine MIME type for detected file type: ${detectedType}`,
+      );
+    }
+
+    return canonicalMimeType;
+  }
+
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Post(':id/urls')
   @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
   @ApiParam({
@@ -415,6 +436,7 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
+  @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
   @Delete(':id/documents/:documentId')
   @ApiOperation({ summary: 'Remove a document from a knowledge base' })
   @ApiParam({

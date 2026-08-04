@@ -50,8 +50,8 @@ import { BulkAddTeamMembersDto } from './dtos/bulk-add-team-members.dto';
 import { ListTeamMembersQueryDto } from './dtos/list-team-members-query.dto';
 import { TeamDtoMapper } from './mappers/team-dto.mapper';
 import { TeamMemberDtoMapper } from './mappers/team-member-dto.mapper';
-import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 @ApiTags('teams')
 @Controller('teams')
@@ -82,7 +82,7 @@ export class TeamsController {
     private readonly teamMemberDtoMapper: TeamMemberDtoMapper,
   ) {}
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Get()
   @ApiOperation({
     summary: 'List all teams for the current organization',
@@ -139,7 +139,7 @@ export class TeamsController {
     return this.teamDtoMapper.toDtoList(teams);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Get(':id')
   @ApiOperation({
     summary: 'Get a team by ID',
@@ -179,7 +179,7 @@ export class TeamsController {
     return this.teamDtoMapper.toDto(response);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Post()
   @ApiOperation({
     summary: 'Create a new team for the current organization',
@@ -223,7 +223,7 @@ export class TeamsController {
     return this.teamDtoMapper.toDto(team);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Patch(':id')
   @ApiOperation({
     summary: 'Update a team in the current organization',
@@ -274,7 +274,7 @@ export class TeamsController {
     return this.teamDtoMapper.toDto(team);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
@@ -309,7 +309,7 @@ export class TeamsController {
     this.logger.log(`Successfully deleted team with id: ${id}`);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.MANAGE_TEAMS)
   @Get(':id/members')
   @ApiOperation({
     summary: 'List members of a team',
@@ -359,7 +359,7 @@ export class TeamsController {
     };
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
   @Post(':id/members')
   @ApiOperation({
     summary: 'Add a user to a team',
@@ -409,7 +409,7 @@ export class TeamsController {
     return this.teamMemberDtoMapper.toDto(teamMember);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
   @Post(':id/members/bulk')
   @ApiOperation({
     summary: 'Add multiple users to a team at once',
@@ -445,7 +445,7 @@ export class TeamsController {
     return this.teamMemberDtoMapper.toDtoList(teamMembers);
   }
 
-  @Roles(UserRole.ADMIN)
+  @RequirePermission(Permission.ASSIGN_USERS_TO_TEAMS)
   @Delete(':id/members/:userId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
