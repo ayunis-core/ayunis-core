@@ -5,6 +5,7 @@ import { JwtAuthGuard } from './authentication/application/guards/jwt-auth.guard
 import { IpAllowlistGuard } from './ip-allowlist/application/guards/ip-allowlist.guard';
 import { EmailConfirmGuard } from './authorization/application/guards/email-confirm.guard';
 import { RolesGuard } from './authorization/application/guards/roles.guard';
+import { PermissionsGuard } from './authorization/application/guards/permissions.guard';
 import { SystemRolesGuard } from './authorization/application/guards/system-roles.guard';
 import { SubscriptionGuard } from './authorization/application/guards/subscription.guard';
 import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
@@ -50,6 +51,7 @@ describe('IamModule global guard order', () => {
       IpAllowlistGuard,
       EmailConfirmGuard,
       RolesGuard,
+      PermissionsGuard,
       SystemRolesGuard,
       AddonGuard,
       SubscriptionGuard,

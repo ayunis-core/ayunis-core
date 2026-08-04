@@ -5,14 +5,18 @@ import { CreateOrgUseCase } from './create-org.use-case';
 import { CreateOrgCommand } from './create-org.command';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgCreationFailedError } from '../../orgs.errors';
+import { OrgCreationFailedError, UnexpectedOrgError } from '../../orgs.errors';
 import { OrgCreatedEvent } from '../../events/org-created.event';
+import { SeedDefaultRolePermissionsUseCase } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 import type { UUID } from 'crypto';
 
 describe('CreateOrgUseCase', () => {
   let useCase: CreateOrgUseCase;
   let mockOrgsRepository: Partial<OrgsRepository>;
   let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emitAsync'>>;
+  let seedDefaultRolePermissionsUseCase: jest.Mocked<
+    Pick<SeedDefaultRolePermissionsUseCase, 'execute'>
+  >;
 
   beforeAll(async () => {
     mockOrgsRepository = {
@@ -27,11 +31,18 @@ describe('CreateOrgUseCase', () => {
           provide: EventEmitter2,
           useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
         },
+        {
+          provide: SeedDefaultRolePermissionsUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
     useCase = module.get<CreateOrgUseCase>(CreateOrgUseCase);
     eventEmitter = module.get(EventEmitter2);
+    seedDefaultRolePermissionsUseCase = module.get(
+      SeedDefaultRolePermissionsUseCase,
+    );
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -83,6 +94,38 @@ describe('CreateOrgUseCase', () => {
     expect(orgCreatedCall?.[1]).not.toHaveProperty('user');
   });
 
+  it('should seed default role permissions for the created org', async () => {
+    const command = new CreateOrgCommand('Test Organization');
+    const mockOrg = new Org({
+      id: 'org-id' as UUID,
+      name: 'Test Organization',
+    });
+
+    jest.spyOn(mockOrgsRepository, 'create').mockResolvedValue(mockOrg);
+
+    await useCase.execute(command);
+
+    expect(seedDefaultRolePermissionsUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: 'org-id' }),
+    );
+  });
+
+  it('should fail org creation when seeding default permissions fails', async () => {
+    const command = new CreateOrgCommand('Test Organization');
+    const mockOrg = new Org({
+      id: 'org-id' as UUID,
+      name: 'Test Organization',
+    });
+
+    jest.spyOn(mockOrgsRepository, 'create').mockResolvedValue(mockOrg);
+    seedDefaultRolePermissionsUseCase.execute.mockRejectedValueOnce(
+      new Error('permission store unavailable'),
+    );
+
+    await expect(useCase.execute(command)).rejects.toThrow(UnexpectedOrgError);
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+  });
+
   it('should throw OrgCreationFailedError for empty name', async () => {
     const command = new CreateOrgCommand('');
 
@@ -100,16 +143,14 @@ describe('CreateOrgUseCase', () => {
     );
   });
 
-  it('should throw OrgCreationFailedError for unexpected errors', async () => {
+  it('should wrap unexpected errors in UnexpectedOrgError', async () => {
     const command = new CreateOrgCommand('Test Organization');
 
     jest
       .spyOn(mockOrgsRepository, 'create')
       .mockRejectedValue(new Error('Database error'));
 
-    await expect(useCase.execute(command)).rejects.toThrow(
-      OrgCreationFailedError,
-    );
+    await expect(useCase.execute(command)).rejects.toThrow(UnexpectedOrgError);
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 });

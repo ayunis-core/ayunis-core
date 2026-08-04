@@ -3,7 +3,12 @@ import type { UUID } from 'crypto';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { RolePermissionRecord } from 'src/iam/permissions/infrastructure/persistence/local/schema/role-permission.record';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import {
+  CONFIGURABLE_ROLES,
+  DEFAULT_ROLE_PERMISSIONS,
+} from 'src/iam/permissions/domain/default-role-permissions.constants';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { OrgSeeder } from './base-seeder';
 import { log } from 'src/db/scripts/utils/seed-log';
@@ -32,6 +37,25 @@ export class OrgUserSeeder extends OrgSeeder {
 
     await this.seedPermittedModels(ctx, orgRecord.id, ctx.getModels());
     await this.seedMembers(ctx, orgRecord.id, org.members);
+    await this.seedRolePermissions(orgRecord.id);
+  }
+
+  // The seed writes orgs straight to the repo, bypassing the org.created
+  // listener that normally plants an org's default grants — so mirror
+  // DEFAULT_ROLE_PERMISSIONS here, else seeded MANAGER/USER accounts start with
+  // no permissions.
+  private async seedRolePermissions(orgId: UUID): Promise<void> {
+    const repo = this.repo(RolePermissionRecord);
+    for (const role of CONFIGURABLE_ROLES) {
+      for (const permission of DEFAULT_ROLE_PERMISSIONS[role]) {
+        await this.findOrCreate(
+          repo,
+          { orgId, role, permission },
+          () => ({ id: randomUUID(), orgId, role, permission }),
+          { entity: 'Role permission', name: `${role}:${permission}` },
+        );
+      }
+    }
   }
 
   private async seedOrg(name: string): Promise<OrgRecord> {
