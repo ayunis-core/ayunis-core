@@ -5,6 +5,7 @@ import {
 } from '@modelcontextprotocol/client';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
 import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
+import { McpConnectionTimeoutError } from '../../application/mcp.errors';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
@@ -254,6 +255,94 @@ describe('McpSdkClientAdapter', () => {
         { name: 'summarize', arguments: { topic: 'roads' } },
         REQUEST_TIMEOUT,
       );
+    });
+  });
+
+  describe('timeout and abort classification', () => {
+    // The DOMException Node mints for AbortController.abort() — name
+    // 'AbortError', numeric code 20 — the exact shape of AppSignal
+    // incident "20: This operation was aborted".
+    const buildDomAbortError = () =>
+      new DOMException('This operation was aborted', 'AbortError');
+
+    const buildSdkTimeoutError = () =>
+      Object.assign(new Error('Request timed out'), {
+        name: 'SdkError',
+        code: 'REQUEST_TIMEOUT',
+      });
+
+    it('maps a raw AbortError from an operation to McpConnectionTimeoutError', async () => {
+      clientMock.listTools.mockRejectedValue(buildDomAbortError());
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
+
+    it('maps an SDK request timeout during connect to McpConnectionTimeoutError', async () => {
+      clientMock.connect.mockRejectedValue(buildSdkTimeoutError());
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
+
+    it('maps an SDK request timeout from an operation to McpConnectionTimeoutError', async () => {
+      clientMock.listPrompts.mockRejectedValue(buildSdkTimeoutError());
+
+      await expect(adapter.listPrompts(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
+
+    it('maps a version-negotiation failure whose cause is an abort', async () => {
+      const negotiationError = Object.assign(
+        new Error('Version negotiation probe failed'),
+        {
+          name: 'SdkError',
+          code: 'ERA_NEGOTIATION_FAILED',
+          data: { cause: buildDomAbortError() },
+        },
+      );
+      clientMock.connect.mockRejectedValue(negotiationError);
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
+
+    it('produces a user-presentable message naming the 30s budget', async () => {
+      clientMock.listTools.mockRejectedValue(buildDomAbortError());
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        /did not respond within 30s/,
+      );
+    });
+
+    it('keeps the original error on the non-serialized cause', async () => {
+      const abortError = buildDomAbortError();
+      clientMock.listTools.mockRejectedValue(abortError);
+
+      const mapped = await adapter.listTools(config).catch((e: unknown) => e);
+
+      expect((mapped as Error).cause).toBe(abortError);
+    });
+
+    it('maps timeouts on callTool as well', async () => {
+      clientMock.callTool.mockRejectedValue(buildDomAbortError());
+
+      await expect(
+        adapter.callTool(config, { toolName: 'search', parameters: {} }),
+      ).rejects.toThrow(McpConnectionTimeoutError);
+    });
+
+    it('passes non-timeout errors through unchanged', async () => {
+      const authError = Object.assign(new Error('Unauthorized'), {
+        code: 401,
+      });
+      clientMock.listTools.mockRejectedValue(authError);
+
+      await expect(adapter.listTools(config)).rejects.toBe(authError);
     });
   });
 

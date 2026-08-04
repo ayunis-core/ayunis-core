@@ -17,6 +17,43 @@ import { McpIntegrationsRepositoryPort } from '../../application/ports/mcp-integ
 import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
 import type { UUID } from 'crypto';
 import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
+import { McpConnectionTimeoutError } from '../../application/mcp.errors';
+
+/**
+ * Node's AbortController.abort() mints a DOMException with name 'AbortError'
+ * and numeric code 20 (DOMException.ABORT_ERR); the MCP SDK signals its own
+ * request timeouts as SdkError with string code 'REQUEST_TIMEOUT', and wraps
+ * version-negotiation probe failures with the original abort on `data.cause`.
+ * The protocol-level timeout answer is JSON-RPC error -32001.
+ */
+const SDK_TIMEOUT_CODES: readonly unknown[] = [20, 'REQUEST_TIMEOUT', -32001];
+const MAX_CAUSE_DEPTH = 4;
+
+function isTimeoutOrAbortError(error: unknown, depth = 0): boolean {
+  if (depth >= MAX_CAUSE_DEPTH || typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const candidate = error as {
+    name?: unknown;
+    code?: unknown;
+    cause?: unknown;
+    data?: unknown;
+  };
+  if (
+    candidate.name === 'AbortError' ||
+    SDK_TIMEOUT_CODES.includes(candidate.code)
+  ) {
+    return true;
+  }
+  const dataCause =
+    typeof candidate.data === 'object' && candidate.data !== null
+      ? (candidate.data as { cause?: unknown }).cause
+      : undefined;
+  return (
+    isTimeoutOrAbortError(candidate.cause, depth + 1) ||
+    isTimeoutOrAbortError(dataCause, depth + 1)
+  );
+}
 
 /**
  * Adapter that wraps @modelcontextprotocol/sdk to provide MCP client functionality.
@@ -46,30 +83,22 @@ export class McpSdkClientAdapter extends McpClientPort {
    * List all tools available on the MCP server
    */
   async listTools(config: McpConnectionConfig): Promise<McpTool[]> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.listTools(undefined, this.requestOptions);
 
       return result.tools;
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
    * List all resources available on the MCP server
    */
   async listResources(config: McpConnectionConfig): Promise<McpResource[]> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.listResources(undefined, this.requestOptions);
 
       return result.resources;
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
@@ -78,9 +107,7 @@ export class McpSdkClientAdapter extends McpClientPort {
   async listResourceTemplates(
     config: McpConnectionConfig,
   ): Promise<McpResource[]> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.listResourceTemplates(
         undefined,
         this.requestOptions,
@@ -92,24 +119,18 @@ export class McpSdkClientAdapter extends McpClientPort {
         description: resourceTemplate.description,
         mimeType: resourceTemplate.mimeType,
       }));
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
    * List all prompt templates available on the MCP server
    */
   async listPrompts(config: McpConnectionConfig): Promise<McpPrompt[]> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.listPrompts(undefined, this.requestOptions);
 
       return result.prompts;
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
@@ -119,9 +140,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     call: McpToolCall,
   ): Promise<McpToolResult> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.callTool(
         {
           name: call.toolName,
@@ -134,9 +153,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         content: result.content,
         isError: Boolean(result.isError),
       };
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
@@ -147,9 +164,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     uri: string,
     parameters?: Record<string, unknown>,
   ): Promise<{ content: unknown; mimeType: string }> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const request = parameters ? { uri, arguments: parameters } : { uri };
 
       const result = await client.readResource(request, this.requestOptions);
@@ -163,9 +178,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         content: content,
         mimeType: firstContent.mimeType || 'text/plain',
       };
-    } finally {
-      await this.closeQuietly(client);
-    }
+    });
   }
 
   /**
@@ -176,9 +189,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     name: string,
     args: Record<string, string>,
   ): Promise<{ messages: unknown[] }> {
-    const client = await this.createClient(config);
-
-    try {
+    return this.withClient(config, async (client) => {
       const result = await client.getPrompt(
         {
           name,
@@ -190,9 +201,49 @@ export class McpSdkClientAdapter extends McpClientPort {
       return {
         messages: result.messages,
       };
+    });
+  }
+
+  /**
+   * Runs one operation on a fresh client and classifies its failure. SDK
+   * timeouts and transport aborts must never escape raw (AYC-651): they
+   * surface as McpConnectionTimeoutError so validation endpoints can show a
+   * clean user message and capability discovery can skip the integration.
+   * Everything else (auth, protocol, HTTP errors) passes through unchanged
+   * for the callers' own mapping.
+   */
+  private async withClient<T>(
+    config: McpConnectionConfig,
+    operation: (client: Client) => Promise<T>,
+  ): Promise<T> {
+    let client: Client;
+    try {
+      client = await this.createClient(config);
+    } catch (error) {
+      throw this.toOperationError(error, config);
+    }
+
+    try {
+      return await operation(client);
+    } catch (error) {
+      throw this.toOperationError(error, config);
     } finally {
       await this.closeQuietly(client);
     }
+  }
+
+  private toOperationError(
+    error: unknown,
+    config: McpConnectionConfig,
+  ): unknown {
+    if (isTimeoutOrAbortError(error)) {
+      return new McpConnectionTimeoutError(
+        config.serverUrl,
+        this.requestOptions.timeout,
+        error,
+      );
+    }
+    return error;
   }
 
   /**

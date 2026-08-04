@@ -4,6 +4,7 @@ import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.comman
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import type { McpClientService } from '../../services/mcp-client.service';
 import type { ContextService } from 'src/common/context/services/context.service';
+import { McpConnectionTimeoutError } from '../../mcp.errors';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
@@ -94,5 +95,20 @@ describe('ValidateMcpIntegrationUseCase', () => {
       integration,
     );
     expect(mcpClientService.listPrompts).toHaveBeenCalledWith(integration);
+  });
+
+  // A hanging MCP server is a validation outcome, not a server defect of
+  // ours: the endpoint must answer `isValid: false` with the classified
+  // timeout message instead of raising a 500 (AYC-651).
+  it('reports a server timeout as a validation failure with a user-presentable message', async () => {
+    const command = new ValidateMcpIntegrationCommand(integrationId);
+    mcpClientService.listTools.mockRejectedValue(
+      new McpConnectionTimeoutError('https://mcp.ayunis.de/locaboo', 30000),
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.isValid).toBe(false);
+    expect(result.errorMessage).toMatch(/did not respond within 30s/);
   });
 });

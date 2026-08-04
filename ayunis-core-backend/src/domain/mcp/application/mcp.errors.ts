@@ -134,26 +134,37 @@ export class McpIntegrationDisabledError extends McpError {
   }
 }
 
+function redactCredentials(serverUrl: string): string {
+  try {
+    const url = new URL(serverUrl);
+    if (url.username || url.password) {
+      url.username = '***';
+      url.password = '';
+    }
+    return url.toString();
+  } catch {
+    return serverUrl;
+  }
+}
+
+/**
+ * The message is user-visible: validation endpoints copy it verbatim into
+ * `valid: false` responses, so it must explain the timeout without leaking
+ * SDK internals. The original SDK error travels on the non-serialized
+ * `cause` only.
+ */
 export class McpConnectionTimeoutError extends McpError {
-  constructor(
-    integrationId: string,
-    integrationName: string,
-    serverUrl: string,
-    metadata?: ErrorMetadata,
-  ) {
-    // Redact credentials from URL for logging.
-    // Single bounded quantifier with no nesting/alternation — linear, not
-    // backtracking-prone; the slow-regex heuristic is a false positive here.
-    // eslint-disable-next-line sonarjs/slow-regex
-    const redactedUrl = serverUrl.replace(/\/\/[^@]+@/, '//***@');
+  constructor(serverUrl: string, timeoutMs: number, cause?: unknown) {
     super(
-      `Connection to MCP integration '${integrationName}' (ID: ${integrationId}) timed out. ` +
-        `Please verify the server at ${redactedUrl} is running and accessible. ` +
-        `Check network connectivity and server status.`,
+      `The MCP server at ${redactCredentials(serverUrl)} did not respond ` +
+        `within ${Math.round(timeoutMs / 1000)}s. Please verify the server ` +
+        `is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_TIMEOUT,
       504,
-      metadata,
     );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
   }
 }
 
