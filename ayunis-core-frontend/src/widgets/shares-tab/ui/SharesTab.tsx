@@ -8,6 +8,7 @@ import type {
 import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useCreateShare } from '../api/useCreateShare';
 import { useDeleteShare } from '../api/useDeleteShare';
+import { useMyPermissions } from '@/features/permissions';
 import {
   Item,
   ItemContent,
@@ -40,6 +41,12 @@ export default function SharesTab({
   const { confirm } = useConfirmation();
   const { createShare, isCreating } = useCreateShare(entityType, entityId);
   const { deleteShare, isDeleting } = useDeleteShare(entityType, entityId);
+  const { can } = useMyPermissions();
+  // Members without the entity's share permission cannot toggle shares (the
+  // backend 403s the create anyway); disable the switches so it's clear.
+  const canShare = can(
+    entityType === 'skill' ? 'share_skills' : 'share_knowledge_bases',
+  );
 
   // Check if organization share exists
   const organizationShare = shares.find(
@@ -125,7 +132,7 @@ export default function SharesTab({
           <Switch
             checked={!!organizationShare}
             onCheckedChange={handleOrgToggleChange}
-            disabled={isCreating || isDeleting}
+            disabled={isCreating || isDeleting || !canShare}
           />
         </ItemActions>
       </Item>
@@ -149,7 +156,7 @@ export default function SharesTab({
                     onCheckedChange={(checked) =>
                       handleTeamToggleChange(team.id, team.name, checked)
                     }
-                    disabled={isCreating || isDeleting}
+                    disabled={isCreating || isDeleting || !canShare}
                   />
                 </ItemActions>
               </Item>

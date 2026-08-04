@@ -7,6 +7,7 @@ import type {
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SharesTab } from '@/widgets/shares-tab';
+import { useMyPermissions } from '@/features/permissions';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import {
   Tabs,
@@ -79,17 +80,19 @@ export function KnowledgeBasePage({
   }
 
   const isReadOnly = knowledgeBase.isShared;
+  const { can } = useMyPermissions();
+  const canManageKb = can('manage_knowledge_bases');
 
   const configContent = (
     <div className="grid gap-4">
       <KnowledgeBasePropertiesCard
         knowledgeBase={knowledgeBase}
-        disabled={isReadOnly}
+        disabled={isReadOnly || !canManageKb}
       />
       <OnboardingTourTarget name={TOUR_TARGET.addDocuments}>
         <KnowledgeBaseDocumentsCard
           knowledgeBaseId={knowledgeBase.id}
-          disabled={isReadOnly}
+          disabled={isReadOnly || !canManageKb}
         />
       </OnboardingTourTarget>
     </div>
@@ -110,7 +113,7 @@ export function KnowledgeBasePage({
               ) : undefined
             }
             action={
-              !isReadOnly ? (
+              !isReadOnly && canManageKb ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
