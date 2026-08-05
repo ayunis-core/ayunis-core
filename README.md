@@ -230,6 +230,34 @@ two sources:
 The production setup above (copying `.env` files for `docker compose`) is
 unaffected.
 
+#### Coding-agent quick reference
+
+Use `./dev` for the whole local stack. It only stops or restarts native
+processes recorded for this checkout and slot; if another process owns a slot
+port, it exits with an actionable error instead of terminating that process.
+
+```bash
+# Start or converge a slot to a healthy stack. The slot is remembered.
+./dev up --slot 2
+
+# Check process/session state and backend/frontend HTTP readiness.
+./dev status --slot 2
+
+# Inspect failures without restarting anything.
+./dev logs --slot 2 backend
+./dev logs --slot 2 frontend
+./dev logs --slot 2 infra
+
+# Recover an unhealthy managed backend or frontend session.
+./dev up --slot 2
+```
+
+`./dev up` is idempotent: it verifies workspace dependencies with a frozen
+lockfile, preserves an already-healthy stack, and replaces stale slot-owned
+backend or frontend sessions before waiting for both services to become ready.
+Do not kill a process reported as an unmanaged port owner; stop it from its
+own checkout or choose another slot.
+
 ### Git Hooks (Husky)
 
 This project uses [Husky](https://typicode.github.io/husky/) to manage Git hooks for code quality checks.

@@ -75,8 +75,9 @@ FRONTEND_URL="http://localhost:$FRONTEND_PORT"
 
 PROJECT_NAME="ayunis-dev-${SLOT}"
 STATE_DIR="$REPO_DIR/.dev/slot-${SLOT}"
-BACKEND_SESSION="${PROJECT_NAME}-backend"
-FRONTEND_SESSION="${PROJECT_NAME}-frontend"
+CHECKOUT_ID="$(printf '%s' "$REPO_DIR" | cksum | cut -d' ' -f1)"
+BACKEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-backend"
+FRONTEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-frontend"
 
 # ── Docker compose wrapper ─────────────────────────────────────────────────
 
@@ -201,6 +202,18 @@ mkdir -p "$STATE_DIR"
 cmd_up() {
   info "Starting slot $SLOT  (port offset +$OFFSET)"
 
+  _sync_dependencies
+  _export_infra_env
+
+  if _infra_healthy \
+    && _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT" \
+    && _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
+    info "Backend already running (PID $(_display_pid "$STATE_DIR/backend.pid"))"
+    info "Frontend already running (PID $(_display_pid "$STATE_DIR/frontend.pid"))"
+    _print_ready_summary
+    return
+  fi
+
   _infisical_preflight
 
   local env_dev="$REPO_DIR/ayunis-core-backend/.env.dev"
@@ -238,12 +251,16 @@ cmd_up() {
   # code-execution fails hard at startup when the sandbox image is missing
   # (it pulls but never builds), so build it before compose waits on health.
   # The image is host-global and shared across dev slots.
-  info "Building python-sandbox image …"
-  docker build -t python-sandbox:latest "$REPO_DIR/ayunis-core-code-execution/sandbox" 2>&1 | tail -2
+  if _infra_healthy; then
+    info "Docker infrastructure already healthy"
+  else
+    info "Building python-sandbox image …"
+    docker build -t python-sandbox:latest "$REPO_DIR/ayunis-core-code-execution/sandbox" 2>&1 | tail -2
 
-  # -- 1. Docker infrastructure -------------------------------------------
-  info "Starting Docker infrastructure …"
-  dc up -d --build --wait 2>&1 | tail -5
+    # -- 1. Docker infrastructure -----------------------------------------
+    info "Starting Docker infrastructure …"
+    dc up -d --build --wait 2>&1 | tail -5
+  fi
 
   # -- 2. Generate .env.dev for backend ------------------------------------
   # Slot selection only: the backend derives ports/URLs from DEV_PORT_OFFSET
@@ -290,12 +307,13 @@ EOF
 
   # -- 4. Backend (native) ------------------------------------------------
   if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
-    info "Backend already running (PID $(cat "$STATE_DIR/backend.pid"))"
+    info "Backend already running (PID $(_display_pid "$STATE_DIR/backend.pid"))"
   else
     _refuse_unmanaged_listener "$STATE_DIR/backend.pid" "$BACKEND_PORT" "Backend"
     if _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
-      warn "Restarting unhealthy Backend (PID $(cat "$STATE_DIR/backend.pid")) …"
-      _kill_pid "$STATE_DIR/backend.pid" "Backend" "$BACKEND_PORT" "$BACKEND_SESSION"
+      warn "Restarting unhealthy Backend (PID $(_display_pid "$STATE_DIR/backend.pid")) …"
+      _kill_pid "$STATE_DIR/backend.pid" "Backend" "$BACKEND_SESSION"
+      _refuse_unmanaged_listener "$STATE_DIR/backend.pid" "$BACKEND_PORT" "Backend"
     fi
     info "Starting backend on port $BACKEND_PORT …"
     : > "$STATE_DIR/backend.log"
@@ -308,12 +326,13 @@ EOF
 
   # -- 5. Frontend (native) -----------------------------------------------
   if _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
-    info "Frontend already running (PID $(cat "$STATE_DIR/frontend.pid"))"
+    info "Frontend already running (PID $(_display_pid "$STATE_DIR/frontend.pid"))"
   else
     _refuse_unmanaged_listener "$STATE_DIR/frontend.pid" "$FRONTEND_PORT" "Frontend"
     if _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
-      warn "Restarting unhealthy Frontend (PID $(cat "$STATE_DIR/frontend.pid")) …"
-      _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT" "$FRONTEND_SESSION"
+      warn "Restarting unhealthy Frontend (PID $(_display_pid "$STATE_DIR/frontend.pid")) …"
+      _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_SESSION"
+      _refuse_unmanaged_listener "$STATE_DIR/frontend.pid" "$FRONTEND_PORT" "Frontend"
     fi
     info "Starting frontend on port $FRONTEND_PORT …"
     : > "$STATE_DIR/frontend.log"
@@ -324,34 +343,16 @@ EOF
       "cd '$REPO_DIR/ayunis-core-frontend' && export VITE_API_BASE_URL='http://localhost:$BACKEND_PORT/api' && exec ${FRONTEND_SECRETS_PREFIX}pnpm exec vite --port '$FRONTEND_PORT'"
   fi
 
-  # -- 6. Wait for backend health -----------------------------------------
-  info "Waiting for backend to become healthy …"
-  local attempts=0
-  local max_attempts=90
-  while ! _url_healthy "$BACKEND_HEALTH_URL"; do
-    attempts=$((attempts + 1))
-    if [ $attempts -ge $max_attempts ]; then
-      echo ""
-      die "Backend did not become healthy after $((max_attempts * 2))s. Check logs:  ./dev logs --slot $SLOT backend"
-    fi
-    printf "."
-    sleep 2
-  done
-  echo ""
+  # -- 6. Wait for native service health ---------------------------------
+  _wait_for_service \
+    "Backend" "$STATE_DIR/backend.pid" "$BACKEND_SESSION" \
+    "$BACKEND_HEALTH_URL" "$BACKEND_PORT" "backend"
+  _wait_for_service \
+    "Frontend" "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" \
+    "$FRONTEND_URL" "$FRONTEND_PORT" "frontend"
 
   # -- 7. Summary ----------------------------------------------------------
-  echo ""
-  echo "✅ Slot $SLOT is ready"
-  echo ""
-  echo "  Backend:      http://localhost:$BACKEND_PORT"
-  echo "  Frontend:     http://localhost:$FRONTEND_PORT"
-  echo "  API docs:     http://localhost:$BACKEND_PORT/api/docs"
-  echo "  Postgres:     localhost:$POSTGRES_HOST_PORT"
-  echo "  MinIO:        localhost:$MINIO_HOST_PORT  (console: $MINIO_CONSOLE_HOST_PORT)"
-  echo "  Mailcatcher:  smtp :$MAILCATCHER_SMTP_HOST_PORT  web :$MAILCATCHER_WEB_HOST_PORT"
-  echo "  Code exec:    localhost:$CODE_EXEC_HOST_PORT"
-  echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
-  echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
+  _print_ready_summary
   echo ""
   if $INFISICAL_OK; then
     echo "  Secrets:      Infisical (dev, /backend + /frontend)"
@@ -367,9 +368,8 @@ cmd_down() {
   info "Stopping slot $SLOT …"
   _export_infra_env
 
-  # Stop native processes (pass ports to kill orphaned grandchild processes)
-  _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_PORT" "$FRONTEND_SESSION"
-  _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_PORT" "$BACKEND_SESSION"
+  _kill_pid "$STATE_DIR/frontend.pid" "Frontend" "$FRONTEND_SESSION"
+  _kill_pid "$STATE_DIR/backend.pid"  "Backend"  "$BACKEND_SESSION"
 
   # Stop Docker infrastructure
   dc down
@@ -394,18 +394,22 @@ cmd_status() {
 
   # Backend
   if _service_healthy "$STATE_DIR/backend.pid" "$BACKEND_SESSION" "$BACKEND_HEALTH_URL" "$BACKEND_PORT"; then
-    echo "  Backend:   running  PID $(cat "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
+    echo "  Backend:   running  PID $(_display_pid "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
   elif _pid_alive "$STATE_DIR/backend.pid" "$BACKEND_SESSION"; then
-    echo "  Backend:   unhealthy  PID $(cat "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
+    echo "  Backend:   unhealthy  PID $(_display_pid "$STATE_DIR/backend.pid")  http://localhost:$BACKEND_PORT"
+  elif [ -n "$(_listener_pids "$BACKEND_PORT")" ]; then
+    echo "  Backend:   stopped  port $BACKEND_PORT occupied by unmanaged PID $(_listener_pids "$BACKEND_PORT")"
   else
     echo "  Backend:   stopped"
   fi
 
   # Frontend
   if _service_healthy "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION" "$FRONTEND_URL" "$FRONTEND_PORT"; then
-    echo "  Frontend:  running  PID $(cat "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
+    echo "  Frontend:  running  PID $(_display_pid "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
   elif _pid_alive "$STATE_DIR/frontend.pid" "$FRONTEND_SESSION"; then
-    echo "  Frontend:  unhealthy  PID $(cat "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
+    echo "  Frontend:  unhealthy  PID $(_display_pid "$STATE_DIR/frontend.pid")  http://localhost:$FRONTEND_PORT"
+  elif [ -n "$(_listener_pids "$FRONTEND_PORT")" ]; then
+    echo "  Frontend:  stopped  port $FRONTEND_PORT occupied by unmanaged PID $(_listener_pids "$FRONTEND_PORT")"
   else
     echo "  Frontend:  stopped"
   fi
@@ -455,17 +459,100 @@ _read_env_var() {
   grep -E "^${key}=" "$file" 2>/dev/null | head -n 1 | cut -d= -f2- || true
 }
 
+_read_pid() {
+  local pidfile="$1"
+  local pid=""
+  [ -f "$pidfile" ] && pid="$(cat "$pidfile" 2>/dev/null || true)"
+  if [[ "$pid" =~ ^[0-9]+$ ]]; then
+    printf '%s' "$pid"
+  fi
+  return 0
+}
+
+_display_pid() {
+  local pid
+  pid="$(_read_pid "$1")"
+  printf '%s' "${pid:-unknown}"
+}
+
+_pid_process_alive() {
+  local pid
+  pid="$(_read_pid "$1")"
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
 _pid_alive() {
   local pidfile="$1"
   local session="${2:-}"
-  if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
-    return 0
-  fi
+  _pid_process_alive "$pidfile" && return 0
   [ -n "$session" ] && _tmux_session_alive "$session"
 }
 
 _url_healthy() {
   curl --fail --silent --max-time 2 "$1" > /dev/null 2>&1
+}
+
+_sync_dependencies() {
+  info "Checking workspace dependencies …"
+  if ! (cd "$REPO_DIR" && pnpm install --frozen-lockfile --prefer-offline); then
+    die "Dependency sync failed. Run 'pnpm install --frozen-lockfile' in $REPO_DIR and retry."
+  fi
+}
+
+_infra_healthy() {
+  local expected_services service status_line state health
+  expected_services="$(dc config --services 2>/dev/null)" || return 1
+  [ -n "$expected_services" ] || return 1
+
+  local service_status
+  service_status="$(dc ps --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null)" || return 1
+  [ -n "$service_status" ] || return 1
+
+  while IFS= read -r service; do
+    status_line="$(printf '%s\n' "$service_status" | grep -E "^${service}\\|" | head -n 1 || true)"
+    [ -n "$status_line" ] || return 1
+    IFS='|' read -r _ state health <<< "$status_line"
+    [ "$state" = "running" ] || return 1
+    [[ -z "$health" || "$health" = "healthy" ]] || return 1
+  done <<< "$expected_services"
+}
+
+_wait_for_service() {
+  local label="$1"
+  local pidfile="$2"
+  local session="$3"
+  local url="$4"
+  local port="$5"
+  local log_target="$6"
+  local attempts=0
+  local max_attempts=90
+
+  info "Waiting for $label to become healthy …"
+  while ! _service_healthy "$pidfile" "$session" "$url" "$port"; do
+    attempts=$((attempts + 1))
+    if [ "$attempts" -ge "$max_attempts" ]; then
+      echo ""
+      die "$label did not become healthy after $((max_attempts * 2))s. Check logs:  ./dev logs --slot $SLOT $log_target"
+    fi
+    printf "."
+    sleep 2
+  done
+  echo ""
+}
+
+_print_ready_summary() {
+  echo ""
+  echo "✅ Slot $SLOT is ready"
+  echo ""
+  echo "  Backend:      http://localhost:$BACKEND_PORT"
+  echo "  Frontend:     http://localhost:$FRONTEND_PORT"
+  echo "  API docs:     http://localhost:$BACKEND_PORT/api/docs"
+  echo "  Postgres:     localhost:$POSTGRES_HOST_PORT"
+  echo "  MinIO:        localhost:$MINIO_HOST_PORT  (console: $MINIO_CONSOLE_HOST_PORT)"
+  echo "  Mailcatcher:  smtp :$MAILCATCHER_SMTP_HOST_PORT  web :$MAILCATCHER_WEB_HOST_PORT"
+  echo "  Code exec:    localhost:$CODE_EXEC_HOST_PORT"
+  echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
+  echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
 }
 
 _process_belongs_to_tree() {
@@ -486,8 +573,8 @@ _port_owned_by_pidfile() {
   local pidfile="$1"
   local port="$2"
   local root_pid listener_pid
-  [ -f "$pidfile" ] || return 1
-  root_pid="$(cat "$pidfile")"
+  root_pid="$(_read_pid "$pidfile")"
+  [ -n "$root_pid" ] || return 1
 
   while IFS= read -r listener_pid; do
     _process_belongs_to_tree "$listener_pid" "$root_pid" && return 0
@@ -495,12 +582,16 @@ _port_owned_by_pidfile() {
   return 1
 }
 
+_listener_pids() {
+  lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | paste -sd, - || true
+}
+
 _refuse_unmanaged_listener() {
   local pidfile="$1"
   local port="$2"
   local label="$3"
   local listener_pids
-  listener_pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | paste -sd, - || true)"
+  listener_pids="$(_listener_pids "$port")"
   [ -z "$listener_pids" ] && return 0
   _port_owned_by_pidfile "$pidfile" "$port" && return 0
   die "$label port $port is occupied by PID $listener_pids not managed by this checkout. Stop it or use another slot."
@@ -516,49 +607,42 @@ _service_healthy() {
     && _url_healthy "$url"
 }
 
+_terminate_process_tree() {
+  local pid="$1"
+  kill -TERM -- -"$pid" 2>/dev/null || true
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill -TERM "$pid" 2>/dev/null || true
+  sleep 1
+  kill -9 -- -"$pid" 2>/dev/null || true
+  pkill -9 -P "$pid" 2>/dev/null || true
+  kill -9 "$pid" 2>/dev/null || true
+}
+
 _kill_pid() {
   local pidfile="$1"
   local label="${2:-process}"
-  local port="${3:-}"
-  local session="${4:-}"
-  if _pid_alive "$pidfile" "$session"; then
-    local pid
-    pid=$(cat "$pidfile")
-    info "Stopping $label (PID $pid) …"
-    # The PID is a subshell that is a process group leader.
-    # Kill the whole group, then fall back to pkill -P for any stragglers.
-    kill -TERM -- -"$pid" 2>/dev/null || true
-    pkill -TERM -P "$pid" 2>/dev/null || true
-    kill -TERM "$pid" 2>/dev/null || true
-    # Wait briefly, then force-kill stragglers
-    sleep 1
-    kill -9 -- -"$pid" 2>/dev/null || true
-    pkill -9 -P "$pid" 2>/dev/null || true
-    kill -9 "$pid" 2>/dev/null || true
-    rm -f "$pidfile"
-  fi
-  if [ -n "$session" ]; then
-    if command -v tmux >/dev/null 2>&1; then
-      tmux kill-session -t "$session" 2>/dev/null || true
-    fi
-  fi
-  # Safety net: kill any process still listening on the port.
-  # Handles orphaned grandchild processes (e.g., node spawned by npm).
-  if [ -n "$port" ]; then
-    _kill_port "$port" "$label"
-  fi
-}
+  local session="${3:-}"
+  local pid session_pid="" terminate_pid=""
+  pid="$(_read_pid "$pidfile")"
 
-_kill_port() {
-  local port="$1"
-  local label="${2:-process}"
-  local pid
-  pid=$(lsof -ti :"$port" 2>/dev/null || true)
-  if [ -n "$pid" ]; then
-    warn "Killing orphaned $label process on port $port (PID $pid)"
-    echo "$pid" | xargs kill -9 2>/dev/null || true
-    sleep 1
+  if [ -n "$session" ] && _tmux_session_alive "$session"; then
+    session_pid="$(tmux list-panes -t "$session" -F '#{pane_pid}' 2>/dev/null | head -n 1 || true)"
+    if [[ "$session_pid" =~ ^[0-9]+$ ]]; then
+      terminate_pid="$session_pid"
+    elif _pid_process_alive "$pidfile"; then
+      terminate_pid="$pid"
+    fi
+    info "Stopping $label (PID ${terminate_pid:-unknown}) …"
+    tmux kill-session -t "$session" 2>/dev/null || true
+  elif _pid_process_alive "$pidfile"; then
+    terminate_pid="$pid"
+    info "Stopping $label (PID $pid) …"
   fi
+
+  # tmux can exit before a watcher child; the pane's process group remains
+  # scoped to this checkout even after the session disappears.
+  [ -n "$terminate_pid" ] && _terminate_process_tree "$terminate_pid"
+  rm -f "$pidfile"
 }
 
 _show_log() {
