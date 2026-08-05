@@ -127,4 +127,59 @@ describe('PresidioAnonymizationProvider', () => {
       AnonymizationFailedError,
     );
   });
+
+  // The axios deadline (ETIMEDOUT with clarifyTimeoutError) must group
+  // under the stable provider taxonomy instead of a raw axios error, so
+  // anonymize outages get one incident with rate alerting (AYC-654).
+  it('classifies a client timeout under the provider timeout taxonomy', async () => {
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('timeout of 60000ms exceeded'), {
+        code: 'ETIMEDOUT',
+      }),
+    );
+
+    await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
+      statusCode: 504,
+    });
+  });
+
+  it('classifies a refused connection under the provider connection taxonomy', async () => {
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:8002'), {
+        code: 'ECONNREFUSED',
+      }),
+    );
+
+    await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE',
+    });
+  });
+
+  it('classifies an upstream 5xx under the provider server taxonomy', async () => {
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 503'), {
+        response: { status: 503 },
+      }),
+    );
+
+    await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
+      code: 'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE',
+    });
+  });
+
+  // A 422 means we built a bad request (e.g. over the service's text-length
+  // cap) — that is our defect and must stay a distinct incident, not blend
+  // into the outage taxonomy.
+  it('keeps upstream 4xx failures as AnonymizationFailedError', async () => {
+    mockAnalyzeTextAnalyzePost.mockRejectedValue(
+      Object.assign(new Error('Request failed with status code 422'), {
+        response: { status: 422 },
+      }),
+    );
+
+    await expect(provider.detect('Ich bin der Dani')).rejects.toThrow(
+      AnonymizationFailedError,
+    );
+  });
 });
