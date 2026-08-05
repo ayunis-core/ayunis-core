@@ -354,14 +354,9 @@ export default function ChatPage({
     });
   }
 
-  function handleRenameThread(fromDropdown = false) {
-    // eslint-disable-next-line sonarjs/no-selector-parameter
-    if (fromDropdown) {
-      // Delay to allow dropdown menu to fully close first
-      setTimeout(() => setRenameDialogOpen(true), 0);
-    } else {
-      setRenameDialogOpen(true);
-    }
+  function handleRenameThread() {
+    // Delay to allow dropdown menu to fully close first
+    setTimeout(() => setRenameDialogOpen(true), 0);
   }
 
   const chatHeader = (
