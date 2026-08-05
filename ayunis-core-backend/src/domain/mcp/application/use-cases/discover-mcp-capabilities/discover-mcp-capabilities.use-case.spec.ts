@@ -12,6 +12,7 @@ import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
+  McpConnectionTimeoutError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
@@ -316,6 +317,24 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(UnexpectedMcpError);
 
       expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+    });
+
+    // A classified timeout must not be re-wrapped as UNEXPECTED_MCP_ERROR —
+    // the send-message assembler skips the integration on any rejection, and
+    // the classified code is what keeps AppSignal grouping stable (AYC-651).
+    it('propagates a classified connection timeout unchanged', async () => {
+      const integration = buildPredefinedIntegration();
+      arrangeSuccessfulClientCalls();
+
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById.mockResolvedValue(integration);
+      mcpClientService.listTools.mockRejectedValue(
+        new McpConnectionTimeoutError('https://mcp.example.com/mcp', 30000),
+      );
+
+      await expect(
+        useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
+      ).rejects.toThrow(McpConnectionTimeoutError);
     });
 
     it('discovers with the integration state read at load time, not the access-check snapshot', async () => {
