@@ -1,11 +1,15 @@
-import { from } from 'rxjs';
+import { from, Observable, throwError } from 'rxjs';
 import type { UUID } from 'crypto';
 import { StreamingInferenceService } from './streaming-inference.service';
+import { extractUsageFromChunks } from '../helpers/stream-usage.helper';
 import {
   StreamInferenceResponseChunk,
   StreamInferenceResponseChunkToolCall,
 } from 'src/domain/models/application/ports/stream-inference.handler';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceFailedError,
+  InferenceStreamStalledError,
+} from 'src/domain/models/application/models.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -18,17 +22,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 
-describe('StreamingInferenceService.extractUsageFromChunks', () => {
-  // extractUsageFromChunks is a pure method that does not touch `this`, so we
-  // can exercise it without wiring up the service's dependencies.
-  const service = new StreamingInferenceService(
-    null as never,
-    null as never,
-    null as never,
-    null as never,
-    null as never,
-  );
-
+describe('extractUsageFromChunks', () => {
   const chunkWithUsage = (usage: {
     inputTokens?: number;
     outputTokens?: number;
@@ -44,7 +38,7 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
 
   it('returns undefined when no chunk carries usage', () => {
     expect(
-      service.extractUsageFromChunks([
+      extractUsageFromChunks([
         StreamInferenceResponseChunk.text('a'),
         StreamInferenceResponseChunk.text('b'),
       ]),
@@ -54,7 +48,7 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
   it('takes last-wins instead of summing cumulative per-chunk usage', () => {
     // Providers (e.g. Gemini, Mistral) report cumulative usage on every chunk.
     // Summing would over-count; the final values are the truth.
-    const usage = service.extractUsageFromChunks([
+    const usage = extractUsageFromChunks([
       chunkWithUsage({ inputTokens: 100, outputTokens: 10 }),
       chunkWithUsage({ inputTokens: 100, outputTokens: 25 }),
       chunkWithUsage({ inputTokens: 100, outputTokens: 42 }),
@@ -65,7 +59,7 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
   it('carries forward the last defined value of each field independently', () => {
     // Gemini repeats promptTokenCount on every chunk but only emits
     // candidatesTokenCount on the final chunk.
-    const usage = service.extractUsageFromChunks([
+    const usage = extractUsageFromChunks([
       chunkWithUsage({ inputTokens: 100 }),
       chunkWithUsage({ inputTokens: 100 }),
       chunkWithUsage({ inputTokens: 100, outputTokens: 30 }),
@@ -77,7 +71,7 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
     // Anthropic's input_tokens excludes tokens served by or written to the
     // prompt cache. Option A billing: customers pay for the full prompt as
     // if uncached, so cache read/write tokens count as input.
-    const usage = service.extractUsageFromChunks([
+    const usage = extractUsageFromChunks([
       chunkWithUsage({
         inputTokens: 3,
         cacheWriteInputTokens: 9677,
@@ -89,7 +83,7 @@ describe('StreamingInferenceService.extractUsageFromChunks', () => {
   });
 
   it('bills cache reads and writes together with uncached input', () => {
-    const usage = service.extractUsageFromChunks([
+    const usage = extractUsageFromChunks([
       chunkWithUsage({
         inputTokens: 10,
         cacheWriteInputTokens: 200,
@@ -147,9 +141,12 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       finishReason,
     });
 
-  const buildService = (chunks: StreamInferenceResponseChunk[]) => {
+  const buildService = (chunks: StreamInferenceResponseChunk[]) =>
+    buildServiceWithStream(jest.fn().mockReturnValue(from(chunks)));
+
+  const buildServiceWithStream = (execute: jest.Mock) => {
     const streamInferenceUseCase = {
-      execute: jest.fn().mockReturnValue(from(chunks)),
+      execute,
     } as unknown as StreamInferenceUseCase;
     const savedMessages: AssistantMessage[] = [];
     const saveAssistantMessageUseCase = {
@@ -302,6 +299,54 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(savedMessages).toHaveLength(1);
     const [text] = savedMessages[0].content;
     expect(text).toBeInstanceOf(TextMessageContent);
+  });
+
+  it('retries once when the stream stalls before producing any output', async () => {
+    const stalled = new InferenceStreamStalledError(180_000);
+    const healthyChunks = [
+      StreamInferenceResponseChunk.text('Die Zugspitze ist der höchste Berg.'),
+      finishChunk('stop'),
+    ];
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(throwError(() => stalled))
+      .mockReturnValueOnce(from(healthyChunks));
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(savedMessages).toHaveLength(1);
+    const [text] = savedMessages[0].content;
+    expect((text as TextMessageContent).text).toContain('Zugspitze');
+  });
+
+  it('does not retry a stall that happens after output was streamed', async () => {
+    const stalled = new InferenceStreamStalledError(180_000);
+    // Emit the text a macrotask before the error so the consumer actually
+    // receives it, as it would with a real provider stream.
+    const execute = jest.fn().mockReturnValueOnce(
+      new Observable<StreamInferenceResponseChunk>((subscriber) => {
+        subscriber.next(
+          StreamInferenceResponseChunk.text('Die Antwort beginnt'),
+        );
+        setTimeout(() => subscriber.error(stalled), 0);
+      }),
+    );
+    const { service } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow(InferenceStreamStalledError);
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry non-stall stream failures', async () => {
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(throwError(() => new Error('provider exploded')));
+    const { service } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow('provider exploded');
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('treats a tool call that streamed no arguments as an empty object', async () => {

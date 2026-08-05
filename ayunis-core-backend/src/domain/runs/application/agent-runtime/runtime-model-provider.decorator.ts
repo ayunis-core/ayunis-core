@@ -23,6 +23,7 @@ import {
   InferenceFailedError,
   InferenceImageTooLargeError,
   InferenceStreamStalledError,
+  ModelErrorCode,
 } from 'src/domain/models/application/models.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
@@ -53,8 +54,42 @@ export class RuntimeModelProviderDecorator {
   ): ModelProvider {
     return {
       name: provider.name,
-      stream: (request) => this.stream(provider, request, context),
+      stream: (request) => this.streamWithRetry(provider, request, context),
     };
+  }
+
+  /**
+   * A stall before any visible content is safe to retry: nothing reached the
+   * accumulator or the client, so a second attempt is indistinguishable from
+   * a slow first one (usage chunks merge last-wins). After content, a retry
+   * would duplicate what the user already watched arrive.
+   */
+  private async *streamWithRetry(
+    provider: ModelProvider,
+    request: ProviderRequest,
+    context: RuntimeModelCallContext,
+  ): AsyncIterable<ProviderChunk> {
+    let streamedContent = false;
+    try {
+      for await (const chunk of this.stream(provider, request, context)) {
+        streamedContent ||= isContentChunk(chunk);
+        yield chunk;
+      }
+      return;
+    } catch (error) {
+      if (
+        streamedContent ||
+        !isStalledStreamError(error) ||
+        request.signal?.aborted
+      ) {
+        throw error;
+      }
+      this.logger.warn(
+        'Provider stream stalled before producing output; retrying once',
+        { model: context.model.name },
+      );
+    }
+    yield* this.stream(provider, request, context);
   }
 
   private async *stream(
@@ -229,4 +264,19 @@ function isAbortError(error: unknown): boolean {
     (error instanceof Error || error instanceof DOMException) &&
     error.name === 'AbortError'
   );
+}
+
+function isContentChunk(chunk: ProviderChunk): boolean {
+  return Boolean(
+    chunk.textDelta ||
+    chunk.thinkingDelta ||
+    (chunk.toolCallDeltas && chunk.toolCallDeltas.length > 0),
+  );
+}
+
+function isStalledStreamError(error: unknown): boolean {
+  // The runtime boundary serializes classified errors, so only the plain
+  // string code survives on AgentRuntimeError.
+  const stalledCode: string = ModelErrorCode.INFERENCE_TIMEOUT;
+  return error instanceof AgentRuntimeError && error.code === stalledCode;
 }

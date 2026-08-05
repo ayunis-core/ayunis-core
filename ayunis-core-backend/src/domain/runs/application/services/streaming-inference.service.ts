@@ -23,13 +23,29 @@ import {
   assertToolCallArgumentsIntact,
   parseFinalToolArguments,
 } from '../helpers/tool-call-arguments.helper';
+import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
 import { observableToBufferedAsyncIterable } from '../helpers/buffered-stream.helper';
+import { extractUsageFromChunks } from '../helpers/stream-usage.helper';
 
 type AssistantContentBlock =
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
+
+interface StreamingInferenceParams {
+  model: LanguageModel;
+  messages: Message[];
+  tools: Tool[];
+  instructions?: string;
+  threadId: UUID;
+  orgId: UUID;
+}
+
+/** Set as soon as an attempt streams visible content — after that, a retry would duplicate it. */
+interface OutputTracker {
+  producedOutput: boolean;
+}
 
 interface AccumulatedToolCall {
   id: string | null;
@@ -82,14 +98,36 @@ export class StreamingInferenceService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async *executeStreamingInference(params: {
-    model: LanguageModel;
-    messages: Message[];
-    tools: Tool[];
-    instructions?: string;
-    threadId: UUID;
-    orgId: UUID;
-  }): AsyncGenerator<AssistantMessage, void, unknown> {
+  async *executeStreamingInference(
+    params: StreamingInferenceParams,
+  ): AsyncGenerator<AssistantMessage, void, unknown> {
+    const tracker = { producedOutput: false };
+    try {
+      yield* this.streamAttempt(params, tracker);
+      return;
+    } catch (error) {
+      // A stall before any output is safe to retry: nothing was streamed to
+      // the client and nothing was persisted, so the second attempt is
+      // indistinguishable from a slow first one. After output, a retry
+      // would duplicate content the user already watched arrive.
+      if (
+        !(error instanceof InferenceStreamStalledError) ||
+        tracker.producedOutput
+      ) {
+        throw error;
+      }
+      this.logger.warn(
+        'Provider stream stalled before producing output; retrying once',
+        { threadId: params.threadId },
+      );
+    }
+    yield* this.streamAttempt(params, { producedOutput: false });
+  }
+
+  private async *streamAttempt(
+    params: StreamingInferenceParams,
+    tracker: OutputTracker,
+  ): AsyncGenerator<AssistantMessage, void, unknown> {
     const { model, tools, threadId, orgId } = params;
 
     const stream$ = this.startStream(params);
@@ -114,6 +152,7 @@ export class StreamingInferenceService {
         assistantMessage,
         state,
         tools,
+        tracker,
       );
     } catch (error) {
       inferenceError = error;
@@ -159,7 +198,7 @@ export class StreamingInferenceService {
     chunks: StreamInferenceResponseChunk[],
     messageId: UUID,
   ): void {
-    const usage = this.extractUsageFromChunks(chunks);
+    const usage = extractUsageFromChunks(chunks);
     if (usage) {
       this.inferenceUsageGuard.collectUsage(model, usage, messageId);
     }
@@ -200,11 +239,13 @@ export class StreamingInferenceService {
     assistantMessage: AssistantMessage,
     state: AccumulatedState,
     tools: Tool[],
+    tracker: OutputTracker,
   ): AsyncGenerator<AssistantMessage, void, unknown> {
     for await (const chunk of asyncIterable) {
       const shouldUpdate = this.accumulateChunk(chunk, state);
 
       if (shouldUpdate) {
+        tracker.producedOutput = true;
         assistantMessage.content = this.buildMessageContent(state, tools);
         yield assistantMessage;
       }
@@ -417,64 +458,5 @@ export class StreamingInferenceService {
         ),
       );
     });
-  }
-
-  extractUsageFromChunks(
-    chunks: StreamInferenceResponseChunk[],
-  ): { inputTokens: number; outputTokens: number } | undefined {
-    const usage = this.lastWinsUsage(chunks);
-    const uncachedInputTokens = usage.inputTokens ?? 0;
-    const cacheRead = usage.cacheReadInputTokens ?? 0;
-    const cacheWrite = usage.cacheWriteInputTokens ?? 0;
-    const hasCache = cacheRead > 0 || cacheWrite > 0;
-    if (
-      usage.inputTokens === undefined &&
-      usage.outputTokens === undefined &&
-      !hasCache
-    ) {
-      return undefined;
-    }
-    if (hasCache) {
-      this.logger.debug('Prompt cache activity', {
-        uncachedInputTokens,
-        cacheReadInputTokens: cacheRead,
-        cacheWriteInputTokens: cacheWrite,
-      });
-    }
-    // Cached prompt tokens are billed as ordinary input: the provider's
-    // inputTokens excludes tokens covered by the prompt cache, so without
-    // this the billed input collapses to the uncached remainder (~3 tokens).
-    return {
-      inputTokens: uncachedInputTokens + cacheRead + cacheWrite,
-      outputTokens: usage.outputTokens ?? 0,
-    };
-  }
-
-  /**
-   * Providers report cumulative usage on every chunk (Gemini repeats
-   * promptTokenCount on each chunk; candidatesTokenCount only appears on the
-   * final one). Summing across chunks would over-count, so take last-wins per
-   * field, matching the non-streaming accumulator (response-accumulator.ts).
-   */
-  private lastWinsUsage(
-    chunks: StreamInferenceResponseChunk[],
-  ): NonNullable<StreamInferenceResponseChunk['usage']> {
-    const result: NonNullable<StreamInferenceResponseChunk['usage']> = {};
-    for (const chunk of chunks) {
-      if (!chunk.usage) continue;
-      if (chunk.usage.inputTokens !== undefined) {
-        result.inputTokens = chunk.usage.inputTokens;
-      }
-      if (chunk.usage.outputTokens !== undefined) {
-        result.outputTokens = chunk.usage.outputTokens;
-      }
-      if (chunk.usage.cacheReadInputTokens !== undefined) {
-        result.cacheReadInputTokens = chunk.usage.cacheReadInputTokens;
-      }
-      if (chunk.usage.cacheWriteInputTokens !== undefined) {
-        result.cacheWriteInputTokens = chunk.usage.cacheWriteInputTokens;
-      }
-    }
-    return result;
   }
 }
