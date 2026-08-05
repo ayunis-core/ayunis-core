@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.22.2](https://github.com/ayunis-core/ayunis-core/compare/v2.22.1...v2.22.2) (2026-08-05)
+
+
+### Bug Fixes
+
+* **anonymization:** classify anonymize-service timeouts under the provider taxonomy (AYC-654) ([#1241](https://github.com/ayunis-core/ayunis-core/issues/1241)) ([150fc29](https://github.com/ayunis-core/ayunis-core/commit/150fc290b61195d2b253d8541256a2c12727df62))
+* **mcp:** classify SDK timeouts and aborts as MCP_CONNECTION_TIMEOUT (AYC-651) ([#1238](https://github.com/ayunis-core/ayunis-core/issues/1238)) ([8fae486](https://github.com/ayunis-core/ayunis-core/commit/8fae486931f838ed33e5af00e5b64f5f9c48da75))
+* **models:** route transient provider transport failures through the taxonomy with retry (AYC-653) ([#1240](https://github.com/ayunis-core/ayunis-core/issues/1240)) ([9e78572](https://github.com/ayunis-core/ayunis-core/commit/9e78572b6bbda11cff6dc3b2d34253e0d2cd3565))
+* **observability:** separate appsignal staging environment via APPSIGNAL_APP_ENV override (AYC-480) ([#1250](https://github.com/ayunis-core/ayunis-core/issues/1250)) ([4f72cc3](https://github.com/ayunis-core/ayunis-core/commit/4f72cc30121a7b85b44854b0d51722b0aee00df1))
+* **retrievers:** classify remaining Mistral OCR failures and stop pointless retries (AYC-655) ([#1242](https://github.com/ayunis-core/ayunis-core/issues/1242)) ([76e61c1](https://github.com/ayunis-core/ayunis-core/commit/76e61c1fc39e812bff14505656bd2cf9e5c2bced))
+
 ## [2.22.1](https://github.com/ayunis-core/ayunis-core/compare/v2.22.0...v2.22.1) (2026-08-05)
 
 
