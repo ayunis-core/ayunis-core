@@ -1,13 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
-import { SDKError } from '@mistralai/mistralai/models/errors';
 import { TranscriptionPort } from '../application/ports/transcription.port';
-import {
-  TranscriptionFailedError,
-  TranscriptionServiceUnavailableError,
-} from '../application/transcription.errors';
+import { TranscriptionFailedError } from '../application/transcription.errors';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
+import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 
 @Injectable()
 export class MistralTranscriptionService extends TranscriptionPort {
@@ -62,11 +60,14 @@ export class MistralTranscriptionService extends TranscriptionPort {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 
-      // Check if it's a service availability issue
-      if (this.isServiceUnavailableError(error)) {
-        throw new TranscriptionServiceUnavailableError(
-          'Mistral transcription service is currently unavailable',
-        );
+      // Availability failures (transport errors, SDK 5xx, timeouts) all
+      // classify here; what falls through is a request-shaped failure.
+      const providerError = wrapProviderFailure(error, {
+        provider: 'mistral',
+        modelId: this.model,
+      });
+      if (providerError) {
+        throw providerError;
       }
 
       throw new TranscriptionFailedError(
@@ -98,29 +99,12 @@ export class MistralTranscriptionService extends TranscriptionPort {
   }
 
   private shouldRetry(error: Error): boolean {
-    const isTransient = error instanceof SDKError && error.statusCode >= 500;
+    const isTransient = isTransientMistralError(error);
     if (isTransient) {
       this.logger.warn('Retrying Mistral transcription after transient error', {
-        statusCode: error.statusCode,
         message: error.message,
       });
     }
     return isTransient;
-  }
-
-  private isServiceUnavailableError(error: unknown): boolean {
-    // Check for common service unavailable indicators
-    if (error instanceof SDKError && error.statusCode >= 500) {
-      return true;
-    }
-    const err = error as { message?: string; name?: string } | undefined;
-    const timeoutNames = ['RequestTimeoutError', 'TimeoutError'];
-    if (err?.name !== undefined && timeoutNames.includes(err.name)) {
-      return true;
-    }
-    const message = err?.message ?? '';
-    return (
-      message.includes('service unavailable') || message.includes('timeout')
-    );
   }
 }

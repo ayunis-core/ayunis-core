@@ -7,6 +7,7 @@ import type {
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
@@ -173,6 +174,8 @@ describe('RuntimeModelProviderDecorator', () => {
     });
   });
 
+  // Connection failures get one setup retry (AYC-653), so they record two
+  // model-call completions; everything else fails on the first attempt.
   it.each([
     [
       'connection failure',
@@ -181,37 +184,44 @@ describe('RuntimeModelProviderDecorator', () => {
       }),
       'PROVIDER_UNAVAILABLE_CONNECTION_ANTHROPIC',
       'provider_connection',
+      2,
     ],
     [
       'transport timeout',
       Object.assign(new Error('request timed out'), { code: 'ETIMEDOUT' }),
       'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
       'provider_timeout',
+      1,
     ],
     [
       'upstream server failure',
       Object.assign(new Error('service unavailable'), { status: 503 }),
       'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
       'provider_server',
+      1,
     ],
     [
       'oversized image',
       Object.assign(new Error('image exceeds 5 MB maximum'), { status: 400 }),
       'INFERENCE_IMAGE_TOO_LARGE',
       'inference_image_too_large',
+      1,
     ],
     [
       'unknown failure',
       new Error('provider returned an invalid stream'),
       'INFERENCE_FAILED',
       'inference_failed',
+      1,
     ],
   ])(
     'classifies a %s and records the mapped failure',
-    async (_label, error, code, type) => {
+    async (_label, error, code, type, attempts) => {
+      jest.useFakeTimers();
       const { decorate, emitAsync } = buildHarness();
 
-      await expect(collect(decorate(throwingProvider(error)))).rejects.toEqual(
+      const collected = collect(decorate(throwingProvider(error)));
+      const failure = expect(collected).rejects.toEqual(
         expect.objectContaining({
           code,
           details: {
@@ -219,10 +229,15 @@ describe('RuntimeModelProviderDecorator', () => {
           },
         }),
       );
+      await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+      await failure;
 
-      expect(emitAsync).toHaveBeenCalledTimes(1);
-      const event = emitAsync.mock.calls[0][1] as InferenceCompletedEvent;
+      expect(emitAsync).toHaveBeenCalledTimes(attempts);
+      const event = emitAsync.mock.calls[
+        attempts - 1
+      ][1] as InferenceCompletedEvent;
       expect(event.error?.message).toBeTruthy();
+      jest.useRealTimers();
     },
   );
 
@@ -339,6 +354,33 @@ describe('RuntimeModelProviderDecorator', () => {
 
     await failure;
     expect(emitAsync).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('retries once when a transient connection failure happens before the first chunk', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:flaky-dns',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
+              code: 'EAI_AGAIN',
+            }),
+          );
+        }
+        yield { textDelta: 'Recovered' };
+      },
+    };
+    const { decorate } = buildHarness();
+
+    const collected = collect(decorate(provider));
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await expect(collected).resolves.toEqual([{ textDelta: 'Recovered' }]);
+    expect(calls).toBe(2);
     jest.useRealTimers();
   });
 

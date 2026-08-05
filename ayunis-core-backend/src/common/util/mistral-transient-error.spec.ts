@@ -48,4 +48,30 @@ describe('isTransientMistralError', () => {
   it('does not retry unknown errors', () => {
     expect(isTransientMistralError(new Error('unrelated failure'))).toBe(false);
   });
+
+  // The SDK's own timeout mapping only covers the fetch call; an
+  // AbortSignal.timeout that fires while the response body is read escapes
+  // as a raw DOMException TimeoutError (code 23) and must still be retried.
+  it('treats a DOMException TimeoutError as transient', () => {
+    const timeout = new DOMException(
+      'The operation was aborted due to timeout',
+      'TimeoutError',
+    );
+    expect(isTransientMistralError(timeout as unknown as Error)).toBe(true);
+  });
+
+  it('treats a bare undici headers timeout as transient', () => {
+    const timeout = Object.assign(new Error('Headers Timeout Error'), {
+      code: 'UND_ERR_HEADERS_TIMEOUT',
+      name: 'HeadersTimeoutError',
+    });
+    expect(isTransientMistralError(timeout)).toBe(true);
+  });
+
+  it('treats a bare DNS failure as transient', () => {
+    const dnsFailure = Object.assign(new Error('getaddrinfo EAI_AGAIN'), {
+      code: 'EAI_AGAIN',
+    });
+    expect(isTransientMistralError(dnsFailure)).toBe(true);
+  });
 });

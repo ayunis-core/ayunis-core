@@ -107,6 +107,23 @@ describe('GenerateImageUseCase', () => {
       await expect(useCase.execute(command)).rejects.not.toThrow(/ENOTFOUND/);
     });
 
+    // Transport failures must group under the stable PROVIDER_UNAVAILABLE_*
+    // taxonomy instead of the generic image-generation error (AYC-653).
+    it('classifies transport failures under the provider taxonomy', async () => {
+      const command = new GenerateImageCommand({
+        model: mockModel,
+        prompt: 'a cat',
+      });
+
+      handler.generate.mockRejectedValue(
+        Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' }),
+      );
+
+      await expect(useCase.execute(command)).rejects.toMatchObject({
+        code: 'PROVIDER_UNAVAILABLE_CONNECTION_AZURE',
+      });
+    });
+
     it('should re-throw ApplicationError exceptions as-is', async () => {
       const command = new GenerateImageCommand({
         model: mockModel,

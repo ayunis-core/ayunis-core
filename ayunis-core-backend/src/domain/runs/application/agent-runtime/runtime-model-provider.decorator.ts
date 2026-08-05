@@ -15,6 +15,10 @@ import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import {
+  isRetryableSetupFailure,
+  SETUP_RETRY_BACKOFF_MS,
+} from 'src/common/errors/provider-transport-error.classifier';
+import {
   STREAM_IDLE_TIMEOUT_MS,
   StreamIdleWatchdog,
 } from 'src/common/streaming/stream-idle-watchdog';
@@ -42,6 +46,10 @@ interface CallState {
   readonly stopRelayingAbort: () => void;
 }
 
+function backoff(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 @Injectable()
 export class RuntimeModelProviderDecorator {
   private readonly logger = new Logger(RuntimeModelProviderDecorator.name);
@@ -59,10 +67,12 @@ export class RuntimeModelProviderDecorator {
   }
 
   /**
-   * A stall before any visible content is safe to retry: nothing reached the
-   * accumulator or the client, so a second attempt is indistinguishable from
-   * a slow first one (usage chunks merge last-wins). After content, a retry
-   * would duplicate what the user already watched arrive.
+   * A failure before any visible content is safe to retry: nothing reached
+   * the accumulator or the client, so a second attempt is indistinguishable
+   * from a slow first one (usage chunks merge last-wins). After content, a
+   * retry would duplicate what the user already watched arrive. Covers both
+   * stalled streams (AYC-652) and transient transport failures raised before
+   * the first chunk (AYC-653) — the latter get a short backoff first.
    */
   private async *streamWithRetry(
     provider: ModelProvider,
@@ -77,16 +87,21 @@ export class RuntimeModelProviderDecorator {
       }
       return;
     } catch (error) {
-      if (
-        streamedContent ||
-        !isStalledStreamError(error) ||
-        request.signal?.aborted
-      ) {
+      const reason = retryReason(error, streamedContent, request.signal);
+      if (!reason) {
         throw error;
       }
+      if (reason === 'transient transport failure') {
+        await backoff(SETUP_RETRY_BACKOFF_MS);
+        // Recheck after the wait — a cancellation during the backoff must
+        // not start a second attempt either.
+        if (request.signal?.aborted) {
+          throw error;
+        }
+      }
       this.logger.warn(
-        'Provider stream stalled before producing output; retrying once',
-        { model: context.model.name },
+        'Provider stream failed before producing output; retrying once',
+        { model: context.model.name, reason },
       );
     }
     yield* this.stream(provider, request, context);
@@ -279,4 +294,26 @@ function isStalledStreamError(error: unknown): boolean {
   // string code survives on AgentRuntimeError.
   const stalledCode: string = ModelErrorCode.INFERENCE_TIMEOUT;
   return error instanceof AgentRuntimeError && error.code === stalledCode;
+}
+
+/**
+ * `stream()` wraps provider failures into AgentRuntimeError before they reach
+ * the retry layer; the raw transport error the classifier understands rides
+ * on `cause`.
+ */
+function isTransientSetupError(error: unknown): boolean {
+  return (
+    error instanceof AgentRuntimeError && isRetryableSetupFailure(error.cause)
+  );
+}
+
+function retryReason(
+  error: unknown,
+  streamedContent: boolean,
+  signal: AbortSignal | undefined,
+): 'stall' | 'transient transport failure' | null {
+  if (streamedContent || signal?.aborted) return null;
+  if (isStalledStreamError(error)) return 'stall';
+  if (isTransientSetupError(error)) return 'transient transport failure';
+  return null;
 }

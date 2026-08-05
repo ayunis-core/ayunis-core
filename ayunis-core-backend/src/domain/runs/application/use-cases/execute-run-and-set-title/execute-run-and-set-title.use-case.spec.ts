@@ -23,6 +23,12 @@ import {
   QuotaErrorCode,
 } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { setError } from '@appsignal/nodejs';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
+
+jest.mock('@appsignal/nodejs', () => ({
+  setError: jest.fn(),
+}));
 
 describe('ExecuteRunAndSetTitleUseCase', () => {
   let useCase: ExecuteRunAndSetTitleUseCase;
@@ -282,6 +288,30 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       expect(events[events.length - 1]).toEqual(
         expect.objectContaining({ type: 'session', streaming: false }),
       );
+    });
+
+    // The SSE response is committed as 200 before the run executes, so the
+    // global exception filter never sees run failures. The catch here is the
+    // only place a classified provider outage can become an AppSignal
+    // incident (AYC-653).
+    it('reports 5xx failures to AppSignal from the SSE catch', async () => {
+      const outage = new ProviderTimeoutError({ provider: 'openai' });
+      executeRunUseCase.execute.mockRejectedValue(outage);
+
+      await drain(useCase.execute(command()));
+
+      expect(setError).toHaveBeenCalledWith(outage);
+    });
+
+    it('does not report expected client errors to AppSignal', async () => {
+      (setError as jest.Mock).mockClear();
+      executeRunUseCase.execute.mockRejectedValue(
+        new QuotaExceededError(QuotaType.FAIR_USE_MESSAGES_HIGH, 1, 1, 1),
+      );
+
+      await drain(useCase.execute(command()));
+
+      expect(setError).not.toHaveBeenCalled();
     });
   });
 });

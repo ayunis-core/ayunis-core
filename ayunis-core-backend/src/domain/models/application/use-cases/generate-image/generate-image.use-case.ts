@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
 import {
   ImageGenerationInput,
@@ -44,6 +45,13 @@ export class GenerateImageUseCase {
         provider: command.model.provider,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
+      const providerError = wrapProviderFailure(error, {
+        provider: command.model.provider,
+        modelId: command.model.name,
+      });
+      if (providerError) {
+        throw providerError;
+      }
       throw new ImageGenerationFailedError(
         'An unexpected error occurred during image generation',
       );
