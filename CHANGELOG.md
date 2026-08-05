@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.22.1](https://github.com/ayunis-core/ayunis-core/compare/v2.22.0...v2.22.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **chat-ui:** remove duplicate rename pencil icon from chat header (AYC-521) ([#1243](https://github.com/ayunis-core/ayunis-core/issues/1243)) ([0b5546b](https://github.com/ayunis-core/ayunis-core/commit/0b5546bd44f54d9c21ae08199e585c567440be71))
+* **chat-ui:** show a clear timeout message when the model stream stalls (AYC-665) ([#1247](https://github.com/ayunis-core/ayunis-core/issues/1247)) ([d6e397a](https://github.com/ayunis-core/ayunis-core/commit/d6e397a7d7783e66db698cfadf59daef0c90fd0c))
+* **models:** stop stalling out healthy reasoning streams after 45s (AYC-665) ([#1245](https://github.com/ayunis-core/ayunis-core/issues/1245)) ([92ca2a0](https://github.com/ayunis-core/ayunis-core/commit/92ca2a0ff6e481bf04b97e28ad6e13c56e16c777))
+* **runs:** retry once when a provider stream stalls before output (AYC-652) ([#1246](https://github.com/ayunis-core/ayunis-core/issues/1246)) ([7cb48f4](https://github.com/ayunis-core/ayunis-core/commit/7cb48f4daf5137e959fbb81793c4bd652ddaf3f5))
+
 ## [2.22.0](https://github.com/ayunis-core/ayunis-core/compare/v2.21.1...v2.22.0) (2026-08-04)
 
 
