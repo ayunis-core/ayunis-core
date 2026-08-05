@@ -5,12 +5,11 @@ import {
   FileRetrieverPage,
 } from '../../domain/file-retriever-result.entity';
 import {
-  FileRetrievalFailedError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
 } from '../../application/file-retriever.errors';
-import type { ApplicationError } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { MistralError } from '@mistralai/mistralai/models/errors';
@@ -79,6 +78,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   }
 
   private mapProcessingError(error: unknown): ApplicationError {
+    // Already-classified errors (the zero-page document error, anything a
+    // future refactor throws inside processFile) must pass through — without
+    // this guard they were re-wrapped as FileRetrieverUnexpectedError and
+    // alerted as UNEXPECTED_ERROR (AYC-655).
+    if (error instanceof ApplicationError) return error;
+
     const ctx = { provider: 'mistral', modelId: this.MODEL_NAME };
 
     const providerError = wrapProviderFailure(error, ctx);
@@ -216,7 +221,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
             type: 'file',
             fileId,
           },
-          includeImageBase64: true,
+          // parseResponse consumes markdown only; image payloads inflate the
+          // response body enough to push large documents into the 120s
+          // body-read deadline (AYC-655).
+          includeImageBase64: false,
         }),
       maxRetries: 3,
       delay: 1000,
@@ -254,10 +262,14 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     });
 
     if (pages.length === 0) {
-      throw new FileRetrievalFailedError('Empty response from Mistral API', {
-        model: this.MODEL_NAME,
-        response,
-      });
+      // Zero pages is a property of the document (nothing OCR could read),
+      // not a defect of ours: the 422 settles the queue job without further
+      // attempts and the message is what the user sees on the failed source
+      // (AYC-655).
+      throw new UnprocessableDocumentError(
+        'No text could be extracted from the document',
+        { model: this.MODEL_NAME, pageCount: 0 },
+      );
     }
 
     // Return the extracted text

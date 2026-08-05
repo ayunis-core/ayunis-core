@@ -6,6 +6,10 @@ import {
   JobRetryScheduledError,
 } from './bullmq-job.helpers';
 import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ProviderRequestRejectedError,
+  ProviderTimeoutError,
+} from 'src/common/errors/provider.errors';
 
 function jobWith(attemptsMade: number, attempts?: number): Job {
   return { attemptsMade, opts: { attempts } } as Job;
@@ -152,5 +156,84 @@ describe('classifyJobFailure', () => {
       expect(final).toBe(true);
       expect(rethrow).toBeNull();
     });
+  });
+
+  describe('deterministic provider rejections', () => {
+    // A provider 4xx rejection is deterministic — re-sending the same
+    // document produces the same rejection, so the remaining attempts only
+    // repeat the upstream call. It is still unexpected (502 by
+    // construction), so it is rethrown once for its
+    // PROVIDER_UNAVAILABLE_REJECTED_* incident (AYC-655).
+    it('fails immediately, skipping pointless retries', () => {
+      const rejection = new ProviderRequestRejectedError(
+        { provider: 'mistral', upstreamStatus: 422 },
+        new Error('document rejected'),
+      );
+
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), rejection);
+
+      expect(final).toBe(true);
+      expect(rethrow).not.toBeNull();
+      expect((rethrow as Error).message).toBe(rejection.message);
+    });
+
+    // Settling before the last attempt only sticks when BullMQ also stops
+    // scheduling: it treats only errors NAMED UnrecoverableError as terminal,
+    // while AppSignal's queue path groups by `code` — the rethrow must
+    // satisfy both, or attempts 2-3 run against an already-failed source.
+    it('rethrows under the BullMQ-terminal name while keeping the grouping code', () => {
+      const rejection = new ProviderRequestRejectedError(
+        { provider: 'mistral', upstreamStatus: 422 },
+        new Error('document rejected'),
+      );
+
+      const { rethrow } = classifyJobFailure(jobWith(0, 3), rejection);
+
+      expect((rethrow as Error).name).toBe('UnrecoverableError');
+      expect((rethrow as Error & { code?: string }).code).toBe(
+        'PROVIDER_UNAVAILABLE_REJECTED_MISTRAL',
+      );
+      expect((rethrow as Error).cause).toBe(rejection);
+    });
+
+    it('rethrows the original error unchanged on the final attempt', () => {
+      const rejection = new ProviderRequestRejectedError(
+        { provider: 'mistral', upstreamStatus: 422 },
+        new Error('document rejected'),
+      );
+
+      const { final, rethrow } = classifyJobFailure(jobWith(2, 3), rejection);
+
+      expect(final).toBe(true);
+      expect(rethrow).toBe(rejection);
+    });
+
+    it('still retries provider timeouts, which may succeed later', () => {
+      const timeout = new ProviderTimeoutError({ provider: 'mistral' });
+
+      const { final, rethrow } = classifyJobFailure(jobWith(0, 3), timeout);
+
+      expect(final).toBe(false);
+      expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+    });
+
+    // 429 says nothing about the input (Mistral maps persistent rate limits
+    // into the REJECTED class too) and a 404 from OCR is files-API eventual
+    // consistency the handler itself treats as transient — both must keep
+    // the spaced queue retries instead of settling on the first attempt.
+    it.each([404, 429])(
+      'still retries provider rejections carrying status %i',
+      (status) => {
+        const rejection = new ProviderRequestRejectedError(
+          { provider: 'mistral', upstreamStatus: status },
+          new Error(`rejected with ${status}`),
+        );
+
+        const { final, rethrow } = classifyJobFailure(jobWith(0, 3), rejection);
+
+        expect(final).toBe(false);
+        expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+      },
+    );
   });
 });
