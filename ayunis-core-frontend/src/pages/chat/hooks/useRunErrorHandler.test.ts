@@ -28,4 +28,19 @@ describe('useRunErrorHandler', () => {
 
     expect(showError).toHaveBeenCalledWith('chat.errorContextBudgetExceeded');
   });
+
+  it('shows the timeout explanation when the provider stream stalls', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'Model stream produced no data for 180000ms',
+      threadId: 'thread-1',
+      timestamp: '2026-08-05T11:00:00.000Z',
+      code: 'INFERENCE_TIMEOUT',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorInferenceTimeout');
+  });
 });
