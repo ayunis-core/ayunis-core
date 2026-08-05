@@ -17587,6 +17587,16 @@
       "MeResponseDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "User id",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization id",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
           "email": {
             "type": "string",
             "description": "User email address",
@@ -17610,7 +17620,7 @@
             "example": "John Doe"
           }
         },
-        "required": ["email", "role", "systemRole", "name"]
+        "required": ["id", "orgId", "email", "role", "systemRole", "name"]
       },
       "MfaCodeRequestDto": {
         "type": "object",

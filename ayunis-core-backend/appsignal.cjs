@@ -27,7 +27,9 @@ const pushApiKey = process.env.APPSIGNAL_PUSH_API_KEY;
 // below overrides AppSignal's own APPSIGNAL_APP_ENV handling.
 const environment =
   process.env.APPSIGNAL_APP_ENV ?? process.env.NODE_ENV ?? 'development';
-const revision = process.env.APP_REVISION ?? readPackageVersion();
+// `||`, not `??`: images built without the APP_REVISION build arg (local
+// compose) carry it as an empty string, which must fall back too.
+const revision = process.env.APP_REVISION || readPackageVersion();
 
 function readPackageVersion() {
   try {

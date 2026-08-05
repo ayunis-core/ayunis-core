@@ -1,6 +1,7 @@
 import { useAuthenticationControllerLogout } from '@/shared/api/generated/ayunisCoreAPI';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearAppsignalTags } from '@/shared/lib/appsignal';
 
 export function useLogout() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export function useLogout() {
       onSuccess: () => {
         // Clear all queries to ensure user data is removed from cache
         queryClient.clear();
+        clearAppsignalTags();
         // Redirect to login page
         void navigate({ to: '/login' });
       },
@@ -19,6 +21,7 @@ export function useLogout() {
         // Even if logout fails on the server, we should still redirect to login
         // as the user intended to log out
         queryClient.clear();
+        clearAppsignalTags();
         void navigate({ to: '/login' });
       },
     },
