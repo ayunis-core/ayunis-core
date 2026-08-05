@@ -21,7 +21,12 @@ config({ path: '.env.dev', quiet: true });
 config({ path: '.env', quiet: true });
 
 const pushApiKey = process.env.APPSIGNAL_PUSH_API_KEY;
-const environment = process.env.NODE_ENV ?? 'development';
+// APPSIGNAL_APP_ENV lets staging hosts (which run with NODE_ENV=production
+// for migrations/logger/CORS behavior) report into a separate AppSignal
+// environment. Must be resolved here: the explicit `environment` option
+// below overrides AppSignal's own APPSIGNAL_APP_ENV handling.
+const environment =
+  process.env.APPSIGNAL_APP_ENV ?? process.env.NODE_ENV ?? 'development';
 const revision = process.env.APP_REVISION ?? readPackageVersion();
 
 function readPackageVersion() {
