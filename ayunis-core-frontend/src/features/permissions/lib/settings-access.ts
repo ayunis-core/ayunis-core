@@ -1,4 +1,5 @@
-import type { AppPermission } from '../api/useMyPermissions';
+import { MeResponseDtoRole } from '@/shared/api';
+import type { AppPermission, Authorization } from './authorization';
 
 const ALL_SETTINGS = '/admin-settings';
 
@@ -23,14 +24,13 @@ export const MANAGER_SETTINGS_SECTIONS: ReadonlyArray<{
  * Admins get the settings root, which prefixes every section.
  */
 export function allowedSettingsSections(
-  role: string | undefined,
-  permissions: readonly AppPermission[],
+  authorization: Authorization,
 ): string[] {
-  if (role === 'admin') {
+  if (authorization.hasRole(MeResponseDtoRole.admin)) {
     return [ALL_SETTINGS];
   }
 
   return MANAGER_SETTINGS_SECTIONS.filter((section) =>
-    section.anyOf.some((p) => permissions.includes(p)),
+    authorization.canAny(...section.anyOf),
   ).map((section) => section.path);
 }

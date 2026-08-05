@@ -1,6 +1,8 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { AcademySettingsPage } from '@/pages/admin-settings/academy-settings';
 import { isAcademyAddonActive } from '@/features/academy';
+import { createAuthorization } from '@/features/permissions';
+import { MeResponseDtoRole } from '@/shared/api';
 import {
   addonsControllerList,
   getAddonsControllerListQueryKey,
@@ -9,7 +11,8 @@ import {
 export const Route = createFileRoute('/_authenticated/admin-settings/academy')({
   component: RouteComponent,
   beforeLoad: ({ context: { user } }) => {
-    if (user.role !== 'admin') {
+    const authorization = createAuthorization(user.role);
+    if (!authorization.hasRole(MeResponseDtoRole.admin)) {
       throw redirect({ to: '/' });
     }
   },

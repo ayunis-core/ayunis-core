@@ -1,9 +1,7 @@
-import {
-  useMyPermissionsControllerGetMine,
-  type MyPermissionsResponseDtoPermissionsItem,
-} from '@/shared/api';
+import { useMyPermissionsControllerGetMine } from '@/shared/api';
+import { createAuthorization } from '../lib/authorization';
 
-export type AppPermission = MyPermissionsResponseDtoPermissionsItem;
+export type { AppPermission } from '../lib/authorization';
 
 /**
  * The current user's effective permissions. Admins implicitly hold all of them
@@ -22,10 +20,11 @@ export function useMyPermissions() {
     },
   });
   const permissions = data?.permissions ?? [];
+  const { can } = createAuthorization(undefined, permissions);
 
   return {
     permissions,
     isLoading,
-    can: (permission: AppPermission) => permissions.includes(permission),
+    can,
   };
 }

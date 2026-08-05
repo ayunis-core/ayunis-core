@@ -8,6 +8,8 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
+import { createAuthorization } from '@/features/permissions';
+import { MeResponseDtoRole } from '@/shared/api';
 
 const searchSchema = z.object({
   skill: z.string().optional(),
@@ -22,7 +24,8 @@ export const Route = createFileRoute('/_authenticated/install')({
 function RouteComponent() {
   const { skill, integration } = Route.useSearch();
   const { user } = Route.useRouteContext();
-  const isAdmin = user?.role === 'admin';
+  const authorization = createAuthorization(user.role);
+  const isAdmin = authorization.hasRole(MeResponseDtoRole.admin);
 
   if (integration) {
     if (!isAdmin) {

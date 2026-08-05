@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { TeamDetailPage } from '@/pages/admin-settings/team-detail';
+import { createAuthorization } from '@/features/permissions';
+import { MeResponseDtoRole } from '@/shared/api';
 import {
   teamsControllerGetTeam,
   getTeamsControllerGetTeamQueryKey,
@@ -18,7 +20,8 @@ export const Route = createFileRoute(
   loader: async ({ context: { user, queryClient }, params: { id } }) => {
     // Both feed admin-only tabs behind admin-only endpoints; prefetching them
     // for a manager who reached this page via a teams permission only 403s.
-    if (user.role === 'admin') {
+    const authorization = createAuthorization(user.role);
+    if (authorization.hasRole(MeResponseDtoRole.admin)) {
       void queryClient.prefetchQuery({
         queryKey:
           getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(id),

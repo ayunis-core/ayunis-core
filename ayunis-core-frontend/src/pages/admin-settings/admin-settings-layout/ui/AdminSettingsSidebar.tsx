@@ -20,19 +20,17 @@ import {
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsLetterheadsEnabled } from '@/features/feature-toggles';
 import { useIsAcademyAddonActive } from '@/features/academy';
-import { useAuthenticationControllerMe } from '@/shared/api';
 import {
-  useMyPermissions,
   allowedSettingsSections,
+  useAuthorization,
 } from '@/features/permissions';
 
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const isLetterheadsEnabled = useIsLetterheadsEnabled();
   const academyAddonActive = useIsAcademyAddonActive();
-  const { data: me } = useAuthenticationControllerMe();
-  const { permissions } = useMyPermissions();
-  const allowedSections = allowedSettingsSections(me?.role, permissions);
+  const authorization = useAuthorization();
+  const allowedSections = allowedSettingsSections(authorization);
   const canSee = (to: string) =>
     allowedSections.some((path) => to.startsWith(path));
 
