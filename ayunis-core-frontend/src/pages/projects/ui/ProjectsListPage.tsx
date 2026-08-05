@@ -350,6 +350,9 @@ function countLabel(count: number, singular: string, plural: string) {
 }
 
 function projectCounts(project: MockProject) {
+  if (!FEATURES.skillsAndKnowledge) {
+    return countLabel(project.chats.length, 'Chat', 'Chats');
+  }
   return [
     countLabel(project.skills.length, 'Skill', 'Skills'),
     countLabel(
