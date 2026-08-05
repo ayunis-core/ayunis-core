@@ -72,7 +72,7 @@ The models module is the central registry for AI model configuration. The abstra
 
 The two inference use-cases (`GetInferenceUseCase`, `StreamInferenceUseCase`) are the error choke points for provider SDK failures on the legacy path (the per-provider adapter files are thin credential wrappers): `ApplicationError` passes through, client aborts become `InferenceAbortedError` (499, streaming only), transport failures and upstream 5xx become the shared `ProviderUnavailableError` family via `wrapProviderFailure` from `src/common/errors` (stable AppSignal grouping per provider+failure-class, AYC-538), and everything else — including upstream 4xx, which may be our own request-building bug — becomes `InferenceFailedError` (500). Runtime-backed stream handlers retain ownership of provider chunk transforms; `ResolveModelProviderUseCase` returns the transformed provider for the runs module to decorate with host-side error, cancellation, timeout, and metrics behavior.
 
-Legacy and SDK runtime streams use the same `StreamIdleWatchdog` from `src/common/streaming/stream-idle-watchdog.ts`. Its 45-second timer starts only after the first provider chunk and resets after every later chunk. Provider SDK request timeouts remain responsible for time-to-first-byte.
+Legacy and SDK runtime streams use the same `StreamIdleWatchdog` from `src/common/streaming/stream-idle-watchdog.ts`. Its 3-minute timer (deliberately generous — reasoning models stream nothing while thinking, and provider keep-alive pings never reach the host, AYC-665) starts only after the first provider chunk and resets after every later chunk. Provider SDK request timeouts remain responsible for time-to-first-byte.
 
 ## Infrastructure Services
 

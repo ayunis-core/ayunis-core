@@ -1,5 +1,14 @@
-/** Silence between chunks before a provider stream counts as stalled. */
-export const STREAM_IDLE_TIMEOUT_MS = 45_000;
+/**
+ * Silence between chunks before a provider stream counts as stalled.
+ *
+ * Generous on purpose: reasoning models legitimately go silent for minutes —
+ * OpenAI-style models stream nothing while reasoning, and the Anthropic SDK
+ * swallows the API's keep-alive pings before they reach us — so a tighter
+ * budget executes healthy runs mid-thought (45s killed every heavy
+ * Opus/Sonnet task, AYC-665). The cost of the slack is only how long a
+ * genuinely dead stream takes to surface.
+ */
+export const STREAM_IDLE_TIMEOUT_MS = 180_000;
 
 /**
  * Detects a provider stream that stops producing chunks part-way through.
