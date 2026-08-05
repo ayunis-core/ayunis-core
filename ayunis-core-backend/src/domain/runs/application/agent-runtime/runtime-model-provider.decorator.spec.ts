@@ -272,6 +272,42 @@ describe('RuntimeModelProviderDecorator', () => {
     ).rejects.toBeInstanceOf(RunAbortedError);
   });
 
+  it('retries once when the stream stalls before any content', async () => {
+    jest.useFakeTimers();
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:stalls-then-recovers',
+      async *stream(providerRequest) {
+        calls += 1;
+        if (calls === 1) {
+          // Usage arrives, then the provider goes silent — nothing the user
+          // can see was produced, so the retry is invisible.
+          yield { usage: { inputTokens: 2048 } };
+          await waitForAbort(providerRequest.signal);
+          return;
+        }
+        yield { textDelta: 'Die Antwort nach dem zweiten Anlauf.' };
+      },
+    };
+    const { decorate, emitAsync } = buildHarness();
+    const iterator = decorate(provider).stream(request)[Symbol.asyncIterator]();
+
+    await expect(iterator.next()).resolves.toMatchObject({
+      value: { usage: { inputTokens: 2048 } },
+    });
+    const nextChunk = iterator.next();
+    await jest.advanceTimersByTimeAsync(STREAM_IDLE_TIMEOUT_MS);
+    await expect(nextChunk).resolves.toMatchObject({
+      value: { textDelta: 'Die Antwort nach dem zweiten Anlauf.' },
+    });
+    await expect(iterator.next()).resolves.toMatchObject({ done: true });
+
+    expect(calls).toBe(2);
+    // One completion event per model call, like the legacy path.
+    expect(emitAsync).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
   it('aborts a stalled provider after the shared inter-chunk timeout', async () => {
     jest.useFakeTimers();
     const provider: ModelProvider = {
