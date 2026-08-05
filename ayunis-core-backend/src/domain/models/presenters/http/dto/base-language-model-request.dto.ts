@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsNumber,
   IsOptional,
+  MaxLength,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -16,6 +17,13 @@ import { nullToUndefined } from 'src/common/util/null-to-undefined';
 
 function hasAnyCostField(o: BaseLanguageModelRequestDto): boolean {
   return o.inputTokenCost !== undefined || o.outputTokenCost !== undefined;
+}
+
+function trimToUndefined({ value }: { value: unknown }): unknown {
+  if (typeof value === 'string') {
+    return value.trim() || undefined;
+  }
+  return value === null ? undefined : value;
 }
 
 export abstract class BaseLanguageModelRequestDto {
@@ -110,4 +118,16 @@ export abstract class BaseLanguageModelRequestDto {
   @IsOptional()
   @IsEnum(ModelTier)
   tier?: ModelTier;
+
+  @ApiPropertyOptional({
+    description:
+      'User-facing description of the model, shown in the model selector info card. Maintained by super admins.',
+    example: 'Geeignet für komplexe Aufgaben und lange Dokumente.',
+    maxLength: 500,
+  })
+  @Transform(trimToUndefined)
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
 }

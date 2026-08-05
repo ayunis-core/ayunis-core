@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUpdateImageGenerationModel } from '../api/useUpdateImageGenerationModel';
 import type { ImageGenerationModelFormData } from '../model/types';
 import type { ImageGenerationModelResponseDto } from '@/shared/api';
@@ -18,6 +19,7 @@ export function EditImageGenerationModelDialog({
   open,
   onOpenChange,
 }: Readonly<EditImageGenerationModelDialogProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
   const { updateImageGenerationModel, isUpdating } =
     useUpdateImageGenerationModel(() => {
       onOpenChange(false);
@@ -52,17 +54,20 @@ export function EditImageGenerationModelDialog({
 
   return (
     <ModelFormDialog
-      title="Edit Image Generation Model"
+      title={t('models.catalog.dialog.editImageGenerationTitle')}
       open={open}
       onOpenChange={onOpenChange}
       form={form}
       onSubmit={handleSubmit}
       isSubmitting={isUpdating}
-      submitLabel="Update"
-      submittingLabel="Updating..."
+      mode="edit"
       providers={IMAGE_GENERATION_MODEL_PROVIDERS}
-      namePlaceholder="e.g., gpt-image-1"
-      displayNamePlaceholder="e.g., GPT Image 1"
+      namePlaceholder={t(
+        'models.catalog.dialog.imageGenerationNamePlaceholder',
+      )}
+      displayNamePlaceholder={t(
+        'models.catalog.dialog.imageGenerationDisplayNamePlaceholder',
+      )}
       hasContent={!!model}
     >
       <ModelPricingFields form={form} disabled={isUpdating} />

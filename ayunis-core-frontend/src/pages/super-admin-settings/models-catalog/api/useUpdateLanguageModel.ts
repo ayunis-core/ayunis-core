@@ -3,6 +3,9 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSuperAdminLanguageCatalogModelsControllerUpdateLanguageModel,
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
+  getModelsControllerGetPermittedLanguageModelsQueryKey,
+  getModelsControllerGetOrgPermittedLanguageModelsQueryKey,
+  getModelsControllerGetAvailableLanguageModelsQueryKey,
   type UpdateLanguageModelRequestDto,
 } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';
@@ -16,10 +19,23 @@ export function useUpdateLanguageModel(onSuccess?: () => void) {
     useSuperAdminLanguageCatalogModelsControllerUpdateLanguageModel({
       mutation: {
         onSuccess: async () => {
-          await queryClient.invalidateQueries({
-            queryKey:
-              getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
-          });
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey:
+                getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey(),
+            }),
+            // Catalog edits change what users see in the model selector
+            queryClient.invalidateQueries({
+              queryKey: getModelsControllerGetPermittedLanguageModelsQueryKey(),
+            }),
+            queryClient.invalidateQueries({
+              queryKey:
+                getModelsControllerGetOrgPermittedLanguageModelsQueryKey(),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: getModelsControllerGetAvailableLanguageModelsQueryKey(),
+            }),
+          ]);
           showSuccess(t('models.updateSuccess'));
           onSuccess?.();
         },

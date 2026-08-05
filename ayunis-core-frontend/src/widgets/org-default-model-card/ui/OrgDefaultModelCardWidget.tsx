@@ -57,6 +57,7 @@ export function OrgDefaultModelCardWidget({
         provider: model.provider,
         displayName: model.displayName,
         tier: model.tier,
+        description: model.description,
       })),
     [permittedModels],
   );

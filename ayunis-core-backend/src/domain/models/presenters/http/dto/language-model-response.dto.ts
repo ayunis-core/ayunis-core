@@ -112,4 +112,12 @@ export class LanguageModelResponseDto {
     example: ModelTier.MEDIUM,
   })
   tier?: ModelTier;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description:
+      'User-facing description of the model, shown in the model selector info card. Maintained by super admins.',
+    example: 'Geeignet für komplexe Aufgaben und lange Dokumente.',
+  })
+  description?: string;
 }

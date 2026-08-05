@@ -25,7 +25,7 @@ export function ModelCheckboxField<T extends FieldValues>({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+        <FormItem className="flex flex-row items-center">
           <FormControl>
             <Checkbox
               checked={field.value}
@@ -33,9 +33,7 @@ export function ModelCheckboxField<T extends FieldValues>({
               disabled={disabled}
             />
           </FormControl>
-          <div className="space-y-1 leading-none">
-            <FormLabel>{label}</FormLabel>
-          </div>
+          <FormLabel>{label}</FormLabel>
         </FormItem>
       )}
     />

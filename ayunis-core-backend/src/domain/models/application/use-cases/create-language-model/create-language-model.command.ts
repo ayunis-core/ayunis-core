@@ -13,6 +13,7 @@ export class CreateLanguageModelCommand {
   inputTokenCost?: number;
   outputTokenCost?: number;
   tier?: ModelTier;
+  description?: string;
 
   constructor(params: {
     name: string;
@@ -26,6 +27,7 @@ export class CreateLanguageModelCommand {
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
+    description?: string;
   }) {
     this.name = params.name;
     this.provider = params.provider;
@@ -38,5 +40,6 @@ export class CreateLanguageModelCommand {
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;
+    this.description = params.description;
   }
 }
