@@ -46,6 +46,7 @@ import { useMarketplaceConfig } from '@/features/marketplace';
 import {
   useMyPermissions,
   allowedSettingsSections,
+  createAuthorization,
 } from '@/features/permissions';
 import {
   useIsAcademyAddonActive,
@@ -58,10 +59,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { theme } = useTheme();
   const { user } = useMe();
   const { permissions } = useMyPermissions();
+  const authorization = createAuthorization(user?.role, permissions);
   // Admins and managers granted a settings-relevant permission (e.g. team
   // management) get the settings entry point.
-  const canOpenSettings =
-    allowedSettingsSections(user?.role, permissions).length > 0;
+  const canOpenSettings = allowedSettingsSections(authorization).length > 0;
   const { logout } = useLogout();
   const { t } = useTranslation('common');
   const navigate = useNavigate();

@@ -5,13 +5,15 @@ import { Progress } from '@ayunis/ui/components/progress';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useMe } from '../api/useMe';
 import { useHideOnboarding } from '../api/useHideOnboarding';
-import { MeResponseDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { MeResponseDtoRole } from '@/shared/api';
 import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
+import { createAuthorization } from '@/features/permissions';
 
 export function OnboardingCard() {
   const { t } = useTranslation('common');
   const { user } = useMe();
-  const isAdmin = user?.role === MeResponseDtoRole.admin;
+  const authorization = createAuthorization(user?.role);
+  const isAdmin = authorization.hasRole(MeResponseDtoRole.admin);
   const { completedStepIds, hidden, isLoading } = useOnboarding();
   const { progressPercent } = useOnboardingProgress(isAdmin, completedStepIds);
   const { hideOnboarding } = useHideOnboarding();

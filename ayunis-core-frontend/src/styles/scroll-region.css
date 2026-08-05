@@ -9,6 +9,12 @@
     --content-scroll-header-gap: 1rem;
   }
 
+  @media (width < 40rem) {
+    .content-scroll-region:has(.content-area-header-actions:not(:empty)) {
+      --content-scroll-header-row: 4.75rem;
+    }
+  }
+
   /*
    * Reserve scrollbar space on both sides so content stays horizontally
    * symmetric whether or not a scrollbar is present. Without this, the

@@ -28,7 +28,7 @@ export default function ContentAreaHeader({
   badge,
 }: Readonly<ContentAreaHeaderProps>) {
   return (
-    <header className="flex min-h-9 w-full items-center justify-between gap-4">
+    <header className="flex min-h-9 w-full items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch max-sm:gap-2">
       <div className="flex min-w-0 flex-1 items-center gap-2 lg:pl-2">
         <div className="flex items-center gap-2 lg:hidden">
           <SidebarTrigger />
@@ -63,7 +63,9 @@ export default function ContentAreaHeader({
         </Breadcrumb>
       </div>
       {action && (
-        <div className="flex shrink-0 items-center gap-2">{action}</div>
+        <div className="content-area-header-actions flex shrink-0 items-center gap-2 empty:hidden max-sm:justify-end">
+          {action}
+        </div>
       )}
     </header>
   );
