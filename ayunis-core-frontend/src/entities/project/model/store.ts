@@ -1,5 +1,6 @@
 import type { ProjectColor, ProjectIconKey } from './appearance';
 import { useSyncExternalStore } from 'react';
+import { applyIterationToList } from './iteration';
 import { initialProjects } from './initial-projects';
 import type {
   MockProject,
@@ -13,7 +14,7 @@ import type {
   ProjectVisibility,
 } from './mock';
 
-let projects: MockProject[] = initialProjects;
+let projects: MockProject[] = applyIterationToList(initialProjects);
 const listeners = new Set<() => void>();
 
 function emit() {

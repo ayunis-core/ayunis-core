@@ -47,6 +47,7 @@ import { cn } from '@/shared/lib/shadcn/utils';
 import {
   ProjectIcon,
   useProjects,
+  FEATURES,
   reorderProjects,
   removeProject,
   moveProjectInSidebar,
@@ -264,10 +265,12 @@ function ProjectItem({
             Neuer Chat
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShareOpen(true)}>
-            <Upload />
-            Teilen
-          </DropdownMenuItem>
+          {FEATURES.sharing && (
+            <DropdownMenuItem onClick={() => setShareOpen(true)}>
+              <Upload />
+              Teilen
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Settings2 />
             Einstellungen

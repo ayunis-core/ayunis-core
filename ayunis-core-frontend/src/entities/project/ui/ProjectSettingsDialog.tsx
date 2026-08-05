@@ -36,6 +36,7 @@ import { Trash2 } from 'lucide-react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { CURRENT_USER, type MockProject } from '../model/mock';
+import { FEATURES } from '../model/iteration';
 import {
   removeProject,
   updateProjectDetails,
@@ -120,8 +121,12 @@ export function ProjectSettingsDialog({
         <Tabs defaultValue="general">
           <TabsList>
             <TabsTrigger value="general">Allgemein</TabsTrigger>
-            <TabsTrigger value="chats">Chats</TabsTrigger>
-            <TabsTrigger value="retention">Datenaufbewahrung</TabsTrigger>
+            {FEATURES.settings && (
+              <>
+                <TabsTrigger value="chats">Chats</TabsTrigger>
+                <TabsTrigger value="retention">Datenaufbewahrung</TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <div className="min-h-[300px] py-1">

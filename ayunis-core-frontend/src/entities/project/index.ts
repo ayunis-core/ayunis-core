@@ -76,6 +76,7 @@ export {
   updateTeamRole,
   removeTeamFromProject,
 } from './model/store';
+export { FEATURES, ITERATION } from './model/iteration';
 export { isPrivateProject } from './model/visibility';
 export { ProjectAvatars } from './ui/ProjectAvatars';
 export { ProjectTeamBadge } from './ui/ProjectTeamBadge';

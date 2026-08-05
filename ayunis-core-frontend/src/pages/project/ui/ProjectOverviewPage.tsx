@@ -54,6 +54,7 @@ import {
   removeChatFromProject,
   toggleProjectStarred,
   CURRENT_USER,
+  FEATURES,
   orgPeople,
   type MockProject,
 } from '@/entities/project';
@@ -129,9 +130,11 @@ export function ProjectOverviewPage({
         </TooltipTrigger>
         <TooltipContent>Projekteinstellungen</TooltipContent>
       </Tooltip>
-      <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
-        <Share2 /> Teilen
-      </Button>
+      {FEATURES.sharing && (
+        <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
+          <Share2 /> Teilen
+        </Button>
+      )}
     </>
   );
 
@@ -183,24 +186,30 @@ export function ProjectOverviewPage({
                   label="Ihre Chats"
                   count={project.chats.length}
                 />
-                <TabTriggerWithCount
-                  value="docs"
-                  label="Erstellte Inhalte"
-                  count={(project.generatedDocuments ?? []).length}
-                />
-                <TabTriggerWithCount
-                  value="kb"
-                  label="Wissen"
-                  count={
-                    project.knowledgeBases.length + project.documents.length
-                  }
-                />
-                <TabTriggerWithCount
-                  value="skills"
-                  label="Skills"
-                  count={project.skills.length}
-                />
-                <TabsTrigger value="instructions">Anweisungen</TabsTrigger>
+                {FEATURES.artifacts && (
+                  <TabTriggerWithCount
+                    value="docs"
+                    label="Erstellte Inhalte"
+                    count={(project.generatedDocuments ?? []).length}
+                  />
+                )}
+                {FEATURES.skillsAndKnowledge && (
+                  <>
+                    <TabTriggerWithCount
+                      value="kb"
+                      label="Wissen"
+                      count={
+                        project.knowledgeBases.length + project.documents.length
+                      }
+                    />
+                    <TabTriggerWithCount
+                      value="skills"
+                      label="Skills"
+                      count={project.skills.length}
+                    />
+                    <TabsTrigger value="instructions">Anweisungen</TabsTrigger>
+                  </>
+                )}
               </TabsList>
 
               <TabsContent value="chats" className="mt-4">

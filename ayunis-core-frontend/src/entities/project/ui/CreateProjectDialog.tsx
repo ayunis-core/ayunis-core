@@ -22,6 +22,7 @@ import {
   ItemActions,
 } from '@/shared/ui/shadcn/item';
 import { RoleSelect } from './RoleSelect';
+import { FEATURES } from '../model/iteration';
 import {
   defaultProjectColor,
   type ProjectColor,
@@ -87,6 +88,10 @@ export function CreateProjectDialog({
   }
 
   const canContinue = name.trim().length > 0;
+  const stepTitle = step === 1 ? 'Worum geht es?' : 'Wer hat Zugriff?';
+  const stepHint = FEATURES.sharing
+    ? `Schritt ${step} von 2 · ${stepTitle}`
+    : 'Worum geht es?';
   const canCreate = canContinue && (mode !== 'teams' || teamIds.length > 0);
 
   function handleCreate() {
@@ -125,11 +130,7 @@ export function CreateProjectDialog({
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-lg">
         <DialogHeader className="shrink-0">
           <DialogTitle>Projekt erstellen</DialogTitle>
-          <DialogDescription>
-            {step === 1
-              ? 'Schritt 1 von 2 · Worum geht es?'
-              : 'Schritt 2 von 2 · Wer hat Zugriff?'}
-          </DialogDescription>
+          <DialogDescription>{stepHint}</DialogDescription>
         </DialogHeader>
 
         <div className="-mx-4 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-1">
@@ -224,9 +225,15 @@ export function CreateProjectDialog({
               <Button variant="ghost" onClick={() => handleOpenChange(false)}>
                 Abbrechen
               </Button>
-              <Button onClick={() => setStep(2)} disabled={!canContinue}>
-                Weiter
-              </Button>
+              {FEATURES.sharing ? (
+                <Button onClick={() => setStep(2)} disabled={!canContinue}>
+                  Weiter
+                </Button>
+              ) : (
+                <Button onClick={handleCreate} disabled={!canContinue}>
+                  Projekt erstellen
+                </Button>
+              )}
             </>
           ) : (
             <>

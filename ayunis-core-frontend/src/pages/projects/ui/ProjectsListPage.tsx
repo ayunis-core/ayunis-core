@@ -56,6 +56,7 @@ import {
   MY_TEAM_IDS,
   orgTeams,
   ProjectAvatars,
+  FEATURES,
   CreateProjectDialog,
   type MockProject,
 } from '@/entities/project';
@@ -185,96 +186,105 @@ export function ProjectsListPage() {
         contentArea={
           <div className="flex flex-col gap-4 pt-2">
             <h1 className="text-2xl font-semibold">Projekte</h1>
-            <Tabs defaultValue="mine" className="w-full">
-              <TabsList>
-                <TabsTrigger value="mine">Von Ihnen erstellt</TabsTrigger>
-                <TabsTrigger value="shared">Mit Ihnen geteilt</TabsTrigger>
-              </TabsList>
+            {!FEATURES.sharing ? (
+              <ProjectGrid
+                projects={mine}
+                viewMode={viewMode}
+                emptyText="Sie haben noch keine Projekte."
+                onOpen={openProject}
+              />
+            ) : (
+              <Tabs defaultValue="mine" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="mine">Von Ihnen erstellt</TabsTrigger>
+                  <TabsTrigger value="shared">Mit Ihnen geteilt</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="mine" className="mt-4">
-                {mine.length > 0 ? (
-                  <div className="flex flex-col gap-6">
-                    {minePrivate.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <h2 className="text-sm font-medium">
-                          Private Projekte
-                        </h2>
-                        <ProjectGrid
-                          projects={minePrivate}
-                          viewMode={viewMode}
-                          emptyText=""
-                          onOpen={openProject}
-                        />
-                      </div>
-                    )}
-                    {mineShared.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <h2 className="text-sm font-medium">
-                          Von mir geteilte Projekte
-                        </h2>
-                        <ProjectGrid
-                          projects={mineShared}
-                          viewMode={viewMode}
-                          emptyText=""
-                          onOpen={openProject}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="py-12 text-center text-sm text-muted-foreground">
-                    Sie haben noch keine eigenen Projekte.
-                  </p>
-                )}
-              </TabsContent>
-              <TabsContent value="shared" className="mt-4">
-                {hasShared ? (
-                  <div className="flex flex-col gap-6">
-                    {orgShared.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <h2 className="text-sm font-medium">Organisation</h2>
-                        <ProjectGrid
-                          projects={orgShared}
-                          viewMode={viewMode}
-                          emptyText=""
-                          onOpen={openProject}
-                        />
-                      </div>
-                    )}
-                    {teamGroups.map(({ team, projects: teamProjects }) => (
-                      <div key={team.id} className="flex flex-col gap-3">
-                        <h2 className="text-sm font-medium">
-                          Team {team.name}
-                        </h2>
-                        <ProjectGrid
-                          projects={teamProjects}
-                          viewMode={viewMode}
-                          emptyText=""
-                          onOpen={openProject}
-                        />
-                      </div>
-                    ))}
-                    {sharedDirect.length > 0 && (
-                      <div className="flex flex-col gap-3">
-                        <h2 className="text-sm font-medium">
-                          Direkt mit Ihnen geteilt
-                        </h2>
-                        <ProjectGrid
-                          projects={sharedDirect}
-                          viewMode={viewMode}
-                          emptyText=""
-                          onOpen={openProject}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="py-12 text-center text-sm text-muted-foreground">
-                    Mit Ihnen wurden noch keine Projekte geteilt.
-                  </p>
-                )}
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="mine" className="mt-4">
+                  {mine.length > 0 ? (
+                    <div className="flex flex-col gap-6">
+                      {minePrivate.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h2 className="text-sm font-medium">
+                            Private Projekte
+                          </h2>
+                          <ProjectGrid
+                            projects={minePrivate}
+                            viewMode={viewMode}
+                            emptyText=""
+                            onOpen={openProject}
+                          />
+                        </div>
+                      )}
+                      {mineShared.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h2 className="text-sm font-medium">
+                            Von mir geteilte Projekte
+                          </h2>
+                          <ProjectGrid
+                            projects={mineShared}
+                            viewMode={viewMode}
+                            emptyText=""
+                            onOpen={openProject}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="py-12 text-center text-sm text-muted-foreground">
+                      Sie haben noch keine eigenen Projekte.
+                    </p>
+                  )}
+                </TabsContent>
+                <TabsContent value="shared" className="mt-4">
+                  {hasShared ? (
+                    <div className="flex flex-col gap-6">
+                      {orgShared.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h2 className="text-sm font-medium">Organisation</h2>
+                          <ProjectGrid
+                            projects={orgShared}
+                            viewMode={viewMode}
+                            emptyText=""
+                            onOpen={openProject}
+                          />
+                        </div>
+                      )}
+                      {teamGroups.map(({ team, projects: teamProjects }) => (
+                        <div key={team.id} className="flex flex-col gap-3">
+                          <h2 className="text-sm font-medium">
+                            Team {team.name}
+                          </h2>
+                          <ProjectGrid
+                            projects={teamProjects}
+                            viewMode={viewMode}
+                            emptyText=""
+                            onOpen={openProject}
+                          />
+                        </div>
+                      ))}
+                      {sharedDirect.length > 0 && (
+                        <div className="flex flex-col gap-3">
+                          <h2 className="text-sm font-medium">
+                            Direkt mit Ihnen geteilt
+                          </h2>
+                          <ProjectGrid
+                            projects={sharedDirect}
+                            viewMode={viewMode}
+                            emptyText=""
+                            onOpen={openProject}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="py-12 text-center text-sm text-muted-foreground">
+                      Mit Ihnen wurden noch keine Projekte geteilt.
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         }
       />
@@ -390,7 +400,7 @@ function ProjectRow({
         </ItemDescription>
       </ItemContent>
       <ItemActions className="self-center">
-        <ProjectAvatars project={project} />
+        {FEATURES.sharing && <ProjectAvatars project={project} />}
         <StarButton project={project} />
       </ItemActions>
     </Item>
@@ -417,7 +427,7 @@ function ProjectCard({
       </CardHeader>
       <CardFooter className="mt-auto px-4 text-xs text-muted-foreground">
         <span className="flex-1">{projectCounts(project)}</span>
-        <ProjectAvatars project={project} />
+        {FEATURES.sharing && <ProjectAvatars project={project} />}
       </CardFooter>
     </Card>
   );
