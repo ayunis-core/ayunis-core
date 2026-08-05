@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Sparkles } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Card, CardContent, CardFooter } from '@/shared/ui/shadcn/card';
-import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Button } from '@ayunis/ui/components/button';
+import { Card, CardContent, CardFooter } from '@ayunis/ui/components/card';
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@ayunis/ui/components/alert';
 import { useGeneratePersonalizedSystemPrompt } from '../api/useGeneratePersonalizedSystemPrompt';
 import {
   PersonalizationStepper,

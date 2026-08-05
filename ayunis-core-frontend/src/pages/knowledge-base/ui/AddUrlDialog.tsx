@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Dialog,
   DialogContent,
@@ -9,14 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { isValidUrl } from '../lib/isValidUrl';
 
 /** Link-depth options offered when adding a URL (0 = just this page). */

@@ -5,9 +5,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/card';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Label } from '@ayunis/ui/components/label';
 import { useOrgMfaRequirement } from '../api/useOrgMfaRequirement';
 
 export function MfaRequirementCard() {

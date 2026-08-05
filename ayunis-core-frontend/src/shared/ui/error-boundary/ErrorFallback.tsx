@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 
 interface Props {
   onReset: () => void;

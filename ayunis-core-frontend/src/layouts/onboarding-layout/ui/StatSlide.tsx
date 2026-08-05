@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useCountUp } from '../lib/useCountUp';
 import { APPEAR_DELAY_MS, CUSTOMER_COUNT } from '../model/showcase-content';
 import { TrustBadges } from './TrustBadges';

@@ -4,7 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Item,
   ItemContent,
@@ -12,7 +12,7 @@ import {
   ItemGroup,
   ItemSeparator,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { useTranslation } from 'react-i18next';
 
 interface OrgDetailsProps {

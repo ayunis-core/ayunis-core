@@ -6,8 +6,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
+} from '@ayunis/ui/components/form';
+import { Textarea } from '@ayunis/ui/components/textarea';
 import type { LanguageModelFormData } from '../model/types';
 
 interface LanguageModelDescriptionFieldProps {

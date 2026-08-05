@@ -1,7 +1,7 @@
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   useInitiateChat,
   type SourceUploadStatus,

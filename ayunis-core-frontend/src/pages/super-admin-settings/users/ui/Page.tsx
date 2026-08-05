@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { useUserExport } from '../api/useUserExport';
 
 export default function SuperAdminUsersPage() {

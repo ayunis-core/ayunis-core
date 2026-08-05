@@ -10,7 +10,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 
 // Static
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';

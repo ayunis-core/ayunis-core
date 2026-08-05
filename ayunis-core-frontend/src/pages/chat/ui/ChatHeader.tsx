@@ -1,19 +1,19 @@
 import { useTranslation } from 'react-i18next';
 import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
-import { Badge } from '@/shared/ui/shadcn/badge';
+} from '@ayunis/ui/components/dropdown-menu';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 
 interface ChatHeaderProps {
   readonly threadTitle?: string;
@@ -30,7 +30,6 @@ export default function ChatHeader({
 }: Readonly<ChatHeaderProps>) {
   const { t } = useTranslation('chat');
 
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: empty string should show "Untitled"
   const displayTitle = threadTitle || t('chat.untitled');
 
   const anonymousBadge = isAnonymous ? (

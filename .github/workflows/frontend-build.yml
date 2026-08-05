@@ -1,14 +1,18 @@
-name: Frontend Build
+name: Frontend and UI Build
 
 on:
   pull_request:
     paths:
       - 'ayunis-core-frontend/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
   push:
     branches: [main]
     paths:
       - 'ayunis-core-frontend/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
 
 jobs:
   build:
@@ -39,3 +43,15 @@ jobs:
 
       - name: Run linter
         run: pnpm run lint
+
+      - name: Type-check UI package
+        working-directory: packages/ui
+        run: pnpm run typecheck
+
+      - name: Lint UI package
+        working-directory: packages/ui
+        run: pnpm run lint
+
+      - name: Check UI package dependencies
+        working-directory: packages/ui
+        run: pnpm run deps:check

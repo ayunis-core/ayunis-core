@@ -1,11 +1,11 @@
-import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Switch } from '@/shared/ui/shadcn/switch';
+import { Button } from '@ayunis/ui/components/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Switch } from '@ayunis/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { useDeleteSkill } from '../api/useDeleteSkill';
 import { PermissionGate } from '@/features/permissions';
@@ -23,7 +23,7 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 
 interface SkillCardProps {

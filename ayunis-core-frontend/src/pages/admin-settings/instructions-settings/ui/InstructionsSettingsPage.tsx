@@ -7,12 +7,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useOrgSystemPrompt } from '../api/useOrgSystemPrompt';
 import { useOrgChatSettings } from '../api/useOrgChatSettings';

@@ -3,10 +3,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Form,
   FormControl,
@@ -14,7 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import { useTranslation } from 'react-i18next';
 import { useUserNameUpdate } from '../api/useUserNameUpdate';
 

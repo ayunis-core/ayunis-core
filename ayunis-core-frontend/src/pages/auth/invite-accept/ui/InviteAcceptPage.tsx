@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Form,
   FormControl,
@@ -6,15 +6,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import type { Invite } from '../model/openapi';
 import { useInviteAccept } from '../api';
 import { useTranslation } from 'react-i18next';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Label } from '@ayunis/ui/components/label';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { DepartmentField } from '@/shared/ui/department-field';
 
 interface InviteAcceptPageProps {

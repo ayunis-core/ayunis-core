@@ -5,7 +5,7 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Form,
   FormControl,
@@ -14,9 +14,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/form';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useUpdateSkill } from '../api';

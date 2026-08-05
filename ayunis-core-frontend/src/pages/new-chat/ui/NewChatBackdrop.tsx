@@ -1,4 +1,4 @@
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useCallback, useEffect, useRef } from 'react';
 import './new-chat-backdrop.css';
 

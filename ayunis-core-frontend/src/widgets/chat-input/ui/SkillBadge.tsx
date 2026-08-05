@@ -1,11 +1,11 @@
 import { Sparkles, XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 
 interface SkillBadgeProps {
   skillName: string;

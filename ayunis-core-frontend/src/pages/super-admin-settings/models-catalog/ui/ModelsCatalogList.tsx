@@ -5,8 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { ItemGroup, ItemSeparator } from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/card';
+import { ItemGroup, ItemSeparator } from '@ayunis/ui/components/item';
 import type {
   SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   LanguageModelResponseDto,

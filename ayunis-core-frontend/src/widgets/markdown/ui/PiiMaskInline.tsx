@@ -3,7 +3,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { usePiiMasks } from '../model/pii-mask-context';
 
 interface PiiMaskInlineProps {

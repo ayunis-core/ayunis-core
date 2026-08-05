@@ -1,7 +1,7 @@
 // Types
 import type { ToolUseMessageContent } from '../../model/openapi';
 import type { CalendarEventInput } from '../../api/useGenerateIcs';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 // Utils
 import { useMemo, useState, useEffect } from 'react';
@@ -12,10 +12,10 @@ import { showError } from '@/shared/lib/toast';
 import { useGenerateIcs } from '../../api/useGenerateIcs';
 
 // Shadcn
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
 
 // Widgets
 import { DateTimePickerWidget } from '@/widgets/date-time-picker/ui/DateTimePickerWidget';

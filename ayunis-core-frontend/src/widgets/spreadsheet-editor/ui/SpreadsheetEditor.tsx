@@ -1,7 +1,7 @@
 import { Save, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ArtifactResponseDto } from '@/shared/api';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { VersionHistory } from '@/widgets/artifact-editor';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useSpreadsheetEditorState } from '../model/useSpreadsheetEditorState';

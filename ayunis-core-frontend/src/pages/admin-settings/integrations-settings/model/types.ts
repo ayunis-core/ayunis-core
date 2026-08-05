@@ -9,8 +9,12 @@ import type { McpOAuthClientInput } from '@/shared/lib/mcp-oauth';
 export type McpIntegration = McpIntegrationResponseDto;
 export type PredefinedConfig = PredefinedConfigResponseDto;
 
-export type CreatePredefinedIntegrationFormData =
-  CreatePredefinedIntegrationDto;
+export type CreatePredefinedIntegrationFormData = Omit<
+  CreatePredefinedIntegrationDto,
+  'slug'
+> & {
+  slug: CreatePredefinedIntegrationDto['slug'] | '';
+};
 
 export interface CustomConfigFieldFormData {
   key: string;

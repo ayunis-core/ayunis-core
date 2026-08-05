@@ -6,7 +6,7 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { useMarketplaceConfig } from '@/features/marketplace';
 
 export default function MarketplacePromoCard() {

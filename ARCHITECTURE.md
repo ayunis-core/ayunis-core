@@ -16,6 +16,7 @@ ayunis-core/
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
+├── packages/ui/              # Shared React design-system primitives
 ├── ARCHITECTURE.md            # This file
 ├── AGENTS.md                  # AI coding agent guidelines
 └── docker-compose.yml         # Local dev infrastructure
@@ -91,12 +92,17 @@ ayunis-core/
 
 📁 **[`ayunis-core-frontend/src/`](ayunis-core-frontend/src/SUMMARY.md)**
 
+Application-independent components and theme tokens live in the private
+[`@ayunis/ui`](packages/ui/README.md) workspace package. The frontend's
+`shared` layer contains application-aware shared components and consumes the UI
+package as its design-system foundation.
+
 | Layer | Summary | Detail |
 | ----- | ------- | ------ |
 | [pages](ayunis-core-frontend/src/pages/SUMMARY.md) | Routes | Auth, chat, skills, knowledge bases, settings |
 | [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic | Theme, language, models, usage tracking |
 | [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md) | Composites | Sidebar, chat input, markdown renderer |
-| [shared](ayunis-core-frontend/src/shared/SUMMARY.md) | Primitives | UI components, generated API client, i18n |
+| [shared](ayunis-core-frontend/src/shared/SUMMARY.md) | Shared application infrastructure | Generated API client, i18n, app-aware components |
 
 ---
 

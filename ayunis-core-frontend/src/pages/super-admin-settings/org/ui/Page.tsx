@@ -7,9 +7,9 @@ import type {
   PaginationDto,
 } from '@/shared/api';
 import { SubscriptionResponseDtoType } from '@/shared/api';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { ClockIcon } from 'lucide-react';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
@@ -30,7 +30,7 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@/shared/ui/shadcn/tabs';
+} from '@ayunis/ui/components/tabs';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCallback } from 'react';

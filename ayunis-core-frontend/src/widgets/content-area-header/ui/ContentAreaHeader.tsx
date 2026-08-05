@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import { SidebarTrigger } from '@/shared/ui/shadcn/sidebar';
-import { Separator } from '@/shared/ui/shadcn/separator';
+import { SidebarTrigger } from '@ayunis/ui/components/sidebar';
+import { Separator } from '@ayunis/ui/components/separator';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +9,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/shared/ui/shadcn/breadcrumb';
+} from '@ayunis/ui/components/breadcrumb';
 
 export interface BreadcrumbEntry {
   label: string;

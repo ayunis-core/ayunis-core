@@ -2,7 +2,7 @@ import CreateSkillDialog from './CreateSkillDialog';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink, Store } from 'lucide-react';
 import { EmptyState } from '@/widgets/empty-state';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useMyPermissions } from '@/features/permissions';
 

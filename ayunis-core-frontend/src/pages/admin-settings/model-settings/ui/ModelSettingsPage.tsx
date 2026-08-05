@@ -1,5 +1,9 @@
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Card, CardContent } from '@ayunis/ui/components/card';
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@ayunis/ui/components/alert';
 import { Info, TriangleAlert } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import ModelTypeCard from './ModelTypeCard';

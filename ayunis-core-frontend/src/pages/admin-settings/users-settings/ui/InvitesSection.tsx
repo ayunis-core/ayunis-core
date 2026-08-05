@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
-import { TableCell, TableHead, TableRow } from '@/shared/ui/shadcn/table';
-import { TableBody } from '@/shared/ui/shadcn/table';
+import { TableCell, TableHead, TableRow } from '@ayunis/ui/components/table';
+import { TableBody } from '@ayunis/ui/components/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dropdown-menu';
+import { Button } from '@ayunis/ui/components/button';
 import { MoreHorizontal, RefreshCw, Trash2 } from 'lucide-react';
 import {
   Card,
@@ -15,8 +15,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Table, TableHeader } from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/card';
+import { Table, TableHeader } from '@ayunis/ui/components/table';
 import { useInviteDelete } from '../api/useInviteDelete';
 import { useDeleteAllInvites } from '../api/useDeleteAllInvites';
 import { useInviteResend } from '../api/useInviteResend';

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import { TeamMembersEmptyState } from './TeamMembersEmptyState';
 import { useRemoveTeamMember } from '../api/useRemoveTeamMember';
 import type { TeamMember } from '../model/types';

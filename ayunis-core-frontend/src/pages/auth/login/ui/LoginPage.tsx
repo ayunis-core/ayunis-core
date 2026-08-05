@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Form,
   FormControl,
@@ -7,9 +7,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useLogin } from '../api/useLogin';
 import { useTranslation } from 'react-i18next';

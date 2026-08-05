@@ -6,9 +6,9 @@ import {
   ItemDescription,
   ItemTitle,
   ItemActions,
-} from '@/shared/ui/shadcn/item';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/item';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';

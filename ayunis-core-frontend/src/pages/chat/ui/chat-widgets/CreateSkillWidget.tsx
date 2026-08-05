@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
+import { cn } from '@ayunis/ui/lib/cn';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {

@@ -1,5 +1,5 @@
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { Card, CardHeader, CardContent } from '@/shared/ui/shadcn/card';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
+import { Card, CardHeader, CardContent } from '@ayunis/ui/components/card';
 
 export function UsageStatsCardsLoading() {
   return (

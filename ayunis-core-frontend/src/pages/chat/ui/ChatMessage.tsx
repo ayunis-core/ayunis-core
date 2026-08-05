@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@ayunis/ui/components/dialog';
 import type { Message, ImageMessageContentResponseDto } from '../model/openapi';
 import config from '@/shared/config';
 import { Markdown } from '@/widgets/markdown';

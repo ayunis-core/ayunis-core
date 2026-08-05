@@ -10,11 +10,11 @@ import {
   ItemActions,
   ItemContent,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
+} from '@ayunis/ui/components/item';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { QuestionFormDialog } from './QuestionFormDialog';
 import { useDeleteQuestion } from '../api/useDeleteQuestion';

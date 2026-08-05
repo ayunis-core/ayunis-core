@@ -20,7 +20,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-} from '@/shared/ui/shadcn/chart';
+} from '@ayunis/ui/components/chart';
 import { ChartCard } from '@/widgets/charts/ui/ChartCard';
 import { ChartLoadingState } from '@/widgets/charts/ui/ChartLoadingState';
 import { ChartEmptyState } from '@/widgets/charts/ui/ChartEmptyState';

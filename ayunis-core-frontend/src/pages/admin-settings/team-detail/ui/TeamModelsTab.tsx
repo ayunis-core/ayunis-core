@@ -1,15 +1,19 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/shadcn/alert';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Label } from '@/shared/ui/shadcn/label';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { useLanguageModels, useImageGenerationModels } from '@/features/models';
 import { ModelTypeCard } from '@/widgets/model-type-card';
 import type { ModelActions } from '@/widgets/model-type-card';

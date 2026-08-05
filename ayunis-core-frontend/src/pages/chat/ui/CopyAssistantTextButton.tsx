@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 
 interface CopyAssistantTextButtonProps {
   readonly contentRef: React.RefObject<HTMLDivElement | null>;

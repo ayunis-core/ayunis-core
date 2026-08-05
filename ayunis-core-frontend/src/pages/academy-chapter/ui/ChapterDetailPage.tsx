@@ -5,14 +5,14 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { toLoomEmbedUrl } from '../lib/toLoomEmbedUrl';
 

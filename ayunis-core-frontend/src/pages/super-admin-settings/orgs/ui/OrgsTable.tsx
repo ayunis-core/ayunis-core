@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
 import type { SuperAdminOrgResponseDto } from '@/shared/api';
 import { useRouter } from '@tanstack/react-router';

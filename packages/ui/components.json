@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "registries": {
+    "@ayunis": {
+      "url": "https://registry.ayunis.de/r/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${AYUNIS_REGISTRY_TOKEN}"
+      }
+    }
+  },
+  "tailwind": {
+    "config": "",
+    "css": "src/styles.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@ayunis/ui/components",
+    "utils": "@ayunis/ui/lib/cn",
+    "ui": "@ayunis/ui/components",
+    "lib": "@ayunis/ui/lib",
+    "hooks": "@ayunis/ui/hooks"
+  },
+  "iconLibrary": "lucide"
+}

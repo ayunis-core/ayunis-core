@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { Markdown } from '@/widgets/markdown';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/shared/ui/shadcn/collapsible';
+} from '@ayunis/ui/components/collapsible';
 import type {
   ActivityRunBlock,
   AgentRunBlock,

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import { Badge } from '@ayunis/ui/components/badge';
 import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
 import { TierStars } from '@/widgets/model-type-card';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';

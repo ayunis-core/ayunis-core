@@ -4,10 +4,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Separator } from '@/shared/ui/shadcn/separator';
+} from '@ayunis/ui/components/card';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Label } from '@ayunis/ui/components/label';
+import { Separator } from '@ayunis/ui/components/separator';
 import {
   ModelWithConfigResponseDtoTier,
   type ModelWithConfigResponseDto,
@@ -19,14 +19,14 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { Star } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   getFlagByProvider,
   getHostingPriority,

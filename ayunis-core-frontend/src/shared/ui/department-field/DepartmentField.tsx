@@ -5,15 +5,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import {
   DEPARTMENT_KEYS,
   DEPARTMENT_OTHER_MAX_LENGTH,

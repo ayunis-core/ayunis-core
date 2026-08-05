@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Badge } from '@/shared/ui/shadcn/badge';
+} from '@ayunis/ui/components/dropdown-menu';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { MoreVertical, Loader2 } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { getIntegrationTypeLabel } from '../lib/helpers';
@@ -22,7 +22,7 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 
 interface IntegrationCardProps {
   integration: McpIntegration;

@@ -7,7 +7,7 @@ import type {
   ColumnRegular,
 } from '@revolist/react-datagrid';
 import { useTranslation } from 'react-i18next';
-import { Empty, EmptyDescription } from '@/shared/ui/shadcn/empty';
+import { Empty, EmptyDescription } from '@ayunis/ui/components/empty';
 import './spreadsheet-grid.css';
 import type { GridRow } from '../model/spreadsheet-grid-state';
 import { columnKey } from '../model/spreadsheet-grid-state';

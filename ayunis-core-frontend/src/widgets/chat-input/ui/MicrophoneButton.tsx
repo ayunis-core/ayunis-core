@@ -1,15 +1,15 @@
 import { Mic, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
 import { useVoiceRecording } from '../hooks/useVoiceRecording';
 import { useTranscribe } from '../api/useTranscribe';
 import { showError } from '@/shared/lib/toast';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
 
 interface MicrophoneButtonProps {

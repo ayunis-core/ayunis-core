@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -16,11 +16,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import type { McpIntegration, UpdateIntegrationFormData } from '../model/types';
 import { useUpdateIntegration } from '../api/useUpdateIntegration';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';

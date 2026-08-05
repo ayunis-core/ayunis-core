@@ -15,12 +15,12 @@ import {
 } from '@dnd-kit/sortable';
 import { Columns3, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
+} from '@ayunis/ui/components/popover';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import {
   resolveColumnReorder,

@@ -4,7 +4,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import { Loader2, Plug } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';

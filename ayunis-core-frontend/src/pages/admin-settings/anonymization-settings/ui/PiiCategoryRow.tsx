@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Item,
   ItemActions,
@@ -10,7 +10,7 @@ import {
   ItemDescription,
   ItemFooter,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import type { PiiCategory } from '@/shared/api';
 import type { CategoryRowState } from '../model/types';
 import { MAX_PATTERN_LENGTH } from '../lib/validate-regex';

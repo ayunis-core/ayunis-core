@@ -4,9 +4,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
+import { Badge } from '@ayunis/ui/components/badge';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionResponseDto } from '@/shared/api';
 import type { ReactNode } from 'react';

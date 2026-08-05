@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ACADEMY_LANDING_PAGE_URL } from '@/features/academy';

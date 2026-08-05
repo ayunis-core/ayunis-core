@@ -132,6 +132,7 @@
       "titleCloud": "Integration hinzufügen",
       "integrationType": "Integrationstyp",
       "integrationTypePlaceholder": "Integration auswählen",
+      "integrationTypeRequired": "Wählen Sie eine Integration aus",
       "name": "Name",
       "namePlaceholder": "Meine Integration",
       "nameDescription": "Ein freundlicher Name für diese Integrationsinstanz",

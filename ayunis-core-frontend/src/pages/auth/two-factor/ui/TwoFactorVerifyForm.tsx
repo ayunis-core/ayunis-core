@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@/shared/ui/shadcn/input-otp';
+} from '@ayunis/ui/components/input-otp';
 import { useVerifyMfa } from '../api/useVerifyMfa';
 
 export function TwoFactorVerifyForm({

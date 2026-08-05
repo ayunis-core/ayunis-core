@@ -20,13 +20,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/shared/ui/shadcn/sidebar';
+} from '@ayunis/ui/components/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
@@ -37,7 +37,7 @@ import { useNavigate } from '@tanstack/react-router';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
 import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
-import { useSidebar } from '@/shared/ui/shadcn/sidebar';
+import { useSidebar } from '@ayunis/ui/components/sidebar';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import config from '@/shared/config';
 import { ReleaseNotesButton } from './ReleaseNotesButton';

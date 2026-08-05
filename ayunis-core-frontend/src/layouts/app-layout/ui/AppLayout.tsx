@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouterState } from '@tanstack/react-router';
-import { SidebarProvider, SidebarInset } from '@/shared/ui/shadcn/sidebar';
+import { SidebarProvider, SidebarInset } from '@ayunis/ui/components/sidebar';
 import AppSidebar from '@/widgets/app-sidebar';
 import AppAlertBanner from '@/widgets/app-alert-banner';
 

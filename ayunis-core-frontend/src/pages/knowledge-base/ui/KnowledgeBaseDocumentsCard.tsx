@@ -7,8 +7,8 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
   ItemContent,
@@ -18,7 +18,7 @@ import {
   ItemMedia,
   ItemGroup,
   ItemSeparator,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import {
   KnowledgeBaseDocumentResponseDtoTextType,
   KnowledgeBaseDocumentResponseDtoStatus,
@@ -37,10 +37,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { formatDate } from '@/shared/lib/format-date';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import {

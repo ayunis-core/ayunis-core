@@ -8,11 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/shadcn/alert';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/dialog';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 interface RevealSecretDialogProps {

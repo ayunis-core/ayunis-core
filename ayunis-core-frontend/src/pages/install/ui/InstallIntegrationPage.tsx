@@ -12,7 +12,7 @@ import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
 import type { MarketplaceIntegrationResponseDto } from '../api/useFetchMarketplaceIntegration';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
@@ -20,7 +20,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Form,
   FormControl,
@@ -29,11 +29,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import {
   hasOAuthConfiguration,
   type McpOAuthConfig,

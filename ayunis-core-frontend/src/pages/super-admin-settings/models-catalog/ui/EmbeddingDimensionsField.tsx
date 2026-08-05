@@ -6,14 +6,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import type { EmbeddingModelFormData } from '../model/types';
 
 const DIMENSIONS = [

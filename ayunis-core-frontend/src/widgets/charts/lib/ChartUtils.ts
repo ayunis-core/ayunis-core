@@ -1,4 +1,4 @@
-import type { ChartConfig } from '../../../shared/ui/shadcn/chart';
+import type { ChartConfig } from '@ayunis/ui/components/chart';
 
 export interface YAxisSeries {
   label: string;

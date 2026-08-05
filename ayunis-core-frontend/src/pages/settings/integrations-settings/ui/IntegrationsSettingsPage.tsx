@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Plug } from 'lucide-react';
 import { SettingsLayout } from '../../settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { Button } from '@ayunis/ui/components/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { UserConfigDialog } from '@/widgets/mcp-user-config';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useUserIntegrations } from '../api/useUserIntegrations';

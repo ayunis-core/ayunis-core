@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';

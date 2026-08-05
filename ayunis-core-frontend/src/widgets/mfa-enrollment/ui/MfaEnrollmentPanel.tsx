@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Copy } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@/shared/ui/shadcn/input-otp';
+} from '@ayunis/ui/components/input-otp';
 
 interface Props {
   qrCodeDataUri: string;

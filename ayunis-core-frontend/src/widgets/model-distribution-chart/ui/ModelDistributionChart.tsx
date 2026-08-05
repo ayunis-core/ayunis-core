@@ -1,6 +1,6 @@
 // Utils
 import { useTranslation } from 'react-i18next';
-import { useIsMobile } from '@/shared/hooks/shadcn/use-mobile';
+import { useIsMobile } from '@ayunis/ui/hooks/use-mobile';
 
 // UI
 import {
@@ -8,14 +8,14 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/shared/ui/shadcn/chart';
+} from '@ayunis/ui/components/chart';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { Pie, PieChart, Cell } from 'recharts';
 
 interface ChartDataItem {

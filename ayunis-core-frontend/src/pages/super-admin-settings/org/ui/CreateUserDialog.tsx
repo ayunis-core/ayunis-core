@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -15,17 +15,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/select';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
+import { Label } from '@ayunis/ui/components/label';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSuperAdminCreateUser } from '../api/useSuperAdminCreateUser';

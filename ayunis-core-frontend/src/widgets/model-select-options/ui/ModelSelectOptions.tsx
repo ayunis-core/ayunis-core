@@ -4,12 +4,12 @@ import {
   Popover,
   PopoverAnchor,
   PopoverContent,
-} from '@/shared/ui/shadcn/popover';
+} from '@ayunis/ui/components/popover';
 import {
   SelectGroup,
   SelectItem,
   SelectLabel,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import {
   getFlagByProvider,
   getHostingPriority,

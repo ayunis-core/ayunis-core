@@ -1,5 +1,5 @@
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 

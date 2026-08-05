@@ -1,12 +1,8 @@
 @import 'tailwindcss';
-@import './themes/core.css';
+@import '@ayunis/ui/styles.css';
 @import './scroll-region.css';
 @import './interactions.css';
 @import './scrollbar.css';
-
-@plugin "tailwindcss-animate";
-
-@custom-variant dark (&:is(.dark *));
 
 html,
 body {

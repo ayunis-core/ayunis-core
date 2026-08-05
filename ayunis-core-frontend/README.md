@@ -31,15 +31,18 @@ This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
 ## Shadcn
 
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+Application-independent components live in the `@ayunis/ui` workspace package.
+Add components using the latest version of [Shadcn](https://ui.shadcn.com/)
+from that package:
 
 ```bash
-pnpx shadcn@latest add button
+cd ../packages/ui
+pnpm dlx shadcn@latest add button
 ```
 
 ### Ayunis Private Registry
 
-This project uses a custom Ayunis registry for shared shadcn components. The registry is configured in `components.json`:
+This project uses a custom Ayunis registry for shared shadcn components. The registry is configured in `packages/ui/components.json`:
 
 ```json
 {
@@ -57,13 +60,14 @@ This project uses a custom Ayunis registry for shared shadcn components. The reg
 To add components from the Ayunis registry:
 
 ```bash
-pnpx shadcn@latest add @ayunis/component-name
+cd ../packages/ui
+pnpm dlx shadcn@latest add @ayunis/component-name
 ```
 
 **Note:** You need the `AYUNIS_REGISTRY_TOKEN` environment variable set and the registry server reachable. Team members get the token injected from Infisical:
 
 ```bash
-infisical run --env=dev --path=/frontend -- pnpx shadcn@latest add @ayunis/component-name
+infisical run --env=dev --path=/frontend -- pnpm dlx shadcn@latest add @ayunis/component-name
 ```
 
 (The `ui-library-update` GitHub workflow keeps its own Actions secret.)

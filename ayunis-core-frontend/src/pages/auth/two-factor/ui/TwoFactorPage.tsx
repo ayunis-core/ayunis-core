@@ -5,7 +5,7 @@ import {
   MfaEnrollmentPanel,
   RecoveryCodesPanel,
 } from '@/widgets/mfa-enrollment';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useMfaLoginEnroll } from '../api/useMfaLoginEnroll';
 import { TwoFactorVerifyForm } from './TwoFactorVerifyForm';
 

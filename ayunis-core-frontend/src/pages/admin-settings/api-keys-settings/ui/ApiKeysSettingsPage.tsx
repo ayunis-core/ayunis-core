@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Button } from '@ayunis/ui/components/button';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { ActiveSubscriptionResponseDtoSubscriptionType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { ActiveSubscriptionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';

@@ -1,15 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { Pencil, Trash2, ChevronRight, Users } from 'lucide-react';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
   ItemDescription,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { useDeleteTeam } from '../api/useDeleteTeam';
 import type { Team } from '../model/types';
 import { PermissionGate } from '@/features/permissions';

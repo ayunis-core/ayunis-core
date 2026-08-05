@@ -2,22 +2,22 @@ import { Fragment, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import SettingsLayout from '../../admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import { useRolePermissionsControllerGet } from '@/shared/api';
 import type {
   EditableRole,

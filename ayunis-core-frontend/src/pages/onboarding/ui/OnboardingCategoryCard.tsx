@@ -6,11 +6,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/shared/ui/shadcn/accordion';
-import { Progress } from '@/shared/ui/shadcn/progress';
+} from '@ayunis/ui/components/accordion';
+import { Progress } from '@ayunis/ui/components/progress';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import OnboardingStepItem from './OnboardingStepItem';
-import { Card } from '@/shared/ui/shadcn/card';
+import { Card } from '@ayunis/ui/components/card';
 
 interface OnboardingCategoryCardProps {
   category: OnboardingCategory;

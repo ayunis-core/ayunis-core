@@ -6,8 +6,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/ui/shadcn/alert-dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/alert-dialog';
+import { Button } from '@ayunis/ui/components/button';
 
 interface RemoveRestrictionsDialogProps {
   open: boolean;

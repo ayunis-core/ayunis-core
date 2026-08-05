@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Item,
   ItemContent,
@@ -15,20 +15,20 @@ import {
   ItemMedia,
   ItemGroup,
   ItemSeparator,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { FileText, Loader2, AlertCircle, Clock, X } from 'lucide-react';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import { showError } from '@/shared/lib/toast';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 
 export interface Source {

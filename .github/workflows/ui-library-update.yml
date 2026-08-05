@@ -52,12 +52,12 @@ jobs:
           node-version: '24'
 
       - name: Sync installed @ayunis components from the registry
-        working-directory: ayunis-core-frontend
+        working-directory: packages/ui
         env:
           AYUNIS_REGISTRY_TOKEN: ${{ secrets.AYUNIS_REGISTRY_TOKEN }}
         run: |
           set -e
-          for f in src/shared/ui/shadcn/*.tsx; do
+          for f in src/components/*.tsx; do
             name=$(basename "$f" .tsx)
             echo "::group::shadcn add @ayunis/$name"
             pnpm dlx shadcn@latest add "@ayunis/$name" --overwrite --yes \
@@ -91,7 +91,7 @@ jobs:
           cat > /tmp/agent-instructions.md <<'EOF'
           The shadcn registry just refreshed every installed @ayunis component
           in this repo. The pending changes are in the working tree, mostly
-          under ./ayunis-core-frontend/src/shared/ui/shadcn/.
+          under ./packages/ui/src/components/.
 
           DO THESE FOUR THINGS:
 
@@ -99,7 +99,7 @@ jobs:
              one of: cosmetic | behavioral | breaking.
 
           2. USAGE SCAN — for behavioral/breaking changes, ripgrep
-             ./ayunis-core-frontend/src/ (excluding the shadcn/ folder itself)
+             ./ayunis-core-frontend/src/
              for callers that touch the affected API. Record file:line for
              every hit and classify each as `safe` or `needs review`.
 

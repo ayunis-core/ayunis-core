@@ -30,17 +30,17 @@ FE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/
 # Backend: staged TS files
 BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|apps|libs|test)/.*\.ts$' || true)
 
-# Workspace packages (packages/*): staged TS files, plus the distinct package dirs touched
-PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.ts$' || true)
+# Workspace packages (packages/*): staged TS/TSX files, plus the distinct package dirs touched
+PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.(ts|tsx)$' || true)
 PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
 
-# Complexity gate scope: ALL staged backend + workspace-package .ts files. This
+# Complexity gate scope: ALL staged backend + workspace-package TS/TSX files. This
 # is intentionally broader than the lint scopes above (which target src/apps/
 # libs/test and src/examples) so it matches the CI "Complexity Check" workflow
 # (.github/workflows/complexity-check.yml) exactly — including root config files
 # like orval.config.ts / tsup.config.ts that CI complexity-checks but the lint
 # jobs skip. The eslint.complexity.config.mjs `ignores` handle exclusions.
-COMPLEXITY_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^(ayunis-core-backend|packages)/.*\.ts$' || true)
+COMPLEXITY_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^(ayunis-core-backend|packages)/.*\.(ts|tsx)$' || true)
 
 # All staged TS/TSX files (for file size check)
 ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
@@ -173,7 +173,7 @@ run_be_eslint() {
 # globbed `ignores`/`files` resolve identically for backend and package files.
 run_complexity() {
   STATUS_FILE="$1"
-  print_section "Complexity • ESLint (staged backend + packages TS)"
+  print_section "Complexity • ESLint (staged backend + packages TS/TSX)"
   printf "%s\n" "$COMPLEXITY_TS_STAGED" | sed 's#^# - #'
   set +e
   printf "%s" "$COMPLEXITY_TS_STAGED" \
@@ -234,7 +234,7 @@ run_pkg_checks() {
   pkg_name=$(basename "$pkg_dir")
   pkg_staged=$(printf "%s\n" "$PKG_TS_STAGED" | grep -E "^${pkg_dir}/" || true)
   pkg_rel=$(printf "%s" "$pkg_staged" | sed "s#^${pkg_dir}/##")
-  print_section "Package ${pkg_name} • checks (staged TS)"
+  print_section "Package ${pkg_name} • checks (staged TS/TSX)"
   printf "%s\n" "$pkg_rel" | sed 's#^# - #'
   st=0
   (
@@ -533,4 +533,3 @@ else
   printf "%b\n" "${GREEN}${BOLD}All pre-commit checks passed.${NC} ✅"
   printf "Completed in %ds\n" "$ELAPSED"
 fi
-

@@ -1,15 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { PII_CATEGORIES } from '@/shared/lib/pii-categories';
 import { useGlobalWhitelistWords } from '../api/useGlobalWhitelistWords';
 import { CategoryWordSection } from './CategoryWordSection';

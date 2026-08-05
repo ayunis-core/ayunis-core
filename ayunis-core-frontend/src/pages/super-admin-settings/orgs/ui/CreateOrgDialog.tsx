@@ -1,6 +1,6 @@
 import { useState, useCallback, type SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/dialog';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import { useSuperAdminCreateOrg } from '../api/useSuperAdminCreateOrg';
 
 export default function CreateOrgDialog() {

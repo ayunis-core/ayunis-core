@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
 import { Mail } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
 
 export default function SendEmailWidget({

@@ -7,24 +7,24 @@ import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import type { CreateCustomIntegrationFormData } from '../model/types';
 import { HTTP_HEADER_NAME_PATTERN } from '../lib/custom-config-field-validation';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Button } from '@ayunis/ui/components/button';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 
 interface CustomConfigFieldEditorProps {
   form: UseFormReturn<CreateCustomIntegrationFormData>;

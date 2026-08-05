@@ -1,10 +1,10 @@
 // Utils
 import { useMemo } from 'react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useDownloadChartImage } from '@/widgets/charts/lib/useDownloadChartImage';
 
 // UI
-import { ChartContainer, type ChartConfig } from '@/shared/ui/shadcn/chart';
+import { ChartContainer, type ChartConfig } from '@ayunis/ui/components/chart';
 import {
   Card,
   CardHeader,
@@ -12,8 +12,8 @@ import {
   CardAction,
   CardContent,
   CardFooter,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { Download, Loader2 } from 'lucide-react';
 
 type ChartCardProps = {

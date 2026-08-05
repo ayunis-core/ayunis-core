@@ -1,6 +1,6 @@
 import type { SubscriptionResponseDto } from '@/shared/api';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
 import { ClockIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SubscriptionCancellationSection as SharedSubscriptionCancellationSection } from '@/widgets/subscription-cancellation-section';

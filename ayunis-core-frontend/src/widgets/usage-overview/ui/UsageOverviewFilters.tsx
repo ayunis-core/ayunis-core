@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { MonthPicker } from '@/widgets/month-picker';
 
 interface FilterOption {

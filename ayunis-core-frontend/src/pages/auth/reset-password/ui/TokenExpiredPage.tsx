@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';

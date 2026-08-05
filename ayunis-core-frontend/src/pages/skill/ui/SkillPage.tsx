@@ -17,15 +17,15 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@/shared/ui/shadcn/tabs';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
+} from '@ayunis/ui/components/tabs';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { Trash2, Pin } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useConfirmation } from '@/widgets/confirmation-modal';

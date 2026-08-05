@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import {
   Card,
   CardAction,
@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { UserUsageTableRow } from './UserUsageTableRow';
 import { UserUsageTablePagination } from './UserUsageTablePagination';
 

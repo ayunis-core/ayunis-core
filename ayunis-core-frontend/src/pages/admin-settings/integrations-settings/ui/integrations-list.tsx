@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Card, CardContent } from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { ExternalLink, FileQuestion, Store } from 'lucide-react';
 import type { McpIntegration } from '../model/types';
 import { IntegrationCard } from './integration-card';

@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { useAcademyAccessOrgSettings } from '../api/useAcademyAccessOrgSettings';
 import { ACADEMY_ACCESS_MODE_OPTIONS } from '../model/modes';
 

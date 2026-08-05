@@ -4,9 +4,9 @@ import {
   CardHeader,
   CardTitle,
   CardAction,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import CreateSubscriptionDialog from './CreateSubscriptionDialog';
 
 interface NoSubscriptionSectionProps {

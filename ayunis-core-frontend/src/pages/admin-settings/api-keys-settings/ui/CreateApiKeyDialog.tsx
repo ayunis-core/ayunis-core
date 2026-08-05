@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -19,16 +19,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Calendar } from '@/shared/ui/shadcn/calendar';
+} from '@ayunis/ui/components/form';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Calendar } from '@ayunis/ui/components/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
-import { cn } from '@/shared/lib/shadcn/utils';
+} from '@ayunis/ui/components/popover';
+import { cn } from '@ayunis/ui/lib/cn';
 import { formatDate } from '@/shared/lib/format-date';
 import { useCreateApiKey } from '../api/useCreateApiKey';
 import {

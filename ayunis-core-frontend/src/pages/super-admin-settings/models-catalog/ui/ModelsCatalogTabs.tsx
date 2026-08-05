@@ -5,7 +5,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/shared/ui/shadcn/tabs';
+} from '@ayunis/ui/components/tabs';
 
 interface ModelsCatalogTabsProps {
   activeCount: number;

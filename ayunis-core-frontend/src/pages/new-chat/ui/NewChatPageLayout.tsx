@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import NewChatBackdrop, { type NewChatBackdropPhase } from './NewChatBackdrop';
 import { useComposeLift } from '../model/useComposeLift';
 

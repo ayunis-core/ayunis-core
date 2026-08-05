@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { UsageStatsCardsLoading } from './UsageStatsCardsLoading';
 
 interface UsageStats {

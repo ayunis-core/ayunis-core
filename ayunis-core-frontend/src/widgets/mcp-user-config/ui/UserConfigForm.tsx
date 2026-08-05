@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DialogFooter } from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+import { DialogFooter } from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import { ConfigFieldInput } from '@/shared/ui/config-field-input';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useGetUserConfig, useSetUserConfig } from '../api/useUserConfig';
 import type {
   McpIntegrationResponseDto,

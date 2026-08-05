@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Combobox,
   ComboboxChip,
@@ -20,7 +20,7 @@ import {
   ComboboxList,
   ComboboxValue,
   useComboboxAnchor,
-} from '@/shared/ui/shadcn/combobox';
+} from '@ayunis/ui/components/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
 import { useAddTeamMembers } from '../api/useAddTeamMembers';

@@ -1,7 +1,7 @@
 import { ChevronRight, X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Progress } from '@/shared/ui/shadcn/progress';
+import { Progress } from '@ayunis/ui/components/progress';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useMe } from '../api/useMe';
 import { useHideOnboarding } from '../api/useHideOnboarding';

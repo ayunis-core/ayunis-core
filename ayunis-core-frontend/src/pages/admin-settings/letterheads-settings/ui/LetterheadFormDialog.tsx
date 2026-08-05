@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -17,11 +17,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Switch } from '@/shared/ui/shadcn/switch';
+} from '@ayunis/ui/components/form';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
+import { Switch } from '@ayunis/ui/components/switch';
 import { MarginEditor } from '@/widgets/margin-editor';
 import { useCreateLetterhead } from '../api/useCreateLetterhead';
 import type { PageMargins } from '../model/types';

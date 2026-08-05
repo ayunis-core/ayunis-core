@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import { slugify } from '../../lib/slugify';
 import { useTranslation } from 'react-i18next';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { Label } from '@ayunis/ui/components/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -57,13 +57,11 @@ export default function EditSkillWidget({
   // Merge streaming params with existing skill data as fallback.
   // Empty-string params mean "unchanged" — fill from existing skill.
   useEffect(() => {
-    /* eslint-disable @typescript-eslint/prefer-nullish-coalescing -- empty string means "unchanged", must fall through to existing skill data */
     const mergedName = params.name || existingSkill?.name || '';
     const mergedDescription =
       params.short_description || existingSkill?.shortDescription || '';
     const mergedInstructions =
       params.instructions || existingSkill?.instructions || '';
-    /* eslint-enable @typescript-eslint/prefer-nullish-coalescing */
 
     const updateWidget = () => {
       setName(mergedName);

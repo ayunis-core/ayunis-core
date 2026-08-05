@@ -6,10 +6,10 @@ import {
   ItemDescription,
   ItemTitle,
   ItemActions,
-} from '@/shared/ui/shadcn/item';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
+} from '@ayunis/ui/components/item';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
 import { Pencil, Trash2 } from 'lucide-react';
 
 interface SkillTemplateItemProps {

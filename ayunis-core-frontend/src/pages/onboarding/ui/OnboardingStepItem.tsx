@@ -6,11 +6,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/shared/ui/shadcn/accordion';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+} from '@ayunis/ui/components/accordion';
+import { Button } from '@ayunis/ui/components/button';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 import {
   useOnboardingTour,

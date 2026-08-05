@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemFooter,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import type { GlobalPiiWhitelistWordDto, PiiCategory } from '@/shared/api';
 import { useAddGlobalWhitelistWord } from '../api/useAddGlobalWhitelistWord';
 import { useDeleteGlobalWhitelistWord } from '../api/useDeleteGlobalWhitelistWord';

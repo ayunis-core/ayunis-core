@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -14,15 +14,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { InviteRole } from '../model/openapi';
@@ -31,7 +31,7 @@ import { useTranslation } from 'react-i18next';
 import { Copy, Check } from 'lucide-react';
 import { showSuccess } from '@/shared/lib/toast';
 import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Label } from '@ayunis/ui/components/label';
 
 interface InviteFormData {
   email: string;

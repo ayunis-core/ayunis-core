@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
-import { SidebarMenuButton } from '@/shared/ui/shadcn/sidebar';
+import { SidebarMenuButton } from '@ayunis/ui/components/sidebar';
 import { useReleaseNotes } from '@/features/useReleaseNotes';
 
 export function ReleaseNotesButton() {

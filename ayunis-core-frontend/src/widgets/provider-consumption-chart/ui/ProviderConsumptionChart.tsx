@@ -11,14 +11,14 @@ import {
   ChartLegend,
   ChartLegendContent,
   type ChartConfig,
-} from '@/shared/ui/shadcn/chart';
+} from '@ayunis/ui/components/chart';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 
 interface ProviderConsumptionChartProps {
   chartData: Array<Record<string, number | string>>;

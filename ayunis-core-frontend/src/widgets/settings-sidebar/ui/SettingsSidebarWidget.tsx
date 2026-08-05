@@ -9,7 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/shared/ui/shadcn/sidebar';
+} from '@ayunis/ui/components/sidebar';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type { ReactElement } from 'react';

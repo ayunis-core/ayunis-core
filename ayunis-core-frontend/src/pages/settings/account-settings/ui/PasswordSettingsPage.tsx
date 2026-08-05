@@ -3,10 +3,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Separator } from '@/shared/ui/shadcn/separator';
+} from '@ayunis/ui/components/card';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
+import { Button } from '@ayunis/ui/components/button';
+import { Separator } from '@ayunis/ui/components/separator';
 import { useTranslation } from 'react-i18next';
 import { usePasswordUpdate } from '../api/usePasswordUpdate';
 import {
@@ -16,7 +16,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 
 export default function PasswordSettingsPage() {
   const { t } = useTranslation('settings');
