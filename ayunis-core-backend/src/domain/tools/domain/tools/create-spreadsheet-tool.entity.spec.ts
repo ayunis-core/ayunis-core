@@ -8,12 +8,18 @@ describe('CreateSpreadsheetTool', () => {
       tool.validateParams({
         title: 'Quarterly budget',
         columns: ['Category', 'Amount'],
-        rows: [['Rent', 1200], ['Notes', null]],
+        rows: [
+          ['Rent', 1200],
+          ['Notes', null],
+        ],
       }),
     ).toEqual({
       title: 'Quarterly budget',
       columns: ['Category', 'Amount'],
-      rows: [['Rent', 1200], ['Notes', null]],
+      rows: [
+        ['Rent', 1200],
+        ['Notes', null],
+      ],
     });
   });
 });
