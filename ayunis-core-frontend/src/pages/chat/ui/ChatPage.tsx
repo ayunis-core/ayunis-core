@@ -14,6 +14,7 @@ import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
 import { useMessageSend } from '../api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
+import UnavailableModelNotice from './UnavailableModelNotice';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
 
@@ -79,7 +80,11 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const { models, isLoading: isLoadingModels } = usePermittedModels();
+  const {
+    models,
+    isLoading: isLoadingModels,
+    error: isModelsError,
+  } = usePermittedModels();
   const [isStreaming, setIsStreaming] = useState(false);
   const { data: thread = initialThread } = useQuery({
     queryKey: getThreadsControllerFindOneQueryKey(initialThread.id),
@@ -105,11 +110,13 @@ export default function ChatPage({
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
   // Detect if the model used in this thread is no longer accessible.
-  // Only flagged after loading completes to avoid flashing the warning.
+  // Only flagged after the permitted-models query succeeds — a loading or
+  // errored query must not hide the input (AYC-666).
   const isModelUnavailable = useMemo(() => {
-    if (thread.permittedModelId) return !isLoadingModels && !selectedModel;
+    if (thread.permittedModelId)
+      return !isLoadingModels && !isModelsError && !selectedModel;
     return false;
-  }, [thread.permittedModelId, selectedModel, isLoadingModels]);
+  }, [thread.permittedModelId, selectedModel, isLoadingModels, isModelsError]);
 
   const queryClient = useQueryClient();
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -395,7 +402,9 @@ export default function ChatPage({
   );
 
   // Controls are always disabled — thread already has messages
-  const chatInput = isModelUnavailable ? null : (
+  const chatInput = isModelUnavailable ? (
+    <UnavailableModelNotice />
+  ) : (
     <>
       <p className="text-xs text-muted-foreground text-center mb-2">
         {t('chat.inputDisclaimer')}

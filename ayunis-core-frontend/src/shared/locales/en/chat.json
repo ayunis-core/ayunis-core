@@ -182,6 +182,8 @@
     "charts": {
       "emptyState": "No chart data available"
     },
+    "modelUnavailableTitle": "AI model no longer available",
+    "modelUnavailableDescription": "The AI model used in this chat is no longer available, so this conversation cannot be continued. Start a new chat to keep working.",
     "longChatWarningTitle": "Conversation too long",
     "longChatWarningDescription": "For better results, consider starting a new chat.",
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",

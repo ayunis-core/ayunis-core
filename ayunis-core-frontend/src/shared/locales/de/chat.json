@@ -182,6 +182,8 @@
     "charts": {
       "emptyState": "Keine Diagrammdaten verfügbar"
     },
+    "modelUnavailableTitle": "KI-Modell nicht mehr verfügbar",
+    "modelUnavailableDescription": "Das in diesem Chat verwendete KI-Modell ist nicht mehr verfügbar, daher kann diese Konversation nicht fortgesetzt werden. Starten Sie einen neuen Chat, um weiterzuarbeiten.",
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
