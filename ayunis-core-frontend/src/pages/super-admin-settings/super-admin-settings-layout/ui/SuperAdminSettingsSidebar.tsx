@@ -7,6 +7,7 @@ import {
   GraduationCap,
   Users,
   Megaphone,
+  EyeOff,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -57,6 +58,11 @@ export function SuperAdminSettingsSidebar() {
       to: '/super-admin-settings/app-alerts',
       icon: <Megaphone />,
       label: t('layout.appAlerts'),
+    },
+    {
+      to: '/super-admin-settings/anonymization',
+      icon: <EyeOff />,
+      label: t('layout.anonymization'),
     },
   ];
 

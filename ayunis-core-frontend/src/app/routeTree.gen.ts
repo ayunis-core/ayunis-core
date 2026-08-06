@@ -58,6 +58,7 @@ import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport 
 import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
 import { Route as AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport } from './routes/_authenticated/super-admin-settings.app-alerts.index'
+import { Route as AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport } from './routes/_authenticated/super-admin-settings.anonymization.index'
 import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
@@ -346,6 +347,12 @@ const AuthenticatedSuperAdminSettingsAppAlertsIndexRoute =
     path: '/super-admin-settings/app-alerts/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSuperAdminSettingsAnonymizationIndexRoute =
+  AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport.update({
+    id: '/super-admin-settings/anonymization/',
+    path: '/super-admin-settings/anonymization/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsAcademyIndexRoute =
   AuthenticatedSuperAdminSettingsAcademyIndexRouteImport.update({
     id: '/super-admin-settings/academy/',
@@ -444,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -501,6 +509,7 @@ export interface FileRoutesByTo {
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/super-admin-settings/anonymization': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -561,6 +570,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/_authenticated/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/_authenticated/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -621,6 +631,7 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads/'
     | '/admin-settings/teams/'
     | '/super-admin-settings/academy/'
+    | '/super-admin-settings/anonymization/'
     | '/super-admin-settings/app-alerts/'
     | '/super-admin-settings/models-catalog/'
     | '/super-admin-settings/orgs/'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/admin-settings/letterheads'
     | '/admin-settings/teams'
     | '/super-admin-settings/academy'
+    | '/super-admin-settings/anonymization'
     | '/super-admin-settings/app-alerts'
     | '/super-admin-settings/models-catalog'
     | '/super-admin-settings/orgs'
@@ -737,6 +749,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/teams/'
     | '/_authenticated/super-admin-settings/academy/'
+    | '/_authenticated/super-admin-settings/anonymization/'
     | '/_authenticated/super-admin-settings/app-alerts/'
     | '/_authenticated/super-admin-settings/models-catalog/'
     | '/_authenticated/super-admin-settings/orgs/'
@@ -1107,6 +1120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/super-admin-settings/anonymization/': {
+      id: '/_authenticated/super-admin-settings/anonymization/'
+      path: '/super-admin-settings/anonymization'
+      fullPath: '/super-admin-settings/anonymization/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/super-admin-settings/academy/': {
       id: '/_authenticated/super-admin-settings/academy/'
       path: '/super-admin-settings/academy'
@@ -1244,6 +1264,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdQuizRoute: typeof AuthenticatedAcademyChapterIdQuizRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  AuthenticatedSuperAdminSettingsAnonymizationIndexRoute: typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute: typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
@@ -1281,6 +1302,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedSuperAdminSettingsOrgsIdRoute,
   AuthenticatedSuperAdminSettingsAcademyIndexRoute:
     AuthenticatedSuperAdminSettingsAcademyIndexRoute,
+  AuthenticatedSuperAdminSettingsAnonymizationIndexRoute:
+    AuthenticatedSuperAdminSettingsAnonymizationIndexRoute,
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute:
     AuthenticatedSuperAdminSettingsAppAlertsIndexRoute,
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:

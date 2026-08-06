@@ -1,0 +1,71 @@
+{
+  "title": "Anonymization",
+  "heading": "Global anonymization exceptions",
+  "description": "Words on this list are never anonymized — in every organization, on top of whatever exceptions the organization has configured itself. Use it to fix reported false positives centrally: add the word once and it stops being masked for all customers immediately.",
+  "loadError": "The global anonymization exceptions could not be loaded.",
+  "retry": "Retry",
+  "add": {
+    "placeholder": "Add a word, e.g. Mitarbeitende",
+    "button": "Add",
+    "success": "Word saved.",
+    "duplicate": "This word is already on the list for this data type.",
+    "empty": "Please enter a word.",
+    "error": "Saving the word failed."
+  },
+  "delete": {
+    "success": "Word removed.",
+    "notFound": "This word was already removed.",
+    "error": "Removing the word failed."
+  },
+  "words": {
+    "addedByOn": "added by {{email}} on {{date}}",
+    "addedOn": "added on {{date}}",
+    "deleteLabel": "Remove {{word}}"
+  },
+  "categories": {
+    "person_name": {
+      "label": "Person names",
+      "description": "First and last names of natural persons"
+    },
+    "organization": {
+      "label": "Organizations",
+      "description": "Names of companies, institutions, and public bodies"
+    },
+    "location": {
+      "label": "Locations & addresses",
+      "description": "Cities, countries, streets, and addresses"
+    },
+    "email_address": {
+      "label": "Email addresses",
+      "description": "Personal and organizational email addresses"
+    },
+    "phone_number": {
+      "label": "Phone numbers",
+      "description": "Landline and mobile numbers"
+    },
+    "url_or_ip": {
+      "label": "URLs & IP addresses",
+      "description": "Web addresses and IP addresses"
+    },
+    "date_time": {
+      "label": "Dates & times",
+      "description": "Specific dates and times, e.g. dates of birth"
+    },
+    "financial_account": {
+      "label": "Financial accounts",
+      "description": "Credit card numbers, IBANs, and bank account numbers"
+    },
+    "government_id": {
+      "label": "Government IDs",
+      "description": "Social security, passport, driver's license, and medical license numbers"
+    },
+    "nationality_religion_politics": {
+      "label": "Nationality, religion & politics",
+      "description": "References to nationality, religious, or political affiliation"
+    },
+    "other": {
+      "label": "Other / unrecognized",
+      "description": "Personal data detected by the engine that does not fit a known category"
+    }
+  }
+}
