@@ -20,9 +20,16 @@ import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-ca
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 import {
   ArtifactContentTooLargeError,
+  InvalidSpreadsheetContentError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from '../../artifacts.errors';
-import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import {
+  DiagramArtifact,
+  DocumentArtifact,
+  SpreadsheetArtifact,
+} from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
@@ -446,5 +453,113 @@ describe('CreateArtifactUseCase', () => {
     await useCase.execute(command);
 
     expect(callOrder).toEqual(['create', 'addVersion']);
+  });
+
+  describe('artifact type dispatch', () => {
+    beforeEach(() => {
+      artifactsRepository.create.mockImplementation(
+        async (artifact) => artifact,
+      );
+      artifactsRepository.addVersion.mockImplementation(
+        async (version) => version,
+      );
+    });
+
+    it('should create a DiagramArtifact with raw content for type DIAGRAM', async () => {
+      const mermaid = 'graph TD;\n  A-->B;';
+      const command = new CreateArtifactCommand({
+        threadId: mockThreadId,
+        type: ArtifactType.DIAGRAM,
+        title: 'Flow Chart',
+        content: mermaid,
+        authorType: AuthorType.ASSISTANT,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(DiagramArtifact);
+      expect(result.versions[0].content).toBe(mermaid);
+    });
+
+    it('should create a SpreadsheetArtifact, not a DiagramArtifact, for type SPREADSHEET', async () => {
+      const command = new CreateArtifactCommand({
+        threadId: mockThreadId,
+        type: ArtifactType.SPREADSHEET,
+        title: 'Budget Sheet',
+        content: JSON.stringify({
+          format: SPREADSHEET_CONTENT_FORMAT,
+          columns: ['Item', 'Amount'],
+          rows: [['Rent', 1200]],
+        }),
+        authorType: AuthorType.ASSISTANT,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(SpreadsheetArtifact);
+      expect(result).not.toBeInstanceOf(DiagramArtifact);
+      expect(result.type).toBe(ArtifactType.SPREADSHEET);
+    });
+
+    it('should canonicalize spreadsheet content by padding ragged rows', async () => {
+      const command = new CreateArtifactCommand({
+        threadId: mockThreadId,
+        type: ArtifactType.SPREADSHEET,
+        title: 'Ragged Sheet',
+        content: JSON.stringify({
+          format: SPREADSHEET_CONTENT_FORMAT,
+          columns: ['A', 'B', 'C'],
+          rows: [['only-one']],
+        }),
+        authorType: AuthorType.ASSISTANT,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(JSON.parse(result.versions[0].content)).toEqual({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['A', 'B', 'C'],
+        rows: [['only-one', null, null]],
+      });
+    });
+
+    it('should measure the canonical spreadsheet content for the size limit', async () => {
+      const compactContent = JSON.stringify({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Value'],
+        rows: [['A'.repeat(ARTIFACT_MAX_CONTENT_LENGTH - 120)]],
+      });
+      const paddedContent = compactContent.replace(
+        '{',
+        `{${' '.repeat(ARTIFACT_MAX_CONTENT_LENGTH - compactContent.length + 1)}`,
+      );
+      const command = new CreateArtifactCommand({
+        threadId: mockThreadId,
+        type: ArtifactType.SPREADSHEET,
+        title: 'Large Formatted Sheet',
+        content: paddedContent,
+        authorType: AuthorType.ASSISTANT,
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result).toBeInstanceOf(SpreadsheetArtifact);
+      expect(result.versions[0].content).toBe(compactContent);
+    });
+
+    it('should reject invalid spreadsheet JSON without creating the artifact', async () => {
+      const command = new CreateArtifactCommand({
+        threadId: mockThreadId,
+        type: ArtifactType.SPREADSHEET,
+        title: 'Broken Sheet',
+        content: 'not valid json {',
+        authorType: AuthorType.ASSISTANT,
+      });
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidSpreadsheetContentError,
+      );
+      expect(artifactsRepository.create).not.toHaveBeenCalled();
+    });
   });
 });
