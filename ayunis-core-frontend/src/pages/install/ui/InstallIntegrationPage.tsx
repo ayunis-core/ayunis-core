@@ -270,7 +270,7 @@ function InstallIntegrationCardView({
               )}
             </div>
             <CardTitle className="text-xl">{integration.name}</CardTitle>
-            <CardDescription>{integration.description}</CardDescription>
+            <CardDescription>{integration.shortDescription}</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
