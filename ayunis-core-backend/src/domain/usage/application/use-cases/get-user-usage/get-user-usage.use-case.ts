@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GetUserUsageQuery } from './get-user-usage.query';
+import { GetUserUsageQuery } from '../../../domain/queries/get-user-usage.query';
 import {
   UsageRepository,
   type UserUsageResult,

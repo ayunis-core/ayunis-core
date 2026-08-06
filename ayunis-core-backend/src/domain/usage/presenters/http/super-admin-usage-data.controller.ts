@@ -17,12 +17,12 @@ import { UUID } from 'crypto';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { GetProviderUsageUseCase } from '../../application/use-cases/get-provider-usage/get-provider-usage.use-case';
 import { GetUserUsageUseCase } from '../../application/use-cases/get-user-usage/get-user-usage.use-case';
-import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
+import { GetProviderUsageQuery } from '../../domain/queries/get-provider-usage.query';
 import {
   GetUserUsageQuery,
   UserUsageSortBy,
   SortOrder,
-} from '../../application/use-cases/get-user-usage/get-user-usage.query';
+} from '../../domain/queries/get-user-usage.query';
 import { UsageConstants } from '../../domain/value-objects/usage.constants';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';

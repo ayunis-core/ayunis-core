@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUsageStatsUseCase } from './get-usage-stats.use-case';
-import { GetUsageStatsQuery } from './get-usage-stats.query';
+import { GetUsageStatsQuery } from '../../../domain/queries/get-usage-stats.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { InvalidDateRangeError } from '../../usage.errors';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';

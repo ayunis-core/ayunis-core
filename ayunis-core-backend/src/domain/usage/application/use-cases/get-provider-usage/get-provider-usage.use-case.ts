@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GetProviderUsageQuery } from './get-provider-usage.query';
+import { GetProviderUsageQuery } from '../../../domain/queries/get-provider-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
 import {

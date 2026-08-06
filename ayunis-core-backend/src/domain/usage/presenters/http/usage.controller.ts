@@ -7,6 +7,7 @@ import { UsageStatsResponseDto } from './dto/usage-stats-response.dto';
 import { ModelDistributionResponseDto } from './dto/model-distribution-response.dto';
 import { ProviderUsageChartResponseDto } from './dto/provider-usage-chart-response.dto';
 import { UsageResponseMapper } from './mappers/usage-response.mapper';
+import { ApiUserUsageQueries } from './decorators/api-user-usage-queries.decorator';
 import { UsageUseCasesFacade } from './usage-use-cases.facade';
 import { ConfigService } from '@nestjs/config';
 import { parseDate } from './utils/parse-date.util';
@@ -19,10 +20,10 @@ import {
   GetUserUsageQuery,
   UserUsageSortBy,
   SortOrder,
-} from '../../application/use-cases/get-user-usage/get-user-usage.query';
-import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
-import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
+} from '../../domain/queries/get-user-usage.query';
+import { GetUsageStatsQuery } from '../../domain/queries/get-usage-stats.query';
+import { GetModelDistributionQuery } from '../../domain/queries/get-model-distribution.query';
+import { GetProviderUsageQuery } from '../../domain/queries/get-provider-usage.query';
 import { ModelProvider } from '../../../models/domain/value-objects/model-provider.enum';
 import { UsageConstants } from '../../domain/value-objects/usage.constants';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
@@ -95,55 +96,7 @@ export class UsageController {
       'User usage statistics retrieved successfully. Includes pagination metadata.',
     type: UserUsageResponseDto,
   })
-  @ApiQuery({
-    name: 'startDate',
-    type: String,
-    required: false,
-    description: 'Start date in ISO format',
-    example: '2024-01-01T00:00:00.000Z',
-  })
-  @ApiQuery({
-    name: 'endDate',
-    type: String,
-    required: false,
-    description: 'End date in ISO format',
-    example: '2024-01-31T23:59:59.999Z',
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: Number,
-    required: false,
-    description: 'Number of users per page (1-1000). Defaults to 50.',
-    example: 50,
-  })
-  @ApiQuery({
-    name: 'offset',
-    type: Number,
-    required: false,
-    description: 'Number of users to skip for pagination. Defaults to 0.',
-    example: 0,
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false,
-    description: 'Search term to filter users by name or email',
-    example: 'john.doe',
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    enum: ['credits', 'requests', 'lastActivity', 'userName'],
-    required: false,
-    description: 'Field to sort users by. Defaults to credits.',
-    example: 'credits',
-  })
-  @ApiQuery({
-    name: 'sortOrder',
-    enum: ['asc', 'desc'],
-    required: false,
-    description: 'Sort order (ascending or descending). Defaults to desc.',
-    example: 'desc',
-  })
+  @ApiUserUsageQueries()
   async getUserUsage(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query('startDate') startDate?: string,

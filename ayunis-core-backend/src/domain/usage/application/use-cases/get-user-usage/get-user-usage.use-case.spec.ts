@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserUsageUseCase } from './get-user-usage.use-case';
-import { GetUserUsageQuery } from './get-user-usage.query';
+import { GetUserUsageQuery } from '../../../domain/queries/get-user-usage.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import {
   InvalidDateRangeError,

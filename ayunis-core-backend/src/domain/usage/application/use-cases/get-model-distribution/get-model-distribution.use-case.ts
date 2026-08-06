@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GetModelDistributionQuery } from './get-model-distribution.query';
+import { GetModelDistributionQuery } from '../../../domain/queries/get-model-distribution.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
 import {

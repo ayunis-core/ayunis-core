@@ -9,10 +9,10 @@ import {
   ModelDistribution,
   type UserUsageResult,
 } from 'src/domain/usage/application/ports/usage.repository';
-import { GetProviderUsageQuery } from 'src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.query';
-import { GetModelDistributionQuery } from 'src/domain/usage/application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetUserUsageQuery } from 'src/domain/usage/application/use-cases/get-user-usage/get-user-usage.query';
-import { GetUsageStatsQuery } from 'src/domain/usage/application/use-cases/get-usage-stats/get-usage-stats.query';
+import { GetProviderUsageQuery } from 'src/domain/usage/domain/queries/get-provider-usage.query';
+import { GetModelDistributionQuery } from 'src/domain/usage/domain/queries/get-model-distribution.query';
+import { GetUserUsageQuery } from 'src/domain/usage/domain/queries/get-user-usage.query';
+import { GetUsageStatsQuery } from 'src/domain/usage/domain/queries/get-usage-stats.query';
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';

@@ -6,10 +6,10 @@ import { GetUserUsageUseCase } from '../../application/use-cases/get-user-usage/
 import { GetUsageStatsUseCase } from '../../application/use-cases/get-usage-stats/get-usage-stats.use-case';
 import { GetCreditUsageUseCase } from '../../application/use-cases/get-credit-usage/get-credit-usage.use-case';
 import { GetCreditUsageQuery } from '../../application/use-cases/get-credit-usage/get-credit-usage.query';
-import { GetProviderUsageQuery } from '../../application/use-cases/get-provider-usage/get-provider-usage.query';
-import { GetModelDistributionQuery } from '../../application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetUserUsageQuery } from '../../application/use-cases/get-user-usage/get-user-usage.query';
-import { GetUsageStatsQuery } from '../../application/use-cases/get-usage-stats/get-usage-stats.query';
+import { GetProviderUsageQuery } from '../../domain/queries/get-provider-usage.query';
+import { GetModelDistributionQuery } from '../../domain/queries/get-model-distribution.query';
+import { GetUserUsageQuery } from '../../domain/queries/get-user-usage.query';
+import { GetUsageStatsQuery } from '../../domain/queries/get-usage-stats.query';
 import { UsageStats } from '../../domain/usage-stats.entity';
 import { ProviderUsage } from '../../domain/provider-usage.entity';
 import { ModelDistribution } from '../../domain/model-distribution.entity';

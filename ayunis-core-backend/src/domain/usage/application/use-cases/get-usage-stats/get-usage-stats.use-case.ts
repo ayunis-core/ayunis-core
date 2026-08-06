@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GetUsageStatsQuery } from './get-usage-stats.query';
+import { GetUsageStatsQuery } from '../../../domain/queries/get-usage-stats.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { validateOptionalDateRange } from '../../usage.utils';
