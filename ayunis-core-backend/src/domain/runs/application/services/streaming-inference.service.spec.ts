@@ -9,6 +9,7 @@ import {
 import {
   InferenceFailedError,
   InferenceStreamStalledError,
+  InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -177,7 +178,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
   };
 
   const consume = async (service: StreamingInferenceService) => {
-    const yielded: AssistantMessage[] = [];
+    const yielded: { id: UUID }[] = [];
     for await (const message of service.executeStreamingInference({
       model,
       messages: [],
@@ -185,7 +186,9 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       threadId,
       orgId,
     })) {
-      yielded.push(message);
+      // The generator yields the same mutable entity; snapshot the id so
+      // retry tests can assert identity across attempts.
+      yielded.push({ id: message.id });
     }
     return yielded;
   };
@@ -235,7 +238,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(toolUses).toHaveLength(0);
   });
 
-  it('throws InferenceFailedError when the stream hits the token limit while emitting tool calls', async () => {
+  it('throws InferenceTokenLimitError when the stream hits the token limit while emitting tool calls', async () => {
     const { service, savedMessages } = buildService([
       toolCallChunk({
         id: 'call_1',
@@ -245,7 +248,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       finishChunk('length'),
     ]);
 
-    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+    await expect(consume(service)).rejects.toThrow(InferenceTokenLimitError);
 
     // Even parseable arguments from a token-limited turn must not be
     // persisted — the collector would execute them on the next run.
@@ -253,6 +256,102 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       (block) => block instanceof ToolUseMessageContent,
     );
     expect(toolUses).toHaveLength(0);
+  });
+
+  it('retries once when the token limit truncates a tool call before any text or thinking streamed (AYC-669)', async () => {
+    // A failed tool-only attempt persists nothing (tool calls are excluded
+    // from the saved message), so a second attempt cannot duplicate content.
+    const truncatedChunks = [
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>Unvollst',
+      }),
+      finishChunk('length'),
+    ];
+    const healthyChunks = [
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1>"}',
+      }),
+      finishChunk('tool_calls'),
+    ];
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(from(truncatedChunks))
+      .mockReturnValueOnce(from(healthyChunks));
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    const yielded = await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    const toolUses = savedMessages
+      .flatMap((message) => message.content)
+      .filter((block) => block instanceof ToolUseMessageContent);
+    expect(toolUses).toHaveLength(1);
+    // Both attempts must stream under one message id — the chat UI keys
+    // updates by id, so a fresh id would leave the failed attempt's partial
+    // tool call on screen as a phantom message beside the retry.
+    expect(new Set(yielded.map((message) => message.id)).size).toBe(1);
+  });
+
+  it('retries a token-limit truncation when only whitespace streamed before the tool call', async () => {
+    // Persistence trims text before saving (buildBaseContent), so a
+    // whitespace-only prefix leaves nothing behind — it must not block the
+    // retry the way real text does.
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(
+        from([
+          StreamInferenceResponseChunk.text('\n\n'),
+          toolCallChunk({
+            id: 'call_1',
+            name: 'create_document',
+            argumentsDelta: '{"title":"Bericht","content":"<h1>Unvollst',
+          }),
+          finishChunk('length'),
+        ]),
+      )
+      .mockReturnValueOnce(
+        from([
+          toolCallChunk({
+            id: 'call_1',
+            name: 'create_document',
+            argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1>"}',
+          }),
+          finishChunk('tool_calls'),
+        ]),
+      );
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    const toolUses = savedMessages
+      .flatMap((message) => message.content)
+      .filter((block) => block instanceof ToolUseMessageContent);
+    expect(toolUses).toHaveLength(1);
+  });
+
+  it('does not retry a token-limit truncation after text was streamed', async () => {
+    // The streamed text is saved by the failed attempt; a retry would append
+    // a second answer to the thread.
+    const execute = jest.fn().mockReturnValue(
+      from([
+        StreamInferenceResponseChunk.text('Der Bericht beginnt hier'),
+        toolCallChunk({
+          id: 'call_1',
+          name: 'create_document',
+          argumentsDelta: '{"title":"Bericht","content":"<h1>Unvollst',
+        }),
+        finishChunk('length'),
+      ]),
+    );
+    const { service } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow(InferenceTokenLimitError);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('discards intact sibling tool calls when one call of the turn is corrupted', async () => {

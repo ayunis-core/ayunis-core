@@ -13,6 +13,7 @@ export enum ModelErrorCode {
   MODEL_INVALID = 'MODEL_INVALID',
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
   INFERENCE_FAILED = 'INFERENCE_FAILED',
+  INFERENCE_TOKEN_LIMIT = 'INFERENCE_TOKEN_LIMIT',
   INFERENCE_ABORTED = 'INFERENCE_ABORTED',
   INFERENCE_IMAGE_TOO_LARGE = 'INFERENCE_IMAGE_TOO_LARGE',
   INFERENCE_INPUT_INVALID = 'INFERENCE_INPUT_INVALID',
@@ -58,9 +59,6 @@ export class UnexpectedModelError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model provider is not supported
- */
 export class ModelProviderNotSupportedError extends ModelError {
   constructor(provider: string, metadata?: ErrorMetadata) {
     super(
@@ -72,9 +70,6 @@ export class ModelProviderNotSupportedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model is not found
- */
 export class ModelNotFoundError extends ModelError {
   constructor(modelId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -86,7 +81,6 @@ export class ModelNotFoundError extends ModelError {
   }
 }
 
-/** Error thrown when a default model is not found */
 export class DefaultModelNotFoundError extends ModelError {
   constructor(orgId: string, metadata?: ErrorMetadata) {
     super(
@@ -134,7 +128,6 @@ export class PermittedImageGenerationModelNotFoundForOrgError extends ModelError
   }
 }
 
-/** Error thrown when deletion fails */
 export class PermittedModelDeletionFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -146,7 +139,6 @@ export class PermittedModelDeletionFailedError extends ModelError {
   }
 }
 
-/** Error thrown when trying to delete the default model */
 export class CannotDeleteDefaultModelError extends ModelError {
   constructor(modelId?: string, metadata?: ErrorMetadata) {
     super(
@@ -158,7 +150,6 @@ export class CannotDeleteDefaultModelError extends ModelError {
   }
 }
 
-/** Error thrown when trying to delete the last permitted language model */
 export class CannotDeleteLastModelError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -170,9 +161,6 @@ export class CannotDeleteLastModelError extends ModelError {
   }
 }
 
-/**
- * Error thrown when model input is invalid
- */
 export class ModelInvalidInputError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -184,14 +172,29 @@ export class ModelInvalidInputError extends ModelError {
   }
 }
 
-/**
- * Error thrown when inference fails
- */
 export class InferenceFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
       `Inference failed: ${reason}`,
       ModelErrorCode.INFERENCE_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+/**
+ * The model hit its output-token budget while a tool call was still being
+ * emitted (finishReason 'length'), so the call's arguments cannot be
+ * trusted or executed (AYC-669). Distinct code so these group apart from
+ * other inference failures in AppSignal and the run pipeline can retry the
+ * attempt when nothing durable has streamed yet.
+ */
+export class InferenceTokenLimitError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Inference failed: model response hit the token limit while emitting a tool call',
+      ModelErrorCode.INFERENCE_TOKEN_LIMIT,
       500,
       metadata,
     );
@@ -231,9 +234,6 @@ export class InferenceImageTooLargeError extends ModelError {
   }
 }
 
-/**
- * Error thrown when inference input is invalid
- */
 export class InferenceInputInvalidError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -257,9 +257,6 @@ export class InferenceStreamStalledError extends ModelError {
   }
 }
 
-/**
- * Error thrown when model rate limit is exceeded
- */
 export class ModelRateLimitExceededError extends ModelError {
   constructor(provider: string, metadata?: ErrorMetadata) {
     super(
@@ -271,9 +268,6 @@ export class ModelRateLimitExceededError extends ModelError {
   }
 }
 
-/**
- * Error thrown when trying to create a model that already exists
- */
 export class ModelAlreadyExistsError extends ModelError {
   constructor(name: string, provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -285,9 +279,6 @@ export class ModelAlreadyExistsError extends ModelError {
   }
 }
 
-/**
- * Error thrown when model update fails
- */
 export class ModelUpdateFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -299,9 +290,6 @@ export class ModelUpdateFailedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when model creation fails
- */
 export class ModelCreationFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -313,9 +301,6 @@ export class ModelCreationFailedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model is not found by ID
- */
 export class ModelNotFoundByIdError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
@@ -327,9 +312,6 @@ export class ModelNotFoundByIdError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model is not found by name and provider
- */
 export class ModelNotFoundByNameAndProviderError extends ModelError {
   constructor(name: string, provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -341,9 +323,6 @@ export class ModelNotFoundByNameAndProviderError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model provider info is not found
- */
 export class ModelProviderInfoNotFoundError extends ModelError {
   constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -355,9 +334,6 @@ export class ModelProviderInfoNotFoundError extends ModelError {
   }
 }
 
-/**
- * Error thrown when model deletion fails
- */
 export class ModelDeletionFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -369,9 +345,6 @@ export class ModelDeletionFailedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when multiple embedding models are not allowed
- */
 export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -383,9 +356,6 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when multiple image-generation models are not allowed.
- */
 export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -397,9 +367,6 @@ export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when an image-generation model uses an unsupported provider.
- */
 export class ImageGenerationModelProviderNotSupportedError extends ModelError {
   constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -426,9 +393,6 @@ export class DuplicateTeamPermittedModelError extends ModelError {
   }
 }
 
-/**
- * Error thrown when the specified team does not exist in the caller's org.
- */
 export class TeamNotFoundInOrgError extends ModelError {
   constructor(teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -440,9 +404,6 @@ export class TeamNotFoundInOrgError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a permitted model does not belong to the specified team.
- */
 export class PermittedModelNotInTeamError extends ModelError {
   constructor(permittedModelId: UUID, teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -454,9 +415,6 @@ export class PermittedModelNotInTeamError extends ModelError {
   }
 }
 
-/**
- * Error thrown when image generation fails.
- */
 export class ImageGenerationFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -468,9 +426,6 @@ export class ImageGenerationFailedError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a non-language model is used where a language model is required.
- */
 export class NotALanguageModelError extends ModelError {
   constructor(modelId: UUID, metadata?: ErrorMetadata) {
     super(

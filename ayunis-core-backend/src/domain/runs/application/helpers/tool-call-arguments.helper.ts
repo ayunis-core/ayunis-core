@@ -1,6 +1,9 @@
 import { Logger } from '@nestjs/common';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
 
 const logger = new Logger('ToolCallArguments');
 
@@ -42,10 +45,9 @@ export function assertToolCallArgumentsIntact(
   const calls = [...toolCalls].filter((call) => call.id && call.name);
   if (calls.length === 0) return;
   if (finishReason === 'length') {
-    throw new InferenceFailedError(
-      'model response hit the token limit while emitting a tool call',
-      { toolNames: calls.map((call) => call.name) },
-    );
+    throw new InferenceTokenLimitError({
+      toolNames: calls.map((call) => call.name),
+    });
   }
   const malformed = calls.filter(
     (call) => parseFinalToolArguments(call.arguments) === null,

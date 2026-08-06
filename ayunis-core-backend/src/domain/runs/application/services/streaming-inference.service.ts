@@ -23,7 +23,10 @@ import {
   assertToolCallArgumentsIntact,
   parseFinalToolArguments,
 } from '../helpers/tool-call-arguments.helper';
-import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
+import {
+  InferenceStreamStalledError,
+  InferenceTokenLimitError,
+} from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
@@ -42,7 +45,12 @@ interface StreamingInferenceParams {
   orgId: UUID;
 }
 
-/** Set as soon as an attempt streams visible content — after that, a retry would duplicate it. */
+/**
+ * Set as soon as an attempt streams durable content (text or thinking) —
+ * after that, a retry would duplicate what the failed attempt already saved.
+ * Tool-call deltas deliberately don't count: a failed attempt never persists
+ * its tool calls, so a tool-only attempt leaves nothing to duplicate.
+ */
 interface OutputTracker {
   producedOutput: boolean;
 }
@@ -102,36 +110,58 @@ export class StreamingInferenceService {
     params: StreamingInferenceParams,
   ): AsyncGenerator<AssistantMessage, void, unknown> {
     const tracker = { producedOutput: false };
+    // One message entity for all attempts: the chat UI keys updates by
+    // message id, so a retry under a fresh id would leave the failed
+    // attempt's partial content on screen as a phantom message.
+    const assistantMessage = new AssistantMessage({
+      threadId: params.threadId,
+      content: [],
+    });
     try {
-      yield* this.streamAttempt(params, tracker);
+      yield* this.streamAttempt(params, tracker, assistantMessage);
       return;
     } catch (error) {
-      // A stall before any output is safe to retry: nothing was streamed to
-      // the client and nothing was persisted, so the second attempt is
-      // indistinguishable from a slow first one. After output, a retry
-      // would duplicate content the user already watched arrive.
-      if (
-        !(error instanceof InferenceStreamStalledError) ||
-        tracker.producedOutput
-      ) {
+      // A stall or a token-limit-truncated tool call is safe to retry as
+      // long as no durable output was streamed: the failed attempt persisted
+      // nothing, so the second attempt is indistinguishable from a slow
+      // first one. After durable output, a retry would duplicate content
+      // the user already watched arrive (AYC-652, AYC-669).
+      if (!this.isRetryableBeforeOutput(error) || tracker.producedOutput) {
         throw error;
       }
       this.logger.warn(
-        'Provider stream stalled before producing output; retrying once',
-        { threadId: params.threadId },
+        'Recoverable inference failure before durable output; retrying once',
+        {
+          threadId: params.threadId,
+          reason: error.constructor.name,
+        },
       );
     }
-    yield* this.streamAttempt(params, { producedOutput: false });
+    yield* this.streamAttempt(
+      params,
+      { producedOutput: false },
+      assistantMessage,
+    );
+  }
+
+  private isRetryableBeforeOutput(
+    error: unknown,
+  ): error is InferenceStreamStalledError | InferenceTokenLimitError {
+    return (
+      error instanceof InferenceStreamStalledError ||
+      error instanceof InferenceTokenLimitError
+    );
   }
 
   private async *streamAttempt(
     params: StreamingInferenceParams,
     tracker: OutputTracker,
+    assistantMessage: AssistantMessage,
   ): AsyncGenerator<AssistantMessage, void, unknown> {
     const { model, tools, threadId, orgId } = params;
 
     const stream$ = this.startStream(params);
-    const assistantMessage = new AssistantMessage({ threadId, content: [] });
+    assistantMessage.content = [];
     const state = initialAccumulatedState();
     let streamCompletedSuccessfully = false;
     const allChunks: StreamInferenceResponseChunk[] = [];
@@ -244,8 +274,15 @@ export class StreamingInferenceService {
     for await (const chunk of asyncIterable) {
       const shouldUpdate = this.accumulateChunk(chunk, state);
 
-      if (shouldUpdate) {
+      // Same predicate as buildBaseContent's persistence check: a
+      // whitespace-only prefix saves nothing, so it must not block a retry.
+      if (
+        !tracker.producedOutput &&
+        (state.text.trim() !== '' || state.thinking.trim() !== '')
+      ) {
         tracker.producedOutput = true;
+      }
+      if (shouldUpdate) {
         assistantMessage.content = this.buildMessageContent(state, tools);
         yield assistantMessage;
       }
