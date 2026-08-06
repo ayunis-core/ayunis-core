@@ -73,8 +73,8 @@ export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
 
 export const PROJECT_ROLE_DESCRIPTIONS: Record<ProjectRole, string> = {
   full: 'Mitglieder einladen, Einstellungen ändern, Inhalte pflegen',
-  edit: 'Skills, Wissen und Dokumente pflegen',
-  use: 'Im Projekt chatten, Skills und Wissen nutzen',
+  edit: 'Fähigkeiten, Wissen und Dokumente pflegen',
+  use: 'Im Projekt chatten, Fähigkeiten und Wissen nutzen',
 };
 
 export interface ProjectCollaborator {

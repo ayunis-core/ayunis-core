@@ -12,7 +12,7 @@ export const PANEL_ORDER: PanelKey[] = [
 ];
 
 export const PANELS: Record<PanelKey, { label: string; icon: LucideIcon }> = {
-  skills: { label: 'Skills', icon: Sparkles },
+  skills: { label: 'Fähigkeiten', icon: Sparkles },
   knowledge: { label: 'Wissen', icon: Brain },
   output: { label: 'Erstellte Inhalte', icon: FileText },
 };

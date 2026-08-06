@@ -354,7 +354,7 @@ function projectCounts(project: MockProject) {
     return countLabel(project.chats.length, 'Chat', 'Chats');
   }
   return [
-    countLabel(project.skills.length, 'Skill', 'Skills'),
+    countLabel(project.skills.length, 'Fähigkeit', 'Fähigkeiten'),
     countLabel(
       project.knowledgeBases.length,
       'Wissensdatenbank',

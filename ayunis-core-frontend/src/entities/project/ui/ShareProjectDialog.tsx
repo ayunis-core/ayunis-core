@@ -111,8 +111,8 @@ export function ShareProjectDialog({
         <DialogHeader className="shrink-0">
           <DialogTitle>Projekt teilen</DialogTitle>
           <DialogDescription>
-            Mitglieder erhalten Zugriff auf Skills, Wissen und Dokumente — Chats
-            bleiben immer privat.
+            Mitglieder erhalten Zugriff auf Fähigkeiten, Wissen und Dokumente —
+            Chats bleiben immer privat.
           </DialogDescription>
         </DialogHeader>
 

@@ -187,12 +187,12 @@ function StackedPanel({
                 variant="ghost"
                 size="icon-sm"
                 onClick={onAddSkills}
-                aria-label="Skill hinzufügen"
+                aria-label="Fähigkeit hinzufügen"
               >
                 <Plus />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Skill hinzufügen</TooltipContent>
+            <TooltipContent>Fähigkeit hinzufügen</TooltipContent>
           </Tooltip>
         )}
         {!isEditing && canAdd && panel === 'knowledge' && (
@@ -264,7 +264,7 @@ function PanelSubheading({ text }: Readonly<{ text: string }>) {
 
 function SkillsBody({ project }: Readonly<{ project: MockProject }>) {
   if (project.skills.length === 0) {
-    return <PanelEmpty text="Noch keine Skills in diesem Projekt." />;
+    return <PanelEmpty text="Noch keine Fähigkeiten in diesem Projekt." />;
   }
   return (
     <ItemGroup className="gap-0">

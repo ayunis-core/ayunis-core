@@ -204,7 +204,7 @@ export function ProjectOverviewPage({
                     />
                     <TabTriggerWithCount
                       value="skills"
-                      label="Skills"
+                      label="Fähigkeiten"
                       count={project.skills.length}
                     />
                     <TabsTrigger value="instructions">Anweisungen</TabsTrigger>
@@ -295,10 +295,10 @@ export function ProjectOverviewPage({
               </TabsContent>
               <TabsContent value="skills" className="mt-4">
                 <ListTab
-                  addLabel="Skill hinzufügen"
+                  addLabel="Fähigkeit hinzufügen"
                   onAdd={() => setAddKind('skills')}
                   onRemove={(id) => removeSkillFromProject(project.id, id)}
-                  emptyText="Noch keine Skills in diesem Projekt."
+                  emptyText="Noch keine Fähigkeiten in diesem Projekt."
                   canManage={canContribute}
                   rows={project.skills.map((s) => ({
                     id: s.id,

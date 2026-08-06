@@ -41,7 +41,7 @@ export function AddProjectItemsDialog({
     <AddItemsDialog
       open={kind !== null}
       onOpenChange={(next) => !next && onClose()}
-      title={isKb ? 'Wissensdatenbanken hinzufügen' : 'Skills hinzufügen'}
+      title={isKb ? 'Wissensdatenbanken hinzufügen' : 'Fähigkeiten hinzufügen'}
       items={
         isKb
           ? availableKnowledgeBases.map((k) => ({

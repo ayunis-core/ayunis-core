@@ -98,7 +98,7 @@ export function ProjectSettingsDialog({
   function handleDelete() {
     confirm({
       title: 'Projekt löschen',
-      description: `Möchten Sie das Projekt „${project.name}“ wirklich löschen? Skills und Wissensdatenbanken bleiben erhalten, das Projekt und seine Chats werden entfernt.`,
+      description: `Möchten Sie das Projekt „${project.name}“ wirklich löschen? Fähigkeiten und Wissensdatenbanken bleiben erhalten, das Projekt und seine Chats werden entfernt.`,
       confirmText: 'Löschen',
       variant: 'destructive',
       onConfirm: () => {
@@ -236,8 +236,8 @@ export function ProjectSettingsDialog({
                       <p className="text-xs text-muted-foreground">
                         Der Chat, seine Nachrichten und darin erstellte
                         Dokumente werden unwiderruflich entfernt —
-                        Wissensdatenbanken, Skills und Einstellungen sind nicht
-                        betroffen.
+                        Wissensdatenbanken, Fähigkeiten und Einstellungen sind
+                        nicht betroffen.
                       </p>
                     </div>
                   )}
