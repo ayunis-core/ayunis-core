@@ -1,4 +1,8 @@
-import { sanitizeObject, sanitizeUnicodeEscapes } from './unicode-sanitizer';
+import {
+  sanitizeObject,
+  sanitizeUnicodeEscapes,
+  toWellFormedText,
+} from './unicode-sanitizer';
 
 describe('sanitizeUnicodeEscapes', () => {
   it('removes completed null escapes and real NULL characters', () => {
@@ -71,5 +75,33 @@ describe('sanitizeObject', () => {
     };
     const once = sanitizeObject(input);
     expect(sanitizeObject(once)).toEqual(once);
+  });
+});
+
+describe('toWellFormedText', () => {
+  it('replaces a lone surrogate with the replacement character', () => {
+    expect(toWellFormedText('a\uD800b')).toBe('a�b');
+    expect(toWellFormedText('a\uDC00b')).toBe('a�b');
+  });
+
+  it('keeps intact surrogate pairs (emoji) unchanged', () => {
+    expect(toWellFormedText('Bericht 📄 fertig')).toBe('Bericht 📄 fertig');
+  });
+
+  it('removes NULL characters', () => {
+    expect(toWellFormedText(`a${String.fromCharCode(0)}b`)).toBe('ab');
+  });
+
+  it('handles a surrogate pair split across a chunk boundary', () => {
+    const emoji = '📄';
+    const truncatedTail = emoji[0];
+    expect(toWellFormedText(`chunk ends mid-pair ${truncatedTail}`)).toBe(
+      'chunk ends mid-pair �',
+    );
+  });
+
+  it('returns well-formed plain text unchanged', () => {
+    const text = 'Wie beantrage ich einen Anwohnerparkausweis?';
+    expect(toWellFormedText(text)).toBe(text);
   });
 });

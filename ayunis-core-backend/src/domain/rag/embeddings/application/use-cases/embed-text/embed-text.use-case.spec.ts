@@ -81,3 +81,35 @@ describe('EmbedTextUseCase error mapping', () => {
     ).rejects.toBe(internal);
   });
 });
+
+describe('EmbedTextUseCase payload sanitization', () => {
+  it('sends well-formed text to the handler when input carries lone surrogates', async () => {
+    // Incident #536: a lone surrogate half (split emoji from OCR/splitter
+    // output) serializes to a \udXXX escape that Mistral's JSON decoder
+    // rejects with 400 "Invalid JSON payload".
+    const received: string[][] = [];
+    const registry = {
+      getHandler: () => ({
+        embed: (texts: string[]) => {
+          received.push(texts);
+          return Promise.resolve([]);
+        },
+      }),
+    };
+    const throttle = {
+      run: (_priority: unknown, fn: () => Promise<unknown>) => fn(),
+    };
+    const useCase = new EmbedTextUseCase(registry as never, throttle as never);
+
+    await useCase.execute(
+      new EmbedTextCommand({
+        model,
+        texts: ['chunk ends mid-pair \uD83D', 'intact text'],
+        orgId: '123e4567-e89b-12d3-a456-426614174000',
+      }),
+    );
+
+    expect(received).toHaveLength(1);
+    expect(received[0]).toEqual(['chunk ends mid-pair �', 'intact text']);
+  });
+});
