@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { APIError, AzureOpenAI } from 'openai';
-import type { ImagesResponse } from 'openai/resources/images';
+import { APIError, AzureOpenAI, toFile } from 'openai';
+import type { ImageEditParams, ImagesResponse } from 'openai/resources/images';
+import { contentTypeToExtension } from 'src/common/util/content-type.util';
 import {
   ImageGenerationHandler,
   ImageGenerationInput,
@@ -21,6 +22,12 @@ const SIZE_ALIASES: Record<string, ImageSize> = {
   landscape: '1536x1024',
   portrait: '1024x1536',
 };
+
+// Models whose image-edit endpoint accepts input_fidelity and defaults it to
+// 'low'. gpt-image-1-mini rejects the param; gpt-image-2+ always processes
+// inputs at high fidelity. Exact match on purpose: an unlisted model merely
+// misses the fidelity boost, while a wrongly sent param fails the request.
+const INPUT_FIDELITY_MODELS = new Set(['gpt-image-1', 'gpt-image-1.5']);
 
 const VALID_QUALITIES = ['low', 'medium', 'high', 'auto'] as const;
 type ImageQuality = (typeof VALID_QUALITIES)[number];
@@ -85,23 +92,61 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       model: input.model.name,
       size: input.size,
       quality: input.quality,
+      referenceImageCount: input.referenceImages?.length ?? 0,
     });
 
     const { size, quality } = this.validateParams(input);
     const client = this.getClient();
 
     try {
-      const response = await client.images.generate({
-        model: input.model.name,
-        prompt: input.prompt,
-        size,
-        quality,
-        n: 1,
-      });
+      const response = input.referenceImages?.length
+        ? await this.requestEdit(client, input, size, quality)
+        : await client.images.generate({
+            model: input.model.name,
+            prompt: input.prompt,
+            size,
+            quality,
+            n: 1,
+          });
       return this.buildResult(response, input.model.name);
     } catch (error) {
       this.handleGenerationError(error, input.model.name);
     }
+  }
+
+  private async requestEdit(
+    client: AzureOpenAI,
+    input: ImageGenerationInput,
+    size: ImageSize,
+    quality: ImageQuality,
+  ): Promise<ImagesResponse> {
+    const image = await Promise.all(
+      (input.referenceImages ?? []).map((reference, index) =>
+        toFile(
+          reference.data,
+          `reference-${index}${contentTypeToExtension(reference.contentType)}`,
+          { type: reference.contentType },
+        ),
+      ),
+    );
+    const params: ImageEditParams = {
+      model: input.model.name,
+      prompt: input.prompt,
+      image,
+      size,
+      quality,
+      n: 1,
+    };
+    // Without this, INPUT_FIDELITY_MODELS drop the fine detail (logos,
+    // scans) the references exist to preserve. The SDK's v4 typings predate
+    // the param but serialize every body key, so it reaches the API.
+    if (INPUT_FIDELITY_MODELS.has(input.model.name)) {
+      return client.images.edit({
+        ...params,
+        input_fidelity: 'high',
+      } as ImageEditParams);
+    }
+    return client.images.edit(params);
   }
 
   private buildResult(

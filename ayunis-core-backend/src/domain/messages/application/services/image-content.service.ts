@@ -7,6 +7,7 @@ import {
   AllowedImageContentType,
   isAllowedImageContentType,
 } from 'src/common/util/content-type.util';
+import { streamToBuffer } from 'src/common/util/stream-to-buffer.util';
 
 export interface ValidatedImageData {
   base64: string;
@@ -78,17 +79,7 @@ export class ImageContentService {
     const stream = await this.downloadObjectUseCase.execute(
       new DownloadObjectCommand(storagePath),
     );
-
-    const chunks: Buffer[] = [];
-    await new Promise<void>((resolve, reject) => {
-      stream.on('data', (chunk) => chunks.push(chunk as Buffer));
-      stream.on('end', () => resolve());
-      stream.on('error', (err) =>
-        reject(err instanceof Error ? err : new Error(String(err))),
-      );
-    });
-
-    return Buffer.concat(chunks);
+    return streamToBuffer(stream);
   }
 
   private validateImageSize(buffer: Buffer): void {

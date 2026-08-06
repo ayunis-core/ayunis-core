@@ -12,12 +12,13 @@ import { APIError } from 'openai';
 
 // Mock the AzureOpenAI class
 const mockImagesGenerate = jest.fn();
+const mockImagesEdit = jest.fn();
 jest.mock('openai', () => {
   const actual = jest.requireActual('openai');
   return {
     ...actual,
     AzureOpenAI: jest.fn().mockImplementation(() => ({
-      images: { generate: mockImagesGenerate },
+      images: { generate: mockImagesGenerate, edit: mockImagesEdit },
     })),
   };
 });
@@ -44,6 +45,7 @@ describe('AzureImageGenerationHandler', () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
     mockImagesGenerate.mockReset();
+    mockImagesEdit.mockReset();
   });
 
   afterEach(() => {
@@ -51,13 +53,19 @@ describe('AzureImageGenerationHandler', () => {
   });
 
   const createInput = (
-    overrides: Partial<{ prompt: string; size: string; quality: string }> = {},
+    overrides: Partial<{
+      prompt: string;
+      size: string;
+      quality: string;
+      referenceImages: Array<{ data: Buffer; contentType: string }>;
+    }> = {},
   ): ImageGenerationInput =>
     new ImageGenerationInput({
       model: mockModel,
       prompt: overrides.prompt ?? 'a beautiful sunset',
       size: overrides.size,
       quality: overrides.quality,
+      referenceImages: overrides.referenceImages,
     });
 
   describe('generate', () => {
@@ -234,6 +242,122 @@ describe('AzureImageGenerationHandler', () => {
         outputTokens: 4096,
         totalTokens: 4216,
       });
+    });
+
+    it('should call the edit endpoint when reference images are provided', async () => {
+      const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+      mockImagesEdit.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      const result = await handler.generate(
+        createInput({
+          prompt: 'Recreate this coat of arms as a clean vector graphic',
+          referenceImages: [
+            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+          ],
+        }),
+      );
+
+      expect(mockImagesGenerate).not.toHaveBeenCalled();
+      expect(mockImagesEdit).toHaveBeenCalledTimes(1);
+      const editParams = mockImagesEdit.mock.calls[0][0] as {
+        model: string;
+        prompt: string;
+        image: unknown[];
+        size: string;
+        quality: string;
+        n: number;
+      };
+      expect(editParams.model).toBe('gpt-image-1');
+      expect(editParams.prompt).toBe(
+        'Recreate this coat of arms as a clean vector graphic',
+      );
+      expect(editParams.image).toHaveLength(2);
+      expect(editParams.size).toBe('auto');
+      expect(editParams.quality).toBe('auto');
+      expect(editParams.n).toBe(1);
+      expect(result.imageData).toEqual(Buffer.from(fakeB64, 'base64'));
+    });
+
+    it('should wrap reference buffers as files matching their content type', async () => {
+      const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+      mockImagesEdit.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      await handler.generate(
+        createInput({
+          referenceImages: [
+            { data: Buffer.from('uploaded-photo'), contentType: 'image/jpeg' },
+          ],
+        }),
+      );
+
+      const editParams = mockImagesEdit.mock.calls[0][0] as {
+        image: Array<{ name: string; type: string }>;
+      };
+      expect(editParams.image[0].name).toBe('reference-0.jpg');
+      expect(editParams.image[0].type).toBe('image/jpeg');
+    });
+
+    // gpt-image-1 and gpt-image-1.5 default input_fidelity to 'low', which
+    // drops the fine detail (logos, scans) reference images exist to
+    // preserve. gpt-image-1-mini rejects the param outright; gpt-image-2+
+    // always processes inputs at high fidelity and is not sent the param.
+    it.each([
+      ['gpt-image-1', 'high'],
+      ['gpt-image-1.5', 'high'],
+      ['gpt-image-1-mini', undefined],
+      ['gpt-image-2', undefined],
+      ['dall-e-2', undefined],
+    ])(
+      'should send input_fidelity %s -> %s for reference-image edits',
+      async (modelName, expectedFidelity) => {
+        const fakeB64 = Buffer.from('edited-image-data').toString('base64');
+        mockImagesEdit.mockResolvedValue({
+          data: [{ b64_json: fakeB64 }],
+        });
+
+        const model = new ImageGenerationModel({
+          name: modelName,
+          provider: ModelProvider.AZURE,
+          displayName: modelName,
+          isArchived: false,
+        });
+        await handler.generate(
+          new ImageGenerationInput({
+            model,
+            prompt: 'a beautiful sunset',
+            referenceImages: [
+              { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+            ],
+          }),
+        );
+
+        const editParams = mockImagesEdit.mock.calls[0][0] as Record<
+          string,
+          unknown
+        >;
+        if (expectedFidelity) {
+          expect(editParams.input_fidelity).toBe(expectedFidelity);
+        } else {
+          expect(editParams).not.toHaveProperty('input_fidelity');
+        }
+      },
+    );
+
+    it('should use the generate endpoint when reference images are empty', async () => {
+      const fakeB64 = Buffer.from('fake-image-data').toString('base64');
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: fakeB64 }],
+      });
+
+      await handler.generate(createInput({ referenceImages: [] }));
+
+      expect(mockImagesEdit).not.toHaveBeenCalled();
+      expect(mockImagesGenerate).toHaveBeenCalledTimes(1);
     });
 
     it('should leave usage undefined when Azure omits it (e.g. DALL-E)', async () => {

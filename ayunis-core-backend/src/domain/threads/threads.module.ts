@@ -41,6 +41,7 @@ import { SaveGeneratedImageUseCase } from './application/use-cases/save-generate
 import { ResolveGeneratedImageUseCase } from './application/use-cases/resolve-generated-image/resolve-generated-image.use-case';
 import { GeneratedImagesController } from './presenters/http/generated-images.controller';
 import { DownloadMessageImageUseCase } from './application/use-cases/download-message-image/download-message-image.use-case';
+import { DownloadReferenceImagesUseCase } from './application/use-cases/download-reference-images/download-reference-images.use-case';
 import { MessageImagesController } from './presenters/http/message-images.controller';
 import { ShareDeletedListener } from './application/listeners/share-deleted.listener';
 import { ThreadActivityListener } from './application/listeners/thread-activity.listener';
@@ -109,6 +110,7 @@ import { McpModule } from '../mcp/mcp.module';
     SaveGeneratedImageUseCase,
     ResolveGeneratedImageUseCase,
     DownloadMessageImageUseCase,
+    DownloadReferenceImagesUseCase,
     CleanupStaleThreadSourcesUseCase,
     RecordThreadActivityUseCase,
     FindExpiredThreadRefsByOrgUseCase,
@@ -146,6 +148,7 @@ import { McpModule } from '../mcp/mcp.module';
     RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     RemoveDirectKnowledgeBaseFromThreadsUseCase,
     SaveGeneratedImageUseCase,
+    DownloadReferenceImagesUseCase,
     FindExpiredThreadRefsByOrgUseCase,
     // Export mappers
     GetThreadDtoMapper,
