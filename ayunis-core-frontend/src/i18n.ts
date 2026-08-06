@@ -58,6 +58,8 @@ import enSuperAdminSettingsPlatformConfig from './shared/locales/en/super-admin-
 import deSuperAdminSettingsPlatformConfig from './shared/locales/de/super-admin-settings-platform-config.json';
 import enSuperAdminSettingsAppAlerts from './shared/locales/en/super-admin-settings-app-alerts.json';
 import deSuperAdminSettingsAppAlerts from './shared/locales/de/super-admin-settings-app-alerts.json';
+import enSuperAdminSettingsAnonymization from './shared/locales/en/super-admin-settings-anonymization.json';
+import deSuperAdminSettingsAnonymization from './shared/locales/de/super-admin-settings-anonymization.json';
 import enAdminSettingsSecurity from './shared/locales/en/admin-settings-security.json';
 import deAdminSettingsSecurity from './shared/locales/de/admin-settings-security.json';
 import enAdminSettingsAcademy from './shared/locales/en/admin-settings-academy.json';
@@ -106,6 +108,7 @@ const resources = {
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': enSuperAdminSettingsSuperAdmins,
     'super-admin-settings-users': enSuperAdminSettingsUsers,
+    'super-admin-settings-anonymization': enSuperAdminSettingsAnonymization,
     'super-admin-settings-academy': enSuperAdminSettingsAcademy,
     academy: enAcademy,
     artifacts: enArtifacts,
@@ -147,6 +150,7 @@ const resources = {
     'super-admin-settings-skills': deSuperAdminSettingsSkills,
     'super-admin-settings-super-admins': deSuperAdminSettingsSuperAdmins,
     'super-admin-settings-users': deSuperAdminSettingsUsers,
+    'super-admin-settings-anonymization': deSuperAdminSettingsAnonymization,
     'super-admin-settings-academy': deSuperAdminSettingsAcademy,
     academy: deAcademy,
     artifacts: deArtifacts,
