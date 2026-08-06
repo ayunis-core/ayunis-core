@@ -9,7 +9,11 @@ import { PasswordSetTokenService } from '../../services/password-set-token.servi
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { SendPasswordResetEmailCommand } from '../send-password-reset-email/send-password-reset-email.command';
-import { UserNotFoundError, UserUnexpectedError } from '../../users.errors';
+import {
+  UserInvalidInputError,
+  UserNotFoundError,
+  UserUnexpectedError,
+} from '../../users.errors';
 
 @Injectable()
 export class SuperAdminTriggerPasswordResetUseCase {
@@ -35,6 +39,11 @@ export class SuperAdminTriggerPasswordResetUseCase {
       const user = await this.usersRepository.findOneById(command.userId);
       if (!user) {
         throw new UserNotFoundError(command.userId);
+      }
+      if (user.passwordHash === null) {
+        throw new UserInvalidInputError(
+          'Password reset is unavailable for users without a local password',
+        );
       }
 
       const resetUrl = await this.sendResetEmail(user);

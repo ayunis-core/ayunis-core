@@ -4,7 +4,11 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UsersRepository } from '../../ports/users.repository';
 import { TriggerPasswordResetUseCase } from '../trigger-password-reset/trigger-password-reset.use-case';
 import { TriggerPasswordResetCommand } from '../trigger-password-reset/trigger-password-reset.command';
-import { UserNotFoundError, UserUnauthorizedError } from '../../users.errors';
+import {
+  UserInvalidInputError,
+  UserNotFoundError,
+  UserUnauthorizedError,
+} from '../../users.errors';
 
 @Injectable()
 export class AdminTriggerPasswordResetUseCase {
@@ -24,21 +28,23 @@ export class AdminTriggerPasswordResetUseCase {
       throw new UserUnauthorizedError('User not authenticated');
     }
 
-    // Find target user by ID
     const targetUser = await this.usersRepository.findOneById(command.userId);
     if (!targetUser) {
       this.logger.error('User not found', { userId: command.userId });
       throw new UserNotFoundError(command.userId);
     }
 
-    // Validate target user belongs to same org
     if (targetUser.orgId !== requestUserOrgId) {
       throw new UserUnauthorizedError(
         'You are not allowed to trigger password reset for this user',
       );
     }
+    if (targetUser.passwordHash === null) {
+      throw new UserInvalidInputError(
+        'Password reset is unavailable for users without a local password',
+      );
+    }
 
-    // Delegate to existing TriggerPasswordResetUseCase
     await this.triggerPasswordResetUseCase.execute(
       new TriggerPasswordResetCommand(targetUser.email),
     );

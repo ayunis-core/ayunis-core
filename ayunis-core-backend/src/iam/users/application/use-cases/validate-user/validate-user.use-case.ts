@@ -31,6 +31,11 @@ export class ValidateUserUseCase {
         });
         throw new UserNotFoundError('unknown');
       }
+      if (user.passwordHash === null) {
+        throw new UserAuthenticationFailedError(
+          'Local password authentication is unavailable',
+        );
+      }
 
       this.logger.debug('Validating password', { userId: user.id });
 
