@@ -6,6 +6,7 @@ export enum AnonymizationSettingsErrorCode {
   INVALID_PATTERN = 'INVALID_PATTERN',
   DUPLICATE_CATEGORY = 'DUPLICATE_CATEGORY',
   UNEXPECTED_ERROR = 'UNEXPECTED_ANONYMIZATION_SETTINGS_ERROR',
+  UNEXPECTED_GLOBAL_WHITELIST_ERROR = 'UNEXPECTED_GLOBAL_ANONYMIZATION_WHITELIST_ERROR',
 }
 
 export class InvalidPatternError extends ApplicationError {
@@ -26,6 +27,17 @@ export class DuplicateCategoryError extends ApplicationError {
       AnonymizationSettingsErrorCode.DUPLICATE_CATEGORY,
       400,
       { category, ...metadata },
+    );
+  }
+}
+
+export class UnexpectedGlobalAnonymizationWhitelistError extends ApplicationError {
+  constructor(error: Error) {
+    super(
+      'Unexpected global anonymization whitelist error',
+      AnonymizationSettingsErrorCode.UNEXPECTED_GLOBAL_WHITELIST_ERROR,
+      500,
+      { originalError: error.message },
     );
   }
 }
