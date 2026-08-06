@@ -29,6 +29,8 @@ import { EditDocumentToolHandler } from './application/handlers/edit-document-to
 import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
 import { CreateDiagramToolHandler } from './application/handlers/create-diagram-tool.handler';
 import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
+import { CreateSpreadsheetToolHandler } from './application/handlers/create-spreadsheet-tool.handler';
+import { UpdateSpreadsheetToolHandler } from './application/handlers/update-spreadsheet-tool.handler';
 import { SkillsModule } from '../skills/skills.module';
 import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
 import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
@@ -78,6 +80,8 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     GenerateImageToolHandler,
     CreateDiagramToolHandler,
     UpdateDiagramToolHandler,
+    CreateSpreadsheetToolHandler,
+    UpdateSpreadsheetToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,
