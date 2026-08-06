@@ -100,4 +100,29 @@ describe('ValidateUserUseCase', () => {
       UserAuthenticationFailedError,
     );
   });
+
+  it('rejects local login for a federated-only user without comparing a hash', async () => {
+    const query = new ValidateUserQuery(
+      'maria.muster@stadt-koeln.de',
+      'password123',
+    );
+    const federatedUser = new User({
+      id: 'user-id' as UUID,
+      email: 'maria.muster@stadt-koeln.de',
+      emailVerified: true,
+      passwordHash: null,
+      role: UserRole.USER,
+      orgId: 'org-id' as UUID,
+      name: 'Maria Muster',
+      hasAcceptedMarketing: false,
+    });
+    jest
+      .spyOn(mockUsersRepository, 'findOneByEmail')
+      .mockResolvedValue(federatedUser);
+
+    await expect(useCase.execute(query)).rejects.toThrow(
+      UserAuthenticationFailedError,
+    );
+    expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
+  });
 });

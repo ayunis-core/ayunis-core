@@ -7,9 +7,9 @@ import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compar
 import {
   UserNotFoundError,
   UserAuthenticationFailedError,
-  UserError,
+  UserUnexpectedError,
 } from '../../users.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class ValidateUserUseCase {
@@ -20,53 +20,36 @@ export class ValidateUserUseCase {
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(query: ValidateUserQuery): Promise<User> {
     this.logger.log('validateUser', { email: query.email });
 
-    try {
-      const user = await this.usersRepository.findOneByEmail(query.email);
-      if (!user) {
-        this.logger.warn('User not found during validation', {
-          email: query.email,
-        });
-        throw new UserNotFoundError('unknown');
-      }
-
-      this.logger.debug('Validating password', { userId: user.id });
-
-      try {
-        const isPasswordValid = await this.compareHashUseCase.execute(
-          new CompareHashCommand(query.password, user.passwordHash),
-        );
-
-        if (!isPasswordValid) {
-          this.logger.warn('Invalid password during validation', {
-            email: query.email,
-          });
-          throw new UserAuthenticationFailedError('Invalid password');
-        }
-
-        this.logger.debug('User validated successfully', { userId: user.id });
-        return user;
-      } catch (error) {
-        if (error instanceof ApplicationError) {
-          throw error;
-        }
-        this.logger.error('Password validation failed', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          email: query.email,
-        });
-        throw new UserAuthenticationFailedError('Password validation failed');
-      }
-    } catch (error) {
-      if (error instanceof UserError) {
-        throw error;
-      }
-      this.logger.error('User validation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+    const user = await this.usersRepository.findOneByEmail(query.email);
+    if (!user) {
+      this.logger.warn('User not found during validation', {
         email: query.email,
       });
-      throw new UserAuthenticationFailedError('User validation failed');
+      throw new UserNotFoundError('unknown');
     }
+    if (user.passwordHash === null) {
+      throw new UserAuthenticationFailedError(
+        'Local password authentication is unavailable',
+      );
+    }
+
+    this.logger.debug('Validating password', { userId: user.id });
+    const isPasswordValid = await this.compareHashUseCase.execute(
+      new CompareHashCommand(query.password, user.passwordHash),
+    );
+
+    if (!isPasswordValid) {
+      this.logger.warn('Invalid password during validation', {
+        email: query.email,
+      });
+      throw new UserAuthenticationFailedError('Invalid password');
+    }
+
+    this.logger.debug('User validated successfully', { userId: user.id });
+    return user;
   }
 }

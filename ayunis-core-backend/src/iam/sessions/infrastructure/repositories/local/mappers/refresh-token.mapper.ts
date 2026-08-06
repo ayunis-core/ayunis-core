@@ -8,6 +8,7 @@ export class RefreshTokenMapper {
       userId: record.userId,
       familyId: record.familyId,
       tokenHash: record.tokenHash,
+      authenticationMethod: record.authenticationMethod,
       expiresAt: record.expiresAt,
       usedAt: record.usedAt,
       revokedAt: record.revokedAt,
@@ -23,6 +24,7 @@ export class RefreshTokenMapper {
     record.userId = domain.userId;
     record.familyId = domain.familyId;
     record.tokenHash = domain.tokenHash;
+    record.authenticationMethod = domain.authenticationMethod;
     record.expiresAt = domain.expiresAt;
     record.usedAt = domain.usedAt;
     record.revokedAt = domain.revokedAt;

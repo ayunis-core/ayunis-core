@@ -17,6 +17,7 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { RotateSessionUseCase } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.use-case';
 import { RotateSessionCommand } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.command';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';
 
 interface RefreshTokenPayload {
@@ -78,7 +79,7 @@ export class RefreshTokenUseCase {
     }
     const userId = payload.sub as UUID;
     const session = await this.createSessionUseCase.execute(
-      new CreateSessionCommand(userId),
+      new CreateSessionCommand(userId, SessionAuthenticationMethod.PASSWORD),
     );
     return { userId, refreshToken: session.refreshToken };
   }

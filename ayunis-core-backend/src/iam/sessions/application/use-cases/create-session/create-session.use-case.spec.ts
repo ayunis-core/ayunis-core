@@ -7,6 +7,7 @@ import {
   TEST_FAMILY_ID,
   TEST_USER_ID,
 } from '../../testing/refresh-token.fixtures';
+import { SessionAuthenticationMethod } from '../../../domain/value-objects/session-authentication-method.enum';
 
 describe('CreateSessionUseCase', () => {
   let useCase: CreateSessionUseCase;
@@ -28,15 +29,16 @@ describe('CreateSessionUseCase', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should insert a token in a new family and return the plaintext', async () => {
+  it('stores the authentication method on a new session family', async () => {
     const result = await useCase.execute(
-      new CreateSessionCommand(TEST_USER_ID),
+      new CreateSessionCommand(TEST_USER_ID, SessionAuthenticationMethod.SSO),
     );
 
     expect(result.refreshToken).toBe('plaintext');
     expect(factory.create).toHaveBeenCalledWith({
       userId: TEST_USER_ID,
       familyId: TEST_FAMILY_ID,
+      authenticationMethod: SessionAuthenticationMethod.SSO,
     });
     expect(repository.insert).toHaveBeenCalledTimes(1);
   });

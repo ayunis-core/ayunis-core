@@ -9,6 +9,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import type { UUID } from 'crypto';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
@@ -49,7 +50,10 @@ describe('LoginUseCase', () => {
       orgId: 'org-id' as UUID,
       name: 'name',
     });
-    const command = new LoginCommand(activeUser);
+    const command = new LoginCommand(
+      activeUser,
+      SessionAuthenticationMethod.SSO,
+    );
 
     jest
       .spyOn(mockAuthRepository, 'generateAccessToken')
@@ -66,6 +70,11 @@ describe('LoginUseCase', () => {
     expect(mockAuthRepository.generateAccessToken).toHaveBeenCalledWith(
       activeUser,
     );
-    expect(mockCreateSessionUseCase.execute).toHaveBeenCalled();
+    expect(mockCreateSessionUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: activeUser.id,
+        authenticationMethod: SessionAuthenticationMethod.SSO,
+      }),
+    );
   });
 });
