@@ -189,7 +189,7 @@ export class ExecuteRunUseCase {
     params: RunParams,
   ): AsyncGenerator<RunStreamItem, void, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
-    const iterations = 20;
+    const iterations = 50;
     const breaker = new ToolFailureBreaker();
     let succeeded = false;
     let preserveTranscript = false;

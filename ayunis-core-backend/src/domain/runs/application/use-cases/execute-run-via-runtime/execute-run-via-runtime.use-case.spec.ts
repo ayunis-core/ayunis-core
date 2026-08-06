@@ -649,7 +649,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       parameters: { type: 'object' },
       execute,
     };
-    const turns = Array.from({ length: 20 }, (_, iteration) =>
+    const turns = Array.from({ length: 50 }, (_, iteration) =>
       toolCallTurn({
         id: `records-${iteration}`,
         name: lookupTool.name,
@@ -665,8 +665,8 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       drain(await useCase.execute(userCommand())),
     ).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
 
-    expect(execute).toHaveBeenCalledTimes(20);
-    expect(createToolResult).toHaveBeenCalledTimes(20);
+    expect(execute).toHaveBeenCalledTimes(50);
+    expect(createToolResult).toHaveBeenCalledTimes(50);
     expect(cleanup).not.toHaveBeenCalled();
   });
 
@@ -678,7 +678,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       parameters: { type: 'object' },
       execute,
     };
-    const turns = Array.from({ length: 20 }, (_, iteration) =>
+    const turns = Array.from({ length: 50 }, (_, iteration) =>
       toolCallTurn({
         id: `records-${iteration}`,
         name: lookupTool.name,
@@ -690,7 +690,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       turns,
     });
     createToolResult.mockImplementation(async (createCommand) => {
-      if (createToolResult.mock.calls.length === 20) {
+      if (createToolResult.mock.calls.length === 50) {
         throw new Error('database unavailable');
       }
       return new ToolResultMessage({
@@ -704,8 +704,8 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       'Run execution failed',
     );
 
-    expect(execute).toHaveBeenCalledTimes(20);
-    expect(createToolResult).toHaveBeenCalledTimes(21);
+    expect(execute).toHaveBeenCalledTimes(50);
+    expect(createToolResult).toHaveBeenCalledTimes(51);
     expect(cleanup).toHaveBeenCalledWith(threadId);
   });
 
