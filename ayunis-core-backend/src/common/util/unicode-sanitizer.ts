@@ -45,6 +45,24 @@ function sanitizeUnicodeEscapesOnce(input: string): string {
   );
 }
 
+// A high surrogate not followed by a low one, or a low surrogate not
+// preceded by a high one — the two shapes of an unpaired UTF-16 half.
+const LONE_SURROGATE =
+  /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+/**
+ * Returns text that survives strict JSON/UTF-8 payload validation: lone
+ * UTF-16 surrogates (e.g. an emoji split in half at a chunk boundary) become
+ * U+FFFD, and NULL characters are removed. JSON.stringify escapes lone
+ * surrogates as \udXXX, which strict decoders — Mistral's embeddings API
+ * among them — reject with 400 "Invalid JSON payload" (incident #536).
+ * Surrogate handling matches String.prototype.toWellFormed, which the
+ * tsconfig ES2023 lib does not yet declare.
+ */
+export function toWellFormedText(input: string): string {
+  return input.replace(LONE_SURROGATE, '\uFFFD').replaceAll('\u0000', '');
+}
+
 /**
  * Ultra-simple safe JSON parser. Just tries to fix the most common issues.
  *
