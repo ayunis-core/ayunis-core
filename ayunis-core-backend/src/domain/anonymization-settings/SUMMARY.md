@@ -17,6 +17,7 @@ anonymization-settings/
 ├── domain/
 │   ├── anonymization-whitelist-entry.entity.ts
 │   ├── global-anonymization-whitelist-word.entity.ts
+│   ├── global-word-whitelist-entry.ts
 │   └── validate-pattern.ts
 ├── application/
 │   ├── anonymization-settings.errors.ts
@@ -44,11 +45,11 @@ anonymization-settings/
 
 ## Key Flows
 
-- **Applying exceptions** — Detection runs in the `ayunis-core-anonymize` service; the common `AnonymizeTextUseCase` drops detections the whitelist exempts. There is no caching — every anonymization call reads the DB, so whitelist changes take effect immediately.
+- **Applying exceptions** — Detection runs in the `ayunis-core-anonymize` service; the common `AnonymizeTextUseCase` drops detections the whitelist exempts (union semantics: a detection is exempt when any entry of its category matches). Global words become literal, regex-escaped patterns via `domain/global-word-whitelist-entry.ts`. There is no caching — every anonymization call reads the DB, so whitelist changes take effect immediately.
 - **Org settings screen** — `GET/PUT /anonymization-settings/pii-whitelist` back the org admin page (`/admin-settings/anonymization`).
 - **Global list management** — `GET/POST/DELETE /super-admin/anonymization-whitelist` back the super-admin screen; each word records who added it and when (`createdByUserId`, SET NULL on user deletion).
 
 ## Consumers
 
-- `thread-pii-masks` — `AnonymizeTextForThreadUseCase` (the main chat path) injects `GetPiiWhitelistUseCase`.
+- `thread-pii-masks` — `AnonymizeTextForThreadUseCase` (the main chat path) injects `GetPiiWhitelistUseCase` and `GetGlobalPiiWhitelistUseCase` and merges both lists.
 - `runs` — uses `AnonymizeTextForOrgUseCase` for thread title generation.

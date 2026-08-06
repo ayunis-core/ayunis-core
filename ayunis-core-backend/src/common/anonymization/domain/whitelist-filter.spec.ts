@@ -142,6 +142,48 @@ describe('filterWhitelistedDetections', () => {
     expect(filterWhitelistedDetections(detections, entries)).toEqual([]);
   });
 
+  it('exempts a detection when any of several entries of its category matches', () => {
+    const detections = [
+      detection({ text: 'Wir' }),
+      detection({ text: 'Mitarbeitende' }),
+      detection({ text: 'Moritz' }),
+    ];
+    const entries = [
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Wir'),
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Mitarbeitende'),
+    ];
+
+    expect(filterWhitelistedDetections(detections, entries)).toEqual([
+      detections[2],
+    ]);
+  });
+
+  it('unions an org pattern with additional word entries of the same category', () => {
+    const detections = [
+      detection({ text: 'Daniel' }),
+      detection({ text: 'Menschen' }),
+      detection({ text: 'Moritz' }),
+    ];
+    const entries = [
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'dani(el)?'),
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Menschen'),
+    ];
+
+    expect(filterWhitelistedDetections(detections, entries)).toEqual([
+      detections[2],
+    ]);
+  });
+
+  it('still exempts via a valid entry when another entry of the category is invalid', () => {
+    const detections = [detection({ text: 'Wir' })];
+    const entries = [
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, '(['),
+      new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Wir'),
+    ];
+
+    expect(filterWhitelistedDetections(detections, entries)).toHaveLength(0);
+  });
+
   it('filters a mixed set of detections independently', () => {
     const exemptByCategory = detection({
       entityType: 'EMAIL_ADDRESS',
