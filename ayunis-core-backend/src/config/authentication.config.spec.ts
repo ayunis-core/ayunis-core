@@ -1,114 +1,36 @@
 import { authenticationConfig } from './authentication.config';
 
+// Requiredness of JWT_SECRET / COOKIE_SECRET and the production COOKIE_SECURE
+// rule are enforced by validateEnv (see env.validation.spec.ts); this factory
+// only reads values.
 describe('authenticationConfig', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     process.env = { ...originalEnv };
-    delete process.env.JWT_SECRET;
-    delete process.env.COOKIE_SECRET;
+    process.env.JWT_SECRET = 'my-jwt-secret';
+    process.env.COOKIE_SECRET = 'my-cookie-secret';
+    delete process.env.COOKIE_SECURE;
   });
 
   afterAll(() => {
     process.env = originalEnv;
   });
 
-  describe('required secrets', () => {
-    it('reads secrets from the environment when set', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.JWT_SECRET = 'my-jwt-secret';
-      process.env.COOKIE_SECRET = 'my-cookie-secret';
+  it('reads secrets from the environment', () => {
+    const config = authenticationConfig();
 
-      const config = authenticationConfig();
-
-      expect(config.jwt.secret).toBe('my-jwt-secret');
-      expect(config.cookie.secret).toBe('my-cookie-secret');
-    });
-
-    it.each(['development', 'test', 'production'])(
-      'throws when both secrets are missing in %s',
-      (nodeEnv) => {
-        process.env.NODE_ENV = nodeEnv;
-
-        expect(() => authenticationConfig()).toThrow(/JWT_SECRET/);
-        expect(() => authenticationConfig()).toThrow(/COOKIE_SECRET/);
-      },
-    );
-
-    it('throws when NODE_ENV is unset and secrets are missing', () => {
-      delete process.env.NODE_ENV;
-
-      expect(() => authenticationConfig()).toThrow(/JWT_SECRET/);
-    });
-
-    it('throws when only JWT_SECRET is missing', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.COOKIE_SECRET = 'cookie';
-
-      expect(() => authenticationConfig()).toThrow(/JWT_SECRET/);
-    });
-
-    it('throws when only COOKIE_SECRET is missing', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.JWT_SECRET = 'jwt';
-
-      expect(() => authenticationConfig()).toThrow(/COOKIE_SECRET/);
-    });
-
-    it('treats an empty-string secret as missing', () => {
-      process.env.NODE_ENV = 'development';
-      process.env.JWT_SECRET = '';
-      process.env.COOKIE_SECRET = '';
-
-      expect(() => authenticationConfig()).toThrow(/JWT_SECRET/);
-    });
-
-    it('does not throw when both secrets are set', () => {
-      process.env.NODE_ENV = 'production';
-      process.env.JWT_SECRET = 'jwt';
-      process.env.COOKIE_SECRET = 'cookie';
-      process.env.COOKIE_SECURE = 'true';
-
-      expect(() => authenticationConfig()).not.toThrow();
-    });
+    expect(config.jwt.secret).toBe('my-jwt-secret');
+    expect(config.cookie.secret).toBe('my-cookie-secret');
   });
 
-  describe('COOKIE_SECURE in production', () => {
-    beforeEach(() => {
-      process.env.JWT_SECRET = 'jwt';
-      process.env.COOKIE_SECRET = 'cookie';
-      delete process.env.COOKIE_SECURE;
-    });
+  it('sets cookie.secure to true when COOKIE_SECURE is "true"', () => {
+    process.env.COOKIE_SECURE = 'true';
 
-    it('throws in production when COOKIE_SECURE is not set', () => {
-      process.env.NODE_ENV = 'production';
+    expect(authenticationConfig().cookie.secure).toBe(true);
+  });
 
-      expect(() => authenticationConfig()).toThrow(/COOKIE_SECURE/);
-    });
-
-    it('throws in production when COOKIE_SECURE is "false"', () => {
-      process.env.NODE_ENV = 'production';
-      process.env.COOKIE_SECURE = 'false';
-
-      expect(() => authenticationConfig()).toThrow(/COOKIE_SECURE/);
-    });
-
-    it('does not throw in production when COOKIE_SECURE is "true"', () => {
-      process.env.NODE_ENV = 'production';
-      process.env.COOKIE_SECURE = 'true';
-
-      expect(() => authenticationConfig()).not.toThrow();
-      expect(authenticationConfig().cookie.secure).toBe(true);
-    });
-
-    it.each(['development', 'test'])(
-      'does not throw outside production (%s) when COOKIE_SECURE is unset',
-      (nodeEnv) => {
-        process.env.NODE_ENV = nodeEnv;
-
-        expect(() => authenticationConfig()).not.toThrow();
-        expect(authenticationConfig().cookie.secure).toBe(false);
-      },
-    );
+  it('defaults cookie.secure to false when COOKIE_SECURE is unset', () => {
+    expect(authenticationConfig().cookie.secure).toBe(false);
   });
 });

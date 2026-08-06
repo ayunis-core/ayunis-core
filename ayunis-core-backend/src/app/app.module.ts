@@ -35,6 +35,7 @@ import { IamModule } from '../iam/iam.module';
 
 import { AuthProvider } from '../config/authentication.config';
 import { rootConfigs } from '../config/root-configs';
+import { validateEnv } from '../config/env.validation';
 import { CookieParserMiddleware } from '../common/middleware/cookie-parser.middleware';
 import dataSource from '../db/datasource';
 import { SecurityHeadersMiddleware } from '../common/middleware/security-headers.middleware';
@@ -58,6 +59,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: rootConfigs,
+      validate: validateEnv,
     }),
     ClsModule.forRoot({
       global: true,

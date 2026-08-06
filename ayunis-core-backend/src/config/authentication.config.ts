@@ -5,58 +5,6 @@ export enum AuthProvider {
   CLOUD = 'cloud',
 }
 
-/**
- * Fail fast at boot when auth secrets are missing — in every environment.
- *
- * There is intentionally no fallback value for JWT_SECRET / COOKIE_SECRET:
- * a shared default would let anyone forge auth tokens/cookies. Requiring the
- * secrets everywhere (not just production) keeps one clear rule and matches
- * the consumers, which read the values with ConfigService.getOrThrow.
- * For local setups, copy .env.example and generate values with
- * `openssl rand -hex 32`.
- */
-function assertSecretsConfigured(secrets: {
-  jwtSecret?: string;
-  cookieSecret?: string;
-}): asserts secrets is { jwtSecret: string; cookieSecret: string } {
-  const missing: string[] = [];
-  if (!secrets.jwtSecret) {
-    missing.push('JWT_SECRET');
-  }
-  if (!secrets.cookieSecret) {
-    missing.push('COOKIE_SECRET');
-  }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required secret(s): ${missing.join(', ')}. ` +
-        'Set these environment variables to secure random values ' +
-        '(e.g. `openssl rand -hex 32`) before starting the application.',
-    );
-  }
-}
-
-/**
- * Fail fast at boot when session cookies would be sent over plain HTTP in
- * production. The code default for COOKIE_SECURE is `false`, which is fine for
- * local http setups but dangerous in production: without the `Secure`
- * attribute the access/refresh token cookies are transmitted over unencrypted
- * HTTP as well, exposing them to network interception. Requiring
- * COOKIE_SECURE=true in production (and only there) keeps local/test setups
- * simple while preventing an insecure production deployment.
- */
-function assertCookieSecureInProduction(secure: boolean): void {
-  const isProduction = (process.env.NODE_ENV ?? '').trim() === 'production';
-  if (isProduction && !secure) {
-    throw new Error(
-      'COOKIE_SECURE must be set to "true" in production. Session cookies ' +
-        '(access/refresh tokens) would otherwise be sent over unencrypted ' +
-        'HTTP. Set COOKIE_SECURE=true (requires HTTPS) before starting the ' +
-        'application.',
-    );
-  }
-}
-
 function jwtConfig(secret: string) {
   return {
     secret,
@@ -109,21 +57,18 @@ const emailProviderBlacklist = [
 ];
 
 export const authenticationConfig = registerAs('auth', () => {
-  const secrets = {
-    jwtSecret: process.env.JWT_SECRET,
-    cookieSecret: process.env.COOKIE_SECRET,
-  };
-
-  assertSecretsConfigured(secrets);
-
-  const cookie = cookieConfig(secrets.cookieSecret);
-  assertCookieSecureInProduction(cookie.secure);
+  // JWT_SECRET / COOKIE_SECRET presence, and COOKIE_SECURE=true in production,
+  // are enforced at boot by validateEnv (src/config/env.validation.ts) — the
+  // single source of truth for env validity. Both secrets are guaranteed
+  // present and non-empty here; there is no insecure default fallback.
+  const jwtSecret = process.env.JWT_SECRET as string;
+  const cookieSecret = process.env.COOKIE_SECRET as string;
 
   return {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast
     provider: (process.env.AUTH_PROVIDER as AuthProvider) || AuthProvider.LOCAL,
-    jwt: jwtConfig(secrets.jwtSecret),
-    cookie,
+    jwt: jwtConfig(jwtSecret),
+    cookie: cookieConfig(cookieSecret),
     cloud: {
       apiUrl: process.env.CLOUD_AUTH_API_URL,
       apiKey: process.env.CLOUD_AUTH_API_KEY,
