@@ -73,6 +73,7 @@ ayunis-core/
 | [onboarding](ayunis-core-backend/src/iam/onboarding/SUMMARY.md) | Onboarding | Per-user onboarding progress |
 | [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md) | Security | Password hashing |
 | [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md) | Network Security | Per-organization IP allowlist enforcement |
+| [sso](ayunis-core-backend/src/iam/sso/SUMMARY.md) | Federated Identity | Municipal SSO connections and broker identity mappings |
 
 ### Infrastructure & Support
 
