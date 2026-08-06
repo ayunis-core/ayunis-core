@@ -136,7 +136,7 @@ jobs:
             # would tear down the app and leave it down while the deploy still
             # reports success (see AYC: corepack outage).
             # Scoped to the Core services on purpose: a bare `compose pull`
-            # would also refresh minio/dozzle/redis/gotenberg, which are
+            # would also refresh minio/redis/gotenberg, which are
             # deliberately only pulled when first started.
             if ! docker compose pull app code-execution anonymize; then
               echo "::error::image pull failed — keeping current containers, not deploying"
