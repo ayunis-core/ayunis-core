@@ -4,7 +4,6 @@ import type { UUID } from 'crypto';
 import { UpdateOnboardingUseCase } from './update-onboarding.use-case';
 import { UpdateOnboardingCommand } from './update-onboarding.command';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
-import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
 
 describe('UpdateOnboardingUseCase', () => {
   let useCase: UpdateOnboardingUseCase;
@@ -13,7 +12,7 @@ describe('UpdateOnboardingUseCase', () => {
   beforeAll(async () => {
     mockOnboardingRepository = {
       findByUserId: jest.fn(),
-      save: jest.fn(),
+      saveProgress: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -30,13 +29,9 @@ describe('UpdateOnboardingUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should update the existing onboarding with completed steps and hidden flag', async () => {
-    const existing = new Onboarding({ userId: 'user-id' as UUID });
+  it('should save the submitted progress without loading current onboarding', async () => {
     jest
-      .spyOn(mockOnboardingRepository, 'findByUserId')
-      .mockResolvedValue(existing);
-    jest
-      .spyOn(mockOnboardingRepository, 'save')
+      .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockImplementation((onboarding) => Promise.resolve(onboarding));
 
     const result = await useCase.execute(
@@ -49,15 +44,19 @@ describe('UpdateOnboardingUseCase', () => {
 
     expect(result.completedStepIds).toEqual(['create-assistant', 'start-chat']);
     expect(result.hidden).toBe(true);
-    expect(mockOnboardingRepository.save).toHaveBeenCalledWith(existing);
+    expect(mockOnboardingRepository.findByUserId).not.toHaveBeenCalled();
+    expect(mockOnboardingRepository.saveProgress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-id',
+        completedStepIds: ['create-assistant', 'start-chat'],
+        hidden: true,
+      }),
+    );
   });
 
-  it('should create onboarding for the user when none exists yet', async () => {
+  it('should save progress for a user without an onboarding row yet', async () => {
     jest
-      .spyOn(mockOnboardingRepository, 'findByUserId')
-      .mockResolvedValue(null);
-    jest
-      .spyOn(mockOnboardingRepository, 'save')
+      .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockImplementation((onboarding) => Promise.resolve(onboarding));
 
     const result = await useCase.execute(
@@ -71,15 +70,12 @@ describe('UpdateOnboardingUseCase', () => {
     expect(result.userId).toBe('new-user-id');
     expect(result.completedStepIds).toEqual(['create-assistant']);
     expect(result.hidden).toBe(false);
-    expect(mockOnboardingRepository.save).toHaveBeenCalledTimes(1);
+    expect(mockOnboardingRepository.saveProgress).toHaveBeenCalledTimes(1);
   });
 
   it('should wrap unexpected repository failures in OnboardingUnexpectedError', async () => {
     jest
-      .spyOn(mockOnboardingRepository, 'findByUserId')
-      .mockResolvedValue(new Onboarding({ userId: 'user-id' as UUID }));
-    jest
-      .spyOn(mockOnboardingRepository, 'save')
+      .spyOn(mockOnboardingRepository, 'saveProgress')
       .mockRejectedValue(new Error('connection lost'));
 
     await expect(

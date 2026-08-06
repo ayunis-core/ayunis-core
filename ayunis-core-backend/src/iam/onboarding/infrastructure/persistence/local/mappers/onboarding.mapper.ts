@@ -10,19 +10,9 @@ export class OnboardingMapper {
       userId: record.userId,
       completedStepIds: record.completedStepIds,
       hidden: record.hidden,
+      welcomeVideoSeenAt: record.welcomeVideoSeenAt,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
-  }
-
-  toRecord(onboarding: Onboarding): OnboardingRecord {
-    const record = new OnboardingRecord();
-    record.id = onboarding.id;
-    record.userId = onboarding.userId;
-    record.completedStepIds = onboarding.completedStepIds;
-    record.hidden = onboarding.hidden;
-    record.createdAt = onboarding.createdAt;
-    record.updatedAt = onboarding.updatedAt;
-    return record;
   }
 }

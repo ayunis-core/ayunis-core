@@ -1,0 +1,8 @@
+{
+  "title": "Welcome to Ayunis Core.",
+  "description": "In the next 75 seconds you'll see how Ayunis Core helps you with the tasks that slow down your workday: writing texts, using internal knowledge, researching quickly.\n\nTake a quick look — then simply get started.",
+  "dismiss": "Go to chat",
+  "close": "Close",
+  "saveError": "The welcome video could not be marked as seen. Check your connection and try again.",
+  "saveUnexpectedError": "The welcome video could not be marked as seen. Please try again."
+}

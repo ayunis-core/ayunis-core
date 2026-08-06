@@ -4807,6 +4807,11 @@ export interface OnboardingResponseDto {
   completedStepIds: string[];
   /** Whether the user has hidden the onboarding checklist */
   hidden: boolean;
+  /**
+   * When the user first dismissed the welcome video
+   * @nullable
+   */
+  welcomeVideoSeenAt: string | null;
 }
 
 export interface UpdateOnboardingDto {

@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Put,
   Body,
   HttpCode,
@@ -28,6 +29,8 @@ import { UpdateOnboardingCommand } from '../../application/use-cases/update-onbo
 import { UpdateOnboardingDto } from './dtos/update-onboarding.dto';
 import { OnboardingResponseDto } from './dtos/onboarding-response.dto';
 import { OnboardingResponseDtoMapper } from './mappers/onboarding-response-dto.mapper';
+import { MarkWelcomeVideoSeenUseCase } from '../../application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.use-case';
+import { MarkWelcomeVideoSeenCommand } from '../../application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.command';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
@@ -37,6 +40,7 @@ export class OnboardingController {
   constructor(
     private readonly getOnboardingUseCase: GetOnboardingUseCase,
     private readonly updateOnboardingUseCase: UpdateOnboardingUseCase,
+    private readonly markWelcomeVideoSeenUseCase: MarkWelcomeVideoSeenUseCase,
     private readonly onboardingResponseDtoMapper: OnboardingResponseDtoMapper,
   ) {}
 
@@ -45,7 +49,7 @@ export class OnboardingController {
   @ApiOperation({
     summary: 'Get onboarding progress',
     description:
-      "Get the current user's onboarding progress: the IDs of completed steps and whether the checklist is hidden.",
+      "Get the current user's onboarding progress and welcome-video status.",
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -63,6 +67,34 @@ export class OnboardingController {
 
     const onboarding = await this.getOnboardingUseCase.execute(
       new GetOnboardingQuery(currentUserId),
+    );
+
+    return this.onboardingResponseDtoMapper.toDto(onboarding);
+  }
+
+  @Post('welcome-video-seen')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Mark the welcome video as seen',
+    description:
+      'Record when the current user first dismisses the welcome video.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Welcome video successfully marked as seen',
+    type: OnboardingResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'User not authenticated' })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error occurred while updating onboarding',
+  })
+  async markWelcomeVideoSeen(
+    @CurrentUser(UserProperty.ID) currentUserId: UUID,
+  ): Promise<OnboardingResponseDto> {
+    this.logger.log('markWelcomeVideoSeen');
+
+    const onboarding = await this.markWelcomeVideoSeenUseCase.execute(
+      new MarkWelcomeVideoSeenCommand(currentUserId),
     );
 
     return this.onboardingResponseDtoMapper.toDto(onboarding);
