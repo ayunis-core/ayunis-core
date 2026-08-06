@@ -24,8 +24,11 @@ class PythonExecutor:
         )
         self.docker_client = docker.from_env()
 
-        # Ensure the sandbox image is available on startup
+        # Fail fast at startup on a genuinely unavailable image (main.py exits
+        # on this). The execution path re-checks per request to self-heal a tag
+        # that gets deleted while the service is running.
         self._ensure_sandbox_image()
+        print(f"Sandbox image ready: {self.config.docker_image}")
 
     def _ensure_sandbox_image(self) -> None:
         """Ensure the sandbox image exists locally, pulling it if missing.
@@ -33,11 +36,16 @@ class PythonExecutor:
         The image is defined in sandbox/Dockerfile and published to GHCR; it
         is never built here. Raises when unavailable — the service must not
         come up healthy without a runnable sandbox (main.py exits on this).
+
+        Called both at startup (fail-fast) and before every execution: the tag
+        is runtime-mutable, so anything from `docker image prune -a` to a deploy
+        image reclaim can delete it out from under a running service, and the
+        execution path (containers.create) has no implicit pull. images.get is
+        a local lookup, so re-checking on the hot path is cheap when present.
         """
         image = self.config.docker_image
         try:
             self.docker_client.images.get(image)
-            print(f"Sandbox image present: {image}")
             return
         except docker.errors.ImageNotFound:
             print(f"Sandbox image {image} not found locally, pulling...")
@@ -67,6 +75,10 @@ class PythonExecutor:
         execution_id = str(uuid.uuid4())[:8]
 
         try:
+            # Re-ensure the image before it is needed: the tag may have been
+            # deleted since startup, and containers.create does not pull.
+            self._ensure_sandbox_image()
+
             # Build in-memory tar archive with code, optional files, and output directory
             tar_stream = io.BytesIO()
             with tarfile.open(fileobj=tar_stream, mode="w") as tar:
