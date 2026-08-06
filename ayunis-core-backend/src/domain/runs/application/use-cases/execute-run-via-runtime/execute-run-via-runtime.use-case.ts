@@ -65,7 +65,7 @@ import type {
   PreparedRuntimeTools,
 } from './execute-run-via-runtime.types';
 
-const RUNTIME_MAX_ITERATIONS = 20;
+const RUNTIME_MAX_ITERATIONS = 50;
 const MAX_CONTEXT_TOKENS = 80000;
 
 interface SeededInput {
