@@ -438,6 +438,60 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
+  it('retries once when the stream completes without emitting any content (incident #548)', async () => {
+    // An empty completed stream showed and persisted nothing, so a second
+    // attempt is exactly as safe as the stall retry.
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(from([] as StreamInferenceResponseChunk[]))
+      .mockReturnValueOnce(
+        from([
+          StreamInferenceResponseChunk.text('Die Antwort kommt doch noch.'),
+          finishChunk('stop'),
+        ]),
+      );
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    const yielded = await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(yielded.length).toBeGreaterThan(0);
+    expect(savedMessages).toHaveLength(1);
+    const [text] = savedMessages[0].content;
+    expect((text as TextMessageContent).text).toContain('Antwort');
+  });
+
+  it('gives an empty stream only one retry before returning empty-handed', async () => {
+    const execute = jest
+      .fn()
+      .mockReturnValue(from([] as StreamInferenceResponseChunk[]));
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    const yielded = await consume(service);
+
+    // The orchestrator turns a fully empty generator into
+    // RUN_EXECUTION_FAILED — the service must not loop beyond one retry.
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(yielded).toHaveLength(0);
+    expect(savedMessages).toHaveLength(0);
+  });
+
+  it('does not retry a stream that streamed text and completed normally', async () => {
+    const execute = jest
+      .fn()
+      .mockReturnValue(
+        from([
+          StreamInferenceResponseChunk.text('Fertige Antwort.'),
+          finishChunk('stop'),
+        ]),
+      );
+    const { service } = buildServiceWithStream(execute);
+
+    await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
   it('does not retry non-stall stream failures', async () => {
     const execute = jest
       .fn()
