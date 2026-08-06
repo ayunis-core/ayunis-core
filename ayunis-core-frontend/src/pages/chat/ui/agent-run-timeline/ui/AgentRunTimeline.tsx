@@ -17,6 +17,7 @@ import type {
 import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from '../lib/render-rich-tool-card';
+import { getArtifactToolTarget } from '../lib/tool-classification';
 
 interface AgentRunTimelineProps {
   unit: AgentRunUnit;
@@ -56,13 +57,10 @@ export default function AgentRunTimeline({
 }
 
 function hasInProgressStep(block: AgentRunBlock): boolean {
-  if (block.kind === 'activity') {
+  if (block.kind === 'activity' || block.kind === 'rich-tool') {
     return block.steps.some((step) => step.status === 'in_progress');
   }
-  return (
-    (block.kind === 'rich-tool' || block.kind === 'pending-tool') &&
-    block.step.status === 'in_progress'
-  );
+  return block.kind === 'pending-tool' && block.step.status === 'in_progress';
 }
 
 interface RunBlockProps {
@@ -161,12 +159,20 @@ function InlineToolBlock({
   threadId,
   onOpenArtifact,
 }: Readonly<InlineToolBlockProps>) {
+  const steps = block.kind === 'rich-tool' ? block.steps : [block.step];
+  const latestStep = steps[steps.length - 1];
+  // A still-streaming mutation step has no parseable artifact_id yet, which
+  // would disable the card's open action; fall back to the newest step whose
+  // target is resolved so the merged card stays openable while args stream.
+  const cardStep =
+    [...steps].reverse().find((step) => getArtifactToolTarget(step.toolUse)) ??
+    latestStep;
   const card =
     block.kind === 'rich-tool'
       ? renderRichToolCard({
-          toolUse: block.step.toolUse,
-          result: block.step.result,
-          isStreaming: block.step.status === 'in_progress',
+          toolUse: cardStep.toolUse,
+          result: cardStep.result,
+          isStreaming: latestStep.status === 'in_progress',
           threadId,
           onOpenArtifact,
           index,
@@ -175,7 +181,9 @@ function InlineToolBlock({
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded-lg border border-border bg-muted/30 px-3 py-1">
-        <AgentRunTimelineRow step={block.step} />
+        {steps.map((step) => (
+          <AgentRunTimelineRow key={step.key} step={step} />
+        ))}
       </div>
       {card}
     </div>
