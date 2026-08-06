@@ -5,6 +5,8 @@ import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-case
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
+import { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
+import { CheckKnowledgeBaseSkillShareAccessQuery } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.query';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -24,11 +26,13 @@ export class KnowledgeBaseAccessService {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
+    private readonly checkKnowledgeBaseSkillShareAccessUseCase: CheckKnowledgeBaseSkillShareAccessUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   /**
-   * Finds a knowledge base accessible to the current user (owned or shared).
+   * Finds a knowledge base accessible to the current user (owned, shared, or
+   * linked to a skill shared with the user).
    * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
    */
   async findAccessibleKnowledgeBase(id: UUID): Promise<KnowledgeBase> {
@@ -38,9 +42,13 @@ export class KnowledgeBaseAccessService {
     }
 
     // Try owned KB first
-    const ownedKb = await this.knowledgeBaseRepository.findById(id);
-    if (ownedKb?.userId === userId) {
-      return ownedKb;
+    const kb = await this.knowledgeBaseRepository.findById(id);
+    if (kb?.userId === userId) {
+      return kb;
+    }
+
+    if (!kb) {
+      throw new KnowledgeBaseNotFoundError(id);
     }
 
     // If not owned, check if shared with user
@@ -48,8 +56,18 @@ export class KnowledgeBaseAccessService {
       new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
     );
 
-    if (share && ownedKb) {
-      return ownedKb;
+    if (share) {
+      return kb;
+    }
+
+    // Sharing a skill implicitly grants read access to the owner's linked KBs
+    const accessibleViaSkill =
+      await this.checkKnowledgeBaseSkillShareAccessUseCase.execute(
+        new CheckKnowledgeBaseSkillShareAccessQuery(id, kb.userId),
+      );
+
+    if (accessibleViaSkill) {
+      return kb;
     }
 
     throw new KnowledgeBaseNotFoundError(id);

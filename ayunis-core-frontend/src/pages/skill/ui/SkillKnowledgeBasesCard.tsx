@@ -27,6 +27,7 @@ import {
   useAssignKnowledgeBase,
   useUnassignKnowledgeBase,
 } from '../api';
+import { mergeSkillKnowledgeBases } from '../lib/merge-skill-knowledge-bases';
 
 export default function SkillKnowledgeBasesCard({
   disabled = false,
@@ -103,16 +104,14 @@ export default function SkillKnowledgeBasesCard({
     );
   }
 
-  if (
-    !data.availableKnowledgeBases ||
-    data.availableKnowledgeBases.length === 0
-  ) {
+  const sortedKnowledgeBases = mergeSkillKnowledgeBases(
+    data.availableKnowledgeBases ?? [],
+    data.assignedKnowledgeBases ?? [],
+  );
+
+  if (sortedKnowledgeBases.length === 0) {
     return null;
   }
-
-  const sortedKnowledgeBases = [...data.availableKnowledgeBases].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
 
   return (
     <Card>
