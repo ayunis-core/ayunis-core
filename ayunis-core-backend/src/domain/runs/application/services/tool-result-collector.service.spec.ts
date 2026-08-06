@@ -211,6 +211,136 @@ describe('ToolResultCollectorService', () => {
     });
   });
 
+  describe('display-only param validation (AYC-675)', () => {
+    class InvalidParamsTool extends MockTool {
+      validateParams(): never {
+        throw new Error(
+          "Invalid parameters: parameter 'start' must be a valid ISO 8601 date-time",
+        );
+      }
+    }
+
+    it('should return an error result and succeeded=false when display-only params are invalid', async () => {
+      const tool = new InvalidParamsTool(
+        'create_calendar_event',
+        ToolType.CREATE_CALENDAR_EVENT,
+      );
+      const toolUse = makeToolUseContent('tu-6', 'create_calendar_event', {
+        start: 'not-a-date',
+      });
+      const thread = makeThread([toolUse]);
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
+      });
+
+      const { contents, outcomes } = await service.collectToolResults({
+        thread,
+        tools: [tool],
+        input: null,
+        orgId,
+        isAnonymous: false,
+      });
+
+      expect(contents).toHaveLength(1);
+      expect(contents[0].result).toBe(
+        "The tool didn't provide any result due to the following error in tool usage: Invalid parameters: parameter 'start' must be a valid ISO 8601 date-time",
+      );
+      expect(outcomes[0].succeeded).toBe(false);
+      expect(executeToolUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should not re-validate hybrid tool params after a successful execution', async () => {
+      // The handler already validated the null-stripped input; re-checking
+      // the raw params could reject a call whose side effect just succeeded.
+      const tool = new InvalidParamsTool(
+        'create_document',
+        ToolType.CREATE_DOCUMENT,
+      );
+      const toolUse = makeToolUseContent('tu-9', 'create_document', {
+        letterhead_id: null,
+      });
+      const thread = makeThread([toolUse]);
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: true,
+      });
+      executeToolUseCase.execute.mockResolvedValue('artifact created');
+
+      const { contents, outcomes } = await service.collectToolResults({
+        thread,
+        tools: [tool],
+        input: null,
+        orgId,
+        isAnonymous: false,
+      });
+
+      expect(contents[0].result).toBe('Tool has been displayed successfully');
+      expect(outcomes[0].succeeded).toBe(true);
+    });
+
+    it('should strip disallowed nulls before validating display-only params', async () => {
+      const tool = new MockTool('bar_chart', ToolType.BAR_CHART);
+      tool.parameters = {
+        type: 'object',
+        properties: { insight: { type: 'string' } },
+      } as never;
+      const validateSpy = jest.spyOn(tool, 'validateParams');
+      const toolUse = makeToolUseContent('tu-10', 'bar_chart', {
+        insight: null,
+      });
+      const thread = makeThread([toolUse]);
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
+      });
+
+      await service.collectToolResults({
+        thread,
+        tools: [tool],
+        input: null,
+        orgId,
+        isAnonymous: false,
+      });
+
+      expect(validateSpy).toHaveBeenCalledWith({});
+    });
+
+    it('should pass a frontend-supplied result through without validating', async () => {
+      const tool = new InvalidParamsTool(
+        'create_calendar_event',
+        ToolType.CREATE_CALENDAR_EVENT,
+      );
+      const toolUse = makeToolUseContent('tu-7', 'create_calendar_event', {
+        start: 'not-a-date',
+      });
+      const thread = makeThread([toolUse]);
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
+      });
+
+      const { contents, outcomes } = await service.collectToolResults({
+        thread,
+        tools: [tool],
+        input: {
+          toolId: 'tu-7',
+          toolName: 'create_calendar_event',
+          result: 'User downloaded the event',
+        },
+        orgId,
+        isAnonymous: false,
+      });
+
+      expect(contents[0].result).toBe('User downloaded the event');
+      expect(outcomes[0].succeeded).toBe(true);
+    });
+  });
+
   describe('exitLoopAfterAgentResponse', () => {
     it('should return false when response contains a hybrid displayable+executable tool', () => {
       const tool = new MockTool('create_document', ToolType.CREATE_DOCUMENT);
@@ -247,6 +377,67 @@ describe('ToolResultCollectorService', () => {
       const result = service.exitLoopAfterAgentResponse(message, [tool]);
 
       expect(result).toBe(true);
+    });
+
+    it('should return false when the display-only tool call has invalid params (AYC-675)', () => {
+      const tool = new MockTool(
+        'create_calendar_event',
+        ToolType.CREATE_CALENDAR_EVENT,
+      );
+      jest.spyOn(tool, 'validateParams').mockImplementation(() => {
+        throw new Error('Invalid parameters');
+      });
+      const toolUseContent = makeToolUseContent(
+        'tu-8',
+        'create_calendar_event',
+      );
+
+      const message = {
+        content: [toolUseContent],
+      } as unknown as AssistantMessage;
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
+      });
+
+      // The loop must continue so the model receives the validation error
+      // and can retry with corrected params.
+      const result = service.exitLoopAfterAgentResponse(message, [tool]);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when one of several display-only calls is invalid (AYC-675)', () => {
+      const validTool = new MockTool('bar_chart', ToolType.BAR_CHART);
+      const invalidTool = new MockTool(
+        'create_calendar_event',
+        ToolType.CREATE_CALENDAR_EVENT,
+      );
+      jest.spyOn(invalidTool, 'validateParams').mockImplementation(() => {
+        throw new Error('Invalid parameters');
+      });
+
+      const message = {
+        content: [
+          makeToolUseContent('tu-9', 'bar_chart'),
+          makeToolUseContent('tu-10', 'create_calendar_event'),
+        ],
+      } as unknown as AssistantMessage;
+
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: true,
+        isExecutable: false,
+      });
+
+      // A valid sibling must not end the turn while an invalid display call
+      // still needs a retry.
+      const result = service.exitLoopAfterAgentResponse(message, [
+        validTool,
+        invalidTool,
+      ]);
+
+      expect(result).toBe(false);
     });
   });
 
