@@ -3,8 +3,9 @@ import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpToolCall } from '../../ports/mcp-client.port';
 import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UnexpectedMcpError } from '../../mcp.errors';
+import { isMcpConnectivityOutage, UnexpectedMcpError } from '../../mcp.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 
 /**
@@ -62,38 +63,71 @@ export class ExecuteMcpToolUseCase {
           ...(result.isError && { errorMessage: 'Tool execution failed' }),
         };
       } catch (toolError) {
-        const duration = Date.now() - startTime;
-        const errorMsg =
-          (toolError as Error).message || 'Tool execution failed';
-
-        this.logger.warn(
-          `[MCP] operation=execute_tool integration=${command.integrationId} name="${integration.name}" tool="${command.toolName}" status=error error="${errorMsg}" duration=${duration}ms`,
+        return this.toSoftFailureResult(
+          toolError,
+          command,
+          integration.name,
+          startTime,
         );
-
-        // Return error to LLM (don't throw)
-        return {
-          isError: true,
-          content: null,
-          errorMessage: errorMsg,
-        };
       }
     } catch (error) {
-      const duration = Date.now() - startTime;
-
-      if (error instanceof ApplicationError) {
-        this.logger.warn(
-          `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=error error="${error.message}" duration=${duration}ms`,
-        );
-        throw error;
-      }
-
-      this.logger.error(
-        `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=unexpected_error error="${(error as Error).message}" duration=${duration}ms`,
-        { error: error as Error },
-      );
-      throw new UnexpectedMcpError(
-        'Unexpected error occurred during tool execution',
-      );
+      this.rethrowExecutionError(error, command, startTime);
     }
+  }
+
+  private rethrowExecutionError(
+    error: unknown,
+    command: ExecuteMcpToolCommand,
+    startTime: number,
+  ): never {
+    const duration = Date.now() - startTime;
+
+    if (error instanceof ApplicationError) {
+      this.logger.warn(
+        `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=error error="${error.message}" duration=${duration}ms`,
+      );
+      throw error;
+    }
+
+    this.logger.error(
+      `[MCP] operation=execute_tool integration=${command.integrationId} tool="${command.toolName}" status=unexpected_error error="${(error as Error).message}" duration=${duration}ms`,
+      { error: error as Error },
+    );
+    throw new UnexpectedMcpError(
+      'Unexpected error occurred during tool execution',
+    );
+  }
+
+  /**
+   * Converts a thrown tool-call failure into the error result handed to the
+   * LLM. This soft-return is the only place classified MCP outages surface
+   * during a run, and their raw transport duplicates are suppressed
+   * AppSignal-side (AYC-616) — so the classified failure must be reported
+   * here or connection outages become invisible. Tool-level failures (bad
+   * params, server-side tool bugs) stay unreported: they are the
+   * integration's expected outcome, not ours.
+   */
+  private toSoftFailureResult(
+    toolError: unknown,
+    command: ExecuteMcpToolCommand,
+    integrationName: string,
+    startTime: number,
+  ): ToolExecutionResult {
+    const duration = Date.now() - startTime;
+    const errorMsg = (toolError as Error).message || 'Tool execution failed';
+
+    this.logger.warn(
+      `[MCP] operation=execute_tool integration=${command.integrationId} name="${integrationName}" tool="${command.toolName}" status=error error="${errorMsg}" duration=${duration}ms`,
+    );
+
+    if (isMcpConnectivityOutage(toolError)) {
+      reportUnexpectedError(toolError);
+    }
+
+    return {
+      isError: true,
+      content: null,
+      errorMessage: errorMsg,
+    };
   }
 }

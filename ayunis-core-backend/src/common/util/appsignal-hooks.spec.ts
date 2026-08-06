@@ -1,6 +1,7 @@
 // appsignal-hooks.cjs is a plain CJS module loaded by appsignal.cjs before
 // the app boots; require() mirrors how it is consumed there.
 import createHttpError from 'http-errors';
+import { errors as undiciErrors } from 'undici';
 import { JobRetryScheduledError } from '../../domain/sources/infrastructure/queue/bullmq-job.helpers';
 
 type UndiciRequest = {
@@ -219,6 +220,39 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     createHttpError(413, 'request entity too large', {
       type: 'entity.too.large',
     }),
+  'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
+  // Node mints errno errors as plain Errors carrying `code`; these mirror
+  // the exact shapes seen in incidents #409, #387, #457, #511.
+  'transport-dns-again': () =>
+    Object.assign(new Error('getaddrinfo EAI_AGAIN core-connect.ayunis.de'), {
+      code: 'EAI_AGAIN',
+      hostname: 'core-connect.ayunis.de',
+    }),
+  'transport-connection-reset': () =>
+    Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }),
+  'transport-connection-aborted': () =>
+    Object.assign(new Error('timeout of 30000ms exceeded'), {
+      code: 'ECONNABORTED',
+    }),
+  // The shape axios produces with clarifyTimeoutError: true — the anonymize
+  // client's deadline errno since AYC-654.
+  'transport-timed-out': () =>
+    Object.assign(new Error('timeout of 60000ms exceeded'), {
+      code: 'ETIMEDOUT',
+    }),
+  'transport-broken-pipe': () =>
+    Object.assign(new Error('write EPIPE'), {
+      code: 'EPIPE',
+      errno: -32,
+      syscall: 'write',
+    }),
+  // The exact object Node mints for AbortSignal.timeout(): name
+  // 'TimeoutError', numeric code 23 — exceptionType stringifies to '23'.
+  'timeout-signal-cancellation': () =>
+    new DOMException(
+      'The operation was aborted due to timeout',
+      'TimeoutError',
+    ),
 };
 
 describe('SUPPRESSIONS registry', () => {

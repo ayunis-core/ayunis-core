@@ -159,6 +159,97 @@ const SUPPRESSIONS = [
       'which stay fully reported.',
     exceptionType: '20',
   },
+  // RAW TRANSPORT DUPLICATES OF THE CLASSIFIED PROVIDER TAXONOMY
+  //
+  // Since AYC-651/653/654/655, every path that acts on provider egress (LLM
+  // inference, embeddings, OCR, MCP, anonymize) classifies these transport
+  // codes into PROVIDER_UNAVAILABLE_* / MCP_CONNECTION_TIMEOUT before they
+  // can fail a request. The undici/http instrumentation still records the
+  // raw errno on the span underneath the handled retry — there is no
+  // "handled" bit to test (see the header) — so each outage double-reports:
+  // once classified, once raw (AYC-615/616/625, incidents #181 #329 #387
+  // #409 #457 #511 #521 recurring on 2.22.2 after the taxonomy deploy).
+  // The classified incidents stay fully reported and carry the AYC-538
+  // rate/anomaly alerting; only the raw errno duplicates are dropped.
+  {
+    id: 'transport-headers-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Provider took too long to start responding. Classified as ' +
+      'PROVIDER_UNAVAILABLE_TIMEOUT_* wherever it can fail a request; the ' +
+      'raw undici span exception is a duplicate (incidents #521, #181).',
+    exceptionType: 'UND_ERR_HEADERS_TIMEOUT',
+  },
+  {
+    id: 'transport-dns-again',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Transient DNS resolution failure on outbound egress. Classified as ' +
+      'PROVIDER_UNAVAILABLE_CONNECTION_* with one setup retry; the raw ' +
+      'getaddrinfo span exception is a duplicate (incident #409).',
+    exceptionType: 'EAI_AGAIN',
+  },
+  {
+    id: 'transport-connection-reset',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Peer closed the socket mid-request ("socket hang up"). Classified as ' +
+      'PROVIDER_UNAVAILABLE_CONNECTION_* with one setup retry; the raw span ' +
+      'exception is a duplicate (incident #387).',
+    exceptionType: 'ECONNRESET',
+  },
+  {
+    id: 'transport-connection-aborted',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Legacy axios deadline shape: without clarifyTimeoutError, axios ' +
+      'reports an exceeded timeout as ECONNABORTED (incident #457, ' +
+      'pre-2.22.2 anonymize calls). Classified under the provider taxonomy ' +
+      'wherever it can fail a request; the raw span exception is a ' +
+      'duplicate.',
+    exceptionType: 'ECONNABORTED',
+  },
+  {
+    id: 'transport-timed-out',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Socket/deadline timeout errno. The anonymize client surfaces its ' +
+      'deadline as ETIMEDOUT since AYC-654 (clarifyTimeoutError), grouped ' +
+      'as PROVIDER_UNAVAILABLE_TIMEOUT_* by the taxonomy; the raw span ' +
+      'exception is a duplicate. The latency root cause is tracked in ' +
+      'AYC-662 via the classified incident.',
+    exceptionType: 'ETIMEDOUT',
+  },
+  {
+    id: 'transport-broken-pipe',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-616',
+    reason:
+      'Write to a socket whose peer already disconnected — an SSE client ' +
+      'that went away or a dropped provider connection. Both directions are ' +
+      'expected socket lifecycle, not defects; consequent application ' +
+      'failures still report under their own names (incident #511).',
+    exceptionType: 'EPIPE',
+  },
+  {
+    id: 'timeout-signal-cancellation',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-625',
+    reason:
+      'The DOMException Node mints for AbortSignal.timeout() (name ' +
+      'TimeoutError, numeric code 23, so exceptionType "23") — the timeout ' +
+      'sibling of the AbortError suppression above. Recorded by undici ' +
+      'instrumentation below SDK deadlines the application already handles ' +
+      'and retries; real timeouts surface as classified application errors ' +
+      '(PROVIDER_UNAVAILABLE_TIMEOUT_*, MCP_CONNECTION_TIMEOUT), which stay ' +
+      'fully reported (incident #329).',
+    exceptionType: '23',
+  },
   {
     id: 'bullmq-retry-scheduled',
     lever: 'ignoreErrors',

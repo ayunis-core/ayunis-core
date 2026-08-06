@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { setError } from '@appsignal/nodejs';
 import { ExecuteMcpToolUseCase } from './execute-mcp-tool.use-case';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -9,12 +10,18 @@ import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ValidateIntegrationAccessService } from '../../services/validate-integration-access.service';
 import {
+  McpConnectionFailedError,
+  McpConnectionTimeoutError,
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   McpUnauthenticatedError,
   UnexpectedMcpError,
 } from '../../mcp.errors';
+
+jest.mock('@appsignal/nodejs', () => ({
+  setError: jest.fn(),
+}));
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -138,6 +145,53 @@ describe('ExecuteMcpToolUseCase', () => {
     expect(result.isError).toBe(true);
     expect(result.errorMessage).toBe('tool failed');
     expect(loggerWarnSpy).toHaveBeenCalled();
+  });
+
+  // The soft-handled tool result is the only place classified MCP outages
+  // surface during a run — without reporting here, suppressing the raw
+  // transport errnos (AYC-616) would leave connection outages invisible.
+  it('reports a classified connection failure to AppSignal while soft-returning it to the LLM', async () => {
+    const integration = buildPredefined();
+    repository.findById.mockResolvedValue(integration);
+    contextService.get.mockReturnValue(mockOrgId);
+    const connectionError = new McpConnectionFailedError(
+      'https://example.com/mcp',
+      new Error('getaddrinfo EAI_AGAIN example.com'),
+    );
+    mcpClientService.callTool.mockRejectedValue(connectionError);
+
+    const result = await useCase.execute(buildCommand());
+
+    expect(result.isError).toBe(true);
+    expect(setError).toHaveBeenCalledWith(connectionError);
+  });
+
+  it('reports a classified connection timeout to AppSignal while soft-returning it to the LLM', async () => {
+    const integration = buildPredefined();
+    repository.findById.mockResolvedValue(integration);
+    contextService.get.mockReturnValue(mockOrgId);
+    const timeoutError = new McpConnectionTimeoutError(
+      'https://example.com/mcp',
+      30_000,
+    );
+    mcpClientService.callTool.mockRejectedValue(timeoutError);
+
+    const result = await useCase.execute(buildCommand());
+
+    expect(result.isError).toBe(true);
+    expect(setError).toHaveBeenCalledWith(timeoutError);
+  });
+
+  it('does not report tool-level failures that are not connection outages', async () => {
+    const integration = buildPredefined();
+    repository.findById.mockResolvedValue(integration);
+    contextService.get.mockReturnValue(mockOrgId);
+    mcpClientService.callTool.mockRejectedValue(new Error('Invalid params'));
+
+    const result = await useCase.execute(buildCommand());
+
+    expect(result.isError).toBe(true);
+    expect(setError).not.toHaveBeenCalled();
   });
 
   it('throws when integration does not exist', async () => {
