@@ -26,6 +26,7 @@ export class CreateSessionUseCase {
     const { token, plaintext } = this.refreshTokenFactory.create({
       userId: command.userId,
       familyId: this.refreshTokenFactory.newFamilyId(),
+      authenticationMethod: command.authenticationMethod,
     });
 
     await this.refreshTokensRepository.insert(token);

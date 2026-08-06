@@ -16,6 +16,7 @@ import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { setCookies, clearMfaPendingCookie } from 'src/common/util/cookie.util';
 import { ActiveUser } from '../../domain/active-user.entity';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
 import { LoginCommand } from '../../application/use-cases/login/login.command';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -166,6 +167,7 @@ export class MfaLoginController {
           orgId: user.orgId,
           name: user.name,
         }),
+        SessionAuthenticationMethod.PASSWORD,
       ),
     );
 
