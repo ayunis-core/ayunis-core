@@ -35,7 +35,36 @@ export class LocalSkillRepository implements SkillRepository {
   ) {}
 
   private getManager(): EntityManager {
+    // txHost.tx is typed non-nullable but is undefined outside an active transaction
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     return this.txHost.tx ?? this.skillRepository.manager;
+  }
+
+  private async syncRelation(
+    manager: EntityManager,
+    skillId: UUID,
+    relation: 'sources' | 'mcpIntegrations' | 'knowledgeBases',
+    existingIds: UUID[],
+    desiredIds: UUID[],
+  ): Promise<void> {
+    const toAdd = desiredIds.filter((id) => !existingIds.includes(id));
+    const toRemove = existingIds.filter((id) => !desiredIds.includes(id));
+
+    if (toAdd.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(SkillRecord, relation)
+        .of(skillId)
+        .add(toAdd);
+    }
+
+    if (toRemove.length > 0) {
+      await manager
+        .createQueryBuilder()
+        .relation(SkillRecord, relation)
+        .of(skillId)
+        .remove(toRemove);
+    }
   }
 
   async create(skill: Skill): Promise<Skill> {
@@ -97,84 +126,30 @@ export class LocalSkillRepository implements SkillRepository {
       throw new SkillNotFoundError(skill.id);
     }
 
-    // Save updated record
     const record = this.skillMapper.toRecord(skill);
     await manager.save(SkillRecord, record);
 
-    // Handle sources many-to-many
-    const existingSourceIds = existing.sources?.map((s) => s.id) ?? [];
-    const sourcesToAdd = skill.sourceIds.filter(
-      (id) => !existingSourceIds.includes(id),
+    await this.syncRelation(
+      manager,
+      skill.id,
+      'sources',
+      existing.sources?.map((s) => s.id) ?? [],
+      skill.sourceIds,
     );
-    const sourcesToRemove = existingSourceIds.filter(
-      (id) => !skill.sourceIds.includes(id),
+    await this.syncRelation(
+      manager,
+      skill.id,
+      'mcpIntegrations',
+      existing.mcpIntegrations?.map((i) => i.id) ?? [],
+      skill.mcpIntegrationIds,
     );
-
-    if (sourcesToAdd.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'sources')
-        .of(skill.id)
-        .add(sourcesToAdd);
-    }
-
-    if (sourcesToRemove.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'sources')
-        .of(skill.id)
-        .remove(sourcesToRemove);
-    }
-
-    // Handle MCP integrations many-to-many
-    const existingMcpIds = existing.mcpIntegrations?.map((i) => i.id) ?? [];
-    const mcpToAdd = skill.mcpIntegrationIds.filter(
-      (id) => !existingMcpIds.includes(id),
+    await this.syncRelation(
+      manager,
+      skill.id,
+      'knowledgeBases',
+      existing.knowledgeBases?.map((kb) => kb.id) ?? [],
+      skill.knowledgeBaseIds,
     );
-    const mcpToRemove = existingMcpIds.filter(
-      (id) => !skill.mcpIntegrationIds.includes(id),
-    );
-
-    if (mcpToAdd.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'mcpIntegrations')
-        .of(skill.id)
-        .add(mcpToAdd);
-    }
-
-    if (mcpToRemove.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'mcpIntegrations')
-        .of(skill.id)
-        .remove(mcpToRemove);
-    }
-
-    // Handle knowledge bases many-to-many
-    const existingKbIds = existing.knowledgeBases?.map((kb) => kb.id) ?? [];
-    const kbToAdd = skill.knowledgeBaseIds.filter(
-      (id) => !existingKbIds.includes(id),
-    );
-    const kbToRemove = existingKbIds.filter(
-      (id) => !skill.knowledgeBaseIds.includes(id),
-    );
-
-    if (kbToAdd.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'knowledgeBases')
-        .of(skill.id)
-        .add(kbToAdd);
-    }
-
-    if (kbToRemove.length > 0) {
-      await manager
-        .createQueryBuilder()
-        .relation(SkillRecord, 'knowledgeBases')
-        .of(skill.id)
-        .remove(kbToRemove);
-    }
 
     // Reload with all relations
     const reloaded = await manager.findOne(SkillRecord, {
