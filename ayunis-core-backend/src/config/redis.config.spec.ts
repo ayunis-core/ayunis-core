@@ -1,5 +1,7 @@
 import { redisConfig } from './redis.config';
 
+// Production requiredness of REDIS_PASSWORD is enforced by validateEnv (see
+// env.validation.spec.ts); this factory only reads values.
 describe('redisConfig', () => {
   const originalEnv = process.env;
 
@@ -15,7 +17,6 @@ describe('redisConfig', () => {
   });
 
   it('reads host, port and password from the environment', () => {
-    process.env.NODE_ENV = 'development';
     process.env.REDIS_HOST = 'redis';
     process.env.REDIS_PORT = '6380';
     process.env.REDIS_PASSWORD = 'secret';
@@ -27,33 +28,11 @@ describe('redisConfig', () => {
     expect(config.password).toBe('secret');
   });
 
-  it('defaults to localhost:6379 with no password outside production', () => {
-    process.env.NODE_ENV = 'development';
-
+  it('defaults to localhost:6379 with no password when unset', () => {
     const config = redisConfig();
 
     expect(config.host).toBe('localhost');
     expect(config.port).toBe(6379);
     expect(config.password).toBeUndefined();
-  });
-
-  it('throws in production when REDIS_PASSWORD is missing', () => {
-    process.env.NODE_ENV = 'production';
-
-    expect(() => redisConfig()).toThrow(/REDIS_PASSWORD/);
-  });
-
-  it('treats an empty-string password as missing in production', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.REDIS_PASSWORD = '';
-
-    expect(() => redisConfig()).toThrow(/REDIS_PASSWORD/);
-  });
-
-  it('does not throw in production when REDIS_PASSWORD is set', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.REDIS_PASSWORD = 'secret';
-
-    expect(() => redisConfig()).not.toThrow();
   });
 });

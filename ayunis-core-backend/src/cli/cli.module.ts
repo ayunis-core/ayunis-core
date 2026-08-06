@@ -13,6 +13,7 @@ import { GetUserCommand } from 'src/cli/application/commands/users/get-user.comm
 import { MakeSuperAdminCommand } from 'src/cli/application/commands/users/make-super-admin.command';
 import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remove-super-admin.command';
 import { rootConfigs } from 'src/config/root-configs';
+import { validateEnv } from 'src/config/env.validation';
 import dataSource from 'src/db/datasource';
 
 /**
@@ -31,6 +32,7 @@ import dataSource from 'src/db/datasource';
     ConfigModule.forRoot({
       isGlobal: true,
       load: rootConfigs,
+      validate: validateEnv,
     }),
     ClsModule.forRoot({
       global: true,
