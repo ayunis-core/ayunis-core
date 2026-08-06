@@ -194,6 +194,131 @@ describe('the agent loop', () => {
     expect(model.requests).toHaveLength(1);
   });
 
+  it('returns the validation error and keeps looping when a display-only call has invalid input (AYC-675)', async () => {
+    const displayOnly = echoTool({
+      name: 'show_event',
+      execute: undefined,
+      validateInput: (input) => {
+        if (input.start === 'not-a-date') {
+          throw new Error(
+            "'start' must be a valid ISO 8601 date-time, received 'not-a-date'",
+          );
+        }
+      },
+    });
+    const model = new MockProvider([
+      toolCallTurn({
+        id: 'call-1',
+        name: 'show_event',
+        input: { start: 'not-a-date' },
+      }),
+      toolCallTurn({
+        id: 'call-2',
+        name: 'show_event',
+        input: { start: '2026-01-31T14:30:00Z' },
+      }),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [displayOnly] }),
+    );
+
+    const toolResults = events.filter((event) => event.type === 'tool_result');
+    expect(toolResults[0]).toMatchObject({
+      toolCallId: 'call-1',
+      result:
+        "'start' must be a valid ISO 8601 date-time, received 'not-a-date'",
+      isError: true,
+    });
+    expect(toolResults[1]).toMatchObject({
+      toolCallId: 'call-2',
+      result: 'Tool has been displayed successfully',
+      isError: false,
+    });
+    // The invalid call must not end the run — the model sees the error,
+    // retries, and only the valid retry exits the loop.
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('consults validateInput before execute and skips execution on failure', async () => {
+    const execute = vi.fn(() => 'should not run');
+    const guarded = echoTool({
+      execute,
+      validateInput: (input) => {
+        if (input.value === 'bad') {
+          throw new Error("'value' is not acceptable");
+        }
+      },
+    });
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'echo', input: { value: 'bad' } }),
+      textTurn('Giving up'),
+    ]);
+
+    const events = await collectEvents(baseInput(model, { tools: [guarded] }));
+
+    expect(events.find((event) => event.type === 'tool_result')).toMatchObject({
+      toolCallId: 'call-1',
+      result: "'value' is not acceptable",
+      isError: true,
+    });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps looping when a valid display-only sibling accompanies an invalid one (AYC-675)', async () => {
+    const displayOnly = echoTool({
+      name: 'show_event',
+      execute: undefined,
+      validateInput: (input) => {
+        if (input.start === 'not-a-date') {
+          throw new Error('invalid start');
+        }
+      },
+    });
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'call-1',
+              name: 'show_event',
+              argumentsDelta: '{"start":"2026-01-31T14:30:00Z"}',
+            },
+            {
+              index: 1,
+              id: 'call-2',
+              name: 'show_event',
+              argumentsDelta: '{"start":"not-a-date"}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+      toolCallTurn({
+        id: 'call-3',
+        name: 'show_event',
+        input: { start: '2026-02-01T09:00:00Z' },
+      }),
+    ]);
+
+    const events = await collectEvents(
+      baseInput(model, { tools: [displayOnly] }),
+    );
+
+    // The valid sibling must not end the turn while the invalid call still
+    // needs a retry: the model gets both results and goes again.
+    expect(model.requests).toHaveLength(2);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
   it('settles executable siblings in the originating display-only turn', async () => {
     const executeLookup = vi.fn(() => 'Berlin budget results');
     const model = new MockProvider([

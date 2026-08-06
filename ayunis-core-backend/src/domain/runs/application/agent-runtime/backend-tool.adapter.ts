@@ -20,6 +20,7 @@ import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/appli
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
+import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 import { serializeRuntimeModelError } from './runtime-model-error';
 
@@ -67,7 +68,26 @@ export class BackendToolAdapter {
       parameters: tool.parameters as unknown as JsonSchema,
     };
     if (!capabilities.isExecutable) {
-      return schema;
+      // Display-only tools never reach a backend handler, so the runtime's
+      // validateInput seam is the only pre-display check of their params; an
+      // invalid call feeds the model an actionable error instead of ending
+      // the turn with garbage params the client would render (AYC-675). The
+      // message carries the same prefix the legacy collector and the
+      // executable path use, so the model sees one error shape on both loops.
+      return {
+        ...schema,
+        validateInput: (input: Record<string, unknown>): void => {
+          try {
+            tool.validateParams(stripDisallowedNulls(input, tool.parameters));
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : 'Invalid parameters';
+            throw new Error(
+              `The tool didn't provide any result due to the following error in tool usage: ${message}`,
+            );
+          }
+        },
+      };
     }
     return {
       ...schema,

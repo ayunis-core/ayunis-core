@@ -64,6 +64,31 @@ describe('BackendToolAdapter', () => {
     expect(tool.execute).toBeUndefined();
   });
 
+  it('wires display-only tools to backend param validation (AYC-675)', () => {
+    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: false });
+    const backendTool = fakeTool('create_calendar_event');
+    (backendTool as { validateParams?: unknown }).validateParams = jest.fn(
+      (params: Record<string, unknown>) => {
+        if (params.start === 'not-a-date') {
+          throw new Error("'start' must be a valid ISO 8601 date-time");
+        }
+        return params;
+      },
+    );
+
+    const [tool] = adapter.toRuntimeTools([backendTool]);
+
+    expect(tool.validateInput).toBeDefined();
+    // Same error shape as the legacy collector and the executable path, so
+    // the model sees one format on both loops.
+    expect(() => tool.validateInput!({ start: 'not-a-date' })).toThrow(
+      /The tool didn't provide any result due to the following error in tool usage: 'start' must be a valid ISO 8601 date-time/,
+    );
+    expect(() =>
+      tool.validateInput!({ start: '2026-01-31T14:30:00Z' }),
+    ).not.toThrow();
+  });
+
   it('hands hybrid tools a display acknowledgement, not the raw result', async () => {
     checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
     execute.mockResolvedValue('the document body');
