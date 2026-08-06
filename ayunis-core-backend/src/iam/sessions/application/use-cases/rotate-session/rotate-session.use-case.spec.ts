@@ -16,6 +16,7 @@ import {
   createMockRefreshTokensRepository,
   TEST_FAMILY_ID,
 } from '../../testing/refresh-token.fixtures';
+import { SessionAuthenticationMethod } from '../../../domain/value-objects/session-authentication-method.enum';
 
 describe('RotateSessionUseCase', () => {
   let useCase: RotateSessionUseCase;
@@ -64,6 +65,22 @@ describe('RotateSessionUseCase', () => {
     );
     expect(repository.insert).not.toHaveBeenCalled();
     expect(repository.revokeFamily).not.toHaveBeenCalled();
+  });
+
+  it('preserves the family authentication method during rotation', async () => {
+    const current = aRefreshToken({
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+    });
+    repository.findByTokenHash.mockResolvedValue(current);
+    repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
+
+    await rotate();
+
+    expect(factory.create).toHaveBeenCalledWith({
+      userId: current.userId,
+      familyId: current.familyId,
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+    });
   });
 
   it('should throw NotFound for an unknown token and write nothing', async () => {

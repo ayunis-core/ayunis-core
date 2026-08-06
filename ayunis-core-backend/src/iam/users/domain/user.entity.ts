@@ -8,7 +8,7 @@ export class User {
   public id: UUID;
   public email: string;
   public emailVerified: boolean;
-  public passwordHash: string;
+  public passwordHash: string | null;
   public role: UserRole;
   public systemRole: SystemRole;
   public orgId: UUID;
@@ -22,7 +22,7 @@ export class User {
     id?: UUID;
     email: string;
     emailVerified: boolean;
-    passwordHash: string;
+    passwordHash: string | null;
     role: UserRole;
     systemRole?: SystemRole;
     orgId: UUID;

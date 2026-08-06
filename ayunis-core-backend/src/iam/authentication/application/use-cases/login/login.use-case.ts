@@ -29,7 +29,7 @@ export class LoginUseCase {
       command.user,
     );
     const session = await this.createSessionUseCase.execute(
-      new CreateSessionCommand(command.user.id),
+      new CreateSessionCommand(command.user.id, command.authenticationMethod),
     );
 
     return new AuthTokens(accessToken, session.refreshToken);

@@ -9,7 +9,7 @@ import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/pass
 import { SendPasswordResetEmailUseCase } from '../send-password-reset-email/send-password-reset-email.use-case';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { UserNotFoundError } from '../../users.errors';
+import { UserInvalidInputError, UserNotFoundError } from '../../users.errors';
 import type { UUID } from 'crypto';
 
 describe('SuperAdminTriggerPasswordResetUseCase', () => {
@@ -27,13 +27,13 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   const frontendBaseUrl = 'http://localhost:3001';
   const passwordResetEndpoint = '/password/reset';
 
-  const buildUser = () =>
+  const buildUser = (passwordHash: string | null = 'hashed-password') =>
     new User({
       id: userId,
       name: userName,
       email: userEmail,
       emailVerified: true,
-      passwordHash: 'hashed-password',
+      passwordHash,
       role: UserRole.USER,
       orgId,
       hasAcceptedMarketing: false,
@@ -124,6 +124,19 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     const command = new SuperAdminTriggerPasswordResetCommand(userId);
 
     await expect(useCase.execute(command)).rejects.toThrow(UserNotFoundError);
+    expect(mockSendPasswordResetEmailUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects password reset for a user without a local password', async () => {
+    jest
+      .spyOn(mockUsersRepository, 'findOneById')
+      .mockResolvedValue(buildUser(null));
+
+    await expect(
+      useCase.execute(new SuperAdminTriggerPasswordResetCommand(userId)),
+    ).rejects.toThrow(UserInvalidInputError);
+
+    expect(mockPasswordSetTokenService.issue).not.toHaveBeenCalled();
     expect(mockSendPasswordResetEmailUseCase.execute).not.toHaveBeenCalled();
   });
 });

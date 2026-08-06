@@ -12,6 +12,7 @@ import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-v
 import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
 import { InvalidPasswordError } from 'src/iam/authentication/application/authentication.errors';
 import type { PasswordSetToken } from 'src/iam/users/domain/password-set-token.entity';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { RevokeAllSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.command';
 
@@ -47,6 +48,12 @@ export class ResetPasswordUseCase {
         userId: token.userId,
       });
       throw new InvalidTokenError('Invalid token - user not found');
+    }
+    if (
+      token.purpose === PasswordSetTokenPurpose.RESET &&
+      user.passwordHash === null
+    ) {
+      throw new InvalidTokenError('Invalid token');
     }
 
     const newHashedPassword = await this.hashTextUseCase.execute(

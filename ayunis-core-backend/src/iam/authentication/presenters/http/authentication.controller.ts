@@ -55,6 +55,7 @@ import { RegisterUserCommand } from '../../application/use-cases/register-user/r
 import { GetCurrentUserCommand } from '../../application/use-cases/get-current-user/get-current-user.command';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -113,7 +114,9 @@ export class AuthenticationController {
       return this.respondMfaPending(res, user, mfaRequirement === 'enroll');
     }
 
-    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
+    const tokens = await this.loginUseCase.execute(
+      new LoginCommand(user, SessionAuthenticationMethod.PASSWORD),
+    );
     setCookies(res, tokens, this.configService, true);
     return res.json({
       success: true,
@@ -182,7 +185,9 @@ export class AuthenticationController {
         department: body.department,
       }),
     );
-    const tokens = await this.loginUseCase.execute(new LoginCommand(user));
+    const tokens = await this.loginUseCase.execute(
+      new LoginCommand(user, SessionAuthenticationMethod.PASSWORD),
+    );
     setCookies(res, tokens, this.configService, true);
 
     return res.json({ success: true });

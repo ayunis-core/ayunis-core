@@ -21,6 +21,7 @@ import {
   createMockPasswordSetTokensRepository,
   TEST_USER_ID,
 } from '../../testing/password-set-token.fixtures';
+import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 
 describe('ResetPasswordUseCase', () => {
   let useCase: ResetPasswordUseCase;
@@ -36,13 +37,13 @@ describe('ResetPasswordUseCase', () => {
 
   const orgId = '660e8400-e29b-41d4-a716-446655440000' as UUID;
 
-  const buildUser = () =>
+  const buildUser = (passwordHash: string | null = 'old-hash') =>
     new User({
       id: TEST_USER_ID,
       name: 'Maria Müller',
       email: 'maria@gemeinde.de',
       emailVerified: true,
-      passwordHash: 'old-hash',
+      passwordHash,
       role: UserRole.USER,
       orgId,
       hasAcceptedMarketing: false,
@@ -162,5 +163,29 @@ describe('ResetPasswordUseCase', () => {
 
     await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
     expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+  });
+
+  it('rejects reset tokens for users without a local password', async () => {
+    mockTokenService.findValid.mockResolvedValue(aPasswordSetToken());
+    mockUsersRepository.findOneById.mockResolvedValue(buildUser(null));
+
+    await expect(useCase.execute(command())).rejects.toThrow(InvalidTokenError);
+
+    expect(mockHashTextUseCase.execute).not.toHaveBeenCalled();
+    expect(mockTokensRepository.consume).not.toHaveBeenCalled();
+    expect(mockUsersRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('allows an explicit initial-password token to create a local password', async () => {
+    const user = buildUser(null);
+    mockTokenService.findValid.mockResolvedValue(
+      aPasswordSetToken({ purpose: PasswordSetTokenPurpose.INITIAL }),
+    );
+    mockUsersRepository.findOneById.mockResolvedValue(user);
+
+    await useCase.execute(command());
+
+    expect(user.passwordHash).toBe('new-hash');
+    expect(mockUsersRepository.update).toHaveBeenCalledWith(user);
   });
 });

@@ -58,6 +58,7 @@ export class RotateSessionUseCase {
     const { token: successor, plaintext } = this.refreshTokenFactory.create({
       userId: current.userId,
       familyId: current.familyId,
+      authenticationMethod: current.authenticationMethod,
     });
 
     const won = await this.refreshTokensRepository.markUsedAndInsertSuccessor(
