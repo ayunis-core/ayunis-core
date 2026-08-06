@@ -17,6 +17,7 @@ import { ImageGenerationResult } from 'src/domain/models/application/ports/image
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
+import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
 
 describe('GenerateImageToolHandler', () => {
   let handler: GenerateImageToolHandler;
@@ -227,6 +228,33 @@ describe('GenerateImageToolHandler', () => {
         context: { orgId: mockOrgId, threadId: mockThreadId },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should expose ApplicationError messages to the LLM, preserving the message', async () => {
+    // Provider errors like content-policy rejections carry a user-appropriate
+    // message; swallowing it left the model retrying blind until the
+    // repeated-failure breaker aborted the run with a generic error (AYC-562).
+    setupHappyPath();
+    const generationError = new ImageGenerationFailedError(
+      'The image could not be generated because the prompt was flagged by the content policy. Please revise your prompt and try again.',
+    );
+    mockGenerateImage.execute.mockRejectedValue(generationError);
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'A comic-style portrait' },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain(generationError.message);
   });
 
   it('should throw ToolExecutionFailedError when save fails', async () => {

@@ -21,6 +21,7 @@
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
     "errorToolNotFound": "Tool not found",
+    "errorToolExecutionFailed": "A tool failed repeatedly. Please adjust your request and try again.",
     "errorAnonymizationUnavailable": "Anonymization is currently unavailable. Your message was not sent to protect your data.",
     "errorContextBudgetExceeded": "The latest conversation turn is too large for the model context window.",
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",

@@ -27,6 +27,9 @@ export function useRunErrorHandler(_threadId: string) {
         case 'RUN_TOOL_NOT_FOUND':
           showError(t('chat.errorToolNotFound'));
           break;
+        case 'RUN_TOOL_EXECUTION_FAILED':
+          showError(t('chat.errorToolExecutionFailed'));
+          break;
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
           showError(t('chat.errorAnonymizationUnavailable'));
           break;
