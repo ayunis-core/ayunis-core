@@ -34,6 +34,18 @@ export function AnonymizationSettingsPage() {
   const { data, isLoading, isError, refetch } =
     useAnonymizationSettingsControllerGet();
   const serverRows = useMemo(() => buildRows(data?.entries ?? []), [data]);
+  // `?? []` also shields against an older API without globalWords during a
+  // rolling deploy — the generated type claims the field is always present.
+  const globalWords = data?.globalWords ?? [];
+  const globalWordsByCategory = useMemo(() => {
+    const grouped: Partial<Record<PiiCategory, string[]>> = {};
+    for (const { category, word } of data?.globalWords ?? []) {
+      const list = grouped[category] ?? [];
+      list.push(word);
+      grouped[category] = list;
+    }
+    return grouped;
+  }, [data]);
 
   const [draft, setDraft] = useState<RowsState | null>(null);
   const [errors, setErrors] = useState<RowErrors>({});
@@ -131,6 +143,11 @@ export function AnonymizationSettingsPage() {
         <CardHeader>
           <CardTitle>{t('piiWhitelist.heading')}</CardTitle>
           <CardDescription>{t('piiWhitelist.description')}</CardDescription>
+          {globalWords.length > 0 && (
+            <CardDescription>
+              {t('piiWhitelist.globalExplanation')}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {PII_CATEGORIES.map((category) => (
@@ -138,6 +155,7 @@ export function AnonymizationSettingsPage() {
               key={category}
               category={category}
               row={rows[category]}
+              globalWords={globalWordsByCategory[category] ?? []}
               error={errors[category]}
               disabled={updateMutation.isPending}
               onChange={(row) => handleRowChange(category, row)}

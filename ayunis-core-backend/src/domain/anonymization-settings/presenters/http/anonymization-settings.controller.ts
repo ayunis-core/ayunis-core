@@ -17,9 +17,11 @@ import { GetPiiWhitelistUseCase } from '../../application/use-cases/get-pii-whit
 import { GetPiiWhitelistQuery } from '../../application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
 import { UpdatePiiWhitelistUseCase } from '../../application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
 import { UpdatePiiWhitelistCommand } from '../../application/use-cases/update-pii-whitelist/update-pii-whitelist.command';
+import { GetGlobalPiiWhitelistUseCase } from '../../application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { UpdatePiiWhitelistRequestDto } from './dtos/update-pii-whitelist-request.dto';
 import { PiiWhitelistResponseDto } from './dtos/pii-whitelist-response.dto';
 import type { AnonymizationWhitelistEntry } from '../../domain/anonymization-whitelist-entry.entity';
+import type { GlobalAnonymizationWhitelistWord } from '../../domain/global-anonymization-whitelist-word.entity';
 
 @ApiTags('anonymization-settings')
 @Controller('anonymization-settings')
@@ -30,6 +32,7 @@ export class AnonymizationSettingsController {
   constructor(
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly updatePiiWhitelistUseCase: UpdatePiiWhitelistUseCase,
+    private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
   ) {}
 
   @Get('pii-whitelist')
@@ -48,7 +51,8 @@ export class AnonymizationSettingsController {
     const entries = await this.getPiiWhitelistUseCase.execute(
       new GetPiiWhitelistQuery(orgId),
     );
-    return this.toResponse(entries);
+    const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
+    return this.toResponse(entries, globalWords);
   }
 
   @Put('pii-whitelist')
@@ -69,6 +73,10 @@ export class AnonymizationSettingsController {
   ): Promise<PiiWhitelistResponseDto> {
     this.logger.log(`Updating PII whitelist for org ${orgId}`);
 
+    // Read the global list before writing: if this read fails, nothing has
+    // been persisted yet, so the client never sees an error for a save that
+    // actually committed.
+    const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
     const entries = await this.updatePiiWhitelistUseCase.execute(
       new UpdatePiiWhitelistCommand(
         orgId,
@@ -78,16 +86,21 @@ export class AnonymizationSettingsController {
         })),
       ),
     );
-    return this.toResponse(entries);
+    return this.toResponse(entries, globalWords);
   }
 
   private toResponse(
     entries: AnonymizationWhitelistEntry[],
+    globalWords: GlobalAnonymizationWhitelistWord[],
   ): PiiWhitelistResponseDto {
     return {
       entries: entries.map((entry) => ({
         category: entry.category,
         pattern: entry.pattern,
+      })),
+      globalWords: globalWords.map((word) => ({
+        category: word.category,
+        word: word.word,
       })),
     };
   }

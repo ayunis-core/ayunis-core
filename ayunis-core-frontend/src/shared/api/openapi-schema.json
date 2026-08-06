@@ -15354,6 +15354,23 @@
         },
         "required": ["category", "pattern"]
       },
+      "GlobalPiiWhitelistWordSummaryDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          },
+          "word": {
+            "type": "string",
+            "description": "The word exempted from anonymization"
+          }
+        },
+        "required": ["category", "word"]
+      },
       "PiiWhitelistResponseDto": {
         "type": "object",
         "properties": {
@@ -15363,9 +15380,16 @@
             "items": {
               "$ref": "#/components/schemas/PiiWhitelistEntryDto"
             }
+          },
+          "globalWords": {
+            "description": "Words exempted platform-wide by Ayunis, read-only for org admins",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlobalPiiWhitelistWordSummaryDto"
+            }
           }
         },
-        "required": ["entries"]
+        "required": ["entries", "globalWords"]
       },
       "UpdatePiiWhitelistRequestDto": {
         "type": "object",

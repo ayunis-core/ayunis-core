@@ -3,6 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { Switch } from '@/shared/ui/shadcn/switch';
 import { Input } from '@/shared/ui/shadcn/input';
 import { Label } from '@/shared/ui/shadcn/label';
+import { Badge } from '@/shared/ui/shadcn/badge';
 import {
   Item,
   ItemActions,
@@ -19,6 +20,7 @@ import type { RegexValidationError } from '../lib/validate-regex';
 interface PiiCategoryRowProps {
   category: PiiCategory;
   row: CategoryRowState;
+  globalWords: string[];
   error?: RegexValidationError;
   disabled: boolean;
   onChange: (row: CategoryRowState) => void;
@@ -27,6 +29,7 @@ interface PiiCategoryRowProps {
 export function PiiCategoryRow({
   category,
   row,
+  globalWords,
   error,
   disabled,
   onChange,
@@ -57,6 +60,21 @@ export function PiiCategoryRow({
           onCheckedChange={(enabled) => onChange({ ...row, enabled })}
         />
       </ItemActions>
+
+      {globalWords.length > 0 && (
+        <ItemFooter>
+          <div className="flex w-full flex-wrap items-center gap-1.5 opacity-70">
+            {globalWords.map((word) => (
+              <Badge key={word} variant="outline">
+                {word}
+                <span className="ml-1 text-muted-foreground">
+                  {t('piiWhitelist.globalBadge')}
+                </span>
+              </Badge>
+            ))}
+          </div>
+        </ItemFooter>
+      )}
 
       {row.enabled && (
         <ItemFooter>

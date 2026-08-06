@@ -3421,9 +3421,17 @@ export interface PiiWhitelistEntryDto {
   pattern: string | null;
 }
 
+export interface GlobalPiiWhitelistWordSummaryDto {
+  category: PiiCategory;
+  /** The word exempted from anonymization */
+  word: string;
+}
+
 export interface PiiWhitelistResponseDto {
   /** Current whitelist entries for the org */
   entries: PiiWhitelistEntryDto[];
+  /** Words exempted platform-wide by Ayunis, read-only for org admins */
+  globalWords: GlobalPiiWhitelistWordSummaryDto[];
 }
 
 export interface UpdatePiiWhitelistRequestDto {

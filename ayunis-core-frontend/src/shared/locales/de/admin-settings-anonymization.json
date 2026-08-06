@@ -15,6 +15,8 @@
     "loadError": "Die Ausnahmen konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
     "exemptBadge": "Nicht maskiert",
+    "globalBadge": "global",
+    "globalExplanation": "Mit \"global\" markierte Einträge werden von Ayunis zentral für alle Kunden gesetzt und nie anonymisiert. Sie können hier nicht bearbeitet werden — Ihre eigenen Ausnahmen gelten zusätzlich.",
     "categories": {
       "person_name": {
         "label": "Personennamen",
