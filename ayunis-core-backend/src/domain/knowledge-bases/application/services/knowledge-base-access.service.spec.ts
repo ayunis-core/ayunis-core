@@ -5,6 +5,7 @@ import { KnowledgeBaseAccessService } from './knowledge-base-access.service';
 import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
+import { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBase } from '../../domain/knowledge-base.entity';
 import { KnowledgeBaseNotFoundError } from '../knowledge-bases.errors';
@@ -17,6 +18,7 @@ describe('KnowledgeBaseAccessService', () => {
   let knowledgeBaseRepository: jest.Mocked<KnowledgeBaseRepository>;
   let findShareByEntityUseCase: jest.Mocked<FindShareByEntityUseCase>;
   let findSharesByScopeUseCase: jest.Mocked<FindSharesByScopeUseCase>;
+  let checkKnowledgeBaseSkillShareAccessUseCase: jest.Mocked<CheckKnowledgeBaseSkillShareAccessUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -59,6 +61,10 @@ describe('KnowledgeBaseAccessService', () => {
           useValue: { execute: jest.fn() },
         },
         {
+          provide: CheckKnowledgeBaseSkillShareAccessUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
           provide: ContextService,
           useValue: {
             get: jest.fn((key: string) => {
@@ -74,6 +80,9 @@ describe('KnowledgeBaseAccessService', () => {
     knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
     findShareByEntityUseCase = module.get(FindShareByEntityUseCase);
     findSharesByScopeUseCase = module.get(FindSharesByScopeUseCase);
+    checkKnowledgeBaseSkillShareAccessUseCase = module.get(
+      CheckKnowledgeBaseSkillShareAccessUseCase,
+    );
     contextService = module.get(ContextService);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -109,6 +118,30 @@ describe('KnowledgeBaseAccessService', () => {
     it('should throw KnowledgeBaseNotFoundError when KB is not owned or shared', async () => {
       knowledgeBaseRepository.findById.mockResolvedValue(null);
       findShareByEntityUseCase.execute.mockResolvedValue(null);
+
+      await expect(service.findAccessibleKnowledgeBase(kbId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
+    });
+
+    it('should return KB linked to a skill shared with the user', async () => {
+      const kbOfSkillOwner = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(kbOfSkillOwner);
+      findShareByEntityUseCase.execute.mockResolvedValue(null);
+      checkKnowledgeBaseSkillShareAccessUseCase.execute.mockResolvedValue(true);
+
+      const result = await service.findAccessibleKnowledgeBase(kbId);
+
+      expect(result).toBe(kbOfSkillOwner);
+    });
+
+    it('should throw KnowledgeBaseNotFoundError when no shared skill links the KB', async () => {
+      const foreignKb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(foreignKb);
+      findShareByEntityUseCase.execute.mockResolvedValue(null);
+      checkKnowledgeBaseSkillShareAccessUseCase.execute.mockResolvedValue(
+        false,
+      );
 
       await expect(service.findAccessibleKnowledgeBase(kbId)).rejects.toThrow(
         KnowledgeBaseNotFoundError,

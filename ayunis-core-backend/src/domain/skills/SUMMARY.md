@@ -48,11 +48,15 @@ skills/
 │       ├── assign-mcp-integration-to-skill/
 │       ├── unassign-mcp-integration-from-skill/
 │       ├── list-skill-mcp-integrations/
+│       ├── assign-knowledge-base-to-skill/
+│       ├── unassign-knowledge-base-from-skill/
+│       ├── list-skill-knowledge-bases/
+│       ├── check-knowledge-base-skill-share-access/  # KB reachable via a shared skill of the KB owner? (exported, used by knowledge-bases)
 │       └── install-skill-from-marketplace/
 ├── infrastructure/
 │   └── persistence/local/
 │       ├── schema/
-│       │   ├── skill.record.ts             # TypeORM entity (ManyToMany for sources + MCP)
+│       │   ├── skill.record.ts             # TypeORM entity (ManyToMany for sources, MCP, knowledge bases)
 │       │   └── skill-activation.record.ts  # Activation state (unique per skillId + userId)
 │       ├── mappers/skill.mapper.ts
 │       ├── local-skill.repository.ts
@@ -61,6 +65,7 @@ skills/
 │   ├── skills.controller.ts                # Core CRUD + toggle-active + toggle-pinned
 │   ├── skill-sources.controller.ts         # Source management endpoints
 │   ├── skill-mcp-integrations.controller.ts # MCP integration endpoints
+│   ├── skill-knowledge-bases.controller.ts # Knowledge base assignment endpoints
 │   ├── dto/
 │   │   ├── base-skill.dto.ts
 │   │   ├── create-skill.dto.ts
@@ -88,6 +93,7 @@ When a skill share is deleted, the `ShareDeletedListener` handles cleanup of act
 
 - **SourcesModule** — for source management (create/delete sources, batch fetch by IDs)
 - **McpModule** — for MCP integration validation and batch fetch
+- **KnowledgeBasesModule** — for resolving assigned knowledge bases (`GetKnowledgeBasesByIdsUseCase`)
 - **ThreadsModule** — for adding sources and MCP integrations to threads during skill activation
 - **SharesModule** — for share authorization strategy registration
 - **UsersModule** — for resolving org-scoped share members (`FindAllUserIdsByOrgIdUseCase`) and shared-skill creator display names (`FindUsersByIdsUseCase`, consumed by `SkillCreatorNameService`)
@@ -119,3 +125,6 @@ Error handling: `MarketplaceInstallFailedError` is raised when the installation 
 | POST | `/skills/:skillId/mcp-integrations/:integrationId` | Assign MCP integration |
 | DELETE | `/skills/:skillId/mcp-integrations/:integrationId` | Unassign MCP integration |
 | GET | `/skills/:skillId/mcp-integrations` | List assigned MCP integrations |
+| POST | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign knowledge base |
+| DELETE | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign knowledge base |
+| GET | `/skills/:skillId/knowledge-bases` | List assigned knowledge bases |
