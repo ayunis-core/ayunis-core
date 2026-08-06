@@ -7,6 +7,7 @@ export interface GlobalAnonymizationWhitelistWordParams {
   category: PiiCategory;
   word: string;
   createdByUserId: UUID | null;
+  createdByEmail?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,6 +22,7 @@ export class GlobalAnonymizationWhitelistWord {
   category: PiiCategory;
   word: string;
   createdByUserId: UUID | null;
+  createdByEmail: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -29,6 +31,7 @@ export class GlobalAnonymizationWhitelistWord {
     this.category = params.category;
     this.word = params.word.trim();
     this.createdByUserId = params.createdByUserId;
+    this.createdByEmail = params.createdByEmail ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }
