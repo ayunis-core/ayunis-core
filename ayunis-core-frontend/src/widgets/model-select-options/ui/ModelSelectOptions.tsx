@@ -14,7 +14,7 @@ import {
   getFlagByProvider,
   getHostingPriority,
 } from '@/shared/lib/model-provider-metadata';
-import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
+import { ModelInfoCard, type ModelInfoModel } from '@/widgets/model-type-card';
 
 export type ModelOption = ModelInfoModel & { id: string };
 

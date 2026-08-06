@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/shared/ui/shadcn/badge';
 import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
-import { TierStars } from '@/widgets/model-type-card';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { TierStars } from './TierStars';
 
 export type ModelInfoModel = Pick<
   PermittedLanguageModelResponseDto,
