@@ -6837,8 +6837,18 @@
             "in": "query",
             "description": "Export format",
             "schema": {
-              "enum": ["docx", "pdf"],
+              "enum": ["docx", "pdf", "xlsx", "csv"],
               "type": "string"
+            }
+          },
+          {
+            "name": "versionNumber",
+            "required": false,
+            "in": "query",
+            "description": "Version number to export; defaults to the current version",
+            "schema": {
+              "example": 2,
+              "type": "number"
             }
           }
         ],
@@ -6858,7 +6868,7 @@
             "description": "Artifact not found"
           }
         },
-        "summary": "Export an artifact as DOCX or PDF",
+        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
         "tags": ["artifacts"]
       }
     },

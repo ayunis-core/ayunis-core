@@ -13948,7 +13948,7 @@ export const useArtifactsControllerRevert = <TError = void,
     }
     
 /**
- * @summary Export an artifact as DOCX or PDF
+ * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
  */
 export const artifactsControllerExport = (
     id: string,
@@ -14027,7 +14027,7 @@ export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof a
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Export an artifact as DOCX or PDF
+ * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
  */
 
 export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(

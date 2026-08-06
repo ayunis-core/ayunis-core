@@ -5126,6 +5126,10 @@ export type ArtifactsControllerExportParams = {
  * Export format
  */
 format: ArtifactsControllerExportFormat;
+/**
+ * Version number to export; defaults to the current version
+ */
+versionNumber?: number;
 };
 
 export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
@@ -5135,6 +5139,8 @@ export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFo
 export const ArtifactsControllerExportFormat = {
   docx: 'docx',
   pdf: 'pdf',
+  xlsx: 'xlsx',
+  csv: 'csv',
 } as const;
 
 export type UsageControllerGetUserUsageParams = {

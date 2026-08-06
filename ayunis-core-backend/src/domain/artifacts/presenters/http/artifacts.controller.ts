@@ -200,7 +200,9 @@ export class ArtifactsController {
   }
 
   @Get(':id/export')
-  @ApiOperation({ summary: 'Export an artifact as DOCX or PDF' })
+  @ApiOperation({
+    summary: 'Export an artifact as DOCX, PDF, XLSX, or CSV',
+  })
   @ApiParam({
     name: 'id',
     description: 'The UUID of the artifact',
@@ -210,8 +212,9 @@ export class ArtifactsController {
   @ApiQuery({
     name: 'format',
     description: 'Export format',
-    enum: ['docx', 'pdf'],
+    enum: ['docx', 'pdf', 'xlsx', 'csv'],
   })
+  @ApiQuery({ name: 'versionNumber', required: false, type: Number })
   @ApiResponse({
     status: 200,
     description: 'The exported file',
@@ -229,9 +232,12 @@ export class ArtifactsController {
   ): Promise<StreamableFile> {
     this.logger.log('export', { artifactId: id, format: query.format });
     const result = await this.exportArtifactUseCase.execute(
-      new ExportArtifactCommand({ artifactId: id, format: query.format }),
+      new ExportArtifactCommand({
+        artifactId: id,
+        format: query.format,
+        versionNumber: query.versionNumber,
+      }),
     );
-
     res.set({
       'Content-Type': result.mimeType,
       'Content-Disposition': `attachment; filename="${result.fileName}"`,

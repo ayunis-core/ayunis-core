@@ -112,6 +112,19 @@ export function parseSpreadsheetContent(raw: string): SpreadsheetContentV1 {
   };
 }
 
+export function mapSpreadsheetStrings(
+  data: SpreadsheetContentV1,
+  map: (value: string) => string,
+): SpreadsheetContentV1 {
+  return {
+    format: data.format,
+    columns: data.columns.map(map),
+    rows: data.rows.map((row) =>
+      row.map((cell) => (typeof cell === 'string' ? map(cell) : cell)),
+    ),
+  };
+}
+
 function normalizeRow(
   row: SpreadsheetCell[],
   columnCount: number,
