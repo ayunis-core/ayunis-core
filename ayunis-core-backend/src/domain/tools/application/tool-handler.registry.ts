@@ -26,6 +26,8 @@ import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.
 import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
 import { CreateDocumentToolHandler } from './handlers/create-document-tool.handler';
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
+import { CreateCalendarEventToolHandler } from './handlers/create-calendar-event-tool.handler';
+import { CreateCalendarEventTool } from '../domain/tools/create-calendar-event-tool.entity';
 import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handler';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
@@ -59,6 +61,7 @@ export class ToolHandlerRegistry {
     activateSkillToolHandler: ActivateSkillToolHandler,
     knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
     knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
+    createCalendarEventToolHandler: CreateCalendarEventToolHandler,
     createDocumentToolHandler: CreateDocumentToolHandler,
     updateDocumentToolHandler: UpdateDocumentToolHandler,
     editDocumentToolHandler: EditDocumentToolHandler,
@@ -79,6 +82,7 @@ export class ToolHandlerRegistry {
       [ActivateSkillTool, activateSkillToolHandler],
       [KnowledgeQueryTool, knowledgeQueryToolHandler],
       [KnowledgeGetTextTool, knowledgeGetTextToolHandler],
+      [CreateCalendarEventTool, createCalendarEventToolHandler],
       [CreateDocumentTool, createDocumentToolHandler],
       [UpdateDocumentTool, updateDocumentToolHandler],
       [EditDocumentTool, editDocumentToolHandler],

@@ -23,6 +23,7 @@ import { McpIntegrationResourceHandler } from './application/handlers/mcp-integr
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
 import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
+import { CreateCalendarEventToolHandler } from './application/handlers/create-calendar-event-tool.handler';
 import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
 import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
@@ -71,6 +72,7 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     ActivateSkillToolHandler,
     KnowledgeQueryToolHandler,
     KnowledgeGetTextToolHandler,
+    CreateCalendarEventToolHandler,
     CreateDocumentToolHandler,
     UpdateDocumentToolHandler,
     EditDocumentToolHandler,

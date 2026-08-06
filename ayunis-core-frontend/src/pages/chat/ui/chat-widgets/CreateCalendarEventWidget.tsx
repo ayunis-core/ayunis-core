@@ -20,17 +20,23 @@ import { Button } from '@/shared/ui/shadcn/button';
 // Widgets
 import { DateTimePickerWidget } from '@/widgets/date-time-picker/ui/DateTimePickerWidget';
 
+function parseDateFromIso(isoString: string | undefined): Date | undefined {
+  if (!isoString) {
+    return undefined;
+  }
+  const date = new Date(isoString);
+  // An unparseable date (e.g. a malformed value from the model) yields an
+  // Invalid Date whose getTime() is NaN. Guarding here keeps the widget from
+  // crashing the whole page on bad tool params (AYC-675).
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 function parseTimeFromIso(
   isoString: string | undefined,
   fallback: string,
 ): string {
-  return isoString
-    ? new Date(isoString).toISOString().substring(11, 19)
-    : fallback;
-}
-
-function parseDateFromIso(isoString: string | undefined): Date | undefined {
-  return isoString ? new Date(isoString) : undefined;
+  const date = parseDateFromIso(isoString);
+  return date ? date.toISOString().substring(11, 19) : fallback;
 }
 
 export default function CreateCalendarEventWidget({
