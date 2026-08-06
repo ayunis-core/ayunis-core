@@ -27,6 +27,8 @@ anonymization-settings/
 │       ├── get-pii-whitelist/            # org entries for one org
 │       ├── update-pii-whitelist/         # full replacement of an org's entries
 │       ├── get-global-pii-whitelist/     # all global words (exported for consumers outside the module)
+│       ├── add-global-pii-whitelist-word/    # trim, reject empty + case-insensitive duplicates, record author
+│       ├── delete-global-pii-whitelist-word/
 │       └── anonymize-text-for-org/       # whitelist → common AnonymizeTextUseCase
 ├── infrastructure/
 │   └── persistence/postgres/
@@ -36,6 +38,7 @@ anonymization-settings/
 │       └── global-anonymization-whitelist.repository.ts
 ├── presenters/
 │   └── http/                             # org admin endpoints (@Roles(ADMIN), org-scoped via @CurrentUser)
+│                                         # + super-admin CRUD (@SystemRoles(SUPER_ADMIN), /super-admin/anonymization-whitelist)
 └── anonymization-settings.module.ts
 ```
 
@@ -43,6 +46,7 @@ anonymization-settings/
 
 - **Applying exceptions** — Detection runs in the `ayunis-core-anonymize` service; the common `AnonymizeTextUseCase` drops detections the whitelist exempts. There is no caching — every anonymization call reads the DB, so whitelist changes take effect immediately.
 - **Org settings screen** — `GET/PUT /anonymization-settings/pii-whitelist` back the org admin page (`/admin-settings/anonymization`).
+- **Global list management** — `GET/POST/DELETE /super-admin/anonymization-whitelist` back the super-admin screen; each word records who added it and when (`createdByUserId`, SET NULL on user deletion).
 
 ## Consumers
 

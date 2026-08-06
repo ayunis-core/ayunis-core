@@ -3434,6 +3434,28 @@ export interface UpdatePiiWhitelistRequestDto {
   entries: PiiWhitelistEntryDto[];
 }
 
+export interface GlobalPiiWhitelistWordDto {
+  id: string;
+  category: PiiCategory;
+  /** The word exempted from anonymization */
+  word: string;
+  /**
+   * Email of the super admin who added the word
+   * @nullable
+   */
+  createdByEmail: string | null;
+  createdAt: string;
+}
+
+export interface AddGlobalPiiWhitelistWordRequestDto {
+  category: PiiCategory;
+  /**
+   * Plain word to exempt from anonymization (no patterns)
+   * @maxLength 200
+   */
+  word: string;
+}
+
 /**
  * The distribution mode of the skill template
  */

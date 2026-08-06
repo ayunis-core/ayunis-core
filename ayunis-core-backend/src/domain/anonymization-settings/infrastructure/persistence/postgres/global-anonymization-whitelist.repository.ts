@@ -25,6 +25,7 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
     this.logger.debug('findAll');
 
     const records = await this.repository.find({
+      relations: { createdByUser: true },
       order: { category: 'ASC', wordLowercase: 'ASC' },
     });
 
@@ -56,8 +57,14 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
     const record = await this.repository.save(
       GlobalAnonymizationWhitelistWordMapper.toRecord(word),
     );
+    // Reload with the user relation so the returned word carries the
+    // author's email, same as findAll.
+    const reloaded = await this.repository.findOne({
+      where: { id: record.id },
+      relations: { createdByUser: true },
+    });
 
-    return GlobalAnonymizationWhitelistWordMapper.toDomain(record);
+    return GlobalAnonymizationWhitelistWordMapper.toDomain(reloaded ?? record);
   }
 
   async delete(id: UUID): Promise<boolean> {

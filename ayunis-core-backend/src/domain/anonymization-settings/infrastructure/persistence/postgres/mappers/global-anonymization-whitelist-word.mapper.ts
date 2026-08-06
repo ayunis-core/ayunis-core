@@ -10,6 +10,7 @@ export class GlobalAnonymizationWhitelistWordMapper {
       category: record.category,
       word: record.word,
       createdByUserId: record.createdByUserId,
+      createdByEmail: record.createdByUser?.email ?? null,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });

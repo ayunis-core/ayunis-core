@@ -6434,6 +6434,98 @@
         "tags": ["anonymization-settings"]
       }
     },
+    "/super-admin/anonymization-whitelist": {
+      "get": {
+        "operationId": "SuperAdminAnonymizationWhitelistController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          }
+        },
+        "summary": "List all global anonymization whitelist words",
+        "tags": ["Super Admin Anonymization Whitelist"]
+      },
+      "post": {
+        "operationId": "SuperAdminAnonymizationWhitelistController_add",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGlobalPiiWhitelistWordRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalPiiWhitelistWordDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty or invalid word"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "409": {
+            "description": "Word already on the whitelist for this category"
+          }
+        },
+        "summary": "Add a word to the global anonymization whitelist",
+        "tags": ["Super Admin Anonymization Whitelist"]
+      }
+    },
+    "/super-admin/anonymization-whitelist/{wordId}": {
+      "delete": {
+        "operationId": "SuperAdminAnonymizationWhitelistController_remove",
+        "parameters": [
+          {
+            "name": "wordId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Word removed"
+          },
+          "401": {
+            "description": "Not authorized as super admin"
+          },
+          "404": {
+            "description": "Word not found"
+          }
+        },
+        "summary": "Remove a word from the global anonymization whitelist",
+        "tags": ["Super Admin Anonymization Whitelist"]
+      }
+    },
     "/super-admin/skill-templates": {
       "post": {
         "description": "Create a new skill template. Only accessible to super admins.",
@@ -15288,6 +15380,54 @@
           }
         },
         "required": ["entries"]
+      },
+      "GlobalPiiWhitelistWordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          },
+          "word": {
+            "type": "string",
+            "description": "The word exempted from anonymization"
+          },
+          "createdByEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Email of the super admin who added the word"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["id", "category", "word", "createdByEmail", "createdAt"]
+      },
+      "AddGlobalPiiWhitelistWordRequestDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          },
+          "word": {
+            "type": "string",
+            "description": "Plain word to exempt from anonymization (no patterns)",
+            "maxLength": 200
+          }
+        },
+        "required": ["category", "word"]
       },
       "CreateSkillTemplateDto": {
         "type": "object",
