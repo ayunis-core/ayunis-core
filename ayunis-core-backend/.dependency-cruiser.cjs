@@ -1,3 +1,16 @@
+// Two module groups nest their submodules one level deeper than flat modules:
+//   src/domain/rag/*        → embeddings, indexers, splitters
+//   src/domain/retrievers/* → file-retrievers, internet-search-retrievers, url-retrievers
+// The `(?:rag/|retrievers/)?` prefix lets the layer-boundary rules match those
+// submodules too. A literal alternation is used deliberately — depcruise's ReDoS
+// guard rejects the equivalent `(?:[^/]+/)?`.
+const MODULE_GROUP_PREFIX = '(?:rag/|retrievers/)?';
+
+// Matches the root of any module, e.g. `src/domain/threads` or
+// `src/domain/retrievers/url-retrievers`. `(domain|iam)` is a capture group;
+// rules that only need path scoping ignore it.
+const MODULE_ROOT = `^src/(domain|iam)/${MODULE_GROUP_PREFIX}[^/]+`;
+
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
   forbidden: [
@@ -11,10 +24,10 @@ module.exports = {
       comment: 'Domain layer cannot import infrastructure (repositories, records)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/domain/',
+        path: `${MODULE_ROOT}/domain/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/',
+        path: `${MODULE_ROOT}/infrastructure/`,
       },
     },
     {
@@ -22,10 +35,10 @@ module.exports = {
       comment: 'Domain layer cannot import presenters (controllers, DTOs)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/domain/',
+        path: `${MODULE_ROOT}/domain/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/presenters/',
+        path: `${MODULE_ROOT}/presenters/`,
       },
     },
     {
@@ -33,10 +46,10 @@ module.exports = {
       comment: 'Domain entities cannot import use cases (application layer)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/domain/',
+        path: `${MODULE_ROOT}/domain/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
       },
     },
 
@@ -51,10 +64,10 @@ module.exports = {
       comment: 'Use cases cannot import infrastructure (repositories, records, mappers)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/',
+        path: `${MODULE_ROOT}/infrastructure/`,
       },
     },
     {
@@ -62,10 +75,10 @@ module.exports = {
       comment: 'Use cases cannot import presenters (controllers, HTTP DTOs, presenter mappers)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/presenters/',
+        path: `${MODULE_ROOT}/presenters/`,
       },
     },
 
@@ -81,10 +94,12 @@ module.exports = {
         'Modules must not import ports from other modules — use exported use cases instead',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/([^/]+)/',
+        // `$2` captures the full module path (including any rag/retrievers group
+        // segment) so the same-module exemption backreference below stays exact.
+        path: `^src/(domain|iam)/(${MODULE_GROUP_PREFIX}[^/]+)/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/application/ports/',
+        path: `${MODULE_ROOT}/application/ports/`,
         pathNot: '^src/$1/$2/application/ports/',
       },
     },
@@ -99,10 +114,10 @@ module.exports = {
       comment: 'Ports cannot import infrastructure implementations',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/application/ports/',
+        path: `${MODULE_ROOT}/application/ports/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/',
+        path: `${MODULE_ROOT}/infrastructure/`,
       },
     },
     {
@@ -110,10 +125,10 @@ module.exports = {
       comment: 'Ports cannot import presenters',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/application/ports/',
+        path: `${MODULE_ROOT}/application/ports/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/presenters/',
+        path: `${MODULE_ROOT}/presenters/`,
       },
     },
 
@@ -130,10 +145,7 @@ module.exports = {
         'Driven infrastructure adapters must not import use cases — infrastructure is called BY the application layer via ports, not the reverse. Queue consumers and scheduled tasks (driving adapters) are exempt.',
       severity: 'error',
       from: {
-        // `(?:rag/|retrievers/)?` tolerates the nested module groups whose
-        // submodules sit one level deeper than flat modules (domain/rag/*,
-        // domain/retrievers/*). A literal alternation keeps the regex ReDoS-safe.
-        path: '^src/(domain|iam)/(?:rag/|retrievers/)?[^/]+/infrastructure/',
+        path: `${MODULE_ROOT}/infrastructure/`,
         pathNot: [
           '/infrastructure/queue/', // BullMQ consumers/services (driving)
           '/infrastructure/tasks/', // scheduled cron tasks (driving)
@@ -141,7 +153,7 @@ module.exports = {
         ],
       },
       to: {
-        path: '^src/(domain|iam)/(?:rag/|retrievers/)?[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
         // Don't count a nested sub-hexagon's own use cases as the forbidden target.
         pathNot: '/infrastructure/.+/application/use-cases/',
       },
@@ -157,10 +169,10 @@ module.exports = {
       comment: 'Infrastructure mappers cannot import use cases',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/.*/mappers/',
+        path: `${MODULE_ROOT}/infrastructure/.*/mappers/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
       },
     },
     {
@@ -168,10 +180,10 @@ module.exports = {
       comment: 'Infrastructure mappers cannot import presenters',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/.*/mappers/',
+        path: `${MODULE_ROOT}/infrastructure/.*/mappers/`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/presenters/',
+        path: `${MODULE_ROOT}/presenters/`,
       },
     },
 
@@ -183,10 +195,10 @@ module.exports = {
       comment: 'Records cannot import use cases',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/.*/schema/.*\\.record\\.ts$',
+        path: `${MODULE_ROOT}/infrastructure/.*/schema/.*\\.record\\.ts$`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/application/use-cases/',
+        path: `${MODULE_ROOT}/application/use-cases/`,
       },
     },
     {
@@ -194,10 +206,10 @@ module.exports = {
       comment: 'Records cannot import presenters',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/.*/schema/.*\\.record\\.ts$',
+        path: `${MODULE_ROOT}/infrastructure/.*/schema/.*\\.record\\.ts$`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/presenters/',
+        path: `${MODULE_ROOT}/presenters/`,
       },
     },
 
@@ -210,10 +222,10 @@ module.exports = {
       comment: 'Controllers cannot import infrastructure directly (use cases instead)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/presenters/http/.*\\.controller\\.ts$',
+        path: `${MODULE_ROOT}/presenters/http/.*\\.controller\\.ts$`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/infrastructure/',
+        path: `${MODULE_ROOT}/infrastructure/`,
       },
     },
     {
@@ -221,10 +233,10 @@ module.exports = {
       comment: 'Controllers cannot import repository ports directly (use services instead)',
       severity: 'error',
       from: {
-        path: '^src/(domain|iam)/[^/]+/presenters/http/.*\\.controller\\.ts$',
+        path: `${MODULE_ROOT}/presenters/http/.*\\.controller\\.ts$`,
       },
       to: {
-        path: '^src/(domain|iam)/[^/]+/application/ports/',
+        path: `${MODULE_ROOT}/application/ports/`,
       },
     },
 
