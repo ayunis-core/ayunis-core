@@ -31,6 +31,7 @@ import type {
   AcceptInviteDto,
   AcceptInviteResponseDto,
   ActiveSubscriptionResponseDto,
+  AddGlobalPiiWhitelistWordRequestDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
@@ -90,6 +91,7 @@ import type {
   GeneratedImageUrlResponseDto,
   GetThreadResponseDto,
   GetThreadsResponseDto,
+  GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
   InstallMarketplaceIntegrationDto,
@@ -13178,6 +13180,226 @@ export const useAnonymizationSettingsControllerUpdate = <TError = void,
       > => {
 
       const mutationOptions = getAnonymizationSettingsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List all global anonymization whitelist words
+ */
+export const superAdminAnonymizationWhitelistControllerList = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GlobalPiiWhitelistWordDto[]>(
+      {url: `/super-admin/anonymization-whitelist`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminAnonymizationWhitelistControllerListQueryKey = () => {
+    return [
+    `/super-admin/anonymization-whitelist`
+    ] as const;
+    }
+
+    
+export const getSuperAdminAnonymizationWhitelistControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAnonymizationWhitelistControllerListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>> = ({ signal }) => superAdminAnonymizationWhitelistControllerList(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminAnonymizationWhitelistControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>>
+export type SuperAdminAnonymizationWhitelistControllerListQueryError = void
+
+
+export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all global anonymization whitelist words
+ */
+
+export function useSuperAdminAnonymizationWhitelistControllerList<TData = Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminAnonymizationWhitelistControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Add a word to the global anonymization whitelist
+ */
+export const superAdminAnonymizationWhitelistControllerAdd = (
+    addGlobalPiiWhitelistWordRequestDto: AddGlobalPiiWhitelistWordRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<GlobalPiiWhitelistWordDto>(
+      {url: `/super-admin/anonymization-whitelist`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addGlobalPiiWhitelistWordRequestDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAnonymizationWhitelistControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, TError,{data: AddGlobalPiiWhitelistWordRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, TError,{data: AddGlobalPiiWhitelistWordRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminAnonymizationWhitelistControllerAdd'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, {data: AddGlobalPiiWhitelistWordRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminAnonymizationWhitelistControllerAdd(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>>
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationBody = AddGlobalPiiWhitelistWordRequestDto
+    export type SuperAdminAnonymizationWhitelistControllerAddMutationError = void
+
+    /**
+ * @summary Add a word to the global anonymization whitelist
+ */
+export const useSuperAdminAnonymizationWhitelistControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>, TError,{data: AddGlobalPiiWhitelistWordRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerAdd>>,
+        TError,
+        {data: AddGlobalPiiWhitelistWordRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAnonymizationWhitelistControllerAddMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a word from the global anonymization whitelist
+ */
+export const superAdminAnonymizationWhitelistControllerRemove = (
+    wordId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/anonymization-whitelist/${wordId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminAnonymizationWhitelistControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>, TError,{wordId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>, TError,{wordId: string}, TContext> => {
+
+const mutationKey = ['superAdminAnonymizationWhitelistControllerRemove'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>, {wordId: string}> = (props) => {
+          const {wordId} = props ?? {};
+
+          return  superAdminAnonymizationWhitelistControllerRemove(wordId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAnonymizationWhitelistControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>>
+    
+    export type SuperAdminAnonymizationWhitelistControllerRemoveMutationError = void
+
+    /**
+ * @summary Remove a word from the global anonymization whitelist
+ */
+export const useSuperAdminAnonymizationWhitelistControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>, TError,{wordId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAnonymizationWhitelistControllerRemove>>,
+        TError,
+        {wordId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminAnonymizationWhitelistControllerRemoveMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
