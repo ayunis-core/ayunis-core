@@ -16,6 +16,7 @@ import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/appli
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolUsedEvent } from '../events/tool-used.event';
 import {
@@ -184,8 +185,7 @@ export class ToolResultCollectorService {
 
     if (capabilities.isDisplayable) {
       return {
-        content: this.handleDisplayableTool(content, input),
-        succeeded: true,
+        ...this.processDisplayOnlyTool(tool, content, input),
         piiMasks: null,
       };
     }
@@ -227,9 +227,11 @@ export class ToolResultCollectorService {
       isAnonymous,
     );
     if (executionResult.succeeded) {
+      // No re-validation here: the handler already validated the
+      // null-stripped input, and rechecking the raw params could reject a
+      // call whose side effect just succeeded.
       return {
-        content: this.handleDisplayableTool(content, input),
-        succeeded: true,
+        ...this.handleDisplayableTool(content, input),
         piiMasks: executionResult.piiMasks,
       };
     }
@@ -250,24 +252,26 @@ export class ToolResultCollectorService {
     if (responseDoesNotContainToolCalls) return true;
 
     try {
-      const responseContainsDisplayOnlyTool = agentResponseMessage.content
+      const displayOnlyCalls = agentResponseMessage.content
         .filter((content) => content instanceof ToolUseMessageContent)
-        .some((content) => {
-          const tool = tools.find((tool) => tool.name === content.name);
-          if (!tool) {
-            this.logger.warn(
-              `Tool ${content.name} mentioned in response but not found`,
-            );
-            return false;
-          }
-
-          const capabilities = this.checkToolCapabilitiesUseCase.execute(
-            new CheckToolCapabilitiesQuery(tool),
-          );
-          // Only exit the loop for display-only tools (not hybrid tools that also need execution)
-          return capabilities.isDisplayable && !capabilities.isExecutable;
-        });
-      if (responseContainsDisplayOnlyTool) return true;
+        .map((content) => ({
+          content,
+          tool: this.findDisplayOnlyTool(content, tools),
+        }))
+        .filter(
+          (call): call is { content: ToolUseMessageContent; tool: Tool } =>
+            call.tool !== undefined,
+        );
+      // Only exit the loop when every display-only call's params validate —
+      // one invalid call must keep the loop running so the model receives
+      // its validation error and retries, instead of the turn ending with a
+      // bad call left unretried (AYC-675). Hybrid tools never exit here;
+      // they also need execution.
+      const allValid = displayOnlyCalls.every(
+        ({ content, tool }) =>
+          this.validateDisplayableParams(tool, content) === null,
+      );
+      if (displayOnlyCalls.length > 0 && allValid) return true;
     } catch (error) {
       this.logger.error('Error checking for display tools', error);
     }
@@ -275,22 +279,93 @@ export class ToolResultCollectorService {
     return false;
   }
 
+  private findDisplayOnlyTool(
+    content: ToolUseMessageContent,
+    tools: Tool[],
+  ): Tool | undefined {
+    const tool = tools.find((candidate) => candidate.name === content.name);
+    if (!tool) {
+      this.logger.warn(
+        `Tool ${content.name} mentioned in response but not found`,
+      );
+      return undefined;
+    }
+    const capabilities = this.checkToolCapabilitiesUseCase.execute(
+      new CheckToolCapabilitiesQuery(tool),
+    );
+    return capabilities.isDisplayable && !capabilities.isExecutable
+      ? tool
+      : undefined;
+  }
+
+  private processDisplayOnlyTool(
+    tool: Tool,
+    content: ToolUseMessageContent,
+    input: RunToolResultInput | null,
+  ): { content: ToolResultMessageContent; succeeded: boolean } {
+    // An explicit frontend-supplied result means the user already interacted
+    // with the rendered widget — never block it on (possibly historical)
+    // invalid params.
+    if (input?.toolId !== content.id) {
+      const validationError = this.validateDisplayableParams(tool, content);
+      if (validationError !== null) {
+        return {
+          content: new ToolResultMessageContent(
+            content.id,
+            content.name,
+            `The tool didn't provide any result due to the following error in tool usage: ${validationError}`,
+          ),
+          succeeded: false,
+        };
+      }
+    }
+    return this.handleDisplayableTool(content, input);
+  }
+
   private handleDisplayableTool(
     content: ToolUseMessageContent,
     input: RunToolResultInput | null,
-  ): ToolResultMessageContent {
+  ): { content: ToolResultMessageContent; succeeded: boolean } {
     if (input?.toolId === content.id) {
-      return new ToolResultMessageContent(
-        input.toolId,
-        input.toolName,
-        input.result,
-      );
+      return {
+        content: new ToolResultMessageContent(
+          input.toolId,
+          input.toolName,
+          input.result,
+        ),
+        succeeded: true,
+      };
     }
-    return new ToolResultMessageContent(
-      content.id,
-      content.name,
-      'Tool has been displayed successfully',
-    );
+    return {
+      content: new ToolResultMessageContent(
+        content.id,
+        content.name,
+        'Tool has been displayed successfully',
+      ),
+      succeeded: true,
+    };
+  }
+
+  /**
+   * Display-only tools bypass backend execution, so this is the only place
+   * their schema runs; the returned message is model-actionable (AYC-646
+   * formatting) and null means the params are valid. Nulls are stripped the
+   * same way `ExecuteToolUseCase` does for executable tools, so a
+   * strict-mode model's explicit null for an optional param never fails a
+   * display-only call.
+   */
+  private validateDisplayableParams(
+    tool: Tool,
+    content: ToolUseMessageContent,
+  ): string | null {
+    try {
+      tool.validateParams(
+        stripDisallowedNulls(content.params, tool.parameters),
+      );
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Invalid parameters';
+    }
   }
 
   private async executeBackendTool(
