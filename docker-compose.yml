@@ -302,28 +302,6 @@ services:
         reservations:
           memory: 512M
 
-  dozzle:
-    image: amir20/dozzle:latest
-    container_name: ayunis-dozzle-prod
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8888:8080" # localhost only for security
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    # No network needed - Dozzle only requires the Docker socket.
-    # Keeping it off ayunis-network ensures the 127.0.0.1 port binding
-    # is the only access path (other containers cannot reach dozzle:8080).
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.25"
-
 volumes:
   postgres-data:
     driver: local
