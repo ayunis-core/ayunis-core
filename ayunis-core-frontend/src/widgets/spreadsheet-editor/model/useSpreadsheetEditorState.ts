@@ -4,15 +4,19 @@ import type { GridRow, GridState } from './spreadsheet-grid-state';
 import {
   addRows,
   addColumn,
+  deleteRow,
   deleteColumn,
   moveColumn,
   renameColumn,
+  rewriteFormulasForRowOperations,
+  type RowOperation,
 } from './spreadsheet-grid-operations';
 import { fromGridState, toGridState } from './spreadsheet-grid-state';
 import {
   parseSpreadsheetContent,
   serializeSpreadsheetContent,
 } from './spreadsheet-content-format';
+import { computeDisplayValues } from './formula-engine';
 
 function loadGridState(content: string | undefined): {
   state: GridState;
@@ -83,6 +87,11 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
   const displayedGridState = historicalContentState?.state ?? gridState;
   const displayedIsValid = historicalContentState?.isValid ?? isValid;
 
+  const displayValues = useMemo(
+    () => computeDisplayValues(displayedGridState),
+    [displayedGridState],
+  );
+
   const edit = (updater: (state: GridState) => GridState) => {
     // The grid is read-only while browsing history, but grid change events
     // must never mutate the editable state or mark it dirty from that mode.
@@ -95,6 +104,7 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
 
   return {
     displayedGridState,
+    displayValues,
     isDirty,
     isValid: displayedIsValid,
     isViewingHistory,
@@ -107,9 +117,20 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
         versionNumber === artifact.currentVersionNumber ? null : versionNumber,
       );
     },
+    setRows: (
+      update: GridRow[] | ((rows: GridRow[]) => GridRow[]),
+      operations: RowOperation[] = [],
+    ) =>
+      edit((state) => {
+        const rows = typeof update === 'function' ? update(state.rows) : update;
+        return {
+          ...state,
+          rows: rewriteFormulasForRowOperations(rows, operations),
+        };
+      }),
     addRows: (count: number) => edit((state) => addRows(state, count)),
-    setRows: (update: (rows: GridRow[]) => GridRow[]) =>
-      edit((state) => ({ ...state, rows: update(state.rows) })),
+    deleteLastRow: () =>
+      edit((state) => deleteRow(state, state.rows.length - 1)),
     addColumn: (label: string) => edit((state) => addColumn(state, label)),
     renameColumn: (index: number, label: string) =>
       edit((state) => renameColumn(state, index, label)),

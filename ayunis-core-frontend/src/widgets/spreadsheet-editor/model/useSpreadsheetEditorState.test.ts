@@ -88,7 +88,7 @@ describe('useSpreadsheetEditorState', () => {
     );
 
     act(() => {
-      result.current.setRows(() => [{ c0: 'edited' }]);
+      result.current.setRows(() => [{ c0: 'edited' }], []);
     });
     act(() => {
       result.current.selectVersion(1);
@@ -111,11 +111,13 @@ describe('useSpreadsheetEditorState', () => {
     );
 
     act(() => {
-      result.current.setRows((rows) => [...rows, { c0: 'second' }]);
-      result.current.setRows((rows) =>
-        rows.map((row, index) =>
-          index === 0 ? { ...row, c0: 'updated' } : row,
-        ),
+      result.current.setRows((rows) => [...rows, { c0: 'second' }], []);
+      result.current.setRows(
+        (rows) =>
+          rows.map((row, index) =>
+            index === 0 ? { ...row, c0: 'updated' } : row,
+          ),
+        [],
       );
     });
 

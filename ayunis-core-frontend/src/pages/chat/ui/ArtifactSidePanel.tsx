@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import type { ArtifactResponseDto } from '@/shared/api';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import ArtifactSidePanelSkeleton from './ArtifactSidePanelSkeleton';
 
 const LazyArtifactEditor = lazy(() =>
   import('@/widgets/artifact-editor').then((m) => ({
@@ -86,5 +87,15 @@ export function ArtifactSidePanel({
     }
   };
 
-  return <Suspense fallback={null}>{panel()}</Suspense>;
+  return (
+    <Suspense
+      fallback={
+        <ArtifactSidePanelSkeleton
+          variant={artifact.type === 'spreadsheet' ? 'spreadsheet' : 'document'}
+        />
+      }
+    >
+      {panel()}
+    </Suspense>
+  );
 }
