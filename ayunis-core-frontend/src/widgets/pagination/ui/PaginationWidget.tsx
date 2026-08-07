@@ -6,9 +6,9 @@ import {
   PaginationContent,
   PaginationItem,
   PaginationEllipsis,
-} from '@/shared/ui/shadcn/pagination';
-import { buttonVariants } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
+} from '@ayunis/ui/components/pagination';
+import { buttonVariants } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 
 type SearchParamValue = string | number | boolean | undefined;
 type SearchParamObject = Record<string, SearchParamValue>;

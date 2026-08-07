@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Switch } from '@/shared/ui/shadcn/switch';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
+import { Switch } from '@ayunis/ui/components/switch';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import SettingsLayout from '../../admin-settings-layout';
 import { MarginEditor } from '@/widgets/margin-editor';
 import type { PdfSource } from '@/widgets/margin-editor';

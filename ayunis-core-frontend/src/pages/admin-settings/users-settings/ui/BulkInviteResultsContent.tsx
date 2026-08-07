@@ -1,5 +1,5 @@
-import { Button } from '@/shared/ui/shadcn/button';
-import { DialogFooter } from '@/shared/ui/shadcn/dialog';
+import { Button } from '@ayunis/ui/components/button';
+import { DialogFooter } from '@ayunis/ui/components/dialog';
 import {
   Table,
   TableBody,
@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import { CheckCircle, Download, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';

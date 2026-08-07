@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { CircleHelp } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
 
 interface HelpLinkProps {

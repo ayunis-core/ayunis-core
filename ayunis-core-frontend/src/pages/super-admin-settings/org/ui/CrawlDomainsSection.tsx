@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Table,
   TableBody,
@@ -15,9 +15,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/table';
+import { Button } from '@ayunis/ui/components/button';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { formatDate } from '@/shared/lib/format-date';
 import { useSuperAdminCrawlDomains } from '../api/useSuperAdminCrawlDomains';
 import { useSuperAdminRevokeCrawlDomain } from '../api/useSuperAdminRevokeCrawlDomain';

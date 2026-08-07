@@ -9,11 +9,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import {
   Form,
   FormControl,
@@ -22,7 +22,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import useAppAlert from '../api/useAppAlert';
 import useSetAppAlert from '../api/useSetAppAlert';
 import { createAppAlertSchema } from '../model/createAppAlertSchema';

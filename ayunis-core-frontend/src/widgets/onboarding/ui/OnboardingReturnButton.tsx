@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { useOnboardingTour } from '../model/onboardingTourContext';
 import { useOnboarding } from '../api/useOnboarding';
 

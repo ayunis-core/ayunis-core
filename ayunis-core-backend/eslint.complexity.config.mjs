@@ -31,6 +31,7 @@ export default [
       '**/build/**',
       '**/coverage/**',
       '**/generated/**',
+      'packages/ui/src/components/**',
       '**/*.entity.ts',
       '**/*.record.ts',
       '**/db/migrations/**',
@@ -46,7 +47,7 @@ export default [
     ],
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,tsx}'],
     // Register the plugins referenced by inline `eslint-disable` directives in
     // the source (so they resolve and don't raise "rule definition not found"),
     // but enable none of their rules — only the two core complexity rules below.

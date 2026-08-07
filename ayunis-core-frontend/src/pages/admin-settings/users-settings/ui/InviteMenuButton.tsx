@@ -1,10 +1,10 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, UserPlus, Users } from 'lucide-react';

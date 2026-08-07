@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Download, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import { useResolveGeneratedImage } from '../../api/useResolveGeneratedImage';
 import type { ToolUseMessageContent } from '../../model/openapi';
 import ImageGenerationLoader from './ImageGenerationLoader';

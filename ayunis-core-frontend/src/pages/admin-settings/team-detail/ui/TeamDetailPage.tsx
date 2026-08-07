@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/shared/ui/shadcn/tabs';
+} from '@ayunis/ui/components/tabs';
 import { TeamMembersList } from './TeamMembersList';
 import { AddTeamMemberDialog } from './AddTeamMemberDialog';
 import { TeamModelsTab } from './TeamModelsTab';

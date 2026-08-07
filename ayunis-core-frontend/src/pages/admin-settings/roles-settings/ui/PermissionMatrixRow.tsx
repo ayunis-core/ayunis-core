@@ -1,5 +1,5 @@
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
-import { TableCell, TableRow } from '@/shared/ui/shadcn/table';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
+import { TableCell, TableRow } from '@ayunis/ui/components/table';
 import type { EditableRole, Permission } from '../model/types';
 
 interface PermissionMatrixRowProps {

@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui/shadcn/table';
+} from '@ayunis/ui/components/table';
 import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -25,7 +25,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   parseInviteCsv,
   generateInviteTemplate,
@@ -37,7 +37,7 @@ import {
 import { useBulkInviteCreate } from '../api/useBulkInviteCreate';
 import BulkInviteResultsContent from './BulkInviteResultsContent';
 import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import { Badge } from '@ayunis/ui/components/badge';
 
 type DialogStep = 'upload' | 'preview' | 'submitting' | 'results';
 

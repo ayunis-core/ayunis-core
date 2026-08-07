@@ -1,6 +1,6 @@
 import type { UserUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
-import { TableCell, TableRow } from '@/shared/ui/shadcn/table';
+import { TableCell, TableRow } from '@ayunis/ui/components/table';
 import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 

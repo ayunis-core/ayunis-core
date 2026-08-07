@@ -4,13 +4,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import {
   Select,
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { useTranslation } from 'react-i18next';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import {

@@ -22,7 +22,7 @@ vi.mock('../api/useWelcomeVideo', () => ({
   useWelcomeVideo: useWelcomeVideoMock,
 }));
 
-vi.mock('@/shared/ui/shadcn/dialog', () => ({
+vi.mock('@ayunis/ui/components/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
     open ? <>{children}</> : null,
   DialogContent: ({

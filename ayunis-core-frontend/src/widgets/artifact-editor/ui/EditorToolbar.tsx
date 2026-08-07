@@ -1,5 +1,5 @@
 import type { Editor } from '@tiptap/react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Bold,
   Italic,

@@ -3,10 +3,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { useUserSystemPrompt } from '../api/useUserSystemPrompt';
 import { useState } from 'react';

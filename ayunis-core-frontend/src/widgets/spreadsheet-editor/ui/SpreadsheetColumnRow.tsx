@@ -2,9 +2,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/shadcn/utils';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
+import { cn } from '@ayunis/ui/lib/cn';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
 import { getColumnDragId } from '../model/column-reordering';
 
 interface SpreadsheetColumnRowProps {

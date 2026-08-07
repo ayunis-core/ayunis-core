@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useChapterQuiz } from '../api/useChapterQuiz';
 import { useSubmitChapterQuiz } from '../api/useSubmitChapterQuiz';

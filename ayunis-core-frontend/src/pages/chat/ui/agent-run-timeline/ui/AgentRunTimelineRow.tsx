@@ -7,13 +7,13 @@ import {
   AlertCircle,
   Sparkles,
 } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/shared/ui/shadcn/collapsible';
-import { Badge } from '@/shared/ui/shadcn/badge';
+} from '@ayunis/ui/components/collapsible';
+import { Badge } from '@ayunis/ui/components/badge';
 import { PiiText } from '@/widgets/markdown';
 import type { TimelineStep, StepStatus } from '../model/types';
 import { getToolActionLabel } from '../lib/get-tool-action-label';

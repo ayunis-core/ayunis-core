@@ -1,11 +1,11 @@
 import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import { useIsSkillsEnabled } from '@/features/feature-toggles';

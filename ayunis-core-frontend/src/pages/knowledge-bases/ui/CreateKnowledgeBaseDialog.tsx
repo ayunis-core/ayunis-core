@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form } from '@/shared/ui/shadcn/form';
+import { Form } from '@ayunis/ui/components/form';
 import { useCreateKnowledgeBase } from '../api/useCreateKnowledgeBase';
 import {
   CreateEntityDialog,

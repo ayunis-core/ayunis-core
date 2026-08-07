@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useAutoRotate } from '../lib/useAutoRotate';
 import { CHAT_USE_CASES, SLIDE_KEYS } from '../model/showcase-content';
 import { ChatSlide } from './ChatSlide';

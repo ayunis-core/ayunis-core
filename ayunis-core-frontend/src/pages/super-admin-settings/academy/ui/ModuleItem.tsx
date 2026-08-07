@@ -8,8 +8,8 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/item';
+import { Button } from '@ayunis/ui/components/button';
 import { ExternalLink, GripVertical, Pencil, Trash2 } from 'lucide-react';
 
 interface ModuleItemProps {

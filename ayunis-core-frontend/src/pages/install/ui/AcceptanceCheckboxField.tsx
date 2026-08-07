@@ -4,14 +4,14 @@ import type {
   FieldValues,
   UseFormReturn,
 } from 'react-hook-form';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
 import {
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/form';
+import { Label } from '@ayunis/ui/components/label';
 
 interface AcceptanceCheckboxFieldProps<TFieldValues extends FieldValues> {
   readonly form: UseFormReturn<TFieldValues>;

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Label } from '@ayunis/ui/components/label';
 
 interface PersonalizationStepContextProps {
   context: string;

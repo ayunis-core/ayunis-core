@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -17,9 +17,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
 import type { CreateCustomIntegrationFormData } from '../model/types';
 import { useCreateCustomIntegration } from '../api/useCreateCustomIntegration';
 import { buildCustomIntegrationPayload } from '../lib/build-custom-integration-payload';

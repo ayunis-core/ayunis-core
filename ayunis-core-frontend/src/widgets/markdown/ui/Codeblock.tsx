@@ -7,12 +7,12 @@ import {
 import { Check, Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/features/theme';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 
 interface CodeBlockProps {
   language?: string;

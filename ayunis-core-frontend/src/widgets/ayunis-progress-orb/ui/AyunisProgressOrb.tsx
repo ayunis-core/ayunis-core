@@ -1,5 +1,5 @@
 import { useEffect, useState, type AnimationEvent } from 'react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import './ayunis-progress-orb.css';
 
 type OrbPhase = 'hidden' | 'working' | 'completing';

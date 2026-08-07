@@ -6,8 +6,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import type { McpIntegration } from '../model/types';
 import { useDeleteIntegration } from '../api/useDeleteIntegration';
 

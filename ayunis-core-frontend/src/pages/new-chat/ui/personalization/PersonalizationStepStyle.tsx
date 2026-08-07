@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Label } from '@/shared/ui/shadcn/label';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { Button } from '@ayunis/ui/components/button';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Label } from '@ayunis/ui/components/label';
+import { cn } from '@ayunis/ui/lib/cn';
 
+// eslint-disable-next-line react-refresh/only-export-components -- the parent wizard consumes this shared option metadata
 export const STYLE_OPTIONS = [
   { key: 'casual', i18nKey: 'newChat.personalization.styleCasual' },
   {

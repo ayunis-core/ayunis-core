@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Form } from '@/shared/ui/shadcn/form';
+import { Form } from '@ayunis/ui/components/form';
 import { type CreateSkillData, useCreateSkill } from '../api/useCreateSkill';
 import {
   CreateEntityDialog,

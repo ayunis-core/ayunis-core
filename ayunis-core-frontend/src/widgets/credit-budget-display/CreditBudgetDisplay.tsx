@@ -1,13 +1,13 @@
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import {
   Item,
   ItemContent,
   ItemTitle,
   ItemActions,
-} from '@/shared/ui/shadcn/item';
-import { Progress } from '@/shared/ui/shadcn/progress';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/item';
+import { Progress } from '@ayunis/ui/components/progress';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { AlertCircle } from 'lucide-react';
 
 interface CreditBudgetDisplayProps {

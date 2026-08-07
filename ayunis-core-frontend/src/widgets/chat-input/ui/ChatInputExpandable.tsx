@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface ChatInputExpandableProps {
   show: boolean;

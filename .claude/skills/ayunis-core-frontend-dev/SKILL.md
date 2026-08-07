@@ -25,11 +25,13 @@ pnpm run lint                  # Must pass
 ## Architecture (Feature-Sliced Design)
 
 ```text
-src/
+packages/ui/  # Framework-level UI primitives, tokens, and utilities
+
+ayunis-core-frontend/src/
 ├── pages/      # Route components (compose widgets/features)
 ├── widgets/    # Reusable composites (used in ≥2 pages)
 ├── features/   # Self-contained business logic
-└── shared/     # Primitives (ui, api, lib)
+└── shared/     # App-wide infrastructure and app-aware UI
 ```
 
 **Import rules**: `pages → widgets → features → shared`
@@ -49,19 +51,20 @@ The FSD rules above are the theory; **this repo's actual conventions are the tie
 
 Do not execute structural moves and amend commits across a stacked-PR chain (e.g. `gt modify` a parent, then check out and amend the child) off a *preliminary* placement conclusion. Settle the placement against repo conventions first, then move — reverting a wrong move across stacked branches means restoring exact pre-session SHAs from the reflog.
 
-## Shared shadcn UI — Never Modify
+## Shared UI Package — Registry-Managed Primitives
 
-**Never edit the shared shadcn components in `src/shared/ui/shadcn/` yourself.** These are managed via the shadcn registry (`components.json`) and are shared design-system primitives. Editing them by hand causes drift from the registry and breaks every consumer.
+Framework-level primitives live in the repository-root `packages/ui/` workspace and are imported through `@ayunis/ui` subpaths. App-aware shared components remain in `ayunis-core-frontend/src/shared/ui/`.
 
-- To add or update a shadcn component, use the shadcn CLI (`pnpm dlx shadcn@latest add <component>`) — do not hand-write or hand-patch files under `src/shared/ui/shadcn/`.
-- If a component's behavior or styling needs to change for a feature, **wrap or compose it** in your own component (in the relevant `ui/` directory or `src/shared/ui/` outside `shadcn/`) rather than modifying the primitive.
-- If you believe a shared shadcn primitive genuinely must change, **stop and ask the user** — do not make the change on your own.
+- Run shadcn registry commands from `packages/ui/`, whose `components.json` owns the aliases and registry configuration: `cd ../packages/ui && pnpm dlx shadcn@latest add <component>`.
+- Do not patch `packages/ui/src/components/` for a feature-specific use case. Wrap or compose the primitive in the relevant frontend `ui/` directory or `src/shared/ui/` instead.
+- Changes inside `packages/ui/` must remain application-independent and be intentional design-system work. If a primitive genuinely needs a new generic capability, confirm that scope with the user before changing it.
+- Import primitives from their public subpaths, such as `@ayunis/ui/components/button`, and `cn` from `@ayunis/ui/lib/cn`. Do not reach into `packages/ui/src/` from the frontend.
 
 ### Reach for existing primitives and tokens
 
 Compose the existing design system before hand-rolling layout, and use design tokens instead of raw Tailwind color scales:
 
-- **Look for a composite primitive first.** For an icon-plus-label row (banners, result cards, list rows) use the `Item` family — `Item` / `ItemMedia variant="icon"` / `ItemContent` — rather than assembling a bare `flex` container yourself. Check `src/shared/ui/` for an existing icon component before adding your own.
+- **Look for a composite primitive first.** For an icon-plus-label row (banners, result cards, list rows) use the `Item` family — `Item` / `ItemMedia variant="icon"` / `ItemContent` — rather than assembling a bare `flex` container yourself. Check `@ayunis/ui` for a framework primitive and `src/shared/ui/` for an app-aware component before adding your own.
 - **Use semantic color tokens, never hardcoded palette classes.** `text-brand`, `text-muted-foreground`, etc. — not `text-amber-500`, `text-blue-600`, or other raw Tailwind color scales, which break theming and dark mode.
 
 ### Page module internals
@@ -105,4 +108,5 @@ Use your harness's browser tooling to check the page renders and the console is 
 - [ ] Page renders without console errors
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
-- [ ] No hand-edits to `src/shared/ui/shadcn/`
+- [ ] UI primitives use public `@ayunis/ui` subpaths
+- [ ] No feature-specific behavior added to `packages/ui/`

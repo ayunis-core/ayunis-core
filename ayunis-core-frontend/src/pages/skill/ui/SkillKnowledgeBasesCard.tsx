@@ -8,20 +8,20 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-} from '@/shared/ui/shadcn/card';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Separator } from '@/shared/ui/shadcn/separator';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/card';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Separator } from '@ayunis/ui/components/separator';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { cn } from '@/shared/lib/shadcn/utils';
+} from '@ayunis/ui/components/item';
+import { Button } from '@ayunis/ui/components/button';
+import { Badge } from '@ayunis/ui/components/badge';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   useSkillKnowledgeBasesQueries,
   useAssignKnowledgeBase,

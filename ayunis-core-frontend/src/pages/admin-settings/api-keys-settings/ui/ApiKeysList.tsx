@@ -1,14 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
+import { Button } from '@ayunis/ui/components/button';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { formatDate } from '@/shared/lib/format-date';
 import { ApiKeysEmptyState } from './ApiKeysEmptyState';
 import { useRevokeApiKey } from '../api/useRevokeApiKey';

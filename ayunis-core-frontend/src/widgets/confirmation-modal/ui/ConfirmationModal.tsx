@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import { useConfirmationContext } from '../model/useConfirmationContext';
 import { useState } from 'react';
 

@@ -6,10 +6,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/card';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Label } from '@ayunis/ui/components/label';
 import type { AddonType } from '@/shared/api';
 import { useSuperAdminAddons } from '../api/useSuperAdminAddons';
 import { useSuperAdminActivateAddon } from '../api/useSuperAdminActivateAddon';

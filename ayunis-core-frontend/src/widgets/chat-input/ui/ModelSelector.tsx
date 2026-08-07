@@ -3,7 +3,7 @@ import {
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { ModelSelectOptions } from '@/widgets/model-select-options';
 import { useTranslation } from 'react-i18next';

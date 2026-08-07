@@ -4,19 +4,19 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/shared/ui/shadcn/card';
-import { Switch } from '@/shared/ui/shadcn/switch';
-import { Separator } from '@/shared/ui/shadcn/separator';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/card';
+import { Switch } from '@ayunis/ui/components/switch';
+import { Separator } from '@ayunis/ui/components/separator';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { cn } from '@/shared/lib/shadcn/utils';
+} from '@ayunis/ui/components/item';
+import { Badge } from '@ayunis/ui/components/badge';
+import { cn } from '@ayunis/ui/lib/cn';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 export interface McpIntegrationsHook {

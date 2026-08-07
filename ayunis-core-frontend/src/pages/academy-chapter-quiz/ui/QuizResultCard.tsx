@@ -7,21 +7,21 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useDownloadCertificate } from '@/features/academy';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import type { QuizResultResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface QuizResultCardProps {

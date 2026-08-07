@@ -8,14 +8,14 @@ import {
   type TooltipRenderProps,
 } from 'react-joyride';
 import { useStableTarget } from '../lib/useStableTarget';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 
 const SPOTLIGHT_BORDER_COLOR = 'var(--brand)';
 const SPOTLIGHT_STROKE_WIDTH = 4;

@@ -4,8 +4,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import CreateTrialDialog from './CreateTrialDialog';
 

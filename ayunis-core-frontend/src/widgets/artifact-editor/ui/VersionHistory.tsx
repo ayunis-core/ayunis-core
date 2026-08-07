@@ -1,9 +1,9 @@
 import type { ArtifactVersionResponseDto } from '@/shared/api';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { ChevronDown, ChevronRight, History, RotateCcw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface VersionHistoryProps {
   readonly versions: ArtifactVersionResponseDto[];

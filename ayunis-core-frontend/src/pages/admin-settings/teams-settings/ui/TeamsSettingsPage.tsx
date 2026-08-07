@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { TeamsList } from './TeamsList';
 import TeamsFilters from './TeamsFilters';

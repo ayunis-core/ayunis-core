@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Form,
   FormControl,
@@ -6,18 +6,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 import { useRegister } from '../api';
 import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
+import { Label } from '@ayunis/ui/components/label';
 import { useGtm } from '@/features/useGtm';
 import config from '@/shared/config';
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { Card, CardContent } from '@ayunis/ui/components/card';
 import { DepartmentField } from '@/shared/ui/department-field';
 
 interface RegisterPageProps {

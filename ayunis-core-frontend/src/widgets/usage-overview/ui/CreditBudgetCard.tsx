@@ -3,7 +3,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import { CreditBudgetDisplay } from '@/widgets/credit-budget-display';
 import { useTranslation } from 'react-i18next';
 import type { CreditUsageView } from '../model/types';

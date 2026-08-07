@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionResponseDto } from '@/shared/api';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
-import { Form } from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/dialog';
+import { Form } from '@ayunis/ui/components/form';
 import { Loader2 } from 'lucide-react';
 import useSuperAdminSubscriptionStartDateUpdate from '../api/useSuperAdminSubscriptionStartDateUpdate';
 import {

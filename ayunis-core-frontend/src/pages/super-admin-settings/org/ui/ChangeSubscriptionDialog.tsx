@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,10 +15,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/ui/shadcn/alert-dialog';
-import { Form } from '@/shared/ui/shadcn/form';
-import { Button } from '@/shared/ui/shadcn/button';
-import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
+} from '@ayunis/ui/components/alert-dialog';
+import { Form } from '@ayunis/ui/components/form';
+import { Button } from '@ayunis/ui/components/button';
+import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { SubscriptionFormFields } from '@/widgets/billing';
 import { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
 import { useTranslation } from 'react-i18next';

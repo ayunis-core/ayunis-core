@@ -5,14 +5,14 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
-} from '@/shared/ui/shadcn/empty';
+} from '@ayunis/ui/components/empty';
 import { useTranslation } from 'react-i18next';
 import { Users } from 'lucide-react';
 

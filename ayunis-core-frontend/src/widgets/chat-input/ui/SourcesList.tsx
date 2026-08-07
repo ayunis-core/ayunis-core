@@ -7,15 +7,15 @@ import type {
 import { SourceResponseDtoStatus } from '@/shared/api';
 
 // Utils
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 // UI
-import { Badge } from '@/shared/ui/shadcn/badge';
+import { Badge } from '@ayunis/ui/components/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { ScrollFadeContainer } from './ScrollFadeContainer';
 
 // Icons

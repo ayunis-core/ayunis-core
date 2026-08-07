@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { FileDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

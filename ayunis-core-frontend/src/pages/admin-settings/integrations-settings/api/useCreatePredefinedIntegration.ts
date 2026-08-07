@@ -5,7 +5,7 @@ import {
   useMcpIntegrationsControllerCreatePredefined,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreatePredefinedIntegrationFormData } from '../model/types';
+import type { CreatePredefinedIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useCreatePredefinedIntegration(onSuccess?: () => void) {
@@ -49,10 +49,8 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
     },
   });
 
-  function createPredefinedIntegration(
-    data: CreatePredefinedIntegrationFormData,
-  ) {
-    const payload: CreatePredefinedIntegrationFormData = {
+  function createPredefinedIntegration(data: CreatePredefinedIntegrationDto) {
+    const payload: CreatePredefinedIntegrationDto = {
       slug: data.slug,
       configValues: data.configValues.map((value) => ({
         name: value.name,

@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { Download } from 'lucide-react';
 import { useCallback, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -4,8 +4,8 @@ import { Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/features/theme';
-import { Button } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface MermaidRendererProps {
   readonly source: string;

@@ -1,8 +1,12 @@
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Button } from '@ayunis/ui/components/button';
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@ayunis/ui/components/alert';
 
 export default function UnavailableModelNotice() {
   const { t } = useTranslation('chat');

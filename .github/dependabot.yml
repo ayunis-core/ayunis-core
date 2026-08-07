@@ -108,6 +108,26 @@ updates:
           - "minor"
           - "patch"
 
+  # UI design-system package
+  - package-ecosystem: "npm"
+    directory: "/packages/ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(deps-ui)"
+    labels:
+      - "dependencies"
+      - "frontend"
+    open-pull-requests-limit: 8
+    groups:
+      ui-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
   # Anonymize service (Python/uv)
   - package-ecosystem: "uv"
     directory: "/ayunis-core-anonymize"

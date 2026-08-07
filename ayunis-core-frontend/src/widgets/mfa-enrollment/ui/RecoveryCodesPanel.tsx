@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Check, Copy } from 'lucide-react';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
+import { Button } from '@ayunis/ui/components/button';
 
 interface Props {
   codes: string[];

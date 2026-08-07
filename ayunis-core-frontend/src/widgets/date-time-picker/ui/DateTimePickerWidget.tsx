@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Button } from '@ayunis/ui/components/button';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
-import { Calendar } from '@/shared/ui/shadcn/calendar';
+} from '@ayunis/ui/components/popover';
+import { Calendar } from '@ayunis/ui/components/calendar';
 import { ChevronDownIcon } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface DateTimePickerWidgetProps {
   label: string;

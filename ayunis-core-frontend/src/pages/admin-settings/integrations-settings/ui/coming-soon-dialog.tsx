@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogHeader,
@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogDescription,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import { useTranslation } from 'react-i18next';
 interface ComingSoonDialogProps {
   open: boolean;

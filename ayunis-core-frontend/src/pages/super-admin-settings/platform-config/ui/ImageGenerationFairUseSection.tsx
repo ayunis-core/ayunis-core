@@ -5,11 +5,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
+import { Label } from '@ayunis/ui/components/label';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import useFairUseLimitEditor from '@/features/fair-use-limit-editor/useFairUseLimitEditor';
 import type { FairUseTierLimit } from '../api/useFairUseLimits';

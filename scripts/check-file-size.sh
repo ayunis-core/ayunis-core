@@ -28,6 +28,7 @@ fi
 FILES=$(echo "$FILES" | grep -v '/generated/' \
     | grep -v '/migrations/' \
     | grep -v '/shadcn/' \
+    | grep -v '^packages/ui/src/components/' \
     | grep -v '\.gen\.' \
     | grep -v '\.spec\.ts$' \
     | grep -v '\.spec\.tsx$' \

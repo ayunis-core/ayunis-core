@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';

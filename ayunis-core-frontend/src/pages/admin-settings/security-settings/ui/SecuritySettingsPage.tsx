@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import SettingsLayout from '../../admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Button } from '@ayunis/ui/components/button';
+import { Textarea } from '@ayunis/ui/components/textarea';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   useIpAllowlistControllerGet,
   useIpAllowlistControllerUpdate,
@@ -24,7 +24,7 @@ import { isValidCidrOrIp } from '../lib/validate-cidr';
 import { MfaRequirementCard } from './MfaRequirementCard';
 import { RemoveRestrictionsDialog } from './RemoveRestrictionsDialog';
 import { AlertCircle, Info, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 
 export function SecuritySettingsPage() {
   const { t: tLayout } = useTranslation('admin-settings-layout');

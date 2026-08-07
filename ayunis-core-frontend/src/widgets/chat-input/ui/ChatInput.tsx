@@ -6,7 +6,7 @@ import {
   useRef,
 } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import { Card, CardContent } from '@ayunis/ui/components/card';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +30,7 @@ import {
 import { useImagePaste } from '../hooks/useImagePaste';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
 import { showError } from '@/shared/lib/toast';

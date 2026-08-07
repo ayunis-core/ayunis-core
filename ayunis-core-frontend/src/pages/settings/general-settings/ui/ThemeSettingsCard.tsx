@@ -3,9 +3,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
-import { Switch } from '@/shared/ui/shadcn/switch';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
+import { Switch } from '@ayunis/ui/components/switch';
 import { useTheme } from '@/features/theme';
 import { useTranslation } from 'react-i18next';
 

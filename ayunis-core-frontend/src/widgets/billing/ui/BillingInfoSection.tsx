@@ -4,8 +4,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { Building, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionResponseDto } from '@/shared/api';

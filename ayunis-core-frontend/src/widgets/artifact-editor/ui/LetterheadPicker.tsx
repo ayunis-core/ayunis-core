@@ -4,7 +4,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { useLetterheadsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
 import { useTranslation } from 'react-i18next';
 

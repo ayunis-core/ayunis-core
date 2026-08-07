@@ -4,8 +4,8 @@ import {
   FormField,
   FormItem,
   FormLabel,
-} from '@/shared/ui/shadcn/form';
-import { Checkbox } from '@/shared/ui/shadcn/checkbox';
+} from '@ayunis/ui/components/form';
+import { Checkbox } from '@ayunis/ui/components/checkbox';
 
 interface ModelCheckboxFieldProps<T extends FieldValues> {
   control: Control<T>;

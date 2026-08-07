@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -16,16 +16,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/select';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
 import type {
   PredefinedConfig,
   CreatePredefinedIntegrationFormData,
@@ -49,7 +49,7 @@ export function CreatePredefinedDialog({
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreatePredefinedIntegrationFormData>({
     defaultValues: {
-      slug: undefined,
+      slug: '',
       configValues: [],
     },
   });
@@ -93,7 +93,11 @@ export function CreatePredefinedDialog({
   }, [credentialFields, form, selectedConfig]);
 
   const handleSubmit = (data: CreatePredefinedIntegrationFormData) => {
-    const payload: CreatePredefinedIntegrationFormData = {
+    if (!data.slug) {
+      return;
+    }
+
+    const payload = {
       slug: data.slug,
       configValues: data.configValues.map((value) => ({
         name: value.name,
@@ -129,6 +133,11 @@ export function CreatePredefinedDialog({
             <FormField
               control={form.control}
               name="slug"
+              rules={{
+                required: t(
+                  'integrations.createPredefinedDialog.integrationTypeRequired',
+                ),
+              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
@@ -136,7 +145,7 @@ export function CreatePredefinedDialog({
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value ?? ''}
+                    value={field.value}
                     disabled={isCreating}
                   >
                     <FormControl>

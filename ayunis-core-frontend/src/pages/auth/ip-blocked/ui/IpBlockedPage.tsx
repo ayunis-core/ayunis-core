@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { ShieldAlert } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 
 export function IpBlockedPage() {

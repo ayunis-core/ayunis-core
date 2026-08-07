@@ -18,22 +18,22 @@ import {
   SidebarMenuItem,
   SidebarMenuAction,
   SidebarGroupContent,
-} from '@/shared/ui/shadcn/sidebar';
+} from '@ayunis/ui/components/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import { useThreads } from '../api';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/shared/ui/shadcn/collapsible';
+} from '@ayunis/ui/components/collapsible';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';

@@ -35,7 +35,7 @@ export function PiiMaskProvider({ masks, children }: PiiMaskProviderProps) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- context hook belongs with its provider (repo convention, see shared/ui/shadcn)
+// eslint-disable-next-line react-refresh/only-export-components -- context hook belongs with its provider by repo convention
 export function usePiiMasks(): ReadonlyMap<string, PiiMaskEntry> {
   return useContext(PiiMaskContext);
 }

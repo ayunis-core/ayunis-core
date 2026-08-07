@@ -26,8 +26,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/card';
+import { Button } from '@ayunis/ui/components/button';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { ModuleItem } from './ModuleItem';
 import { QuizSection } from './QuizSection';

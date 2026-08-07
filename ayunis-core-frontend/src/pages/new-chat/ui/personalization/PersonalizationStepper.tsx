@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface PersonalizationStepperProps {
   currentStep: number;
@@ -12,6 +12,7 @@ const STEP_LABEL_KEYS = [
   'newChat.personalization.stepperContext',
 ] as const;
 
+// eslint-disable-next-line react-refresh/only-export-components -- the parent wizard uses this value for navigation
 export const PERSONALIZATION_TOTAL_STEPS = STEP_LABEL_KEYS.length;
 
 export function PersonalizationStepper({

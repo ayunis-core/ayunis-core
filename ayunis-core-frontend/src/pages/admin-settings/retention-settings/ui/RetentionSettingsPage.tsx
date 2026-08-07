@@ -3,23 +3,23 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import SettingsLayout from '../../admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Button } from '@ayunis/ui/components/button';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Alert, AlertDescription } from '@/shared/ui/shadcn/alert';
+} from '@ayunis/ui/components/card';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/ui/shadcn/alert-dialog';
+} from '@ayunis/ui/components/alert-dialog';
 import {
   useRetentionPoliciesControllerGet,
   useRetentionPoliciesControllerUpdate,

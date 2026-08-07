@@ -4,14 +4,14 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/shared/ui/shadcn/card';
+} from '@ayunis/ui/components/card';
 import {
   Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
-} from '@/shared/ui/shadcn/empty';
+} from '@ayunis/ui/components/empty';
 import { useTranslation } from 'react-i18next';
 import { BarChart3 } from 'lucide-react';
 

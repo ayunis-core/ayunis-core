@@ -1,5 +1,5 @@
 import type { ArtifactResponseDto } from '@/shared/api';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { MermaidRenderer } from './MermaidRenderer';

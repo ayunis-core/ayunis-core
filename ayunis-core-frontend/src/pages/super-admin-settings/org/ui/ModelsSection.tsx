@@ -1,5 +1,9 @@
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/shadcn/alert';
-import { Card, CardContent } from '@/shared/ui/shadcn/card';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
+import { Card, CardContent } from '@ayunis/ui/components/card';
 import ModelTypeCard from './ModelTypeCard';
 import { useSuperAdminModels } from '../api/useSuperAdminModels';
 import { useTranslation } from 'react-i18next';

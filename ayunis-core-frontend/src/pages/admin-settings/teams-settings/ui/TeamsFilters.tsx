@@ -1,4 +1,4 @@
-import { Input } from '@/shared/ui/shadcn/input';
+import { Input } from '@ayunis/ui/components/input';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+import { Button } from '@ayunis/ui/components/button';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { Plus, AlertCircle, ExternalLink } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { IntegrationsList } from './integrations-list';
@@ -17,13 +17,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 import { ComingSoonDialog } from './coming-soon-dialog';
 import { useMarketplaceConfig } from '@/features/marketplace';
 

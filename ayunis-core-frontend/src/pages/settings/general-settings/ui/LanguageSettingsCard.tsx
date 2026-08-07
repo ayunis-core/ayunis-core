@@ -3,15 +3,15 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { useLanguage, type Language } from '@/features/language';
 import { useTranslation } from 'react-i18next';
 

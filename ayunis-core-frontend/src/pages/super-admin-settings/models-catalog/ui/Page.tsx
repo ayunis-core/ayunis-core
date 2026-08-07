@@ -9,13 +9,13 @@ import { CreateEmbeddingModelDialog } from './CreateEmbeddingModelDialog';
 import { EditEmbeddingModelDialog } from './EditEmbeddingModelDialog';
 import { CreateImageGenerationModelDialog } from './CreateImageGenerationModelDialog';
 import { EditImageGenerationModelDialog } from './EditImageGenerationModelDialog';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+} from '@ayunis/ui/components/dropdown-menu';
 import type {
   SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   LanguageModelResponseDto,

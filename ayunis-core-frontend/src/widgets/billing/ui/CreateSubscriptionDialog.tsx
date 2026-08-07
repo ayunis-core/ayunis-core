@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import {
   Form,
   FormControl,
@@ -16,28 +16,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/form';
+import { Input } from '@ayunis/ui/components/input';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
-import { Calendar } from '@/shared/ui/shadcn/calendar';
+} from '@ayunis/ui/components/popover';
+import { Calendar } from '@ayunis/ui/components/calendar';
 import { useTranslation } from 'react-i18next';
-import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
+import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { useState, type ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { CalendarIcon, XIcon } from 'lucide-react';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 export interface CreateSubscriptionFormData {
   companyName: string;

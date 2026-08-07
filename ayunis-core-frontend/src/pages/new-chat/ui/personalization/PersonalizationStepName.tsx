@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/shared/ui/shadcn/input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@ayunis/ui/components/input';
+import { Label } from '@ayunis/ui/components/label';
 
 interface PersonalizationStepNameProps {
   name: string;

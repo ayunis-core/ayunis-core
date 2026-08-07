@@ -4,14 +4,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Label } from '@/shared/ui/shadcn/label';
+} from '@ayunis/ui/components/card';
+import { Label } from '@ayunis/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/shadcn/select';
+} from '@ayunis/ui/components/select';
 import { useTranslation } from 'react-i18next';
 import type { ModelWithConfigResponseDto } from '@/shared/api';
 import { useMemo } from 'react';

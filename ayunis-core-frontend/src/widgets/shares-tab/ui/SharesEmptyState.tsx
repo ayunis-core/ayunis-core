@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/widgets/empty-state';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { Share2 } from 'lucide-react';
 
 interface SharesEmptyStateProps {

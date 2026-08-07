@@ -11,7 +11,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-} from '@/shared/ui/shadcn/chart';
+} from '@ayunis/ui/components/chart';
 import {
   colorVar,
   seriesLabelsToConfig,

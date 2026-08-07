@@ -5,6 +5,7 @@ on:
     paths:
       - 'ayunis-core-backend/**/*.ts'
       - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
 
 jobs:
   complexity:
@@ -35,6 +36,7 @@ jobs:
           files: |
             ayunis-core-backend/**/*.ts
             packages/**/*.ts
+            packages/**/*.tsx
 
       # AST-accurate complexity gate (replaces the old lizard step). Mirrors the
       # changed-files scope lizard used (backend + workspace packages, frontend

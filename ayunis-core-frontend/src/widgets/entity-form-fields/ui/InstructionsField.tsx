@@ -4,8 +4,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
-import { Textarea } from '@/shared/ui/shadcn/textarea';
+} from '@ayunis/ui/components/form';
+import { Textarea } from '@ayunis/ui/components/textarea';
 import { useTranslation } from 'react-i18next';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 

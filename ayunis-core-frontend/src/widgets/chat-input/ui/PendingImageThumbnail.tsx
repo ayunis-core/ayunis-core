@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { XIcon } from 'lucide-react';
 import type { PendingImage } from '../hooks/usePendingImages';
 

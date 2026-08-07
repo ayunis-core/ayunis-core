@@ -7,7 +7,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
   PaginationLink,
-} from '@/shared/ui/shadcn/pagination';
+} from '@ayunis/ui/components/pagination';
 import { getPageNumbers } from '../lib/getPageNumbers';
 
 interface UserUsageTablePaginationProps {

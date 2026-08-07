@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UseFormReturn } from 'react-hook-form';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Calendar } from '@/shared/ui/shadcn/calendar';
+import { Button } from '@ayunis/ui/components/button';
+import { Calendar } from '@ayunis/ui/components/calendar';
 import {
   FormControl,
   FormDescription,
@@ -10,13 +10,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/ui/shadcn/form';
+} from '@ayunis/ui/components/form';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/shared/ui/shadcn/popover';
-import { cn } from '@/shared/lib/shadcn/utils';
+} from '@ayunis/ui/components/popover';
+import { cn } from '@ayunis/ui/lib/cn';
 import { CalendarIcon } from 'lucide-react';
 import type { UpdateSubscriptionStartDateFormData } from '../model/types';
 import { utcDateToLocal } from '../lib/subscription-start-date';

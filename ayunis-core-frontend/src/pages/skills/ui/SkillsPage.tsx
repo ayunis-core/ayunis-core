@@ -15,7 +15,7 @@ import {
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@/shared/ui/shadcn/tabs';
+} from '@ayunis/ui/components/tabs';
 import { EmptyState } from '@/widgets/empty-state';
 import { useMyPermissions } from '@/features/permissions';
 

@@ -1,13 +1,13 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { ArrowUp, Square } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/shared/ui/shadcn/tooltip';
+} from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
 import { TOUR_TARGET, OnboardingTourTarget } from '@/widgets/onboarding';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { cn } from '@ayunis/ui/lib/cn';
 
 interface SendButtonProps {
   /** True while a submit is in flight (submitting or streaming). Replaces

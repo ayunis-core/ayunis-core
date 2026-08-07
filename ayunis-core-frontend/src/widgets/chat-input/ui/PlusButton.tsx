@@ -7,16 +7,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dropdown-menu';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from '@/shared/ui/shadcn/tooltip';
-import { Badge } from '@/shared/ui/shadcn/badge';
+} from '@ayunis/ui/components/tooltip';
+import { Badge } from '@ayunis/ui/components/badge';
 import { Brain, Loader2, Paperclip, Plus } from 'lucide-react';
-import { Input } from '@/shared/ui/shadcn/input';
+import { Input } from '@ayunis/ui/components/input';
 import { useRef } from 'react';
 import { useKnowledgeBases } from '../api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';

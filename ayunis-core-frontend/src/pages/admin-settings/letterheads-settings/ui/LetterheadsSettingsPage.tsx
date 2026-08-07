@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { Pencil, Trash2, ChevronRight } from 'lucide-react';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
   ItemDescription,
-} from '@/shared/ui/shadcn/item';
-import { Empty, EmptyDescription, EmptyTitle } from '@/shared/ui/shadcn/empty';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/item';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +25,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/ui/shadcn/alert-dialog';
+} from '@ayunis/ui/components/alert-dialog';
 import SettingsLayout from '../../admin-settings-layout';
 import { LetterheadFormDialog } from './LetterheadFormDialog';
 import { useLetterheads } from '../api/useLetterheads';

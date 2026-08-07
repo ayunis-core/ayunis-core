@@ -1,6 +1,6 @@
-import { Input } from '@/shared/ui/shadcn/input';
-import { PasswordInput } from '@/shared/ui/shadcn/password-input';
-import { Label } from '@/shared/ui/shadcn/label';
+import { Input } from '@ayunis/ui/components/input';
+import { PasswordInput } from '@ayunis/ui/components/password-input';
+import { Label } from '@ayunis/ui/components/label';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface ConfigFieldInputProps {

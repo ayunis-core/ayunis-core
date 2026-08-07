@@ -5,18 +5,18 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { Badge } from '@/shared/ui/shadcn/badge';
-import { Button } from '@/shared/ui/shadcn/button';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/card';
+import { Badge } from '@ayunis/ui/components/badge';
+import { Button } from '@ayunis/ui/components/button';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/shared/ui/shadcn/dialog';
-import { Input } from '@/shared/ui/shadcn/input';
+} from '@ayunis/ui/components/dialog';
+import { Input } from '@ayunis/ui/components/input';
 import {
   MfaEnrollmentPanel,
   RecoveryCodesPanel,

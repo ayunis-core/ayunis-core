@@ -4,8 +4,8 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/shared/ui/shadcn/card';
-import { Skeleton } from '@/shared/ui/shadcn/skeleton';
+} from '@ayunis/ui/components/card';
+import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useTranslation } from 'react-i18next';
 
 export function ProviderConsumptionLoading() {

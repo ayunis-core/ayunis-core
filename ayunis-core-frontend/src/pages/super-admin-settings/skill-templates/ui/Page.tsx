@@ -8,15 +8,15 @@ import { EditSkillTemplateDialog } from './EditSkillTemplateDialog';
 import { useDeleteSkillTemplate } from '../api/useDeleteSkillTemplate';
 import { useToggleSkillTemplate } from '../api/useToggleSkillTemplate';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/shared/ui/shadcn/card';
-import { ItemGroup, ItemSeparator } from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/card';
+import { ItemGroup, ItemSeparator } from '@ayunis/ui/components/item';
 import { Fragment } from 'react/jsx-runtime';
 
 interface SkillTemplatesPageProps {

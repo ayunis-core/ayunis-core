@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import type { CompleteMcpOAuthDto } from '@/shared/api';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { useCompleteMcpOAuth } from '../api/useCompleteMcpOAuth';
 import {
   resolveOAuthCallbackCopy,

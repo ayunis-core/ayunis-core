@@ -1,4 +1,4 @@
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
+} from '@ayunis/ui/components/dialog';
 import { Loader2, Minus, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionResponseDto } from '@/shared/api';

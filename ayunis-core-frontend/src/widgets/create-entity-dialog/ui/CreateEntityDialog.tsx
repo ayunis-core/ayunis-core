@@ -6,8 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/shadcn/dialog';
-import { Button } from '@/shared/ui/shadcn/button';
+} from '@ayunis/ui/components/dialog';
+import { Button } from '@ayunis/ui/components/button';
 import { Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 

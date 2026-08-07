@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Switch } from '@/shared/ui/shadcn/switch';
+import { Switch } from '@ayunis/ui/components/switch';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import type {
   ShareResponseDto,
@@ -15,7 +15,7 @@ import {
   ItemDescription,
   ItemTitle,
   ItemActions,
-} from '@/shared/ui/shadcn/item';
+} from '@ayunis/ui/components/item';
 
 type EntityType = 'skill' | 'knowledge_base';
 

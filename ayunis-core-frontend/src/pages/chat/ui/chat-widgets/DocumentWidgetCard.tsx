@@ -1,5 +1,5 @@
-import { Button } from '@/shared/ui/shadcn/button';
-import { cn } from '@/shared/lib/shadcn/utils';
+import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 import { FileText, ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 

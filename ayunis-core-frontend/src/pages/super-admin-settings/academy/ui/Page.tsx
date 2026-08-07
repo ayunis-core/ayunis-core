@@ -19,7 +19,7 @@ import type {
   SuperAdminAcademyChapterResponseDto,
 } from '@/shared/api';
 import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
-import { Button } from '@/shared/ui/shadcn/button';
+import { Button } from '@ayunis/ui/components/button';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChapterCard } from './ChapterCard';
 import { ChapterFormDialog } from './ChapterFormDialog';
