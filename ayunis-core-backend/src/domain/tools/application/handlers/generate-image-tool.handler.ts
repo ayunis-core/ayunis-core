@@ -12,15 +12,22 @@ import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/ge
 import { GenerateImageCommand } from 'src/domain/models/application/use-cases/generate-image/generate-image.command';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
 import { SaveGeneratedImageCommand } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.command';
+import { DownloadReferenceImagesUseCase } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.use-case';
+import type { ReferenceImageDownload } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.use-case';
+import { DownloadReferenceImagesQuery } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.query';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { GeneratedImageNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
 
 type GenerateImageResult = Awaited<ReturnType<GenerateImageUseCase['execute']>>;
+type ValidatedGenerateImageInput = ReturnType<
+  GenerateImageTool['validateParams']
+>;
 
 @Injectable()
 export class GenerateImageToolHandler extends ToolExecutionHandler {
@@ -30,6 +37,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly generateImageUseCase: GenerateImageUseCase,
     private readonly saveGeneratedImageUseCase: SaveGeneratedImageUseCase,
+    private readonly downloadReferenceImagesUseCase: DownloadReferenceImagesUseCase,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
     private readonly contextService: ContextService,
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
@@ -64,8 +72,18 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         new GetPermittedImageGenerationModelQuery({ orgId: context.orgId }),
       );
 
-    // After model resolution (org access errors trump quota) but before the
-    // provider call (a quota miss must not spend tokens).
+    // Before the quota check: reference failures are exposed to the model
+    // for a corrected retry, which must not find its fair-use slot burned.
+    const referenceImages = await this.resolveReferenceImages(
+      validatedInput,
+      context,
+      userId,
+      tool.name,
+    );
+
+    // After model and reference resolution (their errors trump quota and
+    // consume no slot) but before the provider call (a quota miss must not
+    // spend tokens).
     await this.checkQuotaUseCase.execute(
       new CheckQuotaQuery(userId, context.orgId, QuotaType.FAIR_USE_IMAGES),
     );
@@ -75,6 +93,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         model: permittedModel.model,
         prompt: validatedInput.prompt,
         size: validatedInput.size,
+        referenceImages,
       }),
     );
 
@@ -83,6 +102,64 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
       result,
       context,
       userId,
+    });
+  }
+
+  private async resolveReferenceImages(
+    input: ValidatedGenerateImageInput,
+    context: ToolExecutionContext,
+    userId: UUID,
+    toolName: string,
+  ): Promise<ReferenceImageDownload[] | undefined> {
+    const includeUploadedImages = input.use_uploaded_images ?? false;
+    const generatedImageIds = (input.reference_generated_image_ids ??
+      []) as UUID[];
+    if (!includeUploadedImages && generatedImageIds.length === 0) {
+      return undefined;
+    }
+    let images: ReferenceImageDownload[];
+    try {
+      images = await this.downloadReferenceImagesUseCase.execute(
+        new DownloadReferenceImagesQuery({
+          threadId: context.threadId,
+          userId,
+          includeUploadedImages,
+          generatedImageIds,
+        }),
+      );
+    } catch (error) {
+      throw this.toReferenceResolutionError(error, toolName);
+    }
+    // Explicitly requested references must never silently degrade into a
+    // text-only generation — surface the reason so the model can react.
+    if (images.length === 0) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message:
+          'None of the requested reference images could be used. References must be PNG, JPEG or WebP up to 10 MB each. Retry without references or ask the user for a supported image.',
+        exposeToLLM: true,
+      });
+    }
+    return images;
+  }
+
+  private toReferenceResolutionError(
+    error: unknown,
+    toolName: string,
+  ): ToolExecutionFailedError {
+    if (error instanceof GeneratedImageNotFoundError) {
+      return new ToolExecutionFailedError({
+        toolName,
+        message: `${error.message}. Only image IDs previously returned by this tool in this conversation can be used as references.`,
+        exposeToLLM: true,
+      });
+    }
+    this.logger.error('Failed to load reference images', error);
+    return new ToolExecutionFailedError({
+      toolName,
+      message:
+        'The reference images could not be loaded. You may retry without references.',
+      exposeToLLM: true,
     });
   }
 

@@ -8,6 +8,7 @@ import { ToolExecutionFailedError } from '../tools.errors';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GenerateImageUseCase } from 'src/domain/models/application/use-cases/generate-image/generate-image.use-case';
 import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.use-case';
+import { DownloadReferenceImagesUseCase } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.use-case';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -18,12 +19,17 @@ import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-qu
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
+import {
+  GeneratedImageNotFoundError,
+  UnexpecteThreadError,
+} from 'src/domain/threads/application/threads.errors';
 
 describe('GenerateImageToolHandler', () => {
   let handler: GenerateImageToolHandler;
   let mockGetPermittedModel: jest.Mocked<GetPermittedImageGenerationModelUseCase>;
   let mockGenerateImage: jest.Mocked<GenerateImageUseCase>;
   let mockSaveGeneratedImage: jest.Mocked<SaveGeneratedImageUseCase>;
+  let mockDownloadReferenceImages: jest.Mocked<DownloadReferenceImagesUseCase>;
   let mockCollectUsage: jest.Mocked<CollectUsageAsyncService>;
   let mockContextService: jest.Mocked<ContextService>;
   let mockCheckQuota: jest.Mocked<CheckQuotaUseCase>;
@@ -37,6 +43,9 @@ describe('GenerateImageToolHandler', () => {
     mockGetPermittedModel = { execute: jest.fn() } as any;
     mockGenerateImage = { execute: jest.fn() } as any;
     mockSaveGeneratedImage = { execute: jest.fn() } as any;
+    mockDownloadReferenceImages = {
+      execute: jest.fn().mockResolvedValue([]),
+    } as any;
     mockCollectUsage = { collect: jest.fn() } as any;
     mockContextService = { get: jest.fn() } as any;
     mockCheckQuota = { execute: jest.fn().mockResolvedValue(undefined) } as any;
@@ -55,6 +64,10 @@ describe('GenerateImageToolHandler', () => {
         {
           provide: SaveGeneratedImageUseCase,
           useValue: mockSaveGeneratedImage,
+        },
+        {
+          provide: DownloadReferenceImagesUseCase,
+          useValue: mockDownloadReferenceImages,
         },
         {
           provide: CollectUsageAsyncService,
@@ -389,6 +402,200 @@ describe('GenerateImageToolHandler', () => {
     ).rejects.toThrow(ToolExecutionFailedError);
 
     expect(mockCollectUsage.collect).not.toHaveBeenCalled();
+  });
+
+  it('should not download reference images when none are requested', async () => {
+    setupHappyPath();
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'A sunset over the Alps' },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    expect(mockDownloadReferenceImages.execute).not.toHaveBeenCalled();
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.referenceImages).toBeUndefined();
+  });
+
+  it('should pass uploaded thread images as references when requested', async () => {
+    setupHappyPath();
+    const reference = {
+      data: Buffer.from('uploaded-scan'),
+      contentType: 'image/png',
+    };
+    mockDownloadReferenceImages.execute.mockResolvedValue([reference]);
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'Recreate this scan as a clean diagram',
+        use_uploaded_images: true,
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const query = mockDownloadReferenceImages.execute.mock.calls[0][0];
+    expect(query.threadId).toBe(mockThreadId);
+    expect(query.userId).toBe(mockUserId);
+    expect(query.includeUploadedImages).toBe(true);
+    expect(query.generatedImageIds).toEqual([]);
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.referenceImages).toEqual([reference]);
+  });
+
+  it('should pass previously generated images as references by ID', async () => {
+    setupHappyPath();
+    const generatedId = randomUUID();
+    const reference = {
+      data: Buffer.from('previously-generated'),
+      contentType: 'image/png',
+    };
+    mockDownloadReferenceImages.execute.mockResolvedValue([reference]);
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'Make the dog bigger',
+        reference_generated_image_ids: [generatedId],
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const query = mockDownloadReferenceImages.execute.mock.calls[0][0];
+    expect(query.includeUploadedImages).toBe(false);
+    expect(query.generatedImageIds).toEqual([generatedId]);
+
+    const command = mockGenerateImage.execute.mock.calls[0][0];
+    expect(command.referenceImages).toEqual([reference]);
+  });
+
+  it('should expose an unknown generated image ID to the LLM so it can correct itself', async () => {
+    setupHappyPath();
+    const unknownId = randomUUID();
+    mockDownloadReferenceImages.execute.mockRejectedValue(
+      new GeneratedImageNotFoundError(unknownId),
+    );
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'Make the dog bigger',
+          reference_generated_image_ids: [unknownId],
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain(unknownId);
+    expect(mockGenerateImage.execute).not.toHaveBeenCalled();
+    // The model is invited to retry with a corrected ID — that retry must
+    // not find its fair-use quota burned by the failed attempt.
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
+  });
+
+  it('should fail visibly when requested references yield no usable image', async () => {
+    // All candidates skipped (unsupported type / oversized): degrading to
+    // text-only generation would silently ignore the model's explicit ask.
+    setupHappyPath();
+    mockDownloadReferenceImages.execute.mockResolvedValue([]);
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toMatch(/reference/i);
+    expect(mockGenerateImage.execute).not.toHaveBeenCalled();
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
+  });
+
+  it('should expose reference-loading failures to the model without leaking internals', async () => {
+    setupHappyPath();
+    mockDownloadReferenceImages.execute.mockRejectedValue(
+      new UnexpecteThreadError(new Error('S3 bucket unreachable')),
+    );
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toMatch(/reference/i);
+    expect(toolError.message).not.toContain('S3 bucket unreachable');
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
+  });
+
+  it('should resolve reference images before consuming the quota', async () => {
+    setupHappyPath();
+    mockDownloadReferenceImages.execute.mockResolvedValue([
+      { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+    ]);
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const referenceOrder =
+      mockDownloadReferenceImages.execute.mock.invocationCallOrder[0];
+    const quotaOrder = mockCheckQuota.execute.mock.invocationCallOrder[0];
+    expect(referenceOrder).toBeLessThan(quotaOrder);
+  });
+
+  it('should reject a non-UUID generated image reference', async () => {
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'Make the dog bigger',
+          reference_generated_image_ids: ['not-a-uuid'],
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should reject more than 16 generated image references', async () => {
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'A collage',
+          reference_generated_image_ids: Array.from({ length: 17 }, () =>
+            randomUUID(),
+          ),
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
   });
 
   it('should check the FAIR_USE_IMAGES quota for the current user', async () => {
