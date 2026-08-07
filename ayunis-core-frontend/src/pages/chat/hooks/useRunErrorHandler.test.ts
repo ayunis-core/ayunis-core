@@ -29,6 +29,21 @@ describe('useRunErrorHandler', () => {
     expect(showError).toHaveBeenCalledWith('chat.errorContextBudgetExceeded');
   });
 
+  it('shows the tool-failure explanation when the repeated-failure breaker aborts the run', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: "Tool 'generate_image' execution failed",
+      threadId: 'thread-1',
+      timestamp: '2026-08-06T12:00:00.000Z',
+      code: 'RUN_TOOL_EXECUTION_FAILED',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorToolExecutionFailed');
+  });
+
   it('shows the timeout explanation when the provider stream stalls', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {

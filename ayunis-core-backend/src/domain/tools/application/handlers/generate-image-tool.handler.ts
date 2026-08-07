@@ -18,7 +18,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
 
 type GenerateImageResult = Awaited<ReturnType<GenerateImageUseCase['execute']>>;
@@ -136,15 +135,16 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
       throw error;
     }
     this.logger.error('Failed to execute generate_image tool', error);
-    if (error instanceof QuotaExceededError) {
+    // ApplicationError messages (quota, content policy, provider outage) are
+    // curated for end users — expose them so the model can explain the
+    // failure instead of retrying blind into the repeated-failure breaker
+    // (AYC-562). A raw rethrow would reach the LLM as "unknown error".
+    if (error instanceof ApplicationError) {
       throw new ToolExecutionFailedError({
         toolName,
         message: error.message,
         exposeToLLM: true,
       });
-    }
-    if (error instanceof ApplicationError) {
-      throw error;
     }
     throw new ToolExecutionFailedError({
       toolName,
