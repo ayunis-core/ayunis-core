@@ -22,9 +22,9 @@ import { TeamModelsTab } from './TeamModelsTab';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 import SettingsLayout from '../../admin-settings-layout';
 import { useHasCreditBudget } from '@/features/credit-limits';
-import { useAuthenticationControllerMe } from '@/shared/api';
+import { MeResponseDtoRole } from '@/shared/api';
 import type { TeamDetail, PaginatedTeamMembers } from '../model/types';
-import { PermissionGate } from '@/features/permissions';
+import { PermissionGate, useAuthorization } from '@/features/permissions';
 
 interface TeamDetailPageProps {
   team: TeamDetail;
@@ -39,10 +39,10 @@ export function TeamDetailPage({
   const { t: tCredit } = useTranslation('admin-settings-credit-limits');
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('members');
-  const { data: me } = useAuthenticationControllerMe();
+  const { hasRole } = useAuthorization();
   // Permitted models and credit limits are admin-only endpoints, so managers who
   // reach this page through a teams permission must not see those tabs.
-  const isAdmin = me?.role === 'admin';
+  const isAdmin = hasRole(MeResponseDtoRole.admin);
   const hasCreditBudget = useHasCreditBudget(isAdmin);
 
   const headerActions =
