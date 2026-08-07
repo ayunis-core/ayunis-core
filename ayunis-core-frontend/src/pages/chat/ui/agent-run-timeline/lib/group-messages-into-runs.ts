@@ -11,8 +11,14 @@ import type {
   TimelineStep,
   StepStatus,
   ToolTimelineStep,
+  RichToolRunBlock,
 } from '../model/types';
-import { isRichTool } from './tool-classification';
+import {
+  getArtifactMutationFamily,
+  getArtifactToolTarget,
+  isRichTool,
+} from './tool-classification';
+import type { ArtifactFamily } from './tool-classification';
 
 interface GroupingOptions {
   isStreaming: boolean;
@@ -185,30 +191,13 @@ function appendAssistantMessage(
         hasResult,
         isActiveAssistantMessage,
       );
-      const step: ToolTimelineStep = {
+      appendToolStep(run, {
         kind: 'tool',
         key: `${message.id}-tool-${toolUse.id}`,
         toolUse,
         result,
         status,
-      };
-      const isPendingTool =
-        toolUse.name.length === 0 && toolUse.stream?.status === 'streaming';
-      if (status !== 'error' && isPendingTool) {
-        run.blocks.push({
-          kind: 'pending-tool',
-          key: step.key,
-          step,
-        });
-      } else if (status !== 'error' && isRichTool(toolUse.name)) {
-        run.blocks.push({
-          kind: 'rich-tool',
-          key: step.key,
-          step,
-        });
-      } else {
-        appendActivityStep(run, step);
-      }
+      });
       return;
     }
 
@@ -222,6 +211,90 @@ function appendAssistantMessage(
   });
 
   flushThinking(isActiveAssistantMessage ? 'in_progress' : 'done');
+}
+
+function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
+  const { toolUse, status } = step;
+  const isPendingTool =
+    toolUse.name.length === 0 && toolUse.stream?.status === 'streaming';
+  if (status !== 'error' && isPendingTool) {
+    run.blocks.push({
+      kind: 'pending-tool',
+      key: step.key,
+      step,
+    });
+    return;
+  }
+  if (status !== 'error' && isRichTool(toolUse.name)) {
+    const mergeTarget = findSameArtifactRichBlock(run, toolUse);
+    if (mergeTarget) {
+      mergeTarget.steps.push(step);
+    } else {
+      run.blocks.push({
+        kind: 'rich-tool',
+        key: step.key,
+        steps: [step],
+      });
+    }
+    return;
+  }
+  appendActivityStep(run, step);
+}
+
+/**
+ * Repeated mutations of the same artifact (e.g. six edit_document calls in a
+ * row) share one rich-tool block, so the chat shows a single widget with the
+ * latest state instead of one widget per call (AYC-476). The backward search
+ * deliberately skips ALL activity blocks — thinking as well as ordinary tool
+ * calls like read_document that the model interleaves with its edits — because
+ * stopping at them would re-split the widget in the common read/edit loop.
+ * Only non-activity blocks end the search: assistant prose (and another
+ * artifact's widget) legitimately separates widgets.
+ *
+ * A mutation call whose arguments are still streaming has no parseable
+ * artifact_id yet, so it merges optimistically into a preceding block of the
+ * same family. Once the arguments parse, the next grouping pass re-evaluates:
+ * the common same-artifact case stays merged, a different artifact splits out
+ * into its own widget.
+ */
+function findSameArtifactRichBlock(
+  run: AgentRunUnit,
+  toolUse: ToolUseMessageContent,
+): RichToolRunBlock | null {
+  const criteria = getMergeCriteria(toolUse);
+  if (!criteria) return null;
+  const block = findTrailingRichBlock(run);
+  const lastStep = block?.steps.at(-1);
+  const previous = lastStep ? getArtifactToolTarget(lastStep.toolUse) : null;
+  if (previous?.family !== criteria.family) return null;
+  const sameArtifact =
+    criteria.artifactId === null || previous.artifactId === criteria.artifactId;
+  return sameArtifact ? block : null;
+}
+
+interface MergeCriteria {
+  family: ArtifactFamily;
+  /** null while the call's arguments are still streaming: match family only. */
+  artifactId: string | null;
+}
+
+function getMergeCriteria(
+  toolUse: ToolUseMessageContent,
+): MergeCriteria | null {
+  const target = getArtifactToolTarget(toolUse);
+  if (target) return target;
+  if (toolUse.stream?.status !== 'streaming') return null;
+  const family = getArtifactMutationFamily(toolUse.name);
+  return family ? { family, artifactId: null } : null;
+}
+
+function findTrailingRichBlock(run: AgentRunUnit): RichToolRunBlock | null {
+  for (let i = run.blocks.length - 1; i >= 0; i--) {
+    const block = run.blocks[i];
+    if (block.kind === 'activity') continue;
+    return block.kind === 'rich-tool' ? block : null;
+  }
+  return null;
 }
 
 function appendActivityStep(run: AgentRunUnit, step: TimelineStep): void {

@@ -60,17 +60,19 @@ const unit: AgentRunUnit = {
     {
       kind: 'rich-tool',
       key: 'tool-rich-1',
-      step: {
-        kind: 'tool',
-        key: 'tool-rich-1',
-        status: 'done',
-        toolUse: {
-          type: 'tool_use',
-          id: 'rich-1',
-          name: 'bar_chart',
-          params: {},
+      steps: [
+        {
+          kind: 'tool',
+          key: 'tool-rich-1',
+          status: 'done',
+          toolUse: {
+            type: 'tool_use',
+            id: 'rich-1',
+            name: 'bar_chart',
+            params: {},
+          },
         },
-      },
+      ],
     },
     {
       kind: 'text',
@@ -135,10 +137,12 @@ describe('AgentRunTimeline', () => {
         {
           kind: 'rich-tool',
           key: pendingStep.key,
-          step: {
-            ...pendingStep,
-            toolUse: { ...pendingStep.toolUse, name: 'bar_chart' },
-          },
+          steps: [
+            {
+              ...pendingStep,
+              toolUse: { ...pendingStep.toolUse, name: 'bar_chart' },
+            },
+          ],
         },
       ],
     };
@@ -151,6 +155,95 @@ describe('AgentRunTimeline', () => {
 
     expect(screen.getByTestId('step-tool-streaming')).toBe(pendingRow);
     expect(screen.getByTestId('rich-card')).toBeTruthy();
+  });
+
+  it('renders one card from the latest step of a merged rich-tool block', () => {
+    const editStep = (id: string) => ({
+      kind: 'tool' as const,
+      key: `tool-${id}`,
+      status: 'done' as const,
+      toolUse: {
+        type: 'tool_use' as const,
+        id,
+        name: 'edit_document',
+        params: { artifact_id: 'art-1' },
+      },
+    });
+    const mergedUnit: AgentRunUnit = {
+      ...unit,
+      blocks: [
+        {
+          kind: 'rich-tool',
+          key: 'tool-e1',
+          steps: [editStep('e1'), editStep('e2'), editStep('e3')],
+        },
+      ],
+    };
+
+    render(<AgentRunTimeline unit={mergedUnit} />);
+
+    expect(screen.getByTestId('step-tool-e1')).toBeTruthy();
+    expect(screen.getByTestId('step-tool-e2')).toBeTruthy();
+    expect(screen.getByTestId('step-tool-e3')).toBeTruthy();
+    expect(screen.getAllByTestId('rich-card')).toHaveLength(1);
+    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        toolUse: expect.objectContaining({ id: 'e3' }),
+      }),
+    );
+  });
+
+  it('renders the card from the last step with an artifact id while a follow-up edit streams', () => {
+    const mergedUnit: AgentRunUnit = {
+      ...unit,
+      isStreaming: true,
+      blocks: [
+        {
+          kind: 'rich-tool',
+          key: 'tool-e1',
+          steps: [
+            {
+              kind: 'tool',
+              key: 'tool-e1',
+              status: 'done',
+              toolUse: {
+                type: 'tool_use',
+                id: 'e1',
+                name: 'edit_document',
+                params: { artifact_id: 'art-1' },
+              },
+            },
+            {
+              kind: 'tool',
+              key: 'tool-e2',
+              status: 'in_progress',
+              toolUse: {
+                type: 'tool_use',
+                id: 'e2',
+                name: 'edit_document',
+                params: {},
+                stream: {
+                  status: 'streaming',
+                  argumentsJson: '{"artifact_id": "art-',
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    render(<AgentRunTimeline unit={mergedUnit} />);
+
+    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        toolUse: expect.objectContaining({
+          id: 'e1',
+          params: { artifact_id: 'art-1' },
+        }),
+        isStreaming: true,
+      }),
+    );
   });
 
   it('does not render the response-start orb after timeline content exists', () => {

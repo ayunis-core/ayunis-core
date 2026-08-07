@@ -38,7 +38,11 @@ export interface ActivityRunBlock {
 export interface RichToolRunBlock {
   kind: 'rich-tool';
   key: string;
-  step: ToolTimelineStep;
+  /**
+   * Non-empty. Holds one step per tool call; consecutive mutations of the
+   * same artifact are merged here so only the last step's widget is rendered.
+   */
+  steps: ToolTimelineStep[];
 }
 
 export interface PendingToolRunBlock {
