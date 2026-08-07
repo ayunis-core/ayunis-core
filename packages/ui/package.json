@@ -54,7 +54,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
-    "recharts": "^2.15.4",
+    "recharts": "^3.10.1",
     "sonner": "^2.0.5",
     "tailwindcss": ">=4.0.0"
   },
@@ -76,7 +76,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
-    "recharts": "^2.15.4",
+    "recharts": "^3.10.1",
     "sonner": "^2.0.5",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
