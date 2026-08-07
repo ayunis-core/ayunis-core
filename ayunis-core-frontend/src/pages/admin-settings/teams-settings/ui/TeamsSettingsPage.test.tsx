@@ -26,6 +26,10 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
+vi.mock('@/features/permissions', () => ({
+  PermissionGate: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('../../admin-settings-layout', () => ({
   default: ({
     children,
