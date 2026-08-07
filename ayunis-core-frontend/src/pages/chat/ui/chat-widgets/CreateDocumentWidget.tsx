@@ -4,6 +4,7 @@ import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { useThreadArtifacts } from '../../api/useThreadArtifacts';
+import { findLatestArtifactId } from '../../lib/find-latest-artifact-id';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 // eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
@@ -51,13 +52,7 @@ export default function CreateDocumentWidget({
   // We look it up from the thread artifacts list by title.
   // When multiple artifacts share the same title, prefer the most recently created one.
   const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId =
-    artifacts
-      .filter((a) => a.title === params.title)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )[0]?.id ?? null;
+  const artifactId = findLatestArtifactId(artifacts, params.title, 'document');
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {

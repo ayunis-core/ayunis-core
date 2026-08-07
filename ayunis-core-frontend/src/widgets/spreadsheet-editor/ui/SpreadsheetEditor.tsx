@@ -17,6 +17,7 @@ interface SpreadsheetEditorProps {
   readonly onExport: (
     format: SpreadsheetExportFormat,
     unsavedContent?: string,
+    versionNumber?: number,
   ) => void;
   readonly onClose: () => void;
   readonly isExporting?: boolean;
@@ -46,13 +47,16 @@ export function SpreadsheetEditor({
   };
 
   const handleExport = (format: SpreadsheetExportFormat) => {
-    // Export what is on screen: a browsed historical version or unsaved
-    // edits; undefined lets the backend export the saved current version.
+    // Historical exports use the immutable server version. Current unsaved
+    // edits are saved first so the downloaded file matches the editor.
+    const unsavedContent =
+      !editor.isViewingHistory && editor.isDirty
+        ? editor.getSerializedContent()
+        : undefined;
     onExport(
       format,
-      editor.isViewingHistory || editor.isDirty
-        ? editor.getDisplayedSerializedContent()
-        : undefined,
+      unsavedContent,
+      editor.isViewingHistory ? editor.displayedVersionNumber : undefined,
     );
   };
 

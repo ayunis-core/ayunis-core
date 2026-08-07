@@ -4,6 +4,7 @@ import type { ToolUseMessageContent } from '../../model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check, Workflow } from 'lucide-react';
 import { useThreadArtifacts } from '../../api/useThreadArtifacts';
+import { findLatestArtifactId } from '../../lib/find-latest-artifact-id';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 // eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
@@ -48,13 +49,7 @@ export default function CreateDiagramWidget({
   };
 
   const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId =
-    artifacts
-      .filter((a) => a.title === params.title && a.type === 'diagram')
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )[0]?.id ?? null;
+  const artifactId = findLatestArtifactId(artifacts, params.title, 'diagram');
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
