@@ -38,6 +38,40 @@
     "revertTo": "Revert to v{{version}}",
     "revert": "Revert"
   },
+  "spreadsheet": {
+    "empty": "This spreadsheet has no columns yet. Add a column to get started.",
+    "invalidContent": "This spreadsheet's content could not be read. Saving will overwrite it.",
+    "viewingHistory": "Viewing version {{version}} (read-only). Select the current version to continue editing.",
+    "unsavedChanges": {
+      "title": "Unsaved changes",
+      "description": "This spreadsheet has unsaved changes. Save them before closing?",
+      "saveAndClose": "Save & close",
+      "discardAndClose": "Discard & close",
+      "keepEditing": "Keep editing"
+    },
+    "toolbar": {
+      "addRows": "Add rows",
+      "addRowsCount": "Number of rows",
+      "addRowsConfirm": "Add",
+      "maxRowsReached": "Maximum of {{count}} rows reached",
+      "addColumn": "Add column",
+      "maxColumnsReached": "Maximum of {{count}} columns reached",
+      "columns": "Edit columns",
+      "newColumnLabel": "Column {{number}}",
+      "renameColumn": "Rename column {{number}}",
+      "dragToReorder": "Drag to reorder columns",
+      "deleteColumn": "Delete column",
+      "deleteColumnTitle": "Delete column?",
+      "deleteColumnDescription": "The column “{{label}}” contains data that will be lost.",
+      "deleteColumnConfirm": "Delete",
+      "deleteColumnCancel": "Cancel"
+    },
+    "export": {
+      "download": "Download",
+      "xlsx": "Excel (.xlsx)",
+      "csv": "CSV (.csv)"
+    }
+  },
   "diagram": {
     "export": {
       "svg": "SVG",
