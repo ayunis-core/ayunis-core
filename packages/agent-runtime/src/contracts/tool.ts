@@ -42,4 +42,14 @@ export interface Tool extends ToolSchema {
     input: Record<string, unknown>,
     ctx: ToolExecutionContext,
   ): ToolExecutionOutput | Promise<ToolExecutionOutput>;
+  /**
+   * Optional input validation, always consulted when present: it runs before
+   * `execute`, or before the display acknowledgement for display-only tools.
+   * When it throws, the call yields an error result carrying the thrown
+   * message instead of executing or acking, and the loop keeps running so
+   * the model can retry with corrected input. Mostly useful for display-only
+   * tools, which otherwise render whatever the model produced without any
+   * check; tools with `execute` typically validate in their own handler.
+   */
+  validateInput?(input: Record<string, unknown>): void;
 }

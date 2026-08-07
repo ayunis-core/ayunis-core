@@ -109,6 +109,10 @@ const runTool = async (
       isError: true,
     };
   }
+  const validationError = validateToolInput(tool, call.input);
+  if (validationError !== null) {
+    return { result: validationError, isError: true };
+  }
   if (!tool.execute) {
     return {
       result: DISPLAY_ACK,
@@ -123,6 +127,21 @@ const runTool = async (
     return normalizeToolOutput(value);
   } catch (error) {
     return failedOutcome(error);
+  }
+};
+
+// For display-only tools this is the only check before the input reaches the
+// client render (AYC-675); for executable tools it is a guard that skips
+// execute entirely.
+const validateToolInput = (
+  tool: Tool,
+  input: Record<string, unknown>,
+): string | null => {
+  try {
+    tool.validateInput?.(input);
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Invalid tool input';
   }
 };
 
