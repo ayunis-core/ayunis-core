@@ -11,6 +11,7 @@
     "academy": "Academy",
     "superAdmins": "Super Admins",
     "platformConfig": "Platform Config",
-    "appAlerts": "App Alerts"
+    "appAlerts": "App Alerts",
+    "anonymization": "Anonymization"
   }
 }
