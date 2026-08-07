@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.23.0](https://github.com/ayunis-core/ayunis-core/compare/v2.22.2...v2.23.0) (2026-08-07)
+
+
+### Features
+
+* **anonymization:** add a global allow list maintained by super admins (AYC-446) ([#1284](https://github.com/ayunis-core/ayunis-core/issues/1284)) ([e1d4765](https://github.com/ayunis-core/ayunis-core/commit/e1d47656af5224b05904bad73cb0a36b13dec579))
+* **api-keys:** disable api key creation without usage-based subscription (AYC-284) ([#1280](https://github.com/ayunis-core/ayunis-core/issues/1280)) ([73f75aa](https://github.com/ayunis-core/ayunis-core/commit/73f75aa1eb284f0c71c07b31560e5afb426bc613))
+* **artifacts:** spreadsheet artifacts with live excel formulas (AYC-153) ([#1061](https://github.com/ayunis-core/ayunis-core/issues/1061)) ([92f789f](https://github.com/ayunis-core/ayunis-core/commit/92f789f5603f88fb98f8e66a76bed89ce4fca3eb))
+* **config:** validate environment variables at boot (AYC-398) ([#1266](https://github.com/ayunis-core/ayunis-core/issues/1266)) ([c6cbbcb](https://github.com/ayunis-core/ayunis-core/commit/c6cbbcbf867b948d6c8e683a99220f94af37b11e))
+* **image-generation:** pass reference images to the image model (AYC-680) ([#1279](https://github.com/ayunis-core/ayunis-core/issues/1279)) ([8bf637d](https://github.com/ayunis-core/ayunis-core/commit/8bf637d9ff9e6e02c7ac526118669b496955e663))
+* **models:** super-admin managed model descriptions (AYC-271) ([#934](https://github.com/ayunis-core/ayunis-core/issues/934)) ([83cd986](https://github.com/ayunis-core/ayunis-core/commit/83cd98649220109b01be6abdff3b82f40b12baa6))
+* **runs:** increase agent run iteration limit to 50 (AYC-577) ([#1269](https://github.com/ayunis-core/ayunis-core/issues/1269)) ([856028f](https://github.com/ayunis-core/ayunis-core/commit/856028f6ec2cb29dbbea73281f39afef36239a62))
+* **welcome-video:** welcome video pop-up after onboarding (AYC-407) ([#1114](https://github.com/ayunis-core/ayunis-core/issues/1114)) ([9bb7ff3](https://github.com/ayunis-core/ayunis-core/commit/9bb7ff32c025b166918baecc449680f0edefa3b5))
+
+
+### Bug Fixes
+
+* **academy:** cap lesson video width and move module list to a side panel (AYC-648) ([#1264](https://github.com/ayunis-core/ayunis-core/issues/1264)) ([64c6a92](https://github.com/ayunis-core/ayunis-core/commit/64c6a9250276c9a295be55b376f94b7af6f8b269))
+* **agent-runtime:** validate display-only tool input before ending the loop (AYC-675) ([#1277](https://github.com/ayunis-core/ayunis-core/issues/1277)) ([c7bda66](https://github.com/ayunis-core/ayunis-core/commit/c7bda66a507523333b5b0ca0134cbfb7a4f45c94))
+* **chat:** show model-unavailable notice instead of hiding chat input (AYC-666) ([#1273](https://github.com/ayunis-core/ayunis-core/issues/1273)) ([c5cc0c7](https://github.com/ayunis-core/ayunis-core/commit/c5cc0c76445c499ed6df138e2b2ad2339b6104dd))
+* **chat:** show one widget for repeated edits of the same artifact (AYC-476) ([#1275](https://github.com/ayunis-core/ayunis-core/issues/1275)) ([4fa114a](https://github.com/ayunis-core/ayunis-core/commit/4fa114ac005623719d544ce38946acf8bd4299d3))
+* **code-execution:** tolerate a missing sandbox image at runtime (AYC-600) ([#1274](https://github.com/ayunis-core/ayunis-core/issues/1274)) ([c2d6525](https://github.com/ayunis-core/ayunis-core/commit/c2d6525a20d78946e70387550ae5f048c8f0e6b4))
+* **deps:** apply layer-boundary rules to nested module groups (AYC-335) ([#1263](https://github.com/ayunis-core/ayunis-core/issues/1263)) ([5a0a468](https://github.com/ayunis-core/ayunis-core/commit/5a0a468e3a2146804579a8a3d3f107bfb97afa30))
+* **dev:** make local supervisor health-aware (AYC-633) ([#1252](https://github.com/ayunis-core/ayunis-core/issues/1252)) ([45d9ff9](https://github.com/ayunis-core/ayunis-core/commit/45d9ff9cea148e6f3999e6c7f7c2c76bdb6f65db))
+* **rag:** sanitize embedding payload text to well-formed unicode (AYC-670) ([#1256](https://github.com/ayunis-core/ayunis-core/issues/1256)) ([eda86a9](https://github.com/ayunis-core/ayunis-core/commit/eda86a90fde8e8b61508f0c749eb3eff3753a007))
+* **runs:** retry token-limit truncated tool calls before durable output (AYC-669) ([#1257](https://github.com/ayunis-core/ayunis-core/issues/1257)) ([3922eaf](https://github.com/ayunis-core/ayunis-core/commit/3922eaf59ea548a035d950c5e15f8e793bdca412))
+* **runs:** surface real image-generation errors instead of a generic failure (AYC-562) ([#1278](https://github.com/ayunis-core/ayunis-core/issues/1278)) ([0ea94ec](https://github.com/ayunis-core/ayunis-core/commit/0ea94ec52dd64f193e36e6578bbc2f4ee59b2bf0))
+* **skills:** grant knowledge base access via shared skills (AYC-13) ([#1272](https://github.com/ayunis-core/ayunis-core/issues/1272)) ([6dbbcb7](https://github.com/ayunis-core/ayunis-core/commit/6dbbcb7a6fca85dd72fddf0d72b890e6926f205c))
+* **tools:** validate display-only tool params so bad calendar dates reach the model, not a crash (AYC-675) ([#1276](https://github.com/ayunis-core/ayunis-core/issues/1276)) ([5e30477](https://github.com/ayunis-core/ayunis-core/commit/5e30477da33bf65e5a68d926eee6693ef7e56f05))
+* use shortDescription on integration install card ([#1268](https://github.com/ayunis-core/ayunis-core/issues/1268)) ([5cff407](https://github.com/ayunis-core/ayunis-core/commit/5cff4078938bf8a8646702b5b2fc91a5b3b85f24))
+
+
+### Code Refactoring
+
+* **skills:** extract relation sync helper in skill repository update (AYC-13) ([#1271](https://github.com/ayunis-core/ayunis-core/issues/1271)) ([dce318c](https://github.com/ayunis-core/ayunis-core/commit/dce318cac29c3bd11abaf60b88acfba2354bc2b5))
+* **ui:** extract primitives into workspace package (AYC-667) ([#1254](https://github.com/ayunis-core/ayunis-core/issues/1254)) ([776d0ec](https://github.com/ayunis-core/ayunis-core/commit/776d0ec640a7b66f1c42e852201b145c92cd16e9))
+
+
+### Tests
+
+* **frontend:** fix teams setup and run suite in CI (AYC-667) ([#1255](https://github.com/ayunis-core/ayunis-core/issues/1255)) ([2840626](https://github.com/ayunis-core/ayunis-core/commit/2840626d1396cc8570806788a8c32a27aed6a0cb))
+
+
+### Miscellaneous
+
+* **infra:** remove dozzle from the docker stack (AYC-687) ([#1286](https://github.com/ayunis-core/ayunis-core/issues/1286)) ([40f9136](https://github.com/ayunis-core/ayunis-core/commit/40f9136df3d88431c618c17f7119f61e956dc4c2))
+
 ## [2.22.2](https://github.com/ayunis-core/ayunis-core/compare/v2.22.1...v2.22.2) (2026-08-05)
 
 
