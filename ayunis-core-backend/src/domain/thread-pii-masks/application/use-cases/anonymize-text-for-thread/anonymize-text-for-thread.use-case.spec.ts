@@ -8,6 +8,8 @@ import { AnonymizationFailedError } from 'src/common/anonymization/application/a
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
+import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
+import type { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
 
@@ -19,12 +21,14 @@ describe('AnonymizeTextForThreadUseCase', () => {
   let findByThreadId: jest.Mock;
   let saveMany: jest.Mock;
   let whitelistExecute: jest.Mock;
+  let globalWhitelistExecute: jest.Mock;
   let anonymizeExecute: jest.Mock;
 
   beforeEach(() => {
     findByThreadId = jest.fn().mockResolvedValue([]);
     saveMany = jest.fn().mockResolvedValue(undefined);
     whitelistExecute = jest.fn().mockResolvedValue([]);
+    globalWhitelistExecute = jest.fn().mockResolvedValue([]);
     anonymizeExecute = jest.fn().mockResolvedValue({
       originalText: text,
       anonymizedText: 'Ich bin der {{pii:PERSON_NAME_1}}',
@@ -36,6 +40,9 @@ describe('AnonymizeTextForThreadUseCase', () => {
     useCase = new AnonymizeTextForThreadUseCase(
       { findByThreadId, saveMany },
       { execute: whitelistExecute } as unknown as GetPiiWhitelistUseCase,
+      {
+        execute: globalWhitelistExecute,
+      } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
@@ -73,6 +80,34 @@ describe('AnonymizeTextForThreadUseCase', () => {
             maskIndex: 1,
             value: 'Moritz',
           },
+        ],
+      }),
+    );
+  });
+
+  it('unions the org whitelist with the global word list', async () => {
+    whitelistExecute.mockResolvedValue([
+      new AnonymizationWhitelistEntry({
+        orgId,
+        category: PiiCategory.LOCATION,
+        pattern: null,
+      }),
+    ]);
+    globalWhitelistExecute.mockResolvedValue([
+      new GlobalAnonymizationWhitelistWord({
+        category: PiiCategory.PERSON_NAME,
+        word: 'Mitarbeitende',
+        createdByUserId: null,
+      }),
+    ]);
+
+    await useCase.execute(command());
+
+    expect(anonymizeExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whitelist: [
+          new PiiWhitelistEntry(PiiCategory.LOCATION, null),
+          new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Mitarbeitende'),
         ],
       }),
     );

@@ -6,6 +6,8 @@ import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist
 import type { AnonymizationResult } from 'src/common/anonymization/application/ports/anonymization.port';
 import { AnonymizationWhitelistRepository } from '../../ports/anonymization-whitelist.repository';
 import { UnexpectedAnonymizationSettingsError } from '../../anonymization-settings.errors';
+import { GetGlobalPiiWhitelistUseCase } from '../get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import { toWhitelistEntry } from '../../../domain/global-word-whitelist-entry';
 import type { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
 
 /**
@@ -19,6 +21,7 @@ export class AnonymizeTextForOrgUseCase {
 
   constructor(
     private readonly repository: AnonymizationWhitelistRepository,
+    private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
@@ -29,9 +32,13 @@ export class AnonymizeTextForOrgUseCase {
 
     try {
       const entries = await this.repository.findByOrgId(command.orgId);
-      const whitelist = entries.map(
-        (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
-      );
+      const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
+      const whitelist = [
+        ...entries.map(
+          (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
+        ),
+        ...globalWords.map(toWhitelistEntry),
+      ];
 
       return await this.anonymizeTextUseCase.execute(
         new AnonymizeTextCommand(command.text, undefined, whitelist),

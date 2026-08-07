@@ -2,10 +2,12 @@ import type { PiiCategory } from './pii-category.enum';
 import type { PiiDetection } from './pii-detection';
 import type { PiiWhitelistEntry } from './pii-whitelist-entry';
 
-type EntriesByCategory = Map<PiiCategory, PiiWhitelistEntry>;
+type EntriesByCategory = Map<PiiCategory, PiiWhitelistEntry[]>;
 
 /**
- * Drops detections that the org whitelist exempts from anonymization.
+ * Drops detections that the whitelist exempts from anonymization. Entries may
+ * repeat a category (org rule plus global words); a detection is exempt as
+ * soon as any entry of its category matches — union semantics.
  * Fail-safe: entries with invalid patterns never exempt anything.
  */
 export function filterWhitelistedDetections(
@@ -15,9 +17,15 @@ export function filterWhitelistedDetections(
   if (entries.length === 0) {
     return detections;
   }
-  const entriesByCategory = new Map(
-    entries.map((entry) => [entry.category, entry]),
-  );
+  const entriesByCategory: EntriesByCategory = new Map();
+  for (const entry of entries) {
+    const existing = entriesByCategory.get(entry.category);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      entriesByCategory.set(entry.category, [entry]);
+    }
+  }
   return detections.filter(
     (detection) => !isExempt(detection, entriesByCategory),
   );
@@ -27,14 +35,14 @@ export function isExempt(
   detection: PiiDetection,
   entriesByCategory: EntriesByCategory,
 ): boolean {
-  const entry = entriesByCategory.get(detection.category);
-  if (!entry) {
+  const entries = entriesByCategory.get(detection.category);
+  if (!entries) {
     return false;
   }
-  if (entry.pattern === null) {
-    return true;
-  }
-  return fullyMatches(entry.pattern, detection.text);
+  return entries.some(
+    (entry) =>
+      entry.pattern === null || fullyMatches(entry.pattern, detection.text),
+  );
 }
 
 export function fullyMatches(pattern: string, value: string): boolean {

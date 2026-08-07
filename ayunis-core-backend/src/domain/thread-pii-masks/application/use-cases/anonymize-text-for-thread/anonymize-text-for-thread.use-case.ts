@@ -6,6 +6,8 @@ import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist
 import type { AnonymizationResult } from 'src/common/anonymization/application/ports/anonymization.port';
 import { GetPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
 import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
+import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
+import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
 import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
@@ -30,6 +32,7 @@ export class AnonymizeTextForThreadUseCase {
   constructor(
     private readonly repository: ThreadPiiMaskRepository,
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
+    private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
   ) {}
 
@@ -45,9 +48,13 @@ export class AnonymizeTextForThreadUseCase {
       const entries = await this.getPiiWhitelistUseCase.execute(
         new GetPiiWhitelistQuery(command.orgId),
       );
-      const whitelist = entries.map(
-        (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
-      );
+      const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
+      const whitelist = [
+        ...entries.map(
+          (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
+        ),
+        ...globalWords.map(toWhitelistEntry),
+      ];
       const existing = await this.repository.findByThreadId(command.threadId);
 
       const result = await this.anonymizeTextUseCase.execute(

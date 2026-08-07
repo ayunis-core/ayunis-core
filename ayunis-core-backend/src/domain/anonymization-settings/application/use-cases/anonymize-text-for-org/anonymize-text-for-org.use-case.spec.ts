@@ -6,6 +6,8 @@ import type { AnonymizeTextUseCase } from 'src/common/anonymization/application/
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist-entry';
 import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/domain/anonymization-whitelist-entry.entity';
+import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
+import type { GetGlobalPiiWhitelistUseCase } from '../get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 
 describe('AnonymizeTextForOrgUseCase', () => {
@@ -13,10 +15,12 @@ describe('AnonymizeTextForOrgUseCase', () => {
   const text = 'Ich bin der Dani aus Marl';
   let useCase: AnonymizeTextForOrgUseCase;
   let findByOrgId: jest.Mock;
+  let globalWhitelistExecute: jest.Mock;
   let anonymizeExecute: jest.Mock;
 
   beforeEach(() => {
     findByOrgId = jest.fn().mockResolvedValue([]);
+    globalWhitelistExecute = jest.fn().mockResolvedValue([]);
     anonymizeExecute = jest.fn().mockResolvedValue({
       originalText: text,
       anonymizedText: 'Ich bin der [PERSON] aus [LOCATION]',
@@ -27,6 +31,9 @@ describe('AnonymizeTextForOrgUseCase', () => {
         findByOrgId,
         replaceForOrg: jest.fn(),
       },
+      {
+        execute: globalWhitelistExecute,
+      } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
@@ -69,6 +76,52 @@ describe('AnonymizeTextForOrgUseCase', () => {
       expect.objectContaining({ text, whitelist: [] }),
     );
     expect(result.anonymizedText).toBe('Ich bin der [PERSON] aus [LOCATION]');
+  });
+
+  it('appends global words to the org whitelist as literal patterns', async () => {
+    findByOrgId.mockResolvedValue([
+      new AnonymizationWhitelistEntry({
+        orgId,
+        category: PiiCategory.PERSON_NAME,
+        pattern: 'dani(el)?',
+      }),
+    ]);
+    globalWhitelistExecute.mockResolvedValue([
+      new GlobalAnonymizationWhitelistWord({
+        category: PiiCategory.PERSON_NAME,
+        word: 'Mitarbeitende',
+        createdByUserId: null,
+      }),
+    ]);
+
+    await useCase.execute(new AnonymizeTextForOrgCommand(text, orgId));
+
+    expect(anonymizeExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whitelist: [
+          new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'dani(el)?'),
+          new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Mitarbeitende'),
+        ],
+      }),
+    );
+  });
+
+  it('passes global words even when the org has no own entries', async () => {
+    globalWhitelistExecute.mockResolvedValue([
+      new GlobalAnonymizationWhitelistWord({
+        category: PiiCategory.PERSON_NAME,
+        word: 'Menschen',
+        createdByUserId: null,
+      }),
+    ]);
+
+    await useCase.execute(new AnonymizeTextForOrgCommand(text, orgId));
+
+    expect(anonymizeExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whitelist: [new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Menschen')],
+      }),
+    );
   });
 
   it('propagates engine failures unchanged for fail-safe handling', async () => {
