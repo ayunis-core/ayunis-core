@@ -5,7 +5,10 @@ import {
 } from '@modelcontextprotocol/client';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
 import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
-import { McpConnectionTimeoutError } from '../../application/mcp.errors';
+import {
+  McpConnectionFailedError,
+  McpConnectionTimeoutError,
+} from '../../application/mcp.errors';
 import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
@@ -327,9 +330,91 @@ describe('McpSdkClientAdapter', () => {
 
       expect((mapped as Error).cause).toBe(abortError);
     });
+  });
+
+  describe('connection failure classification', () => {
+    // Undici wraps errno failures in `TypeError: fetch failed` with the
+    // coded error on `cause` — the shape of incidents #409/#387.
+    const buildFetchFailedError = (code: string, message: string) =>
+      Object.assign(new TypeError('fetch failed'), {
+        cause: Object.assign(new Error(message), { code }),
+      });
+
+    it('maps a DNS failure from an operation to McpConnectionFailedError', async () => {
+      clientMock.listTools.mockRejectedValue(
+        buildFetchFailedError(
+          'EAI_AGAIN',
+          'getaddrinfo EAI_AGAIN core-connect.ayunis.de',
+        ),
+      );
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionFailedError,
+      );
+    });
+
+    it('maps a connection reset during connect to McpConnectionFailedError', async () => {
+      clientMock.connect.mockRejectedValue(
+        buildFetchFailedError('ECONNRESET', 'socket hang up'),
+      );
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionFailedError,
+      );
+    });
+
+    it('keeps the original error on the non-serialized cause', async () => {
+      const transportError = buildFetchFailedError(
+        'ECONNRESET',
+        'socket hang up',
+      );
+      clientMock.listTools.mockRejectedValue(transportError);
+
+      const mapped = await adapter.listTools(config).catch((e: unknown) => e);
+
+      expect((mapped as Error).cause).toBe(transportError);
+    });
+
+    it('passes non-transport operation errors through unchanged', async () => {
+      const protocolError = new Error('Method not found');
+      clientMock.listTools.mockRejectedValue(protocolError);
+
+      await expect(adapter.listTools(config)).rejects.toBe(protocolError);
+    });
+
+    // Timeout errnos outside the SDK's own codes must classify too: their
+    // raw span duplicates are suppressed (AYC-616), so an unclassified
+    // timeout would leave the outage invisible on soft-return paths.
+    it('maps an undici headers timeout to McpConnectionTimeoutError', async () => {
+      clientMock.listTools.mockRejectedValue(
+        buildFetchFailedError(
+          'UND_ERR_HEADERS_TIMEOUT',
+          'Headers Timeout Error',
+        ),
+      );
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
+
+    it('maps an AbortSignal.timeout DOMException to McpConnectionTimeoutError', async () => {
+      clientMock.listTools.mockRejectedValue(
+        new DOMException(
+          'The operation was aborted due to timeout',
+          'TimeoutError',
+        ),
+      );
+
+      await expect(adapter.listTools(config)).rejects.toThrow(
+        McpConnectionTimeoutError,
+      );
+    });
 
     it('maps timeouts on callTool as well', async () => {
-      clientMock.callTool.mockRejectedValue(buildDomAbortError());
+      clientMock.callTool.mockRejectedValue(
+        new DOMException('This operation was aborted', 'AbortError'),
+      );
 
       await expect(
         adapter.callTool(config, { toolName: 'search', parameters: {} }),

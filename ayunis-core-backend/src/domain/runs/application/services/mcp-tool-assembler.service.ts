@@ -9,6 +9,8 @@ import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cas
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { isMcpConnectivityOutage } from 'src/domain/mcp/application/mcp.errors';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 
 type McpCapability = Awaited<
   ReturnType<DiscoverMcpCapabilitiesUseCase['execute']>
@@ -146,6 +148,13 @@ export class McpToolAssemblerService {
                 : 'Unknown error',
           },
         );
+        // The skip is the only place run-time discovery outages surface, and
+        // their raw transport duplicates are suppressed AppSignal-side
+        // (AYC-616) — report the classified failure or the outage is
+        // invisible, often before any tool call runs.
+        if (isMcpConnectivityOutage(result.reason)) {
+          reportUnexpectedError(result.reason);
+        }
         return null;
       })
       .filter((cap): cap is McpCapability => cap !== null);

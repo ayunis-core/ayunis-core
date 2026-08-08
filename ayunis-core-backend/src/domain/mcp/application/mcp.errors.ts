@@ -9,6 +9,7 @@ export enum McpErrorCode {
   MCP_INTEGRATION_ACCESS_DENIED = 'MCP_INTEGRATION_ACCESS_DENIED',
   MCP_INTEGRATION_DISABLED = 'MCP_INTEGRATION_DISABLED',
   MCP_CONNECTION_TIMEOUT = 'MCP_CONNECTION_TIMEOUT',
+  MCP_CONNECTION_FAILED = 'MCP_CONNECTION_FAILED',
   MCP_AUTHENTICATION_FAILED = 'MCP_AUTHENTICATION_FAILED',
   MCP_VALIDATION_FAILED = 'MCP_VALIDATION_FAILED',
   MCP_TOOL_EXECUTION_FAILED = 'MCP_TOOL_EXECUTION_FAILED',
@@ -134,14 +135,15 @@ export class McpIntegrationDisabledError extends McpError {
   }
 }
 
-function redactCredentials(serverUrl: string): string {
+/**
+ * Reduces a server URL to origin + path for user-visible messages:
+ * credentials, query strings, and fragments can all carry tokens for
+ * integrations whose serverUrl is otherwise never exposed.
+ */
+function redactServerUrl(serverUrl: string): string {
   try {
     const url = new URL(serverUrl);
-    if (url.username || url.password) {
-      url.username = '***';
-      url.password = '';
-    }
-    return url.toString();
+    return `${url.origin}${url.pathname}`;
   } catch {
     return serverUrl;
   }
@@ -156,7 +158,7 @@ function redactCredentials(serverUrl: string): string {
 export class McpConnectionTimeoutError extends McpError {
   constructor(serverUrl: string, timeoutMs: number, cause?: unknown) {
     super(
-      `The MCP server at ${redactCredentials(serverUrl)} did not respond ` +
+      `The MCP server at ${redactServerUrl(serverUrl)} did not respond ` +
         `within ${Math.round(timeoutMs / 1000)}s. Please verify the server ` +
         `is running and accessible.`,
       McpErrorCode.MCP_CONNECTION_TIMEOUT,
@@ -166,6 +168,42 @@ export class McpConnectionTimeoutError extends McpError {
       this.cause = cause;
     }
   }
+}
+
+/**
+ * Transport-level connection failure toward an MCP server (DNS, reset,
+ * broken pipe) — the connection sibling of McpConnectionTimeoutError, with
+ * the same user-presentable message contract. Carries a stable code so
+ * outages stay visible in AppSignal after the raw errno duplicates were
+ * suppressed (AYC-616).
+ */
+export class McpConnectionFailedError extends McpError {
+  constructor(serverUrl: string, cause?: unknown) {
+    super(
+      `The MCP server at ${redactServerUrl(serverUrl)} could not be ` +
+        `reached. Please verify the server is running and accessible.`,
+      McpErrorCode.MCP_CONNECTION_FAILED,
+      502,
+    );
+    if (cause !== undefined) {
+      this.cause = cause;
+    }
+  }
+}
+
+/**
+ * The two classified MCP connectivity outages. Soft-handling call sites
+ * (tool execution, run-time capability discovery) must report these to
+ * AppSignal before swallowing them — their raw transport duplicates are
+ * suppressed (AYC-616), so the classified error is the only outage signal.
+ */
+export function isMcpConnectivityOutage(
+  error: unknown,
+): error is McpConnectionFailedError | McpConnectionTimeoutError {
+  return (
+    error instanceof McpConnectionFailedError ||
+    error instanceof McpConnectionTimeoutError
+  );
 }
 
 export class McpAuthenticationFailedError extends McpError {
