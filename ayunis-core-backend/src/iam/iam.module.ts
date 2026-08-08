@@ -37,6 +37,7 @@ import { RateLimitGuard } from 'src/common/guards/rate-limit.guard';
 import { AddonGuard } from './authorization/application/guards/addon.guard';
 import { UsageBasedSubscriptionGuard } from './authorization/application/guards/usage-based-subscription.guard';
 import { AcademyCertificateGuard } from './academy-access/application/guards/academy-certificate.guard';
+import { SsoModule } from './sso/sso.module';
 
 // Feature modules re-exported by IamModule. Listed once and spread into both
 // `imports` and `exports` so the two cannot drift out of sync.
@@ -61,6 +62,7 @@ const IAM_FEATURE_MODULES = [
   AcademyAccessModule,
   PermissionsModule,
   MfaModule,
+  SsoModule,
 ];
 
 // Global guard execution order is declared HERE — explicitly, in array
