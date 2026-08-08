@@ -49,19 +49,29 @@ function isValidQuality(value: string): value is ImageQuality {
 @Injectable()
 export class AzureImageGenerationHandler extends ImageGenerationHandler {
   private readonly logger = new Logger(AzureImageGenerationHandler.name);
-  private client: AzureOpenAI | null = null;
+  // Keyed by deployment: the SDK only prefixes /deployments/{name} when the
+  // client is constructed with `deployment` — for images.edit the body is
+  // multipart FormData by the time buildRequest looks for a model name, so a
+  // deployment-less client sends edits to a URL Azure 404s on. This handler
+  // is a singleton serving every org's model, hence one client per name.
+  private readonly clients = new Map<string, AzureOpenAI>();
 
   constructor(private readonly configService: ConfigService) {
     super();
   }
 
-  private getClient(): AzureOpenAI {
-    this.client ??= new AzureOpenAI({
-      apiKey: this.configService.get('models.azure.apiKey'),
-      endpoint: this.configService.get('models.azure.endpoint'),
-      apiVersion: this.configService.get('models.azure.apiVersion'),
-    });
-    return this.client;
+  private getClient(deploymentName: string): AzureOpenAI {
+    let client = this.clients.get(deploymentName);
+    if (!client) {
+      client = new AzureOpenAI({
+        apiKey: this.configService.get('models.azure.apiKey'),
+        endpoint: this.configService.get('models.azure.endpoint'),
+        apiVersion: this.configService.get('models.azure.apiVersion'),
+        deployment: deploymentName,
+      });
+      this.clients.set(deploymentName, client);
+    }
+    return client;
   }
 
   private validateParams(input: ImageGenerationInput): {
@@ -96,7 +106,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
     });
 
     const { size, quality } = this.validateParams(input);
-    const client = this.getClient();
+    const client = this.getClient(input.model.name);
 
     try {
       const response = input.referenceImages?.length
