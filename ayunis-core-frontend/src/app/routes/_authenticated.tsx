@@ -11,6 +11,7 @@ import {
 import { queryOptions } from '@tanstack/react-query';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
+import { setAppsignalTags, clearAppsignalTags } from '@/shared/lib/appsignal';
 
 const meQueryOptions = () =>
   queryOptions({
@@ -23,12 +24,14 @@ export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context: { queryClient } }) => {
     try {
       const user = await queryClient.fetchQuery(meQueryOptions());
+      setAppsignalTags({ userId: user.id, orgId: user.orgId });
       await queryClient.fetchQuery({
         queryKey: getAppControllerIsCloudQueryKey(),
         queryFn: () => appControllerIsCloud(),
       });
       return { user };
     } catch (error) {
+      clearAppsignalTags();
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {

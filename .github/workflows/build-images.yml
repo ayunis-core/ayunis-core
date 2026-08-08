@@ -103,6 +103,12 @@ jobs:
           platforms: linux/${{ matrix.platform }}
           provenance: false
           labels: ${{ steps.meta.outputs.labels }}
+          # Consumed only by the app Dockerfile: inlined into the frontend
+          # bundle as VITE_APP_REVISION and exported as ENV APP_REVISION, so
+          # both ends report the built commit to AppSignal and the
+          # `sourcemaps` job below uploads maps under the same revision.
+          build-args: |
+            APP_REVISION=${{ github.sha }}
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           # Registry cache rather than type=gha: four images across two
           # platforms export eight mode=max scopes, and the two anonymize layer
@@ -243,3 +249,99 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/ayunis-core/ayunis-infra/dispatches \
             -d "$(jq -nc --arg image "$IMAGE" --arg tag "$TAG" '{event_type:"image-published",client_payload:{image:$image,tag:$tag}}')"
+
+  # Uploads the frontend sourcemaps for this commit to AppSignal (AYC-539).
+  # Vite builds with `sourcemap: 'hidden'`; the image deletes the maps (they
+  # must not be publicly served), so this job rebuilds the frontend and
+  # uploads them out of band. Rollup's content-addressed asset names depend
+  # only on source + lockfile, both pinned to the same commit the image
+  # build uses — and node is pinned to the Dockerfile's version to keep the
+  # toolchain identical — so the names here match the published bundles.
+  #
+  # The frontend client normalizes backtrace paths to `assets/<chunk>.js`
+  # (matchBacktracePaths in src/shared/lib/appsignal.ts), which is exactly
+  # the name each map is uploaded under — one upload serves every
+  # deployment hostname. Revision is the git sha, the same APP_REVISION the
+  # image reports.
+  #
+  # Requires the APPSIGNAL_PUSH_API_KEY secret (the org push key appsignal.cjs
+  # also uses on the hosts). Optional repo variables:
+  #   APPSIGNAL_FRONTEND_APP_NAME     — AppSignal app to upload to
+  #                                     (default: ayunis-core-frontend)
+  #   APPSIGNAL_FRONTEND_ENVIRONMENTS — space-separated environments
+  #                                     (default: staging production)
+  # Skips with a notice instead of failing while the secret is not set up.
+  sourcemaps:
+    runs-on: ubuntu-latest
+    env:
+      APPSIGNAL_PUSH_API_KEY: ${{ secrets.APPSIGNAL_PUSH_API_KEY }}
+      APPSIGNAL_FRONTEND_APP_NAME: ${{ vars.APPSIGNAL_FRONTEND_APP_NAME || 'ayunis-core-frontend' }}
+      APPSIGNAL_FRONTEND_ENVIRONMENTS: ${{ vars.APPSIGNAL_FRONTEND_ENVIRONMENTS || 'staging production' }}
+    steps:
+      - name: Check for push API key
+        id: gate
+        run: |
+          if [ -z "$APPSIGNAL_PUSH_API_KEY" ]; then
+            echo "::notice::APPSIGNAL_PUSH_API_KEY is not configured - skipping sourcemap upload"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        if: steps.gate.outputs.enabled == 'true'
+
+      - name: Install pnpm
+        if: steps.gate.outputs.enabled == 'true'
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v6.3.1
+
+      - name: Setup Node.js
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          # Same node as the image build (root Dockerfile) so the toolchain
+          # producing the hashed asset names is identical.
+          node-version: '24.16.0'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: ayunis-core-frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend with sourcemaps
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: ayunis-core-frontend
+        env:
+          VITE_APP_REVISION: ${{ github.sha }}
+        run: pnpm run build
+
+      - name: Upload sourcemaps to AppSignal
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: ayunis-core-frontend/dist
+        env:
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          maps=$(find . -name '*.js.map' | sort)
+          if [ -z "$maps" ]; then
+            echo "::error::no sourcemaps found in dist - is build.sourcemap disabled?"
+            exit 1
+          fi
+          count=0
+          for map in $maps; do
+            asset="${map#./}"
+            asset="${asset%.map}"
+            for environment in $APPSIGNAL_FRONTEND_ENVIRONMENTS; do
+              echo "Uploading $map as $asset (env: $environment)"
+              curl -fsS -X POST \
+                -F "name[]=${asset}" \
+                -F "revision=${REVISION}" \
+                -F "file=@${map}" \
+                "https://appsignal.com/api/sourcemaps?push_api_key=${APPSIGNAL_PUSH_API_KEY}&app_name=${APPSIGNAL_FRONTEND_APP_NAME}&environment=${environment}" \
+                > /dev/null
+              count=$((count + 1))
+            done
+          done
+          echo "Uploaded $count sourcemap(s) for revision $REVISION"

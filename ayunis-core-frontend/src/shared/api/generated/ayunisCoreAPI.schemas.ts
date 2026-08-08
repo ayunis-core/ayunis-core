@@ -4794,6 +4794,10 @@ export const MeResponseDtoSystemRole = {
 } as const;
 
 export interface MeResponseDto {
+  /** User id */
+  id: string;
+  /** Organization id */
+  orgId: string;
   /** User email address */
   email: string;
   /** User role */

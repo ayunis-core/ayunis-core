@@ -52,6 +52,18 @@ export class MfaLoginConfirmResponseDto {
 
 export class MeResponseDto {
   @ApiProperty({
+    description: 'User id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Organization id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  orgId: string;
+
+  @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',
   })
