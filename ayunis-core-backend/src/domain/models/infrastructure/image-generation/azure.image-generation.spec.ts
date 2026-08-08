@@ -8,7 +8,7 @@ import {
 import { ImageGenerationFailedError } from '../../application/models.errors';
 import { ImageGenerationModel } from '../../domain/models/image-generation.model';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
-import { APIError } from 'openai';
+import { APIError, AzureOpenAI } from 'openai';
 
 // Mock the AzureOpenAI class
 const mockImagesGenerate = jest.fn();
@@ -22,6 +22,8 @@ jest.mock('openai', () => {
     })),
   };
 });
+
+const mockAzureOpenAICtor = jest.mocked(AzureOpenAI);
 
 describe('AzureImageGenerationHandler', () => {
   let handler: AzureImageGenerationHandler;
@@ -369,6 +371,77 @@ describe('AzureImageGenerationHandler', () => {
       const result = await handler.generate(createInput());
 
       expect(result.usage).toBeUndefined();
+    });
+  });
+
+  // The SDK only routes requests to /deployments/{name}/… when the client is
+  // constructed with `deployment`: for images.edit the body is multipart
+  // FormData by the time AzureOpenAI.buildRequest looks for a model name, so
+  // a deployment-less client sends edits to a URL Azure 404s on.
+  describe('client construction', () => {
+    const stubGenerate = () => {
+      mockImagesGenerate.mockResolvedValue({
+        data: [{ b64_json: Buffer.from('img').toString('base64') }],
+      });
+    };
+
+    it('should construct the client with the model name as deployment', async () => {
+      stubGenerate();
+
+      await handler.generate(createInput());
+
+      expect(mockAzureOpenAICtor).toHaveBeenCalledTimes(1);
+      expect(mockAzureOpenAICtor).toHaveBeenCalledWith(
+        expect.objectContaining({ deployment: 'gpt-image-1' }),
+      );
+    });
+
+    it('should construct the client with the deployment for reference-image edits', async () => {
+      mockImagesEdit.mockResolvedValue({
+        data: [{ b64_json: Buffer.from('img').toString('base64') }],
+      });
+
+      await handler.generate(
+        createInput({
+          referenceImages: [
+            { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+          ],
+        }),
+      );
+
+      expect(mockAzureOpenAICtor).toHaveBeenCalledTimes(1);
+      expect(mockAzureOpenAICtor).toHaveBeenCalledWith(
+        expect.objectContaining({ deployment: 'gpt-image-1' }),
+      );
+    });
+
+    it('should reuse the cached client for the same model', async () => {
+      stubGenerate();
+
+      await handler.generate(createInput());
+      await handler.generate(createInput());
+
+      expect(mockAzureOpenAICtor).toHaveBeenCalledTimes(1);
+    });
+
+    it('should construct a separate client per model deployment', async () => {
+      stubGenerate();
+      const otherModel = new ImageGenerationModel({
+        name: 'gpt-image-1-mini',
+        provider: ModelProvider.AZURE,
+        displayName: 'GPT Image 1 Mini',
+        isArchived: false,
+      });
+
+      await handler.generate(createInput());
+      await handler.generate(
+        new ImageGenerationInput({ model: otherModel, prompt: 'a sunset' }),
+      );
+
+      expect(mockAzureOpenAICtor).toHaveBeenCalledTimes(2);
+      expect(mockAzureOpenAICtor).toHaveBeenLastCalledWith(
+        expect.objectContaining({ deployment: 'gpt-image-1-mini' }),
+      );
     });
   });
 });
