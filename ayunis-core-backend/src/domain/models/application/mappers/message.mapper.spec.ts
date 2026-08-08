@@ -39,27 +39,58 @@ describe('toInferenceMessages', () => {
     expect(messages[0].content[0]).toEqual({ type: 'text', text: 'hello' });
   });
 
-  it('resolves image content to inline base64 data', async () => {
+  it('resolves image content to inline base64 data preceded by its ref label', async () => {
     convertImageToBase64.mockResolvedValue({
       base64: 'AAAA',
       contentType: 'image/png',
     });
+    const message = new UserMessage({
+      threadId: randomUUID(),
+      content: [new ImageMessageContent(0, 'image/png')],
+    });
     const messages = await toInferenceMessages(
-      [
-        new UserMessage({
-          threadId: randomUUID(),
-          content: [new ImageMessageContent(0, 'image/png')],
-        }),
-      ],
+      [message],
       'org-1',
       imageContentService,
     );
     expect(convertImageToBase64).toHaveBeenCalledTimes(1);
-    expect(messages[0].content[0]).toEqual<ImageContent>({
-      type: 'image',
-      data: 'AAAA',
-      mediaType: 'image/png',
+    expect(messages[0].content).toEqual([
+      { type: 'text', text: `[image ref: ${message.id}:0]` },
+      {
+        type: 'image',
+        data: 'AAAA',
+        mediaType: 'image/png',
+      } satisfies ImageContent,
+    ]);
+  });
+
+  it('labels every image of a multi-image message with its own ref', async () => {
+    convertImageToBase64.mockResolvedValue({
+      base64: 'AAAA',
+      contentType: 'image/png',
     });
+    const message = new UserMessage({
+      threadId: randomUUID(),
+      content: [
+        new TextMessageContent('recreate these'),
+        new ImageMessageContent(0, 'image/png'),
+        new ImageMessageContent(1, 'image/png'),
+      ],
+    });
+    const messages = await toInferenceMessages(
+      [message],
+      'org-1',
+      imageContentService,
+    );
+    expect(
+      messages[0].content.map((c) => (c.type === 'text' ? c.text : c.type)),
+    ).toEqual([
+      'recreate these',
+      `[image ref: ${message.id}:0]`,
+      'image',
+      `[image ref: ${message.id}:1]`,
+      'image',
+    ]);
   });
 
   it('maps an assistant message with thinking, text and tool use', async () => {

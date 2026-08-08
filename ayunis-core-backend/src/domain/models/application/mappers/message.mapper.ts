@@ -44,11 +44,13 @@ async function toInferenceMessage(
       threadId: message.threadId,
       messageId: message.id,
     };
-    const content = await Promise.all(
-      message.content.map((c) =>
-        toUserContent(c, context, imageContentService),
-      ),
-    );
+    const content = (
+      await Promise.all(
+        message.content.map((c) =>
+          toUserContent(c, context, imageContentService),
+        ),
+      )
+    ).flat();
     return { role: 'user', content };
   }
   if (message instanceof AssistantMessage) {
@@ -81,14 +83,23 @@ async function toUserContent(
   content: TextMessageContent | ImageMessageContent,
   context: { orgId: string; threadId: string; messageId: string },
   imageContentService: ImageContentService,
-): Promise<InferenceMessageContent> {
+): Promise<InferenceMessageContent[]> {
   if (content instanceof TextMessageContent) {
-    return { type: 'text', text: content.text };
+    return [{ type: 'text', text: content.text }];
   }
   if (content instanceof ImageMessageContent) {
     const { base64, contentType } =
       await imageContentService.convertImageToBase64(content, context);
-    return { type: 'image', data: base64, mediaType: contentType };
+    // The label gives the model a stable handle to pass this image to the
+    // generate_image tool (reference_uploaded_image_ids); the neutral image
+    // block itself carries no identifier.
+    return [
+      {
+        type: 'text',
+        text: `[image ref: ${context.messageId}:${content.index}]`,
+      },
+      { type: 'image', data: base64, mediaType: contentType },
+    ];
   }
   throw new InferenceFailedError(
     'Unsupported user content type for inference mapping',
