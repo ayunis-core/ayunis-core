@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
 import { DownloadReferenceImagesUseCase } from './download-reference-images.use-case';
+import type { UploadedImageRef } from './download-reference-images.query';
 import { DownloadReferenceImagesQuery } from './download-reference-images.query';
 import type { ThreadsRepository } from '../../ports/threads.repository';
 import type { GeneratedImagesRepository } from '../../ports/generated-images.repository';
@@ -11,7 +12,9 @@ import type { ContextService } from 'src/common/context/services/context.service
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   GeneratedImageNotFoundError,
+  MessageImageNotFoundError,
   ThreadNotFoundError,
+  UnsupportedImageContentTypeError,
 } from '../../threads.errors';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
@@ -75,6 +78,10 @@ describe('DownloadReferenceImagesUseCase', () => {
     });
   }
 
+  function refTo(message: UserMessage, index: number): UploadedImageRef {
+    return { messageId: message.id, index };
+  }
+
   function stubDownloadWithPathEcho(): void {
     downloadObjectUseCase.execute.mockImplementation((command) =>
       Promise.resolve(Readable.from([Buffer.from(command.objectName)])),
@@ -83,14 +90,14 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   function query(
     overrides: Partial<{
-      includeUploadedImages: boolean;
+      uploadedImageRefs: UploadedImageRef[];
       generatedImageIds: UUID[];
     }> = {},
   ): DownloadReferenceImagesQuery {
     return new DownloadReferenceImagesQuery({
       threadId,
       userId,
-      includeUploadedImages: overrides.includeUploadedImages ?? false,
+      uploadedImageRefs: overrides.uploadedImageRefs ?? [],
       generatedImageIds: overrides.generatedImageIds ?? [],
     });
   }
@@ -150,13 +157,13 @@ describe('DownloadReferenceImagesUseCase', () => {
     ).rejects.toThrow(GeneratedImageNotFoundError);
   });
 
-  it('should download uploaded images from the thread when requested', async () => {
+  it('should download the referenced uploaded images from their storage paths', async () => {
     const message = buildImageMessage(2, new Date('2026-08-01T10:00:00Z'));
     threadsRepository.findOne.mockResolvedValue(buildThread([message]));
     stubDownloadWithPathEcho();
 
     const result = await useCase.execute(
-      query({ includeUploadedImages: true }),
+      query({ uploadedImageRefs: [refTo(message, 0), refTo(message, 1)] }),
     );
 
     expect(result).toEqual([
@@ -171,23 +178,41 @@ describe('DownloadReferenceImagesUseCase', () => {
     ]);
   });
 
-  it('should return uploaded images of the newest message first', async () => {
+  it('should return uploaded images in the order they were referenced', async () => {
     const older = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
     const newer = buildImageMessage(1, new Date('2026-08-02T10:00:00Z'));
     threadsRepository.findOne.mockResolvedValue(buildThread([older, newer]));
     stubDownloadWithPathEcho();
 
     const result = await useCase.execute(
-      query({ includeUploadedImages: true }),
+      query({ uploadedImageRefs: [refTo(older, 0), refTo(newer, 0)] }),
     );
 
     expect(result.map((image) => image.data.toString())).toEqual([
-      `${orgId}/${threadId}/${newer.id}/0.png`,
       `${orgId}/${threadId}/${older.id}/0.png`,
+      `${orgId}/${threadId}/${newer.id}/0.png`,
     ]);
   });
 
-  it('should not download uploaded images when not requested', async () => {
+  it('should only download the referenced image, not other thread uploads', async () => {
+    const referenced = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
+    const other = buildImageMessage(1, new Date('2026-08-02T10:00:00Z'));
+    threadsRepository.findOne.mockResolvedValue(
+      buildThread([referenced, other]),
+    );
+    stubDownloadWithPathEcho();
+
+    const result = await useCase.execute(
+      query({ uploadedImageRefs: [refTo(referenced, 0)] }),
+    );
+
+    expect(result.map((image) => image.data.toString())).toEqual([
+      `${orgId}/${threadId}/${referenced.id}/0.png`,
+    ]);
+    expect(downloadObjectUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not download uploaded images when none are referenced', async () => {
     const message = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
     threadsRepository.findOne.mockResolvedValue(buildThread([message]));
 
@@ -197,28 +222,37 @@ describe('DownloadReferenceImagesUseCase', () => {
     expect(downloadObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should skip uploaded images whose type the image-edit API does not accept', async () => {
+  it('should throw MessageImageNotFoundError for a ref to an unknown message', async () => {
+    threadsRepository.findOne.mockResolvedValue(buildThread());
+
+    await expect(
+      useCase.execute(
+        query({ uploadedImageRefs: [{ messageId: randomUUID(), index: 0 }] }),
+      ),
+    ).rejects.toThrow(MessageImageNotFoundError);
+  });
+
+  it('should throw MessageImageNotFoundError for an out-of-range image index', async () => {
+    const message = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
+    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+
+    await expect(
+      useCase.execute(query({ uploadedImageRefs: [refTo(message, 3)] })),
+    ).rejects.toThrow(MessageImageNotFoundError);
+  });
+
+  it('should throw UnsupportedImageContentTypeError for a ref to an image type the edit API rejects', async () => {
     const message = new UserMessage({
       threadId,
       createdAt: new Date('2026-08-01T10:00:00Z'),
-      content: [
-        new ImageMessageContent(0, 'image/gif'),
-        new ImageMessageContent(1, 'image/webp'),
-      ],
+      content: [new ImageMessageContent(0, 'image/gif')],
     });
     threadsRepository.findOne.mockResolvedValue(buildThread([message]));
-    stubDownloadWithPathEcho();
 
-    const result = await useCase.execute(
-      query({ includeUploadedImages: true }),
-    );
-
-    expect(result).toEqual([
-      {
-        data: Buffer.from(`${orgId}/${threadId}/${message.id}/1.webp`),
-        contentType: 'image/webp',
-      },
-    ]);
+    await expect(
+      useCase.execute(query({ uploadedImageRefs: [refTo(message, 0)] })),
+    ).rejects.toThrow(UnsupportedImageContentTypeError);
+    expect(downloadObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should skip images larger than the 10 MB reference limit', async () => {
@@ -230,7 +264,7 @@ describe('DownloadReferenceImagesUseCase', () => {
       .mockResolvedValueOnce(Readable.from([Buffer.from('small-image')]));
 
     const result = await useCase.execute(
-      query({ includeUploadedImages: true }),
+      query({ uploadedImageRefs: [refTo(message, 0), refTo(message, 1)] }),
     );
 
     expect(result).toEqual([
@@ -243,6 +277,11 @@ describe('DownloadReferenceImagesUseCase', () => {
       buildImageMessage(4, new Date(`2026-08-0${i + 1}T10:00:00Z`)),
     );
     threadsRepository.findOne.mockResolvedValue(buildThread(messages));
+    const uploadedImageRefs = messages.flatMap((message) =>
+      message.content
+        .filter((c) => c instanceof ImageMessageContent)
+        .map((c) => refTo(message, c.index)),
+    );
     const generatedIds = [randomUUID(), randomUUID()] as UUID[];
     generatedImagesRepository.findByIdAndThreadId.mockImplementation((id) =>
       Promise.resolve(
@@ -260,7 +299,7 @@ describe('DownloadReferenceImagesUseCase', () => {
     stubDownloadWithPathEcho();
 
     const result = await useCase.execute(
-      query({ includeUploadedImages: true, generatedImageIds: generatedIds }),
+      query({ uploadedImageRefs, generatedImageIds: generatedIds }),
     );
 
     expect(result).toHaveLength(16);

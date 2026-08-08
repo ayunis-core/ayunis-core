@@ -53,6 +53,7 @@ describe('RuntimeHistoryMaterializer', () => {
         role: 'user',
         content: [
           { type: 'text', text: 'new question' },
+          { type: 'text', text: `[image ref: ${retained.id}:0]` },
           {
             type: 'image',
             data: 'retained-image',

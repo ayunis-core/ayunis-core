@@ -14,15 +14,26 @@ import { SaveGeneratedImageUseCase } from 'src/domain/threads/application/use-ca
 import { SaveGeneratedImageCommand } from 'src/domain/threads/application/use-cases/save-generated-image/save-generated-image.command';
 import { DownloadReferenceImagesUseCase } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.use-case';
 import type { ReferenceImageDownload } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.use-case';
-import { DownloadReferenceImagesQuery } from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.query';
+import {
+  DownloadReferenceImagesQuery,
+  UploadedImageRef,
+} from 'src/domain/threads/application/use-cases/download-reference-images/download-reference-images.query';
 import { CollectUsageAsyncService } from 'src/domain/usage/application/services/collect-usage-async.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { GeneratedImageNotFoundError } from 'src/domain/threads/application/threads.errors';
+import {
+  GeneratedImageNotFoundError,
+  MessageImageNotFoundError,
+  UnsupportedImageContentTypeError,
+} from 'src/domain/threads/application/threads.errors';
 import { PermittedImageGenerationModel } from 'src/domain/models/domain/permitted-model.entity';
+
+// Provider limit for images.edit; both ref arrays are schema-capped at 16
+// individually, so only their combination can exceed it.
+const MAX_COMBINED_REFERENCE_IMAGES = 16;
 
 type GenerateImageResult = Awaited<ReturnType<GenerateImageUseCase['execute']>>;
 type ValidatedGenerateImageInput = ReturnType<
@@ -111,11 +122,24 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     userId: UUID,
     toolName: string,
   ): Promise<ReferenceImageDownload[] | undefined> {
-    const includeUploadedImages = input.use_uploaded_images ?? false;
-    const generatedImageIds = (input.reference_generated_image_ids ??
-      []) as UUID[];
-    if (!includeUploadedImages && generatedImageIds.length === 0) {
+    const uploadedImageRefs = this.parseUploadedImageRefs(
+      input.reference_uploaded_image_ids ?? [],
+    );
+    const generatedImageIds = [
+      ...new Set(input.reference_generated_image_ids ?? []),
+    ] as UUID[];
+    if (uploadedImageRefs.length === 0 && generatedImageIds.length === 0) {
       return undefined;
+    }
+    if (
+      uploadedImageRefs.length + generatedImageIds.length >
+      MAX_COMBINED_REFERENCE_IMAGES
+    ) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `At most ${MAX_COMBINED_REFERENCE_IMAGES} reference images are allowed per generation across uploaded and generated references. Retry with fewer references.`,
+        exposeToLLM: true,
+      });
     }
     let images: ReferenceImageDownload[];
     try {
@@ -123,7 +147,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         new DownloadReferenceImagesQuery({
           threadId: context.threadId,
           userId,
-          includeUploadedImages,
+          uploadedImageRefs,
           generatedImageIds,
         }),
       );
@@ -143,6 +167,14 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     return images;
   }
 
+  // The '<uuid>:<index>' shape is guaranteed by the tool schema's pattern.
+  private parseUploadedImageRefs(refs: string[]): UploadedImageRef[] {
+    return [...new Set(refs)].map((ref) => {
+      const [messageId, index] = ref.split(':');
+      return { messageId: messageId as UUID, index: Number(index) };
+    });
+  }
+
   private toReferenceResolutionError(
     error: unknown,
     toolName: string,
@@ -151,6 +183,20 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
       return new ToolExecutionFailedError({
         toolName,
         message: `${error.message}. Only image IDs previously returned by this tool in this conversation can be used as references.`,
+        exposeToLLM: true,
+      });
+    }
+    if (error instanceof MessageImageNotFoundError) {
+      return new ToolExecutionFailedError({
+        toolName,
+        message: `${error.message}. Only refs from '[image ref: …]' labels in this conversation can be used as uploaded-image references.`,
+        exposeToLLM: true,
+      });
+    }
+    if (error instanceof UnsupportedImageContentTypeError) {
+      return new ToolExecutionFailedError({
+        toolName,
+        message: `${error.message}. References must be PNG, JPEG or WebP. Retry without that reference or ask the user for a supported image.`,
         exposeToLLM: true,
       });
     }
