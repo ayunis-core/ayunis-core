@@ -9,12 +9,17 @@ import { ImageMessageContent } from 'src/domain/messages/domain/message-contents
 import type { Thread } from '../../../domain/thread.entity';
 import {
   GeneratedImageNotFoundError,
+  MessageImageNotFoundError,
   ThreadNotFoundError,
   UnexpecteThreadError,
+  UnsupportedImageContentTypeError,
 } from '../../threads.errors';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GeneratedImagesRepository } from '../../ports/generated-images.repository';
-import { DownloadReferenceImagesQuery } from './download-reference-images.query';
+import {
+  DownloadReferenceImagesQuery,
+  UploadedImageRef,
+} from './download-reference-images.query';
 
 export interface ReferenceImageDownload {
   data: Buffer;
@@ -46,7 +51,7 @@ export class DownloadReferenceImagesUseCase {
   ): Promise<ReferenceImageDownload[]> {
     this.logger.log('Downloading reference images', {
       threadId: query.threadId,
-      includeUploadedImages: query.includeUploadedImages,
+      uploadedImageCount: query.uploadedImageRefs.length,
       generatedImageCount: query.generatedImageIds.length,
     });
 
@@ -64,13 +69,13 @@ export class DownloadReferenceImagesUseCase {
     }
 
     const generated = await this.downloadGeneratedImages(query);
-    if (!query.includeUploadedImages) {
-      return generated;
-    }
     const uploaded = await this.downloadUploadedImages(
       thread,
       orgId,
-      MAX_REFERENCE_IMAGES - generated.length,
+      query.uploadedImageRefs.slice(
+        0,
+        Math.max(0, MAX_REFERENCE_IMAGES - generated.length),
+      ),
     );
     return [...generated, ...uploaded];
   }
@@ -98,36 +103,43 @@ export class DownloadReferenceImagesUseCase {
     return images;
   }
 
-  // Newest messages first: the latest upload is the most likely reference.
   private async downloadUploadedImages(
     thread: Thread,
     orgId: string,
-    limit: number,
+    refs: UploadedImageRef[],
   ): Promise<ReferenceImageDownload[]> {
     const images: ReferenceImageDownload[] = [];
-    for (const message of [...thread.messages].reverse()) {
-      for (const content of message.content) {
-        if (images.length >= limit) {
-          return images;
-        }
-        if (
-          !(content instanceof ImageMessageContent) ||
-          !REFERENCE_IMAGE_CONTENT_TYPES.includes(content.contentType)
-        ) {
-          continue;
-        }
-        const storagePath = content.getStoragePath(
-          orgId,
-          thread.id,
-          message.id,
-        );
-        const data = await this.download(storagePath);
-        if (this.withinSizeLimit(data, storagePath)) {
-          images.push({ data, contentType: content.contentType });
-        }
+    for (const ref of refs) {
+      const content = this.findUploadedImage(thread, ref);
+      if (!REFERENCE_IMAGE_CONTENT_TYPES.includes(content.contentType)) {
+        throw new UnsupportedImageContentTypeError(content.contentType);
+      }
+      const storagePath = content.getStoragePath(
+        orgId,
+        thread.id,
+        ref.messageId,
+      );
+      const data = await this.download(storagePath);
+      if (this.withinSizeLimit(data, storagePath)) {
+        images.push({ data, contentType: content.contentType });
       }
     }
     return images;
+  }
+
+  private findUploadedImage(
+    thread: Thread,
+    ref: UploadedImageRef,
+  ): ImageMessageContent {
+    const message = thread.messages.find((m) => m.id === ref.messageId);
+    const content = message?.content.find(
+      (c): c is ImageMessageContent =>
+        c instanceof ImageMessageContent && c.index === ref.index,
+    );
+    if (!content) {
+      throw new MessageImageNotFoundError(ref.messageId, ref.index);
+    }
+    return content;
   }
 
   private async download(objectName: string): Promise<Buffer> {

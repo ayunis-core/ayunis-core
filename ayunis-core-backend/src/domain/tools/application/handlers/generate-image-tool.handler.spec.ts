@@ -21,7 +21,9 @@ import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { ImageGenerationFailedError } from 'src/domain/models/application/models.errors';
 import {
   GeneratedImageNotFoundError,
+  MessageImageNotFoundError,
   UnexpecteThreadError,
+  UnsupportedImageContentTypeError,
 } from 'src/domain/threads/application/threads.errors';
 
 describe('GenerateImageToolHandler', () => {
@@ -418,8 +420,9 @@ describe('GenerateImageToolHandler', () => {
     expect(command.referenceImages).toBeUndefined();
   });
 
-  it('should pass uploaded thread images as references when requested', async () => {
+  it('should pass the referenced uploaded images to the download query', async () => {
     setupHappyPath();
+    const messageId = randomUUID();
     const reference = {
       data: Buffer.from('uploaded-scan'),
       contentType: 'image/png',
@@ -430,7 +433,7 @@ describe('GenerateImageToolHandler', () => {
       tool: new GenerateImageTool(),
       input: {
         prompt: 'Recreate this scan as a clean diagram',
-        use_uploaded_images: true,
+        reference_uploaded_image_ids: [`${messageId}:0`, `${messageId}:2`],
       },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
@@ -438,11 +441,34 @@ describe('GenerateImageToolHandler', () => {
     const query = mockDownloadReferenceImages.execute.mock.calls[0][0];
     expect(query.threadId).toBe(mockThreadId);
     expect(query.userId).toBe(mockUserId);
-    expect(query.includeUploadedImages).toBe(true);
+    expect(query.uploadedImageRefs).toEqual([
+      { messageId, index: 0 },
+      { messageId, index: 2 },
+    ]);
     expect(query.generatedImageIds).toEqual([]);
 
     const command = mockGenerateImage.execute.mock.calls[0][0];
     expect(command.referenceImages).toEqual([reference]);
+  });
+
+  it('should collapse duplicate uploaded-image refs before downloading', async () => {
+    setupHappyPath();
+    const messageId = randomUUID();
+    mockDownloadReferenceImages.execute.mockResolvedValue([
+      { data: Buffer.from('uploaded-scan'), contentType: 'image/png' },
+    ]);
+
+    await handler.execute({
+      tool: new GenerateImageTool(),
+      input: {
+        prompt: 'Recreate this scan',
+        reference_uploaded_image_ids: [`${messageId}:0`, `${messageId}:0`],
+      },
+      context: { orgId: mockOrgId, threadId: mockThreadId },
+    });
+
+    const query = mockDownloadReferenceImages.execute.mock.calls[0][0];
+    expect(query.uploadedImageRefs).toEqual([{ messageId, index: 0 }]);
   });
 
   it('should pass previously generated images as references by ID', async () => {
@@ -464,7 +490,7 @@ describe('GenerateImageToolHandler', () => {
     });
 
     const query = mockDownloadReferenceImages.execute.mock.calls[0][0];
-    expect(query.includeUploadedImages).toBe(false);
+    expect(query.uploadedImageRefs).toEqual([]);
     expect(query.generatedImageIds).toEqual([generatedId]);
 
     const command = mockGenerateImage.execute.mock.calls[0][0];
@@ -512,7 +538,10 @@ describe('GenerateImageToolHandler', () => {
     try {
       await handler.execute({
         tool: new GenerateImageTool(),
-        input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+        input: {
+          prompt: 'Recreate this scan',
+          reference_uploaded_image_ids: [`${randomUUID()}:0`],
+        },
         context: { orgId: mockOrgId, threadId: mockThreadId },
       });
     } catch (error) {
@@ -537,7 +566,10 @@ describe('GenerateImageToolHandler', () => {
     try {
       await handler.execute({
         tool: new GenerateImageTool(),
-        input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+        input: {
+          prompt: 'Recreate this scan',
+          reference_uploaded_image_ids: [`${randomUUID()}:0`],
+        },
         context: { orgId: mockOrgId, threadId: mockThreadId },
       });
     } catch (error) {
@@ -560,7 +592,10 @@ describe('GenerateImageToolHandler', () => {
 
     await handler.execute({
       tool: new GenerateImageTool(),
-      input: { prompt: 'Recreate this scan', use_uploaded_images: true },
+      input: {
+        prompt: 'Recreate this scan',
+        reference_uploaded_image_ids: [`${randomUUID()}:0`],
+      },
       context: { orgId: mockOrgId, threadId: mockThreadId },
     });
 
@@ -596,6 +631,133 @@ describe('GenerateImageToolHandler', () => {
         context: { orgId: mockOrgId, threadId: mockThreadId },
       }),
     ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it.each([
+    ['not-a-ref'],
+    [`${randomUUID()}`],
+    [`${randomUUID()}:`],
+    [`${randomUUID()}:one`],
+  ])(
+    'should reject the malformed uploaded-image ref %s',
+    async (malformedRef) => {
+      await expect(
+        handler.execute({
+          tool: new GenerateImageTool(),
+          input: {
+            prompt: 'Recreate this scan',
+            reference_uploaded_image_ids: [malformedRef],
+          },
+          context: { orgId: mockOrgId, threadId: mockThreadId },
+        }),
+      ).rejects.toThrow(ToolExecutionFailedError);
+    },
+  );
+
+  it('should reject more than 16 uploaded image references', async () => {
+    await expect(
+      handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'A collage',
+          reference_uploaded_image_ids: Array.from(
+            { length: 17 },
+            () => `${randomUUID()}:0`,
+          ),
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      }),
+    ).rejects.toThrow(ToolExecutionFailedError);
+  });
+
+  it('should expose a combined reference count above 16 without downloading or consuming quota', async () => {
+    setupHappyPath();
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'A collage',
+          reference_uploaded_image_ids: Array.from(
+            { length: 10 },
+            () => `${randomUUID()}:0`,
+          ),
+          reference_generated_image_ids: Array.from({ length: 7 }, () =>
+            randomUUID(),
+          ),
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain('16');
+    expect(mockDownloadReferenceImages.execute).not.toHaveBeenCalled();
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
+  });
+
+  it('should expose an unknown uploaded-image ref to the LLM so it can correct itself', async () => {
+    setupHappyPath();
+    const messageId = randomUUID();
+    mockDownloadReferenceImages.execute.mockRejectedValue(
+      new MessageImageNotFoundError(messageId, 0),
+    );
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'Recreate this scan',
+          reference_uploaded_image_ids: [`${messageId}:0`],
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain(messageId);
+    expect(toolError.message).toContain('[image ref:');
+    expect(mockGenerateImage.execute).not.toHaveBeenCalled();
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
+  });
+
+  it('should expose an unsupported reference content type to the LLM', async () => {
+    setupHappyPath();
+    mockDownloadReferenceImages.execute.mockRejectedValue(
+      new UnsupportedImageContentTypeError('image/gif'),
+    );
+
+    let caught: unknown;
+    try {
+      await handler.execute({
+        tool: new GenerateImageTool(),
+        input: {
+          prompt: 'Recreate this scan',
+          reference_uploaded_image_ids: [`${randomUUID()}:0`],
+        },
+        context: { orgId: mockOrgId, threadId: mockThreadId },
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ToolExecutionFailedError);
+    const toolError = caught as ToolExecutionFailedError;
+    expect(toolError.exposeToLLM).toBe(true);
+    expect(toolError.message).toContain('image/gif');
+    expect(toolError.message).toMatch(/PNG, JPEG or WebP/);
+    expect(mockGenerateImage.execute).not.toHaveBeenCalled();
+    expect(mockCheckQuota.execute).not.toHaveBeenCalled();
   });
 
   it('should check the FAIR_USE_IMAGES quota for the current user', async () => {
