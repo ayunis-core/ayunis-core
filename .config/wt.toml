@@ -12,9 +12,12 @@ for f in ayunis-core-backend/.env \
 done
 '''
 
-[post-start]
+[[post-start]]
 # Single root install: this is a pnpm workspace (workspace:* deps), so `npm ci`
 # fails with EUNSUPPORTEDPROTOCOL. One `pnpm install` links every workspace
 # (backend, frontend, and packages/*) and honors onlyBuiltDependencies.
 install-node = "pnpm install --frozen-lockfile"
+
+[[post-start]]
+build-node = "cd ayunis-core-backend && pnpm run build:deps"
 # install-python = "cd ayunis-core-anonymize && uv sync"  # uncomment if you work on anonymize
