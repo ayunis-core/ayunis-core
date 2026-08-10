@@ -8,7 +8,10 @@ import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catal
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
-import { ModelNotFoundByIdError } from '../../models.errors';
+import {
+  ModelAlreadyExistsError,
+  ModelNotFoundByIdError,
+} from '../../models.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
@@ -183,6 +186,51 @@ describe('UpdateLanguageModelUseCase', () => {
 
       // Assert
       expect(callOrder).toEqual(['save', 'clearDefaults']);
+    });
+
+    it('should reject a name and provider used by another model', async () => {
+      const conflictingModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const conflictingModel = createMockLanguageModel(
+        conflictingModelId,
+        false,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne
+        .mockResolvedValueOnce(existingModel)
+        .mockResolvedValueOnce(conflictingModel);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        ModelAlreadyExistsError,
+      );
+      expect(modelsRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should allow an unchanged name and provider', async () => {
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      await expect(useCase.execute(command)).resolves.toEqual(
+        expect.objectContaining({ id: mockModelId }),
+      );
+    });
+
+    it('should allow a unique name and provider', async () => {
+      const existingModel = createMockLanguageModel(mockModelId, false);
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne
+        .mockResolvedValueOnce(existingModel)
+        .mockResolvedValueOnce(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      await expect(useCase.execute(command)).resolves.toEqual(
+        expect.objectContaining({ id: mockModelId }),
+      );
     });
 
     it('should throw ModelNotFoundByIdError when model does not exist', async () => {
