@@ -17,7 +17,10 @@ export interface CreditLimitInfo {
   creditsUsed: number;
 }
 
-export function useUserCreditLimits(onSetSuccess?: () => void) {
+export function useUserCreditLimits(
+  onSetSuccess?: () => void,
+  onRemoveSuccess?: () => void,
+) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const hasCreditBudget = useHasCreditBudget();
@@ -71,7 +74,10 @@ export function useUserCreditLimits(onSetSuccess?: () => void) {
 
   const removeMutation = useCreditLimitsControllerRemoveUserLimit({
     mutation: {
-      onSuccess: () => showSuccess(t('creditLimits.remove.success')),
+      onSuccess: () => {
+        showSuccess(t('creditLimits.remove.success'));
+        onRemoveSuccess?.();
+      },
       onError: (error) => {
         try {
           const { code } = extractErrorData(error);

@@ -18,8 +18,10 @@ interface SetUserCreditLimitDialogProps {
   targetName: string;
   initialMonthlyCredits?: number;
   isSaving: boolean;
+  isRemoving?: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (monthlyCredits: number) => void;
+  onRemove?: () => void;
 }
 
 interface FormValues {
@@ -32,9 +34,12 @@ export function SetUserCreditLimitDialog({
   targetName,
   initialMonthlyCredits,
   onSubmit,
+  onRemove,
   isSaving,
+  isRemoving,
 }: Readonly<SetUserCreditLimitDialogProps>) {
   const { t } = useTranslation('admin-settings-credit-limits');
+  const hasExistingLimit = initialMonthlyCredits !== undefined;
 
   const {
     register,
@@ -95,19 +100,38 @@ export function SetUserCreditLimitDialog({
                 {errors.monthlyCredits.message}
               </p>
             )}
+            {hasExistingLimit && onRemove && (
+              <p className="text-muted-foreground text-xs">
+                {t('creditLimits.dialog.removeHint')}
+              </p>
+            )}
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t('creditLimits.dialog.cancel')}
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {t('creditLimits.dialog.save')}
-            </Button>
+          <DialogFooter className="sm:justify-between">
+            {hasExistingLimit && onRemove ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={onRemove}
+                disabled={isSaving || isRemoving}
+              >
+                {t('creditLimits.dialog.removeLimit')}
+              </Button>
+            ) : (
+              <span className="hidden sm:block" />
+            )}
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                {t('creditLimits.dialog.cancel')}
+              </Button>
+              <Button type="submit" disabled={isSaving || isRemoving}>
+                {t('creditLimits.dialog.save')}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
