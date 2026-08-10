@@ -222,7 +222,7 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     }),
   'transport-headers-timeout': () => new undiciErrors.HeadersTimeoutError(),
   // Node mints errno errors as plain Errors carrying `code`; these mirror
-  // the exact shapes seen in incidents #409, #387, #457, #511.
+  // the exact shapes seen in incidents #409, #387, #457, and #511.
   'transport-dns-again': () =>
     Object.assign(new Error('getaddrinfo EAI_AGAIN core-connect.ayunis.de'), {
       code: 'EAI_AGAIN',
@@ -295,6 +295,10 @@ describe('SUPPRESSIONS registry', () => {
       expect(ignoredErrorTypes).toEqual(
         entries.map(([, s]) => s.exceptionType),
       );
+    });
+
+    it('suppresses raw broken pipes after scoped handlers classify outcomes', () => {
+      expect(ignoredErrorTypes).toContain('EPIPE');
     });
 
     it.each(entries)('%s has a sample error', (id) => {

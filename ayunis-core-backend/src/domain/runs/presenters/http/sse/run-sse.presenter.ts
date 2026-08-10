@@ -1,20 +1,38 @@
+import { sendError } from '@appsignal/nodejs';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
 import type { RunErrorResponseDto } from '../dto/run-response.dto';
 import { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
+const CLIENT_DISCONNECT_CODES = new Set(['EPIPE', 'ECONNRESET']);
+
+class SseResponseWriteError extends Error {
+  readonly code = 'SSE_RESPONSE_WRITE_FAILED';
+
+  constructor(cause: unknown) {
+    const sourceError =
+      cause instanceof Error ? cause : new Error(String(cause));
+    super(sourceError.message, { cause: sourceError });
+    this.name = this.code;
+  }
+}
 
 interface ConnectionState {
   disconnected: boolean;
+  clientDisconnected: boolean;
+  completed: boolean;
+  handledErrors: WeakSet<object>;
 }
 
 interface SseConnection {
   state: ConnectionState;
-  cleanup: () => void;
+  write: (chunk: string) => void;
+  cleanup: (removeListeners?: boolean) => void;
 }
 
 type RunEventSource = (signal: AbortSignal) => AsyncIterable<RunEvent>;
@@ -36,31 +54,54 @@ export class RunSsePresenter {
     threadId: UUID,
     eventSource: RunEventSource,
   ): Promise<void> {
-    this.openConnection(response);
     const abortController = new AbortController();
     const connection = this.trackConnection(
       response,
       threadId,
       abortController,
     );
-
+    let opened = false;
     try {
-      await this.forwardEvents(
-        response,
-        eventSource(abortController.signal),
-        connection.state,
-      );
-    } catch (error) {
-      this.writeExecutionError(response, threadId, error);
-    } finally {
-      connection.cleanup();
-      if (!response.writableEnded) {
-        response.end();
+      this.openConnection(response, connection);
+      opened = true;
+      if (connection.state.disconnected) return;
+      try {
+        await this.forwardEvents(
+          connection,
+          eventSource(abortController.signal),
+        );
+      } catch (error) {
+        this.writeExecutionError(connection, threadId, error);
       }
+    } finally {
+      this.finishConnection(response, connection, opened);
     }
   }
 
-  private openConnection(response: Response): void {
+  private finishConnection(
+    response: Response,
+    connection: SseConnection,
+    opened: boolean,
+  ): void {
+    connection.state.completed = true;
+    connection.cleanup(!opened);
+    if (
+      !opened ||
+      connection.state.clientDisconnected ||
+      response.writableEnded ||
+      response.destroyed
+    ) {
+      return;
+    }
+    try {
+      response.end();
+    } catch (error) {
+      connection.cleanup(true);
+      throw error;
+    }
+  }
+
+  private openConnection(response: Response, connection: SseConnection): void {
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('Connection', 'keep-alive');
@@ -70,22 +111,21 @@ export class RunSsePresenter {
     // messages because the server-side finally-block persists what it has.
     response.setHeader('X-Accel-Buffering', 'no');
     response.flushHeaders();
-    response.write(': connection established\n\n');
+    connection.write(': connection established\n\n');
   }
 
   private async forwardEvents(
-    response: Response,
+    connection: SseConnection,
     events: AsyncIterable<RunEvent>,
-    state: ConnectionState,
   ): Promise<void> {
     for await (const event of events) {
-      if (state.disconnected) {
+      if (connection.state.disconnected) {
         this.logger.log('Stopping event stream due to client disconnect');
         break;
       }
 
       this.writeEvent(
-        response,
+        connection,
         this.eventMapper.eventId(event),
         this.eventMapper.toDto(event),
       );
@@ -103,37 +143,43 @@ export class RunSsePresenter {
     threadId: UUID,
     abortController: AbortController,
   ): SseConnection {
-    // Object wrapper so TS recognises async mutation from the handlers
-    const state: ConnectionState = { disconnected: false };
-    const disconnectHandler = () => {
-      this.logger.log('Client disconnected from SSE stream', { threadId });
-      state.disconnected = true;
-      abortController.abort();
+    const state: ConnectionState = {
+      disconnected: false,
+      clientDisconnected: false,
+      completed: false,
+      handledErrors: new WeakSet(),
     };
-    const errorHandler = (err: Error) => {
-      this.logger.warn('SSE response stream error', {
-        threadId,
-        error: err.message,
-      });
-      state.disconnected = true;
-      abortController.abort(err);
+    const write = (chunk: string) =>
+      this.writeChunk(response, chunk, threadId, state, abortController);
+    const removeListeners = () => {
+      response.off('close', disconnectHandler);
+      response.off('error', errorHandler);
+      response.off('finish', removeListeners);
+    };
+    const disconnectHandler = () => {
+      if (!state.completed) {
+        this.logger.log('Client disconnected from SSE stream', { threadId });
+        state.disconnected = true;
+        state.clientDisconnected = true;
+        abortController.abort();
+      }
+      removeListeners();
+    };
+    const errorHandler = (error: Error) => {
+      this.handleWriteError(error, threadId, state, abortController, true);
     };
 
     response.on('close', disconnectHandler);
     response.on('error', errorHandler);
-    const heartbeatInterval = this.startHeartbeat(
-      response,
-      threadId,
-      state,
-      abortController,
-    );
+    response.on('finish', removeListeners);
+    const heartbeatInterval = this.startHeartbeat(write, state);
 
     return {
       state,
-      cleanup: () => {
+      write,
+      cleanup: (shouldRemoveListeners = false) => {
         clearInterval(heartbeatInterval);
-        response.off('close', disconnectHandler);
-        response.off('error', errorHandler);
+        if (shouldRemoveListeners || response.closed) removeListeners();
       },
     };
   }
@@ -147,34 +193,103 @@ export class RunSsePresenter {
    * a timer callback would be an uncaught exception and kill the process.
    */
   private startHeartbeat(
-    response: Response,
-    threadId: UUID,
+    write: (chunk: string) => void,
     state: ConnectionState,
-    abortController: AbortController,
   ): NodeJS.Timeout {
     return setInterval(() => {
-      if (state.disconnected || response.writableEnded) {
-        return;
-      }
-      try {
-        response.write(': heartbeat\n\n');
-      } catch (err) {
-        state.disconnected = true;
-        abortController.abort(err);
-        this.logger.warn('SSE heartbeat write failed', {
-          threadId,
-          error: err instanceof Error ? err.message : String(err),
-        });
+      if (!state.disconnected && !state.completed) {
+        write(': heartbeat\n\n');
       }
     }, HEARTBEAT_INTERVAL_MS);
   }
 
-  private writeEvent(response: Response, id: string, data: unknown): void {
-    response.write(`id: ${id}\ndata: ${JSON.stringify(data)}\n\n`);
+  private writeChunk(
+    response: Response,
+    chunk: string,
+    threadId: UUID,
+    state: ConnectionState,
+    abortController: AbortController,
+  ): void {
+    try {
+      response.write(chunk, (error?: Error | null) => {
+        if (error) {
+          this.handleWriteError(error, threadId, state, abortController);
+        }
+      });
+    } catch (error) {
+      this.handleWriteError(error, threadId, state, abortController);
+    }
+  }
+
+  private handleWriteError(
+    error: unknown,
+    threadId: UUID,
+    state: ConnectionState,
+    abortController: AbortController,
+    standaloneReport = false,
+  ): void {
+    if (this.wasAlreadyHandled(error, state)) return;
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? String(error.code)
+        : undefined;
+    if (code && CLIENT_DISCONNECT_CODES.has(code)) {
+      state.clientDisconnected = true;
+      this.logger.log('SSE write stopped after client disconnect', {
+        threadId,
+      });
+    } else {
+      this.reportWriteError(error, threadId, state, standaloneReport);
+    }
+    state.disconnected = true;
+    if (!state.completed) abortController.abort(error);
+  }
+
+  private reportWriteError(
+    error: unknown,
+    threadId: UUID,
+    state: ConnectionState,
+    standalone: boolean,
+  ): void {
+    const reportableError = new SseResponseWriteError(error);
+    this.logger.error('SSE response write failed', {
+      threadId,
+      error: reportableError.message,
+    });
+    try {
+      if (standalone || state.disconnected || state.completed) {
+        sendError(reportableError);
+      } else {
+        reportUnexpectedError(reportableError);
+      }
+    } catch (reportingError) {
+      this.logger.error('Failed to report SSE response write error', {
+        threadId,
+        error:
+          reportingError instanceof Error
+            ? reportingError.message
+            : String(reportingError),
+      });
+    }
+  }
+
+  private wasAlreadyHandled(error: unknown, state: ConnectionState): boolean {
+    if (typeof error !== 'object' || error === null) return false;
+    if (state.handledErrors.has(error)) return true;
+    state.handledErrors.add(error);
+    return false;
+  }
+
+  private writeEvent(
+    connection: SseConnection,
+    id: string,
+    data: unknown,
+  ): void {
+    connection.write(`id: ${id}\ndata: ${JSON.stringify(data)}\n\n`);
   }
 
   private writeExecutionError(
-    response: Response,
+    connection: SseConnection,
     threadId: UUID,
     error: unknown,
   ): void {
@@ -195,14 +310,6 @@ export class RunSsePresenter {
       details: error instanceof ApplicationError ? error.metadata : undefined,
     };
 
-    try {
-      this.writeEvent(response, 'execution-error', errorResponse);
-    } catch (writeError) {
-      this.logger.warn('Failed to write SSE error event', {
-        threadId,
-        error:
-          writeError instanceof Error ? writeError.message : String(writeError),
-      });
-    }
+    this.writeEvent(connection, 'execution-error', errorResponse);
   }
 }

@@ -228,12 +228,12 @@ const SUPPRESSIONS = [
   {
     id: 'transport-broken-pipe',
     lever: 'ignoreErrors',
-    ticket: 'AYC-616',
+    ticket: 'AYC-693',
     reason:
-      'Write to a socket whose peer already disconnected — an SSE client ' +
-      'that went away or a dropped provider connection. Both directions are ' +
-      'expected socket lifecycle, not defects; consequent application ' +
-      'failures still report under their own names (incident #511).',
+      'EPIPE confirms that the peer closed its end of a socket. Run SSE ' +
+      'handles that disconnect through write callbacks; provider failures ' +
+      'still report through their classified application errors, and genuine ' +
+      'response failures report as SSE_RESPONSE_WRITE_FAILED (incident #511).',
     exceptionType: 'EPIPE',
   },
   {
