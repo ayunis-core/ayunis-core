@@ -34,6 +34,8 @@
       "creditsRequired": "Please enter a credit amount",
       "creditsMin": "Must be 0 or greater",
       "creditsHint": "Credits per calendar month. 0 freezes the target entirely.",
+      "removeHint": "Removing the limit lets this user spend within the organization budget without an individual cap.",
+      "removeLimit": "Remove limit",
       "cancel": "Cancel",
       "save": "Save"
     }

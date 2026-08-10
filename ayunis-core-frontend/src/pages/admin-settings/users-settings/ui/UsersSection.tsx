@@ -75,8 +75,11 @@ export default function UsersSection({
   const [creditLimitUser, setCreditLimitUser] = useState<User | null>(null);
   const hasCreditBudget = useHasCreditBudget();
   const { user: currentUser } = useMe();
-  const { userLimits, setUserLimit, removeUserLimit, isSaving } =
-    useUserCreditLimits(() => setCreditLimitUser(null));
+  const { userLimits, setUserLimit, removeUserLimit, isSaving, isRemoving } =
+    useUserCreditLimits(
+      () => setCreditLimitUser(null),
+      () => setCreditLimitUser(null),
+    );
 
   const renderCreditLimit = (limit: CreditLimitInfo | undefined) =>
     limit ? (
@@ -339,7 +342,13 @@ export default function UsersSection({
           onSubmit={(monthlyCredits) =>
             setUserLimit(creditLimitUser.id, monthlyCredits)
           }
+          onRemove={
+            userLimits.has(creditLimitUser.id)
+              ? () => removeUserLimit(creditLimitUser.id)
+              : undefined
+          }
           isSaving={isSaving}
+          isRemoving={isRemoving}
         />
       )}
     </Card>

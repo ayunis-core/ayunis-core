@@ -34,6 +34,8 @@
       "creditsRequired": "Bitte einen Credit-Betrag eingeben",
       "creditsMin": "Muss 0 oder größer sein",
       "creditsHint": "Credits pro Kalendermonat. 0 sperrt das Ziel vollständig.",
+      "removeHint": "Wenn Sie das Limit entfernen, kann dieser Nutzer ohne individuelle Obergrenze innerhalb des Organisationsbudgets abrechnen.",
+      "removeLimit": "Limit entfernen",
       "cancel": "Abbrechen",
       "save": "Speichern"
     }
