@@ -19,11 +19,16 @@ This guide covers deploying Ayunis Core to production and managing configuration
 > release from the registry instead of building on the host, use the
 > `compose.release.yml` overlay:
 > `CORE_TAG=vX.Y.Z docker compose -f docker-compose.yml -f compose.release.yml up -d --no-build`.
-> The packages are public, so no registry login is needed to pull them.
+> The packages are public, so no registry login is needed to pull them, and
+> each tag is a multi-arch manifest list (`linux/amd64` + `linux/arm64`), so a
+> host pulls whichever matches it.
 >
-> Staging deploys this way already — it pulls `sha-<short-commit>` after
-> `build-images.yml` finishes for that commit. Internal and production still
-> build on the host; switching them is the second half of AYC-589.
+> **All deployed environments run this way** (AYC-589) — none of them build on
+> the host any more. Staging pulls `sha-<short-commit>` once `build-images.yml`
+> finishes for that commit; internal and production pull `vX.Y.Z`. To roll an
+> environment back, run the command above with an older `CORE_TAG` on the host.
+> The steps below still describe a from-source deployment, which is the path
+> for self-hosters building their own images.
 
 ### Prerequisites
 

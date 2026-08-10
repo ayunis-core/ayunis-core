@@ -7,9 +7,13 @@ name: Build & Publish Images
 #   ayunis-core-python-sandbox  — image user code executes in (DOCKER_IMAGE)
 #
 # Pushes to main produce sha-<commit> + latest tags (what staging pulls,
-# AYC-589); release tags produce vX.Y.Z. release-please dispatches this
-# workflow for its tags explicitly (GITHUB_TOKEN-created tags don't fire
-# push-tag workflows) — see release-please.yml.
+# AYC-589); release tags produce vX.Y.Z.
+#
+# release-please calls this workflow instead of pushing a tag that would
+# trigger it: GITHUB_TOKEN-created tags don't fire push-tag workflows, and
+# since AYC-589 its deploys pull these images, so the build has to be a real
+# `needs:` dependency rather than a fire-and-forget dispatch. The caller's ref
+# is then refs/heads/main, not the tag — hence release_tag.
 #
 # Each image is published as a multi-arch manifest list (AYC-589). This is not
 # optional: staging runs aarch64 while internal and production run x86_64, and
@@ -24,13 +28,24 @@ on:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Build this tag instead of the caller's ref, and tag the images with it
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: build-images-${{ github.ref }}
+  # release_tag, not just github.ref: a release-please call runs with the
+  # caller's ref (main) and would otherwise share a group with the build
+  # triggered by the very push that created the release — where a third
+  # queued run would cancel it.
+  group: build-images-${{ inputs.release_tag || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -69,7 +84,11 @@ jobs:
             target: ''
     runs-on: ${{ matrix.platform == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
+      # github.sha, not github.ref: on the push path the ref's tip may already
+      # have moved past the commit whose sha- tag we're about to publish.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ inputs.release_tag || github.sha }}
 
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -179,10 +198,15 @@ jobs:
           # overwrite the main-branch latest that staging pulls.
           flavor: |
             latest=false
+          # A release_tag build runs with the caller's ref (main), so the
+          # ref-derived tags are gated off — otherwise it would republish
+          # sha-/latest and defeat the latest=false rule above. type=semver
+          # still covers a hand-pushed v* tag.
           tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern=v{{version}}
+            type=sha,prefix=sha-,enable=${{ inputs.release_tag == '' }}
+            type=raw,value=latest,enable=${{ inputs.release_tag == '' && github.ref == 'refs/heads/main' }}
+            type=semver,pattern=v{{version}},enable=${{ inputs.release_tag == '' }}
+            type=raw,value=${{ inputs.release_tag }},enable=${{ inputs.release_tag != '' }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
@@ -220,7 +244,12 @@ jobs:
   # and CI_APP_* org secrets shared with this repo.
   notify-infra:
     needs: merge
-    if: startsWith(github.ref, 'refs/tags/v')
+    # On the release-please path github.ref is main, so the ref check alone
+    # would silently stop pinging infra.
+    if: ${{ inputs.release_tag != '' || startsWith(github.ref, 'refs/tags/v') }}
+    # This Renovate wake-up is not part of publishing the images. A transient
+    # notification failure must not fail the reusable workflow and skip deploys.
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - name: Mint ayunis-infra token
@@ -236,7 +265,7 @@ jobs:
         env:
           INFRA_TOKEN: ${{ steps.infra-token.outputs.token }}
           IMAGE: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           curl -fsS -X POST \
             -H "Authorization: Bearer ${INFRA_TOKEN}" \
