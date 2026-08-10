@@ -1,8 +1,25 @@
 import { useState } from 'react';
 import { Panel, Group as PanelGroup } from 'react-resizable-panels';
-import { ChevronLeft, Star } from 'lucide-react';
+import {
+  ChevronLeft,
+  MoreVertical,
+  Pencil,
+  Sparkles,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { MockChatInput } from './MockChatInput';
 import { Button } from '@/shared/ui/shadcn/button';
+import { Badge } from '@/shared/ui/shadcn/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { RenameChatDialog } from './RenameChatDialog';
 import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
 import { Separator } from '@/shared/ui/shadcn/separator';
 import {
@@ -21,6 +38,8 @@ import {
   ProjectIcon,
   addDocumentToProject,
   toggleChatPinned,
+  renameChatInProject,
+  removeChatFromProject,
   CURRENT_USER,
   type MockProject,
   type ProjectChat,
@@ -43,6 +62,8 @@ export function ChatView({
     initialArtifactId ? ['output'] : [],
   );
   const [addKind, setAddKind] = useState<AddItemKind>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const { confirm } = useConfirmation();
   const canContribute =
     project.ownerId === CURRENT_USER.id || project.allowMemberContent;
 
@@ -50,6 +71,19 @@ export function ChatView({
     addDocumentToProject(project.id, {
       id: crypto.randomUUID(),
       name: `Dokument ${project.documents.length + 1}.pdf`,
+    });
+  }
+
+  function handleDeleteChat() {
+    confirm({
+      title: 'Chat löschen',
+      description: `Möchten Sie „${chat.title}“ wirklich löschen?`,
+      confirmText: 'Löschen',
+      variant: 'destructive',
+      onConfirm: () => {
+        removeChatFromProject(project.id, chat.id);
+        onBackToProject();
+      },
     });
   }
 
@@ -75,6 +109,8 @@ export function ChatView({
             messages={chat.messages}
             isPinned={chat.pinned ?? false}
             onTogglePin={() => toggleChatPinned(project.id, chat.id)}
+            onRename={() => setRenameOpen(true)}
+            onDelete={handleDeleteChat}
             openPanels={openPanels}
             onTogglePanel={togglePanel}
             onBackToProject={onBackToProject}
@@ -105,6 +141,13 @@ export function ChatView({
         kind={addKind}
         onClose={() => setAddKind(null)}
       />
+
+      <RenameChatDialog
+        open={renameOpen}
+        onOpenChange={setRenameOpen}
+        currentTitle={chat.title}
+        onRename={(title) => renameChatInProject(project.id, chat.id, title)}
+      />
     </>
   );
 }
@@ -115,6 +158,8 @@ interface ChatColumnProps {
   messages: MockProject['chats'][number]['messages'];
   isPinned: boolean;
   onTogglePin: () => void;
+  onRename: () => void;
+  onDelete: () => void;
   openPanels: PanelKey[];
   onTogglePanel: (key: PanelKey) => void;
   onBackToProject: () => void;
@@ -126,6 +171,8 @@ function ChatColumn({
   messages,
   isPinned,
   onTogglePin,
+  onRename,
+  onDelete,
   openPanels,
   onTogglePanel,
   onBackToProject,
@@ -146,28 +193,35 @@ function ChatColumn({
           · {chatTitle}
         </span>
         <div className="flex shrink-0 items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                onClick={onTogglePin}
-                aria-label={isPinned ? 'Chat loslösen' : 'Chat anheften'}
+                className="text-muted-foreground"
+                aria-label="Chat-Aktionen"
               >
-                <Star
-                  className={cn(
-                    'size-4',
-                    isPinned
-                      ? 'fill-brand text-brand'
-                      : 'text-muted-foreground',
-                  )}
-                />
+                <MoreVertical />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isPinned ? 'Chat loslösen' : 'Chat anheften'}
-            </TooltipContent>
-          </Tooltip>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onRename}>
+                <Pencil />
+                Chat umbenennen
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onTogglePin}>
+                <Star className={cn(isPinned && 'fill-brand text-brand')} />
+                {isPinned
+                  ? 'Nicht mehr im Projekt anheften'
+                  : 'Chat im Projekt anheften'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                <Trash2 />
+                Chat löschen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Separator orientation="vertical" className="h-5" />
           {PANEL_ORDER.map((key) => {
             const Icon = PANELS[key].icon;
@@ -202,7 +256,17 @@ function ChatColumn({
         </div>
       </ScrollArea>
 
-      <div className="mx-auto w-full max-w-[720px] px-4 pb-4 shrink-0">
+      <div className="mx-auto w-full max-w-[720px] shrink-0 px-4 pb-4">
+        {project.skills.length > 0 && (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            {project.skills.map((skill) => (
+              <Badge key={skill.id} variant="secondary" className="gap-1">
+                <Sparkles className="size-3 shrink-0" />
+                {skill.name}
+              </Badge>
+            ))}
+          </div>
+        )}
         <MockChatInput />
       </div>
     </div>

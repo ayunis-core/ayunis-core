@@ -130,6 +130,17 @@ export function toggleChatPinned(projectId: string, chatId: string) {
   }));
 }
 
+export function renameChatInProject(
+  projectId: string,
+  chatId: string,
+  title: string,
+) {
+  updateProject(projectId, (p) => ({
+    ...p,
+    chats: p.chats.map((c) => (c.id === chatId ? { ...c, title } : c)),
+  }));
+}
+
 export function removeChatFromProject(projectId: string, chatId: string) {
   updateProject(projectId, (p) => ({
     ...p,

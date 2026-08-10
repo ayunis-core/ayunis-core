@@ -58,6 +58,7 @@ export {
   removeDocumentFromProject,
   toggleGeneratedDocumentShared,
   removeGeneratedDocument,
+  renameChatInProject,
   removeChatFromProject,
   toggleChatPinned,
   toggleProjectStarred,
