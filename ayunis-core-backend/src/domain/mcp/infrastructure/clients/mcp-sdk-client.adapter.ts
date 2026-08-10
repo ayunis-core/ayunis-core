@@ -17,7 +17,12 @@ import { McpIntegrationsRepositoryPort } from '../../application/ports/mcp-integ
 import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
 import type { UUID } from 'crypto';
 import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
-import { McpConnectionTimeoutError } from '../../application/mcp.errors';
+import {
+  McpConnectionFailedError,
+  McpConnectionTimeoutError,
+} from '../../application/mcp.errors';
+import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
+import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 
 /**
  * Node's AbortController.abort() mints a DOMException with name 'AbortError'
@@ -240,12 +245,23 @@ export class McpSdkClientAdapter extends McpClientPort {
     error: unknown,
     config: McpConnectionConfig,
   ): unknown {
-    if (isTimeoutOrAbortError(error)) {
+    // Transport errnos (timeouts beyond the SDK's own codes, DNS, reset,
+    // broken pipe) must not escape raw either: their raw span duplicates
+    // are suppressed AppSignal-side (AYC-616), so the classified error is
+    // the only outage signal left.
+    const transport = classifyTransportError(error);
+    if (
+      isTimeoutOrAbortError(error) ||
+      transport?.failureClass === ProviderFailureClass.TIMEOUT
+    ) {
       return new McpConnectionTimeoutError(
         config.serverUrl,
         this.requestOptions.timeout,
         error,
       );
+    }
+    if (transport?.failureClass === ProviderFailureClass.CONNECTION) {
+      return new McpConnectionFailedError(config.serverUrl, error);
     }
     return error;
   }
