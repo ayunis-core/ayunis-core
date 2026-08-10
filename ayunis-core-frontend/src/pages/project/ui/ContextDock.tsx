@@ -267,15 +267,20 @@ function SkillsBody({ project }: Readonly<{ project: MockProject }>) {
     return <PanelEmpty text="Noch keine Fähigkeiten in diesem Projekt." />;
   }
   return (
-    <ItemGroup className="gap-0">
-      {project.skills.map((skill) => (
-        <Item key={skill.id} size="sm" className={ROW_CLASS}>
-          <ItemContent>
-            <ItemTitle>{skill.name}</ItemTitle>
-          </ItemContent>
-        </Item>
-      ))}
-    </ItemGroup>
+    <div className="flex flex-col gap-2">
+      <p className="text-xs text-muted-foreground">
+        In diesem Projekt immer aktiv — Sie müssen nichts auswählen.
+      </p>
+      <ItemGroup className="gap-0">
+        {project.skills.map((skill) => (
+          <Item key={skill.id} size="sm" className={ROW_CLASS}>
+            <ItemContent>
+              <ItemTitle>{skill.name}</ItemTitle>
+            </ItemContent>
+          </Item>
+        ))}
+      </ItemGroup>
+    </div>
   );
 }
 

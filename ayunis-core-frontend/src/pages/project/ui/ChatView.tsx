@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { Panel, Group as PanelGroup } from 'react-resizable-panels';
-import {
-  ChevronLeft,
-  MoreVertical,
-  Pencil,
-  Sparkles,
-  Star,
-  Trash2,
-} from 'lucide-react';
+import { ChevronLeft, MoreVertical, Pencil, Star, Trash2 } from 'lucide-react';
 import { MockChatInput } from './MockChatInput';
 import { Button } from '@/shared/ui/shadcn/button';
-import { Badge } from '@/shared/ui/shadcn/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,16 +242,6 @@ function ChatColumn({
       </ScrollArea>
 
       <div className="mx-auto w-full max-w-[720px] shrink-0 px-4 pb-4">
-        {project.skills.length > 0 && (
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            {project.skills.map((skill) => (
-              <Badge key={skill.id} variant="secondary" className="gap-1">
-                <Sparkles className="size-3 shrink-0" />
-                {skill.name}
-              </Badge>
-            ))}
-          </div>
-        )}
         <MockChatInput />
       </div>
     </div>
