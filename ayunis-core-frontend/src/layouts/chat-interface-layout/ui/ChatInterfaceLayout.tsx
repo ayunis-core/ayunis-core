@@ -54,9 +54,9 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
     <div
       className={`flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl pb-4 ${className}`}
     >
-      <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col pr-2">
+      <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
         <div
-          className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto w-full"
+          className="content-scroll-viewport min-h-0 flex-1 overflow-x-hidden overflow-y-auto w-full"
           ref={setScrollRef}
           onScroll={onScroll}
         >
