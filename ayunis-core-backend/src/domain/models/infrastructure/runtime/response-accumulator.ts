@@ -6,7 +6,7 @@ import type {
   Usage,
 } from '@ayunis/inference';
 import { InferenceResponse } from '../../application/ports/inference.handler';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
@@ -110,13 +110,10 @@ class StreamResponseAccumulator {
   }
 
   private build(): InferenceResponse {
-    // A non-streaming completion that hit the token limit is truncated, not a
-    // valid answer. Surface it instead of returning a partial response as
-    // success (e.g. for title generation), matching the pre-runtime handler.
-    if (this.finishReason === 'length') {
-      throw new InferenceFailedError(
-        'Model response was truncated (reached the maximum token limit)',
-      );
+    if (this.finishReason === 'length' && this.toolCalls.size > 0) {
+      throw new InferenceTokenLimitError({
+        toolNames: [...this.toolCalls.values()].map((call) => call.name),
+      });
     }
     const content: ResponseContent[] = [];
     if (this.thinking) {
@@ -145,7 +142,7 @@ class StreamResponseAccumulator {
         ),
       );
     }
-    return new InferenceResponse(content, this.buildMeta());
+    return new InferenceResponse(content, this.buildMeta(), this.finishReason);
   }
 
   private buildMeta(): ResponseMeta {

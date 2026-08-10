@@ -1,7 +1,7 @@
 import { OpenAIResponseMapper } from './openai-response.mapper';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import type { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
+import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 
 const searchTool: ToolSchema = {
@@ -76,5 +76,37 @@ describe('OpenAIResponseMapper', () => {
 
     expect(result.choices[0].message.content).toBe('hello');
     expect(result.choices[0].finish_reason).toBe('stop');
+  });
+
+  it('maps token-limited partial text to finish_reason length', () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('partial answer')],
+      {},
+      'length',
+    );
+
+    const result = mapper.toResponse({
+      id: 'cmpl-1',
+      modelName: 'gpt-4o',
+      response,
+      tools: [],
+    });
+
+    expect(result.choices[0].message.content).toBe('partial answer');
+    expect(result.choices[0].finish_reason).toBe('length');
+  });
+
+  it('maps a token-limit completion without visible text', () => {
+    const response = new InferenceResponse([], {}, 'length');
+
+    const result = mapper.toResponse({
+      id: 'cmpl-1',
+      modelName: 'o3',
+      response,
+      tools: [],
+    });
+
+    expect(result.choices[0].message.content).toBeNull();
+    expect(result.choices[0].finish_reason).toBe('length');
   });
 });

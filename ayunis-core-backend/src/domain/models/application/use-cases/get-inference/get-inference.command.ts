@@ -9,6 +9,7 @@ export class GetInferenceCommand {
   tools: ToolSchema[];
   toolChoice: ModelToolChoice;
   instructions?: string;
+  acceptTokenLimitCompletion: boolean;
 
   constructor(params: {
     model: LanguageModel;
@@ -16,11 +17,14 @@ export class GetInferenceCommand {
     tools: ToolSchema[];
     toolChoice: ModelToolChoice;
     instructions?: string;
+    acceptTokenLimitCompletion?: boolean;
   }) {
     this.model = params.model;
     this.messages = params.messages;
     this.tools = params.tools;
     this.toolChoice = params.toolChoice;
     this.instructions = params.instructions;
+    this.acceptTokenLimitCompletion =
+      params.acceptTokenLimitCompletion ?? false;
   }
 }

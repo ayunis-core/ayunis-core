@@ -19,6 +19,7 @@ import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
+import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
 
 describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let useCase: ExecuteOpenAIChatCompletionUseCase;
@@ -118,6 +119,39 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         { inputTokens: 10, outputTokens: 5 },
         expect.any(String),
       );
+    });
+
+    it('returns token-limited partial text as a length completion', async () => {
+      const response = new InferenceResponse(
+        [new TextMessageContent('Partial answer')],
+        {},
+        'length',
+      );
+      getInferenceUseCase.execute.mockResolvedValue(response);
+
+      const result = await useCase.executeNonStreaming(baseCommand());
+
+      expect(result.choices[0]).toMatchObject({
+        message: { content: 'Partial answer' },
+        finish_reason: 'length',
+      });
+      expect(getInferenceUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ acceptTokenLimitCompletion: true }),
+      );
+    });
+
+    it('classifies a token-limited tool call as an expected client response', async () => {
+      getInferenceUseCase.execute.mockRejectedValue(
+        new InferenceTokenLimitError({ toolNames: ['get_weather'] }),
+      );
+
+      await expect(
+        useCase.executeNonStreaming(baseCommand()),
+      ).rejects.toMatchObject({
+        code: 'OPENAI_COMPAT_TOKEN_LIMIT',
+        statusCode: 422,
+      });
+      expect(inferenceUsageGuard.collectUsage).not.toHaveBeenCalled();
     });
 
     it('throws OpenAIModelNotFoundError without calling guard for an unknown model', async () => {

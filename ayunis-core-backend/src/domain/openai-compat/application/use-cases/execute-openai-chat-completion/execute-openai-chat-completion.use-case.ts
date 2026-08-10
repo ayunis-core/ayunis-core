@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { Observable, finalize, map } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
+import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
 import { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -15,7 +16,10 @@ import {
   OpenAIStreamMapper,
   OpenAIStreamSession,
 } from '../../mappers/openai-stream.mapper';
-import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
+import {
+  OpenAIModelNotFoundError,
+  OpenAITokenLimitError,
+} from '../../openai-compat.errors';
 import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-completion.command';
 import type { ChatCompletionResponse } from '../../types/openai-response.types';
 import type { ChatCompletionChunk } from '../../types/openai-chunk.types';
@@ -56,13 +60,14 @@ export class ExecuteOpenAIChatCompletionUseCase {
     const requestId = this.requestMapper.newRequestId();
     const tools = this.requestMapper.toToolSchemas(command.request);
 
-    const response = await this.getInferenceUseCase.execute(
+    const response = await this.executeNonStreamingInference(
       new GetInferenceCommand({
         model,
         messages,
         tools,
         toolChoice: this.requestMapper.toModelToolChoice(command.request),
         instructions: systemPrompt || undefined,
+        acceptTokenLimitCompletion: true,
       }),
     );
 
@@ -86,6 +91,19 @@ export class ExecuteOpenAIChatCompletionUseCase {
       response,
       tools,
     });
+  }
+
+  private async executeNonStreamingInference(
+    command: GetInferenceCommand,
+  ): ReturnType<GetInferenceUseCase['execute']> {
+    try {
+      return await this.getInferenceUseCase.execute(command);
+    } catch (error) {
+      if (error instanceof InferenceTokenLimitError) {
+        throw new OpenAITokenLimitError(error.metadata);
+      }
+      throw error;
+    }
   }
 
   async executeStreaming(

@@ -4,6 +4,7 @@ import type { TextMessageContent } from 'src/domain/messages/domain/message-cont
 import type { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import type { Model } from '../../domain/model.entity';
+import type { FinishReason } from '@ayunis/inference';
 import type { ToolSchema } from '../../domain/value-objects/tool-schema';
 
 export class InferenceInput {
@@ -42,6 +43,7 @@ export class InferenceResponse {
       outputTokens?: number;
       totalTokens?: number;
     },
+    public finishReason?: FinishReason,
   ) {}
 }
 

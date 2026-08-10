@@ -20,10 +20,7 @@ export class OpenAIResponseMapper {
     tools: readonly ToolSchema[];
   }): ChatCompletionResponse {
     const message = this.buildAssistantMessage(params.response, params.tools);
-    const finishReason: ChatCompletionResponseChoice['finish_reason'] =
-      message.tool_calls && message.tool_calls.length > 0
-        ? 'tool_calls'
-        : 'stop';
+    const finishReason = this.mapFinishReason(params.response, message);
 
     return {
       id: params.id,
@@ -44,6 +41,16 @@ export class OpenAIResponseMapper {
             }
           : undefined,
     };
+  }
+
+  private mapFinishReason(
+    response: InferenceResponse,
+    message: ChatCompletionResponseMessage,
+  ): ChatCompletionResponseChoice['finish_reason'] {
+    if (response.finishReason === 'length') return 'length';
+    if (message.tool_calls && message.tool_calls.length > 0)
+      return 'tool_calls';
+    return 'stop';
   }
 
   private buildAssistantMessage(
