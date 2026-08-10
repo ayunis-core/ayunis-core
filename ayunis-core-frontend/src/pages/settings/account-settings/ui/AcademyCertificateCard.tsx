@@ -11,6 +11,7 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
+  resolveCertificateExpiryNotice,
   useAcademyAccessStatus,
   useAcademyProgress,
   useIsAcademyAddonActive,
@@ -52,6 +53,14 @@ export function AcademyCertificateCard() {
   // In annual mode `allowed` is precisely "holds a non-expired certificate", so
   // lean on the server's verdict instead of racing the client clock.
   const expired = renewalRequired && lastPassedAt !== null && !status.allowed;
+  // Same 30-day window the admin overview flags, so both sides of the org read
+  // the same state for the same member.
+  const expiringSoon =
+    !expired &&
+    resolveCertificateExpiryNotice(
+      nextRenewalAt === null ? null : new Date(nextRenewalAt),
+      new Date(),
+    ).level !== 'none';
 
   return (
     <Card>
@@ -62,6 +71,7 @@ export function AcademyCertificateCard() {
             <CertificateBadge
               hasPassed={lastPassedAt !== null}
               expired={expired}
+              expiringSoon={expiringSoon}
             />
           )}
         </CardTitle>
@@ -107,7 +117,12 @@ export function AcademyCertificateCard() {
 function CertificateBadge({
   hasPassed,
   expired,
-}: Readonly<{ hasPassed: boolean; expired: boolean }>) {
+  expiringSoon,
+}: Readonly<{
+  hasPassed: boolean;
+  expired: boolean;
+  expiringSoon: boolean;
+}>) {
   const { t } = useTranslation('academy');
 
   if (!hasPassed) {
@@ -115,6 +130,9 @@ function CertificateBadge({
   }
   if (expired) {
     return <Badge variant="destructive">{t('account.status.expired')}</Badge>;
+  }
+  if (expiringSoon) {
+    return <Badge variant="outline">{t('account.status.expiringSoon')}</Badge>;
   }
   return (
     <Badge variant="secondary" className="gap-1">

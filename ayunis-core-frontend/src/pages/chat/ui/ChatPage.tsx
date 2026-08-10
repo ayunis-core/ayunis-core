@@ -13,7 +13,8 @@ import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/thread-run';
-import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
+import { useAcademyAccessStatus } from '@/features/academy';
+import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import type {
