@@ -33,6 +33,7 @@ import { useSkipPersonalization } from '../api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -48,6 +49,7 @@ export default function NewChatPage({
   initialAttachmentUrl,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
+  const isEmbedded = useEmbedded();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
@@ -229,14 +231,15 @@ export default function NewChatPage({
       header={
         <ContentAreaHeader
           breadcrumbs={[{ label: t('newChat.newChat') }]}
-          action={<HelpLink path="" />}
+          action={isEmbedded ? undefined : <HelpLink path="" />}
         />
       }
       compose={
         <>
           <h1
             className={cn(
-              'new-chat-greeting text-center text-2xl font-bold',
+              'new-chat-greeting text-center font-bold',
+              isEmbedded ? 'text-xl' : 'text-2xl',
               isCreating && 'new-chat-greeting--exit',
             )}
             aria-hidden={isCreating}
@@ -302,20 +305,23 @@ export default function NewChatPage({
 
           <div
             className={cn(
-              'new-chat-dock-extras mt-4 flex flex-col gap-4 overflow-hidden',
+              'new-chat-dock-extras flex flex-col gap-4 overflow-hidden',
+              isEmbedded ? '-mt-2' : 'mt-4',
               isCreating && 'new-chat-dock-extras--collapsed',
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
+            {!isEmbedded && (
+              <OnboardingTourTarget
+                name={TOUR_TARGET.pinnedSkills}
+                settleMs={900}
+              >
+                <PinnedSkills
+                  onSkillSelect={handleSkillSelect}
+                  selectedSkillId={selectedSkillId}
+                />
+              </OnboardingTourTarget>
+            )}
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>

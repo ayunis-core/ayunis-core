@@ -61,7 +61,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
           onScroll={onScroll}
         >
           <div className="content-scroll-header-offset" aria-hidden />
-          <div className="mx-auto w-full max-w-[800px]">{chatContent}</div>
+          <div className="mx-auto w-full max-w-[800px] px-4">{chatContent}</div>
         </div>
         <div
           className="content-scroll-header"
@@ -71,7 +71,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[800px] flex-shrink-0 sticky bottom-0 z-10 bg-background">
+      <div className="mx-auto w-full max-w-[800px] px-4 flex-shrink-0 sticky bottom-0 z-10 bg-background">
         {chatInput}
       </div>
     </div>

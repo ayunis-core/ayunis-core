@@ -17,9 +17,6 @@ import type {
   SourceResponseDtoType,
 } from '@/shared/api';
 import PlusButton from './PlusButton';
-import ModelSelector from './ModelSelector';
-import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
-import { SendButton } from './SendButton';
 import { AnonymousButton } from './AnonymousButton';
 import { SkillBadge } from './SkillBadge';
 import {
@@ -35,7 +32,9 @@ import { SourcesList } from './SourcesList';
 import { ChatInputExpandable } from './ChatInputExpandable';
 import { showError } from '@/shared/lib/toast';
 import './chat-input-glow.css';
-import { MicrophoneButton } from './MicrophoneButton';
+import { ActionModeSelector } from './ActionModeSelector';
+import { ChatInputSendControls } from './ChatInputSendControls';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -154,6 +153,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const inFlight = submissionState !== 'idle';
     const showProcessingGlow = inFlight;
     const { t } = useTranslation('common');
+    const isEmbedded = useEmbedded();
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -229,6 +229,19 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
         return true;
       },
     }));
+
+    const handleTranscriptionComplete = (text: string) => {
+      setMessage((prev) => (prev ? `${prev} ${text}` : text));
+      // Focus textarea and place cursor at end after transcription
+      setTimeout(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.focus();
+          const length = textarea.value.length;
+          textarea.setSelectionRange(length, length);
+        }
+      }, 0);
+    };
 
     const handleSend = () => {
       if (
@@ -408,9 +421,14 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   data-testid="input"
                 />
 
-                <div className="flex items-center justify-between">
+                <div
+                  className={cn(
+                    'flex items-center justify-between gap-2',
+                    isEmbedded && '@container',
+                  )}
+                >
                   {/* Left side */}
-                  <div className="flex-shrink-0 flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 min-w-0">
                     <OnboardingTourTarget
                       name={TOUR_TARGET.chatUpload}
                       settleMs={900}
@@ -449,42 +467,20 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         onRemove={() => onSkillRemove()}
                       />
                     )}
+                    {isEmbedded && <ActionModeSelector />}
                   </div>
 
-                  <div className="flex-shrink-0 flex space-x-2">
-                    <TooltipIf
-                      condition={isModelChangeDisabled ?? false}
-                      tooltip={t('chatInput.modelChangeDisabledTooltip')}
-                    >
-                      <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
-                        <ModelSelector
-                          isDisabled={isModelChangeDisabled ?? false}
-                          selectedModelId={modelId}
-                          onModelChange={onModelChange}
-                        />
-                      </OnboardingTourTarget>
-                    </TooltipIf>
-                    <MicrophoneButton
-                      onTranscriptionComplete={(text) => {
-                        setMessage((prev) => (prev ? `${prev} ${text}` : text));
-                        // Focus textarea and place cursor at end after transcription
-                        setTimeout(() => {
-                          const textarea = textareaRef.current;
-                          if (textarea) {
-                            textarea.focus();
-                            const length = textarea.value.length;
-                            textarea.setSelectionRange(length, length);
-                          }
-                        }, 0);
-                      }}
-                    />
-                    <SendButton
-                      inFlight={inFlight}
-                      canSend={!!canSend}
-                      onSend={handleSend}
-                      onCancel={onCancel}
-                    />
-                  </div>
+                  <ChatInputSendControls
+                    isModelChangeDisabled={isModelChangeDisabled}
+                    modelId={modelId}
+                    onModelChange={onModelChange}
+                    isEmbedded={isEmbedded}
+                    onTranscriptionComplete={handleTranscriptionComplete}
+                    inFlight={inFlight}
+                    canSend={!!canSend}
+                    onSend={handleSend}
+                    onCancel={onCancel}
+                  />
                 </div>
               </div>
             </CardContent>

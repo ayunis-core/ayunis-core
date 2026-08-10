@@ -70,9 +70,16 @@ function proxy(req, res) {
   );
 
   upstream.on('error', (error) => {
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
     res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end(`Upstream not reachable: ${origin.origin}\n${error.message}`);
   });
+
+  req.on('error', () => upstream.destroy());
+  res.on('error', () => upstream.destroy());
 
   req.pipe(upstream);
 }
@@ -96,28 +103,15 @@ const server = createServer(options, (req, res) => {
   proxy(req, res);
 });
 
-server.on('upgrade', (req, socket, head) => {
-  const origin = new URL(FRONTEND);
-  const upstream = httpRequest({
-    hostname: origin.hostname,
-    port: origin.port,
-    path: req.url,
-    method: req.method,
-    headers: { ...req.headers, host: origin.host },
-  });
+server.on('clientError', (error, socket) => {
+  socket.destroy();
+});
 
-  upstream.on('upgrade', (upstreamRes, upstreamSocket, upstreamHead) => {
-    const headers = Object.entries(upstreamRes.headers)
-      .map(([key, value]) => `${key}: ${String(value)}`)
-      .join('\r\n');
-    socket.write(`HTTP/1.1 101 Switching Protocols\r\n${headers}\r\n\r\n`);
-    if (upstreamHead.length > 0) socket.unshift(upstreamHead);
-    upstreamSocket.pipe(socket).pipe(upstreamSocket);
-  });
-
-  upstream.on('error', () => socket.destroy());
-  if (head.length > 0) upstream.write(head);
-  upstream.end();
+// Vite's HMR websocket is intentionally NOT proxied: forwarding raw upgrade
+// frames corrupts the mask bit and crashes the upstream Vite process. The
+// task pane doesn't need hot reload — reject the upgrade cleanly instead.
+server.on('upgrade', (req, socket) => {
+  socket.destroy();
 });
 
 server.listen(PORT, () => {
