@@ -7,7 +7,10 @@ import {
   MessagesRepository,
 } from '../../ports/messages.repository';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  MessageThreadMissingError,
+} from '../../messages.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { AssistantMessageCreatedEvent } from '../../events/assistant-message-created.event';
 import type { UUID } from 'crypto';
@@ -25,7 +28,7 @@ export class SaveAssistantMessageUseCase {
 
   async execute(
     command: SaveAssistantMessageCommand,
-  ): Promise<AssistantMessage> {
+  ): Promise<AssistantMessage | null> {
     this.logger.log('Saving assistant message', {
       messageId: command.message.id,
       threadId: command.message.threadId,
@@ -36,27 +39,19 @@ export class SaveAssistantMessageUseCase {
         command.message,
       )) as AssistantMessage;
 
-      const userId = this.contextService.get('userId');
-      const orgId = this.contextService.get('orgId');
-      this.eventEmitter
-        .emitAsync(
-          AssistantMessageCreatedEvent.EVENT_NAME,
-          new AssistantMessageCreatedEvent(
-            userId ?? ('unknown' as UUID),
-            orgId ?? ('unknown' as UUID),
-            command.message.threadId,
-            saved.id,
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit AssistantMessageCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            messageId: saved.id,
-          });
-        });
-
+      this.emitCreatedEvent(command, saved);
       return saved;
     } catch (error) {
+      if (error instanceof MessageThreadMissingError) {
+        this.logger.warn(
+          'Skipped saving assistant message because thread no longer exists',
+          {
+            messageId: command.message.id,
+            threadId: command.message.threadId,
+          },
+        );
+        return null;
+      }
       this.logger.error('Failed to save assistant message', {
         messageId: command.message.id,
         threadId: command.message.threadId,
@@ -69,5 +64,29 @@ export class SaveAssistantMessageUseCase {
             new Error('Unknown error'),
           );
     }
+  }
+
+  private emitCreatedEvent(
+    command: SaveAssistantMessageCommand,
+    saved: AssistantMessage,
+  ): void {
+    const userId = this.contextService.get('userId');
+    const orgId = this.contextService.get('orgId');
+    this.eventEmitter
+      .emitAsync(
+        AssistantMessageCreatedEvent.EVENT_NAME,
+        new AssistantMessageCreatedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId ?? ('unknown' as UUID),
+          command.message.threadId,
+          saved.id,
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error('Failed to emit AssistantMessageCreatedEvent', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          messageId: saved.id,
+        });
+      });
   }
 }

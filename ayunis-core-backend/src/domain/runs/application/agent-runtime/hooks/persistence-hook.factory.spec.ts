@@ -54,6 +54,32 @@ describe('PersistenceHookFactory', () => {
     );
   });
 
+  it('aborts the run when its thread disappeared before persistence', async () => {
+    const save = jest.fn().mockResolvedValue(null);
+    const { hook, addMessage } = buildHook(save);
+    const model = completingProvider([
+      { textDelta: 'Partial answer' },
+      { finishReason: 'stop' },
+    ]);
+    const events: unknown[] = [];
+
+    for await (const event of run({
+      instructions: '',
+      model,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'Hi' }] }],
+      hooks: [hook],
+    })) {
+      events.push(event);
+    }
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(addMessage).not.toHaveBeenCalled();
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'aborted',
+    });
+  });
+
   it('does not persist an empty assistant message after interruption', async () => {
     const save = jest.fn().mockResolvedValue(undefined);
     const { hook, addMessage } = buildHook(save);
@@ -97,6 +123,15 @@ function buildHook(save: jest.Mock): { hook: Hook; addMessage: jest.Mock } {
     integrations: new RuntimeToolIntegrationRegistry([]),
   });
   return { hook, addMessage };
+}
+
+function completingProvider(chunks: ProviderChunk[]): ModelProvider {
+  return {
+    name: 'completing',
+    async *stream() {
+      yield* chunks;
+    },
+  };
 }
 
 function interruptingProvider(chunk: ProviderChunk): ModelProvider {

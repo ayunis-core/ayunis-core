@@ -163,6 +163,49 @@ describe('ExecuteRunUseCase', () => {
     );
   });
 
+  it('aborts when the thread disappears before the assistant message is persisted', async () => {
+    const thread = createMockThread();
+    findThreadUseCase.execute.mockResolvedValue({
+      thread,
+      isLongChat: false,
+    });
+    const inferenceOrchestratorService = (
+      useCase as unknown as {
+        inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+      }
+    ).inferenceOrchestratorService;
+    inferenceOrchestratorService.runInference.mockImplementation(() =>
+      (async function* () {
+        yield* [] as AssistantMessage[];
+        return null;
+      })(),
+    );
+    const toolResultCollectorService = (
+      useCase as unknown as {
+        toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
+      }
+    ).toolResultCollectorService;
+    toolResultCollectorService.exitLoopAfterAgentResponse.mockReturnValue(
+      false,
+    );
+
+    const generator = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Erstelle eine Zusammenfassung', []),
+        streaming: true,
+      }),
+    );
+    let result = await generator.next();
+    while (!result.done) result = await generator.next();
+
+    expect(result.value).toBe('aborted');
+    expect(inferenceOrchestratorService.runInference).toHaveBeenCalledTimes(1);
+    expect(
+      messageCleanupService.cleanupTrailingNonAssistantMessages,
+    ).not.toHaveBeenCalled();
+  });
+
   describe('skill activation via quick action', () => {
     it('should append already-activated note to instructions when skillId is provided', async () => {
       const skillId = randomUUID();

@@ -32,7 +32,7 @@ export class InferenceOrchestratorService {
 
   async *runInference(
     params: RunParams,
-  ): AsyncGenerator<Message, AssistantMessage, void> {
+  ): AsyncGenerator<Message, AssistantMessage | null, void> {
     const trimmedMessages = this.trimMessagesForContextUseCase.execute(
       new TrimMessagesForContextCommand(
         params.thread.messages,
@@ -58,23 +58,33 @@ export class InferenceOrchestratorService {
   private async *runStreamingInference(
     params: RunParams,
     trimmedMessages: Message[],
-  ): AsyncGenerator<Message, AssistantMessage, void> {
+  ): AsyncGenerator<Message, AssistantMessage | null, void> {
     let finalMessage: AssistantMessage | undefined;
-
-    for await (const partialMessage of this.streamingInferenceService.executeStreamingInference(
-      {
-        model: params.model,
-        messages: trimmedMessages,
-        tools: params.tools,
-        instructions: params.instructions,
-        threadId: params.thread.id,
-        orgId: params.orgId,
-      },
-    )) {
-      finalMessage = partialMessage;
-      yield partialMessage;
+    const stream = this.streamingInferenceService.executeStreamingInference({
+      model: params.model,
+      messages: trimmedMessages,
+      tools: params.tools,
+      instructions: params.instructions,
+      threadId: params.thread.id,
+      orgId: params.orgId,
+    });
+    let threadExists = true;
+    let streamCompleted = false;
+    try {
+      for (;;) {
+        const next = await stream.next();
+        if (next.done) {
+          threadExists = next.value;
+          streamCompleted = true;
+          break;
+        }
+        finalMessage = next.value;
+        yield next.value;
+      }
+    } finally {
+      if (!streamCompleted) await stream.return(true);
     }
-
+    if (!threadExists) return null;
     if (!finalMessage) {
       throw new RunExecutionFailedError(
         'No final message received from streaming inference',

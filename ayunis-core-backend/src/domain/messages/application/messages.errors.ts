@@ -51,6 +51,13 @@ export class MessageTooLongError extends MessageError {
   }
 }
 
+export class MessageThreadMissingError extends Error {
+  constructor(readonly threadId: string) {
+    super(`Message parent thread '${threadId}' no longer exists`);
+    this.name = MessageThreadMissingError.name;
+  }
+}
+
 export class MessageCreationError extends ApplicationError {
   constructor(messageType: string, error: Error, metadata?: ErrorMetadata) {
     super(

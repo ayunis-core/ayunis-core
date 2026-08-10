@@ -87,7 +87,7 @@ export class StreamingInferenceService {
 
   async *executeStreamingInference(
     params: StreamingInferenceParams,
-  ): AsyncGenerator<AssistantMessage, void, unknown> {
+  ): AsyncGenerator<AssistantMessage, boolean, unknown> {
     const tracker = freshTracker();
     // One message entity for all attempts: the chat UI keys updates by
     // message id, so a retry under a fresh id would leave the failed
@@ -97,9 +97,13 @@ export class StreamingInferenceService {
       content: [],
     });
     try {
-      yield* this.streamAttempt(params, tracker, assistantMessage);
+      const threadExists = yield* this.streamAttempt(
+        params,
+        tracker,
+        assistantMessage,
+      );
       if (tracker.yieldedContent) {
-        return;
+        return threadExists;
       }
       // The stream completed without a single chunk — an empty provider
       // response. Nothing was shown or persisted, so one retry is as safe
@@ -126,7 +130,7 @@ export class StreamingInferenceService {
         },
       );
     }
-    yield* this.streamAttempt(params, freshTracker(), assistantMessage);
+    return yield* this.streamAttempt(params, freshTracker(), assistantMessage);
   }
 
   private isRetryableBeforeOutput(
@@ -142,7 +146,7 @@ export class StreamingInferenceService {
     params: StreamingInferenceParams,
     tracker: OutputTracker,
     assistantMessage: AssistantMessage,
-  ): AsyncGenerator<AssistantMessage, void, unknown> {
+  ): AsyncGenerator<AssistantMessage, boolean, unknown> {
     const { model, tools, threadId, orgId } = params;
 
     const stream$ = this.startStream(params);
@@ -161,6 +165,7 @@ export class StreamingInferenceService {
     );
 
     let inferenceError: unknown;
+    let threadExists = true;
     try {
       yield* this.processStreamingChunks(
         asyncIterable,
@@ -179,7 +184,7 @@ export class StreamingInferenceService {
         this.collectStreamUsage(model, allChunks, assistantMessage.id);
       }
 
-      await this.saveAccumulatedMessage(
+      threadExists = await this.saveAccumulatedMessage(
         threadId,
         state,
         assistantMessage,
@@ -187,6 +192,7 @@ export class StreamingInferenceService {
         tools,
       );
     }
+    return threadExists;
   }
 
   private startStream(params: {
@@ -346,7 +352,7 @@ export class StreamingInferenceService {
     assistantMessage: AssistantMessage,
     streamCompletedSuccessfully: boolean,
     tools: Tool[],
-  ): Promise<void> {
+  ): Promise<boolean> {
     this.logger.log(
       'Finalizing streaming inference, saving accumulated message',
       {
@@ -365,9 +371,10 @@ export class StreamingInferenceService {
     assistantMessage.content = finalContent;
 
     if (finalContent.length > 0) {
-      await this.saveAssistantMessageUseCase.execute(
+      const saved = await this.saveAssistantMessageUseCase.execute(
         new SaveAssistantMessageCommand(assistantMessage),
       );
+      if (!saved) return false;
       this.logger.log('Successfully saved message to database', {
         threadId,
         messageId: assistantMessage.id,
@@ -377,6 +384,7 @@ export class StreamingInferenceService {
         threadId,
       });
     }
+    return true;
   }
 
   private buildFinalContent(

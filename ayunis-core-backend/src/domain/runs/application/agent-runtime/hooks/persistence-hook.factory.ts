@@ -1,4 +1,5 @@
 import type {
+  AfterModelCallContext,
   AssistantMessage as RuntimeAssistantMessage,
   Hook,
   RunContext,
@@ -51,19 +52,19 @@ export class PersistenceHookFactory {
       name: 'ayunis-persistence',
       runEndFailureMode: 'critical',
       afterModelCall: (ctx) =>
-        this.persistAssistantMessage(
+        this.persistAssistantMessageOrAbort(
+          ctx,
+          params.thread,
+          params.integrations,
+        ),
+      modelCallInterrupted: async (ctx) => {
+        await this.persistAssistantMessage(
           ctx.message,
           params.thread,
           assistantMessageId(ctx.context.runId, ctx.iteration),
           params.integrations,
-        ),
-      modelCallInterrupted: (ctx) =>
-        this.persistAssistantMessage(
-          ctx.message,
-          params.thread,
-          assistantMessageId(ctx.context.runId, ctx.iteration),
-          params.integrations,
-        ),
+        );
+      },
       afterToolCall: async (ctx) => {
         const pending = ctx.context.get<PendingToolResults>(
           PENDING_TOOL_RESULTS,
@@ -87,14 +88,28 @@ export class PersistenceHookFactory {
     };
   }
 
+  private async persistAssistantMessageOrAbort(
+    ctx: AfterModelCallContext,
+    thread: Thread,
+    integrations: RuntimeToolIntegrationRegistry,
+  ): Promise<void> {
+    const persisted = await this.persistAssistantMessage(
+      ctx.message,
+      thread,
+      assistantMessageId(ctx.context.runId, ctx.iteration),
+      integrations,
+    );
+    if (!persisted) ctx.abort('thread no longer exists');
+  }
+
   private async persistAssistantMessage(
     message: RuntimeAssistantMessage,
     thread: Thread,
     id: UUID,
     integrations: RuntimeToolIntegrationRegistry,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (message.content.length === 0) {
-      return;
+      return true;
     }
     const backendMessage = toBackendAssistantMessage(
       message,
@@ -105,9 +120,11 @@ export class PersistenceHookFactory {
     const saved = await this.saveAssistantMessageUseCase.execute(
       new SaveAssistantMessageCommand(backendMessage),
     );
+    if (!saved) return false;
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );
+    return true;
   }
 
   private async flushToolResults(
