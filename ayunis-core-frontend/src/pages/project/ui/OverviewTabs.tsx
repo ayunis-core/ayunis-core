@@ -175,9 +175,13 @@ export function ListTab({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex min-h-8 items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-muted-foreground">
+        <h3 className="text-sm font-medium">
           {heading}
-          {hint && <span className="ml-1.5 font-normal">({hint})</span>}
+          {hint && (
+            <span className="ml-1.5 font-normal text-muted-foreground">
+              ({hint})
+            </span>
+          )}
         </h3>
         {canManage && (
           <Button variant="outline" size="sm" onClick={onAdd}>

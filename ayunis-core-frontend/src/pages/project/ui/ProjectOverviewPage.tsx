@@ -249,7 +249,7 @@ export function ProjectOverviewPage({
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
                     <div className="flex min-h-8 items-center justify-between gap-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">
+                      <h3 className="text-sm font-medium">
                         Wissensdatenbanken
                       </h3>
                       {canContribute && (
@@ -282,9 +282,7 @@ export function ProjectOverviewPage({
                   </div>
                   <div className="flex flex-col gap-2">
                     <div className="flex min-h-8 items-center justify-between gap-2">
-                      <h3 className="text-sm font-medium text-muted-foreground">
-                        Dateien
-                      </h3>
+                      <h3 className="text-sm font-medium">Dateien</h3>
                       {canContribute && (
                         <Button
                           variant="outline"
