@@ -19,5 +19,27 @@
         "description": "Benutzer müssen den KI-Führerschein bestehen und alle 12 Monate erneuern. Zum Erneuern muss die gesamte Academy erneut abgeschlossen werden."
       }
     }
+  },
+  "overview": {
+    "title": "Zertifikatsstatus je Benutzer",
+    "description": "Wer den KI-Führerschein bestanden hat, wann er bestanden wurde und bei wem Handlungsbedarf besteht. Zertifikate, die innerhalb von 30 Tagen ablaufen, gelten als bald ablaufend.",
+    "searchPlaceholder": "Nach Name oder E-Mail suchen",
+    "empty": "Keine Benutzer entsprechen diesen Filtern",
+    "emptyDescription": "Setzen Sie die Suche oder den Statusfilter zurück, um alle Benutzer zu sehen.",
+    "filter": {
+      "all": "Alle Status"
+    },
+    "column": {
+      "member": "Benutzer",
+      "lastPassed": "Zuletzt bestanden",
+      "renewalDue": "Erneuerung fällig",
+      "status": "Status"
+    },
+    "status": {
+      "valid": "Gültig",
+      "expiringSoon": "Läuft bald ab",
+      "expired": "Abgelaufen",
+      "notPassed": "Noch nicht erworben"
+    }
   }
 }
