@@ -5,7 +5,10 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { RuntimeInferenceHandler } from '../runtime/runtime-inference.handler';
 import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import {
+  ANTHROPIC_MAX_OUTPUT_TOKENS,
+  INFERENCE_MAX_RETRIES,
+} from '../runtime/inference-config';
 
 @Injectable()
 export class AnthropicInferenceHandler extends RuntimeInferenceHandler {
@@ -21,6 +24,7 @@ export class AnthropicInferenceHandler extends RuntimeInferenceHandler {
       apiKey: this.configService.get<string>('models.anthropic.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
+      maxTokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
     });
   }
 }
