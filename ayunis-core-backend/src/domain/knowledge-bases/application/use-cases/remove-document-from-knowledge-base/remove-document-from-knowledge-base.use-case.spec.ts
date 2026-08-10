@@ -87,7 +87,9 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
 
     await useCase.execute(command);
 
-    expect(mockDeleteSourceUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(mockDeleteSourceUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceId: documentId, orgId }),
+    );
   });
 
   it('should throw DocumentNotInKnowledgeBaseError when document is not in the KB', async () => {

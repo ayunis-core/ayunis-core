@@ -1,5 +1,8 @@
 import type { UUID } from 'crypto';
 
 export class DeleteSourcesCommand {
-  constructor(public readonly sourceIds: UUID[]) {}
+  constructor(
+    public readonly sourceIds: UUID[],
+    public readonly orgId: UUID,
+  ) {}
 }

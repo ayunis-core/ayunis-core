@@ -28,6 +28,7 @@ import type { FileSource } from 'src/domain/sources/domain/sources/text-source.e
 describe('AddFileSourceToSkillUseCase', () => {
   const skillId = randomUUID();
   const userId = randomUUID();
+  const orgId = randomUUID();
   const updatedSkill = { id: skillId } as Skill;
 
   let skillRepository: jest.Mocked<SkillRepository>;
@@ -63,7 +64,7 @@ describe('AddFileSourceToSkillUseCase', () => {
       .mockResolvedValue(Buffer.from('file-bytes'));
 
     const contextService = {
-      get: jest.fn().mockReturnValue(userId),
+      get: jest.fn((key: string) => (key === 'orgId' ? orgId : userId)),
     } as unknown as ContextService;
 
     useCase = new AddFileSourceToSkillUseCase(
@@ -213,7 +214,7 @@ describe('AddFileSourceToSkillUseCase', () => {
     ).rejects.toThrow();
 
     expect(deleteSources.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceIds: [created.id] }),
+      expect.objectContaining({ sourceIds: [created.id], orgId }),
     );
   });
 

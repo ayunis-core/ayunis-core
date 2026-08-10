@@ -108,7 +108,10 @@ describe('DeleteKnowledgeBaseUseCase', () => {
       expect.objectContaining({ knowledgeBaseId }),
     );
     expect(mockDeleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      new DeleteSourcesCommand(sources.map((s) => s.id)),
+      new DeleteSourcesCommand(
+        sources.map((source) => source.id),
+        orgId,
+      ),
     );
     expect(mockKbRepository.delete).toHaveBeenCalledWith(existing);
   });
@@ -131,7 +134,7 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     );
 
     expect(mockDeleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      new DeleteSourcesCommand([]),
+      new DeleteSourcesCommand([], orgId),
     );
     expect(mockKbRepository.delete).toHaveBeenCalledWith(existing);
   });

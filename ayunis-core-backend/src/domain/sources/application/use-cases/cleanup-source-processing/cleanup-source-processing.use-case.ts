@@ -10,10 +10,10 @@ import { CleanupSourceProcessingCommand } from './cleanup-source-processing.comm
  * Cancels in-flight processing jobs and purges processing blobs
  * (`<orgId>/processing/<sourceId>/`) for the given sources.
  *
- * Unlike `SourceProcessingCleanupService` this needs neither source rows nor a
- * request context — the org id is passed explicitly — so it can run after the
- * owning rows are already cascade-deleted (deferred user/org deletion
- * cleanup). Everything is best-effort: failures are logged, never thrown.
+ * This needs neither source rows nor a request context — the org id is passed
+ * explicitly — so it can run during direct deletion or after owning rows are
+ * already cascade-deleted. Everything is best-effort: failures are logged,
+ * never thrown.
  */
 @Injectable()
 export class CleanupSourceProcessingUseCase {

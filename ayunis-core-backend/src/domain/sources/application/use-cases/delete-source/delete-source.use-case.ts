@@ -3,7 +3,8 @@ import { SourceRepository } from '../../ports/source.repository';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
 import { DeleteContentCommand } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.command';
-import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
+import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
+import { CleanupSourceProcessingCommand } from '../cleanup-source-processing/cleanup-source-processing.command';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedSourceError } from '../../sources.errors';
@@ -16,7 +17,7 @@ export class DeleteSourceUseCase {
   constructor(
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
-    private readonly sourceProcessingCleanupService: SourceProcessingCleanupService,
+    private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
   ) {}
 
   @Transactional()
@@ -26,8 +27,8 @@ export class DeleteSourceUseCase {
       const source = await this.sourceRepository.findById(command.sourceId);
 
       if (source?.status === SourceStatus.PROCESSING) {
-        await this.sourceProcessingCleanupService.cancelAndCleanup(
-          command.sourceId,
+        await this.cleanupSourceProcessingUseCase.execute(
+          new CleanupSourceProcessingCommand([command.sourceId], command.orgId),
         );
       }
 

@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   detectFileType,
   getCanonicalMimeType,
@@ -45,6 +47,7 @@ export class AddFileSourceToThreadUseCase {
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly startDataSourceProcessingUseCase: StartDataSourceProcessingUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -143,8 +146,13 @@ export class AddFileSourceToThreadUseCase {
       await this.attachSources(thread, sources);
     } catch (error) {
       try {
+        const orgId = this.contextService.get('orgId');
+        if (!orgId) throw new UnauthorizedAccessError();
         await this.deleteSourcesUseCase.execute(
-          new DeleteSourcesCommand(sources.map((source) => source.id)),
+          new DeleteSourcesCommand(
+            sources.map((source) => source.id),
+            orgId,
+          ),
         );
       } catch (cleanupError) {
         this.logger.error('Failed to delete sources after attach failure', {

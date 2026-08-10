@@ -13,7 +13,7 @@ import { randomUUID } from 'crypto';
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
-import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
+import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceRepository } from '../../ports/source.repository';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
@@ -44,16 +44,18 @@ function makeReadySource(id: UUID): FileSource {
 describe('DeleteSourceUseCase', () => {
   let useCase: DeleteSourceUseCase;
   let mockSourceRepository: Record<string, jest.Mock>;
-  let mockSourceProcessingCleanupService: Record<string, jest.Mock>;
+  let mockCleanupSourceProcessingUseCase: Record<string, jest.Mock>;
   let mockDeleteContentUseCase: Record<string, jest.Mock>;
+
+  const orgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
 
   beforeAll(async () => {
     mockSourceRepository = {
       findById: jest.fn().mockResolvedValue(null),
       delete: jest.fn().mockResolvedValue(undefined),
     };
-    mockSourceProcessingCleanupService = {
-      cancelAndCleanup: jest.fn().mockResolvedValue(undefined),
+    mockCleanupSourceProcessingUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
     };
     mockDeleteContentUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
@@ -64,8 +66,8 @@ describe('DeleteSourceUseCase', () => {
         DeleteSourceUseCase,
         { provide: SourceRepository, useValue: mockSourceRepository },
         {
-          provide: SourceProcessingCleanupService,
-          useValue: mockSourceProcessingCleanupService,
+          provide: CleanupSourceProcessingUseCase,
+          useValue: mockCleanupSourceProcessingUseCase,
         },
         { provide: DeleteContentUseCase, useValue: mockDeleteContentUseCase },
       ],
@@ -78,9 +80,7 @@ describe('DeleteSourceUseCase', () => {
     jest.clearAllMocks();
     mockSourceRepository.findById.mockResolvedValue(null);
     mockSourceRepository.delete.mockResolvedValue(undefined);
-    mockSourceProcessingCleanupService.cancelAndCleanup.mockResolvedValue(
-      undefined,
-    );
+    mockCleanupSourceProcessingUseCase.execute.mockResolvedValue(undefined);
     mockDeleteContentUseCase.execute.mockResolvedValue(undefined);
   });
 
@@ -88,28 +88,26 @@ describe('DeleteSourceUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should cancel and cleanup when deleting a processing source', async () => {
+  it('should clean up a processing source using its explicit org', async () => {
     const sourceId = randomUUID();
     mockSourceRepository.findById.mockResolvedValue(
       makeProcessingSource(sourceId),
     );
 
-    await useCase.execute(new DeleteSourceCommand(sourceId));
+    await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
 
-    expect(
-      mockSourceProcessingCleanupService.cancelAndCleanup,
-    ).toHaveBeenCalledWith(sourceId);
+    expect(mockCleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: [sourceId], orgId }),
+    );
   });
 
-  it('should not call cancelAndCleanup for ready sources', async () => {
+  it('should not clean up ready sources', async () => {
     const sourceId = randomUUID();
     mockSourceRepository.findById.mockResolvedValue(makeReadySource(sourceId));
 
-    await useCase.execute(new DeleteSourceCommand(sourceId));
+    await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
 
-    expect(
-      mockSourceProcessingCleanupService.cancelAndCleanup,
-    ).not.toHaveBeenCalled();
+    expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should wrap repository errors into UnexpectedSourceError', async () => {
@@ -119,7 +117,7 @@ describe('DeleteSourceUseCase', () => {
     );
 
     await expect(
-      useCase.execute(new DeleteSourceCommand(sourceId)),
+      useCase.execute(new DeleteSourceCommand(sourceId, orgId)),
     ).rejects.toBeInstanceOf(UnexpectedSourceError);
 
     expect(mockSourceRepository.delete).toHaveBeenCalledWith(sourceId);

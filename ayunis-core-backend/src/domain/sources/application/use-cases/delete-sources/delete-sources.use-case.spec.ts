@@ -11,7 +11,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { DeleteSourcesUseCase } from './delete-sources.use-case';
 import { DeleteSourcesCommand } from './delete-sources.command';
-import { SourceProcessingCleanupService } from '../../services/source-processing-cleanup.service';
+import { CleanupSourceProcessingUseCase } from '../cleanup-source-processing/cleanup-source-processing.use-case';
 import { SourceRepository } from '../../ports/source.repository';
 import { IndexRegistry } from 'src/domain/rag/indexers/application/indexer.registry';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -32,16 +32,18 @@ function makeSource(id: UUID, status: SourceStatus): FileSource {
 describe('DeleteSourcesUseCase', () => {
   let useCase: DeleteSourcesUseCase;
   let mockSourceRepository: Record<string, jest.Mock>;
-  let mockSourceProcessingCleanupService: Record<string, jest.Mock>;
+  let mockCleanupSourceProcessingUseCase: Record<string, jest.Mock>;
   let mockIndex: Record<string, jest.Mock>;
+
+  const orgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
 
   beforeAll(async () => {
     mockSourceRepository = {
       findByIds: jest.fn().mockResolvedValue([]),
       deleteMany: jest.fn().mockResolvedValue(undefined),
     };
-    mockSourceProcessingCleanupService = {
-      cancelAndCleanup: jest.fn().mockResolvedValue(undefined),
+    mockCleanupSourceProcessingUseCase = {
+      execute: jest.fn().mockResolvedValue(undefined),
     };
     mockIndex = { deleteMany: jest.fn().mockResolvedValue(undefined) };
 
@@ -50,8 +52,8 @@ describe('DeleteSourcesUseCase', () => {
         DeleteSourcesUseCase,
         { provide: SourceRepository, useValue: mockSourceRepository },
         {
-          provide: SourceProcessingCleanupService,
-          useValue: mockSourceProcessingCleanupService,
+          provide: CleanupSourceProcessingUseCase,
+          useValue: mockCleanupSourceProcessingUseCase,
         },
         {
           provide: IndexRegistry,
@@ -67,9 +69,7 @@ describe('DeleteSourcesUseCase', () => {
     jest.clearAllMocks();
     mockSourceRepository.findByIds.mockResolvedValue([]);
     mockSourceRepository.deleteMany.mockResolvedValue(undefined);
-    mockSourceProcessingCleanupService.cancelAndCleanup.mockResolvedValue(
-      undefined,
-    );
+    mockCleanupSourceProcessingUseCase.execute.mockResolvedValue(undefined);
   });
 
   it('should cancel and cleanup for processing sources in batch delete', async () => {
@@ -81,15 +81,13 @@ describe('DeleteSourcesUseCase', () => {
       makeSource(readyId, SourceStatus.READY),
     ]);
 
-    await useCase.execute(new DeleteSourcesCommand([processingId, readyId]));
+    await useCase.execute(
+      new DeleteSourcesCommand([processingId, readyId], orgId),
+    );
 
-    // Only the processing source should trigger cleanup
-    expect(
-      mockSourceProcessingCleanupService.cancelAndCleanup,
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockSourceProcessingCleanupService.cancelAndCleanup,
-    ).toHaveBeenCalledWith(processingId);
+    expect(mockCleanupSourceProcessingUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: [processingId], orgId }),
+    );
     // Both should be deleted from index and DB
     expect(mockIndex.deleteMany).toHaveBeenCalledWith([processingId, readyId]);
     expect(mockSourceRepository.deleteMany).toHaveBeenCalledWith([
@@ -99,7 +97,7 @@ describe('DeleteSourcesUseCase', () => {
   });
 
   it('should skip early when sourceIds is empty', async () => {
-    await useCase.execute(new DeleteSourcesCommand([]));
+    await useCase.execute(new DeleteSourcesCommand([], orgId));
 
     expect(mockSourceRepository.findByIds).not.toHaveBeenCalled();
     expect(mockSourceRepository.deleteMany).not.toHaveBeenCalled();

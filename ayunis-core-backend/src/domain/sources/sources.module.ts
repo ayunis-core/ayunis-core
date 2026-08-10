@@ -26,7 +26,6 @@ import { GetSourcesByKnowledgeBaseIdUseCase } from './application/use-cases/get-
 import { CreateProcessingSourceUseCase } from './application/use-cases/create-processing-source/create-processing-source.use-case';
 import { MarkSourceFailedUseCase } from './application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { EnqueueDocumentProcessingUseCase } from './application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
-import { SourceProcessingCleanupService } from './application/services/source-processing-cleanup.service';
 import { StartDocumentProcessingUseCase } from './application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
@@ -49,7 +48,6 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   providers: [
-    SourceProcessingCleanupService,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
