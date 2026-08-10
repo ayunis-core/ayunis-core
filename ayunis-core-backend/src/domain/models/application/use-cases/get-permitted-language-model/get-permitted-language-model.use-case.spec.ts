@@ -12,11 +12,14 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
 
 describe('GetPermittedLanguageModelUseCase', () => {
   let useCase: GetPermittedLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
+  let getEffectiveLanguageModelsUseCase: jest.Mocked<GetEffectiveLanguageModelsUseCase>;
 
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174010' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
   const mockPermittedModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
@@ -54,9 +57,16 @@ describe('GetPermittedLanguageModelUseCase', () => {
           },
         },
         {
+          provide: GetEffectiveLanguageModelsUseCase,
+          useValue: {
+            execute: jest.fn(),
+          },
+        },
+        {
           provide: ContextService,
           useValue: {
             get: jest.fn((key: string) => {
+              if (key === 'userId') return mockUserId;
               if (key === 'orgId') return mockOrgId;
               if (key === 'systemRole') return null;
               return null;
@@ -68,6 +78,9 @@ describe('GetPermittedLanguageModelUseCase', () => {
 
     useCase = module.get(GetPermittedLanguageModelUseCase);
     permittedModelsRepository = module.get(PermittedModelsRepository);
+    getEffectiveLanguageModelsUseCase = module.get(
+      GetEffectiveLanguageModelsUseCase,
+    );
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
@@ -80,6 +93,10 @@ describe('GetPermittedLanguageModelUseCase', () => {
   it('should return the model when it belongs to the caller org', async () => {
     const model = permittedModelForOrg(mockOrgId);
     permittedModelsRepository.findOneLanguage.mockResolvedValue(model);
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [model],
+      overrideTeamIds: [],
+    });
 
     await expect(
       useCase.execute(
@@ -96,6 +113,29 @@ describe('GetPermittedLanguageModelUseCase', () => {
         new GetPermittedLanguageModelQuery({ id: mockPermittedModelId }),
       ),
     ).rejects.toBeInstanceOf(ModelNotFoundByIdError);
+  });
+
+  it('should reject an org model excluded by team overrides', async () => {
+    const orgModel = permittedModelForOrg(mockOrgId);
+    const teamId = '123e4567-e89b-12d3-a456-426614174021';
+    const effectiveTeamModel = new PermittedLanguageModel({
+      id: '123e4567-e89b-12d3-a456-426614174020',
+      model: mockLanguageModel,
+      orgId: mockOrgId,
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamId,
+    });
+    permittedModelsRepository.findOneLanguage.mockResolvedValue(orgModel);
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [effectiveTeamModel],
+      overrideTeamIds: [teamId],
+    });
+
+    await expect(
+      useCase.execute(
+        new GetPermittedLanguageModelQuery({ id: mockPermittedModelId }),
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
   });
 
   it('should throw UnauthorizedAccessError when the model belongs to another org', async () => {

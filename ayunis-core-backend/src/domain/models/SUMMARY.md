@@ -40,7 +40,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedModelsUseCase** (`application/use-cases/get-permitted-models`): Retrieves all permitted models for an org.
 - **GetPermittedModelUseCase** (`application/use-cases/get-permitted-model`): Retrieves a single permitted model by ID.
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.
-- **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves the single permitted language model by model ID.
+- **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves a language-model permit by ID only when it belongs to the current user's effective org/team model set.
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
 - **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. Image generation is team-restrictable: when the user belongs to one or more teams with model overrides enabled, image generation is only available if the org's image-generation model has been assigned to one of those override teams; users in no override team fall back to the org-level permitted model (mirrors `GetEffectiveLanguageModelsUseCase`).
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
@@ -58,7 +58,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **SetUserDefaultLanguageModelUseCase** (`application/use-cases/set-user-default-language-model`): Sets a user's default language model.
 - **GetOrgDefaultModelUseCase** (`application/use-cases/get-org-default-model`): Retrieves the org-level default model.
 - **GetUserDefaultModelUseCase** (`application/use-cases/get-user-default-model`): Retrieves a user's default model.
-- **GetDefaultModelUseCase** (`application/use-cases/get-default-model`): Resolves the effective default model for a user (user → org → system fallback).
+- **GetDefaultModelUseCase** (`application/use-cases/get-default-model`): Resolves the effective default model for a user (user → team → org → alphabetical fallback) and returns the permit record from the user's current effective org/team model set.
 - **DeleteUserDefaultModelUseCase** (`application/use-cases/delete-user-default-model`): Removes a user's default model preference.
 - **DeleteUserDefaultModelsByModelIdUseCase** (`application/use-cases/delete-user-default-models-by-model-id`): Removes all user defaults referencing a specific model.
 - **ClearDefaultsByCatalogModelIdUseCase** (`application/use-cases/clear-defaults-by-catalog-model-id`): Clears all default references for a catalog model being deleted.
