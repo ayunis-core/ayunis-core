@@ -11,6 +11,12 @@ export interface PresignedUrlResponseOverrides {
   contentDisposition?: string;
 }
 
+/** An object's key plus the metadata needed to age it against a safety window. */
+export interface StorageObjectSummary {
+  objectName: string;
+  lastModified?: Date;
+}
+
 export abstract class ObjectStoragePort {
   /**
    * Upload a file to the storage
@@ -108,4 +114,16 @@ export abstract class ObjectStoragePort {
    * @returns Array of object names matching the prefix
    */
   abstract listObjects(prefix?: string, bucket?: string): Promise<string[]>;
+
+  /**
+   * List objects with the metadata needed to age them against a safety window.
+   *
+   * @param prefix Optional prefix to filter objects
+   * @param bucket Optional bucket name (uses default if not provided)
+   * @returns Array of object summaries (key + last-modified time) matching the prefix
+   */
+  abstract listObjectsWithMetadata(
+    prefix?: string,
+    bucket?: string,
+  ): Promise<StorageObjectSummary[]>;
 }

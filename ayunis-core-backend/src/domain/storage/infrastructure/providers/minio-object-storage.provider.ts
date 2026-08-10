@@ -5,6 +5,7 @@ import { Readable } from 'stream';
 import {
   ObjectStoragePort,
   type PresignedUrlResponseOverrides,
+  type StorageObjectSummary,
 } from '../../application/ports/object-storage.port';
 import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from '../../domain/storage-object-upload.entity';
@@ -259,6 +260,35 @@ export class MinioObjectStorageProvider
 
       stream.on('end', () => {
         resolve(objectNames);
+      });
+    });
+  }
+
+  async listObjectsWithMetadata(
+    prefix?: string,
+    bucket?: string,
+  ): Promise<StorageObjectSummary[]> {
+    const bucketName = bucket ?? this.defaultBucket;
+    const objects: StorageObjectSummary[] = [];
+
+    return new Promise((resolve, reject) => {
+      const stream = this.client.listObjects(bucketName, prefix, true);
+
+      stream.on('data', (obj) => {
+        if (obj.name) {
+          objects.push({
+            objectName: obj.name,
+            lastModified: obj.lastModified,
+          });
+        }
+      });
+
+      stream.on('error', (err) => {
+        reject(err);
+      });
+
+      stream.on('end', () => {
+        resolve(objects);
       });
     });
   }
