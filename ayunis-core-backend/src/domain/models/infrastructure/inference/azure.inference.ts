@@ -20,8 +20,6 @@ export class AzureInferenceHandler extends RuntimeInferenceHandler {
     return azure({
       apiKey: this.configService.get<string>('models.azure.apiKey') ?? '',
       endpoint: this.configService.get<string>('models.azure.endpoint') ?? '',
-      apiVersion:
-        this.configService.get<string>('models.azure.apiVersion') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
     });

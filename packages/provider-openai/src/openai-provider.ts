@@ -1,4 +1,4 @@
-import OpenAI, { AzureOpenAI } from 'openai';
+import OpenAI from 'openai';
 import type { ChatCompletionCreateParamsStreaming } from 'openai/resources/chat/completions';
 
 import type {
@@ -37,8 +37,6 @@ export interface AzureProviderOptions {
   apiKey: string;
   /** Azure resource endpoint, e.g. 'https://my-resource.openai.azure.com'. */
   endpoint: string;
-  /** Azure API version, e.g. '2024-10-21'. */
-  apiVersion: string;
   /** Azure deployment name, passed through as the model id. */
   model: string;
   /** SDK-level retry count for transient failures. Default: 2. */
@@ -64,16 +62,42 @@ export const openai = (options: OpenAIProviderOptions): ModelProvider => {
   return createProvider(client, `openai:${options.model}`, options.model);
 };
 
+const buildAzureV1BaseUrl = (endpoint: string): string => {
+  let url: URL;
+  try {
+    url = new URL(endpoint.trim());
+  } catch {
+    throw new Error(
+      `Azure OpenAI endpoint must be an absolute HTTPS URL; received ${JSON.stringify(endpoint)}`,
+    );
+  }
+  if (
+    url.protocol !== 'https:' ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(
+      `Azure OpenAI endpoint must be an absolute HTTPS URL without credentials, query parameters, or a fragment; received ${JSON.stringify(endpoint)}`,
+    );
+  }
+  let pathname = url.pathname;
+  while (pathname.endsWith('/')) {
+    pathname = pathname.slice(0, -1);
+  }
+  url.pathname = `${pathname}/openai/v1/`;
+  return url.toString();
+};
+
 /**
- * Azure OpenAI ModelProvider. Same Chat Completions protocol as `openai`,
- * only the client differs (resource endpoint + API version). `model` is the
- * Azure deployment name.
+ * Azure OpenAI ModelProvider using the versionless v1 Chat Completions API.
+ * `model` is the Azure deployment name.
  */
 export const azure = (options: AzureProviderOptions): ModelProvider => {
-  const client = new AzureOpenAI({
+  const client = new OpenAI({
     apiKey: options.apiKey,
-    endpoint: options.endpoint,
-    apiVersion: options.apiVersion,
+    baseURL: buildAzureV1BaseUrl(options.endpoint),
     timeout: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     ...(options.maxRetries !== undefined
       ? { maxRetries: options.maxRetries }

@@ -31,16 +31,32 @@ describe('openai client construction', () => {
 });
 
 describe('azure client construction', () => {
-  it('bounds each request attempt with the default timeout', () => {
+  const insecureEndpoint = ['http:', '//my-resource.openai.azure.com'].join('');
+  it('uses the standard client with the Azure v1 base URL', () => {
     azure({
       apiKey: 'azure-key',
       endpoint: 'https://my-resource.openai.azure.com',
-      apiVersion: '2024-10-21',
       model: 'gpt-5.4',
     });
 
-    expect(azureCtor).toHaveBeenCalledWith(
-      expect.objectContaining({ timeout: DEFAULT_TIMEOUT_MS }),
+    expect(openaiCtor).toHaveBeenCalledWith({
+      apiKey: 'azure-key',
+      baseURL: 'https://my-resource.openai.azure.com/openai/v1/',
+      timeout: DEFAULT_TIMEOUT_MS,
+    });
+    expect(azureCtor).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'https://my-resource.openai.azure.com/',
+    'https://my-resource.openai.azure.com///',
+  ])('handles trailing endpoint slashes in %s', (endpoint) => {
+    azure({ apiKey: 'azure-key', endpoint, model: 'gpt-5.4' });
+
+    expect(openaiCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseURL: 'https://my-resource.openai.azure.com/openai/v1/',
+      }),
     );
   });
 
@@ -48,13 +64,21 @@ describe('azure client construction', () => {
     azure({
       apiKey: 'azure-key',
       endpoint: 'https://my-resource.openai.azure.com',
-      apiVersion: '2024-10-21',
       model: 'gpt-5.4',
       timeoutMs: 45_000,
     });
 
-    expect(azureCtor).toHaveBeenCalledWith(
+    expect(openaiCtor).toHaveBeenCalledWith(
       expect.objectContaining({ timeout: 45_000 }),
     );
   });
+
+  it.each(['', 'not-an-endpoint', insecureEndpoint])(
+    'rejects invalid endpoint %j with an actionable error',
+    (endpoint) => {
+      expect(() =>
+        azure({ apiKey: 'azure-key', endpoint, model: 'gpt-5.4' }),
+      ).toThrow(/Azure OpenAI endpoint.*absolute HTTPS URL/);
+    },
+  );
 });

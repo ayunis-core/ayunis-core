@@ -63,7 +63,6 @@ describe('azure', () => {
     const provider = azure({
       apiKey: 'azure-test',
       endpoint: 'https://my-resource.openai.azure.com',
-      apiVersion: '2024-10-21',
       model: 'gpt-4o-deployment',
     });
     expect(provider.name).toBe('azure:gpt-4o-deployment');
