@@ -92,6 +92,7 @@ describe('GetDefaultModelUseCase', () => {
     // Default: no user default
     userDefaultModelsRepository.findByUserId.mockResolvedValue(null);
     permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(null);
+    permittedModelsRepository.findTeamDefaultLanguage.mockResolvedValue(null);
   });
 
   it('should return user default when it is in the effective set', async () => {
@@ -110,6 +111,30 @@ describe('GetDefaultModelUseCase', () => {
     );
 
     expect(result).toBe(userDefault);
+  });
+
+  it('should return the effective team permit for a matching user default', async () => {
+    const gpt4 = makeLanguageModel('gpt-4');
+    const userDefault = makePermittedLanguageModel(gpt4, {
+      id: '33333333-3333-3333-3333-333333333333',
+    });
+    const effectiveTeamModel = makePermittedLanguageModel(gpt4, {
+      id: '44444444-4444-4444-4444-444444444444',
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamAId,
+    });
+
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [effectiveTeamModel],
+      overrideTeamIds: [teamAId],
+    });
+    userDefaultModelsRepository.findByUserId.mockResolvedValue(userDefault);
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({ orgId, userId }),
+    );
+
+    expect(result).toBe(effectiveTeamModel);
   });
 
   it('should skip user default when it is NOT in the effective set', async () => {
@@ -228,6 +253,33 @@ describe('GetDefaultModelUseCase', () => {
     );
 
     expect(result).toBe(orgDefault);
+  });
+
+  it('should return the effective team permit for a matching org default', async () => {
+    const gpt4 = makeLanguageModel('gpt-4');
+    const orgDefault = makePermittedLanguageModel(gpt4, {
+      id: '55555555-5555-5555-5555-555555555555',
+      isDefault: true,
+    });
+    const effectiveTeamModel = makePermittedLanguageModel(gpt4, {
+      id: '66666666-6666-6666-6666-666666666666',
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamAId,
+    });
+
+    getEffectiveLanguageModelsUseCase.execute.mockResolvedValue({
+      models: [effectiveTeamModel],
+      overrideTeamIds: [teamAId],
+    });
+    permittedModelsRepository.findOrgDefaultLanguage.mockResolvedValue(
+      orgDefault,
+    );
+
+    const result = await useCase.execute(
+      new GetDefaultModelQuery({ orgId, userId }),
+    );
+
+    expect(result).toBe(effectiveTeamModel);
   });
 
   it('should skip org default when NOT in effective set', async () => {
