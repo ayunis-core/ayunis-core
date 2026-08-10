@@ -332,10 +332,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.assignments.removeDirectKnowledgeBaseAssignments(params);
   }
 
-  async findSourceIdsWithOnlyStaleDirectAssignments(
+  async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
-  ): Promise<UUID[]> {
-    return this.assignments.findSourceIdsWithOnlyStaleDirectAssignments(
+  ): ReturnType<
+    LocalThreadAssignmentsRepository['findSourcesWithOnlyStaleDirectAssignments']
+  > {
+    return this.assignments.findSourcesWithOnlyStaleDirectAssignments(
       olderThan,
     );
   }

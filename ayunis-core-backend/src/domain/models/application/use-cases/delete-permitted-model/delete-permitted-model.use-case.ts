@@ -196,7 +196,7 @@ export class DeletePermittedModelUseCase {
     // Batch delete RAG index + sources (2 queries total)
     if (sourceIds.length > 0) {
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sourceIds),
+        new DeleteSourcesCommand(sourceIds, orgId),
       );
     }
 

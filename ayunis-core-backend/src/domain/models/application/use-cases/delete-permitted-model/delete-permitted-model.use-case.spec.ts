@@ -13,27 +13,34 @@ import { DeletePermittedModelUseCase } from './delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
+  PermittedEmbeddingModel,
   PermittedImageGenerationModel,
   PermittedLanguageModel,
 } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
 describe('DeletePermittedModelUseCase', () => {
   let useCase: DeletePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getPermittedModelsUseCase: jest.Mocked<GetPermittedModelsUseCase>;
+  let findAllThreadsByOrgWithSourcesUseCase: jest.Mocked<FindAllThreadsByOrgWithSourcesUseCase>;
+  let deleteSourcesUseCase: jest.Mocked<DeleteSourcesUseCase>;
+  let contextService: jest.Mocked<ContextService>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -114,6 +121,11 @@ describe('DeletePermittedModelUseCase', () => {
     useCase = module.get(DeletePermittedModelUseCase);
     permittedModelsRepository = module.get(PermittedModelsRepository);
     getPermittedModelsUseCase = module.get(GetPermittedModelsUseCase);
+    findAllThreadsByOrgWithSourcesUseCase = module.get(
+      FindAllThreadsByOrgWithSourcesUseCase,
+    );
+    deleteSourcesUseCase = module.get(DeleteSourcesUseCase);
+    contextService = module.get(ContextService);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
@@ -122,6 +134,47 @@ describe('DeletePermittedModelUseCase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('uses the target org when deleting sources as a cross-org super admin', async () => {
+    const adminOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
+    const sourceId = '123e4567-e89b-12d3-a456-426614174098' as UUID;
+    const embeddingModel = new PermittedEmbeddingModel({
+      id: mockPermittedModelId,
+      model: new EmbeddingModel({
+        id: mockCatalogModelId,
+        name: 'text-embedding-3-small',
+        displayName: 'Text Embedding 3 Small',
+        provider: ModelProvider.OPENAI,
+        dimensions: EmbeddingDimensions.DIMENSION_1536,
+        isArchived: false,
+      }),
+      orgId: mockOrgId,
+      scope: PermittedModelScope.ORG,
+    });
+    contextService.get.mockImplementation((key) => {
+      if (key === 'orgId') return adminOrgId;
+      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
+      return null;
+    });
+    permittedModelsRepository.findOne.mockResolvedValue(embeddingModel);
+    findAllThreadsByOrgWithSourcesUseCase.execute.mockResolvedValue([
+      { sourceAssignments: [{ source: { id: sourceId } }] },
+    ] as never);
+
+    await useCase.execute(
+      new DeletePermittedModelCommand({
+        orgId: mockOrgId,
+        permittedModelId: mockPermittedModelId,
+      }),
+    );
+
+    expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceIds: [sourceId],
+        orgId: mockOrgId,
+      }),
+    );
   });
 
   describe('cascade delete team-scoped models', () => {

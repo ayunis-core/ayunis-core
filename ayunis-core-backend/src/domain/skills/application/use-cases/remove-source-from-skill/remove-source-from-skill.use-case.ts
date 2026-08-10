@@ -27,7 +27,8 @@ export class RemoveSourceFromSkillUseCase {
     });
     try {
       const userId = this.contextService.get('userId');
-      if (!userId) {
+      const orgId = this.contextService.get('orgId');
+      if (!userId || !orgId) {
         throw new UnauthorizedException('User not authenticated');
       }
 
@@ -46,7 +47,7 @@ export class RemoveSourceFromSkillUseCase {
       });
 
       await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(command.sourceId),
+        new DeleteSourceCommand(command.sourceId, orgId),
       );
       await this.skillRepository.update(updatedSkill);
     } catch (error) {

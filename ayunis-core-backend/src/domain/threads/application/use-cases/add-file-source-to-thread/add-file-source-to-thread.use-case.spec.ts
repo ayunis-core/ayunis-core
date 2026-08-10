@@ -22,9 +22,11 @@ import type { SourceAssignment } from '../../../domain/thread-source-assignment.
 import type { Thread } from '../../../domain/thread.entity';
 import type { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
+import type { ContextService } from 'src/common/context/services/context.service';
 
 describe('AddFileSourceToThreadUseCase', () => {
   const threadId = randomUUID();
+  const orgId = randomUUID();
   const thread = { id: threadId } as Thread;
 
   let findThread: jest.Mocked<FindThreadUseCase>;
@@ -59,12 +61,16 @@ describe('AddFileSourceToThreadUseCase', () => {
       .spyOn(fs.promises, 'readFile')
       .mockResolvedValue(Buffer.from('file-bytes'));
 
+    const contextService = {
+      get: jest.fn().mockReturnValue(orgId),
+    } as unknown as ContextService;
     useCase = new AddFileSourceToThreadUseCase(
       findThread,
       addSourceToThread,
       startDocumentProcessing,
       startDataSourceProcessing,
       deleteSources,
+      contextService,
     );
   });
 
@@ -212,7 +218,10 @@ describe('AddFileSourceToThreadUseCase', () => {
     ).rejects.toThrow();
 
     expect(deleteSources.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceIds: [first.id, second.id] }),
+      expect.objectContaining({
+        sourceIds: [first.id, second.id],
+        orgId,
+      }),
     );
   });
 

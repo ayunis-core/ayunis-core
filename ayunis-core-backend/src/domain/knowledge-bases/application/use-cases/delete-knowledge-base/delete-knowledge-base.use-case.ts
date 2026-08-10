@@ -42,7 +42,7 @@ export class DeleteKnowledgeBaseUseCase {
       );
       const sourceIds = sources.map((s) => s.id);
       await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sourceIds),
+        new DeleteSourcesCommand(sourceIds, existing.orgId),
       );
 
       await this.knowledgeBaseRepository.delete(existing);

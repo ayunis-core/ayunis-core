@@ -10,16 +10,19 @@ import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/d
 describe('CleanupStaleThreadSourcesUseCase', () => {
   let useCase: CleanupStaleThreadSourcesUseCase;
   let threadsRepository: jest.Mocked<
-    Pick<ThreadsRepository, 'findSourceIdsWithOnlyStaleDirectAssignments'>
+    Pick<ThreadsRepository, 'findSourcesWithOnlyStaleDirectAssignments'>
   >;
   let findUnreferencedSourceIdsUseCase: jest.Mocked<
     Pick<FindUnreferencedSourceIdsUseCase, 'execute'>
   >;
   let deleteSourcesUseCase: jest.Mocked<Pick<DeleteSourcesUseCase, 'execute'>>;
 
+  const orgA = '123e4567-e89b-12d3-a456-426614174010' as UUID;
+  const orgB = '123e4567-e89b-12d3-a456-426614174020' as UUID;
+
   beforeEach(() => {
     threadsRepository = {
-      findSourceIdsWithOnlyStaleDirectAssignments: jest.fn(),
+      findSourcesWithOnlyStaleDirectAssignments: jest.fn(),
     };
     findUnreferencedSourceIdsUseCase = { execute: jest.fn() };
     deleteSourcesUseCase = { execute: jest.fn() };
@@ -32,7 +35,7 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
   });
 
   it('returns zero counts and skips downstream calls when no stale candidates', async () => {
-    threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mockResolvedValue(
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
       [],
     );
 
@@ -51,8 +54,8 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
 
   it('reports scannedCount but skips delete when no candidate passes the unreferenced filter', async () => {
     const kept = randomUUID();
-    threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mockResolvedValue(
-      [kept],
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
+      [{ sourceId: kept, orgId: orgA }],
     );
     findUnreferencedSourceIdsUseCase.execute.mockResolvedValue([]);
 
@@ -72,8 +75,8 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
     const keep = randomUUID();
     const drop1 = randomUUID();
     const drop2 = randomUUID();
-    threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mockResolvedValue(
-      [keep, drop1, drop2],
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
+      [keep, drop1, drop2].map((sourceId) => ({ sourceId, orgId: orgA })),
     );
     findUnreferencedSourceIdsUseCase.execute.mockResolvedValue([drop1, drop2]);
     deleteSourcesUseCase.execute.mockResolvedValue(undefined);
@@ -98,13 +101,40 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
     );
     const command = deleteSourcesUseCase.execute.mock.calls[0][0];
     expect(command.sourceIds).toEqual([drop1, drop2]);
+    expect(command.orgId).toBe(orgA);
+  });
+
+  it('deletes stale sources in their owning org', async () => {
+    const sourceA = randomUUID();
+    const sourceB = randomUUID();
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
+      [
+        { sourceId: sourceA, orgId: orgA },
+        { sourceId: sourceB, orgId: orgB },
+      ],
+    );
+    findUnreferencedSourceIdsUseCase.execute.mockResolvedValue([
+      sourceA,
+      sourceB,
+    ]);
+    deleteSourcesUseCase.execute.mockResolvedValue(undefined);
+
+    await useCase.execute();
+
+    expect(deleteSourcesUseCase.execute).toHaveBeenCalledTimes(2);
+    expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: [sourceA], orgId: orgA }),
+    );
+    expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceIds: [sourceB], orgId: orgB }),
+    );
   });
 
   it('records failed counts and per-source errors when the batch delete throws', async () => {
     const drop1 = randomUUID();
     const drop2 = randomUUID();
-    threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mockResolvedValue(
-      [drop1, drop2],
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
+      [drop1, drop2].map((sourceId) => ({ sourceId, orgId: orgA })),
     );
     findUnreferencedSourceIdsUseCase.execute.mockResolvedValue([drop1, drop2]);
     deleteSourcesUseCase.execute.mockRejectedValue(new Error('db offline'));
@@ -123,14 +153,14 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
 
   it('passes a cutoff date approximately 30 days before now', async () => {
     const now = Date.now();
-    threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mockResolvedValue(
+    threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mockResolvedValue(
       [],
     );
 
     await useCase.execute();
 
     const cutoff =
-      threadsRepository.findSourceIdsWithOnlyStaleDirectAssignments.mock
+      threadsRepository.findSourcesWithOnlyStaleDirectAssignments.mock
         .calls[0][0];
     const expected = now - 30 * 24 * 60 * 60 * 1000;
     expect(Math.abs(cutoff.getTime() - expected)).toBeLessThan(5_000);

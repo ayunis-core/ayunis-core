@@ -52,7 +52,7 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
       }
 
       await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(command.documentId),
+        new DeleteSourceCommand(command.documentId, knowledgeBase.orgId),
       );
     } catch (error) {
       if (error instanceof ApplicationError) {

@@ -33,6 +33,11 @@ export interface FindExpiredThreadRefsParams {
   offset: number;
 }
 
+export interface StaleThreadSourceRef {
+  sourceId: UUID;
+  orgId: UUID;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -113,14 +118,15 @@ export abstract class ThreadsRepository {
     userIds: UUID[];
   }): Promise<void>;
   /**
-   * Returns source IDs where (a) at least one direct (non-skill) thread
+   * Returns source and owning-org IDs where (a) at least one direct
+   * (non-skill) thread
    * assignment exists and (b) every such direct assignment points to a
    * thread whose messages are all older than `olderThan`. Empty threads do
    * NOT count as stale — they keep the source alive. The caller is
    * responsible for filtering out sources still referenced by other domains
    * (skills, knowledge bases) before deletion.
    */
-  abstract findSourceIdsWithOnlyStaleDirectAssignments(
+  abstract findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
-  ): Promise<UUID[]>;
+  ): Promise<StaleThreadSourceRef[]>;
 }

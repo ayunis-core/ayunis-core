@@ -219,16 +219,18 @@ export class LocalThreadAssignmentsRepository {
       .execute();
   }
 
-  async findSourceIdsWithOnlyStaleDirectAssignments(
+  async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
-  ): Promise<UUID[]> {
-    this.logger.log('findSourceIdsWithOnlyStaleDirectAssignments', {
-      olderThan,
-    });
+  ): Promise<{ sourceId: UUID; orgId: UUID }[]> {
+    this.logger.log('findSourcesWithOnlyStaleDirectAssignments', { olderThan });
 
     const rows = await this.threadSourceAssignmentRepository
       .createQueryBuilder('tsa')
-      .select('DISTINCT tsa.sourceId', 'sourceId')
+      .innerJoin('tsa.thread', 'thread')
+      .innerJoin('thread.user', 'user')
+      .select('tsa.sourceId', 'sourceId')
+      .addSelect('user.orgId', 'orgId')
+      .distinct(true)
       .where('tsa.originSkillId IS NULL')
       .andWhere(
         `NOT EXISTS (
@@ -249,9 +251,9 @@ export class LocalThreadAssignmentsRepository {
         )`,
       )
       .setParameter('cutoff', olderThan)
-      .getRawMany<{ sourceId: UUID }>();
+      .getRawMany<{ sourceId: UUID; orgId: UUID }>();
 
-    return rows.map((row) => row.sourceId);
+    return rows;
   }
 
   async removeDirectKnowledgeBaseAssignments(params: {

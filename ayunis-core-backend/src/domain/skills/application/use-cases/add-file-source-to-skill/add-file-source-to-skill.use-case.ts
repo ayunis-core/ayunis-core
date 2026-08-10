@@ -151,8 +151,13 @@ export class AddFileSourceToSkillUseCase {
       return await this.attachSources(skillId, sources);
     } catch (error) {
       try {
+        const orgId = this.contextService.get('orgId');
+        if (!orgId) throw new UnauthorizedAccessError();
         await this.deleteSourcesUseCase.execute(
-          new DeleteSourcesCommand(sources.map((source) => source.id)),
+          new DeleteSourcesCommand(
+            sources.map((source) => source.id),
+            orgId,
+          ),
         );
       } catch (cleanupError) {
         this.logger.error('Failed to delete sources after attach failure', {

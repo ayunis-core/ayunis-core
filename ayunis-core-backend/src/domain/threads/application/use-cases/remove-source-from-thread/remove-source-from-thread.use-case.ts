@@ -5,6 +5,8 @@ import { SourceRemovalError, SourceNotFoundError } from '../../threads.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 @Injectable()
 export class RemoveSourceFromThreadUseCase {
@@ -13,6 +15,7 @@ export class RemoveSourceFromThreadUseCase {
   constructor(
     private readonly threadsRepository: ThreadsRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   async execute(command: RemoveSourceCommand): Promise<void> {
@@ -34,8 +37,10 @@ export class RemoveSourceFromThreadUseCase {
         throw new SourceNotFoundError(command.sourceId);
       }
 
+      const orgId = this.contextService.get('orgId');
+      if (!orgId) throw new UnauthorizedAccessError();
       await this.deleteSourceUseCase.execute(
-        new DeleteSourceCommand(assignmentToRemove.source.id),
+        new DeleteSourceCommand(assignmentToRemove.source.id, orgId),
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
