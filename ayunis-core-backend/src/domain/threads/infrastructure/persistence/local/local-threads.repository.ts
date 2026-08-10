@@ -67,6 +67,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
     this.logger.log('findOne', { id, userId });
     const threadEntity = await this.threadRepository.findOne({
       where: { id, userId },
+      relationLoadStrategy: 'query',
       relations: [
         'messages',
         'model',
@@ -77,15 +78,13 @@ export class LocalThreadsRepository extends ThreadsRepository {
         'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
       ],
-      order: {
-        messages: {
-          createdAt: 'ASC',
-        },
-      },
     });
     if (!threadEntity) {
       return null;
     }
+    threadEntity.messages?.sort(
+      (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
+    );
     return this.threadMapper.toDomain(threadEntity);
   }
 
