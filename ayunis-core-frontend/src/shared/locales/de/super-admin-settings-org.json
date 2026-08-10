@@ -371,6 +371,9 @@
     "deleteError": "Modell konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "alreadyExists": "Ein Modell mit dieser Kennung existiert bereits.",
     "notFound": "Modell nicht gefunden. Es wurde möglicherweise gelöscht.",
+    "invalid": "Einige Modelldaten sind ungültig. Bitte überprüfen Sie Ihre Eingaben.",
+    "providerNotSupported": "Dieser Anbieter wird für dieses Modell nicht unterstützt.",
+    "imageGenerationProviderNotSupported": "Dieser Anbieter unterstützt keine Bilderzeugungsmodelle.",
     "tabs": {
       "active": "Aktiv",
       "archived": "Archiviert"

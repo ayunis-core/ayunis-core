@@ -371,6 +371,9 @@
     "deleteError": "Failed to delete model. Please try again.",
     "alreadyExists": "A model with this identifier already exists.",
     "notFound": "Model not found. It may have been deleted.",
+    "invalid": "Some model details are invalid. Please review them and try again.",
+    "providerNotSupported": "This provider is not supported for this model.",
+    "imageGenerationProviderNotSupported": "This provider does not support image-generation models.",
     "tabs": {
       "active": "Active",
       "archived": "Archived"

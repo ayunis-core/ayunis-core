@@ -8,6 +8,7 @@ import {
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { resolveModelErrorToastKey } from '../lib/resolveModelErrorToastKey';
 
 export function useUpdateImageGenerationModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');
@@ -29,11 +30,9 @@ export function useUpdateImageGenerationModel(onSuccess?: () => void) {
             console.error('Update image generation model failed:', error);
             try {
               const { code } = extractErrorData(error);
-              if (code === 'MODEL_NOT_FOUND') {
-                showError(t('models.notFound'));
-              } else {
-                showError(t('models.updateError'));
-              }
+              showError(
+                t(resolveModelErrorToastKey(code, 'models.updateError')),
+              );
             } catch {
               showError(t('models.updateError'));
             }
