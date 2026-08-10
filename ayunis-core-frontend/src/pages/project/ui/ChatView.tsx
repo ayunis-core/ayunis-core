@@ -21,7 +21,6 @@ import {
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameChatDialog } from './RenameChatDialog';
 import { ScrollArea } from '@/shared/ui/shadcn/scroll-area';
-import { Separator } from '@/shared/ui/shadcn/separator';
 import {
   Tooltip,
   TooltipContent,
@@ -215,7 +214,6 @@ function ChatColumn({
               </Tooltip>
             );
           })}
-          <Separator orientation="vertical" className="h-5" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-sm" aria-label="Chat-Aktionen">
