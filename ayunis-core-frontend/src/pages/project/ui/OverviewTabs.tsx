@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Upload, X, Star, Trash2 } from 'lucide-react';
+import { Plus, X, Star, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/shadcn/button';
 import { Badge } from '@/shared/ui/shadcn/badge';
@@ -249,27 +249,15 @@ export function GeneratedDocumentsTab({
 
 export function DocumentsTab({
   project,
-  onAdd,
   onRemove,
   canManage = true,
 }: Readonly<{
   project: MockProject;
-  onAdd: () => void;
   onRemove: (id: string) => void;
   canManage?: boolean;
 }>) {
   return (
     <div className="flex flex-col gap-3">
-      {canManage && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={onAdd}
-        >
-          <Upload /> Datei hochladen
-        </Button>
-      )}
       {project.documents.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
           Noch keine Dateien in diesem Projekt.

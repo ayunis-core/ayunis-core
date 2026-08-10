@@ -8,6 +8,7 @@ import {
   Building2,
   Users,
   Plus,
+  Upload,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/shadcn/utils';
 import AppLayout from '@/layouts/app-layout';
@@ -247,20 +248,21 @@ export function ProjectOverviewPage({
               <TabsContent value="kb" className="mt-4">
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      Wissensdatenbanken
-                    </h3>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex min-h-8 items-center justify-between gap-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Wissensdatenbanken
+                      </h3>
                       {canContribute && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="self-start"
                           onClick={() => setAddKind('kb')}
                         >
                           <Plus /> Wissensdatenbank hinzufügen
                         </Button>
                       )}
+                    </div>
+                    <div className="flex flex-col gap-3">
                       {project.knowledgeBases.length === 0 ? (
                         <p className="py-8 text-center text-sm text-muted-foreground">
                           Noch keine Wissensdatenbanken eingebunden.
@@ -279,12 +281,22 @@ export function ProjectOverviewPage({
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">
-                      Dateien
-                    </h3>
+                    <div className="flex min-h-8 items-center justify-between gap-2">
+                      <h3 className="text-sm font-medium text-muted-foreground">
+                        Dateien
+                      </h3>
+                      {canContribute && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddDocument}
+                        >
+                          <Upload /> Datei hochladen
+                        </Button>
+                      )}
+                    </div>
                     <DocumentsTab
                       project={project}
-                      onAdd={handleAddDocument}
                       onRemove={(id) =>
                         removeDocumentFromProject(project.id, id)
                       }
