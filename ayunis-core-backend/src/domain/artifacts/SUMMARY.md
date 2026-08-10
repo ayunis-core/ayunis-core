@@ -54,6 +54,7 @@ artifacts/
 │   └── export/
 │       ├── html-document-export.service.ts
 │       ├── html-to-docx-converter.ts
+│       ├── paragraph-style-parser.ts
 │       ├── docx-document-config.ts
 │       ├── pdf-letterhead-compositor.ts
 │       └── xlsx-spreadsheet-export.service.ts

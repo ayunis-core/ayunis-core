@@ -80,6 +80,11 @@ const SANITIZE_OPTIONS: IOptions = {
       'text-align': [/^(left|right|center|justify)$/],
       'background-color': [/.*/],
       color: [/.*/],
+      // Paragraph spacing preserved for DOCX/PDF export (see
+      // html-to-docx-converter). Restricted to unitless / pt / px numbers.
+      'line-height': [/^\d+(\.\d+)?(pt|px)?$/],
+      'margin-top': [/^-?\d+(\.\d+)?(pt|px)?$/],
+      'margin-bottom': [/^-?\d+(\.\d+)?(pt|px)?$/],
     },
   },
 };
