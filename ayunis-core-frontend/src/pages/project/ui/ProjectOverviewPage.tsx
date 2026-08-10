@@ -307,6 +307,8 @@ export function ProjectOverviewPage({
               </TabsContent>
               <TabsContent value="skills" className="mt-4">
                 <ListTab
+                  heading="Hinzugefügte Fähigkeiten"
+                  hint="immer aktiv"
                   addLabel="Fähigkeit hinzufügen"
                   onAdd={() => setAddKind('skills')}
                   onRemove={(id) => removeSkillFromProject(project.id, id)}

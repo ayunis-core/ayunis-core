@@ -152,6 +152,8 @@ export function ChatsTab({
 }
 
 interface ListTabProps {
+  heading: string;
+  hint?: string;
   addLabel: string;
   onAdd: () => void;
   onRemove: (id: string) => void;
@@ -161,6 +163,8 @@ interface ListTabProps {
 }
 
 export function ListTab({
+  heading,
+  hint,
   addLabel,
   onAdd,
   onRemove,
@@ -170,16 +174,17 @@ export function ListTab({
 }: Readonly<ListTabProps>) {
   return (
     <div className="flex flex-col gap-3">
-      {canManage && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={onAdd}
-        >
-          <Plus /> {addLabel}
-        </Button>
-      )}
+      <div className="flex min-h-8 items-center justify-between gap-2">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          {heading}
+          {hint && <span className="ml-1.5 font-normal">({hint})</span>}
+        </h3>
+        {canManage && (
+          <Button variant="outline" size="sm" onClick={onAdd}>
+            <Plus /> {addLabel}
+          </Button>
+        )}
+      </div>
       {rows.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">
           {emptyText}
