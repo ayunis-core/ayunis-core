@@ -7,6 +7,7 @@ import {
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { resolveModelErrorToastKey } from '../lib/resolveModelErrorToastKey';
 
 export function useDeleteModel() {
   const { t } = useTranslation('super-admin-settings-org');
@@ -25,11 +26,7 @@ export function useDeleteModel() {
         console.error('Delete model failed:', error);
         try {
           const { code } = extractErrorData(error);
-          if (code === 'MODEL_NOT_FOUND') {
-            showError(t('models.notFound'));
-          } else {
-            showError(t('models.deleteError'));
-          }
+          showError(t(resolveModelErrorToastKey(code, 'models.deleteError')));
         } catch {
           // Non-AxiosError (network failure, request cancellation, etc.)
           showError(t('models.deleteError'));
