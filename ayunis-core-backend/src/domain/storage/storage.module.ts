@@ -11,10 +11,13 @@ import { ListObjectsUseCase } from './application/use-cases/list-objects/list-ob
 import { GetPresignedUrlUseCase } from './application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import { PurgeOrgStorageUseCase } from './application/use-cases/purge-org-storage/purge-org-storage.use-case';
 import { PurgeStoragePrefixesUseCase } from './application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
+import { SweepOrphanStorageUseCase } from './application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 import { StorageOrgDeletionRequestedListener } from './application/listeners/org-deletion-requested.listener';
+import { OrphanStorageSweepTask } from './infrastructure/tasks/orphan-storage-sweep.task';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
 @Module({
-  imports: [ConfigModule.forFeature(storageConfig)],
+  imports: [ConfigModule.forFeature(storageConfig), OrgsModule],
   providers: [
     {
       provide: ObjectStoragePort,
@@ -28,7 +31,9 @@ import { StorageOrgDeletionRequestedListener } from './application/listeners/org
     GetPresignedUrlUseCase,
     PurgeOrgStorageUseCase,
     PurgeStoragePrefixesUseCase,
+    SweepOrphanStorageUseCase,
     StorageOrgDeletionRequestedListener,
+    OrphanStorageSweepTask,
   ],
   exports: [
     ObjectStoragePort,
