@@ -78,9 +78,9 @@ export function GeneratedContentRows({
             className={cn('flex flex-col', compact ? rowGap : 'gap-1')}
           >
             {!compact && (
-              <span className="text-sm font-medium text-muted-foreground">
+              <h3 className="text-sm font-medium">
                 {GENERATED_CONTENT_LABELS[group.group]}
-              </span>
+              </h3>
             )}
             <ItemGroup className={rowGap}>
               {group.items.map((doc) => (
