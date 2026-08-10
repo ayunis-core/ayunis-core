@@ -43,6 +43,9 @@ export const SOURCE_FILE_UPLOAD_OPTIONS: MulterOptions = {
     },
   }),
   limits: { fileSize: MAX_SOURCE_FILE_SIZE_BYTES },
+  // Browsers send the multipart filename as raw UTF-8 bytes; busboy defaults to
+  // latin1, which garbles umlauts and other non-ASCII characters into mojibake.
+  defParamCharset: 'utf8',
 };
 
 export const SOURCE_FILE_API_BODY = {
