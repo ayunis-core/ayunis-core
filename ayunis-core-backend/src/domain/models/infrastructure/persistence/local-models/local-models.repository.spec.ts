@@ -1,4 +1,4 @@
-import type { Repository } from 'typeorm';
+import { QueryFailedError, type Repository } from 'typeorm';
 import type { UUID } from 'crypto';
 import { LocalModelsRepository } from './local-models.repository';
 import { ModelMapper } from './mappers/model.mapper';
@@ -13,6 +13,10 @@ import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model'
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
+import {
+  ModelAlreadyExistsError,
+  ModelErrorCode,
+} from 'src/domain/models/application/models.errors';
 
 describe('LocalModelsRepository', () => {
   let repository: LocalModelsRepository;
@@ -75,6 +79,59 @@ describe('LocalModelsRepository', () => {
     record.updatedAt = new Date('2025-01-02T00:00:00Z');
     return record;
   };
+
+  describe('save', () => {
+    it('maps a concurrent unique constraint violation to a model conflict', async () => {
+      const model = new LanguageModel({
+        id: modelId,
+        name: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        displayName: 'GPT-4o',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        isArchived: false,
+      });
+      const driverError = Object.assign(new Error('duplicate key'), {
+        code: '23505',
+        constraint: 'IDX_7c11834d93fa8eaf208a48d66a',
+      });
+      localModelRepository.save.mockRejectedValue(
+        new QueryFailedError('UPDATE models', [], driverError),
+      );
+
+      const result = repository.save(model);
+
+      await expect(result).rejects.toMatchObject({
+        code: ModelErrorCode.MODEL_ALREADY_EXISTS,
+        statusCode: 409,
+      });
+      await expect(result).rejects.toBeInstanceOf(ModelAlreadyExistsError);
+    });
+
+    it('does not misclassify another unique constraint violation', async () => {
+      const model = new LanguageModel({
+        id: modelId,
+        name: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        displayName: 'GPT-4o',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        isArchived: false,
+      });
+      const driverError = Object.assign(new Error('duplicate primary key'), {
+        code: '23505',
+        constraint: 'PK_ef9ed7160ea69013636466bf2d5',
+      });
+      const queryError = new QueryFailedError('UPDATE models', [], driverError);
+      localModelRepository.save.mockRejectedValue(queryError);
+
+      await expect(repository.save(model)).rejects.toBe(queryError);
+    });
+  });
 
   describe('findOneImageGeneration', () => {
     it('returns the mapped domain model when the row is an image-generation record', async () => {

@@ -17,6 +17,23 @@ import { ModelMapper } from './mappers/model.mapper';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { ModelAlreadyExistsError } from 'src/domain/models/application/models.errors';
+
+const PG_UNIQUE_VIOLATION = '23505';
+const MODEL_KEY_UNIQUE_CONSTRAINT = 'IDX_7c11834d93fa8eaf208a48d66a';
+
+function isModelKeyUniqueConstraintViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const record = error as Record<string, unknown>;
+  const driverError = record.driverError as Record<string, unknown> | undefined;
+  const code = driverError?.code ?? record.code;
+  const constraint = driverError?.constraint ?? record.constraint;
+  return (
+    code === PG_UNIQUE_VIOLATION && constraint === MODEL_KEY_UNIQUE_CONSTRAINT
+  );
+}
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
@@ -93,7 +110,14 @@ export class LocalModelsRepository extends ModelsRepository {
     });
 
     const modelEntity = this.localModelMapper.toRecord(model);
-    await this.localModelRepository.save(modelEntity);
+    try {
+      await this.localModelRepository.save(modelEntity);
+    } catch (error) {
+      if (isModelKeyUniqueConstraintViolation(error)) {
+        throw new ModelAlreadyExistsError(model.name, model.provider);
+      }
+      throw error;
+    }
   }
 
   async update<T extends Model>(id: UUID, model: T): Promise<T> {
