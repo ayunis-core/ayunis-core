@@ -1,0 +1,13 @@
+{
+  "name": "ayunis-core-outlook-addin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Prototype Outlook add-in for Ayunis Core (AYC-510)",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "devDependencies": {
+    "office-addin-dev-certs": "^2.0.10"
+  }
+}

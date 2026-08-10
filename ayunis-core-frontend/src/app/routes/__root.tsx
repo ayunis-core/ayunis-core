@@ -8,6 +8,7 @@ import {
   ConfirmationModal,
 } from '@/widgets/confirmation-modal';
 import { getTheme, setTheme } from '@/features/theme';
+import { EmbeddedContextProvider } from '@/shared/contexts/embedded/EmbeddedContextProvider';
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -19,13 +20,15 @@ export const Route = createRootRouteWithContext<{
   },
   component: () => (
     <>
-      <ConfirmationProvider>
-        <ChatContextProvider>
-          <Outlet />
-          <ConfirmationModal />
-          <Toaster />
-        </ChatContextProvider>
-      </ConfirmationProvider>
+      <EmbeddedContextProvider>
+        <ConfirmationProvider>
+          <ChatContextProvider>
+            <Outlet />
+            <ConfirmationModal />
+            <Toaster />
+          </ChatContextProvider>
+        </ConfirmationProvider>
+      </EmbeddedContextProvider>
     </>
   ),
 });
