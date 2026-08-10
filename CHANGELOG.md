@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.23.1](https://github.com/ayunis-core/ayunis-core/compare/v2.23.0...v2.23.1) (2026-08-10)
+
+
+### CI/CD
+
+* centralize pull-based deploy safeguards (AYC-589) ([#1226](https://github.com/ayunis-core/ayunis-core/issues/1226)) ([62d39f4](https://github.com/ayunis-core/ayunis-core/commit/62d39f4dd5aa7713ca45dd9b5ff6436c6a027bbb))
+* switch internal and production deploys to ghcr image pulls (AYC-589) ([#1194](https://github.com/ayunis-core/ayunis-core/issues/1194)) ([76d66fb](https://github.com/ayunis-core/ayunis-core/commit/76d66fbde436e8d0610ed30fbd9f445eb102b3d0))
+
 ## [2.23.0](https://github.com/ayunis-core/ayunis-core/compare/v2.22.2...v2.23.0) (2026-08-10)
 
 
