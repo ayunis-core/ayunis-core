@@ -14,6 +14,23 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/shared/lib/toast', () => ({ showError }));
 
 describe('useRunErrorHandler', () => {
+  it('shows the anonymization limit explanation for an oversized message', () => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'Text exceeds maximum anonymization length: 30001 > 30000',
+      threadId: 'thread-1',
+      timestamp: '2026-08-10T18:00:00.000Z',
+      code: 'ANONYMIZATION_INPUT_TOO_LONG',
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith(
+      'chat.errorAnonymizationInputTooLong',
+    );
+  });
+
   it('shows the context-budget explanation for an oversized latest turn', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {

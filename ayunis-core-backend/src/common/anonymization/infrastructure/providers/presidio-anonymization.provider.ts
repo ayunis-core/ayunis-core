@@ -1,19 +1,44 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AnonymizationPort } from '../../application/ports/anonymization.port';
-import { AnonymizationFailedError } from '../../application/anonymization.errors';
+import {
+  AnonymizationFailedError,
+  AnonymizationInputTooLongError,
+} from '../../application/anonymization.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { PiiDetection } from '../../domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
 
+// Keep this synchronized with ayunis-core-anonymize/app/models.py.
+const MAX_ANONYMIZATION_TEXT_LENGTH = 30_000;
+
+function countCodePoints(text: string): number {
+  let count = 0;
+  for (let offset = 0; offset < text.length; offset += 1) {
+    count += 1;
+    if ((text.codePointAt(offset) ?? 0) > 0xffff) {
+      offset += 1;
+    }
+  }
+  return count;
+}
+
 @Injectable()
 export class PresidioAnonymizationProvider extends AnonymizationPort {
   private readonly logger = new Logger(PresidioAnonymizationProvider.name);
 
   async detect(text: string, entities?: string[]): Promise<PiiDetection[]> {
+    const textLength = countCodePoints(text);
+    if (textLength > MAX_ANONYMIZATION_TEXT_LENGTH) {
+      throw new AnonymizationInputTooLongError(
+        textLength,
+        MAX_ANONYMIZATION_TEXT_LENGTH,
+      );
+    }
+
     this.logger.debug('Detecting PII', {
-      textLength: text.length,
+      textLength,
       entities,
     });
 
@@ -33,19 +58,19 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       );
 
       this.logger.debug('PII detection complete', {
-        textLength: text.length,
+        textLength,
         detectionCount: detections.length,
       });
 
       return detections;
     } catch (error: unknown) {
       this.logger.error('PII detection failed', { error: error as Error });
-      // Every caller treats a detect() failure as fatal and fail-closed (the
-      // user's message is blocked rather than sent unmasked), so this catch
-      // is the single classification point. Transport failures and upstream
-      // 5xx group under PROVIDER_UNAVAILABLE_*_ANONYMIZE; a 4xx means we
-      // built a bad request and stays a distinct AnonymizationFailedError
-      // (AYC-654).
+      // Every caller treats a service-call pipeline failure as fatal and
+      // fail-closed (the user's message is blocked rather than sent unmasked),
+      // so this catch is their single classification point. Transport failures
+      // and upstream 5xx group under PROVIDER_UNAVAILABLE_*_ANONYMIZE. A
+      // remaining 4xx means our request shape drifted despite local validation
+      // and stays a distinct AnonymizationFailedError (AYC-654).
       const providerError = wrapProviderFailure(error, {
         provider: 'anonymize',
       });

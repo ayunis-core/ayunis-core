@@ -28,6 +28,7 @@ import type { CountTokensUseCase } from 'src/common/token-counter/application/us
 import type { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
@@ -1085,6 +1086,25 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     // masks are streamed before the (redacted) user message
     expect(items[0]).toBeInstanceOf(RunPiiMasksUpdate);
     expect(items[1]).toMatchObject({ id: 'user-msg' });
+  });
+
+  it('preserves oversize validation and sends no unanonymized text', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const inputTooLongError = new AnonymizationInputTooLongError(
+      30_001,
+      30_000,
+    );
+    anonymize.mockRejectedValue(inputTooLongError);
+
+    const generator = await useCase.execute(
+      userCommand(new RunUserInput('A'.repeat(30_001))),
+    );
+
+    await expect(drain(generator)).rejects.toBe(inputTooLongError);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
   });
 
   it('activates a requested skill before the run and folds in its instructions', async () => {

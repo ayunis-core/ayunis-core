@@ -23,6 +23,7 @@
     "errorToolNotFound": "Tool not found",
     "errorToolExecutionFailed": "A tool failed repeatedly. Please adjust your request and try again.",
     "errorAnonymizationUnavailable": "Anonymization is currently unavailable. Your message was not sent to protect your data.",
+    "errorAnonymizationInputTooLong": "Your message exceeds the 30,000-character anonymization limit and was not sent. Please shorten it and try again.",
     "errorContextBudgetExceeded": "The latest conversation turn is too large for the model context window.",
     "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
     "errorRestoreFailedSubmission": "Your previous message and attachments couldn't be restored because the input already contains a draft.",
