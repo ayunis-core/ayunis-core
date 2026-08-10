@@ -19,11 +19,11 @@ import { Link } from '@tanstack/react-router';
 import {
   AcademyGateNotice,
   useAcademyAccessStatus,
+  useAcademyProgress,
   useDownloadCertificate,
 } from '@/features/academy';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useAcademyProgress } from '../api/useAcademyProgress';
 
 interface AcademyPageProps {
   chapters: AcademyChapterResponseDto[];

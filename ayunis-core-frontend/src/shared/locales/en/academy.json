@@ -65,6 +65,19 @@
     "downloadError": "The certificate could not be downloaded. Please try again.",
     "download": "Download certificate"
   },
+  "account": {
+    "title": "AI certificate (KI-Führerschein)",
+    "lastPassed": "Last passed:",
+    "nextRenewal": "Next renewal due:",
+    "expiredOn": "Expired on:",
+    "notPassedDescription": "You haven't earned the certificate yet.",
+    "action": "Go to the academy",
+    "status": {
+      "valid": "Valid",
+      "expired": "Expired",
+      "notPassed": "Not yet earned"
+    }
+  },
   "gate": {
     "title": "Certificate required",
     "description": "Your organization requires the AI certificate (KI-Führerschein) before you can use Ayunis Core chat. Complete the academy to unlock it — your existing chats stay readable in the meantime.",
