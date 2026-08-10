@@ -89,11 +89,12 @@ export function ChatView({
   }
 
   const hasPanels = openPanels.length > 0;
+  const dockSize = openPanels.includes('output') ? 48 : 32;
 
   return (
     <>
       <PanelGroup orientation="horizontal" className="absolute inset-0">
-        <Panel defaultSize={hasPanels ? 60 : 100} minSize={40}>
+        <Panel defaultSize={hasPanels ? 100 - dockSize : 100} minSize={40}>
           <ChatColumn
             project={project}
             chatTitle={chat.title}
@@ -110,7 +111,7 @@ export function ChatView({
         {hasPanels && (
           <>
             <ResizeHandle orientation="col" />
-            <Panel defaultSize={40} minSize={320}>
+            <Panel defaultSize={dockSize} minSize={320}>
               <ContextDock
                 project={project}
                 chatId={chat.id}
