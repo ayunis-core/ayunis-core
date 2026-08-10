@@ -11,7 +11,7 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
 import { ModelTierStars } from '@/widgets/model-type-card';
 
 interface ModelItemProps {
@@ -35,7 +35,7 @@ export function ModelItem({
     <Item>
       <ItemContent>
         <ItemTitle>
-          <span aria-hidden="true">{getFlagByProvider(model.provider)} </span>
+          <ProviderFlag provider={model.provider} className="mr-1" />
           {model.displayName}
           {isLanguage && model.tier && <ModelTierStars tier={model.tier} />}
           {model.isArchived && (

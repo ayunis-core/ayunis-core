@@ -10,10 +10,8 @@ import {
   SelectItem,
   SelectLabel,
 } from '@ayunis/ui/components/select';
-import {
-  getFlagByProvider,
-  getHostingPriority,
-} from '@/shared/lib/model-provider-metadata';
+import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
 
 export type ModelOption = ModelInfoModel & { id: string };
@@ -95,9 +93,14 @@ export default function ModelSelectOptions({
                     setHoveredModel(model);
                   }}
                 >
-                  {showFlag
-                    ? `${getFlagByProvider(model.provider)} ${name}`
-                    : name}
+                  {showFlag ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <ProviderFlag provider={model.provider} />
+                      {name}
+                    </span>
+                  ) : (
+                    name
+                  )}
                   {model.tier && (
                     // Radix portals the item text into the closed trigger;
                     // hide the tier label there so only the name shows.

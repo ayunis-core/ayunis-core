@@ -32,12 +32,17 @@ const PROVIDER_HOSTED_IN: Record<ModelProvider, HostedIn> = {
     ModelProviderInfoResponseDtoHostedIn.EU,
 };
 
-const HOSTING_FLAG: Record<HostedIn, string> = {
-  [ModelProviderInfoResponseDtoHostedIn.DE]: '🇩🇪',
-  [ModelProviderInfoResponseDtoHostedIn.EU]: '🇪🇺',
-  [ModelProviderInfoResponseDtoHostedIn.US]: '🇺🇸',
-  [ModelProviderInfoResponseDtoHostedIn.SELF_HOSTED]: '🇩🇪',
-  [ModelProviderInfoResponseDtoHostedIn.AYUNIS]: '🇩🇪',
+// Flag rendering uses inline SVGs (see ProviderFlag) rather than Unicode flag
+// emoji: Windows (Edge/Chrome) ships no glyphs for regional-indicator emoji, so
+// emoji flags render as letter pairs there. These codes select the SVG to draw.
+export type ProviderFlagCode = 'DE' | 'EU' | 'US';
+
+const HOSTING_FLAG: Record<HostedIn, ProviderFlagCode> = {
+  [ModelProviderInfoResponseDtoHostedIn.DE]: 'DE',
+  [ModelProviderInfoResponseDtoHostedIn.EU]: 'EU',
+  [ModelProviderInfoResponseDtoHostedIn.US]: 'US',
+  [ModelProviderInfoResponseDtoHostedIn.SELF_HOSTED]: 'DE',
+  [ModelProviderInfoResponseDtoHostedIn.AYUNIS]: 'DE',
 };
 
 const HOSTING_PRIORITY: Record<HostedIn, number> = {
@@ -58,9 +63,11 @@ export function getHostedInByProvider(
   ];
 }
 
-export function getFlagByProvider(provider: ModelProvider): string {
+export function getFlagCodeByProvider(
+  provider: ModelProvider,
+): ProviderFlagCode | null {
   const hostedIn = getHostedInByProvider(provider);
-  return hostedIn ? HOSTING_FLAG[hostedIn] : '';
+  return hostedIn ? HOSTING_FLAG[hostedIn] : null;
 }
 
 export function getHostingPriority(provider: ModelProvider): number {

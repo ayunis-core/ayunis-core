@@ -4,7 +4,7 @@ import {
   ModelProviderInfoResponseDtoProvider,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
-  getFlagByProvider,
+  getFlagCodeByProvider,
   getHostedInByProvider,
   getHostingPriority,
 } from './model-provider-metadata';
@@ -22,22 +22,22 @@ describe('model provider metadata', () => {
     ).toBe(ModelProviderInfoResponseDtoHostedIn.EU);
   });
 
-  it('maps hosted-in values to flags used in model selectors', () => {
+  it('maps hosted-in values to flag codes used in model selectors', () => {
     expect(
-      getFlagByProvider(ModelProviderInfoResponseDtoProvider.stackit),
-    ).toBe('🇩🇪');
+      getFlagCodeByProvider(ModelProviderInfoResponseDtoProvider.stackit),
+    ).toBe('DE');
     expect(
-      getFlagByProvider(ModelProviderInfoResponseDtoProvider.bedrock),
-    ).toBe('🇪🇺');
-    expect(getFlagByProvider(ModelProviderInfoResponseDtoProvider.openai)).toBe(
-      '🇺🇸',
-    );
+      getFlagCodeByProvider(ModelProviderInfoResponseDtoProvider.bedrock),
+    ).toBe('EU');
+    expect(
+      getFlagCodeByProvider(ModelProviderInfoResponseDtoProvider.openai),
+    ).toBe('US');
   });
 
   it('degrades gracefully for providers without hosting metadata', () => {
     const unknownProvider =
       'unknown-provider' as ModelProviderInfoResponseDtoProvider;
-    expect(getFlagByProvider(unknownProvider)).toBe('');
+    expect(getFlagCodeByProvider(unknownProvider)).toBeNull();
     expect(getHostingPriority(unknownProvider)).toBe(3);
   });
 
