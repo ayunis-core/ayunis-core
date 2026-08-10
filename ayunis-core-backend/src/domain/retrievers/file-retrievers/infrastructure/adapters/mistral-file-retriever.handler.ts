@@ -112,8 +112,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     }
     // Reached only after `ocrWithReuploadRecovery` has probed the file and, if
     // it had vanished, re-uploaded once — so a surviving 3310 is the document,
-    // not the AYC-556 dedup race that shares this error type.
-    if (rejectsDocument(error, 'invalid_request_file')) {
+    // not the AYC-556 dedup race that shares this error type. Mistral's 3740
+    // response likewise means its document parser rejected the PDF itself.
+    if (
+      rejectsDocument(error, 'invalid_request_file') ||
+      rejectsDocument(error, 'document_parser_invalid_file')
+    ) {
       return new UnprocessableDocumentError(error.message, metadata);
     }
 
@@ -280,7 +284,18 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 }
 
 function rejectsDocument(error: MistralError, errorType: string): boolean {
-  return typeof error.body === 'string' && error.body.includes(errorType);
+  if (error.statusCode !== 400) return false;
+
+  try {
+    const body: unknown = JSON.parse(error.body);
+    return (
+      typeof body === 'object' &&
+      body !== null &&
+      (body as Record<string, unknown>).type === errorType
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isProviderRejection(statusCode: number): boolean {
