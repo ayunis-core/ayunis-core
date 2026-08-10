@@ -66,7 +66,7 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       client = new AzureOpenAI({
         apiKey: this.configService.get('models.azure.apiKey'),
         endpoint: this.configService.get('models.azure.endpoint'),
-        apiVersion: this.configService.get('models.azure.apiVersion'),
+        apiVersion: this.configService.get('models.azure.imageApiVersion'),
         deployment: deploymentName,
       });
       this.clients.set(deploymentName, client);
