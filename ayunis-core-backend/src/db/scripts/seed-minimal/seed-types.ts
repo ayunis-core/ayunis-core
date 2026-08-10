@@ -11,6 +11,8 @@ export type {
   AdminFixture,
   MemberFixture,
   SubscriptionFixture,
+  AcademyChapterFixture,
+  AcademyCompletionFixture,
 } from 'src/db/fixtures/minimal-fixture.types';
 
 export type LanguageModelKey = (typeof LANGUAGE_MODEL_KEYS)[number];
