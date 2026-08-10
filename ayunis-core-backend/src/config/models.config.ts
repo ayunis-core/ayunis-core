@@ -43,7 +43,6 @@ export const modelsConfig = registerAs('models', () => ({
   azure: {
     apiKey: process.env.AZURE_OPENAI_API_KEY,
     endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-    apiVersion: process.env.AZURE_OPENAI_API_VERSION,
     imageApiVersion:
       process.env.AZURE_OPENAI_IMAGE_API_VERSION?.trim() ||
       '2025-04-01-preview',
