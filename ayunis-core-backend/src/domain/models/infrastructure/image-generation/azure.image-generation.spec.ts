@@ -396,6 +396,21 @@ describe('AzureImageGenerationHandler', () => {
       );
     });
 
+    it('should use the image API version instead of the shared Azure API version', async () => {
+      configService.get.mockImplementation((key: string) =>
+        key === 'models.azure.imageApiVersion'
+          ? '2025-04-01-preview'
+          : '2024-12-01-preview',
+      );
+      stubGenerate();
+
+      await handler.generate(createInput());
+
+      expect(mockAzureOpenAICtor).toHaveBeenCalledWith(
+        expect.objectContaining({ apiVersion: '2025-04-01-preview' }),
+      );
+    });
+
     it('should construct the client with the deployment for reference-image edits', async () => {
       mockImagesEdit.mockResolvedValue({
         data: [{ b64_json: Buffer.from('img').toString('base64') }],
