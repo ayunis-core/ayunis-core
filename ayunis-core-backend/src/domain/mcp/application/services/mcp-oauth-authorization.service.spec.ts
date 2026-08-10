@@ -43,6 +43,7 @@ describe('McpOAuthAuthorizationService', () => {
   const registrations = { findByIntegrationAndIssuer: jest.fn() };
   const encryption = { encrypt: jest.fn(), decrypt: jest.fn() };
   const cache = { invalidate: jest.fn() };
+  const mcpClient = { invalidateConnections: jest.fn() };
   const config = { get: jest.fn() };
   const oauthFetch = new McpOAuthFetchService(config as never);
   let service: McpOAuthAuthorizationService;
@@ -67,6 +68,7 @@ describe('McpOAuthAuthorizationService', () => {
       encryption,
       cache as never,
       oauthFetch,
+      mcpClient as never,
     );
   });
 
@@ -124,6 +126,10 @@ describe('McpOAuthAuthorizationService', () => {
       fetchFn: oauthFetch.fetch,
     });
     expect(cache.invalidate).toHaveBeenCalledWith(integration.id, userId);
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+      userId,
+    );
   });
 
   it('rejects a callback when the SDK does not complete authorization', async () => {
@@ -187,6 +193,13 @@ describe('McpOAuthAuthorizationService', () => {
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(tokens.delete).toHaveBeenCalledWith(integration.id, userId);
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+      userId,
+    );
+    expect(
+      mcpClient.invalidateConnections.mock.invocationCallOrder[0],
+    ).toBeLessThan(tokens.delete.mock.invocationCallOrder[0]);
   });
 
   function buildPending(state: string): McpOAuthPendingSession {

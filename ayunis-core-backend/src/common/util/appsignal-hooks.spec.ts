@@ -24,7 +24,6 @@ type Suppression = {
 const hooks = require('../../../appsignal-hooks.cjs') as {
   SUPPRESSIONS: Suppression[];
   isCrawlerRequest: (request: UndiciRequest) => boolean;
-  isMcpEventStreamRequest: (request: UndiciRequest) => boolean;
   shouldIgnoreRequest: (request: UndiciRequest) => boolean;
   exceptionTypeOf: (error: unknown) => string | undefined;
   ignoredErrorTypes: string[];
@@ -35,7 +34,6 @@ const hooks = require('../../../appsignal-hooks.cjs') as {
 const {
   SUPPRESSIONS,
   isCrawlerRequest,
-  isMcpEventStreamRequest,
   shouldIgnoreRequest,
   exceptionTypeOf,
   ignoredErrorTypes,
@@ -99,61 +97,6 @@ describe('isCrawlerRequest', () => {
   });
 });
 
-describe('isMcpEventStreamRequest', () => {
-  it('matches the MCP SDK listening stream', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'text/event-stream'],
-      }),
-    ).toBe(true);
-  });
-
-  it('matches undici v5 string headers', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: 'Accept: text/event-stream\r\n',
-      }),
-    ).toBe(true);
-  });
-
-  // The JSON-RPC POST sends `application/json, text/event-stream` — genuine
-  // connectivity and auth failures surface there and must keep reporting.
-  it('does not match the MCP JSON-RPC POST', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'POST',
-        headers: ['accept', 'application/json, text/event-stream'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match a GET that merely accepts event streams among others', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'application/json, text/event-stream'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match a plain GET', () => {
-    expect(
-      isMcpEventStreamRequest({
-        method: 'GET',
-        headers: ['accept', 'application/json'],
-      }),
-    ).toBe(false);
-  });
-
-  it('does not match when the method is absent', () => {
-    expect(
-      isMcpEventStreamRequest({ headers: ['accept', 'text/event-stream'] }),
-    ).toBe(false);
-  });
-});
-
 describe('shouldIgnoreRequest', () => {
   it('ignores crawler requests', () => {
     expect(
@@ -161,13 +104,13 @@ describe('shouldIgnoreRequest', () => {
     ).toBe(true);
   });
 
-  it('ignores the MCP listening stream', () => {
+  it('instruments MCP listening streams', () => {
     expect(
       shouldIgnoreRequest({
         method: 'GET',
         headers: ['accept', 'text/event-stream'],
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('instruments provider requests', () => {

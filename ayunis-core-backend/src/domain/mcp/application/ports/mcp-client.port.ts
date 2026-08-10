@@ -1,11 +1,19 @@
 /**
  * Configuration for connecting to an MCP server
  */
+export interface McpConnectionScope {
+  orgId: string;
+  integrationId: string;
+  userId?: string;
+}
+
 export interface McpConnectionConfig {
   /** Base URL of the MCP server (uses Streamable HTTP transport, MCP protocol 2024-11-05+) */
   serverUrl: string;
   /** Optional headers to send with every MCP request (auth + config fields) */
   headers?: Record<string, string>;
+  /** Tenant and integration identity that scopes stateful MCP sessions. */
+  connectionScope: McpConnectionScope;
   /** Per-user OAuth context resolved by the infrastructure adapter. */
   oauth?: {
     integrationId: string;
@@ -70,12 +78,8 @@ export interface McpToolResult {
  * Port interface for MCP client operations.
  * Abstracts the MCP SDK to allow testing and alternative implementations.
  *
- * All methods use on-demand connection strategy:
- * 1. Create new client connection
- * 2. Execute operation
- * 3. Close connection (in finally block)
- *
- * All operations enforce 30-second timeout.
+ * Connections may be reused across operations with equivalent configuration.
+ * All operations enforce a 30-second timeout.
  */
 export abstract class McpClientPort {
   /**
@@ -137,4 +141,6 @@ export abstract class McpClientPort {
   abstract validateConnection(
     config: McpConnectionConfig,
   ): Promise<{ valid: boolean; error?: string }>;
+
+  abstract invalidateConnections(scope: McpConnectionScope): Promise<void>;
 }

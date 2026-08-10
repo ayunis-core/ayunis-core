@@ -20,6 +20,7 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { McpClientService } from '../../services/mcp-client.service';
 
 @Injectable()
 export class SetUserMcpConfigUseCase {
@@ -31,6 +32,7 @@ export class SetUserMcpConfigUseCase {
     private readonly contextService: ContextService,
     private readonly configService: McpConfigService,
     private readonly capabilityCache: McpCapabilityCacheService,
+    private readonly mcpClientService: McpClientService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
@@ -82,6 +84,10 @@ export class SetUserMcpConfigUseCase {
       existing,
     );
 
+    await this.mcpClientService.invalidateConnections(
+      configurableIntegration,
+      userId,
+    );
     this.capabilityCache.invalidate(command.integrationId, userId);
 
     return this.maskResult(saved.configValues, userFields);

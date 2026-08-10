@@ -28,11 +28,6 @@ import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.r
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
 import { handleMcpOperationError } from './mcp-operation-error';
 
-/**
- * Service for executing MCP operations with authentication.
- * Leverages the polymorphic authentication design of integration entities.
- * Handles credential decryption and connection configuration.
- */
 @Injectable()
 export class McpClientService {
   private readonly logger = new Logger(McpClientService.name);
@@ -47,16 +42,14 @@ export class McpClientService {
     private readonly capabilityCache?: McpCapabilityCacheService,
   ) {}
 
-  /**
-   * Builds MCP connection configuration from integration entity.
-   * Schema-configured integrations resolve organization and user fields.
-   * Other integrations delegate header generation to their auth entity.
-   *
-   * @param integration The MCP integration entity
-   * @param userId Optional user ID for per-user config resolution
-   * @returns Connection configuration for MCP client
-   * @throws McpAuthenticationError if authentication configuration fails
-   */
+  invalidateConnections(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): Promise<void> {
+    return this.mcpClient.invalidateConnections(
+      this.buildConnectionScope(integration, userId),
+    );
+  }
 
   async buildConnectionConfig(
     integration: McpIntegration,
@@ -65,13 +58,9 @@ export class McpClientService {
     if (integration instanceof SchemaConfiguredMcpIntegration) {
       return this.buildSchemaConfiguredConnectionConfig(integration, userId);
     }
-    return this.buildAuthConnectionConfig(integration);
+    return this.buildAuthConnectionConfig(integration, userId);
   }
 
-  /**
-   * Builds connection config for schema-configured integrations by resolving
-   * config schema fields to HTTP headers, with optional user-level overrides.
-   */
   private async buildSchemaConfiguredConnectionConfig(
     integration: SchemaConfiguredMcpIntegration,
     userId?: UUID,
@@ -154,6 +143,7 @@ export class McpClientService {
     return {
       serverUrl: integration.serverUrl,
       headers,
+      connectionScope: this.buildConnectionScope(integration, userId),
       oauth:
         integration.configSchema.oauth && userId
           ? {
@@ -213,10 +203,15 @@ export class McpClientService {
 
   private async buildAuthConnectionConfig(
     integration: McpIntegration,
+    userId?: UUID,
   ): Promise<McpConnectionConfig> {
     try {
       const headers = await this.buildAuthHeaders(integration);
-      return { serverUrl: integration.serverUrl, headers };
+      return {
+        serverUrl: integration.serverUrl,
+        headers,
+        connectionScope: this.buildConnectionScope(integration, userId),
+      };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         throw error;
@@ -228,6 +223,17 @@ export class McpClientService {
       });
       throw new McpAuthenticationError('Authentication configuration failed');
     }
+  }
+
+  private buildConnectionScope(
+    integration: McpIntegration,
+    userId?: UUID,
+  ): McpConnectionConfig['connectionScope'] {
+    return {
+      orgId: integration.orgId,
+      integrationId: integration.id,
+      ...(userId ? { userId } : {}),
+    };
   }
 
   private async buildAuthHeaders(
@@ -283,13 +289,6 @@ export class McpClientService {
     return headers;
   }
 
-  /**
-   * Lists all tools available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available tools
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listTools(
     integration: McpIntegration,
     userId?: UUID,

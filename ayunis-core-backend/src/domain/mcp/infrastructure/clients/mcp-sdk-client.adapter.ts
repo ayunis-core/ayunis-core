@@ -6,6 +6,7 @@ import {
 import {
   McpClientPort,
   McpConnectionConfig,
+  McpConnectionScope,
   McpTool,
   McpResource,
   McpPrompt,
@@ -23,6 +24,7 @@ import {
 } from '../../application/mcp.errors';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
+import { McpClientPoolService } from './mcp-client-pool.service';
 
 /**
  * Node's AbortController.abort() mints a DOMException with name 'AbortError'
@@ -67,11 +69,9 @@ function isTimeoutOrAbortError(error: unknown, depth = 0): boolean {
 /**
  * Adapter that wraps @modelcontextprotocol/sdk to provide MCP client functionality.
  *
- * Uses on-demand connection strategy:
- * - Creates new connection for each operation
- * - Closes connection immediately after operation completes
- * - Enforces a 30-second timeout via the SDK's per-request options, so the
- *   SDK aborts its own request cleanly instead of leaving it in flight
+ * Reuses connections with the same server and authentication configuration,
+ * closing them after one minute without an active operation. Each request
+ * still has a 30-second SDK timeout.
  *
  * Uses Streamable HTTP transport for HTTP-based connections (MCP protocol 2024-11-05+).
  */
@@ -81,6 +81,7 @@ export class McpSdkClientAdapter extends McpClientPort {
   private readonly requestOptions = { timeout: 30000 };
 
   constructor(
+    private readonly clientPool: McpClientPoolService,
     @Optional() private readonly oauthProviderFactory?: McpOAuthProviderFactory,
     @Optional() private readonly integrations?: McpIntegrationsRepositoryPort,
     @Optional() private readonly oauthFetch?: McpOAuthFetchPort,
@@ -214,8 +215,7 @@ export class McpSdkClientAdapter extends McpClientPort {
   }
 
   /**
-   * Runs one operation on a fresh client and classifies its failure. SDK
-   * timeouts and transport aborts must never escape raw (AYC-651): they
+   * SDK timeouts and transport aborts must never escape raw (AYC-651): they
    * surface as McpConnectionTimeoutError so validation endpoints can show a
    * clean user message and capability discovery can skip the integration.
    * Everything else (auth, protocol, HTTP errors) passes through unchanged
@@ -225,19 +225,14 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     operation: (client: Client) => Promise<T>,
   ): Promise<T> {
-    let client: Client;
     try {
-      client = await this.createClient(config);
+      return await this.clientPool.withClient(
+        config,
+        () => this.createClient(config),
+        operation,
+      );
     } catch (error) {
       throw this.toOperationError(error, config);
-    }
-
-    try {
-      return await operation(client);
-    } catch (error) {
-      throw this.toOperationError(error, config);
-    } finally {
-      await this.closeQuietly(client);
     }
   }
 
@@ -270,34 +265,29 @@ export class McpSdkClientAdapter extends McpClientPort {
    * Validate connection to an MCP server.
    * Attempts to connect and list all capabilities (tools, resources, prompts).
    */
+  invalidateConnections(scope: McpConnectionScope): Promise<void> {
+    return this.clientPool.invalidateConnections(scope);
+  }
+
   async validateConnection(
     config: McpConnectionConfig,
   ): Promise<{ valid: boolean; error?: string }> {
-    let client: Client | null = null;
-
     try {
-      client = await this.createClient(config);
-
-      // Try to list all capabilities to validate connection
-      await client.listTools(undefined, this.requestOptions);
-      await client.listResources(undefined, this.requestOptions);
-      await client.listPrompts(undefined, this.requestOptions);
-
+      await this.withClient(config, async (client) => {
+        await client.listTools(undefined, this.requestOptions);
+        await client.listResources(undefined, this.requestOptions);
+        await client.listPrompts(undefined, this.requestOptions);
+      });
       return { valid: true };
     } catch (error) {
       this.logger.warn('Connection validation failed', {
         serverUrl: config.serverUrl,
         error: error instanceof Error ? error.message : String(error),
       });
-
       return {
         valid: false,
         error: error instanceof Error ? error.message : String(error),
       };
-    } finally {
-      if (client) {
-        await this.closeQuietly(client);
-      }
     }
   }
 
@@ -357,21 +347,5 @@ export class McpSdkClientAdapter extends McpClientPort {
     if (!this.oauthFetch)
       throw new Error('OAuth fetch dependency is unavailable');
     return this.oauthFetch;
-  }
-
-  /**
-   * close() aborts the transport, which can itself reject (e.g. AbortError
-   * from an in-flight SSE stream). Running in a finally block, that rejection
-   * would replace the operation's actual result or error — so it is only
-   * logged, never rethrown.
-   */
-  private async closeQuietly(client: Client): Promise<void> {
-    try {
-      await client.close();
-    } catch (error) {
-      this.logger.warn('Failed to close MCP client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
   }
 }

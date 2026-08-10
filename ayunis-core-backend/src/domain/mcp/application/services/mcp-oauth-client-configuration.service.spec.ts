@@ -33,11 +33,15 @@ describe('McpOAuthClientConfigurationService', () => {
     consumeByStateHash: jest.fn(),
     deleteByIntegration: jest.fn(),
   } as jest.Mocked<McpOAuthPendingSessionRepositoryPort>;
+  const capabilityCache = { invalidate: jest.fn() };
+  const mcpClient = { invalidateConnections: jest.fn() };
   const service = new McpOAuthClientConfigurationService(
     encryption,
     registrations,
     tokens,
     pendingSessions,
+    capabilityCache as never,
+    mcpClient as never,
   );
 
   beforeEach(() => {
@@ -82,6 +86,10 @@ describe('McpOAuthClientConfigurationService', () => {
     expect(registrations.save.mock.invocationCallOrder[0]).toBeLessThan(
       tokens.deleteByIntegration.mock.invocationCallOrder[0],
     );
+    expect(mcpClient.invalidateConnections).toHaveBeenCalledWith(integration);
+    expect(
+      mcpClient.invalidateConnections.mock.invocationCallOrder[0],
+    ).toBeLessThan(tokens.deleteByIntegration.mock.invocationCallOrder[0]);
   });
 
   it('requires client information for static registration', async () => {

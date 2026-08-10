@@ -11,6 +11,7 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import { SECRET_MASK } from 'src/domain/mcp/domain/value-objects/secret-mask.constant';
 import { McpConfigService } from '../../services/mcp-config.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import type { McpClientService } from '../../services/mcp-client.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationNotConfigurableError,
@@ -31,6 +32,9 @@ describe('SetUserMcpConfigUseCase', () => {
   let contextService: jest.Mocked<ContextService>;
   let configService: McpConfigService;
   let capabilityCache: McpCapabilityCacheService;
+  let mcpClientService: jest.Mocked<
+    Pick<McpClientService, 'invalidateConnections'>
+  >;
 
   const userId = '770e8400-e29b-41d4-a716-446655440001' as UUID;
   const orgId = '660e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -104,6 +108,7 @@ describe('SetUserMcpConfigUseCase', () => {
     configService = new McpConfigService(credentialEncryption);
 
     capabilityCache = new McpCapabilityCacheService();
+    mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new SetUserMcpConfigUseCase(
       integrationRepository,
@@ -111,6 +116,7 @@ describe('SetUserMcpConfigUseCase', () => {
       contextService,
       configService,
       capabilityCache,
+      mcpClientService as unknown as McpClientService,
     );
   });
 
@@ -147,6 +153,10 @@ describe('SetUserMcpConfigUseCase', () => {
       tenantId: 'my-tenant-123',
     });
     expect(userConfigRepository.save).toHaveBeenCalled();
+    expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+      userId,
+    );
   });
 
   it('should wrap unexpected errors in UnexpectedMcpError', async () => {

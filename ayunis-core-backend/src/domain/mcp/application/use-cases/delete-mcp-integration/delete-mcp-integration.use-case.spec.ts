@@ -8,6 +8,7 @@ import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repo
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpClientService } from '../../services/mcp-client.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
@@ -23,6 +24,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
   let userConfigRepository: McpIntegrationUserConfigRepositoryPort;
   let contextService: ContextService;
   let capabilityCache: McpCapabilityCacheService;
+  let mcpClientService: jest.Mocked<
+    Pick<McpClientService, 'invalidateConnections'>
+  >;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
 
@@ -54,6 +58,10 @@ describe('DeleteMcpIntegrationUseCase', () => {
       providers: [
         DeleteMcpIntegrationUseCase,
         McpCapabilityCacheService,
+        {
+          provide: McpClientService,
+          useValue: { invalidateConnections: jest.fn() },
+        },
         {
           provide: McpIntegrationsRepositoryPort,
           useValue: {
@@ -89,6 +97,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
     capabilityCache = module.get<McpCapabilityCacheService>(
       McpCapabilityCacheService,
     );
+    mcpClientService = module.get(McpClientService);
 
     // Spy on logger methods
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -118,6 +127,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
       expect(repository.delete).toHaveBeenCalledWith(mockIntegrationId);
+      expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
+        mockIntegration,
+      );
       expect(loggerLogSpy).toHaveBeenCalledWith('deleteMcpIntegration', {
         id: mockIntegrationId,
       });

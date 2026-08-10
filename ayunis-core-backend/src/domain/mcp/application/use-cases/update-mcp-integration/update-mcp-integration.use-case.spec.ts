@@ -8,6 +8,7 @@ import type { McpCredentialEncryptionPort } from '../../ports/mcp-credential-enc
 import { McpConfigService } from '../../services/mcp-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import type { McpClientService } from '../../services/mcp-client.service';
 import type { ValidateMcpIntegrationUseCase } from '../validate-mcp-integration/validate-mcp-integration.use-case';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
@@ -33,6 +34,9 @@ describe('UpdateMcpIntegrationUseCase', () => {
   let validateUseCase: jest.Mocked<ValidateMcpIntegrationUseCase>;
   let connectionValidationService: ConnectionValidationService;
   let capabilityCache: McpCapabilityCacheService;
+  let mcpClientService: jest.Mocked<
+    Pick<McpClientService, 'invalidateConnections'>
+  >;
   let useCase: UpdateMcpIntegrationUseCase;
 
   beforeEach(() => {
@@ -65,6 +69,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
     );
 
     capabilityCache = new McpCapabilityCacheService();
+    mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new UpdateMcpIntegrationUseCase(
       repository,
@@ -74,6 +79,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
       connectionValidationService,
       capabilityCache,
       { initialize: jest.fn() } as never,
+      mcpClientService as unknown as McpClientService,
     );
     context.get.mockReturnValue(orgId);
     repository.save.mockImplementation(async (integration) => integration);
@@ -115,6 +121,9 @@ describe('UpdateMcpIntegrationUseCase', () => {
       'encrypted-new',
     );
     expect(repository.save).toHaveBeenCalledWith(integration);
+    expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
+      integration,
+    );
   });
 
   it('rejects OAuth client updates before mutating a non-schema integration', async () => {
