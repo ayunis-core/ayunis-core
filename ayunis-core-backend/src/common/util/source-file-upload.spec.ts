@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import * as fs from 'fs';
-import multer from 'multer';
+import multer, { type Options } from 'multer';
 import {
   removeUploadedFile,
   SOURCE_FILE_UPLOAD_OPTIONS,
@@ -40,7 +40,12 @@ function runUpload(filename: string): Promise<UploadedSourceFile> {
   const res = {} as unknown as Parameters<
     ReturnType<ReturnType<typeof multer>['single']>
   >[1];
-  const middleware = multer(SOURCE_FILE_UPLOAD_OPTIONS).single('file');
+  // NestJS's MulterOptions and @types/multer's Options diverge only on the
+  // `dest` declaration, which this config never sets, so the runtime shape is
+  // compatible.
+  const middleware = multer(
+    SOURCE_FILE_UPLOAD_OPTIONS as unknown as Options,
+  ).single('file');
 
   return new Promise((resolvePromise, reject) => {
     middleware(req as never, res, (err: unknown) => {
