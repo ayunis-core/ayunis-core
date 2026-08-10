@@ -7,12 +7,12 @@ import {
   UsageRepository,
   ProviderUsage,
   ModelDistribution,
+  type ProviderUsageParams,
+  type ModelDistributionParams,
+  type UserUsageParams,
+  type UsageStatsParams,
   type UserUsageResult,
 } from 'src/domain/usage/application/ports/usage.repository';
-import { GetProviderUsageQuery } from 'src/domain/usage/application/use-cases/get-provider-usage/get-provider-usage.query';
-import { GetModelDistributionQuery } from 'src/domain/usage/application/use-cases/get-model-distribution/get-model-distribution.query';
-import { GetUserUsageQuery } from 'src/domain/usage/application/use-cases/get-user-usage/get-user-usage.query';
-import { GetUsageStatsQuery } from 'src/domain/usage/application/use-cases/get-usage-stats/get-usage-stats.query';
 import { Paginated } from 'src/common/pagination';
 import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
 import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
@@ -101,9 +101,7 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageMapper.toDomainArray(records);
   }
 
-  async getProviderUsage(
-    query: GetProviderUsageQuery,
-  ): Promise<ProviderUsage[]> {
+  async getProviderUsage(query: ProviderUsageParams): Promise<ProviderUsage[]> {
     // Get aggregated provider usage
     const providerStats = await getProviderStats({
       usageRepository: this.usageRepository,
@@ -141,7 +139,7 @@ export class LocalUsageRepository extends UsageRepository {
   }
 
   async getModelDistribution(
-    query: GetModelDistributionQuery,
+    query: ModelDistributionParams,
   ): Promise<ModelDistribution[]> {
     const modelStats = await getModelStats(
       this.usageRepository,
@@ -154,7 +152,7 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageQueryMapper.mapModelStatsToDistribution(modelStats).items;
   }
 
-  async getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult> {
+  async getUserUsage(query: UserUsageParams): Promise<UserUsageResult> {
     // Determine sort field and order
     const sortField = this.mapSortFieldForUsers(query.sortBy);
     const sortOrder = query.sortOrder.toUpperCase() as 'ASC' | 'DESC';
@@ -225,7 +223,7 @@ export class LocalUsageRepository extends UsageRepository {
     });
   }
 
-  async getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats> {
+  async getUsageStats(query: UsageStatsParams): Promise<UsageStats> {
     const stats = (await getUsageAggregateStats(
       this.usageRepository,
       query.organizationId,

@@ -1,9 +1,6 @@
 import type { UUID } from 'crypto';
 import type { Usage } from '../../domain/usage.entity';
-import type { GetUserUsageQuery } from '../use-cases/get-user-usage/get-user-usage.query';
-import type { GetProviderUsageQuery } from '../use-cases/get-provider-usage/get-provider-usage.query';
-import type { GetModelDistributionQuery } from '../use-cases/get-model-distribution/get-model-distribution.query';
-import type { GetUsageStatsQuery } from '../use-cases/get-usage-stats/get-usage-stats.query';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { Paginated } from 'src/common/pagination';
 import { UsageStats } from '../../domain/usage-stats.entity';
 import { ProviderUsage } from '../../domain/provider-usage.entity';
@@ -17,6 +14,33 @@ export {
   ModelDistribution,
   UserUsageItem,
 };
+
+interface UsageDateRangeParams {
+  organizationId: UUID;
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export interface ProviderUsageParams extends UsageDateRangeParams {
+  includeTimeSeriesData: boolean;
+  provider?: ModelProvider;
+  modelId?: UUID;
+}
+
+export interface ModelDistributionParams extends UsageDateRangeParams {
+  maxModels: number;
+  modelId?: UUID;
+}
+
+export interface UserUsageParams extends UsageDateRangeParams {
+  limit: number;
+  offset: number;
+  searchTerm?: string;
+  sortBy: 'credits' | 'requests' | 'lastActivity' | 'userName';
+  sortOrder: 'asc' | 'desc';
+}
+
+export type UsageStatsParams = UsageDateRangeParams;
 
 export interface UserUsageResult {
   users: Paginated<UserUsageItem>;
@@ -42,13 +66,13 @@ export abstract class UsageRepository {
     endDate?: Date,
   ): Promise<Usage[]>;
   abstract getProviderUsage(
-    query: GetProviderUsageQuery,
+    params: ProviderUsageParams,
   ): Promise<ProviderUsage[]>;
   abstract getModelDistribution(
-    query: GetModelDistributionQuery,
+    params: ModelDistributionParams,
   ): Promise<ModelDistribution[]>;
-  abstract getUserUsage(query: GetUserUsageQuery): Promise<UserUsageResult>;
-  abstract getUsageStats(query: GetUsageStatsQuery): Promise<UsageStats>;
+  abstract getUserUsage(params: UserUsageParams): Promise<UserUsageResult>;
+  abstract getUsageStats(params: UsageStatsParams): Promise<UsageStats>;
   abstract getUsageCount(
     organizationId: UUID,
     startDate?: Date,
