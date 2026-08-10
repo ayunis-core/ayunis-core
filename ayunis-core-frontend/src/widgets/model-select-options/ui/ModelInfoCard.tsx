@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@ayunis/ui/components/badge';
-import { getFlagByProvider } from '@/shared/lib/model-provider-metadata';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
 import { TierStars } from '@/widgets/model-type-card';
 import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
@@ -20,7 +20,6 @@ export default function ModelInfoCard({ model }: Readonly<ModelInfoCardProps>) {
   const hostingDetail = t(`models.providerHosting.${model.provider}`, {
     defaultValue: '',
   });
-  const flag = getFlagByProvider(model.provider);
 
   return (
     <div className="space-y-3">
@@ -43,8 +42,8 @@ export default function ModelInfoCard({ model }: Readonly<ModelInfoCardProps>) {
       )}
       {hostingDetail && (
         <div className="border-t pt-3 text-xs text-muted-foreground">
-          <p>
-            <span aria-hidden="true">{flag} </span>
+          <p className="flex items-center gap-1.5">
+            <ProviderFlag provider={model.provider} />
             {hostingDetail}
           </p>
         </div>

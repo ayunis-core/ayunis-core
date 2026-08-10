@@ -27,10 +27,8 @@ import {
 } from '@ayunis/ui/components/tooltip';
 import { Star } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
-import {
-  getFlagByProvider,
-  getHostingPriority,
-} from '@/shared/lib/model-provider-metadata';
+import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
+import { ProviderFlag } from '@/shared/ui/provider-flag';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
   [ModelWithConfigResponseDtoTier.zero]: 0,
@@ -200,7 +198,6 @@ export default function ModelTypeCard({
         <div className="space-y-2">
           {sortedModels.map((model, index) => {
             const modelKey = `model-${model.provider}:${model.name}`;
-            const flag = getFlagByProvider(model.provider);
             return (
               <div key={modelKey}>
                 <Item
@@ -212,7 +209,10 @@ export default function ModelTypeCard({
                 >
                   <ItemContent>
                     <ItemTitle>
-                      {flag && <span className="mr-1">{flag}</span>}
+                      <ProviderFlag
+                        provider={model.provider}
+                        className="mr-1"
+                      />
                       {model.displayName || model.name}
                       {model.tier && <ModelTierStars tier={model.tier} />}
                     </ItemTitle>
