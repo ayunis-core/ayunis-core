@@ -5,7 +5,6 @@ import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { ProviderMetadata } from 'src/domain/messages/domain/message-contents/provider-metadata.type';
 import { SaveAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.use-case';
 import { SaveAssistantMessageCommand } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.command';
 import { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
@@ -32,6 +31,12 @@ import { InferenceCompletedEvent } from '../events/inference-completed.event';
 import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
 import { observableToBufferedAsyncIterable } from '../helpers/buffered-stream.helper';
 import { extractUsageFromChunks } from '../helpers/stream-usage.helper';
+import {
+  AccumulatedState,
+  AccumulatedToolCall,
+  accumulateChunk,
+  initialAccumulatedState,
+} from '../helpers/stream-accumulation.helper';
 
 type AssistantContentBlock =
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
@@ -46,48 +51,22 @@ interface StreamingInferenceParams {
 }
 
 /**
- * Set as soon as an attempt streams durable content (text or thinking) —
- * after that, a retry would duplicate what the failed attempt already saved.
- * Tool-call deltas deliberately don't count: a failed attempt never persists
- * its tool calls, so a tool-only attempt leaves nothing to duplicate.
+ * `producedOutput` is set as soon as an attempt streams durable content
+ * (text or thinking) — after that, a retry would duplicate what the failed
+ * attempt already saved. Tool-call deltas deliberately don't count: a
+ * failed attempt never persists its tool calls, so a tool-only attempt
+ * leaves nothing to duplicate. `yieldedContent` tracks any yield at all —
+ * an attempt that completes without one produced an empty provider
+ * response (incident #548) and is retried like a stall.
  */
 interface OutputTracker {
   producedOutput: boolean;
+  yieldedContent: boolean;
 }
 
-interface AccumulatedToolCall {
-  id: string | null;
-  name: string | null;
-  arguments: string;
-  providerMetadata: ProviderMetadata;
-}
-
-interface AccumulatedState {
-  text: string;
-  thinking: string;
-  textProviderMetadata: ProviderMetadata;
-  thinkingId: string | null;
-  thinkingSignature: string | null;
-  toolCalls: Map<number, AccumulatedToolCall>;
-  finishReason: string | null;
-  /**
-   * Set when the turn's tool calls failed the integrity check. The whole
-   * tool phase must then be excluded from the saved message — persisting
-   * even the intact sibling calls would let the next run execute half a
-   * turn the model never saw results for.
-   */
-  toolCallsCorrupted: boolean;
-}
-
-const initialAccumulatedState = (): AccumulatedState => ({
-  text: '',
-  thinking: '',
-  textProviderMetadata: null,
-  thinkingId: null,
-  thinkingSignature: null,
-  toolCalls: new Map(),
-  finishReason: null,
-  toolCallsCorrupted: false,
+const freshTracker = (): OutputTracker => ({
+  producedOutput: false,
+  yieldedContent: false,
 });
 
 /**
@@ -109,7 +88,7 @@ export class StreamingInferenceService {
   async *executeStreamingInference(
     params: StreamingInferenceParams,
   ): AsyncGenerator<AssistantMessage, void, unknown> {
-    const tracker = { producedOutput: false };
+    const tracker = freshTracker();
     // One message entity for all attempts: the chat UI keys updates by
     // message id, so a retry under a fresh id would leave the failed
     // attempt's partial content on screen as a phantom message.
@@ -119,7 +98,17 @@ export class StreamingInferenceService {
     });
     try {
       yield* this.streamAttempt(params, tracker, assistantMessage);
-      return;
+      if (tracker.yieldedContent) {
+        return;
+      }
+      // The stream completed without a single chunk — an empty provider
+      // response. Nothing was shown or persisted, so one retry is as safe
+      // as the stall retry; a second empty attempt falls through to the
+      // orchestrator's RUN_EXECUTION_FAILED (incident #548).
+      this.logger.warn(
+        'Provider stream completed without any output; retrying once',
+        { threadId: params.threadId },
+      );
     } catch (error) {
       // A stall or a token-limit-truncated tool call is safe to retry as
       // long as no durable output was streamed: the failed attempt persisted
@@ -137,11 +126,7 @@ export class StreamingInferenceService {
         },
       );
     }
-    yield* this.streamAttempt(
-      params,
-      { producedOutput: false },
-      assistantMessage,
-    );
+    yield* this.streamAttempt(params, freshTracker(), assistantMessage);
   }
 
   private isRetryableBeforeOutput(
@@ -272,7 +257,7 @@ export class StreamingInferenceService {
     tracker: OutputTracker,
   ): AsyncGenerator<AssistantMessage, void, unknown> {
     for await (const chunk of asyncIterable) {
-      const shouldUpdate = this.accumulateChunk(chunk, state);
+      const shouldUpdate = accumulateChunk(chunk, state);
 
       // Same predicate as buildBaseContent's persistence check: a
       // whitespace-only prefix saves nothing, so it must not block a retry.
@@ -283,6 +268,7 @@ export class StreamingInferenceService {
         tracker.producedOutput = true;
       }
       if (shouldUpdate) {
+        tracker.yieldedContent = true;
         assistantMessage.content = this.buildMessageContent(state, tools);
         yield assistantMessage;
       }
@@ -297,64 +283,6 @@ export class StreamingInferenceService {
     } catch (error) {
       state.toolCallsCorrupted = true;
       throw error;
-    }
-  }
-
-  private accumulateChunk(
-    chunk: StreamInferenceResponseChunk,
-    state: AccumulatedState,
-  ): boolean {
-    let shouldUpdate = false;
-
-    if (chunk.thinkingDelta) {
-      state.thinking += chunk.thinkingDelta;
-      shouldUpdate = true;
-    }
-    if (chunk.thinkingId) {
-      state.thinkingId = chunk.thinkingId;
-    }
-    if (chunk.thinkingSignature) {
-      state.thinkingSignature = chunk.thinkingSignature;
-    }
-
-    if (chunk.textContentDelta) {
-      state.text += chunk.textContentDelta;
-      shouldUpdate = true;
-    }
-    if (chunk.textProviderMetadata) {
-      state.textProviderMetadata = chunk.textProviderMetadata;
-    }
-
-    if (chunk.toolCallsDelta.length > 0) {
-      this.accumulateToolCalls(chunk.toolCallsDelta, state.toolCalls);
-      shouldUpdate = true;
-    }
-    if (chunk.finishReason) {
-      state.finishReason = chunk.finishReason;
-    }
-
-    return shouldUpdate;
-  }
-
-  private accumulateToolCalls(
-    deltas: StreamInferenceResponseChunk['toolCallsDelta'],
-    toolCalls: Map<number, AccumulatedToolCall>,
-  ): void {
-    for (const toolCall of deltas) {
-      const existing = toolCalls.get(toolCall.index) ?? {
-        id: null,
-        name: null,
-        arguments: '',
-        providerMetadata: null,
-      };
-
-      toolCalls.set(toolCall.index, {
-        id: toolCall.id ?? existing.id,
-        name: toolCall.name ?? existing.name,
-        arguments: existing.arguments + (toolCall.argumentsDelta ?? ''),
-        providerMetadata:
-          toolCall.providerMetadata ?? existing.providerMetadata,
-      });
     }
   }
 
