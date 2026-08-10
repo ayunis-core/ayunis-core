@@ -5,6 +5,7 @@ import { ObjectStoragePort } from '../../ports/object-storage.port';
 import type { StorageObjectSummary } from '../../ports/object-storage.port';
 import { PurgeOrgStorageUseCase } from '../purge-org-storage/purge-org-storage.use-case';
 import { PurgeOrgStorageCommand } from '../purge-org-storage/purge-org-storage.command';
+import { extractOrgIdFromKey } from '../../../domain/org-storage-layout';
 
 /**
  * How old the newest blob under an org's prefixes must be before the sweeper
@@ -13,15 +14,6 @@ import { PurgeOrgStorageCommand } from '../purge-org-storage/purge-org-storage.c
  * so anything recently touched is left for the next run rather than purged.
  */
 export const ORPHAN_STORAGE_SAFETY_WINDOW_MS = 24 * 60 * 60 * 1000;
-
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Top-level key layouts whose second segment is the owning org id. Every other
- * org-scoped prefix embeds the org id as the first segment (`<orgId>/...`).
- */
-const NESTED_ORG_PREFIXES = new Set(['generated-images', 'letterheads']);
 
 export interface SweepOrphanStorageResult {
   storageOrgCount: number;
@@ -112,7 +104,7 @@ export class SweepOrphanStorageUseCase {
     const now = Date.now();
     const newestByOrg = new Map<string, number>();
     for (const summary of summaries) {
-      const orgId = this.extractOrgId(summary.objectName);
+      const orgId = extractOrgIdFromKey(summary.objectName);
       if (!orgId) {
         continue;
       }
@@ -123,13 +115,5 @@ export class SweepOrphanStorageUseCase {
       }
     }
     return newestByOrg;
-  }
-
-  private extractOrgId(objectName: string): string | null {
-    const [first, second] = objectName.split('/');
-    if (NESTED_ORG_PREFIXES.has(first)) {
-      return second && UUID_REGEX.test(second) ? second : null;
-    }
-    return UUID_REGEX.test(first) ? first : null;
   }
 }
