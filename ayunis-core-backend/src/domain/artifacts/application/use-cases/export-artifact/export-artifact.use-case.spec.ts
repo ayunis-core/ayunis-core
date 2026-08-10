@@ -10,6 +10,7 @@ import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { DocumentExportPort } from '../../ports/document-export.port';
 import { SpreadsheetExportPort } from '../../ports/spreadsheet-export.port';
 import {
+  ArtifactExportTimeoutError,
   ArtifactNotFoundError,
   ArtifactNotExportableError,
 } from '../../artifacts.errors';
@@ -266,6 +267,33 @@ describe('ExportArtifactUseCase', () => {
         continuationPageMargins: { top: 20, right: 15, bottom: 20, left: 15 },
       }),
     );
+  });
+
+  it('should not retry a timed-out letterhead render', async () => {
+    const artifact = createArtifact({ letterheadId: mockLetterheadId });
+    const letterhead = createLetterhead();
+    const timeout = new ArtifactExportTimeoutError(
+      new Error('Navigation timeout of 30000 ms exceeded'),
+    );
+
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    findLetterheadUseCase.execute.mockResolvedValue(letterhead);
+    downloadObjectUseCase.execute
+      .mockResolvedValueOnce(createBufferStream(Buffer.from('%PDF-first')))
+      .mockResolvedValueOnce(
+        createBufferStream(Buffer.from('%PDF-continuation')),
+      );
+    documentExportPort.exportToPdf.mockRejectedValue(timeout);
+
+    await expect(
+      useCase.execute(
+        new ExportArtifactCommand({
+          artifactId: mockArtifactId,
+          format: 'pdf',
+        }),
+      ),
+    ).rejects.toBe(timeout);
+    expect(documentExportPort.exportToPdf).toHaveBeenCalledTimes(1);
   });
 
   it('should export PDF without letterhead when letterhead is not found', async () => {

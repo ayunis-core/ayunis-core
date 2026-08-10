@@ -1,6 +1,8 @@
 import { HtmlDocumentExportService } from './html-document-export.service';
 import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import type { LetterheadConfig } from '../../application/ports/document-export.port';
+import { ArtifactExportTimeoutError } from '../../application/artifacts.errors';
+import { TimeoutError } from 'puppeteer-core';
 import * as JSZip from 'jszip';
 
 async function extractDocumentXml(buffer: Buffer): Promise<string> {
@@ -16,6 +18,8 @@ async function extractDocumentXml(buffer: Buffer): Promise<string> {
 const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
 
 const mockPage = {
+  setRequestInterception: jest.fn().mockResolvedValue(undefined),
+  on: jest.fn(),
   setContent: jest.fn().mockResolvedValue(undefined),
   pdf: jest.fn().mockResolvedValue(FAKE_PDF),
   close: jest.fn().mockResolvedValue(undefined),
@@ -29,10 +33,15 @@ const mockBrowser = {
 
 const mockLaunch = jest.fn().mockResolvedValue(mockBrowser);
 
-jest.mock('puppeteer-core', () => ({
-  __esModule: true,
-  default: { launch: (...args: unknown[]) => mockLaunch(...args) },
-}));
+jest.mock('puppeteer-core', () => {
+  const { TimeoutError: ActualTimeoutError } =
+    jest.requireActual('puppeteer-core');
+  return {
+    __esModule: true,
+    TimeoutError: ActualTimeoutError,
+    default: { launch: (...args: unknown[]) => mockLaunch(...args) },
+  };
+});
 
 describe('HtmlDocumentExportService', () => {
   let service: HtmlDocumentExportService;
@@ -195,6 +204,60 @@ describe('HtmlDocumentExportService', () => {
         expect.stringContaining('Hello'),
         { waitUntil: 'networkidle0' },
       );
+    });
+
+    it('should abort remote resources before rendering', async () => {
+      await service.exportToPdf(
+        '<p>Agenda</p><img src="https://assets.example.org/header.png">',
+      );
+
+      expect(mockPage.setRequestInterception).toHaveBeenCalledWith(true);
+      expect(mockPage.on).toHaveBeenCalledWith('request', expect.any(Function));
+
+      const handleRequest = mockPage.on.mock.calls[0][1] as (request: {
+        url: () => string;
+        abort: () => void;
+        continue: () => void;
+      }) => void;
+      const request = {
+        url: () => 'https://assets.example.org/header.png',
+        abort: jest.fn(),
+        continue: jest.fn(),
+      };
+      handleRequest(request);
+
+      expect(request.abort).toHaveBeenCalled();
+      expect(request.continue).not.toHaveBeenCalled();
+    });
+
+    it('should allow embedded data resources', async () => {
+      await service.exportToPdf('<p>Agenda</p>');
+
+      const handleRequest = mockPage.on.mock.calls[0][1] as (request: {
+        url: () => string;
+        abort: () => void;
+        continue: () => void;
+      }) => void;
+      const request = {
+        url: () => 'data:image/png;base64,aGVhZGVy',
+        abort: jest.fn(),
+        continue: jest.fn(),
+      };
+      handleRequest(request);
+
+      expect(request.continue).toHaveBeenCalled();
+      expect(request.abort).not.toHaveBeenCalled();
+    });
+
+    it('should classify Puppeteer timeouts as artifact export timeouts', async () => {
+      mockPage.setContent.mockRejectedValueOnce(
+        new TimeoutError('Navigation timeout of 30000 ms exceeded'),
+      );
+
+      await expect(service.exportToPdf('<p>Agenda</p>')).rejects.toBeInstanceOf(
+        ArtifactExportTimeoutError,
+      );
+      expect(mockPage.close).toHaveBeenCalled();
     });
 
     it('should generate A4 PDF with correct margins when no letterhead', async () => {

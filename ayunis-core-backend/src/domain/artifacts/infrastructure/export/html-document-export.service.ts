@@ -7,6 +7,8 @@ import { convertHtmlToDocx } from './html-to-docx-converter';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
 import { sanitizeHtmlContent } from '../../application/helpers/sanitize-html-content';
+import { TimeoutError } from 'puppeteer-core';
+import { ArtifactExportTimeoutError } from '../../application/artifacts.errors';
 
 /** CSS for PDF export (Puppeteer supports full <style> blocks). */
 const PDF_CSS = `
@@ -78,6 +80,14 @@ export class HtmlDocumentExportService
     const page = await browser.newPage();
 
     try {
+      await page.setRequestInterception(true);
+      page.on('request', (request) => {
+        if (request.url().startsWith('data:')) {
+          void request.continue();
+          return;
+        }
+        void request.abort();
+      });
       await page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
 
       const pdfOptions = letterhead
@@ -96,6 +106,11 @@ export class HtmlDocumentExportService
         letterhead.firstPagePdf,
         letterhead.continuationPagePdf,
       );
+    } catch (error) {
+      if (error instanceof TimeoutError) {
+        throw new ArtifactExportTimeoutError(error);
+      }
+      throw error;
     } finally {
       await page.close();
     }

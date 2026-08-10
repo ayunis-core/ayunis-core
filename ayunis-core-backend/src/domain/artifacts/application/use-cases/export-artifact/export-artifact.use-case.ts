@@ -14,6 +14,7 @@ import {
   type ExportFormat,
 } from './export-artifact.command';
 import {
+  ArtifactExportTimeoutError,
   ArtifactNotFoundError,
   ArtifactNotExportableError,
   ArtifactVersionNotFoundError,
@@ -250,7 +251,9 @@ export class ExportArtifactUseCase {
         letterheadConfig,
       );
     } catch (error) {
-      if (!letterheadConfig) throw error;
+      if (error instanceof ArtifactExportTimeoutError || !letterheadConfig) {
+        throw error;
+      }
       const reason = error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(
         `Letterhead compositing failed, exporting without letterhead: ${reason}`,
