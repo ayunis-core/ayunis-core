@@ -140,6 +140,22 @@ describe('sanitizeHtmlContent', () => {
       expect(sanitizeHtmlContent(html)).toBe(html);
     });
 
+    it('should preserve paragraph spacing styles for export', () => {
+      const html =
+        '<p style="line-height:1;margin-top:0pt;margin-bottom:0pt">Text</p>';
+      const result = sanitizeHtmlContent(html);
+      expect(result).toContain('line-height:1');
+      expect(result).toContain('margin-top:0pt');
+      expect(result).toContain('margin-bottom:0pt');
+    });
+
+    it('should strip spacing styles with unsupported units', () => {
+      const html = '<p style="line-height:1.5em;margin-bottom:2rem">Text</p>';
+      const result = sanitizeHtmlContent(html);
+      expect(result).not.toContain('line-height');
+      expect(result).not.toContain('margin-bottom');
+    });
+
     it('should handle empty HTML', () => {
       expect(sanitizeHtmlContent('')).toBe('');
     });

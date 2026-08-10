@@ -176,4 +176,105 @@ describe('convertHtmlToDocx', () => {
     expect(xml).toContain('Right Heading');
     expect(xml).toContain('right');
   });
+
+  it('should render line-height: 1 as single line spacing', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="line-height: 1">Single spaced</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Single spaced');
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="auto"/);
+  });
+
+  it('should render line-height: 1.5 as one-and-a-half line spacing', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="line-height: 1.5">Loose</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="360"[^>]*w:lineRule="auto"/);
+  });
+
+  it('should render margin-bottom as spacing after the paragraph', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="margin-bottom: 0pt">No gap after</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('No gap after');
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="0"/);
+  });
+
+  it('should render margin-top as spacing before the paragraph', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="margin-top: 6pt">Gap before</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toMatch(/<w:spacing[^>]*w:before="120"/);
+  });
+
+  it('should preserve all paragraph spacing from combined inline styles', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="font-size: 12pt; line-height: 1; margin-top: 0pt; margin-bottom: 0pt; padding-top: 0; padding-bottom: 0; text-align: justify;">Body</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Body');
+    expect(xml).toContain('both'); // JUSTIFIED alignment renders as w:val="both"
+    expect(xml).toMatch(/w:line="240"/);
+    expect(xml).toMatch(/w:lineRule="auto"/);
+    expect(xml).toMatch(/w:after="0"/);
+    expect(xml).toMatch(/w:before="0"/);
+  });
+
+  it('should preserve spacing on headings, list items, and table cells', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<h1 style="margin-bottom: 0pt">Heading</h1>' +
+        '<ul><li><p style="line-height: 1">Item</p></li></ul>' +
+        '<table><tr><td style="margin-bottom: 0pt">Cell</td></tr></table>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Heading');
+    expect(xml).toContain('Item');
+    expect(xml).toContain('Cell');
+    expect(
+      (xml.match(/<w:spacing[^>]*w:after="0"/g) ?? []).length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"/);
+  });
+
+  it('should convert px margins to twips', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="margin-bottom: 16px">Pixels</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    // 16px * 15 twips/px = 240
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="240"/);
+  });
+
+  it('should render px line-height as exact line spacing', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="line-height: 16px">Fixed</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    // 16px * 15 twips/px = 240, exact line rule
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="exact"/);
+  });
+
+  it('should read table cell spacing from the nested paragraph', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<table><tr><td><p style="line-height: 1; margin-bottom: 0pt; text-align: right">Cell</p></td></tr></table>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Cell');
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="auto"/);
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="0"/);
+    expect(xml).toContain('right');
+  });
 });

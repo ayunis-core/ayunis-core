@@ -1,6 +1,14 @@
 import { HtmlDocumentExportService } from './html-document-export.service';
 import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import type { LetterheadConfig } from '../../application/ports/document-export.port';
+import * as JSZip from 'jszip';
+
+async function extractDocumentXml(buffer: Buffer): Promise<string> {
+  const zip = await JSZip.loadAsync(buffer);
+  const docXml = zip.file('word/document.xml');
+  if (!docXml) throw new Error('No word/document.xml in DOCX');
+  return docXml.async('text');
+}
 
 // ---------------------------------------------------------------------------
 // Puppeteer mock — avoids launching a real browser in unit tests
@@ -150,6 +158,18 @@ describe('HtmlDocumentExportService', () => {
 
       expect(result).toBeInstanceOf(Buffer);
       expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should preserve line-height and margin spacing through sanitization', async () => {
+      const html =
+        '<p style="line-height: 1; margin-top: 0pt; margin-bottom: 0pt; text-align: justify;">Body</p>';
+      const result = await service.exportToDocx(html);
+      const xml = await extractDocumentXml(result);
+
+      expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="auto"/);
+      expect(xml).toMatch(/<w:spacing[^>]*w:after="0"/);
+      expect(xml).toMatch(/<w:spacing[^>]*w:before="0"/);
+      expect(xml).toContain('both'); // JUSTIFIED alignment
     });
   });
 
