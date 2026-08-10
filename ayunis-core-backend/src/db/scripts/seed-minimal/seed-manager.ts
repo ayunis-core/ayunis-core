@@ -9,18 +9,24 @@ import { OrgUserSeeder } from './seeders/org-user-seeder';
 import { BillingSeeder } from './seeders/billing-seeder';
 import { UsageSeeder } from './seeders/usage-seeder';
 import { CreditLimitSeeder } from './seeders/credit-limit-seeder';
+import { AcademyContentSeeder } from './seeders/academy-content-seeder';
+import { AcademyAccessSeeder } from './seeders/academy-access-seeder';
 
 export class SeedManager {
   private readonly globalSeeders: GlobalSeeder[] = [
     new ModelSeeder(),
     new PlatformConfigSeeder(),
+    new AcademyContentSeeder(),
   ];
 
+  // AcademyAccessSeeder runs last: its per-chapter progress rows need both the
+  // org's users and the chapters the global seeders created.
   private readonly orgSeeders: OrgSeeder[] = [
     new OrgUserSeeder(),
     new BillingSeeder(),
     new UsageSeeder(),
     new CreditLimitSeeder(),
+    new AcademyAccessSeeder(),
   ];
 
   constructor(private readonly runner: SeedRunner) {}
