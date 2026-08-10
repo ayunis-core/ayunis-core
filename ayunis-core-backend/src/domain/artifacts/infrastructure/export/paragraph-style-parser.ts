@@ -71,11 +71,12 @@ function parseLineHeight(
 ): Partial<ISpacingProperties> | undefined {
   const trimmed = value.trim();
 
-  if (trimmed.endsWith('pt')) {
-    const pt = toFiniteNumber(trimmed.slice(0, -2));
-    return pt === undefined
+  // An absolute unit (`pt`/`px`) maps to a fixed (exact) line height.
+  if (trimmed.endsWith('pt') || trimmed.endsWith('px')) {
+    const twips = cssLengthToTwips(trimmed);
+    return twips === undefined
       ? undefined
-      : { line: Math.round(pt * 20), lineRule: LineRuleType.EXACT };
+      : { line: twips, lineRule: LineRuleType.EXACT };
   }
 
   // A unitless multiplier maps to auto line spacing measured in 240ths of a

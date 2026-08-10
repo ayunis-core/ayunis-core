@@ -255,4 +255,26 @@ describe('convertHtmlToDocx', () => {
     // 16px * 15 twips/px = 240
     expect(xml).toMatch(/<w:spacing[^>]*w:after="240"/);
   });
+
+  it('should render px line-height as exact line spacing', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<p style="line-height: 16px">Fixed</p>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    // 16px * 15 twips/px = 240, exact line rule
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="exact"/);
+  });
+
+  it('should read table cell spacing from the nested paragraph', async () => {
+    const buffer = await convertHtmlToDocx(
+      '<table><tr><td><p style="line-height: 1; margin-bottom: 0pt; text-align: right">Cell</p></td></tr></table>',
+    );
+    const xml = await extractDocumentXml(buffer);
+
+    expect(xml).toContain('Cell');
+    expect(xml).toMatch(/<w:spacing[^>]*w:line="240"[^>]*w:lineRule="auto"/);
+    expect(xml).toMatch(/<w:spacing[^>]*w:after="0"/);
+    expect(xml).toContain('right');
+  });
 });

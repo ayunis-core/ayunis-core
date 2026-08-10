@@ -342,33 +342,39 @@ function convertTableRow(tr: HTMLElement): TableRow | null {
   if (cellElements.length === 0) return null;
 
   const isHeader = cellElements[0].tagName.toLowerCase() === 'th';
-  const cells = cellElements.map((cell) => {
-    const runs = collectInlineRuns(cell, {
-      bold: isHeader || undefined,
-    });
-
-    const colspanAttr = cell.getAttribute('colspan');
-    const rowspanAttr = cell.getAttribute('rowspan');
-    const columnSpan = colspanAttr ? parseInt(colspanAttr, 10) : undefined;
-    const rowSpan = rowspanAttr ? parseInt(rowspanAttr, 10) : undefined;
-
-    return new TableCell({
-      children: [
-        new Paragraph({
-          children: runs,
-          alignment: parseAlignment(cell),
-          spacing: parseSpacing(cell),
-        }),
-      ],
-      borders: TABLE_BORDERS,
-      shading: isHeader ? { fill: 'F5F5F5' } : undefined,
-      width: { size: 0, type: WidthType.AUTO },
-      ...(columnSpan && columnSpan > 1 && { columnSpan }),
-      ...(rowSpan && rowSpan > 1 && { rowSpan }),
-    });
-  });
+  const cells = cellElements.map((cell) => convertTableCell(cell, isHeader));
 
   return new TableRow({ children: cells });
+}
+
+function convertTableCell(cell: HTMLElement, isHeader: boolean): TableCell {
+  const runs = collectInlineRuns(cell, { bold: isHeader || undefined });
+
+  const columnSpan = parseSpan(cell.getAttribute('colspan'));
+  const rowSpan = parseSpan(cell.getAttribute('rowspan'));
+
+  // TipTap wraps cell content in a nested <p> that carries the paragraph
+  // styles; fall back to the cell itself when there is no inner paragraph.
+  const styleNode = cell.querySelector(':scope > p') ?? cell;
+
+  return new TableCell({
+    children: [
+      new Paragraph({
+        children: runs,
+        alignment: parseAlignment(styleNode) ?? parseAlignment(cell),
+        spacing: parseSpacing(styleNode) ?? parseSpacing(cell),
+      }),
+    ],
+    borders: TABLE_BORDERS,
+    shading: isHeader ? { fill: 'F5F5F5' } : undefined,
+    width: { size: 0, type: WidthType.AUTO },
+    ...(columnSpan && columnSpan > 1 && { columnSpan }),
+    ...(rowSpan && rowSpan > 1 && { rowSpan }),
+  });
+}
+
+function parseSpan(attr: string | undefined): number | undefined {
+  return attr ? parseInt(attr, 10) : undefined;
 }
 
 // ---------------------------------------------------------------------------
