@@ -1,4 +1,7 @@
-import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
+import {
+  AnonymizationFailedError,
+  AnonymizationInputTooLongError,
+} from 'src/common/anonymization/application/anonymization.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -357,6 +360,30 @@ describe('ExecuteRunUseCase', () => {
   });
 
   describe('anonymous mode anonymization failure', () => {
+    it('should preserve deterministic oversize validation without sending the message', async () => {
+      const thread = createMockThread({ isAnonymous: true });
+      findThreadUseCase.execute.mockResolvedValue({
+        thread,
+        isLongChat: false,
+      });
+      const inputTooLongError = new AnonymizationInputTooLongError(
+        30_001,
+        30_000,
+      );
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
+        inputTooLongError,
+      );
+
+      const command = new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('A'.repeat(30_001), []),
+        streaming: false,
+      });
+
+      const generator = await useCase.execute(command);
+      await expect(generator.next()).rejects.toBe(inputTooLongError);
+    });
+
     it('should throw RunAnonymizationUnavailableError when anonymize service is unavailable and thread is anonymous', async () => {
       const thread = createMockThread({ isAnonymous: true });
       findThreadUseCase.execute.mockResolvedValue({

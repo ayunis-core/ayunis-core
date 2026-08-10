@@ -23,6 +23,7 @@
     "errorToolNotFound": "Tool nicht gefunden",
     "errorToolExecutionFailed": "Ein Tool ist wiederholt fehlgeschlagen. Bitte passen Sie Ihre Anfrage an und versuchen Sie es erneut.",
     "errorAnonymizationUnavailable": "Die Anonymisierung ist derzeit nicht verfügbar. Ihre Nachricht wurde nicht gesendet, um Ihre Daten zu schützen.",
+    "errorAnonymizationInputTooLong": "Ihre Nachricht überschreitet das Limit von 30.000 Zeichen für die Anonymisierung und wurde nicht gesendet. Bitte kürzen Sie sie und versuchen Sie es erneut.",
     "errorContextBudgetExceeded": "Die letzte Konversationsrunde ist zu groß für das Kontextfenster des Modells.",
     "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
     "errorRestoreFailedSubmission": "Ihre vorherige Nachricht und Anhänge konnten nicht wiederhergestellt werden, da die Eingabe bereits einen Entwurf enthält.",

@@ -33,6 +33,9 @@ export function useRunErrorHandler(_threadId: string) {
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
           showError(t('chat.errorAnonymizationUnavailable'));
           break;
+        case 'ANONYMIZATION_INPUT_TOO_LONG':
+          showError(t('chat.errorAnonymizationInputTooLong'));
+          break;
         case 'RUN_CONTEXT_BUDGET_EXCEEDED':
           showError(t('chat.errorContextBudgetExceeded'));
           break;

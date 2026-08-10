@@ -22,6 +22,7 @@ import {
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { ExecuteRunCommand } from './execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
@@ -446,6 +447,9 @@ export class ExecuteRunUseCase {
       }
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
+      if (error instanceof AnonymizationInputTooLongError) {
+        throw error;
+      }
       this.logger.error('Anonymization service unavailable', {
         error: error as Error,
       });

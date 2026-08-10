@@ -118,6 +118,27 @@ describe('PresidioAnonymizationProvider', () => {
     expect(detections).toHaveLength(0);
   });
 
+  it('rejects text beyond the service limit without sending it', async () => {
+    const result = provider.detect('A'.repeat(30_001));
+
+    await expect(result).rejects.toMatchObject({
+      code: 'ANONYMIZATION_INPUT_TOO_LONG',
+      statusCode: 422,
+    });
+    expect(mockAnalyzeTextAnalyzePost).not.toHaveBeenCalled();
+  });
+
+  it('counts Unicode code points like the anonymize service', async () => {
+    const text = '😀'.repeat(30_000);
+    mockResults([]);
+
+    await expect(provider.detect(text)).resolves.toEqual([]);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledWith({
+      text,
+      entities: null,
+    });
+  });
+
   it('throws AnonymizationFailedError when the service call fails', async () => {
     mockAnalyzeTextAnalyzePost.mockRejectedValue(
       new Error('connect ECONNREFUSED'),
@@ -168,9 +189,8 @@ describe('PresidioAnonymizationProvider', () => {
     });
   });
 
-  // A 422 means we built a bad request (e.g. over the service's text-length
-  // cap) — that is our defect and must stay a distinct incident, not blend
-  // into the outage taxonomy.
+  // A remaining 422 means our request shape drifted despite local validation.
+  // It must stay a distinct incident rather than blend into the outage taxonomy.
   it('keeps upstream 4xx failures as AnonymizationFailedError', async () => {
     mockAnalyzeTextAnalyzePost.mockRejectedValue(
       Object.assign(new Error('Request failed with status code 422'), {
