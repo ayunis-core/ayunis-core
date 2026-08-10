@@ -193,36 +193,6 @@ function ChatColumn({
           · {chatTitle}
         </span>
         <div className="flex shrink-0 items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="text-muted-foreground"
-                aria-label="Chat-Aktionen"
-              >
-                <MoreVertical />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onRename}>
-                <Pencil />
-                Chat umbenennen
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onTogglePin}>
-                <Star className={cn(isPinned && 'fill-brand text-brand')} />
-                {isPinned
-                  ? 'Nicht mehr im Projekt anheften'
-                  : 'Chat im Projekt anheften'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={onDelete}>
-                <Trash2 />
-                Chat löschen
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Separator orientation="vertical" className="h-5" />
           {PANEL_ORDER.map((key) => {
             const Icon = PANELS[key].icon;
             const isOpen = openPanels.includes(key);
@@ -245,6 +215,31 @@ function ChatColumn({
               </Tooltip>
             );
           })}
+          <Separator orientation="vertical" className="h-5" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Chat-Aktionen">
+                <MoreVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onRename}>
+                <Pencil />
+                Chat umbenennen
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onTogglePin}>
+                <Star className={cn(isPinned && 'fill-brand text-brand')} />
+                {isPinned
+                  ? 'Nicht mehr im Projekt anheften'
+                  : 'Chat im Projekt anheften'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                <Trash2 />
+                Chat löschen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
