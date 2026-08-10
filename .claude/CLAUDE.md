@@ -2,7 +2,7 @@
 
 > **Philosophy**: Code is opaque weights. Correctness is inferred from externally observable behavior.
 
-For architecture overview and module navigation, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For architecture overview and module navigation, see [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ---
 
