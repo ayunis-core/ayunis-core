@@ -6,7 +6,7 @@ import { ImageContentService } from 'src/domain/messages/application/services/im
 import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
 import type { Model } from '../../domain/model.entity';
 import {
-  ANTHROPIC_MAX_OUTPUT_TOKENS,
+  CLAUDE_MAX_OUTPUT_TOKENS,
   INFERENCE_MAX_RETRIES,
 } from '../runtime/inference-config';
 
@@ -24,7 +24,7 @@ export class AnthropicStreamInferenceHandler extends RuntimeStreamInferenceHandl
       apiKey: this.configService.get<string>('models.anthropic.apiKey') ?? '',
       model: model.name,
       maxRetries: INFERENCE_MAX_RETRIES,
-      maxTokens: ANTHROPIC_MAX_OUTPUT_TOKENS,
+      maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
     });
   }
 }
