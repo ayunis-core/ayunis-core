@@ -12,7 +12,7 @@ import { showError } from '@/shared/lib/toast';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-import { useDeleteThread } from '@/features/useDeleteThread';
+import { useDeleteThread } from '@/features/thread-run';
 import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -151,6 +151,7 @@ export default function ChatPage({
   });
 
   const { deleteChat } = useDeleteThread({
+    onBeforeDelete: resetRunState,
     onSuccess: () => {
       void navigate({ to: '/chat' });
     },
@@ -301,14 +302,13 @@ export default function ChatPage({
     }
   }
 
-  function handleSendCancelled() {
-    abort();
+  function resetRunState() {
     lastSubmissionRef.current = null;
     setIsStreaming(false);
     setPendingSubmission(null);
+  }
 
-    // Immediately remove tool calls from the last assistant message in local state
-    // This provides instant feedback matching what the backend will save
+  function removePendingToolCalls() {
     setMessages((prev) => {
       const lastMessage = prev[prev.length - 1];
       // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- guard against empty prev array where lastMessage would be undefined
@@ -329,6 +329,12 @@ export default function ChatPage({
       }
       return prev;
     });
+  }
+
+  function handleSendCancelled() {
+    abort();
+    resetRunState();
+    removePendingToolCalls();
   }
 
   function handleDeleteThread() {
