@@ -122,9 +122,14 @@ export function ProviderFlag({
     <svg
       viewBox="0 0 3 2"
       className={cn(
-        'inline-block h-[0.9em] w-[1.35em] shrink-0 overflow-hidden rounded-[2px] align-[-0.1em] ring-1 ring-border',
+        'inline-block shrink-0 overflow-hidden rounded-[2px] align-[-0.1em] ring-1 ring-border',
         className,
       )}
+      // Dimensions are set inline rather than via h-/w- utilities: the Select
+      // primitives force descendant SVGs without a size- class to `size-4`
+      // (a higher-specificity rule), which would crop the 3:2 flag to a
+      // square. Inline styles win over that class-based override.
+      style={{ height: '0.9em', width: '1.35em' }}
       role="presentation"
       aria-hidden="true"
       focusable="false"
