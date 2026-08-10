@@ -50,10 +50,26 @@ the client:
 - `ChapterProgressView.passValid` distinguishes "ever passed" (`passed`, true
   forever) from "still counts" — a lapsed learner needs it to see what to redo.
 
-Only the academy knows the period. `GetAcademyCompletionUseCase` exports
-`{ completedAt, expiresAt }` so gating consumers never import the constant
-across a module boundary. Recomputation is forward-only: an existing
-`AcademyCompletion` row is never re-derived under the newer rule.
+Only the academy knows the period. `AcademyCompletionView`
+(`domain/academy-completion-view.ts`) is what gating consumers see —
+`{ completedAt, expiresAt }` with the period already applied, built by the one
+`toAcademyCompletionView` mapper (`util/academy-completion-view.ts`) — so no
+other module imports the constant across a module boundary.
+
+`expiresAt` is derived in TypeScript rather than by a Postgres generated column,
+deliberately: the column form repeats the period in SQL while
+`isPassWithinValidity` still needs it here, and TypeORM keys generated columns in
+`typeorm_metadata` by database name, which reports phantom schema drift in any
+environment whose database is named differently from the one the migration was
+generated against (CI uses `ayunis_test`). `certificate-validity.ts` stays pure
+period maths. Recomputation is forward-only: an existing `AcademyCompletion` row
+is never re-derived under the newer rule.
+
+`GetAcademyCompletionsUseCase` is the many-user counterpart, returning a
+`ReadonlyMap<UUID, AcademyCompletionView>` keyed by user. Admin overviews that
+list a whole org read through it instead of firing one query per member; users
+who never completed the academy are absent from the map rather than mapped to a
+null view.
 
 ## Certificate
 

@@ -4,7 +4,8 @@
  * once ignore it.
  *
  * The academy owns this period so no other module has to import it across a
- * module boundary — consumers read `expiresAt` off `GetAcademyCompletionUseCase`.
+ * module boundary — consumers read the already-applied `expiresAt` off
+ * `AcademyCompletionView`.
  */
 export const CERTIFICATE_VALIDITY_MONTHS = 12;
 

@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcademyAccessControllerListOrgCertificatesParams,
   AcademyAccessStatusResponseDto,
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
@@ -132,6 +133,7 @@ import type {
   OrgMfaRequirementResponseDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
+  PaginatedOrgCertificateStatusesResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
   PermittedImageGenerationModelResponseDto,
@@ -21499,6 +21501,100 @@ export const useAcademyAccessControllerUpsertOrgSettings = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Certificate standing of every member of the admin's org
+ */
+export const academyAccessControllerListOrgCertificates = (
+    params?: AcademyAccessControllerListOrgCertificatesParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PaginatedOrgCertificateStatusesResponseDto>(
+      {url: `/academy-access/org-certificates`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getAcademyAccessControllerListOrgCertificatesQueryKey = (params?: AcademyAccessControllerListOrgCertificatesParams,) => {
+    return [
+    `/academy-access/org-certificates`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getAcademyAccessControllerListOrgCertificatesQueryOptions = <TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAcademyAccessControllerListOrgCertificatesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>> = ({ signal }) => academyAccessControllerListOrgCertificates(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AcademyAccessControllerListOrgCertificatesQueryResult = NonNullable<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>>
+export type AcademyAccessControllerListOrgCertificatesQueryError = unknown
+
+
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params: undefined |  AcademyAccessControllerListOrgCertificatesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>,
+          TError,
+          Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Certificate standing of every member of the admin's org
+ */
+
+export function useAcademyAccessControllerListOrgCertificates<TData = Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError = unknown>(
+ params?: AcademyAccessControllerListOrgCertificatesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyAccessControllerListOrgCertificates>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAcademyAccessControllerListOrgCertificatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Get the current user’s two-factor auth status
  */

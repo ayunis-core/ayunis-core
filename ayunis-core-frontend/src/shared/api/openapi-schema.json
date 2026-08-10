@@ -10238,6 +10238,68 @@
         "tags": ["Academy Access"]
       }
     },
+    "/academy-access/org-certificates": {
+      "get": {
+        "operationId": "AcademyAccessController_listOrgCertificates",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search members by name or email",
+            "schema": {
+              "example": "anna",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Only return members whose certificate is in this state",
+            "schema": {
+              "$ref": "#/components/schemas/CertificateValidityStatus"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of members to return",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of members to skip",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedOrgCertificateStatusesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Certificate standing of every member of the admin's org",
+        "tags": ["Academy Access"]
+      }
+    },
     "/mfa/status": {
       "get": {
         "operationId": "MfaController_getStatus",
@@ -18139,6 +18201,69 @@
           }
         },
         "required": ["mode"]
+      },
+      "CertificateValidityStatus": {
+        "type": "string",
+        "enum": ["not_passed", "valid", "expiring_soon", "expired"]
+      },
+      "OrgCertificateStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Anna Admin"
+          },
+          "email": {
+            "type": "string",
+            "example": "anna@example.com"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the member last completed the academy, or null if they never have"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the certificate stops being valid. Only populated when the org requires annual renewal."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CertificateValidityStatus"
+              }
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "name",
+          "email",
+          "completedAt",
+          "expiresAt",
+          "status"
+        ]
+      },
+      "PaginatedOrgCertificateStatusesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrgCertificateStatusResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
       },
       "MfaStatusResponseDto": {
         "type": "object",
