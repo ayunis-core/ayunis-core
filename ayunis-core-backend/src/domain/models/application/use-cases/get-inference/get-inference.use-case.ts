@@ -5,12 +5,16 @@ import {
   InferenceInput,
   InferenceResponse,
 } from '../../ports/inference.handler';
-import { InferenceFailedError } from '../../models.errors';
+import {
+  InferenceFailedError,
+  InferenceTokenLimitError,
+} from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 
 @Injectable()
 export class GetInferenceUseCase {
@@ -40,7 +44,7 @@ export class GetInferenceUseCase {
         command.model.provider,
       );
 
-      return await inferenceHandler.answer(
+      const response = await inferenceHandler.answer(
         new InferenceInput({
           model: command.model,
           messages: stripReplayedToolNulls(command.messages, command.tools),
@@ -50,9 +54,33 @@ export class GetInferenceUseCase {
           orgId,
         }),
       );
+      this.assertTokenLimitResponseAllowed(
+        response,
+        command.acceptTokenLimitCompletion,
+      );
+      return response;
     } catch (error) {
       this.handleInferenceError(error, command);
     }
+  }
+
+  private assertTokenLimitResponseAllowed(
+    response: InferenceResponse,
+    acceptTokenLimitCompletion: boolean,
+  ): void {
+    if (response.finishReason !== 'length') return;
+    const toolCalls = response.content.filter(
+      (content) => content instanceof ToolUseMessageContent,
+    );
+    if (toolCalls.length > 0) {
+      throw new InferenceTokenLimitError({
+        toolNames: toolCalls.map((toolCall) => toolCall.name),
+      });
+    }
+    if (acceptTokenLimitCompletion) return;
+    throw new InferenceFailedError(
+      'Model response was truncated (reached the maximum token limit)',
+    );
   }
 
   private handleInferenceError(

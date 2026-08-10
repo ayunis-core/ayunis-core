@@ -3,7 +3,7 @@ import { accumulateResponse } from './response-accumulator';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
-import { InferenceFailedError } from 'src/domain/models/application/models.errors';
+import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
 
 async function* stream(chunks: ProviderChunk[]): AsyncIterable<ProviderChunk> {
   for (const chunk of chunks) yield chunk;
@@ -64,12 +64,35 @@ describe('accumulateResponse', () => {
     expect((response.content[0] as ToolUseMessageContent).params).toEqual({});
   });
 
-  it('throws when the completion was truncated (finishReason length)', async () => {
+  it('returns partial text with the length finish reason when the token limit is reached', async () => {
+    const response = await accumulateResponse(
+      stream([{ textDelta: 'partial answer' }, { finishReason: 'length' }]),
+    );
+
+    expect(response).toMatchObject({ finishReason: 'length' });
+    expect((response.content[0] as TextMessageContent).text).toBe(
+      'partial answer',
+    );
+  });
+
+  it('rejects a tool call interrupted by the token limit', async () => {
     await expect(
       accumulateResponse(
-        stream([{ textDelta: 'partial' }, { finishReason: 'length' }]),
+        stream([
+          {
+            toolCallDeltas: [
+              {
+                index: 0,
+                id: 'call-1',
+                name: 'get_weather',
+                argumentsDelta: '{"city":"Ber',
+              },
+            ],
+          },
+          { finishReason: 'length' },
+        ]),
       ),
-    ).rejects.toBeInstanceOf(InferenceFailedError);
+    ).rejects.toBeInstanceOf(InferenceTokenLimitError);
   });
 
   it('does not throw for normal stop/tool_calls finish reasons', async () => {

@@ -4,6 +4,7 @@ import type { ErrorMetadata } from 'src/common/errors/base.error';
 export enum OpenAICompatErrorCode {
   INVALID_REQUEST = 'OPENAI_COMPAT_INVALID_REQUEST',
   MODEL_NOT_FOUND = 'OPENAI_COMPAT_MODEL_NOT_FOUND',
+  TOKEN_LIMIT = 'OPENAI_COMPAT_TOKEN_LIMIT',
   UNEXPECTED = 'OPENAI_COMPAT_UNEXPECTED',
 }
 
@@ -20,6 +21,17 @@ export class OpenAIModelNotFoundError extends ApplicationError {
       OpenAICompatErrorCode.MODEL_NOT_FOUND,
       404,
       { modelName },
+    );
+  }
+}
+
+export class OpenAITokenLimitError extends ApplicationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Model response hit the token limit while emitting a tool call',
+      OpenAICompatErrorCode.TOKEN_LIMIT,
+      422,
+      metadata,
     );
   }
 }

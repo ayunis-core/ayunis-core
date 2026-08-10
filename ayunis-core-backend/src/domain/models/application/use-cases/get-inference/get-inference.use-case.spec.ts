@@ -3,6 +3,7 @@ import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
 import {
   InferenceFailedError,
+  InferenceTokenLimitError,
   ModelRateLimitExceededError,
 } from '../../models.errors';
 import {
@@ -10,31 +11,46 @@ import {
   ProviderServerError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
-import type { InferenceInput } from '../../ports/inference.handler';
+import {
+  InferenceResponse,
+  type InferenceInput,
+} from '../../ports/inference.handler';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import type { ToolSchema } from 'src/domain/models/domain/value-objects/tool-schema';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 
 const model = {
   name: 'mistral-large-latest',
   provider: 'mistral',
 } as unknown as LanguageModel;
 
-function makeCommand(): GetInferenceCommand {
+function makeCommand(acceptTokenLimitCompletion = false): GetInferenceCommand {
   return new GetInferenceCommand({
     model,
     messages: [],
     tools: [],
     toolChoice: ModelToolChoice.AUTO,
     instructions: 'You are a helpful municipal assistant.',
+    acceptTokenLimitCompletion,
   });
 }
 
 function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => Promise.reject(error) }),
+  };
+  const contextService = {
+    get: () => '123e4567-e89b-12d3-a456-426614174000',
+  };
+  return new GetInferenceUseCase(registry as never, contextService as never);
+}
+
+function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
+  const registry = {
+    getHandler: () => ({ answer: () => Promise.resolve(response) }),
   };
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
@@ -102,6 +118,54 @@ describe('GetInferenceUseCase error mapping', () => {
     await expect(
       useCaseWithFailingHandler(new Error('boom')).execute(makeCommand()),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('rejects token-limited partial text by default', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('partial title')],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand()),
+    ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('returns token-limited partial text when the caller accepts it', async () => {
+    const response = new InferenceResponse(
+      [new TextMessageContent('partial answer')],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).resolves.toBe(response);
+  });
+
+  it('returns a text-only token-limit completion without visible text when the caller accepts it', async () => {
+    const response = new InferenceResponse([], {}, 'length');
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).resolves.toBe(response);
+  });
+
+  it('rejects token-limited tool calls even when token-limit completion is accepted', async () => {
+    const response = new InferenceResponse(
+      [
+        new ToolUseMessageContent('call-1', 'get_weather', {
+          city: 'Ber',
+        }),
+      ],
+      {},
+      'length',
+    );
+
+    await expect(
+      useCaseWithResponse(response).execute(makeCommand(true)),
+    ).rejects.toBeInstanceOf(InferenceTokenLimitError);
   });
 });
 
