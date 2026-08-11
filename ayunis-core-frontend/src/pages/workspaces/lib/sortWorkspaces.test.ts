@@ -24,6 +24,13 @@ describe('sortWorkspaces', () => {
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-08-05T10:00:00.000Z',
   });
+  const busy = aWorkspace({
+    id: 'busy',
+    name: 'Zulassung',
+    createdAt: '2026-08-01T09:00:00.000Z',
+    updatedAt: '2026-08-01T09:00:00.000Z',
+    lastActivityAt: '2026-08-09T10:00:00.000Z',
+  });
   const newer = aWorkspace({
     id: 'newer',
     name: 'Bauhof',
@@ -35,6 +42,12 @@ describe('sortWorkspaces', () => {
     expect(
       sortWorkspaces([newer, older], 'updatedAt').map((w) => w.id),
     ).toEqual(['older', 'newer']);
+  });
+
+  it('ranks chat activity as an update', () => {
+    expect(sortWorkspaces([older, busy], 'updatedAt').map((w) => w.id)).toEqual(
+      ['busy', 'older'],
+    );
   });
 
   it('puts the most recently created first', () => {

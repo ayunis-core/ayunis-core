@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import {
   Item,
   ItemActions,
@@ -16,6 +17,7 @@ interface WorkspaceRowProps {
 }
 
 export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
+  const { t } = useTranslation('workspaces');
   return (
     <Item variant="outline" className="relative">
       <ItemMedia>
@@ -37,11 +39,14 @@ export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
             {workspace.name}
           </Link>
         </ItemTitle>
-        {workspace.description && (
-          <ItemDescription className="line-clamp-1">
-            {workspace.description}
-          </ItemDescription>
-        )}
+        <ItemDescription className="line-clamp-1">
+          {[
+            t('page.chatCount', { count: workspace.chatCount ?? 0 }),
+            workspace.description,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </ItemDescription>
       </ItemContent>
       <ItemActions className="relative">
         <WorkspacePinButton

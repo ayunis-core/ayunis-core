@@ -3474,6 +3474,10 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** Number of chats filed under the workspace (list responses only) */
+  chatCount?: number;
+  /** Later of the last edit and the most recent chat activity (list responses only) */
+  lastActivityAt?: string;
 }
 
 export interface ReorderWorkspacesDto {

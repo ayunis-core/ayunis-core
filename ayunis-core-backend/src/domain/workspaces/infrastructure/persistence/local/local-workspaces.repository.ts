@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import {
+  WorkspacesRepository,
+  type WorkspaceThreadStats,
+} from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceRecord } from './schema/workspace.record';
@@ -52,6 +55,36 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
         );
       })
       .map(({ record, settings: row }) => this.mapper.toDomain(record, row));
+  }
+
+  // Read-only seam onto the threads table by name. Importing the threads
+  // module here would reverse the threads → workspaces dependency and close a
+  // cycle, so this aggregate query stays raw SQL instead.
+  async getThreadStats(
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, WorkspaceThreadStats>> {
+    if (workspaceIds.length === 0) {
+      return new Map();
+    }
+    const rows: Array<{
+      workspaceId: UUID;
+      chatCount: number;
+      lastActivityAt: Date | null;
+    }> = await this.repo.manager.query(
+      `SELECT "workspaceId",
+              COUNT(*)::int AS "chatCount",
+              MAX(COALESCE("lastActivityAt", "createdAt")) AS "lastActivityAt"
+       FROM threads
+       WHERE "workspaceId" = ANY($1)
+       GROUP BY "workspaceId"`,
+      [workspaceIds],
+    );
+    return new Map(
+      rows.map((row) => [
+        row.workspaceId,
+        { chatCount: row.chatCount, lastActivityAt: row.lastActivityAt },
+      ]),
+    );
   }
 
   async findById(userId: UUID, id: UUID): Promise<Workspace | null> {

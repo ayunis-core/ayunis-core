@@ -19,9 +19,17 @@ export function sortWorkspaces(
       left.name.localeCompare(right.name, locale),
     );
   }
-  // Newest first. ISO-8601 strings compare correctly as strings.
+  if (sortKey === 'createdAt') {
+    // Newest first. ISO-8601 strings compare correctly as strings.
+    return sorted.sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt),
+    );
+  }
+  // "Last updated" means activity: the later of the workspace's own edit and
+  // its most recent chat activity, so busy workspaces rise even when their
+  // settings were never touched.
   return sorted.sort((left, right) =>
-    right[sortKey].localeCompare(left[sortKey]),
+    effectiveActivity(right).localeCompare(effectiveActivity(left)),
   );
 }
 
@@ -34,4 +42,8 @@ export function filterWorkspaces(
   return workspaces.filter((workspace) =>
     workspace.name.toLowerCase().includes(term),
   );
+}
+
+function effectiveActivity(workspace: Workspace): string {
+  return workspace.lastActivityAt ?? workspace.updatedAt;
 }

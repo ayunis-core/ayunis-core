@@ -1,7 +1,9 @@
 import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
@@ -14,6 +16,7 @@ interface WorkspaceCardProps {
 }
 
 export function WorkspaceCard({ workspace }: Readonly<WorkspaceCardProps>) {
+  const { t } = useTranslation('workspaces');
   return (
     // The pin button is a sibling of the link, not a descendant: a <button>
     // inside an <a> is invalid HTML and breaks keyboard activation.
@@ -37,6 +40,9 @@ export function WorkspaceCard({ workspace }: Readonly<WorkspaceCardProps>) {
               {workspace.description}
             </CardDescription>
           </CardHeader>
+          <CardFooter className="text-sm text-muted-foreground">
+            {t('page.chatCount', { count: workspace.chatCount ?? 0 })}
+          </CardFooter>
         </Card>
       </Link>
       <div className="absolute top-4 right-4">

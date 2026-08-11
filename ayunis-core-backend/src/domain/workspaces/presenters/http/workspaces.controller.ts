@@ -80,10 +80,8 @@ export class WorkspacesController {
   })
   async findAll(): Promise<WorkspaceResponseDto[]> {
     this.logger.log('findAll');
-    const workspaces = await this.findAllWorkspacesUseCase.execute();
-    return workspaces.map((workspace) =>
-      this.workspaceDtoMapper.toDto(workspace),
-    );
+    const items = await this.findAllWorkspacesUseCase.execute();
+    return items.map((item) => this.workspaceDtoMapper.toListItemDto(item));
   }
 
   // Declared before `PATCH :id` so `reorder` is not swallowed by the id route.

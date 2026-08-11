@@ -7,6 +7,13 @@ import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 
+export interface WorkspaceListItem {
+  workspace: Workspace;
+  chatCount: number;
+  /** Later of the workspace's own edit and its most recent chat activity. */
+  lastActivityAt: Date;
+}
+
 @Injectable()
 export class FindAllWorkspacesUseCase {
   private readonly logger = new Logger(FindAllWorkspacesUseCase.name);
@@ -17,11 +24,28 @@ export class FindAllWorkspacesUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(): Promise<Workspace[]> {
+  async execute(): Promise<WorkspaceListItem[]> {
     this.logger.log('Finding all workspaces');
-    return await this.workspacesRepository.findAllByUserId(
+
+    const workspaces = await this.workspacesRepository.findAllByUserId(
       this.resolveUserId(),
     );
+    const stats = await this.workspacesRepository.getThreadStats(
+      workspaces.map((workspace) => workspace.id),
+    );
+
+    return workspaces.map((workspace) => {
+      const threadStats = stats.get(workspace.id);
+      const chatActivity = threadStats?.lastActivityAt;
+      return {
+        workspace,
+        chatCount: threadStats?.chatCount ?? 0,
+        lastActivityAt:
+          chatActivity && chatActivity > workspace.updatedAt
+            ? chatActivity
+            : workspace.updatedAt,
+      };
+    });
   }
 
   private resolveUserId(): UUID {

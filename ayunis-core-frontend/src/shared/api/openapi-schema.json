@@ -15773,6 +15773,16 @@
             "type": "string",
             "description": "When the workspace was last updated",
             "example": "2026-08-11T10:30:00.000Z"
+          },
+          "chatCount": {
+            "type": "number",
+            "description": "Number of chats filed under the workspace (list responses only)",
+            "example": 3
+          },
+          "lastActivityAt": {
+            "type": "string",
+            "description": "Later of the last edit and the most recent chat activity (list responses only)",
+            "example": "2026-08-11T10:30:00.000Z"
           }
         },
         "required": [

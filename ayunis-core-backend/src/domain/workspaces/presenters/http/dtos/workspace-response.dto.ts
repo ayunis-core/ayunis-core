@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class WorkspaceResponseDto {
   @ApiProperty({
@@ -56,4 +56,18 @@ export class WorkspaceResponseDto {
     example: '2026-08-11T10:30:00.000Z',
   })
   updatedAt: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Number of chats filed under the workspace (list responses only)',
+    example: 3,
+  })
+  chatCount?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Later of the last edit and the most recent chat activity (list responses only)',
+    example: '2026-08-11T10:30:00.000Z',
+  })
+  lastActivityAt?: string;
 }
