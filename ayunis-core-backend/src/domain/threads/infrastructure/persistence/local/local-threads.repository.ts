@@ -100,15 +100,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .createQueryBuilder('thread')
       .where('thread.userId = :userId', { userId });
 
-    if (filters?.search) {
-      queryBuilder.andWhere('thread.title ILIKE :search', {
-        search: `%${filters.search}%`,
-      });
-    }
-
+    this.applyFindAllFilters(queryBuilder, filters);
     this.applyFindAllRelations(queryBuilder, options);
 
-    queryBuilder.orderBy('thread.createdAt', 'DESC');
+    queryBuilder
+      .orderBy('thread.isPinned', 'DESC')
+      .addOrderBy('thread.createdAt', 'DESC');
 
     if (options?.withMessages) {
       queryBuilder.addOrderBy('messages.createdAt', 'ASC');
@@ -132,6 +129,23 @@ export class LocalThreadsRepository extends ThreadsRepository {
       offset,
       total,
     });
+  }
+
+  private applyFindAllFilters(
+    queryBuilder: SelectQueryBuilder<ThreadRecord>,
+    filters?: ThreadsFindAllFilters,
+  ): void {
+    if (filters?.search) {
+      queryBuilder.andWhere('thread.title ILIKE :search', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    if (filters?.workspaceId) {
+      queryBuilder.andWhere('thread.workspaceId = :workspaceId', {
+        workspaceId: filters.workspaceId,
+      });
+    }
   }
 
   private applyFindAllRelations(
@@ -307,6 +321,45 @@ export class LocalThreadsRepository extends ThreadsRepository {
       select: { id: true },
     });
     return rows.map((row) => row.id);
+  }
+
+  async findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllIdsByWorkspaceId', { workspaceId });
+    const rows = await this.threadRepository.find({
+      where: { workspaceId },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  async assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void> {
+    this.logger.log('assignToWorkspace', { params });
+    const result = await this.threadRepository.update(
+      { id: params.threadId, userId: params.userId },
+      { workspaceId: params.workspaceId },
+    );
+    if (!result.affected) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
+  }
+
+  async togglePinned(threadId: UUID, userId: UUID): Promise<boolean> {
+    this.logger.log('togglePinned', { threadId });
+    const rows: Array<{ isPinned: boolean }> =
+      await this.threadRepository.manager.query(
+        `UPDATE threads SET "isPinned" = NOT "isPinned"
+         WHERE "id" = $1 AND "userId" = $2
+         RETURNING "isPinned"`,
+        [threadId, userId],
+      );
+    if (rows.length === 0) {
+      throw new ThreadNotFoundError(threadId, userId);
+    }
+    return rows[0].isPinned;
   }
 
   async removeSourceAssignmentsByOriginSkill(params: {

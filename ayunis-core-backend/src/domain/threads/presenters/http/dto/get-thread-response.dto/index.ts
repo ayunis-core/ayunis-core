@@ -28,6 +28,7 @@ import {
 import { KnowledgeBaseSummaryResponseDto } from '../knowledge-base-summary-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 import { McpIntegrationSummaryResponseDto } from '../mcp-integration-summary-response.dto';
+import { ThreadMetadataResponseDto } from '../thread-metadata-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -46,7 +47,7 @@ import { McpIntegrationSummaryResponseDto } from '../mcp-integration-summary-res
   UrlSourceResponseDto,
   CSVDataSourceResponseDto,
 )
-export class GetThreadResponseDto {
+export class GetThreadResponseDto extends ThreadMetadataResponseDto {
   @ApiProperty({
     description: 'Unique identifier for the thread',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -91,25 +92,6 @@ export class GetThreadResponseDto {
     items: { $ref: getSchemaPath(SourceResponseDto) },
   })
   sources: SourceResponseDto[];
-
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T12:00:00.000Z',
-  })
-  createdAt: string;
-
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T12:30:00.000Z',
-  })
-  updatedAt: string;
-
-  @ApiProperty({
-    description:
-      'Whether the thread is in anonymous mode (PII redaction enabled)',
-    example: false,
-  })
-  isAnonymous: boolean;
 
   @ApiProperty({
     description:

@@ -16,6 +16,8 @@ export class Thread {
   title?: string;
   messages: Message[];
   isAnonymous: boolean;
+  workspaceId: UUID | null;
+  isPinned: boolean;
   lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +32,8 @@ export class Thread {
     title?: string;
     messages: Message[];
     isAnonymous?: boolean;
+    workspaceId?: UUID | null;
+    isPinned?: boolean;
     lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
@@ -43,6 +47,8 @@ export class Thread {
     this.title = params.title;
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;
+    this.workspaceId = params.workspaceId ?? null;
+    this.isPinned = params.isPinned ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     // A freshly created thread's last activity is its creation time; it is

@@ -13,6 +13,7 @@ import {
   ToolResultMessageContentResponseDto,
 } from './get-thread-response.dto/message-response.dto';
 import { ModelResponseDto } from './get-thread-response.dto/model-response-dto';
+import { ThreadMetadataResponseDto } from './thread-metadata-response.dto';
 
 @ApiExtraModels(
   UserMessageResponseDto,
@@ -24,7 +25,7 @@ import { ModelResponseDto } from './get-thread-response.dto/model-response-dto';
   ToolResultMessageContentResponseDto,
   ModelResponseDto,
 )
-export class GetThreadsResponseDtoItem {
+export class GetThreadsResponseDtoItem extends ThreadMetadataResponseDto {
   @ApiProperty({
     description: 'Unique identifier for the thread',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -36,23 +37,4 @@ export class GetThreadsResponseDtoItem {
     example: 'Discussion about AI models',
   })
   title?: string;
-
-  @ApiProperty({
-    description: 'Creation timestamp',
-    example: '2024-01-01T12:00:00.000Z',
-  })
-  createdAt: string;
-
-  @ApiProperty({
-    description: 'Last update timestamp',
-    example: '2024-01-01T12:30:00.000Z',
-  })
-  updatedAt: string;
-
-  @ApiProperty({
-    description:
-      'Whether the thread is in anonymous mode (PII redaction enabled)',
-    example: false,
-  })
-  isAnonymous: boolean;
 }

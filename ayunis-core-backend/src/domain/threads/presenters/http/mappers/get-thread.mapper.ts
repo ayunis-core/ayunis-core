@@ -38,6 +38,8 @@ export class GetThreadDtoMapper {
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
+      workspaceId: thread.workspaceId ?? null,
+      isPinned: thread.isPinned,
       isLongChat,
       knowledgeBases: thread.getUniqueKnowledgeBases(),
       piiMasks: this.piiMaskDtoMapper.toDtoArray(piiMasks),

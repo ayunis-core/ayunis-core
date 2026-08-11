@@ -16,6 +16,7 @@ import { ThreadSourceAssignmentRecord } from './thread-source-assignment.record'
 import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-assignment.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 
 @Entity({ name: 'threads' })
 export class ThreadRecord extends BaseRecord {
@@ -39,6 +40,22 @@ export class ThreadRecord extends BaseRecord {
 
   @Column({ default: false })
   isAnonymous: boolean;
+
+  /**
+   * The workspace ("Projekt") this chat is filed under, if any. Deleting the
+   * workspace deletes its chats — the rows go by this cascade, their MinIO
+   * blobs by the WorkspaceDeletionRequestedEvent listener.
+   */
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  workspaceId: UUID | null;
+
+  @ManyToOne(() => WorkspaceRecord, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'workspaceId' })
+  workspace?: WorkspaceRecord;
+
+  @Column({ default: false })
+  isPinned: boolean;
 
   /**
    * Timestamp of the most recent conversation activity (last message added).

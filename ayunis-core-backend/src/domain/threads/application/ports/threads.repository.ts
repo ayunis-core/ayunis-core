@@ -12,6 +12,7 @@ export interface ThreadsFindAllOptions {
 
 export interface ThreadsFindAllFilters {
   search?: string;
+  workspaceId?: UUID;
 }
 
 export interface ThreadsPagination {
@@ -93,8 +94,25 @@ export abstract class ThreadsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void>;
+  /**
+   * `workspaceId: null` detaches the thread from its workspace.
+   * Throws `ThreadNotFoundError` when the user owns no such thread. Unlike
+   * `togglePinned`, filing a chat is treated as an edit and bumps `updatedAt`.
+   */
+  abstract assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void>;
+  /**
+   * Flips `isPinned` in a single statement. Pinning is not an edit of the
+   * thread, so it must leave `updatedAt` and `lastActivityAt` alone —
+   * data-retention keys off the latter.
+   */
+  abstract togglePinned(threadId: UUID, userId: UUID): Promise<boolean>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
+  abstract findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   /**
    * Returns a page of expired thread references (id + owner) for an org,

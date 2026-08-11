@@ -10,6 +10,7 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Query,
 } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -39,6 +40,12 @@ import { UpdateThreadTitleCommand } from '../../application/use-cases/update-thr
 
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { UpdateThreadTitleDto } from './dto/update-thread-title.dto';
+import { AssignThreadWorkspaceDto } from './dto/assign-thread-workspace.dto';
+import { AssignThreadToWorkspaceUseCase } from 'src/domain/threads/application/use-cases/assign-thread-to-workspace/assign-thread-to-workspace.use-case';
+import { AssignThreadToWorkspaceCommand } from 'src/domain/threads/application/use-cases/assign-thread-to-workspace/assign-thread-to-workspace.command';
+import { ToggleThreadPinnedUseCase } from 'src/domain/threads/application/use-cases/toggle-thread-pinned/toggle-thread-pinned.use-case';
+import { ToggleThreadPinnedCommand } from 'src/domain/threads/application/use-cases/toggle-thread-pinned/toggle-thread-pinned.command';
+import { ToggleThreadPinnedResponseDto } from './dto/toggle-thread-pinned-response.dto';
 import { GetThreadResponseDto } from './dto/get-thread-response.dto';
 import { GetThreadsResponseDtoItem } from './dto/get-threads-response-item.dto';
 import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
@@ -50,6 +57,9 @@ import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -63,11 +73,29 @@ export class ThreadsController {
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
     private readonly updateThreadTitleUseCase: UpdateThreadTitleUseCase,
+    private readonly assignThreadToWorkspaceUseCase: AssignThreadToWorkspaceUseCase,
+    private readonly toggleThreadPinnedUseCase: ToggleThreadPinnedUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * The workspace routes carry @RequireFeature, but `workspaceId` also rides
+   * along on routes that must stay open while the feature is off (create,
+   * list filter). Treat the parameter like a gated route: while the flag is
+   * off it does not exist, mirroring FeatureGuard's 404.
+   */
+  private assertWorkspaceParamAllowed(workspaceId: string | undefined): void {
+    if (
+      workspaceId !== undefined &&
+      !this.configService.get<boolean>(`features.${FeatureFlag.Workspaces}`)
+    ) {
+      throw new NotFoundException();
+    }
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new thread' })
@@ -85,10 +113,12 @@ export class ThreadsController {
     this.logger.log('create', {
       modelId: createThreadDto.modelId,
     });
+    this.assertWorkspaceParamAllowed(createThreadDto.workspaceId);
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
         modelId: createThreadDto.modelId,
         isAnonymous: createThreadDto.isAnonymous,
+        workspaceId: createThreadDto.workspaceId,
       }),
     );
     // New threads are never long chats
@@ -127,12 +157,14 @@ export class ThreadsController {
     @Query() queryParams: FindAllThreadsQueryParamsDto,
   ): Promise<GetThreadsResponseDto> {
     this.logger.log('findAll', { filters: queryParams });
+    this.assertWorkspaceParamAllowed(queryParams.workspaceId);
     const threads = await this.findAllThreadsUseCase.execute(
       new FindAllThreadsQuery(
         userId,
         undefined,
         {
           search: queryParams.search,
+          workspaceId: queryParams.workspaceId,
         },
         {
           limit: queryParams.limit,
@@ -224,5 +256,56 @@ export class ThreadsController {
         title: updateThreadTitleDto.title,
       }),
     );
+  }
+
+  @Patch(':id/workspace')
+  @RequireFeature(FeatureFlag.Workspaces)
+  @ApiOperation({ summary: 'Move a thread into a workspace or out of one' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread to move',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiBody({ type: AssignThreadWorkspaceDto })
+  @ApiResponse({ status: 204, description: 'The thread has been moved' })
+  @ApiResponse({ status: 404, description: 'Thread or workspace not found' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async assignWorkspace(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: AssignThreadWorkspaceDto,
+  ): Promise<void> {
+    this.logger.log('assignWorkspace', { id, workspaceId: dto.workspaceId });
+    await this.assignThreadToWorkspaceUseCase.execute(
+      new AssignThreadToWorkspaceCommand({
+        threadId: id,
+        workspaceId: dto.workspaceId,
+      }),
+    );
+  }
+
+  @Patch(':id/toggle-pinned')
+  @RequireFeature(FeatureFlag.Workspaces)
+  @ApiOperation({ summary: 'Pin or unpin a thread in the sidebar' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread to pin or unpin',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The new pin state',
+    type: ToggleThreadPinnedResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Thread not found' })
+  async togglePinned(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<ToggleThreadPinnedResponseDto> {
+    this.logger.log('togglePinned', { id });
+    const isPinned = await this.toggleThreadPinnedUseCase.execute(
+      new ToggleThreadPinnedCommand({ threadId: id }),
+    );
+    return { isPinned };
   }
 }

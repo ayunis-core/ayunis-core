@@ -26,10 +26,10 @@ The whole module sits behind the `workspacesEnabled` feature flag
   literal produced by the custom-colour picker.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   *before* the row delete and drains the listeners' deferred cleanup only after
-  it succeeds, so a failed delete loses nothing. Nothing listens yet; the
-  threads integration that deletes a workspace's chats (and purges their
-  object-storage assets, which no database cascade can reach) arrives with the
-  threads module changes.
+  it succeeds, so a failed delete loses nothing. The threads module deletes
+  the workspace's chats via its `threads.workspaceId` FK cascade and listens
+  to this event to purge their object-storage assets, which no database
+  cascade can reach.
 
 ## Architecture
 
@@ -74,7 +74,7 @@ workspaces/
 | PATCH | `/workspaces/reorder` | Set the manual order — declared before `:id` |
 | PATCH | `/workspaces/:id` | Update name / description / icon / colour |
 | PATCH | `/workspaces/:id/toggle-pinned` | Pin or unpin |
-| DELETE | `/workspaces/:id` | Delete the workspace (chats follow once the threads integration lands) |
+| DELETE | `/workspaces/:id` | Delete the workspace and its chats |
 
 ## Cross-Module Boundaries
 
