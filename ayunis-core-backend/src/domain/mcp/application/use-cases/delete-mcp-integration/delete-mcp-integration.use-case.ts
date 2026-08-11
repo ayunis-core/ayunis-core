@@ -10,6 +10,7 @@ import {
   UnexpectedMcpError,
 } from '../../mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { McpClientService } from '../../services/mcp-client.service';
 
 /**
  * Use case for deleting an MCP integration.
@@ -23,6 +24,7 @@ export class DeleteMcpIntegrationUseCase {
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
     private readonly capabilityCache: McpCapabilityCacheService,
+    private readonly mcpClientService: McpClientService,
   ) {}
 
   /**
@@ -61,6 +63,7 @@ export class DeleteMcpIntegrationUseCase {
     // Delete integration
     await this.repository.delete(command.integrationId);
 
+    await this.mcpClientService.invalidateConnections(integration);
     this.capabilityCache.invalidate(command.integrationId);
   }
 }

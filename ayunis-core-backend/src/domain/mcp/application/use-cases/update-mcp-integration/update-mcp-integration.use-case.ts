@@ -21,6 +21,7 @@ import { McpConfigService } from '../../services/mcp-config.service';
 import { ConnectionValidationService } from '../../services/connection-validation.service';
 import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
 import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-client-configuration.service';
+import { McpClientService } from '../../services/mcp-client.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
@@ -34,6 +35,7 @@ export class UpdateMcpIntegrationUseCase {
     private readonly connectionValidationService: ConnectionValidationService,
     private readonly capabilityCache: McpCapabilityCacheService,
     private readonly oauthClientConfiguration: McpOAuthClientConfigurationService,
+    private readonly mcpClientService: McpClientService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
@@ -60,9 +62,9 @@ export class UpdateMcpIntegrationUseCase {
     }
 
     // Invalidate as soon as the new config is committed — the connection
-    // validation below runs live MCP requests that can take tens of seconds,
-    // and cached discoveries must not keep serving the pre-update tool list
-    // for that long.
+    // validation below can take tens of seconds, while pooled sessions and
+    // discoveries must stop using the previous configuration immediately.
+    await this.mcpClientService.invalidateConnections(saved);
     this.capabilityCache.invalidate(command.integrationId as UUID);
 
     return this.validateConnectionIfNeeded(saved, command);

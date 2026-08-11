@@ -62,28 +62,6 @@ function isCrawlerRequest(request) {
 }
 
 /**
- * Identifies the listening stream the MCP SDK's StreamableHTTPClientTransport
- * opens in the background on connect. The client adapter opens one connection
- * per operation and always closes it, and close() unconditionally aborts that
- * still-open stream — so undici reports an AbortError on a request the
- * application deliberately cancelled and never consumed, after the operation
- * already succeeded (AYC-555).
- *
- * The listening stream is the only outbound GET sending exactly
- * `text/event-stream`; MCP JSON-RPC calls are POSTs sending
- * `application/json, text/event-stream`, so genuine connectivity and auth
- * failures stay fully instrumented. That "only" holds today because MCP is the
- * sole SSE client — a second one would silently widen this predicate, which is
- * why it is registered as a stopgap rather than a permanent scoping rule.
- */
-function isMcpEventStreamRequest(request) {
-  return (
-    request.method === 'GET' &&
-    headerValue(request.headers, 'accept') === 'text/event-stream'
-  );
-}
-
-/**
  * The key AppSignal's agent matches `ignoreErrors` against.
  *
  * OpenTelemetry derives it as `code` when truthy, falling back to `name`
@@ -133,18 +111,6 @@ const SUPPRESSIONS = [
     match: isCrawlerRequest,
   },
   {
-    id: 'mcp-listening-stream',
-    lever: 'ignoreRequestHook',
-    ticket: 'AYC-555',
-    stopgapFor: 'AYC-571',
-    reason:
-      'The MCP SDK opens a background SSE GET on connect and close() aborts ' +
-      'it, so undici records an AbortError after the operation already ' +
-      'succeeded. This covers for per-operation connect/close — remove it ' +
-      'once connections are reused.',
-    match: isMcpEventStreamRequest,
-  },
-  {
     id: 'abort-signal-cancellation',
     lever: 'ignoreErrors',
     ticket: 'AYC-651',
@@ -152,7 +118,7 @@ const SUPPRESSIONS = [
       'The DOMException Node mints for AbortController.abort() (name ' +
       'AbortError, numeric code 20, so exceptionType "20"). An abort is ' +
       'always a cancellation we or an SDK issued deliberately — MCP ' +
-      'transport close after a completed operation, SDK request timeouts, ' +
+      'transport teardown after going idle, SDK request timeouts, ' +
       'stream watchdogs, client disconnects — never itself the failure. ' +
       'Real timeouts surface as classified application errors ' +
       '(MCP_CONNECTION_TIMEOUT, INFERENCE_TIMEOUT, PROVIDER_UNAVAILABLE_*), ' +
@@ -345,7 +311,6 @@ function headerValue(headers, name) {
 module.exports = {
   SUPPRESSIONS,
   isCrawlerRequest,
-  isMcpEventStreamRequest,
   shouldIgnoreRequest,
   exceptionTypeOf,
   ignoredErrorTypes,

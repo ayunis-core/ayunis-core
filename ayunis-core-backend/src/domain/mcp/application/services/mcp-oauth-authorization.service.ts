@@ -15,6 +15,7 @@ import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.r
 import { McpOAuthClientRegistrationRepositoryPort } from '../ports/mcp-oauth-client-registration.repository.port';
 import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
 import { McpOAuthFetchPort } from '../ports/mcp-oauth-fetch.port';
+import { McpClientService } from './mcp-client.service';
 
 export interface CompleteMcpOAuthInput {
   state: string;
@@ -35,6 +36,7 @@ export class McpOAuthAuthorizationService {
     private readonly encryption: McpCredentialEncryptionPort,
     private readonly capabilityCache: McpCapabilityCacheService,
     private readonly oauthFetch: McpOAuthFetchPort,
+    private readonly mcpClientService: McpClientService,
   ) {}
 
   async authorize(integrationId: UUID): Promise<{ authorizationUrl: string }> {
@@ -94,13 +96,20 @@ export class McpOAuthAuthorizationService {
       fetchFn: this.oauthFetch.fetch,
     });
     if (result !== 'AUTHORIZED') this.rejectCallback();
+    await this.mcpClientService.invalidateConnections(
+      integration,
+      identity.userId,
+    );
     this.capabilityCache.invalidate(integration.id, identity.userId);
     return { integrationId: integration.id };
   }
 
   async disconnect(integrationId: UUID): Promise<void> {
-    this.requireOAuthIntegration(await this.access.validate(integrationId));
+    const integration = this.requireOAuthIntegration(
+      await this.access.validate(integrationId),
+    );
     const { userId } = this.requireIdentity();
+    await this.mcpClientService.invalidateConnections(integration, userId);
     await this.revokeQuietly(integrationId, userId);
     await this.tokens.delete(integrationId, userId);
     this.capabilityCache.invalidate(integrationId, userId);

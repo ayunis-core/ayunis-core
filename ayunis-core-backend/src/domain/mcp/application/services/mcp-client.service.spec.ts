@@ -29,6 +29,7 @@ class MockMcpClientPort extends McpClientPort {
   readResource = jest.fn();
   getPrompt = jest.fn();
   validateConnection = jest.fn();
+  invalidateConnections = jest.fn();
 }
 
 class MockCredentialEncryptionPort extends McpCredentialEncryptionPort {
@@ -84,6 +85,21 @@ describe('McpClientService', () => {
     jest.clearAllMocks();
   });
 
+  describe('invalidateConnections', () => {
+    it('invalidates the integration connection scope for one user', async () => {
+      const integration = aCustomMcpIntegration(baseIntegrationParams);
+      const userId = randomUUID();
+
+      await service.invalidateConnections(integration, userId);
+
+      expect(client.invalidateConnections).toHaveBeenCalledWith({
+        orgId: integration.orgId,
+        integrationId: integration.id,
+        userId,
+      });
+    });
+  });
+
   describe('buildConnectionConfig', () => {
     it('resolves schema-configured custom integration headers', async () => {
       const integration = aCustomMcpIntegration({
@@ -129,6 +145,11 @@ describe('McpClientService', () => {
         'X-Tenant-ID': 'council-42',
         Authorization: 'Bearer personal-token',
       });
+      expect(config.connectionScope).toEqual({
+        orgId: integration.orgId,
+        integrationId: integration.id,
+        userId,
+      });
     });
 
     it('returns base config with empty headers for no-auth integrations', async () => {
@@ -142,6 +163,11 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: {},
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
+        oauth: undefined,
       });
       expect(encryption.decrypt).not.toHaveBeenCalled();
     });
@@ -163,6 +189,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -184,6 +214,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { 'X-API-Key': 'decrypted-secret' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -207,6 +241,10 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
       });
     });
 
@@ -279,6 +317,11 @@ describe('McpClientService', () => {
       expect(config).toEqual({
         serverUrl: 'https://mcp.ayunis.de/oparl',
         headers: { 'X-Oparl-Endpoint-Url': 'https://rim.ekom21.de/oparl' },
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
+        },
+        oauth: undefined,
       });
       expect(encryption.decrypt).not.toHaveBeenCalled();
     });
@@ -649,6 +692,10 @@ describe('McpClientService', () => {
         {
           serverUrl: integration.serverUrl,
           headers: {},
+          connectionScope: {
+            orgId: integration.orgId,
+            integrationId: integration.id,
+          },
           oauth: undefined,
         },
       );

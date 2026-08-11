@@ -5,6 +5,7 @@ import { McpCredentialEncryptionService } from './infrastructure/encryption/mcp-
 import { McpClientPort } from './application/ports/mcp-client.port';
 import { McpCapabilityCacheService } from './application/services/mcp-capability-cache.service';
 import { McpSdkClientAdapter } from './infrastructure/clients/mcp-sdk-client.adapter';
+import { McpClientPoolService } from './infrastructure/clients/mcp-client-pool.service';
 import { McpClientService } from './application/services/mcp-client.service';
 import { McpConfigService } from './application/services/mcp-config.service';
 import { ConnectionValidationService } from './application/services/connection-validation.service';
@@ -101,6 +102,7 @@ import { McpIntegrationResponseMapper } from './presenters/http/mappers/mcp-inte
       provide: McpCredentialEncryptionPort,
       useClass: McpCredentialEncryptionService,
     },
+    McpClientPoolService,
     {
       provide: McpClientPort,
       useClass: McpSdkClientAdapter,
