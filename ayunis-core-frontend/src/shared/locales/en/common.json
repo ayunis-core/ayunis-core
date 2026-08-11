@@ -44,7 +44,21 @@
     "renameThreadError": "Failed to rename chat",
     "renameThreadEmptyError": "Title cannot be empty",
     "renameThreadMaxLengthError": "Title cannot exceed {{max}} characters",
-    "showMore": "Show more..."
+    "pinError": "Pinned items could not be updated. Please try again.",
+    "showMore": "Show more...",
+    "workspaces": "Projects",
+    "pinnedChats": "Pinned",
+    "pinChat": "Pin",
+    "unpinChat": "Unpin",
+    "addToWorkspace": "Add to project",
+    "removeFromWorkspace": "Remove from project",
+    "newWorkspace": "New project",
+    "workspaceOptions": "Project options",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "unpinWorkspace": "Remove from sidebar",
+    "deleteWorkspace": "Delete",
+    "dragWorkspace": "Move project"
   },
   "chatInput": {
     "placeholder": "How can I help today?",
