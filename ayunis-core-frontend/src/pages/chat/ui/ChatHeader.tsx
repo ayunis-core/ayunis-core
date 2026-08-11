@@ -1,5 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { MoreVertical, ShieldCheck, Trash2, Pencil } from 'lucide-react';
+import { MoreVertical, Pencil, ShieldCheck, Star, Trash2 } from 'lucide-react';
+import { cn } from '@ayunis/ui/lib/cn';
+import {
+  isFavorite,
+  useFavorites,
+  useToggleFavorite,
+} from '@/features/favorites';
+import { useWorkspaces } from '@/features/workspaces';
+import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -16,21 +24,41 @@ import {
 } from '@ayunis/ui/components/tooltip';
 
 interface ChatHeaderProps {
+  readonly threadId: string;
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
+  readonly workspaceId?: string | null;
   readonly onRename: () => void;
   readonly onDelete: () => void;
 }
 
 export default function ChatHeader({
+  threadId,
   threadTitle,
   isAnonymous,
+  workspaceId,
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
   const { t } = useTranslation('chat');
+  const { t: tCommon } = useTranslation('common');
+  const isWorkspacesEnabled = useIsWorkspacesEnabled();
+  const { favorites } = useFavorites();
+  const { toggle: togglePinned } = useToggleFavorite();
+  const { workspaces } = useWorkspaces();
+  const isPinned = isFavorite(favorites, threadId, 'thread');
 
   const displayTitle = threadTitle || t('chat.untitled');
+  // A chat filed under a workspace is presented as the workspace's child, so
+  // the parent crumb leads back to the workspace instead of the chats list.
+  // Falls back to "Chats" when the workspace is not loadable (flag off,
+  // workspace deleted).
+  const workspace = workspaceId
+    ? workspaces.find((w) => w.id === workspaceId)
+    : undefined;
+  const parentCrumb = workspace
+    ? { label: workspace.name, href: `/workspaces/${workspace.id}` }
+    : { label: t('chat.chats'), href: '/chats' };
 
   const anonymousBadge = isAnonymous ? (
     <Tooltip>
@@ -46,29 +74,44 @@ export default function ChatHeader({
 
   return (
     <ContentAreaHeader
-      breadcrumbs={[
-        { label: t('chat.chats'), href: '/chats' },
-        { label: displayTitle },
-      ]}
+      breadcrumbs={[parentCrumb, { label: displayTitle }]}
       badge={anonymousBadge}
       action={
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-1">
+          {isWorkspacesEnabled && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={
+                isPinned
+                  ? tCommon('sidebar.unpinChat')
+                  : tCommon('sidebar.pinChat')
+              }
+              onClick={() => togglePinned('thread', threadId)}
+            >
+              <Star
+                className={cn('h-5 w-5', isPinned && 'fill-brand text-brand')}
+              />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onRename}>
-              <Pencil className="h-4 w-4" />
-              <span>{t('chat.renameThread')}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete} variant="destructive">
-              <Trash2 />
-              <span>{t('chat.deleteThread')}</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5 text-primary" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onRename}>
+                <Pencil className="h-4 w-4" />
+                <span>{t('chat.renameThread')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} variant="destructive">
+                <Trash2 />
+                <span>{t('chat.deleteThread')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       }
     />
   );
