@@ -7,6 +7,7 @@
     "unpin": "Unpin",
     "settings": "Settings",
     "newChat": "New chat",
+    "chatPlaceholder": "What can we help you with?",
     "truncatedChats": "Showing the first {{count}} chats"
   },
   "chat": {

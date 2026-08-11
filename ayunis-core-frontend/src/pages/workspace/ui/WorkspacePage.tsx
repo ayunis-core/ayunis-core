@@ -16,6 +16,7 @@ import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
+import { WorkspaceChatStarter } from './WorkspaceChatStarter';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
 
@@ -56,6 +57,9 @@ export default function WorkspacePage({
         contentArea={
           <div className="space-y-6">
             <WorkspaceHero workspace={workspace} />
+
+            <WorkspaceChatStarter workspaceId={workspace.id} />
+
             <Tabs defaultValue="chats">
               <TabsList>
                 <TabsTrigger value="chats">

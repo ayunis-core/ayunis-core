@@ -53,6 +53,8 @@ interface InitiateChatParams {
   knowledgeBases: KnowledgeBaseSummary[];
   mcpIntegrations: IntegrationSummary[];
   isAnonymous: boolean;
+  /** Files the new chat under a workspace ("Projekt"). */
+  workspaceId?: string;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
@@ -214,6 +216,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     knowledgeBases,
     mcpIntegrations,
     isAnonymous,
+    workspaceId,
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
     cancelledRef.current = false;
@@ -225,6 +228,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
       const createThreadData: CreateThreadData = {
         modelId,
         isAnonymous,
+        workspaceId,
       };
       thread = await createThreadMutation.mutateAsync({
         data: createThreadData,

@@ -1,12 +1,4 @@
-import {
-  MoreHorizontal,
-  MessageCircle,
-  Loader2,
-  Trash,
-  ChevronDown,
-  Search,
-  Pencil,
-} from 'lucide-react';
+import { Loader2, ChevronDown, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 
@@ -16,18 +8,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
   SidebarGroupContent,
 } from '@ayunis/ui/components/sidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@ayunis/ui/components/dropdown-menu';
 import { useThreads } from '../api';
 import { useDeleteThread } from '@/features/useDeleteThread';
 import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
+import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Collapsible,
@@ -37,6 +23,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
+import { ChatSidebarItem } from './ChatSidebarItem';
 
 export function ChatsSidebarGroup() {
   const { t } = useTranslation('common');
@@ -47,6 +34,16 @@ export function ChatsSidebarGroup() {
   const navigate = useNavigate();
 
   const [isOpen, setOpen] = useChatsSidebarOpen();
+  const isWorkspacesEnabled = useIsWorkspacesEnabled();
+
+  // Pinning ships with the workspaces feature; with the flag off the sidebar
+  // must look exactly as it did before, even if some threads carry isPinned.
+  const pinnedThreads = isWorkspacesEnabled
+    ? threads.filter((thread) => thread.isPinned)
+    : [];
+  const otherThreads = isWorkspacesEnabled
+    ? threads.filter((thread) => !thread.isPinned)
+    : threads;
 
   // Rename dialog state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -169,6 +166,24 @@ export function ChatsSidebarGroup() {
 
   return (
     <>
+      {pinnedThreads.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>{t('sidebar.pinnedChats')}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {pinnedThreads.map((thread) => (
+                <ChatSidebarItem
+                  key={thread.id}
+                  thread={thread}
+                  onRename={handleRenameClick}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
+
       <Collapsible
         open={isOpen}
         onOpenChange={setOpen}
@@ -190,60 +205,13 @@ export function ChatsSidebarGroup() {
           <CollapsibleContent>
             <SidebarGroupContent>
               <SidebarMenu>
-                {threads.map((thread) => (
-                  <SidebarMenuItem key={thread.id} data-testid="chat">
-                    <SidebarMenuButton
-                      asChild
-                      isActive={params.threadId === thread.id}
-                    >
-                      <Link
-                        to={'/chats/$threadId'}
-                        params={{ threadId: thread.id }}
-                      >
-                        <MessageCircle />
-                        <div className="grid flex-1 text-left text-sm leading-tight">
-                          <span className="truncate">
-                            {thread.title ?? t('sidebar.untitled')}
-                          </span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        data-testid="dropdown-menu-trigger"
-                        asChild
-                      >
-                        <SidebarMenuAction showOnHover>
-                          <MoreHorizontal />
-                          <span className="sr-only">{t('sidebar.more')}</span>
-                        </SidebarMenuAction>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        className="rounded-lg"
-                        side="bottom"
-                        align="end"
-                        data-testid="chat-dropdown"
-                      >
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleRenameClick(thread.id, thread.title ?? null)
-                          }
-                          data-testid="rename"
-                        >
-                          <Pencil />
-                          <span>{t('sidebar.renameChat')}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          onClick={() => handleDeleteClick(thread.id)}
-                          data-testid="delete"
-                        >
-                          <Trash />
-                          <span>{t('sidebar.deleteChat')}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </SidebarMenuItem>
+                {otherThreads.map((thread) => (
+                  <ChatSidebarItem
+                    key={thread.id}
+                    thread={thread}
+                    onRename={handleRenameClick}
+                    onDelete={handleDeleteClick}
+                  />
                 ))}
                 {hasMore && (
                   <SidebarMenuItem>

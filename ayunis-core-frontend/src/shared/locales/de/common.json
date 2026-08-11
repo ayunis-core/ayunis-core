@@ -51,13 +51,13 @@
     "unpinChat": "Nicht mehr anheften",
     "addToWorkspace": "Zu Projekt hinzufügen",
     "removeFromWorkspace": "Aus Projekt entfernen",
-    "newWorkspace": "Neues Projekt",
     "workspaceOptions": "Projektoptionen",
     "moveUp": "Nach oben verschieben",
     "moveDown": "Nach unten verschieben",
     "unpinWorkspace": "Aus Seitenleiste lösen",
     "deleteWorkspace": "Löschen",
-    "dragWorkspace": "Projekt verschieben"
+    "dragWorkspace": "Projekt verschieben",
+    "settings": "Einstellungen"
   },
   "chatInput": {
     "placeholder": "Wie kann ich heute helfen?",

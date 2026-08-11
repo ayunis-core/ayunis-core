@@ -18,6 +18,9 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { takeChatDraft } from '@/features/chat-draft-handoff';
+import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
+import { WorkspacePicker } from './WorkspacePicker';
 import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
@@ -39,6 +42,8 @@ interface NewChatPageProps {
   isEmbeddingModelEnabled: boolean;
   initialPrompt?: string;
   initialAttachmentUrl?: string;
+  /** Preselects a workspace, e.g. when arriving from a workspace page. */
+  initialWorkspaceId?: string;
 }
 
 export default function NewChatPage({
@@ -46,6 +51,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   initialPrompt,
   initialAttachmentUrl,
+  initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -68,16 +74,26 @@ export default function NewChatPage({
   const queryClient = useQueryClient();
   const router = useRouter();
   const chatInputRef = useRef<ChatInputRef>(null);
+  const isWorkspacesEnabled = useIsWorkspacesEnabled();
 
   useEffect(() => {
     if (initialPrompt) {
       chatInputRef.current?.setMessage(initialPrompt);
     }
   }, [initialPrompt]);
+  useEffect(() => {
+    const draft = takeChatDraft();
+    if (draft) {
+      chatInputRef.current?.setMessage(draft);
+    }
+  }, []);
   useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(
+    initialWorkspaceId ?? null,
+  );
   type LocalSource = {
     id: string;
     name: string;
@@ -186,6 +202,7 @@ export default function NewChatPage({
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
+      workspaceId: workspaceId ?? undefined,
       onSourceStatus: handleSourceStatus,
     });
   }
@@ -298,6 +315,15 @@ export default function NewChatPage({
               selectedSkillName={selectedSkillName}
               onSkillRemove={handleSkillRemove}
             />
+
+            {isWorkspacesEnabled && (
+              <div className="mt-1.5 flex justify-start">
+                <WorkspacePicker
+                  workspaceId={workspaceId}
+                  onWorkspaceChange={setWorkspaceId}
+                />
+              </div>
+            )}
           </div>
 
           <div

@@ -349,8 +349,10 @@ export default function ChatPage({
 
   const chatHeader = (
     <ChatHeader
+      threadId={thread.id}
       threadTitle={threadTitle}
       isAnonymous={thread.isAnonymous}
+      isPinned={thread.isPinned}
       onRename={handleRenameThread}
       onDelete={handleDeleteThread}
     />

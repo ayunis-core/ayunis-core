@@ -7,6 +7,7 @@
     "unpin": "Nicht mehr anheften",
     "settings": "Einstellungen",
     "newChat": "Neuer Chat",
+    "chatPlaceholder": "Womit können wir Ihnen helfen?",
     "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
   },
   "chat": {
