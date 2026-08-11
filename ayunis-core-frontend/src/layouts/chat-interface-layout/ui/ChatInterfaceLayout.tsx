@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useAutoScroll } from '@/features/useAutoScroll';
 import { useContentScrollHeader } from '@/features/useContentScrollHeader';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 import {
   Panel,
   Group as PanelGroup,
@@ -50,6 +52,12 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
     [handleScroll, onHeaderScroll],
   );
 
+  const isEmbedded = useEmbedded();
+  const railClass = cn(
+    'mx-auto w-full max-w-[800px] px-4',
+    isEmbedded && 'px-5',
+  );
+
   const chatPane = (
     <div
       className={`flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl pb-4 ${className}`}
@@ -61,7 +69,7 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
           onScroll={onScroll}
         >
           <div className="content-scroll-header-offset" aria-hidden />
-          <div className="mx-auto w-full max-w-[800px] px-4">{chatContent}</div>
+          <div className={railClass}>{chatContent}</div>
         </div>
         <div
           className="content-scroll-header"
@@ -71,7 +79,12 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[800px] px-4 flex-shrink-0 sticky bottom-0 z-10 bg-background">
+      <div
+        className={cn(
+          railClass,
+          'flex-shrink-0 sticky bottom-0 z-10 bg-background',
+        )}
+      >
         {chatInput}
       </div>
     </div>

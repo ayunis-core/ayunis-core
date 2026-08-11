@@ -3,6 +3,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
+import InsertReplyToOutlookButton from './InsertReplyToOutlookButton';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -40,7 +41,12 @@ export default function AssistantRunBlock({
             onOpenArtifact={onOpenArtifact}
           />
         </div>
-        {hasText && <CopyAssistantTextButton contentRef={contentRef} />}
+        {hasText && (
+          <div className="flex items-center gap-1">
+            <CopyAssistantTextButton contentRef={contentRef} />
+            <InsertReplyToOutlookButton contentRef={contentRef} />
+          </div>
+        )}
       </div>
     </div>
   );

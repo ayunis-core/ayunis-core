@@ -79,6 +79,28 @@
               </Group>
             </OfficeTab>
           </ExtensionPoint>
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="ayunisGroupCompose">
+                <Label resid="groupLabel" />
+                <Control xsi:type="Button" id="ayunisOpenPaneCompose">
+                  <Label resid="paneButtonLabel" />
+                  <Supertip>
+                    <Title resid="paneButtonLabel" />
+                    <Description resid="paneButtonTip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16" />
+                    <bt:Image size="32" resid="icon32" />
+                    <bt:Image size="80" resid="icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="taskpaneUrl" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
     </Hosts>
@@ -131,6 +153,28 @@
                     <Action xsi:type="ShowTaskpane">
                       <SourceLocation resid="taskpaneUrl" />
                       <SupportsPinning>true</SupportsPinning>
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+            <ExtensionPoint xsi:type="MessageComposeCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="ayunisGroupCompose">
+                  <Label resid="groupLabel" />
+                  <Control xsi:type="Button" id="ayunisOpenPaneCompose">
+                    <Label resid="paneButtonLabel" />
+                    <Supertip>
+                      <Title resid="paneButtonLabel" />
+                      <Description resid="paneButtonTip" />
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="icon16" />
+                      <bt:Image size="32" resid="icon32" />
+                      <bt:Image size="80" resid="icon80" />
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="taskpaneUrl" />
                     </Action>
                   </Control>
                 </Group>

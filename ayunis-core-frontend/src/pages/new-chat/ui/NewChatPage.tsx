@@ -1,7 +1,26 @@
-import { Lock } from 'lucide-react';
+import { Lock, Loader2 } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
 import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
+import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
+import type { OutlookMail } from '@/features/outlook/useOutlookMail';
+
+// Short, human sender label for the shortcut buttons: prefer the display name,
+// else derive it from the email domain (mvg.de → MVG, benuta.com → Benuta).
+function senderLabel(mail: OutlookMail): string {
+  const name = mail.senderName?.trim();
+  if (name && !name.includes('@')) return name;
+  const email = (mail.senderEmail ?? name ?? '').trim();
+  const core = (email.split('@').pop() ?? '').split('.')[0];
+  if (!core) return 'Absender';
+  return core.length <= 4
+    ? core.toUpperCase()
+    : core.charAt(0).toUpperCase() + core.slice(1);
+}
+
+function buildComposeReplyPrompt(original: string): string {
+  return `Entwirf eine höfliche, professionelle Antwort auf diese E-Mail. Antworte auf Deutsch. Gliedere die Antwort klar in Absätze: eine Anrede, ein oder mehrere kurze Textabsätze und eine Grußformel — jeweils durch eine Leerzeile getrennt. Gib ausschließlich den fertigen Antworttext aus — keine Rückfragen, keine Einleitung, kein E-Mail-Formular und keine Betreffzeile. Original-E-Mail:\n\n${original}`;
+}
 import {
   useInitiateChat,
   type SourceUploadStatus,
@@ -9,6 +28,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { RecentChatsButton } from '@/widgets/recent-chats';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
@@ -34,6 +54,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
+import {
+  useOutlookMail,
+  useOutlookCompose,
+  resetReplyPreservation,
+} from '@/features/outlook/useOutlookMail';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -53,7 +78,16 @@ export default function NewChatPage({
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
-  const greeting = useTimeBasedGreeting();
+  const timeGreeting = useTimeBasedGreeting();
+  const { mail, isLoading: isMailLoading, readMailBody } = useOutlookMail();
+  const { isCompose, originalText } = useOutlookCompose({ reactive: true });
+  const sender = mail ? senderLabel(mail) : '';
+  // In the task pane the greeting stays fixed and on-task instead of the
+  // full-app time-based flavour text.
+  let embeddedGreeting = 'Wie kann Ayunis Core helfen?';
+  if (isCompose || mail?.subject)
+    embeddedGreeting = 'Wie kann Ayunis Core bei dieser E-Mail helfen?';
+  const greeting = isEmbedded ? embeddedGreeting : timeGreeting;
   const { setPendingImages, setPendingSkillId } = useChatContext();
   const {
     hasSystemPrompt,
@@ -176,6 +210,7 @@ export default function NewChatPage({
       return;
     }
 
+    resetReplyPreservation();
     setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
 
     setPendingImages(imageFiles && imageFiles.length > 0 ? imageFiles : []);
@@ -191,6 +226,26 @@ export default function NewChatPage({
       onSourceStatus: handleSourceStatus,
     });
   }
+
+  const handleTypedSend = (
+    message: string,
+    imageFiles?: Array<{ file: File; altText?: string }>,
+    skillId?: string,
+  ) => {
+    if (!isEmbedded) {
+      handleSend(message, imageFiles, skillId);
+      return;
+    }
+    void (async () => {
+      let email = '';
+      if (isCompose) email = originalText;
+      else if (mail?.subject) email = await readMailBody();
+      const augmented = email.trim()
+        ? `${message}\n\nOriginal-E-Mail:\n\n${email}`
+        : message;
+      handleSend(augmented, imageFiles, skillId);
+    })();
+  };
 
   function handleCancel() {
     cancel();
@@ -230,8 +285,8 @@ export default function NewChatPage({
       onMistExitComplete={handleMistExitComplete}
       header={
         <ContentAreaHeader
-          breadcrumbs={[{ label: t('newChat.newChat') }]}
-          action={isEmbedded ? undefined : <HelpLink path="" />}
+          breadcrumbs={isEmbedded ? [] : [{ label: t('newChat.newChat') }]}
+          action={isEmbedded ? <RecentChatsButton /> : <HelpLink path="" />}
         />
       }
       compose={
@@ -246,6 +301,81 @@ export default function NewChatPage({
           >
             {greeting}
           </h1>
+
+          {isEmbedded && !isCreating && isMailLoading && (
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>E-Mail wird gelesen …</span>
+            </div>
+          )}
+
+          {isEmbedded && isCompose && !isCreating && (
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full bg-background px-4 text-xs font-normal"
+                onClick={() =>
+                  handleSend(buildComposeReplyPrompt(originalText))
+                }
+              >
+                Antwort entwerfen
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full bg-background px-4 text-xs font-normal"
+                onClick={() =>
+                  handleSend(
+                    `Fasse diese E-Mail kurz und klar zusammen. Original-E-Mail:\n\n${originalText}`,
+                  )
+                }
+              >
+                E-Mail zusammenfassen
+              </Button>
+            </div>
+          )}
+
+          {isEmbedded &&
+            !isCompose &&
+            !isCreating &&
+            !isMailLoading &&
+            mail?.subject && (
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full bg-background px-4 text-xs font-normal"
+                  onClick={() =>
+                    void readMailBody().then((body) =>
+                      handleSend(
+                        `Entwirf eine höfliche, professionelle Antwort auf diese E-Mail von ${sender}. Antworte auf Deutsch. Hier ist die E-Mail:\n\n${body}`,
+                      ),
+                    )
+                  }
+                >
+                  Antworte auf {sender}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full bg-background px-4 text-xs font-normal"
+                  onClick={() =>
+                    void readMailBody().then((body) =>
+                      handleSend(
+                        `Fasse diese E-Mail von ${sender} kurz und klar zusammen. Hier ist die E-Mail:\n\n${body}`,
+                      ),
+                    )
+                  }
+                >
+                  E-Mail von {sender} zusammenfassen
+                </Button>
+              </div>
+            )}
 
           <div className="new-chat-input-stack relative w-full">
             <p
@@ -269,7 +399,7 @@ export default function NewChatPage({
               submissionState={isCreating ? 'submitting' : 'idle'}
               isSendDisabled={isAcademyGated}
               onModelChange={handleModelChange}
-              onSend={handleSend}
+              onSend={handleTypedSend}
               onCancel={handleCancel}
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
@@ -300,6 +430,7 @@ export default function NewChatPage({
               selectedSkillId={selectedSkillId}
               selectedSkillName={selectedSkillName}
               onSkillRemove={handleSkillRemove}
+              onSkillSelect={handleSkillSelect}
             />
           </div>
 

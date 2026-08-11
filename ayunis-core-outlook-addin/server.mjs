@@ -114,9 +114,32 @@ server.on('upgrade', (req, socket) => {
   socket.destroy();
 });
 
+// Cold Vite dev servers optimize dependencies on the first request, during
+// which the page briefly errors — Outlook caches that as a failed add-in load.
+// Warming the pane route (and its entry module) up front makes the first real
+// open from Outlook land on an already-optimized server.
+function warmUp() {
+  const origin = new URL(FRONTEND);
+  for (const path of ['/chat?embedded=1', '/src/main.tsx']) {
+    const req = httpRequest(
+      {
+        hostname: origin.hostname,
+        port: origin.port,
+        path,
+        method: 'GET',
+        headers: { host: origin.host },
+      },
+      (res) => res.resume(),
+    );
+    req.on('error', () => {});
+    req.end();
+  }
+}
+
 server.listen(PORT, () => {
   console.log(`Add-in origin:  https://localhost:${PORT}`);
   console.log(`Task pane:      https://localhost:${PORT}/chat?embedded=1`);
   console.log(`Proxying app →  ${FRONTEND}`);
   console.log(`Proxying api →  ${BACKEND}`);
+  warmUp();
 });

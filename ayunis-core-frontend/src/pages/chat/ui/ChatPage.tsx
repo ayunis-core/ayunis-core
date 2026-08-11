@@ -8,6 +8,12 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import type { Thread, Message } from '../model/openapi';
+import {
+  getSendEmailBody,
+  extractPlainText,
+  replyTextToHtml,
+  looksLikeEmailReply,
+} from '../lib/compose-reply';
 import { showError } from '@/shared/lib/toast';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -46,8 +52,14 @@ import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
 import { reconcileMessages } from '../lib/reconcile-thread-messages';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
+import { useOutlookCompose } from '@/features/outlook/useOutlookMail';
 
 const PROCESSING_POLL_INTERVAL = 5000;
+
+// Demo only: the plan-approval card shows solely in a chat whose title contains
+// this marker, so it appears in one designated demo chat instead of every one.
+const PLAN_DEMO_TITLE_MARKER = 'plan';
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -61,6 +73,9 @@ export default function ChatPage({
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
+  const isEmbedded = useEmbedded();
+  const { isCompose, setReplyBody } = useOutlookCompose();
+  const wasStreamingRef = useRef(false);
   const {
     models,
     isLoading: isLoadingModels,
@@ -261,6 +276,27 @@ export default function ChatPage({
     },
   });
 
+  // Compose add-in: write the finished reply into the Outlook draft once it's
+  // done — a single clean write keeps the paragraph formatting. The "working"
+  // state is already visible in the chat while it streams.
+  useEffect(() => {
+    const justFinished = wasStreamingRef.current && !isStreaming;
+    wasStreamingRef.current = isStreaming;
+    if (!justFinished || !isCompose) return;
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.role !== 'assistant') return;
+    const emailDraft = getSendEmailBody(last);
+    if (emailDraft) {
+      setReplyBody(replyTextToHtml(emailDraft));
+      return;
+    }
+    const answer = extractPlainText(last);
+    if (answer && looksLikeEmailReply(answer)) {
+      setReplyBody(replyTextToHtml(answer));
+    }
+  }, [isStreaming, isCompose, messages, setReplyBody]);
+
   // Send is gated while a fresh upload is in flight or while server-side
   // processing of an attached source hasn't finished — both are reasons we
   // want the user to wait before they can submit a message. The academy gate
@@ -379,6 +415,10 @@ export default function ChatPage({
       pendingSubmission={pendingSubmission}
       showLoadingPlaceholder={showLoadingPlaceholder}
       onOpenArtifact={handleOpenArtifact}
+      showPlanCard={
+        isEmbedded &&
+        (threadTitle ?? '').toLowerCase().includes(PLAN_DEMO_TITLE_MARKER)
+      }
     />
   );
 

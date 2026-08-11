@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@ayunis/ui/lib/cn';
 import NewChatBackdrop, { type NewChatBackdropPhase } from './NewChatBackdrop';
 import { useComposeLift } from '../model/useComposeLift';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 
 export type NewChatMistPhase = NewChatBackdropPhase | 'hidden';
 
@@ -25,6 +26,8 @@ export default function NewChatPageLayout({
   onMistExitComplete,
 }: Readonly<NewChatPageLayoutProps>) {
   const useComposeLayout = compose !== undefined;
+  const isEmbedded = useEmbedded();
+  const stagePad = isEmbedded ? 'px-5' : 'px-4';
   const { stageRef, composeRef, liftPx } = useComposeLift(
     useComposeLayout,
     isSettling,
@@ -45,7 +48,10 @@ export default function NewChatPageLayout({
           {useComposeLayout ? (
             <div
               ref={stageRef}
-              className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-4"
+              className={cn(
+                'flex min-h-0 flex-1 flex-col justify-end pb-4',
+                stagePad,
+              )}
             >
               <div
                 ref={composeRef}
@@ -72,7 +78,12 @@ export default function NewChatPageLayout({
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-4">
+            <div
+              className={cn(
+                'flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto pb-4',
+                stagePad,
+              )}
+            >
               <div className="w-full max-w-[800px]">{children}</div>
             </div>
           )}

@@ -1,6 +1,7 @@
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
 import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
+import { PlanApprovalCard } from '@/pages/chat/ui/PlanApprovalCard';
 import type { RenderUnit } from '@/pages/chat/ui/agent-run-timeline';
 import type { Message } from '@/pages/chat/model/openapi';
 
@@ -10,6 +11,8 @@ interface ChatThreadContentProps {
   readonly pendingSubmission: string | null;
   readonly showLoadingPlaceholder: boolean;
   readonly onOpenArtifact: (artifactId: string) => void;
+  /** Demo only: append a simulated plan-approval turn at the end of the thread. */
+  readonly showPlanCard?: boolean;
 }
 
 export function ChatThreadContent({
@@ -18,6 +21,7 @@ export function ChatThreadContent({
   pendingSubmission,
   showLoadingPlaceholder,
   onOpenArtifact,
+  showPlanCard = false,
 }: ChatThreadContentProps) {
   const showPendingUserBubble = pendingSubmission !== null;
 
@@ -46,6 +50,18 @@ export function ChatThreadContent({
         />
       )}
       {showLoadingPlaceholder && <LoadingAssistantBlock />}
+      {showPlanCard && (
+        <div className="pt-2">
+          <PlanApprovalCard
+            title="Antwort auf diese E-Mail entwerfen"
+            steps={[
+              'Ich lese die E-Mail und fasse die Kernpunkte zusammen.',
+              'Ich formuliere einen passenden Antwortentwurf.',
+              'Du prüfst den Entwurf und sendest ihn selbst.',
+            ]}
+          />
+        </div>
+      )}
     </div>
   );
 }

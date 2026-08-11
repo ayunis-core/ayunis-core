@@ -7,6 +7,9 @@ import ChatsEmptyState from './ChatsEmptyState';
 import ChatsPagination from './ChatsPagination';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
+import { Button } from '@ayunis/ui/components/button';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { ChatListItem } from '../model/types';
 
@@ -26,6 +29,15 @@ export default function ChatsPage({
   currentPage,
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
+  const isEmbedded = useEmbedded();
+
+  const headerAction = isEmbedded ? (
+    <Button variant="ghost" size="sm" asChild>
+      <Link to="/chat">Zur Startseite</Link>
+    </Button>
+  ) : (
+    <HelpLink path="chat/" />
+  );
 
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 20;
@@ -38,7 +50,7 @@ export default function ChatsPage({
           header={
             <ContentAreaHeader
               breadcrumbs={[{ label: t('page.title') }]}
-              action={<HelpLink path="chat/" />}
+              action={headerAction}
             />
           }
         >
@@ -54,7 +66,7 @@ export default function ChatsPage({
         contentHeader={
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
-            action={<HelpLink path="chat/" />}
+            action={headerAction}
           />
         }
         contentArea={

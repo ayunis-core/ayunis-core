@@ -19,6 +19,28 @@ interface ModelSelectorProps {
   responsiveLabel?: boolean;
 }
 
+// Brand prefixes the provider flag already conveys, so they're dropped from the
+// trigger label in the cramped task pane ("Claude Sonnet 4" → "Sonnet 4").
+const BRAND_PREFIXES = [
+  'Claude',
+  'Mistral',
+  'Gemini',
+  'Llama',
+  'Anthropic',
+  'OpenAI',
+  'Meta',
+];
+
+function abbreviateModelName(displayName: string): string {
+  let name = displayName.trim();
+  const openIndex = name.lastIndexOf('(');
+  if (openIndex > 0 && name.endsWith(')')) {
+    name = name.slice(0, openIndex).trimEnd();
+  }
+  const brand = BRAND_PREFIXES.find((b) => name.startsWith(`${b} `));
+  return brand ? name.slice(brand.length + 1) : name;
+}
+
 export default function ModelSelector({
   isDisabled,
   selectedModelId,
@@ -48,8 +70,11 @@ export default function ModelSelector({
             <span className="contents @min-[24rem]:hidden">
               <ProviderFlag provider={selectedModel.provider} />
             </span>
-            <span className="hidden @min-[24rem]:contents">
-              <SelectValue placeholder={placeholder} />
+            <span className="hidden items-center gap-1.5 @min-[24rem]:inline-flex">
+              <ProviderFlag provider={selectedModel.provider} />
+              <span className="max-w-[8rem] truncate">
+                {abbreviateModelName(selectedModel.displayName)}
+              </span>
             </span>
           </>
         ) : (

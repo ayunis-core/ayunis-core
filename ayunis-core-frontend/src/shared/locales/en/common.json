@@ -95,7 +95,10 @@
     "transcriptionFailed": "Transcription failed",
     "modelSelectorAriaLabel": "Select AI model",
     "modelChangeDisabledTooltip": "The model can't be changed in an existing chat.",
-    "deactivateSkillTooltip": "Deactivate skill"
+    "deactivateSkillTooltip": "Deactivate skill",
+    "addSkill": "Add skill",
+    "skillsEmptyState": "No skills available yet",
+    "skillsLoadError": "Failed to load skills"
   },
   "pinnedSkills": {
     "empty": "No pinned skills",

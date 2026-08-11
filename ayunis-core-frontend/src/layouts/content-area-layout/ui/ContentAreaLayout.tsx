@@ -1,5 +1,7 @@
 import React from 'react';
+import { cn } from '@ayunis/ui/lib/cn';
 import { useContentScrollHeader } from '@/features/useContentScrollHeader';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;
@@ -22,6 +24,7 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
 }) => {
   const { scrollRef, headerScrolled, onScroll } =
     useContentScrollHeader(resetKey);
+  const isEmbedded = useEmbedded();
 
   return (
     <div className={`flex min-h-0 flex-col absolute inset-0 pb-4 ${className}`}>
@@ -35,7 +38,11 @@ export const ContentAreaLayout: React.FC<ContentAreaLayoutProps> = ({
             <div className="content-scroll-header-offset" aria-hidden />
           )}
           <div
-            className={`mx-auto w-full px-2 pb-3 ${fullWidth ? '' : 'max-w-[800px]'}`}
+            className={cn(
+              'mx-auto w-full pb-3',
+              isEmbedded ? 'px-5' : 'px-2',
+              !fullWidth && 'max-w-[800px]',
+            )}
           >
             {contentArea}
           </div>

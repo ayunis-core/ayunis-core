@@ -7,6 +7,27 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
+
+function copyTextViaExecCommand(text: string): boolean {
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    // eslint-disable-next-line sonarjs/deprecation
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
 interface CopyAssistantTextButtonProps {
   readonly contentRef: React.RefObject<HTMLDivElement | null>;
@@ -17,6 +38,12 @@ export default function CopyAssistantTextButton({
 }: CopyAssistantTextButtonProps) {
   const [copied, setCopied] = useState(false);
   const { t } = useTranslation('chat');
+  const isEmbedded = useEmbedded();
+
+  const markCopied = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleCopy = async () => {
     const el = contentRef.current;
@@ -36,6 +63,11 @@ export default function CopyAssistantTextButton({
     const plainText = textParts.join('\n\n');
     if (!plainText.trim()) return;
 
+    if (isEmbedded) {
+      if (copyTextViaExecCommand(plainText)) markCopied();
+      return;
+    }
+
     try {
       await navigator.clipboard.write([
         new ClipboardItem({
@@ -43,15 +75,14 @@ export default function CopyAssistantTextButton({
           'text/plain': new Blob([plainText], { type: 'text/plain' }),
         }),
       ]);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      markCopied();
     } catch {
       try {
         await navigator.clipboard.writeText(plainText);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        markCopied();
       } catch (error) {
-        console.error('Failed to copy message:', error);
+        if (copyTextViaExecCommand(plainText)) markCopied();
+        else console.error('Failed to copy message:', error);
       }
     }
   };

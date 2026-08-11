@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Hand, FastForward, ChevronDown } from 'lucide-react';
+import { Hand, Zap, ChevronDown } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
@@ -22,7 +22,7 @@ const MODES: Record<
   auto: {
     label: 'Ohne Nachfrage handeln',
     description: 'Ayunis Core führt die Schritte direkt aus.',
-    icon: FastForward,
+    icon: Zap,
   },
 };
 
@@ -42,10 +42,10 @@ export function ActionModeSelector() {
           <ActiveIcon className="h-4 w-4 shrink-0" />
           {/* Label collapses to icon-only once the input toolbar (a @container)
               gets too narrow, so the row never wraps to a second line. */}
-          <span className="hidden min-w-0 truncate @min-[35rem]:inline">
+          <span className="hidden min-w-0 truncate @min-[40rem]:inline">
             {MODES[mode].label}
           </span>
-          <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 opacity-60 @min-[35rem]:inline" />
+          <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 opacity-60 @min-[40rem]:inline" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">

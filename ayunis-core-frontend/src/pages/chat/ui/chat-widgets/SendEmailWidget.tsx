@@ -8,6 +8,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Mail } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
+import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
 
 export default function SendEmailWidget({
   content,
@@ -36,6 +37,7 @@ export default function SendEmailWidget({
   // Mask dictionary so egress (clipboard, mailto) emits original values while
   // the on-screen fields keep showing `{{pii:...}}` tokens.
   const masks = usePiiMasks();
+  const isEmbedded = useEmbedded();
 
   // Update state when params change (for streaming updates)
   useEffect(() => {
@@ -69,6 +71,21 @@ export default function SendEmailWidget({
     const query = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
     return `mailto:${mailtoPath}${query}`;
   }, [subject, body, to, masks]);
+
+  if (isEmbedded) {
+    return (
+      <div
+        className={cn(
+          'my-2 whitespace-pre-wrap',
+          isStreaming && 'animate-pulse',
+        )}
+        data-copyable="true"
+        key={`${content.name}-${content.id}`}
+      >
+        {resolvePiiTokens(body, masks)}
+      </div>
+    );
+  }
 
   return (
     <div

@@ -40,19 +40,6 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 
-/**
- * Lifecycle of an in-flight submit. The input behaves differently in each:
- *
- * - `idle`     — fully editable, send button visible, can submit if `canSend`.
- * - `submitting` — message is being delivered (upload + processing pipeline
- *                  on the new-chat page). Textarea is read-only, plus button
- *                  disabled, send button replaced with a cancel button. Local
- *                  message state is preserved so it survives a cancellation
- *                  or a failure.
- * - `streaming`  — assistant response is streaming. Textarea remains editable
- *                  (so the user can prepare a follow-up), but the send button
- *                  is replaced with a cancel button.
- */
 export type ChatInputSubmissionState = 'idle' | 'submitting' | 'streaming';
 
 interface ChatInputProps {
@@ -95,6 +82,7 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -142,6 +130,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      onSkillSelect,
       initialMessage,
     },
     ref,
@@ -245,7 +234,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     const handleSend = () => {
       if (
-        (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
+        (!message.trim() &&
+          pendingImages.length === 0 &&
+          (isEmbedded || !selectedSkillId)) ||
         !modelId ||
         inFlight ||
         isSendDisabled
@@ -297,7 +288,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     };
 
     const canSend =
-      (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
+      (message.trim() ||
+        pendingImages.length > 0 ||
+        (!isEmbedded && selectedSkillId)) &&
       modelId &&
       !inFlight &&
       !isSendDisabled;
@@ -448,6 +441,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         attachedIntegrationIds={mcpIntegrations?.map(
                           (integration) => integration.id,
                         )}
+                        onSkillSelect={onSkillSelect}
+                        selectedSkillId={selectedSkillId}
                       />
                     </OnboardingTourTarget>
                     <OnboardingTourTarget
@@ -461,12 +456,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         isEnforced={isAnonymousEnforced}
                       />
                     </OnboardingTourTarget>
-                    {selectedSkillId && selectedSkillName && onSkillRemove && (
-                      <SkillBadge
-                        skillName={selectedSkillName}
-                        onRemove={() => onSkillRemove()}
-                      />
-                    )}
+                    {!isEmbedded &&
+                      selectedSkillId &&
+                      selectedSkillName &&
+                      onSkillRemove && (
+                        <SkillBadge
+                          skillName={selectedSkillName}
+                          onRemove={() => onSkillRemove()}
+                        />
+                      )}
                     {isEmbedded && <ActionModeSelector />}
                   </div>
 

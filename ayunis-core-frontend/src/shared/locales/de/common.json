@@ -95,7 +95,10 @@
     "transcriptionFailed": "Transkription fehlgeschlagen",
     "modelSelectorAriaLabel": "KI-Modell auswählen",
     "modelChangeDisabledTooltip": "Das Modell kann in einem bestehenden Chat nicht mehr gewechselt werden.",
-    "deactivateSkillTooltip": "Fähigkeit deaktivieren"
+    "deactivateSkillTooltip": "Fähigkeit deaktivieren",
+    "addSkill": "Fähigkeit hinzufügen",
+    "skillsEmptyState": "Noch keine Fähigkeiten verfügbar",
+    "skillsLoadError": "Fehler beim Laden der Fähigkeiten"
   },
   "pinnedSkills": {
     "empty": "Keine angehefteten Fähigkeiten",
