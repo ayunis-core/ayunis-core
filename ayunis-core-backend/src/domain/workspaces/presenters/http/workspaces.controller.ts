@@ -137,8 +137,6 @@ export class WorkspacesController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    // True one stack-branch up, where the threads FK cascade lands; kept
-    // stable here so the generated OpenAPI client does not churn mid-stack.
     summary: 'Delete a workspace and every chat inside it',
   })
   @ApiParam({

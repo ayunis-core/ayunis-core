@@ -13,6 +13,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
     },
     public readonly filters?: {
       search?: string;
+      workspaceId?: UUID;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

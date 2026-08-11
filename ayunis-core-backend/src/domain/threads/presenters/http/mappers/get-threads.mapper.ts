@@ -13,6 +13,7 @@ export class GetThreadsDtoMapper {
       createdAt: thread.createdAt.toISOString(),
       updatedAt: thread.updatedAt.toISOString(),
       isAnonymous: thread.isAnonymous,
+      workspaceId: thread.workspaceId ?? null,
     };
   }
 

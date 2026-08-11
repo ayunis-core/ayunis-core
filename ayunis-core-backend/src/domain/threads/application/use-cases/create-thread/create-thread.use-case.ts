@@ -12,6 +12,8 @@ import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/us
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
+import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.query';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -21,6 +23,7 @@ export class CreateThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
+    private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -34,11 +37,19 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
+    // Throws WorkspaceNotFoundError for an id the caller does not own.
+    if (command.workspaceId) {
+      await this.findWorkspaceUseCase.execute(
+        new FindWorkspaceQuery(command.workspaceId),
+      );
+    }
+
     try {
       const thread = new Thread({
         userId,
         model,
         isAnonymous,
+        workspaceId: command.workspaceId,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
