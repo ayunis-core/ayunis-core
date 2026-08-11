@@ -1,6 +1,7 @@
 import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
+  getFavoritesControllerFindAllQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { abortActiveThreadRun } from '../model/active-thread-run';
@@ -29,6 +30,9 @@ export function useDeleteThread(params: UseDeleteChatParams) {
           // Invalidate queries first to update the cache
           void queryClient.invalidateQueries({
             queryKey: getThreadsControllerFindAllQueryKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: getFavoritesControllerFindAllQueryKey(),
           });
           // Then call the user's onSuccess callback
           params.onSuccess?.();

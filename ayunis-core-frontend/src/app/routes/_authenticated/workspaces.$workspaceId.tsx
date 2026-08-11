@@ -7,9 +7,23 @@ import {
   getThreadsControllerFindAllQueryKey,
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
+  modelsDefaultsControllerGetEffectiveDefaultModel,
+  getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
+  modelsControllerIsEmbeddingModelEnabled,
+  getModelsControllerIsEmbeddingModelEnabledQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
 const WORKSPACE_CHATS_LIMIT = 100;
+
+const queryDefaultModelOptions = () => ({
+  queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
+  queryFn: () => modelsDefaultsControllerGetEffectiveDefaultModel(),
+});
+
+const queryIsEmbeddingModelEnabledOptions = () => ({
+  queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+  queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+});
 
 export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
   {
@@ -45,6 +59,17 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         queryFn: () => threadsControllerFindAll(chatsParams),
       });
 
+      // The model queries only serve the embedded composer; a failure must
+      // not take down the whole workspace page (chats and settings work
+      // without them). Without a model the composer rejects sending with a
+      // toast, matching the new-chat page's no-model behavior.
+      const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
+        queryClient.fetchQuery(queryDefaultModelOptions()).catch(() => null),
+        queryClient
+          .fetchQuery(queryIsEmbeddingModelEnabledOptions())
+          .catch(() => null),
+      ]);
+
       return {
         workspace,
         chats: chats.data,
@@ -52,14 +77,29 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         // than the number of rows that happened to fit in one page.
         // `total` is optional in the generated DTO; fall back to what loaded.
         chatCount: chats.pagination.total ?? chats.data.length,
+        selectedModelId: defaultModelResponse?.permittedLanguageModel?.id,
+        isEmbeddingModelEnabled:
+          embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
       };
     },
   },
 );
 
 function RouteComponent() {
-  const { workspace, chats, chatCount } = Route.useLoaderData();
+  const {
+    workspace,
+    chats,
+    chatCount,
+    selectedModelId,
+    isEmbeddingModelEnabled,
+  } = Route.useLoaderData();
   return (
-    <WorkspacePage workspace={workspace} chats={chats} chatCount={chatCount} />
+    <WorkspacePage
+      workspace={workspace}
+      chats={chats}
+      chatCount={chatCount}
+      selectedModelId={selectedModelId}
+      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+    />
   );
 }

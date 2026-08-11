@@ -16,6 +16,7 @@ import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
+import { WorkspaceChatStarter } from './WorkspaceChatStarter';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
 import { WorkspaceHero } from './WorkspaceHero';
 
@@ -24,12 +25,16 @@ interface WorkspacePageProps {
   chats: GetThreadsResponseDtoItem[];
   /** Total chats in the workspace, which can exceed the loaded page. */
   chatCount: number;
+  selectedModelId?: string;
+  isEmbeddingModelEnabled: boolean;
 }
 
 export default function WorkspacePage({
   workspace,
   chats,
   chatCount,
+  selectedModelId,
+  isEmbeddingModelEnabled,
 }: Readonly<WorkspacePageProps>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
@@ -56,6 +61,13 @@ export default function WorkspacePage({
         contentArea={
           <div className="space-y-6">
             <WorkspaceHero workspace={workspace} />
+
+            <WorkspaceChatStarter
+              workspaceId={workspace.id}
+              selectedModelId={selectedModelId}
+              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+            />
+
             <Tabs defaultValue="chats">
               <TabsList>
                 <TabsTrigger value="chats">

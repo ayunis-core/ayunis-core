@@ -5,6 +5,7 @@ import type { UseFormReturn } from 'react-hook-form';
 import {
   useWorkspacesControllerCreate,
   getWorkspacesControllerFindAllQueryKey,
+  getFavoritesControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { WorkspaceResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -43,6 +44,9 @@ export function useCreateWorkspace(
       onSettled: async () => {
         await queryClient.invalidateQueries({
           queryKey: getWorkspacesControllerFindAllQueryKey(),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: getFavoritesControllerFindAllQueryKey(),
         });
         await router.invalidate();
       },
