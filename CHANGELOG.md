@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.24.0](https://github.com/ayunis-core/ayunis-core/compare/v2.23.1...v2.24.0) (2026-08-11)
+
+
+### Features
+
+* **webhooks:** emit product usage events (AYC-475) ([#1339](https://github.com/ayunis-core/ayunis-core/issues/1339)) ([4b431fc](https://github.com/ayunis-core/ayunis-core/commit/4b431fc95abbcaf560626d8619d2207b54da803e))
+
+
+### Bug Fixes
+
+* **anonymization:** reject oversize input before service call (AYC-692) ([#1332](https://github.com/ayunis-core/ayunis-core/issues/1332)) ([c98d589](https://github.com/ayunis-core/ayunis-core/commit/c98d589ab571d18389f91b377601431233f9274e))
+* **chat:** preserve new chat layout with reduced motion (AYC-000) ([#1354](https://github.com/ayunis-core/ayunis-core/issues/1354)) ([2c13949](https://github.com/ayunis-core/ayunis-core/commit/2c13949d55aa6f8d03f6ec57a3fb91208f7fc74e))
+* **mcp:** reuse connections across operations (AYC-571) ([#1331](https://github.com/ayunis-core/ayunis-core/issues/1331)) ([e72edd7](https://github.com/ayunis-core/ayunis-core/commit/e72edd766bfde70669979e282e3eb59af5d2096d))
+* **models:** handle duplicate language model updates (AYC-696) ([#1326](https://github.com/ayunis-core/ayunis-core/issues/1326)) ([535f543](https://github.com/ayunis-core/ayunis-core/commit/535f5435b102351fa9192aa2d342df5b97cdfa7c))
+* **models:** migrate azure chat inference to v1 (AYC-708) ([#1336](https://github.com/ayunis-core/ayunis-core/issues/1336)) ([b325440](https://github.com/ayunis-core/ayunis-core/commit/b3254403cdb481ba17c757d8d85ad88dbdfae535))
+* **models:** show granular catalog error toasts (AYC-696) ([#1338](https://github.com/ayunis-core/ayunis-core/issues/1338)) ([39ab845](https://github.com/ayunis-core/ayunis-core/commit/39ab84502831af865354f7821cca23f8b5ba7cd6))
+* **openai-compat:** return partial text at token limit (AYC-697) ([#1334](https://github.com/ayunis-core/ayunis-core/issues/1334)) ([a13c8c7](https://github.com/ayunis-core/ayunis-core/commit/a13c8c74fb80b8b3ae2023c52fa4032c602dd9d4))
+* **threads:** avoid Cartesian thread detail query (AYC-661) ([#1325](https://github.com/ayunis-core/ayunis-core/issues/1325)) ([abf4b10](https://github.com/ayunis-core/ayunis-core/commit/abf4b107c54ca41d569ccb9a8b37cf7a246c5966))
+* **threads:** load data source details separately (AYC-000) ([#1355](https://github.com/ayunis-core/ayunis-core/issues/1355)) ([6fcd215](https://github.com/ayunis-core/ayunis-core/commit/6fcd215146900e2a7f6d89d50971048ac1c1f5e9))
+
+
+### Miscellaneous
+
+* **dev:** make anonymisation service opt-in (AYC-000) ([#1356](https://github.com/ayunis-core/ayunis-core/issues/1356)) ([f72efa1](https://github.com/ayunis-core/ayunis-core/commit/f72efa1f74af202ae5119c72a868fbd963a7b70e))
+
+
+### CI/CD
+
+* **staging:** prune obsolete build cache before deploy (AYC-000) ([#1357](https://github.com/ayunis-core/ayunis-core/issues/1357)) ([c9893db](https://github.com/ayunis-core/ayunis-core/commit/c9893dbb402c9d7a5728a85c8f84e55b969e8798))
+
 ## [2.23.1](https://github.com/ayunis-core/ayunis-core/compare/v2.23.0...v2.23.1) (2026-08-10)
 
 
