@@ -10,6 +10,8 @@ export enum SsoErrorCode {
   CONNECTION_NOT_FOUND = 'SSO_CONNECTION_NOT_FOUND',
   CONNECTION_MUST_BE_DISABLED = 'SSO_CONNECTION_MUST_BE_DISABLED',
   CONNECTION_CHANGED = 'SSO_CONNECTION_CHANGED',
+  BROKER_NOT_CONFIGURED = 'SSO_BROKER_NOT_CONFIGURED',
+  BROKER_RESPONSE_INVALID = 'SSO_BROKER_RESPONSE_INVALID',
   UNEXPECTED = 'SSO_UNEXPECTED_ERROR',
 }
 
@@ -77,6 +79,27 @@ export class SsoConnectionChangedError extends SsoError {
       SsoErrorCode.CONNECTION_CHANGED,
       409,
       { orgId },
+    );
+  }
+}
+
+export class SsoBrokerNotConfiguredError extends SsoError {
+  constructor() {
+    super(
+      'Municipal SSO is not configured',
+      SsoErrorCode.BROKER_NOT_CONFIGURED,
+      503,
+    );
+  }
+}
+
+export class InvalidSsoBrokerResponseError extends SsoError {
+  constructor(field: string) {
+    super(
+      'The identity broker returned an invalid authentication response',
+      SsoErrorCode.BROKER_RESPONSE_INVALID,
+      401,
+      { field },
     );
   }
 }

@@ -12,6 +12,8 @@ import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
 import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
 import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
+import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
+import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
 
 @Module({
   imports: [
@@ -25,6 +27,10 @@ import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/m
     {
       provide: OrgSsoConnectionsRepository,
       useClass: PostgresOrgSsoConnectionsRepository,
+    },
+    {
+      provide: OidcBrokerClient,
+      useClass: ZitadelOidcBrokerClient,
     },
     ConfigureOrgSsoConnectionUseCase,
     SetOrgSsoEnabledUseCase,

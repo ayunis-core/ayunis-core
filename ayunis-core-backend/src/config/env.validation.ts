@@ -6,10 +6,12 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsUrl,
   Min,
   validateSync,
   type ValidationError,
 } from 'class-validator';
+import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
 const BOOLEAN_STRINGS = ['true', 'false'] as const;
@@ -73,6 +75,18 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(0)
   SESSION_REFRESH_GRACE_SECONDS?: number;
+
+  // Municipal SSO — optional as a group so local authentication remains
+  // available before the broker integration is configured.
+  @IsOptional()
+  @IsUrl({ require_protocol: true, require_tld: false })
+  SSO_OIDC_ISSUER?: string;
+  @IsOptional() @IsNotEmpty() SSO_OIDC_CLIENT_ID?: string;
+  @IsOptional() @IsNotEmpty() SSO_OIDC_CLIENT_SECRET?: string;
+  @IsOptional() @IsNotEmpty() SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY?: string;
+  @IsOptional()
+  @IsUrl({ require_protocol: true, require_tld: false })
+  SSO_OIDC_CALLBACK_URL?: string;
 
   // Database
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) POSTGRES_PORT?: number;
@@ -225,6 +239,57 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
   return messages;
 }
 
+const SSO_OIDC_KEYS = [
+  'SSO_OIDC_ISSUER',
+  'SSO_OIDC_CLIENT_ID',
+  'SSO_OIDC_CLIENT_SECRET',
+  'SSO_OIDC_CALLBACK_URL',
+  'SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY',
+] as const;
+
+function validateSsoOidcRules(env: Record<string, unknown>): string[] {
+  const configured = SSO_OIDC_KEYS.filter((key) => env[key] !== undefined);
+  if (configured.length === 0) {
+    return [];
+  }
+  const messages = SSO_OIDC_KEYS.filter((key) => env[key] === undefined).map(
+    (key) => `${key} is required when municipal SSO OIDC is configured`,
+  );
+  for (const key of ['SSO_OIDC_ISSUER', 'SSO_OIDC_CALLBACK_URL'] as const) {
+    const value = env[key];
+    if (
+      typeof value === 'string' &&
+      usesDisallowedSsoProtocol(value, env.NODE_ENV === 'production')
+    ) {
+      messages.push(`${key} must use HTTPS except for local development`);
+    }
+  }
+  const encryptionKey = env.SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY;
+  if (
+    typeof encryptionKey === 'string' &&
+    !/^[0-9a-f]{64}$/i.test(encryptionKey)
+  ) {
+    messages.push(
+      'SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY must be a 64-character hex string',
+    );
+  }
+  return messages;
+}
+
+function usesDisallowedSsoProtocol(
+  value: string,
+  isProduction: boolean,
+): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol !== 'https:' && (isProduction || !isLoopbackHttpUrl(value))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Validate the whole environment at boot. Returns the untouched config on
  * success (factories keep reading `process.env`); throws one aggregated error
@@ -239,6 +304,7 @@ export function validateEnv(
   const messages = [
     ...collectConstraintMessages(errors),
     ...validateProductionRules(env),
+    ...validateSsoOidcRules(env),
   ];
   if (messages.length > 0) {
     messages.sort((a, b) => a.localeCompare(b));
