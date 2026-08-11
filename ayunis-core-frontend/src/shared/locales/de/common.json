@@ -44,7 +44,20 @@
     "renameThreadError": "Chat konnte nicht umbenannt werden",
     "renameThreadEmptyError": "Titel darf nicht leer sein",
     "renameThreadMaxLengthError": "Titel darf maximal {{max}} Zeichen lang sein",
-    "showMore": "Mehr anzeigen..."
+    "showMore": "Mehr anzeigen...",
+    "workspaces": "Projekte",
+    "pinnedChats": "Angeheftet",
+    "pinChat": "Anheften",
+    "unpinChat": "Nicht mehr anheften",
+    "addToWorkspace": "Zu Projekt hinzufügen",
+    "removeFromWorkspace": "Aus Projekt entfernen",
+    "newWorkspace": "Neues Projekt",
+    "workspaceOptions": "Projektoptionen",
+    "moveUp": "Nach oben verschieben",
+    "moveDown": "Nach unten verschieben",
+    "unpinWorkspace": "Aus Seitenleiste lösen",
+    "deleteWorkspace": "Löschen",
+    "dragWorkspace": "Projekt verschieben"
   },
   "chatInput": {
     "placeholder": "Wie kann ich heute helfen?",

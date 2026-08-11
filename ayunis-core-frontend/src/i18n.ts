@@ -36,6 +36,10 @@ import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
 import enInstallIntegration from './shared/locales/en/install-integration.json';
 import deInstallIntegration from './shared/locales/de/install-integration.json';
+import enWorkspaces from './shared/locales/en/workspaces.json';
+import deWorkspaces from './shared/locales/de/workspaces.json';
+import enWorkspace from './shared/locales/en/workspace.json';
+import deWorkspace from './shared/locales/de/workspace.json';
 import enSkills from './shared/locales/en/skills.json';
 import deSkills from './shared/locales/de/skills.json';
 import enSkill from './shared/locales/en/skill.json';
@@ -103,6 +107,8 @@ const resources = {
     install: enInstall,
     'install-integration': enInstallIntegration,
     skills: enSkills,
+    workspaces: enWorkspaces,
+    workspace: enWorkspace,
     skill: enSkill,
     'knowledge-bases': enKnowledgeBases,
     'super-admin-settings-skills': enSuperAdminSettingsSkills,
@@ -145,6 +151,8 @@ const resources = {
     install: deInstall,
     'install-integration': deInstallIntegration,
     skills: deSkills,
+    workspaces: deWorkspaces,
+    workspace: deWorkspace,
     skill: deSkill,
     'knowledge-bases': deKnowledgeBases,
     'super-admin-settings-skills': deSuperAdminSettingsSkills,

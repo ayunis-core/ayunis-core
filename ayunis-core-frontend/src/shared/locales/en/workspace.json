@@ -1,0 +1,17 @@
+{
+  "page": {
+    "breadcrumb": "Projects",
+    "chatsTab": "Your chats",
+    "emptyChats": "No chats yet. Just start typing above.",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "settings": "Settings",
+    "newChat": "New chat"
+  },
+  "chat": {
+    "untitled": "Untitled chat",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "remove": "Remove from project"
+  }
+}

@@ -1,0 +1,26 @@
+/* Custom (user-picked) colours cannot be Tailwind classes, so they come in as a
+   CSS variable and are mixed toward black/white per theme — that mixing is what
+   keeps an arbitrary hex readable in both light and dark mode. */
+[data-workspace-color='custom'] {
+  color: color-mix(in oklab, var(--workspace-color) 74%, black);
+}
+
+.dark [data-workspace-color='custom'] {
+  color: color-mix(in oklab, var(--workspace-color) 70%, white);
+}
+
+[data-workspace-color='custom'][data-workspace-tint] {
+  background-color: color-mix(
+    in oklab,
+    var(--workspace-color) 10%,
+    transparent
+  );
+}
+
+.dark [data-workspace-color='custom'][data-workspace-tint] {
+  background-color: color-mix(
+    in oklab,
+    var(--workspace-color) 16%,
+    transparent
+  );
+}

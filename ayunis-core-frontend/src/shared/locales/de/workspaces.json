@@ -1,0 +1,167 @@
+{
+  "page": {
+    "title": "Projekte",
+    "heading": "Projekte",
+    "searchPlaceholder": "Projekte durchsuchen",
+    "newWorkspace": "Neues Projekt",
+    "empty": "Sie haben noch keine Projekte.",
+    "emptyTitle": "Noch keine Projekte",
+    "emptyDescription": "Legen Sie ein Projekt an, um Ihre Chats thematisch zu bündeln.",
+    "viewOptions": "Ansicht und Sortierung",
+    "sortBy": "Sortieren nach",
+    "display": "Darstellung",
+    "grid": "Kachelansicht",
+    "list": "Listenansicht",
+    "chatCount_one": "{{count}} Chat",
+    "chatCount_other": "{{count}} Chats",
+    "noResults": "Keine Projekte gefunden."
+  },
+  "sort": {
+    "updatedAt": "Zuletzt aktualisiert",
+    "createdAt": "Erstellungsdatum",
+    "alpha": "Alphabetisch"
+  },
+  "card": {
+    "pin": "Anheften",
+    "unpin": "Nicht mehr anheften"
+  },
+  "appearance": {
+    "iconLabel": "Symbol",
+    "colorLabel": "Farbe",
+    "customColor": "Eigene Farbe",
+    "previewPlaceholder": "Vorschau",
+    "icons": {
+      "folder": "Ordner",
+      "file": "Dokumente",
+      "files": "Unterlagen",
+      "filecheck": "Prüfung",
+      "clipboard": "Checkliste",
+      "archive": "Archiv",
+      "inbox": "Posteingang",
+      "mail": "Post",
+      "stamp": "Amtsstempel",
+      "idcard": "Ausweise",
+      "landmark": "Rathaus",
+      "building": "Gebäude",
+      "map": "Karte",
+      "mappin": "Standort",
+      "users": "Personen",
+      "usercheck": "Bürgerbüro",
+      "handshake": "Verträge",
+      "social": "Soziales",
+      "baby": "Kinderbetreuung",
+      "school": "Schule",
+      "library": "Bibliothek",
+      "book": "Satzungen",
+      "scale": "Recht",
+      "gavel": "Beschlüsse",
+      "shield": "Ordnungsamt",
+      "lock": "Datenschutz",
+      "key": "Zugänge",
+      "siren": "Einsatz",
+      "ambulance": "Rettungsdienst",
+      "flame": "Feuerwehr",
+      "package": "Beschaffung",
+      "store": "Gewerbe",
+      "briefcase": "Wirtschaft",
+      "truck": "Fuhrpark",
+      "wrench": "Bauhof",
+      "hammer": "Bau",
+      "cone": "Baustelle",
+      "bus": "Nahverkehr",
+      "bike": "Radverkehr",
+      "car": "Kfz-Zulassung",
+      "receipt": "Abrechnung",
+      "euro": "Finanzen",
+      "calculator": "Kalkulation",
+      "piggy": "Haushalt",
+      "chart": "Auswertung",
+      "trend": "Entwicklung",
+      "calendar": "Termine",
+      "clock": "Fristen",
+      "recycle": "Abfall",
+      "tree": "Grünflächen",
+      "leaf": "Umwelt",
+      "droplet": "Wasser",
+      "dog": "Hundesteuer",
+      "palette": "Kultur",
+      "music": "Veranstaltung",
+      "sport": "Sport",
+      "trophy": "Wettbewerb",
+      "vote": "Wahlen",
+      "server": "IT",
+      "idea": "Idee",
+      "megaphone": "Öffentlichkeit",
+      "presentation": "Sitzung",
+      "utensils": "Gastronomie",
+      "phone": "Bürgertelefon"
+    },
+    "colors": {
+      "violet": "Violett",
+      "blue": "Blau",
+      "teal": "Türkis",
+      "green": "Grün",
+      "amber": "Bernstein",
+      "rose": "Rosé"
+    }
+  },
+  "form": {
+    "nameLabel": "Woran arbeiten Sie?",
+    "namePlaceholder": "z. B. Bürgeranfragen",
+    "descriptionLabel": "Was möchten Sie erreichen?",
+    "descriptionPlaceholder": "Optionale Beschreibung",
+    "cancel": "Abbrechen"
+  },
+  "createDialog": {
+    "title": "Neues Projekt",
+    "submit": "Projekt erstellen",
+    "submitting": "Wird erstellt …"
+  },
+  "settingsDialog": {
+    "title": "Projekteinstellungen",
+    "submit": "Speichern",
+    "submitting": "Wird gespeichert …",
+    "open": "Einstellungen"
+  },
+  "deleteDialog": {
+    "rowTitle": "Projekt löschen",
+    "rowDescription": "Das Projekt und alle darin enthaltenen Chats werden gelöscht.",
+    "title": "Projekt löschen",
+    "description": "„{{name}}“ und alle darin enthaltenen Chats werden unwiderruflich gelöscht.",
+    "confirmText": "Löschen",
+    "cancelText": "Abbrechen"
+  },
+  "picker": {
+    "empty": "Noch keine Projekte",
+    "placeholder": "Projekt auswählen",
+    "addToWorkspace": "Zu Projekt hinzufügen",
+    "removeFromWorkspace": "Aus Projekt entfernen",
+    "newWorkspace": "Neues Projekt"
+  },
+  "validation": {
+    "invalid": "Ungültiger Wert",
+    "name": {
+      "invalid": "Bitte geben Sie einen gültigen Namen ein",
+      "isNotEmpty": "Bitte geben Sie einen Namen ein",
+      "maxLength": "Der Name ist zu lang"
+    },
+    "description": {
+      "maxLength": "Die Beschreibung ist zu lang"
+    }
+  },
+  "toast": {
+    "createSuccess": "Projekt erstellt",
+    "createError": "Das Projekt konnte nicht erstellt werden",
+    "updateSuccess": "Projekt gespeichert",
+    "updateError": "Das Projekt konnte nicht gespeichert werden",
+    "deleteSuccess": "Projekt gelöscht",
+    "deleteError": "Das Projekt konnte nicht gelöscht werden",
+    "notFound": "Projekt nicht gefunden",
+    "pinError": "Das Anheften hat nicht funktioniert",
+    "reorderError": "Die Reihenfolge konnte nicht gespeichert werden",
+    "chatMoved": "Chat verschoben",
+    "chatRemoved": "Chat aus dem Projekt entfernt",
+    "chatMoveError": "Der Chat konnte nicht verschoben werden",
+    "chatNotFound": "Chat nicht gefunden"
+  }
+}

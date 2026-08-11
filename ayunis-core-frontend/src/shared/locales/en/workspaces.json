@@ -1,0 +1,167 @@
+{
+  "page": {
+    "title": "Projects",
+    "heading": "Projects",
+    "searchPlaceholder": "Search projects",
+    "newWorkspace": "New project",
+    "empty": "You do not have any projects yet.",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Create a project to group your chats by topic.",
+    "viewOptions": "View and sorting",
+    "sortBy": "Sort by",
+    "display": "Display",
+    "grid": "Grid view",
+    "list": "List view",
+    "chatCount_one": "{{count}} chat",
+    "chatCount_other": "{{count}} chats",
+    "noResults": "No projects found."
+  },
+  "sort": {
+    "updatedAt": "Last updated",
+    "createdAt": "Date created",
+    "alpha": "Alphabetical"
+  },
+  "card": {
+    "pin": "Pin",
+    "unpin": "Unpin"
+  },
+  "appearance": {
+    "iconLabel": "Icon",
+    "colorLabel": "Color",
+    "customColor": "Custom color",
+    "previewPlaceholder": "Preview",
+    "icons": {
+      "folder": "Folder",
+      "file": "Documents",
+      "files": "Records",
+      "filecheck": "Review",
+      "clipboard": "Checklist",
+      "archive": "Archive",
+      "inbox": "Inbox",
+      "mail": "Mail",
+      "stamp": "Official stamp",
+      "idcard": "ID documents",
+      "landmark": "Town hall",
+      "building": "Buildings",
+      "map": "Map",
+      "mappin": "Location",
+      "users": "People",
+      "usercheck": "Citizens’ office",
+      "handshake": "Contracts",
+      "social": "Social services",
+      "baby": "Childcare",
+      "school": "Schools",
+      "library": "Library",
+      "book": "Bylaws",
+      "scale": "Legal",
+      "gavel": "Resolutions",
+      "shield": "Public order",
+      "lock": "Data protection",
+      "key": "Access",
+      "siren": "Emergency",
+      "ambulance": "Ambulance service",
+      "flame": "Fire service",
+      "package": "Procurement",
+      "store": "Trade",
+      "briefcase": "Economy",
+      "truck": "Vehicle fleet",
+      "wrench": "Works depot",
+      "hammer": "Construction",
+      "cone": "Roadworks",
+      "bus": "Public transport",
+      "bike": "Cycling",
+      "car": "Vehicle registration",
+      "receipt": "Billing",
+      "euro": "Finance",
+      "calculator": "Costing",
+      "piggy": "Budget",
+      "chart": "Analysis",
+      "trend": "Development",
+      "calendar": "Appointments",
+      "clock": "Deadlines",
+      "recycle": "Waste",
+      "tree": "Green spaces",
+      "leaf": "Environment",
+      "droplet": "Water",
+      "dog": "Dog license",
+      "palette": "Culture",
+      "music": "Events",
+      "sport": "Sport",
+      "trophy": "Competitions",
+      "vote": "Elections",
+      "server": "IT",
+      "idea": "Ideas",
+      "megaphone": "Public relations",
+      "presentation": "Meetings",
+      "utensils": "Hospitality",
+      "phone": "Citizen hotline"
+    },
+    "colors": {
+      "violet": "Violet",
+      "blue": "Blue",
+      "teal": "Teal",
+      "green": "Green",
+      "amber": "Amber",
+      "rose": "Rose"
+    }
+  },
+  "form": {
+    "nameLabel": "What are you working on?",
+    "namePlaceholder": "e.g. Citizen enquiries",
+    "descriptionLabel": "What do you want to achieve?",
+    "descriptionPlaceholder": "Optional description",
+    "cancel": "Cancel"
+  },
+  "createDialog": {
+    "title": "New project",
+    "submit": "Create project",
+    "submitting": "Creating …"
+  },
+  "settingsDialog": {
+    "title": "Project settings",
+    "submit": "Save",
+    "submitting": "Saving …",
+    "open": "Settings"
+  },
+  "deleteDialog": {
+    "rowTitle": "Delete project",
+    "rowDescription": "The project and every chat inside it will be deleted.",
+    "title": "Delete project",
+    "description": "“{{name}}” and every chat inside it will be permanently deleted.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel"
+  },
+  "picker": {
+    "empty": "No projects yet",
+    "placeholder": "Select project",
+    "addToWorkspace": "Add to project",
+    "removeFromWorkspace": "Remove from project",
+    "newWorkspace": "New project"
+  },
+  "validation": {
+    "invalid": "Invalid value",
+    "name": {
+      "invalid": "Please enter a valid name",
+      "isNotEmpty": "Please enter a name",
+      "maxLength": "The name is too long"
+    },
+    "description": {
+      "maxLength": "The description is too long"
+    }
+  },
+  "toast": {
+    "createSuccess": "Project created",
+    "createError": "The project could not be created",
+    "updateSuccess": "Project saved",
+    "updateError": "The project could not be saved",
+    "deleteSuccess": "Project deleted",
+    "deleteError": "The project could not be deleted",
+    "notFound": "Project not found",
+    "pinError": "Pinning did not work",
+    "reorderError": "The new order could not be saved",
+    "chatMoved": "Chat moved",
+    "chatRemoved": "Chat removed from the project",
+    "chatMoveError": "The chat could not be moved",
+    "chatNotFound": "Chat not found"
+  }
+}
