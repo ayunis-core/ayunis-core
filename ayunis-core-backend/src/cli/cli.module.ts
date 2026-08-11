@@ -15,6 +15,11 @@ import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remo
 import { rootConfigs } from 'src/config/root-configs';
 import { validateEnv } from 'src/config/env.validation';
 import dataSource from 'src/db/datasource';
+import { SsoModule } from 'src/iam/sso/sso.module';
+import { ConfigureOrgSsoConnectionCliCommand } from 'src/cli/application/commands/sso/configure-org-sso-connection.command';
+import { EnableOrgSsoCliCommand } from 'src/cli/application/commands/sso/enable-org-sso.command';
+import { DisableOrgSsoCliCommand } from 'src/cli/application/commands/sso/disable-org-sso.command';
+import { SetOrgSsoJitProvisioningCliCommand } from 'src/cli/application/commands/sso/set-org-sso-jit-provisioning.command';
 
 /**
  * CLI Module for administrative commands
@@ -58,12 +63,17 @@ import dataSource from 'src/db/datasource';
     ContextModule,
     UsersModule,
     InvitesModule,
+    SsoModule,
   ],
   providers: [
     DeleteUserCommand,
     GetUserCommand,
     MakeSuperAdminCommand,
     RemoveSuperAdminCommand,
+    ConfigureOrgSsoConnectionCliCommand,
+    EnableOrgSsoCliCommand,
+    DisableOrgSsoCliCommand,
+    SetOrgSsoJitProvisioningCliCommand,
   ],
 })
 export class CliModule {}

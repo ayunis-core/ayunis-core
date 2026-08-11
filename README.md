@@ -328,6 +328,7 @@ git update-index --chmod=+x .husky/commit-msg
 - **Documentation (Coming Soon)**
 - **[Contributing Guide](CONTRIBUTING.md)**
 - **[Deployment Guide](DEPLOYMENT.md)**
+- **[Municipal SSO V1 operator runbook](docs/runbooks/municipal-sso-v1.md)**
 - **[License](LICENSE.md)**
 
 ## 🤝 Contributing

@@ -40,7 +40,7 @@
     "migration:drop:dev": "typeorm-ts-node-commonjs schema:drop -d src/db/datasource.ts",
     "bundle-frontend": "bash scripts/bundle-frontend.sh",
     "generate:client": "orval --config ./orval.config.ts",
-    "cli:ts": "ts-node -r tsconfig-paths/register src/cli/main.ts",
+    "cli:ts": "ts-node --files -r tsconfig-paths/register src/cli/main.ts",
     "cli": "node dist/src/cli/main.js",
     "seed:minimal:ts": "ts-node -r tsconfig-paths/register src/db/scripts/seed-minimal/seed-manager.ts",
     "seed:minimal": "node dist/src/db/scripts/seed-minimal/seed-manager.js",
