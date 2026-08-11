@@ -17,6 +17,7 @@ export interface WorkspaceFavoriteResult extends FavoriteResultBase {
 export interface ThreadFavoriteResult extends FavoriteResultBase {
   referenceType: FavoriteReferenceType.Thread;
   name: string | null;
+  workspaceId: UUID | null;
 }
 
 export type FavoriteResult = WorkspaceFavoriteResult | ThreadFavoriteResult;

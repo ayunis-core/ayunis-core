@@ -5,7 +5,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   useInitiateChat,
   type SourceUploadStatus,
-} from '../api/useInitiateChat';
+} from '@/features/chat-initiation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -18,6 +18,8 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
+import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
+import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
@@ -40,6 +42,8 @@ interface NewChatPageProps {
   isEmbeddingModelEnabled: boolean;
   initialPrompt?: string;
   initialAttachmentUrl?: string;
+  /** Preselects a workspace, e.g. when arriving from a workspace page. */
+  initialWorkspaceId?: string;
 }
 
 export default function NewChatPage({
@@ -47,6 +51,7 @@ export default function NewChatPage({
   isEmbeddingModelEnabled,
   initialPrompt,
   initialAttachmentUrl,
+  initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat();
@@ -69,6 +74,7 @@ export default function NewChatPage({
   const queryClient = useQueryClient();
   const router = useRouter();
   const chatInputRef = useRef<ChatInputRef>(null);
+  const isWorkspacesEnabled = useIsWorkspacesEnabled();
 
   useEffect(() => {
     if (initialPrompt) {
@@ -79,6 +85,9 @@ export default function NewChatPage({
 
   const [modelId, setModelId] = useState(selectedModelId);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(
+    initialWorkspaceId ?? null,
+  );
   type LocalSource = {
     id: string;
     name: string;
@@ -187,6 +196,7 @@ export default function NewChatPage({
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
+      workspaceId: workspaceId ?? undefined,
       onSourceStatus: handleSourceStatus,
     });
   }
@@ -299,6 +309,15 @@ export default function NewChatPage({
               selectedSkillName={selectedSkillName}
               onSkillRemove={handleSkillRemove}
             />
+
+            {isWorkspacesEnabled && (
+              <div className="mt-1.5 flex justify-start">
+                <WorkspacePicker
+                  workspaceId={workspaceId}
+                  onWorkspaceChange={setWorkspaceId}
+                />
+              </div>
+            )}
           </div>
 
           <div

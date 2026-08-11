@@ -5,6 +5,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
+  getFavoritesControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { abortActiveThreadRun } from '@/features/thread-run';
@@ -35,6 +36,9 @@ export function useDeleteChat(onSuccess?: () => void) {
       onSettled: () => {
         void queryClient.invalidateQueries({
           queryKey: getThreadsControllerFindAllQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getFavoritesControllerFindAllQueryKey(),
         });
         void router.invalidate();
       },

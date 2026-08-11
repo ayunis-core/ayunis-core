@@ -16049,9 +16049,21 @@
           "name": {
             "type": "string",
             "nullable": true
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
-        "required": ["id", "position", "referenceId", "referenceType", "name"]
+        "required": [
+          "id",
+          "position",
+          "referenceId",
+          "referenceType",
+          "name",
+          "workspaceId"
+        ]
       },
       "ToggleFavoriteDto": {
         "type": "object",

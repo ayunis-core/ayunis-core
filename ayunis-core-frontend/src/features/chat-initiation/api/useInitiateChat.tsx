@@ -1,6 +1,8 @@
 import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
+  getWorkspacesControllerFindAllQueryKey,
+  getWorkspacesControllerFindOneQueryKey,
   threadKnowledgeBasesControllerAddKnowledgeBase,
   threadMcpIntegrationsControllerAddMcpIntegration,
   threadSourcesControllerAddFileSource,
@@ -19,7 +21,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CreateThreadData } from '../model/openapi';
+import type { CreateThreadDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { SourceResponseDtoType } from '@/shared/api';
 
 const PROCESSING_POLL_INTERVAL_MS = 500;
@@ -53,6 +55,8 @@ interface InitiateChatParams {
   knowledgeBases: KnowledgeBaseSummary[];
   mcpIntegrations: IntegrationSummary[];
   isAnonymous: boolean;
+  /** Files the new chat under a workspace ("Projekt"). */
+  workspaceId?: string;
   /** Reports per-source progress so the page can render upload/processing
    *  state on each chip. */
   onSourceStatus?: (sourceId: string, status: SourceUploadStatus) => void;
@@ -86,15 +90,25 @@ async function waitForSourcesProcessed(
   }
 }
 
-export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
+export const useInitiateChat = (options?: {
+  onSuccess?: () => void;
+  /**
+   * The new-chat page plays a settle animation while the thread is created
+   * and delays navigation until it finished; callers without that layout
+   * (e.g. the workspace chat starter) pass `false` to navigate immediately.
+   */
+  settleAnimation?: boolean;
+}) => {
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
   const { setPendingMessage } = useChatContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createThreadMutation = useThreadsControllerCreate();
+  const [isInitiatingChat, setIsInitiatingChat] = useState(false);
   const [isAttachingResources, setIsAttachingResources] = useState(false);
   const [isSettlingLayout, setIsSettlingLayout] = useState(false);
+  const isInitiatingChatRef = useRef(false);
   const settleStartedAtRef = useRef<number | null>(null);
 
   // Cancellation flag is a ref because we want `cancel()` to flip it
@@ -102,7 +116,10 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   // checkpoint, without dragging it through the dependency graph.
   const cancelledRef = useRef(false);
 
+  const settleAnimation = options?.settleAnimation ?? true;
+
   function beginSettleAnimation(): void {
+    if (!settleAnimation) return;
     settleStartedAtRef.current = Date.now();
     setIsSettlingLayout(true);
   }
@@ -110,6 +127,12 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   function endSettleAnimation(): void {
     settleStartedAtRef.current = null;
     setIsSettlingLayout(false);
+  }
+
+  function stopInitiatingChat(): void {
+    isInitiatingChatRef.current = false;
+    setIsInitiatingChat(false);
+    endSettleAnimation();
   }
 
   async function waitForSettleAnimation(): Promise<void> {
@@ -214,17 +237,22 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     knowledgeBases,
     mcpIntegrations,
     isAnonymous,
+    workspaceId,
     onSourceStatus,
   }: InitiateChatParams): Promise<void> {
+    if (isInitiatingChatRef.current) return;
+    isInitiatingChatRef.current = true;
+    setIsInitiatingChat(true);
     cancelledRef.current = false;
     beginSettleAnimation();
     const isCancelled = () => cancelledRef.current;
 
     let thread;
     try {
-      const createThreadData: CreateThreadData = {
+      const createThreadData: CreateThreadDto = {
         modelId,
         isAnonymous,
+        workspaceId,
       };
       thread = await createThreadMutation.mutateAsync({
         data: createThreadData,
@@ -232,11 +260,11 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     } catch (error) {
       console.error('Failed to create thread:', error);
       showError(t('chat.errorSendMessage'));
-      endSettleAnimation();
+      stopInitiatingChat();
       return;
     }
     if (isCancelled()) {
-      endSettleAnimation();
+      stopInitiatingChat();
       return;
     }
 
@@ -245,7 +273,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
       knowledgeBases.length === 0 &&
       mcpIntegrations.length === 0
     ) {
-      await finalizeAndNavigate(thread.id, message);
+      await finalizeAndNavigate(thread.id, message, workspaceId);
       return;
     }
 
@@ -254,7 +282,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
       if (sources.length > 0) {
         const ok = await uploadAllSources(thread.id, sources, onSourceStatus);
         if (!ok || isCancelled()) {
-          endSettleAnimation();
+          stopInitiatingChat();
           return;
         }
 
@@ -262,12 +290,12 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
           await waitForSourcesProcessed(thread.id, isCancelled);
         } catch (error) {
           if (error instanceof CancelledError) {
-            endSettleAnimation();
+            stopInitiatingChat();
             return;
           }
           console.error('Source processing failed or timed out:', error);
           showError(tCommon('sources.fileSourceTimeoutError'));
-          endSettleAnimation();
+          stopInitiatingChat();
           return;
         }
       }
@@ -278,7 +306,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
         isCancelled,
       );
       if (!kbOk || isCancelled()) {
-        endSettleAnimation();
+        stopInitiatingChat();
         return;
       }
 
@@ -288,11 +316,11 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
         isCancelled,
       );
       if (!integrationsOk || isCancelled()) {
-        endSettleAnimation();
+        stopInitiatingChat();
         return;
       }
 
-      await finalizeAndNavigate(thread.id, message);
+      await finalizeAndNavigate(thread.id, message, workspaceId);
     } finally {
       setIsAttachingResources(false);
     }
@@ -301,9 +329,10 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   async function finalizeAndNavigate(
     threadId: string,
     message: string,
+    workspaceId?: string,
   ): Promise<void> {
     if (cancelledRef.current) {
-      endSettleAnimation();
+      stopInitiatingChat();
       return;
     }
 
@@ -312,7 +341,7 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     // Cancel may fire while the settle animation is running.
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ref toggled from cancel()
     if (cancelledRef.current) {
-      endSettleAnimation();
+      stopInitiatingChat();
       return;
     }
 
@@ -322,6 +351,15 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
     void queryClient.invalidateQueries({
       queryKey: getThreadsControllerFindOneQueryKey(threadId),
     });
+    if (workspaceId) {
+      // Workspace cards derive chatCount/lastActivityAt from these queries.
+      void queryClient.invalidateQueries({
+        queryKey: getWorkspacesControllerFindAllQueryKey(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
+      });
+    }
     setPendingMessage(message);
     options?.onSuccess?.();
 
@@ -333,13 +371,14 @@ export const useInitiateChat = (options?: { onSuccess?: () => void }) => {
   function cancel() {
     cancelledRef.current = true;
     setIsAttachingResources(false);
-    endSettleAnimation();
+    stopInitiatingChat();
   }
 
   return {
     initiateChat,
     cancel,
     isCreating:
+      isInitiatingChat ||
       isSettlingLayout ||
       createThreadMutation.isPending ||
       isAttachingResources,

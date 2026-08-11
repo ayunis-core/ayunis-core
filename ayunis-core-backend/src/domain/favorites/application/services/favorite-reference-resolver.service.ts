@@ -115,6 +115,7 @@ export class FavoriteReferenceResolver {
           referenceType: FavoriteReferenceType.Thread,
           referenceId: favorite.referenceId,
           name: thread.title ?? null,
+          workspaceId: thread.workspaceId,
         }
       : null;
   }

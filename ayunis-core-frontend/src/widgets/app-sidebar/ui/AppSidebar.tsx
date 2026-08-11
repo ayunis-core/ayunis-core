@@ -7,6 +7,7 @@ import {
   Plus,
   Brain,
   Sparkles,
+  FolderOpen,
   Store,
   GraduationCap,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
+import { FavoritesSidebarGroup } from './FavoritesSidebarGroup';
 import { useMe } from '../api/useMe';
 import { useLogout } from '../api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
@@ -89,6 +91,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       // certificate. Existing chats stay reachable.
       disabled: isAcademyGated,
     },
+    ...(featureToggles.workspacesEnabled
+      ? [
+          {
+            title: t('sidebar.workspaces'),
+            url: '/workspaces',
+            icon: FolderOpen,
+          },
+        ]
+      : []),
     ...(featureToggles.skillsEnabled
       ? [
           {
@@ -194,6 +205,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
 
+        {featureToggles.workspacesEnabled && <FavoritesSidebarGroup />}
         <ChatsSidebarGroup />
       </SidebarContent>
 

@@ -27,7 +27,7 @@ import { ModuleFormDialog } from './ModuleFormDialog';
 import { useDeleteChapter } from '../api/useDeleteChapter';
 import { useDeleteModule } from '../api/useDeleteModule';
 import { useReorderChapters } from '../api/useReorderChapters';
-import { moveById } from '../lib/sortOrder';
+import { moveById } from '@/shared/lib/move-by-id';
 
 interface AcademyPageProps {
   chapters: SuperAdminAcademyChapterResponseDto[];

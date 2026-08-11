@@ -33,6 +33,9 @@ export class ThreadFavoriteResponseDto extends FavoriteResponseDtoBase {
 
   @ApiProperty({ type: String, nullable: true })
   name: string | null;
+
+  @ApiProperty({ type: String, format: 'uuid', nullable: true })
+  workspaceId: UUID | null;
 }
 
 export type FavoriteResponseDto =

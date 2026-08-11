@@ -68,14 +68,15 @@ prevents duplicate favorites, and a user/position constraint protects order.
 `@RequireFeature(FeatureFlag.Workspaces)` like the workspaces API, since
 favorites currently only surface workspace/thread pinning.
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/favorites` | Read resolved favorites in personal order |
-| PATCH | `/favorites/toggle` | Favorite or unfavorite an owned target |
-| PATCH | `/favorites/reorder` | Reorder the caller's favorites |
+| Method | Path                 | Purpose                                   |
+| ------ | -------------------- | ----------------------------------------- |
+| GET    | `/favorites`         | Read resolved favorites in personal order |
+| PATCH  | `/favorites/toggle`  | Favorite or unfavorite an owned target    |
+| PATCH  | `/favorites/reorder` | Reorder the caller's favorites            |
 
 The response is discriminated by `referenceType`. Workspace favorites include
-name, icon, and color; thread favorites include their nullable name.
+name, icon, and color; thread favorites include their nullable name and
+workspace id so consumers do not need one detail request per favorite.
 
 ## Exports
 
