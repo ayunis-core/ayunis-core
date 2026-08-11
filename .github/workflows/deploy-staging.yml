@@ -47,4 +47,4 @@ jobs:
             # sha tag even when git would lengthen an ambiguous --short value.
             export CORE_TAG="sha-$(git rev-parse HEAD | cut -c1-7)"
             echo "Deploying $CORE_TAG"
-            MIN_FREE_GB=9 PRUNE_BUILD_CACHE=false bash scripts/deploy-core-images.sh
+            MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash scripts/deploy-core-images.sh
