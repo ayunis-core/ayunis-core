@@ -110,7 +110,7 @@ fi
 : > "$DOCKER_LOG"
 PRUNE_BUILD_CACHE=false run_deploy
 if grep -Fq 'builder prune -af' "$DOCKER_LOG"; then
-  fail "Expected staging to preserve the host build cache."
+  fail "Expected disabled build-cache pruning to preserve the cache."
 fi
 
 : > "$DOCKER_LOG"
@@ -172,6 +172,10 @@ for expectation in "${workflow_expectations[@]}"; do
   fi
 done
 
+if ! grep -Fq 'MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash scripts/deploy-core-images.sh' \
+  "$REPO_DIR/.github/workflows/deploy-staging.yml"; then
+  fail "Expected staging to reclaim the obsolete host build cache before its disk check."
+fi
 if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
   "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
   || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
