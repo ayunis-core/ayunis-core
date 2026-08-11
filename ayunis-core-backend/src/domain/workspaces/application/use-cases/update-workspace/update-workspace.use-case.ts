@@ -1,0 +1,55 @@
+import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import {
+  UnexpectedWorkspaceError,
+  WorkspaceNotFoundError,
+} from 'src/domain/workspaces/application/workspaces.errors';
+import { UpdateWorkspaceCommand } from './update-workspace.command';
+
+@Injectable()
+export class UpdateWorkspaceUseCase {
+  private readonly logger = new Logger(UpdateWorkspaceUseCase.name);
+
+  constructor(
+    private readonly workspacesRepository: WorkspacesRepository,
+    private readonly contextService: ContextService,
+  ) {}
+
+  @HandleUnexpectedErrors(UnexpectedWorkspaceError)
+  async execute(command: UpdateWorkspaceCommand): Promise<Workspace> {
+    this.logger.log('Updating workspace', { workspaceId: command.workspaceId });
+
+    const workspace = await this.workspacesRepository.findById(
+      this.resolveUserId(),
+      command.workspaceId,
+    );
+    if (!workspace) {
+      throw new WorkspaceNotFoundError(command.workspaceId);
+    }
+
+    if (command.name !== undefined) {
+      workspace.rename(command.name);
+    }
+    if (command.description !== undefined) {
+      workspace.describe(command.description);
+    }
+    if (command.icon !== undefined || command.color !== undefined) {
+      workspace.restyle({ icon: command.icon, color: command.color });
+    }
+
+    return await this.workspacesRepository.save(workspace);
+  }
+
+  private resolveUserId(): UUID {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
+    return userId;
+  }
+}

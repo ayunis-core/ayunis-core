@@ -10,6 +10,7 @@ describe('AppController', () => {
       knowledgeBasesEnabled: true,
       letterheadsEnabled: false,
       skillsEnabled: true,
+      workspacesEnabled: true,
       agentRuntimeEnabled: true,
     };
     const controller = new AppController(

@@ -4,6 +4,7 @@ export enum FeatureFlag {
   KnowledgeBases = 'knowledgeBasesEnabled',
   Letterheads = 'letterheadsEnabled',
   Skills = 'skillsEnabled',
+  Workspaces = 'workspacesEnabled',
   AgentRuntime = 'agentRuntimeEnabled',
 }
 
@@ -30,6 +31,12 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
   ),
   skillsEnabled: parseBooleanWithDefault(
     process.env.FEATURE_SKILLS_ENABLED,
+    false,
+  ),
+  // Workspaces ("Projekte") group chats into folders. Off until the six-iteration
+  // rollout is far enough along to expose (AYC-700).
+  workspacesEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_WORKSPACES_ENABLED,
     false,
   ),
   // Routes runs through the extracted @ayunis/agent-runtime loop instead of the

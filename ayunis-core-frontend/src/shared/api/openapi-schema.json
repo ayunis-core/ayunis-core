@@ -9435,6 +9435,225 @@
         "tags": ["Super Admin Academy"]
       }
     },
+    "/workspaces": {
+      "post": {
+        "operationId": "WorkspacesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The created workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a workspace",
+        "tags": ["workspaces"]
+      },
+      "get": {
+        "operationId": "WorkspacesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The workspaces in their manual order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the current user’s workspaces",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/reorder": {
+      "patch": {
+        "operationId": "WorkspacesController_reorder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderWorkspacesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The workspaces in their new order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the manual order of the workspaces",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}": {
+      "get": {
+        "operationId": "WorkspacesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Get a workspace",
+        "tags": ["workspaces"]
+      },
+      "patch": {
+        "operationId": "WorkspacesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Update a workspace",
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspacesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The workspace was deleted"
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Delete a workspace and every chat inside it",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/toggle-pinned": {
+      "patch": {
+        "operationId": "WorkspacesController_togglePinned",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The workspace with its new pin state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found"
+          }
+        },
+        "summary": "Pin or unpin a workspace in the sidebar",
+        "tags": ["workspaces"]
+      }
+    },
     "/openai-compat/v1/chat/completions": {
       "post": {
         "operationId": "ChatCompletionsController_create",
@@ -10456,6 +10675,11 @@
             "description": "Whether the skills feature is enabled",
             "example": false
           },
+          "workspacesEnabled": {
+            "type": "boolean",
+            "description": "Whether the workspaces feature is enabled",
+            "example": false
+          },
           "agentRuntimeEnabled": {
             "type": "boolean",
             "description": "Whether runs use the independent agent runtime",
@@ -10466,6 +10690,7 @@
           "knowledgeBasesEnabled",
           "letterheadsEnabled",
           "skillsEnabled",
+          "workspacesEnabled",
           "agentRuntimeEnabled"
         ]
       },
@@ -17658,6 +17883,138 @@
           }
         },
         "required": ["text", "options"]
+      },
+      "CreateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace",
+            "example": "Bürgeranfragen"
+          },
+          "description": {
+            "type": "string",
+            "description": "What the workspace is for",
+            "example": "Anfragen von Bürgerinnen und Bürgern bündeln"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Key of the workspace icon from the client icon catalogue",
+            "example": "landmark"
+          },
+          "color": {
+            "type": "string",
+            "description": "Palette key or #rrggbb literal for the workspace colour",
+            "example": "#6b5bd6"
+          }
+        },
+        "required": ["name"]
+      },
+      "WorkspaceResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the workspace",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace",
+            "example": "Bürgeranfragen"
+          },
+          "description": {
+            "type": "string",
+            "description": "What the workspace is for",
+            "example": "Anfragen von Bürgerinnen und Bürgern bündeln",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Key of the workspace icon from the client icon catalogue",
+            "example": "landmark"
+          },
+          "color": {
+            "type": "string",
+            "description": "Palette key or #rrggbb literal for the workspace colour",
+            "example": "#6b5bd6"
+          },
+          "isPinned": {
+            "type": "boolean",
+            "description": "Whether the workspace is pinned to the sidebar",
+            "example": true
+          },
+          "sortOrder": {
+            "type": "number",
+            "description": "Position of the workspace in the manual sidebar order",
+            "example": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the workspace was created",
+            "example": "2026-08-11T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the workspace was last updated",
+            "example": "2026-08-11T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "icon",
+          "color",
+          "isPinned",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ReorderWorkspacesDto": {
+        "type": "object",
+        "properties": {
+          "workspaceIds": {
+            "description": "Workspace ids in their new order. Ids the caller does not own are ignored.",
+            "example": [
+              "123e4567-e89b-12d3-a456-426614174000",
+              "123e4567-e89b-12d3-a456-426614174001"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["workspaceIds"]
+      },
+      "UpdateWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the workspace",
+            "example": "Bürgeranfragen"
+          },
+          "description": {
+            "type": "string",
+            "description": "What the workspace is for. Send null to clear it.",
+            "example": "Anfragen von Bürgerinnen und Bürgern bündeln",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "description": "Key of the workspace icon from the client icon catalogue",
+            "example": "landmark"
+          },
+          "color": {
+            "type": "string",
+            "description": "Palette key or #rrggbb literal for the workspace colour",
+            "example": "#6b5bd6"
+          }
+        }
       },
       "ChatCompletionRequestDto": {
         "type": "object",

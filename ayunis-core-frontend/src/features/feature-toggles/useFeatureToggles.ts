@@ -8,6 +8,7 @@ export function useFeatureToggles(): FeatureTogglesResponseDto {
     knowledgeBasesEnabled: data?.knowledgeBasesEnabled ?? true,
     letterheadsEnabled: data?.letterheadsEnabled ?? false,
     skillsEnabled: data?.skillsEnabled ?? false,
+    workspacesEnabled: data?.workspacesEnabled ?? false,
     agentRuntimeEnabled: data?.agentRuntimeEnabled ?? false,
   };
 }

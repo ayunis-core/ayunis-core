@@ -50,6 +50,7 @@ ayunis-core/
 | [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
+| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md) | Folders | Personal folders ("Projekte") that group a user's chats |
 
 ### IAM Modules — Identity & Access Management
 
