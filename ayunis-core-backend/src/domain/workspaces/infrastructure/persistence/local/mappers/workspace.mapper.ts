@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import type { WorkspaceUserSettingsRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-user-settings.record';
 
 @Injectable()
 export class WorkspaceMapper {
-  toDomain(record: WorkspaceRecord): Workspace {
+  /**
+   * Pin state and manual order live on the caller's settings row, not on the
+   * workspace itself; a missing row means the defaults.
+   */
+  toDomain(
+    record: WorkspaceRecord,
+    settings?: WorkspaceUserSettingsRecord | null,
+  ): Workspace {
     return new Workspace({
       id: record.id,
       userId: record.userId,
@@ -13,8 +21,8 @@ export class WorkspaceMapper {
       description: record.description,
       icon: record.icon,
       color: record.color,
-      isPinned: record.isPinned,
-      sortOrder: record.sortOrder,
+      isPinned: settings?.isPinned ?? false,
+      sortOrder: settings?.sortOrder ?? 0,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -29,8 +37,6 @@ export class WorkspaceMapper {
     record.description = domain.description;
     record.icon = domain.icon;
     record.color = domain.color;
-    record.isPinned = domain.isPinned;
-    record.sortOrder = domain.sortOrder;
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;

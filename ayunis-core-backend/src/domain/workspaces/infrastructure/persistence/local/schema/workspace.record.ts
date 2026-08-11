@@ -18,12 +18,6 @@ export class WorkspaceRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 32 })
   color: string;
 
-  @Column({ default: false })
-  isPinned: boolean;
-
-  @Column({ type: 'int', default: 0 })
-  sortOrder: number;
-
   @Column()
   @Index()
   userId: UUID;

@@ -16,10 +16,19 @@ The whole module sits behind the `workspacesEnabled` feature flag
 
 ## Domain Concepts
 
-- **Workspace** — owned by exactly one user and scoped to their org. `isPinned`
-  controls sidebar visibility; `sortOrder` is the manual position within it.
-  Both are deliberately kept out of `updatedAt`'s reach so pinning and dragging
-  do not reshuffle the "last updated" sort on the list page.
+- **Workspace** — owned by exactly one user and scoped to their org.
+- **Per-user settings** — `isPinned` (sidebar visibility) and `sortOrder` (the
+  manual position there) are how a user arranges *their* sidebar, so they live
+  on `workspace_user_settings` (one row per workspace × user, the
+  `skill_activations` pattern) rather than on the workspace row. That keeps
+  them out of `updatedAt`'s reach — pinning and dragging never reshuffle the
+  "last updated" sort — and means iteration 4's shared workspaces will not make
+  collaborators fight over one pin state. The domain `Workspace` entity still
+  carries both fields; the repository hydrates them from the caller's settings
+  row (read-only projections — `save` persists the workspace row alone, and
+  settings are written only via `saveSettings` on creation and the atomic
+  `togglePinned` / `updateSortOrders` paths, so a rename can never rewrite the
+  caller's manual order).
 - **Appearance** — `icon` and `color` are opaque keys owned by the frontend
   catalogue. The backend only guards their shape (`WORKSPACE_ICON_PATTERN`,
   `WORKSPACE_COLOR_PATTERN`); `color` is either a palette key or a `#rrggbb`
@@ -54,6 +63,7 @@ workspaces/
 │       └── reorder-workspaces/
 ├── infrastructure/persistence/local/
 │   ├── schema/workspace.record.ts   # table `workspaces`
+│   ├── schema/workspace-user-settings.record.ts # per-user pin + order
 │   ├── mappers/workspace.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   └── local-workspaces-repository.module.ts

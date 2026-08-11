@@ -66,6 +66,7 @@ describe('CreateWorkspaceUseCase', () => {
     );
 
     expect(workspace.isPinned).toBe(true);
+    expect(repository.saveSettings).toHaveBeenCalledWith(workspace);
   });
 
   it('places the workspace after the existing ones', async () => {

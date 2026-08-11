@@ -124,6 +124,10 @@ describe('UpdateWorkspaceUseCase', () => {
 
     expect(updated.isPinned).toBe(true);
     expect(updated.sortOrder).toBe(3);
+    // A plain edit must never write the per-user settings row: the mapper
+    // defaults a missing/never-ordered row, and persisting those defaults
+    // would silently rewrite the caller's manual order.
+    expect(repository.saveSettings).not.toHaveBeenCalled();
   });
 
   it('throws when the workspace does not belong to the caller', async () => {

@@ -42,6 +42,7 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
     save: jest
       .fn()
       .mockImplementation((workspace: Workspace) => Promise.resolve(workspace)),
+    saveSettings: jest.fn().mockResolvedValue(undefined),
     delete: jest.fn().mockResolvedValue(undefined),
     togglePinned: jest.fn().mockResolvedValue(true),
     updateSortOrders: jest.fn().mockResolvedValue(undefined),

@@ -37,7 +37,11 @@ export class CreateWorkspaceUseCase {
       sortOrder: nextSortOrder(existing),
     });
 
-    return await this.workspacesRepository.save(workspace);
+    const saved = await this.workspacesRepository.save(workspace);
+    // The initial pin and slot in the manual order are written separately —
+    // `save` deliberately never touches per-user settings.
+    await this.workspacesRepository.saveSettings(saved);
+    return saved;
   }
 
   private resolveOwner(): { userId: UUID; orgId: UUID } {

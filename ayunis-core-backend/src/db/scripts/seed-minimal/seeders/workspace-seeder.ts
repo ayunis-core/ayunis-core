@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { WorkspaceUserSettingsRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-user-settings.record';
 import { OrgSeeder } from './base-seeder';
 import type { SeedState } from '../seed-state';
 import type { OrgFixture } from '../seed-types';
@@ -21,7 +22,7 @@ export class WorkspaceSeeder extends OrgSeeder {
     const admin = ctx.getAdmin(org.key);
 
     for (const workspace of workspaces) {
-      await this.findOrCreate(
+      const record = await this.findOrCreate(
         this.repo(WorkspaceRecord),
         { orgId, userId: admin.id, name: workspace.name },
         () => ({
@@ -32,10 +33,22 @@ export class WorkspaceSeeder extends OrgSeeder {
           description: workspace.description ?? null,
           icon: workspace.icon,
           color: workspace.color,
+        }),
+        { entity: 'Workspace', name: workspace.name },
+      );
+
+      // Pin state and manual order are per-user rows, owned by the admin here.
+      await this.findOrCreate(
+        this.repo(WorkspaceUserSettingsRecord),
+        { workspaceId: record.id, userId: admin.id },
+        () => ({
+          id: randomUUID(),
+          workspaceId: record.id,
+          userId: admin.id,
           isPinned: workspace.isPinned,
           sortOrder: workspace.sortOrder,
         }),
-        { entity: 'Workspace', name: workspace.name },
+        { entity: 'Workspace settings', name: workspace.name },
       );
     }
   }
