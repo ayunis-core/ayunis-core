@@ -12,9 +12,18 @@ describe('McpIntegrationResource', () => {
       integrationId: randomUUID(),
     });
 
-    const tool = new McpIntegrationResource(resource, false);
+    const tool = new McpIntegrationResource(
+      resource,
+      false,
+      'Municipal Documents',
+      'https://cdn.example.com/municipal-documents.svg',
+    );
 
     expect(tool.name).toBe('Project README');
     expect(tool.description).toContain('Project README');
+    expect(tool.integrationName).toBe('Municipal Documents');
+    expect(tool.integrationLogoUrl).toBe(
+      'https://cdn.example.com/municipal-documents.svg',
+    );
   });
 });

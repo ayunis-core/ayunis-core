@@ -320,6 +320,7 @@ export class ExecuteRunViaRuntimeUseCase {
       this.toolUsageHookFactory.create({
         userId: prepared.userId,
         orgId: prepared.orgId,
+        integrations: prepared.toolIntegrations,
       }),
       this.skillActivationHookFactory.create({
         threadId: prepared.thread.id,

@@ -3,6 +3,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ToolUsedEvent } from '../../events/tool-used.event';
+import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+
+interface ToolUsageHookParams {
+  userId: UUID;
+  orgId: UUID;
+  integrations: RuntimeToolIntegrationRegistry;
+}
 
 @Injectable()
 export class ToolUsageHookFactory {
@@ -10,7 +17,7 @@ export class ToolUsageHookFactory {
 
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  create(params: { userId: UUID; orgId: UUID }): Hook {
+  create(params: ToolUsageHookParams): Hook {
     return {
       name: 'ayunis-tool-usage',
       beforeToolCall: (ctx) => {
@@ -21,14 +28,18 @@ export class ToolUsageHookFactory {
     };
   }
 
-  private emitToolUsed(
-    params: { userId: UUID; orgId: UUID },
-    toolName: string,
-  ): void {
+  private emitToolUsed(params: ToolUsageHookParams, toolName: string): void {
+    const integration = params.integrations.get(toolName);
     this.eventEmitter
       .emitAsync(
         ToolUsedEvent.EVENT_NAME,
-        new ToolUsedEvent(params.userId, params.orgId, toolName),
+        new ToolUsedEvent(
+          params.userId,
+          params.orgId,
+          toolName,
+          integration?.id as UUID | undefined,
+          integration?.name,
+        ),
       )
       .catch((error: unknown) => {
         this.logger.error('Failed to emit ToolUsedEvent', {

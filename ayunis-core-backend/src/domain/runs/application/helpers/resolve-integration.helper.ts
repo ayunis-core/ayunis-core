@@ -1,4 +1,5 @@
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
+import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import type { ToolUseIntegration } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -15,7 +16,10 @@ export function resolveIntegration(
   tools: Tool[],
 ): ToolUseIntegration | undefined {
   const matchedTool = tools.find((t) => t.name === toolName);
-  if (matchedTool instanceof McpIntegrationTool) {
+  if (
+    matchedTool instanceof McpIntegrationTool ||
+    matchedTool instanceof McpIntegrationResource
+  ) {
     return {
       id: matchedTool.integrationId,
       name: matchedTool.integrationName,

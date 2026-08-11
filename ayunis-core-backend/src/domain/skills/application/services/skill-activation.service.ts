@@ -15,6 +15,9 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { UUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SkillUsedEvent } from '../events/skill-used.event';
 
 export interface SkillActivationResult {
   instructions: string;
@@ -31,6 +34,8 @@ export class SkillActivationService {
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
     private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly contextService: ContextService,
   ) {}
 
   /**
@@ -52,8 +57,26 @@ export class SkillActivationService {
     await this.copySourcesToThread(skill, thread);
     await this.copyMcpIntegrationsToThread(skill, thread);
     await this.copyKnowledgeBasesToThread(skill, thread);
+    this.emitSkillUsed(skill, thread.userId);
 
     return { instructions: skill.instructions, skillName: skill.name };
+  }
+
+  private emitSkillUsed(skill: Skill, userId: UUID): void {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) return;
+
+    this.eventEmitter
+      .emitAsync(
+        SkillUsedEvent.EVENT_NAME,
+        new SkillUsedEvent(userId, orgId, skill.id, skill.name),
+      )
+      .catch((error: unknown) => {
+        this.logger.error('Failed to emit SkillUsedEvent', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          skillId: skill.id,
+        });
+      });
   }
 
   /** Copies the skill's sources to the thread (skips non-ready sources). */

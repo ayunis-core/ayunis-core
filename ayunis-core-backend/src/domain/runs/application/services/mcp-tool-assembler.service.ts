@@ -177,10 +177,15 @@ export class McpToolAssemblerService {
         }),
       ),
       ...mcpCapabilities.flatMap((capability) =>
-        capability.resources.map(
-          (resource) =>
-            new McpIntegrationResource(resource, capability.returnsPii),
-        ),
+        capability.resources.map((resource) => {
+          const meta = integrationMetaMap.get(resource.integrationId);
+          return new McpIntegrationResource(
+            resource,
+            capability.returnsPii,
+            meta?.name ?? 'Unknown',
+            meta?.logoUrl ?? null,
+          );
+        }),
       ),
     ];
   }

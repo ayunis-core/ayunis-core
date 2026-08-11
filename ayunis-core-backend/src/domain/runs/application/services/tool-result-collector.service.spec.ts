@@ -13,6 +13,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 import { randomUUID } from 'crypto';
+import { ToolUsedEvent } from '../events/tool-used.event';
 
 // --- Helpers ---
 
@@ -37,11 +38,13 @@ function makeToolUseContent(
   id: string,
   name: string,
   params: Record<string, any> = {},
+  integration?: { id: string; name: string; logoUrl: string | null },
 ): ToolUseMessageContent {
   return Object.assign(Object.create(ToolUseMessageContent.prototype), {
     id,
     name,
     params,
+    integration,
     type: MessageContentType.TOOL_USE,
   });
 }
@@ -62,6 +65,7 @@ describe('ToolResultCollectorService', () => {
   let checkToolCapabilitiesUseCase: jest.Mocked<CheckToolCapabilitiesUseCase>;
   let anonymizeTextForThreadUseCase: jest.Mocked<AnonymizeTextForThreadUseCase>;
   let contextService: jest.Mocked<ContextService>;
+  let eventEmitter: { emitAsync: jest.Mock };
 
   const orgId = randomUUID();
   const threadId = randomUUID();
@@ -84,16 +88,14 @@ describe('ToolResultCollectorService', () => {
       get: jest.fn().mockReturnValue(randomUUID()),
     } as unknown as jest.Mocked<ContextService>;
 
-    const mockEventEmitter = {
-      emitAsync: jest.fn().mockResolvedValue([]),
-    };
+    eventEmitter = { emitAsync: jest.fn().mockResolvedValue([]) };
 
     service = new ToolResultCollectorService(
       executeToolUseCase,
       checkToolCapabilitiesUseCase,
       anonymizeTextForThreadUseCase,
       contextService,
-      mockEventEmitter as never,
+      eventEmitter as never,
     );
   });
 
@@ -144,6 +146,46 @@ describe('ToolResultCollectorService', () => {
       expect(results).toHaveLength(1);
       expect(results[0].result).toBe('backend result');
       expect(executeToolUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('should include MCP integration identity in tool usage events', async () => {
+      const userId = randomUUID();
+      const integrationId = randomUUID();
+      const tool = new MockTool('search_council_sessions', ToolType.MCP_TOOL);
+      const toolUse = makeToolUseContent(
+        'tu-mcp',
+        'search_council_sessions',
+        {},
+        {
+          id: integrationId,
+          name: 'Council Data',
+          logoUrl: null,
+        },
+      );
+      contextService.get.mockReturnValue(userId);
+      checkToolCapabilitiesUseCase.execute.mockReturnValue({
+        isDisplayable: false,
+        isExecutable: true,
+      });
+
+      await service.collectToolResults({
+        thread: makeThread([toolUse]),
+        tools: [tool],
+        input: null,
+        orgId,
+        isAnonymous: false,
+      });
+
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        ToolUsedEvent.EVENT_NAME,
+        expect.objectContaining({
+          userId,
+          orgId,
+          toolName: 'search_council_sessions',
+          integrationId,
+          integrationName: 'Council Data',
+        }),
+      );
     });
 
     it('should call executeBackendTool first then return displayable result for hybrid tool', async () => {
