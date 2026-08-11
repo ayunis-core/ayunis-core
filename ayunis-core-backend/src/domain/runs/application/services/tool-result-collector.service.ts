@@ -123,7 +123,7 @@ export class ToolResultCollectorService {
       };
     }
 
-    this.emitToolUsedEvent(orgId, content.name);
+    this.emitToolUsedEvent(orgId, content);
 
     try {
       return await this.executeByCapability(
@@ -145,17 +145,23 @@ export class ToolResultCollectorService {
     }
   }
 
-  private emitToolUsedEvent(orgId: UUID, toolName: string): void {
+  private emitToolUsedEvent(orgId: UUID, content: ToolUseMessageContent): void {
     const userId = this.contextService.get('userId');
     this.eventEmitter
       .emitAsync(
         ToolUsedEvent.EVENT_NAME,
-        new ToolUsedEvent(userId ?? ('unknown' as UUID), orgId, toolName),
+        new ToolUsedEvent(
+          userId ?? ('unknown' as UUID),
+          orgId,
+          content.name,
+          content.integration?.id as UUID | undefined,
+          content.integration?.name,
+        ),
       )
       .catch((err: unknown) => {
         this.logger.error('Failed to emit ToolUsedEvent', {
           error: err instanceof Error ? err.message : 'Unknown error',
-          toolName,
+          toolName: content.name,
         });
       });
   }

@@ -28,12 +28,19 @@ import type { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/fi
 import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import type { ConfigService } from '@nestjs/config';
 import type { SeatBasedSubscriptionEventData } from 'src/iam/subscriptions/application/events/subscription-event-data.types';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
 
 const USER_ID = '00000000-0000-0000-0000-000000000001' as UUID;
 const ORG_ID = '00000000-0000-0000-0000-000000000002' as UUID;
 const SUB_ID = '00000000-0000-0000-0000-000000000003' as UUID;
 const THREAD_ID = '00000000-0000-0000-0000-000000000004' as UUID;
 const MESSAGE_ID = '00000000-0000-0000-0000-000000000005' as UUID;
+const SKILL_ID = '00000000-0000-0000-0000-000000000006' as UUID;
+const INTEGRATION_ID = '00000000-0000-0000-0000-000000000007' as UUID;
+const API_KEY_ID = '00000000-0000-0000-0000-000000000008' as UUID;
 
 function makeUser(): User {
   return new User({
@@ -294,10 +301,14 @@ describe('WebhookDispatchListener', () => {
   });
 
   describe('handleUsageCollected', () => {
-    function makeUsage(userId: UUID | null = USER_ID): Usage {
+    function makeUsage(
+      userId: UUID | null = USER_ID,
+      apiKeyId: UUID | null = null,
+    ): Usage {
       return new Usage({
         id: '00000000-0000-0000-0000-000000000099',
         userId,
+        apiKeyId,
         organizationId: ORG_ID,
         modelId: '00000000-0000-0000-0000-0000000000aa',
         provider: ModelProvider.OPENAI,
@@ -338,6 +349,9 @@ describe('WebhookDispatchListener', () => {
           createdAt: '2026-04-07T12:00:00.000Z',
         }),
       );
+      expect(
+        (command.event.data as UsageCollectedWebhookPayload).apiKeyId,
+      ).toBeUndefined();
     });
 
     it('should enrich the payload with user email and name', async () => {
@@ -354,9 +368,9 @@ describe('WebhookDispatchListener', () => {
       );
     });
 
-    it('should dispatch unenriched without a user lookup for API-key usage (null userId)', async () => {
+    it('should dispatch API key identity without a user lookup', async () => {
       await listener.handleUsageCollected(
-        new UsageCollectedEvent(makeUsage(null), 'gpt-4o-mini'),
+        new UsageCollectedEvent(makeUsage(null, API_KEY_ID), 'gpt-4o-mini'),
       );
 
       expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
@@ -364,6 +378,7 @@ describe('WebhookDispatchListener', () => {
       const command = sendWebhookUseCase.execute.mock.calls[0][0];
       const data = command.event.data as UsageCollectedWebhookPayload;
       expect(data.userId).toBeNull();
+      expect(data.apiKeyId).toBe(API_KEY_ID);
       expect(data.userEmail).toBeUndefined();
       expect(data.userName).toBeUndefined();
     });
@@ -393,6 +408,84 @@ describe('WebhookDispatchListener', () => {
 
       expect(findUserByIdUseCase.execute).not.toHaveBeenCalled();
       expect(sendWebhookUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('product usage events', () => {
+    it('should dispatch skill usage with user identity', async () => {
+      await listener.handleSkillUsed(
+        new SkillUsedEvent(USER_ID, ORG_ID, SKILL_ID, 'Legal Research'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.SKILL_USED);
+      expect(command.event.data).toEqual({
+        userId: USER_ID,
+        orgId: ORG_ID,
+        skillId: SKILL_ID,
+        skillName: 'Legal Research',
+        userEmail: 'test@example.com',
+        userName: 'Test User',
+      });
+    });
+
+    it('should dispatch marketplace skill installs', async () => {
+      await listener.handleMarketplaceSkillInstalled(
+        new MarketplaceSkillInstalledEvent(USER_ID, ORG_ID, 'legal-research'),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.SKILL_INSTALLED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({ identifier: 'legal-research' }),
+      );
+    });
+
+    it('should dispatch MCP integration usage with user identity', async () => {
+      await listener.handleToolUsed(
+        new ToolUsedEvent(
+          USER_ID,
+          ORG_ID,
+          'search_council_sessions',
+          INTEGRATION_ID,
+          'Council Data',
+        ),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(WebhookEventType.INTEGRATION_USED);
+      expect(command.event.data).toEqual(
+        expect.objectContaining({
+          integrationId: INTEGRATION_ID,
+          integrationName: 'Council Data',
+        }),
+      );
+    });
+
+    it('should ignore non-integration tool usage', async () => {
+      await listener.handleToolUsed(
+        new ToolUsedEvent(USER_ID, ORG_ID, 'internet_search'),
+      );
+
+      expect(sendWebhookUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('should dispatch marketplace integration installs', async () => {
+      await listener.handleMarketplaceIntegrationInstalled(
+        new MarketplaceIntegrationInstalledEvent(
+          USER_ID,
+          ORG_ID,
+          'council-data',
+        ),
+      );
+
+      const command = sendWebhookUseCase.execute.mock.calls[0][0];
+      expect(command.event.eventType).toBe(
+        WebhookEventType.INTEGRATION_INSTALLED,
+      );
+      expect(command.event.data).toEqual(
+        expect.objectContaining({ identifier: 'council-data' }),
+      );
     });
   });
 

@@ -7,5 +7,7 @@ export class ToolUsedEvent {
     public readonly userId: UUID,
     public readonly orgId: UUID,
     public readonly toolName: string,
+    public readonly integrationId?: UUID,
+    public readonly integrationName?: string,
   ) {}
 }

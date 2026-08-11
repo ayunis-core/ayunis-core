@@ -38,6 +38,14 @@ import { AddonDeactivatedWebhookEvent } from '../domain/webhook-events/addon-dea
 import { mapSubscriptionToWebhookPayload } from './subscription-payload.mapper';
 import { mapBillingInfoToWebhookPayload } from './billing-info-payload.mapper';
 import type { WebhookEvent } from '../domain/webhook-event.entity';
+import { SkillUsedEvent } from 'src/domain/skills/application/events/skill-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
+import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { SkillUsedWebhookEvent } from '../domain/webhook-events/skill-used.webhook-event';
+import { SkillInstalledWebhookEvent } from '../domain/webhook-events/skill-installed.webhook-event';
+import { IntegrationUsedWebhookEvent } from '../domain/webhook-events/integration-used.webhook-event';
+import { IntegrationInstalledWebhookEvent } from '../domain/webhook-events/integration-installed.webhook-event';
 
 /**
  * Subscribes to domain events that have corresponding webhook event types
@@ -176,6 +184,70 @@ export class WebhookDispatchListener {
     await this.dispatch(new ChatSentWebhookEvent(event, user));
   }
 
+  @OnEvent(SkillUsedEvent.EVENT_NAME)
+  async handleSkillUsed(event: SkillUsedEvent): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new SkillUsedWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(MarketplaceSkillInstalledEvent.EVENT_NAME)
+  async handleMarketplaceSkillInstalled(
+    event: MarketplaceSkillInstalledEvent,
+  ): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new SkillInstalledWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(ToolUsedEvent.EVENT_NAME)
+  async handleToolUsed(event: ToolUsedEvent): Promise<void> {
+    if (!event.integrationId || !event.integrationName) return;
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new IntegrationUsedWebhookEvent({
+        userId: event.userId,
+        orgId: event.orgId,
+        integrationId: event.integrationId,
+        integrationName: event.integrationName,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
+  @OnEvent(MarketplaceIntegrationInstalledEvent.EVENT_NAME)
+  async handleMarketplaceIntegrationInstalled(
+    event: MarketplaceIntegrationInstalledEvent,
+  ): Promise<void> {
+    const user = await this.resolveWebhookUser(event.userId);
+    if (!user) return;
+
+    await this.dispatch(
+      new IntegrationInstalledWebhookEvent({
+        ...event,
+        userEmail: user.email,
+        userName: user.name,
+      }),
+    );
+  }
+
   @OnEvent(AddonActivatedEvent.EVENT_NAME)
   async handleAddonActivated(event: AddonActivatedEvent): Promise<void> {
     await this.dispatch(
@@ -200,6 +272,10 @@ export class WebhookDispatchListener {
 
   private webhookConfigured(): boolean {
     return !!this.configService.get<string>('app.orgEventsWebhookUrl');
+  }
+
+  private async resolveWebhookUser(userId: UUID): Promise<User | null> {
+    return this.webhookConfigured() ? this.resolveUser(userId) : null;
   }
 
   /**

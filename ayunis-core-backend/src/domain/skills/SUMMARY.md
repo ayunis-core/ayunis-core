@@ -10,7 +10,7 @@ Skills are reusable knowledge + integration bundles that an AI assistant can act
 - **Activation**: Skill activation is tracked in a separate `skill_activations` table (via `SkillActivationRecord`). Only active skills are surfaced in the system prompt as available for the LLM to activate. The repository provides `activateSkill`, `deactivateSkill`, `isSkillActive`, and `getActiveSkillIds` methods to manage activation state.
 - **Pinning**: Active skills can be pinned so they appear prominently in the UI. Pinning state is stored as an `isPinned` boolean column on `SkillActivationRecord`. The repository provides `isSkillPinned` (checks if a skill is pinned for a user), `toggleSkillPinned` (returns the new pinned state), and `getPinnedSkillIds` methods. A skill must be active before it can be pinned — attempting to pin an inactive skill raises `SkillNotActiveError`.
 - **User context resolution**: Per-user state (isActive, isPinned, isShared) is resolved by `SkillAccessService` via `resolveUserContext(skillId)` (single skill) and `resolveUserContextBatch()` (all skills for a user). Controllers never import repository ports directly — they use use cases and `SkillAccessService` instead. This boundary is enforced by a `controllers-no-ports` dependency-cruiser rule.
-- **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread.
+- **On-demand injection**: The LLM activates a skill via the `activate_skill` tool, which injects the skill's instructions and attaches its sources/MCP integrations to the thread. Successful activation emits `SkillUsedEvent` with user, organization, skill ID, and display name for downstream product analytics.
 - **Name uniqueness**: Skill names must be unique per user (enforced at repository level) because the `activate_skill` tool uses the name as the identifier.
 
 ## Structure
@@ -109,22 +109,22 @@ Error handling: `MarketplaceInstallFailedError` is raised when the installation 
 
 ## API Endpoints
 
-| Method | Path | Description |
-| ------ | ---- | ----------- |
-| POST | `/skills/install-from-marketplace` | Install a skill from the marketplace |
-| POST | `/skills` | Create a skill |
-| GET | `/skills` | List all skills for current user |
-| GET | `/skills/:id` | Get a skill by ID |
-| PUT | `/skills/:id` | Update a skill |
-| DELETE | `/skills/:id` | Delete a skill |
-| PATCH | `/skills/:id/toggle-active` | Toggle skill active/inactive |
-| PATCH | `/skills/:id/toggle-pinned` | Toggle skill pinned/unpinned |
-| GET | `/skills/:id/sources` | List sources for a skill |
-| POST | `/skills/:id/sources/file` | Add a file source to a skill |
-| DELETE | `/skills/:id/sources/:sourceId` | Remove a source from a skill |
-| POST | `/skills/:skillId/mcp-integrations/:integrationId` | Assign MCP integration |
-| DELETE | `/skills/:skillId/mcp-integrations/:integrationId` | Unassign MCP integration |
-| GET | `/skills/:skillId/mcp-integrations` | List assigned MCP integrations |
-| POST | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign knowledge base |
-| DELETE | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign knowledge base |
-| GET | `/skills/:skillId/knowledge-bases` | List assigned knowledge bases |
+| Method | Path                                                | Description                          |
+| ------ | --------------------------------------------------- | ------------------------------------ |
+| POST   | `/skills/install-from-marketplace`                  | Install a skill from the marketplace |
+| POST   | `/skills`                                           | Create a skill                       |
+| GET    | `/skills`                                           | List all skills for current user     |
+| GET    | `/skills/:id`                                       | Get a skill by ID                    |
+| PUT    | `/skills/:id`                                       | Update a skill                       |
+| DELETE | `/skills/:id`                                       | Delete a skill                       |
+| PATCH  | `/skills/:id/toggle-active`                         | Toggle skill active/inactive         |
+| PATCH  | `/skills/:id/toggle-pinned`                         | Toggle skill pinned/unpinned         |
+| GET    | `/skills/:id/sources`                               | List sources for a skill             |
+| POST   | `/skills/:id/sources/file`                          | Add a file source to a skill         |
+| DELETE | `/skills/:id/sources/:sourceId`                     | Remove a source from a skill         |
+| POST   | `/skills/:skillId/mcp-integrations/:integrationId`  | Assign MCP integration               |
+| DELETE | `/skills/:skillId/mcp-integrations/:integrationId`  | Unassign MCP integration             |
+| GET    | `/skills/:skillId/mcp-integrations`                 | List assigned MCP integrations       |
+| POST   | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Assign knowledge base                |
+| DELETE | `/skills/:skillId/knowledge-bases/:knowledgeBaseId` | Unassign knowledge base              |
+| GET    | `/skills/:skillId/knowledge-bases`                  | List assigned knowledge bases        |

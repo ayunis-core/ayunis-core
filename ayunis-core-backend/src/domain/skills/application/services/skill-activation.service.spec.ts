@@ -17,6 +17,9 @@ import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity'
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { UUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ContextService } from 'src/common/context/services/context.service';
+import { SkillUsedEvent } from '../events/skill-used.event';
 
 describe('SkillActivationService', () => {
   let service: SkillActivationService;
@@ -25,8 +28,10 @@ describe('SkillActivationService', () => {
   let addMcpIntegrationToThreadUseCase: jest.Mocked<AddMcpIntegrationToThreadUseCase>;
   let addKnowledgeBaseToThreadUseCase: jest.Mocked<AddKnowledgeBaseToThreadUseCase>;
   let getSourcesByIdsUseCase: jest.Mocked<GetSourcesByIdsUseCase>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
+  const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const skillId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const sourceId1 = '660e8400-e29b-41d4-a716-446655440001' as UUID;
   const sourceId2 = '660e8400-e29b-41d4-a716-446655440002' as UUID;
@@ -89,6 +94,14 @@ describe('SkillActivationService', () => {
           provide: GetSourcesByIdsUseCase,
           useValue: { execute: jest.fn() },
         },
+        {
+          provide: EventEmitter2,
+          useValue: { emitAsync: jest.fn().mockResolvedValue([]) },
+        },
+        {
+          provide: ContextService,
+          useValue: { get: jest.fn().mockReturnValue(orgId) },
+        },
       ],
     }).compile();
 
@@ -102,6 +115,7 @@ describe('SkillActivationService', () => {
       AddKnowledgeBaseToThreadUseCase,
     );
     getSourcesByIdsUseCase = module.get(GetSourcesByIdsUseCase);
+    eventEmitter = module.get(EventEmitter2);
 
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
@@ -130,6 +144,25 @@ describe('SkillActivationService', () => {
         'Analyze the legal question thoroughly.',
       );
       expect(result.skillName).toBe('Legal Research');
+    });
+
+    it('should emit the used skill after activation succeeds', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        sourceIds: [],
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+
+      skillAccessService.findAccessibleSkill.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+        SkillUsedEvent.EVENT_NAME,
+        new SkillUsedEvent(userId, orgId, skillId, 'Legal Research'),
+      );
     });
 
     it('should return the skill instructions and name', async () => {

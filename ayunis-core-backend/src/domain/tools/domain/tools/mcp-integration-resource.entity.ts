@@ -29,9 +29,16 @@ function getDescription(mcpResource: McpResource): string {
  */
 export class McpIntegrationResource extends Tool {
   public readonly integrationId: UUID;
+  public readonly integrationName: string;
+  public readonly integrationLogoUrl: string | null;
   private readonly _returnsPii: boolean;
 
-  constructor(mcpResource: McpResource, returnsPii: boolean) {
+  constructor(
+    mcpResource: McpResource,
+    returnsPii: boolean,
+    integrationName: string,
+    integrationLogoUrl: string | null,
+  ) {
     super({
       name: mcpResource.name,
       description: getDescription(mcpResource),
@@ -39,6 +46,8 @@ export class McpIntegrationResource extends Tool {
       type: ToolType.MCP_RESOURCE,
     });
     this.integrationId = mcpResource.integrationId;
+    this.integrationName = integrationName;
+    this.integrationLogoUrl = integrationLogoUrl;
     this._returnsPii = returnsPii;
   }
 
