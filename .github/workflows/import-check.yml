@@ -1,0 +1,83 @@
+name: Import Check
+
+on:
+  pull_request:
+    paths:
+      - 'ayunis-core-backend/**/*.ts'
+      - 'ayunis-core-frontend/**/*.ts'
+      - 'ayunis-core-frontend/**/*.tsx'
+
+jobs:
+  imports:
+    name: Backend & frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Need full history for the diff
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get changed backend files
+        id: changed-backend
+        uses: tj-actions/changed-files@v47
+        with:
+          files: ayunis-core-backend/**/*.ts
+
+      - name: Get changed frontend files
+        id: changed-frontend
+        uses: tj-actions/changed-files@v47
+        with:
+          files: |
+            ayunis-core-frontend/**/*.ts
+            ayunis-core-frontend/**/*.tsx
+
+      # Blocks parent-relative imports on changed files only. The same rule sits
+      # at `warn` in each package's eslint.config.mjs so the pre-existing backlog
+      # stays visible without failing lint, and the pre-commit `--fix` run
+      # rewrites them locally — this job is the safety net for commits made with
+      # `--no-verify` or `PRECOMMIT_NO_FIX=1`. ESLint runs from the repo root via
+      # each package's installed binary so the config globs resolve against
+      # repo-relative paths.
+      - name: Check backend imports
+        if: steps.changed-backend.outputs.any_changed == 'true'
+        run: |
+          echo "Checking import paths for changed backend files:"
+          echo "${{ steps.changed-backend.outputs.all_changed_files }}" | tr ' ' '\n' | sed 's/^/  - /'
+          echo ""
+          echo "${{ steps.changed-backend.outputs.all_changed_files }}" | tr ' ' '\n' \
+            | sed '/^$/d' \
+            | tr '\n' '\0' \
+            | xargs -0 --no-run-if-empty ayunis-core-backend/node_modules/.bin/eslint \
+                --no-config-lookup \
+                --config ayunis-core-backend/eslint.imports.config.mjs \
+                --no-warn-ignored
+
+      - name: Check frontend imports
+        if: steps.changed-frontend.outputs.any_changed == 'true'
+        run: |
+          echo "Checking import paths for changed frontend files:"
+          echo "${{ steps.changed-frontend.outputs.all_changed_files }}" | tr ' ' '\n' | sed 's/^/  - /'
+          echo ""
+          echo "${{ steps.changed-frontend.outputs.all_changed_files }}" | tr ' ' '\n' \
+            | sed '/^$/d' \
+            | tr '\n' '\0' \
+            | xargs -0 --no-run-if-empty ayunis-core-frontend/node_modules/.bin/eslint \
+                --no-config-lookup \
+                --config ayunis-core-frontend/eslint.imports.config.mjs \
+                --no-warn-ignored
+
+      - name: No TypeScript files changed
+        if: steps.changed-backend.outputs.any_changed != 'true' && steps.changed-frontend.outputs.any_changed != 'true'
+        run: echo "No TypeScript files changed, skipping import check."

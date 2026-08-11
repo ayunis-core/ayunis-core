@@ -8,6 +8,7 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import noRelativeParentImports from '../eslint-rules/no-relative-parent-imports.mjs';
 
 export default tseslint.config(
   {
@@ -59,9 +60,19 @@ export default tseslint.config(
       'react-hooks': reactHooksPlugin,
       'react-refresh': reactRefreshPlugin,
       'unused-imports': unusedImports,
+      ayunis: {
+        rules: { 'no-relative-parent-imports': noRelativeParentImports },
+      },
     },
     rules: {
       ...reactHooksPlugin.configs.recommended.rules,
+
+      // `@/…` for anything outside the current directory; `./sibling` stays
+      // relative. Kept at `warn` so the pre-existing backlog stays visible
+      // without failing lint — the pre-commit `--fix` run and the Import Check
+      // CI workflow enforce it on changed files. Auto-fixable, so touching a
+      // legacy file rewrites its imports instead of creating manual work.
+      'ayunis/no-relative-parent-imports': ['warn', { prefix: '@' }],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
@@ -88,7 +99,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       '@typescript-eslint/no-duplicate-enum-values': 'error',
-      'eqeqeq': 'error',
+      eqeqeq: 'error',
       'unused-imports/no-unused-imports': 'error',
 
       // New rules (warn)

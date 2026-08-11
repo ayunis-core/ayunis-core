@@ -5,6 +5,7 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import noRelativeParentImports from '../eslint-rules/no-relative-parent-imports.mjs';
 
 export default tseslint.config(
   {
@@ -39,6 +40,9 @@ export default tseslint.config(
     },
     plugins: {
       'unused-imports': unusedImports,
+      ayunis: {
+        rules: { 'no-relative-parent-imports': noRelativeParentImports },
+      },
     },
   },
   {
@@ -61,6 +65,16 @@ export default tseslint.config(
       '@typescript-eslint/no-duplicate-enum-values': 'error',
       eqeqeq: 'error',
       'unused-imports/no-unused-imports': 'error',
+
+      // Absolute imports (`src/…`) for anything outside the current directory;
+      // `./sibling` stays relative. Reviewers asked for this repeatedly and the
+      // convention was previously written down nowhere, so the codebase carries
+      // a large backlog of `../` imports. Kept at `warn` so that backlog stays
+      // visible without failing `pnpm lint`, while the pre-commit `--fix` run
+      // and the Import Check CI workflow enforce it on changed files. The rule
+      // is auto-fixable, so touching a legacy file rewrites its imports rather
+      // than handing the developer manual work.
+      'ayunis/no-relative-parent-imports': ['warn', { prefix: 'src' }],
 
       // Complexity gate (AST-accurate replacement for the old lizard tool).
       // Thresholds mirror the previous lizard config. Kept at `warn` so the
