@@ -82,6 +82,20 @@ export interface MemberFixture {
   creditLimit?: number;
 }
 
+/**
+ * A workspace ("Projekt") owned by the org's admin user. The icon is a key
+ * from the frontend catalogue (`shared/lib/workspace-appearance.ts`); the
+ * colour is either a palette key from that catalogue or a `#rrggbb` literal.
+ */
+export interface WorkspaceFixture {
+  name: string;
+  description?: string;
+  icon: string;
+  color: string;
+  isPinned: boolean;
+  sortOrder: number;
+}
+
 export interface OrgFixture {
   key: string;
   name: string;
@@ -91,6 +105,7 @@ export interface OrgFixture {
   teams: readonly string[];
   memberships: Readonly<Record<string, readonly string[]>>;
   teamLimits?: Readonly<Record<string, number>>;
+  workspaces?: readonly WorkspaceFixture[];
 }
 
 export interface PermittedModelFixture {

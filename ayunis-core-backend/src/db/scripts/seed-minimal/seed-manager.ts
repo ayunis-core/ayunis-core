@@ -9,6 +9,7 @@ import { OrgUserSeeder } from './seeders/org-user-seeder';
 import { BillingSeeder } from './seeders/billing-seeder';
 import { UsageSeeder } from './seeders/usage-seeder';
 import { CreditLimitSeeder } from './seeders/credit-limit-seeder';
+import { WorkspaceSeeder } from './seeders/workspace-seeder';
 
 export class SeedManager {
   private readonly globalSeeders: GlobalSeeder[] = [
@@ -21,6 +22,7 @@ export class SeedManager {
     new BillingSeeder(),
     new UsageSeeder(),
     new CreditLimitSeeder(),
+    new WorkspaceSeeder(),
   ];
 
   constructor(private readonly runner: SeedRunner) {}

@@ -133,6 +133,35 @@ export const minimalFixture = {
       members: [],
       teams: [],
       memberships: {},
+      // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,
+      // both list views and the manual ordering without clicking anything.
+      // Only visible while FEATURE_WORKSPACES_ENABLED is on.
+      workspaces: [
+        {
+          name: 'Bürgeranfragen',
+          description:
+            'Anfragen von Bürgerinnen und Bürgern bündeln und beantworten',
+          icon: 'usercheck',
+          color: 'violet',
+          isPinned: true,
+          sortOrder: 0,
+        },
+        {
+          name: 'Feuerwehr',
+          description: 'Einsätze, Fahrzeuge und Ausrüstung',
+          icon: 'flame',
+          color: 'rose',
+          isPinned: true,
+          sortOrder: 1,
+        },
+        {
+          name: 'Gebühren & Finanzen',
+          icon: 'euro',
+          color: '#2c7a4b',
+          isPinned: false,
+          sortOrder: 2,
+        },
+      ],
     },
     {
       key: 'usage',
