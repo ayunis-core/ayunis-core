@@ -17,11 +17,11 @@ import { CheckCircle2, Download, RotateCcw, Trophy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import {
-  AcademyGateNotice,
   useAcademyAccessStatus,
   useAcademyProgress,
   useDownloadCertificate,
 } from '@/features/academy';
+import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
