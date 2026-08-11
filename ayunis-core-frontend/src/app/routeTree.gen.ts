@@ -20,6 +20,7 @@ import { Route as onboardingIpBlockedRouteImport } from './routes/(onboarding)/i
 import { Route as onboardingEmailConfirmRouteImport } from './routes/(onboarding)/email-confirm'
 import { Route as onboardingConfirmEmailRouteImport } from './routes/(onboarding)/confirm-email'
 import { Route as onboardingAcceptInviteRouteImport } from './routes/(onboarding)/accept-invite'
+import { Route as AuthenticatedWorkspacesIndexRouteImport } from './routes/_authenticated/workspaces.index'
 import { Route as AuthenticatedSuperAdminSettingsIndexRouteImport } from './routes/_authenticated/super-admin-settings.index'
 import { Route as AuthenticatedSkillsIndexRouteImport } from './routes/_authenticated/skills.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -29,6 +30,7 @@ import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_authenticated/admin-settings.index'
 import { Route as AuthenticatedAcademyIndexRouteImport } from './routes/_authenticated/academy.index'
+import { Route as AuthenticatedWorkspacesWorkspaceIdRouteImport } from './routes/_authenticated/workspaces.$workspaceId'
 import { Route as AuthenticatedSkillsIdRouteImport } from './routes/_authenticated/skills.$id'
 import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
@@ -123,6 +125,12 @@ const onboardingAcceptInviteRoute = onboardingAcceptInviteRouteImport.update({
   path: '/accept-invite',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWorkspacesIndexRoute =
+  AuthenticatedWorkspacesIndexRouteImport.update({
+    id: '/workspaces/',
+    path: '/workspaces/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsIndexRoute =
   AuthenticatedSuperAdminSettingsIndexRouteImport.update({
     id: '/super-admin-settings/',
@@ -173,6 +181,12 @@ const AuthenticatedAcademyIndexRoute =
   AuthenticatedAcademyIndexRouteImport.update({
     id: '/academy/',
     path: '/academy/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedWorkspacesWorkspaceIdRoute =
+  AuthenticatedWorkspacesWorkspaceIdRouteImport.update({
+    id: '/workspaces/$workspaceId',
+    path: '/workspaces/$workspaceId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSkillsIdRoute = AuthenticatedSkillsIdRouteImport.update({
@@ -435,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy/': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -444,6 +459,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/skills/': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
@@ -493,6 +509,7 @@ export interface FileRoutesByTo {
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/academy': typeof AuthenticatedAcademyIndexRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsIndexRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -502,6 +519,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/skills': typeof AuthenticatedSkillsIndexRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
@@ -554,6 +572,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
   '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/skills/$id': typeof AuthenticatedSkillsIdRoute
+  '/_authenticated/workspaces/$workspaceId': typeof AuthenticatedWorkspacesWorkspaceIdRoute
   '/_authenticated/academy/': typeof AuthenticatedAcademyIndexRoute
   '/_authenticated/admin-settings/': typeof AuthenticatedAdminSettingsIndexRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -563,6 +582,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/skills/': typeof AuthenticatedSkillsIndexRoute
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
+  '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/_authenticated/academy/$chapterId_/quiz': typeof AuthenticatedAcademyChapterIdQuizRoute
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
@@ -615,6 +635,7 @@ export interface FileRouteTypes {
     | '/settings/general'
     | '/settings/integrations'
     | '/skills/$id'
+    | '/workspaces/$workspaceId'
     | '/academy/'
     | '/admin-settings/'
     | '/chat/'
@@ -624,6 +645,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/skills/'
     | '/super-admin-settings/'
+    | '/workspaces/'
     | '/academy/$chapterId/quiz'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
@@ -673,6 +695,7 @@ export interface FileRouteTypes {
     | '/settings/general'
     | '/settings/integrations'
     | '/skills/$id'
+    | '/workspaces/$workspaceId'
     | '/academy'
     | '/admin-settings'
     | '/chat'
@@ -682,6 +705,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/super-admin-settings'
+    | '/workspaces'
     | '/academy/$chapterId/quiz'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
@@ -733,6 +757,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/general'
     | '/_authenticated/settings/integrations'
     | '/_authenticated/skills/$id'
+    | '/_authenticated/workspaces/$workspaceId'
     | '/_authenticated/academy/'
     | '/_authenticated/admin-settings/'
     | '/_authenticated/chat/'
@@ -742,6 +767,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/skills/'
     | '/_authenticated/super-admin-settings/'
+    | '/_authenticated/workspaces/'
     | '/_authenticated/academy/$chapterId_/quiz'
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
@@ -854,6 +880,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingAcceptInviteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/workspaces/': {
+      id: '/_authenticated/workspaces/'
+      path: '/workspaces'
+      fullPath: '/workspaces/'
+      preLoaderRoute: typeof AuthenticatedWorkspacesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/super-admin-settings/': {
       id: '/_authenticated/super-admin-settings/'
       path: '/super-admin-settings'
@@ -915,6 +948,13 @@ declare module '@tanstack/react-router' {
       path: '/academy'
       fullPath: '/academy/'
       preLoaderRoute: typeof AuthenticatedAcademyIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/workspaces/$workspaceId': {
+      id: '/_authenticated/workspaces/$workspaceId'
+      path: '/workspaces/$workspaceId'
+      fullPath: '/workspaces/$workspaceId'
+      preLoaderRoute: typeof AuthenticatedWorkspacesWorkspaceIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/skills/$id': {
@@ -1253,6 +1293,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
   AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSkillsIdRoute: typeof AuthenticatedSkillsIdRoute
+  AuthenticatedWorkspacesWorkspaceIdRoute: typeof AuthenticatedWorkspacesWorkspaceIdRoute
   AuthenticatedAcademyIndexRoute: typeof AuthenticatedAcademyIndexRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
@@ -1261,6 +1302,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSkillsIndexRoute: typeof AuthenticatedSkillsIndexRoute
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
+  AuthenticatedWorkspacesIndexRoute: typeof AuthenticatedWorkspacesIndexRoute
   AuthenticatedAcademyChapterIdQuizRoute: typeof AuthenticatedAcademyChapterIdQuizRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
@@ -1287,6 +1329,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsIntegrationsRoute:
     AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSkillsIdRoute: AuthenticatedSkillsIdRoute,
+  AuthenticatedWorkspacesWorkspaceIdRoute:
+    AuthenticatedWorkspacesWorkspaceIdRoute,
   AuthenticatedAcademyIndexRoute: AuthenticatedAcademyIndexRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
@@ -1296,6 +1340,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSkillsIndexRoute: AuthenticatedSkillsIndexRoute,
   AuthenticatedSuperAdminSettingsIndexRoute:
     AuthenticatedSuperAdminSettingsIndexRoute,
+  AuthenticatedWorkspacesIndexRoute: AuthenticatedWorkspacesIndexRoute,
   AuthenticatedAcademyChapterIdQuizRoute:
     AuthenticatedAcademyChapterIdQuizRoute,
   AuthenticatedSuperAdminSettingsOrgsIdRoute:

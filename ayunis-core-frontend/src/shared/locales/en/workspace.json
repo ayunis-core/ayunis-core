@@ -6,7 +6,8 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "settings": "Settings",
-    "newChat": "New chat"
+    "newChat": "New chat",
+    "truncatedChats": "Showing the first {{count}} chats"
   },
   "chat": {
     "untitled": "Untitled chat",
