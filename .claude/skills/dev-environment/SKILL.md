@@ -7,19 +7,27 @@ description: Start, stop, and manage the local dev stack (Docker infra, backend,
 
 ## Starting the Stack
 
-The `./dev` script manages the full local development stack. It works from any checkout — worktree or main repo.
+The `./dev` script manages the local development stack. It works from any checkout — worktree or main repo.
+
+By default, `./dev up` omits the slow anonymisation service. Use this for routine backend, frontend, migration, and QA work:
 
 ```bash
-# Start everything (requires a slot number on first run)
+# Requires a slot number on first run
 ./dev up --slot 2
 
 # Subsequent runs remember the slot
 ./dev up
 ```
 
+Before starting the stack, decide whether the task actually exercises anonymisation. Only include the service when the task tests or changes anonymisation behavior:
+
+```bash
+./dev up --slot 2 --with-anonymisation
+```
+
 ### What `./dev up` does
 
-1. Starts Docker infrastructure (postgres, minio, mailcatcher, code-execution, anonymize)
+1. Starts Docker infrastructure (postgres, minio, mailcatcher, code-execution, redis, gotenberg, plus anonymize only when `--with-anonymisation` is set)
 2. Generates `.env.dev` with localhost connection config for the slot
 3. Runs database migrations
 4. Starts the backend natively (`nest start --watch`)
@@ -56,7 +64,7 @@ The backend runs `nest start --watch` — it auto-reloads on code changes. If it
 ```bash
 ./dev logs backend    # Check what went wrong
 ./dev down
-./dev up              # Slot is remembered
+./dev up              # Slot is remembered; add --with-anonymisation only if needed
 ```
 
 ## Stopping

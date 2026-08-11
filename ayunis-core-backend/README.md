@@ -61,6 +61,9 @@ From the **repository root**:
 ./dev down          # Stop everything
 ```
 
+Anonymisation is omitted by default to speed up startup. Add
+`--with-anonymisation` to `./dev up` when working on anonymisation behavior.
+
 Use `./dev up --slot 1` to run a second instance in parallel (e.g. for another worktree).
 
 Environment precedence and the `DEV_PORT_OFFSET` slot derivation are

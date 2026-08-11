@@ -3,8 +3,9 @@
 # dev — manage a per-worktree development stack for ayunis-core
 #
 # Usage:
-#   ./dev up   [--slot N]   Start infra (Docker) + backend + frontend in background
-#   ./dev down [--slot N]   Stop everything
+#   ./dev up   [--slot N] [--with-anonymisation]
+#                              Start infra (Docker) + backend + frontend in background
+#   ./dev down [--slot N]      Stop everything
 #   ./dev status [--slot N] Show what's running and on which ports
 #   ./dev logs [--slot N] [--tail N] [backend|frontend|infra|all]
 #                           Print recent logs (default: all, last 80 lines)
@@ -26,15 +27,21 @@ warn() { echo "⚠️  $*" >&2; }
 # ── Parse arguments ────────────────────────────────────────────────────────
 
 SLOT=""
+WITH_ANONYMISATION=false
 COMMAND="${1:-help}"
 shift || true
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --slot) SLOT="${2:?--slot requires a number}"; shift 2 ;;
-    *)      break ;;
+    --with-anonymisation) WITH_ANONYMISATION=true; shift ;;
+    *) break ;;
   esac
 done
+
+if $WITH_ANONYMISATION && [ "$COMMAND" != "up" ]; then
+  die "--with-anonymisation is only supported by ./dev up"
+fi
 
 # ── Resolve slot: explicit flag > saved file > error ──────────────────────
 
@@ -78,6 +85,19 @@ STATE_DIR="$REPO_DIR/.dev/slot-${SLOT}"
 CHECKOUT_ID="$(printf '%s' "$REPO_DIR" | cksum | cut -d' ' -f1)"
 BACKEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-backend"
 FRONTEND_SESSION="${PROJECT_NAME}-${CHECKOUT_ID}-frontend"
+
+INFRA_SERVICES=(
+  postgres
+  minio
+  mailcatcher
+  docker-socket-proxy
+  code-execution
+  redis
+  gotenberg
+)
+if $WITH_ANONYMISATION; then
+  INFRA_SERVICES+=(anonymize)
+fi
 
 # ── Docker compose wrapper ─────────────────────────────────────────────────
 
@@ -259,7 +279,7 @@ cmd_up() {
 
     # -- 1. Docker infrastructure -----------------------------------------
     info "Starting Docker infrastructure …"
-    dc up -d --build --wait 2>&1 | tail -5
+    dc up -d --build --wait "${INFRA_SERVICES[@]}" 2>&1 | tail -5
   fi
 
   # -- 2. Generate .env.dev for backend ------------------------------------
@@ -501,8 +521,7 @@ _sync_dependencies() {
 
 _infra_healthy() {
   local expected_services service status_line state health
-  expected_services="$(dc config --services 2>/dev/null)" || return 1
-  [ -n "$expected_services" ] || return 1
+  expected_services="$(printf '%s\n' "${INFRA_SERVICES[@]}")"
 
   local service_status
   service_status="$(dc ps --format '{{.Service}}|{{.State}}|{{.Health}}' 2>/dev/null)" || return 1
@@ -551,7 +570,11 @@ _print_ready_summary() {
   echo "  MinIO:        localhost:$MINIO_HOST_PORT  (console: $MINIO_CONSOLE_HOST_PORT)"
   echo "  Mailcatcher:  smtp :$MAILCATCHER_SMTP_HOST_PORT  web :$MAILCATCHER_WEB_HOST_PORT"
   echo "  Code exec:    localhost:$CODE_EXEC_HOST_PORT"
-  echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
+  if $WITH_ANONYMISATION; then
+    echo "  Anonymize:    localhost:$ANONYMIZE_HOST_PORT"
+  else
+    echo "  Anonymize:    disabled"
+  fi
   echo "  Gotenberg:    localhost:$GOTENBERG_HOST_PORT"
 }
 
@@ -668,7 +691,7 @@ case "$COMMAND" in
     echo "Usage: ./dev <up|down|status|logs> [--slot N] [logs options]"
     echo ""
     echo "Commands:"
-    echo "  up     --slot N                            Start the full dev stack in background"
+    echo "  up     --slot N [--with-anonymisation]     Start the dev stack in background"
     echo "  down   [--slot N]                          Stop everything"
     echo "  status [--slot N]                          Show what's running"
     echo "  logs   [--slot N] [--tail N] [backend|frontend|infra|all]"

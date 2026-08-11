@@ -238,6 +238,7 @@ port, it exits with an actionable error instead of terminating that process.
 
 ```bash
 # Start or converge a slot to a healthy stack. The slot is remembered.
+# Anonymisation is omitted by default; add --with-anonymisation when needed.
 ./dev up --slot 2
 
 # Check process/session state and backend/frontend HTTP readiness.

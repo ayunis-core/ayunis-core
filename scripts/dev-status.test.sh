@@ -212,12 +212,14 @@ chmod +x \
   "$TEST_DIR/bin/openssl" \
   "$TEST_DIR/bin/sleep"
 
+: > "$TEST_DIR/default-docker-calls"
 set +e
 output="$(
   PATH="$TEST_DIR/bin:$PATH" \
     AYUNIS_NO_INFISICAL=1 \
     FAKE_BACKEND_SESSION=1 \
     FAKE_BACKEND_READY="$TEST_DIR/backend-ready" \
+    FAKE_DOCKER_CALLS="$TEST_DIR/default-docker-calls" \
     FAKE_PNPM_CALLS="$TEST_DIR/pnpm-calls" \
     FAKE_TMUX_CALLS="$TEST_DIR/tmux-calls" \
     "$UP_DIR/dev" up 2>&1
@@ -239,6 +241,11 @@ fi
 
 if ! grep -Fq -- 'install --frozen-lockfile' "$TEST_DIR/pnpm-calls" 2>/dev/null; then
   printf 'Expected dev up to synchronize workspace dependencies with a frozen-lockfile install.\n' >&2
+  failures=$((failures + 1))
+fi
+
+if grep -F -- ' up -d --build --wait ' "$TEST_DIR/default-docker-calls" | grep -Fq -- ' anonymize'; then
+  printf 'Expected dev up to omit anonymize by default.\n' >&2
   failures=$((failures + 1))
 fi
 
@@ -403,6 +410,38 @@ set -e
 
 if [[ $status -eq 0 || "$output" != *"pnpm install --frozen-lockfile"* ]]; then
   printf 'Expected dependency repair failures to include the exact recovery command.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+
+WITH_ANONYMISATION_DIR="$TEST_DIR/with-anonymisation"
+mkdir -p \
+  "$WITH_ANONYMISATION_DIR/.dev" \
+  "$WITH_ANONYMISATION_DIR/ayunis-core-backend" \
+  "$WITH_ANONYMISATION_DIR/ayunis-core-frontend" \
+  "$WITH_ANONYMISATION_DIR/ayunis-core-code-execution/sandbox"
+cp "$REPO_DIR/dev" "$WITH_ANONYMISATION_DIR/dev"
+chmod +x "$WITH_ANONYMISATION_DIR/dev"
+printf '97\n' > "$WITH_ANONYMISATION_DIR/.dev/slot"
+: > "$TEST_DIR/with-anonymisation-docker-calls"
+rm -f "$TEST_DIR/with-anonymisation-ready" "$TEST_DIR/with-anonymisation-ready.frontend"
+
+set +e
+output="$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    AYUNIS_NO_INFISICAL=1 \
+    FAKE_BACKEND_READY="$TEST_DIR/with-anonymisation-ready" \
+    FAKE_DOCKER_CALLS="$TEST_DIR/with-anonymisation-docker-calls" \
+    "$WITH_ANONYMISATION_DIR/dev" up --with-anonymisation 2>&1
+)"
+status=$?
+set -e
+
+compose_up_call="$(grep -F -- ' up -d --build --wait ' "$TEST_DIR/with-anonymisation-docker-calls" || true)"
+if [[ $status -ne 0 \
+  || "$compose_up_call" != *" postgres "* \
+  || "$compose_up_call" != *" anonymize"* ]]; then
+  printf 'Expected --with-anonymisation to include anonymize.\n%s\nDocker calls:\n%s\n' \
+    "$output" "$(cat "$TEST_DIR/with-anonymisation-docker-calls")" >&2
   failures=$((failures + 1))
 fi
 
