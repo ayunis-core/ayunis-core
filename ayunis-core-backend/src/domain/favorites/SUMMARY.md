@@ -35,6 +35,11 @@ prevents duplicate favorites, and a user/position constraint protects order.
 - **`RemoveFavoriteReferenceUseCase`** — Deletes every favorite row matching a
   reference type/id (used when a target is deleted).
 
+## Event Listeners
+
+- **`FavoriteWorkspaceDeletionRequestedListener`** — Removes workspace
+  favorites when a workspace is deleted.
+
 ## Infrastructure
 
 - **`LocalFavoritesRepository`** — TypeORM implementation backed by the

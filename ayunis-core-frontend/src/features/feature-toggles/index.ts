@@ -4,4 +4,5 @@ export {
   useIsKnowledgeBasesEnabled,
   useIsLetterheadsEnabled,
   useIsSkillsEnabled,
+  useIsWorkspacesEnabled,
 } from './useIsFeatureEnabled';

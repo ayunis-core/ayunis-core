@@ -20,6 +20,12 @@ export class FeatureTogglesResponseDto {
   skillsEnabled: boolean;
 
   @ApiProperty({
+    description: 'Whether the workspaces feature is enabled',
+    example: false,
+  })
+  workspacesEnabled: boolean;
+
+  @ApiProperty({
     description: 'Whether runs use the independent agent runtime',
     example: false,
   })
