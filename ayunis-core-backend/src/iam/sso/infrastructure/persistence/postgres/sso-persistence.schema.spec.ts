@@ -1,6 +1,6 @@
 import { getMetadataArgsStorage } from 'typeorm';
-import { FederatedIdentityRecord } from './schema/federated-identity.record';
-import { OrgSsoConnectionRecord } from './schema/org-sso-connection.record';
+import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
+import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
 
 type SsoRecord = typeof OrgSsoConnectionRecord | typeof FederatedIdentityRecord;
 
