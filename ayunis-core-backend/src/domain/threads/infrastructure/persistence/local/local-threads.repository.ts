@@ -71,9 +71,6 @@ export class LocalThreadsRepository extends ThreadsRepository {
       relations: [
         'messages',
         'model',
-        'sourceAssignments',
-        'sourceAssignments.source',
-        'sourceAssignments.source.dataSourceDetails',
         'knowledgeBaseAssignments',
         'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
@@ -82,6 +79,8 @@ export class LocalThreadsRepository extends ThreadsRepository {
     if (!threadEntity) {
       return null;
     }
+    threadEntity.sourceAssignments =
+      await this.assignments.findSourceAssignmentsByThreadId(id);
     threadEntity.messages?.sort(
       (left, right) => left.createdAt.getTime() - right.createdAt.getTime(),
     );

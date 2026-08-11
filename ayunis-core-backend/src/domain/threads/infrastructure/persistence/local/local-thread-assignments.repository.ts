@@ -24,6 +24,17 @@ export class LocalThreadAssignmentsRepository {
     private readonly sourceAssignmentMapper: ThreadSourceAssignmentMapper,
   ) {}
 
+  async findSourceAssignmentsByThreadId(
+    threadId: UUID,
+  ): Promise<ThreadSourceAssignmentRecord[]> {
+    return this.threadSourceAssignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect('assignment.source', 'source')
+      .leftJoinAndSelect('source.dataSourceDetails', 'dataSourceDetails')
+      .where('assignment.threadId = :threadId', { threadId })
+      .getMany();
+  }
+
   /**
    * Writes only the row being added. An earlier version took the caller's
    * entire desired assignment set and re-derived the diff from a second,

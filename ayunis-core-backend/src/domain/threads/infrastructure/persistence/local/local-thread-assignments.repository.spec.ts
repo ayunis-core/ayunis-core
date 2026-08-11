@@ -1,5 +1,5 @@
 import { randomUUID, type UUID } from 'crypto';
-import type { Repository } from 'typeorm';
+import type { Repository, SelectQueryBuilder } from 'typeorm';
 
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import type { ThreadRecord } from './schema/thread.record';
@@ -37,7 +37,10 @@ describe('LocalThreadAssignmentsRepository', () => {
     Pick<Repository<ThreadRecord>, 'findOne' | 'exists'>
   >;
   let sourceAssignmentRepo: jest.Mocked<
-    Pick<Repository<ThreadSourceAssignmentRecord>, 'save'>
+    Pick<
+      Repository<ThreadSourceAssignmentRecord>,
+      'save' | 'createQueryBuilder'
+    >
   >;
   let kbAssignmentRepo: jest.Mocked<
     Repository<ThreadKnowledgeBaseAssignmentRecord>
@@ -55,6 +58,7 @@ describe('LocalThreadAssignmentsRepository', () => {
     };
     sourceAssignmentRepo = {
       save: jest.fn(),
+      createQueryBuilder: jest.fn(),
     };
     kbAssignmentRepo = {} as jest.Mocked<
       Repository<ThreadKnowledgeBaseAssignmentRecord>
@@ -83,6 +87,43 @@ describe('LocalThreadAssignmentsRepository', () => {
       kbAssignmentRepo,
       mapper,
     );
+  });
+
+  describe('findSourceAssignmentsByThreadId', () => {
+    it('loads each source and its data-source details in one dedicated query', async () => {
+      const records = [makeAssignmentRecord(threadId, randomUUID())];
+      const queryBuilder = {
+        leftJoinAndSelect: jest.fn(),
+        where: jest.fn(),
+        getMany: jest.fn().mockResolvedValue(records),
+      };
+      queryBuilder.leftJoinAndSelect.mockReturnValue(queryBuilder);
+      queryBuilder.where.mockReturnValue(queryBuilder);
+      sourceAssignmentRepo.createQueryBuilder.mockReturnValue(
+        queryBuilder as unknown as SelectQueryBuilder<ThreadSourceAssignmentRecord>,
+      );
+
+      const result = await repository.findSourceAssignmentsByThreadId(threadId);
+
+      expect(result).toBe(records);
+      expect(sourceAssignmentRepo.createQueryBuilder).toHaveBeenCalledWith(
+        'assignment',
+      );
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenNthCalledWith(
+        1,
+        'assignment.source',
+        'source',
+      );
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenNthCalledWith(
+        2,
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+      );
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'assignment.threadId = :threadId',
+        { threadId },
+      );
+    });
   });
 
   describe('addSourceAssignment', () => {
