@@ -191,6 +191,9 @@ importers:
       openai:
         specifier: ^4.104.0
         version: 4.104.0(encoding@0.1.13)(ws@8.21.0)(zod@3.25.76)
+      openid-client:
+        specifier: ^6.8.5
+        version: 6.8.5
       otplib:
         specifier: ^12.0.1
         version: 12.0.1
@@ -10511,6 +10514,9 @@ packages:
   oas-validator@5.0.8:
     resolution: {integrity: sha512-cu20/HE5N5HKqVygs3dt94eYJfBi0TsZvPVXDhbXQHiEityDN+RROTleefoKRKKJ9dFAF2JBkDHgvWj0sjKGmw==}
 
+  oauth4webapi@3.8.7:
+    resolution: {integrity: sha512-4RxcKxXjuItDFZ20RRPf4YTw3kpeXJyCgJFxVzJ068A7PNJ18st2Dg90tlC1LkSDS0GecroagCLHYEIVUhCAkw==}
+
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
@@ -10581,6 +10587,9 @@ packages:
 
   openapi3-ts@4.5.0:
     resolution: {integrity: sha512-jaL+HgTq2Gj5jRcfdutgRGLosCy/hT8sQf6VOy+P+g36cZOjI1iukdPnijC+4CmeRzg/jEllJUboEic2FhxhtQ==}
+
+  openid-client@6.8.5:
+    resolution: {integrity: sha512-jNGC/5wnTYwCcEUe2ss0IRUmVRQcgxM0A1nLb3eX/9llqNbMWOQd2xd+qDAgfVCpA5Qh96Y1cdnkfbva6+bSdA==}
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -22467,8 +22476,7 @@ snapshots:
 
   jose@6.2.3: {}
 
-  jose@6.2.8:
-    optional: true
+  jose@6.2.8: {}
 
   joycon@3.1.1: {}
 
@@ -24120,6 +24128,8 @@ snapshots:
       should: 13.2.3
       yaml: 1.10.3
 
+  oauth4webapi@3.8.7: {}
+
   object-assign@4.1.1: {}
 
   object-inspect@1.13.4: {}
@@ -24202,6 +24212,11 @@ snapshots:
   openapi3-ts@4.5.0:
     dependencies:
       yaml: 2.9.0
+
+  openid-client@6.8.5:
+    dependencies:
+      jose: 6.2.8
+      oauth4webapi: 3.8.7
 
   optionator@0.9.4:
     dependencies:

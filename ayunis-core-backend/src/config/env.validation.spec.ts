@@ -107,6 +107,111 @@ describe('validateEnv', () => {
         validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'yes' })),
       ).toThrow(/FEATURE_SKILLS_ENABLED/);
     });
+
+    it('accepts a complete SSO OIDC relying-party configuration', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('rejects an invalid SSO transaction encryption key', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'too-short',
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY/);
+    });
+
+    it('rejects a partial SSO OIDC relying-party configuration', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'https://sso.ayunis.de',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_CLIENT_SECRET/);
+    });
+
+    it('rejects a malformed SSO OIDC URL', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'not-a-url',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_ISSUER/);
+    });
+
+    it('accepts loopback HTTP for local SSO testing', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: 'http://localhost:8080',
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'http://localhost:3000/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it('rejects insecure non-loopback SSO URLs', () => {
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- invalid input under test
+      const insecureIssuer = 'http://sso.ayunis.de';
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: insecureIssuer,
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_ISSUER must use HTTPS/);
+    });
+
+    it('rejects non-HTTP SSO URLs', () => {
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- invalid input under test
+      const nonHttpIssuer = 'ftp://sso.ayunis.de';
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            SSO_OIDC_ISSUER: nonHttpIssuer,
+            SSO_OIDC_CLIENT_ID: 'ayunis-core-client',
+            SSO_OIDC_CLIENT_SECRET: 'client-secret',
+            SSO_LOGIN_TRANSACTION_ENCRYPTION_KEY: 'a'.repeat(64),
+            SSO_OIDC_CALLBACK_URL:
+              'https://core.ayunis.de/api/auth/sso/oidc/callback',
+          }),
+        ),
+      ).toThrow(/SSO_OIDC_ISSUER must use HTTPS/);
+    });
   });
 
   describe('production rules', () => {
