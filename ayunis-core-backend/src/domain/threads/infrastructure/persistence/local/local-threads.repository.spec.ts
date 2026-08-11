@@ -7,14 +7,24 @@ import type { ThreadMapper } from './mappers/thread.mapper';
 import type { ThreadRecord } from './schema/thread.record';
 
 describe('LocalThreadsRepository', () => {
-  it('loads the complete thread graph with separate queries', async () => {
+  it('loads source assignments separately from the other thread relations', async () => {
+    const threadRecord = { messages: [] } as unknown as ThreadRecord;
+    const sourceAssignments = [{ id: randomUUID() }];
     const threadRepository = {
-      findOne: jest.fn().mockResolvedValue(null),
+      findOne: jest.fn().mockResolvedValue(threadRecord),
     } as unknown as jest.Mocked<Repository<ThreadRecord>>;
+    const threadMapper = {
+      toDomain: jest.fn().mockReturnValue({}),
+    } as unknown as ThreadMapper;
+    const assignments = {
+      findSourceAssignmentsByThreadId: jest
+        .fn()
+        .mockResolvedValue(sourceAssignments),
+    } as unknown as LocalThreadAssignmentsRepository;
     const repository = new LocalThreadsRepository(
       threadRepository,
-      {} as ThreadMapper,
-      {} as LocalThreadAssignmentsRepository,
+      threadMapper,
+      assignments,
     );
     const threadId = randomUUID();
     const userId = randomUUID();
@@ -27,14 +37,17 @@ describe('LocalThreadsRepository', () => {
       relations: [
         'messages',
         'model',
-        'sourceAssignments',
-        'sourceAssignments.source',
-        'sourceAssignments.source.dataSourceDetails',
         'knowledgeBaseAssignments',
         'knowledgeBaseAssignments.knowledgeBase',
         'mcpIntegrations',
       ],
     });
+    expect(assignments.findSourceAssignmentsByThreadId).toHaveBeenCalledWith(
+      threadId,
+    );
+    expect(threadMapper.toDomain).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceAssignments }),
+    );
   });
 
   it('returns messages in chronological order', async () => {
@@ -54,10 +67,13 @@ describe('LocalThreadsRepository', () => {
         messages: record.messages,
       })),
     } as unknown as ThreadMapper;
+    const assignments = {
+      findSourceAssignmentsByThreadId: jest.fn().mockResolvedValue([]),
+    } as unknown as LocalThreadAssignmentsRepository;
     const repository = new LocalThreadsRepository(
       threadRepository,
       threadMapper,
-      {} as LocalThreadAssignmentsRepository,
+      assignments,
     );
 
     const thread = await repository.findOne(randomUUID(), randomUUID());
