@@ -5,5 +5,6 @@ export class CreatePermittedModelCommand {
     public readonly modelId: UUID,
     public readonly orgId: UUID,
     public readonly anonymousOnly?: boolean,
+    public readonly internetAccessEnabled?: boolean,
   ) {}
 }

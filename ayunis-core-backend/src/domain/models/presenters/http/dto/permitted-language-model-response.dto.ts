@@ -49,6 +49,13 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
   anonymousOnly: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether built-in internet search and website content tools are enabled for this permitted model',
+  })
+  internetAccessEnabled: boolean;
+
+  @ApiProperty({
     enum: ModelTier,
     required: false,
     nullable: true,

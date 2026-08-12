@@ -12,6 +12,7 @@ export class PermittedModel {
   public readonly orgId: UUID;
   public readonly isDefault: boolean;
   public readonly anonymousOnly: boolean;
+  public readonly internetAccessEnabled: boolean;
   public readonly scope: PermittedModelScope;
   public readonly scopeId: UUID | null;
   public readonly createdAt: Date;
@@ -23,6 +24,7 @@ export class PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -33,6 +35,7 @@ export class PermittedModel {
     this.orgId = params.orgId;
     this.isDefault = params.isDefault ?? false;
     this.anonymousOnly = params.anonymousOnly ?? false;
+    this.internetAccessEnabled = params.internetAccessEnabled ?? true;
     this.scope = params.scope ?? PermittedModelScope.ORG;
     this.scopeId = params.scopeId ?? null;
 
@@ -56,6 +59,7 @@ export class PermittedLanguageModel extends PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -74,6 +78,7 @@ export class PermittedEmbeddingModel extends PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -92,6 +97,7 @@ export class PermittedImageGenerationModel extends PermittedModel {
     orgId: UUID;
     isDefault?: boolean;
     anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;

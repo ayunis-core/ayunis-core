@@ -139,6 +139,9 @@ describe('ExecuteRunUseCase', () => {
       inferenceUsageGuard,
       toolAssemblyService,
       {
+        execute: jest.fn().mockResolvedValue(false),
+      } as never,
+      {
         collectToolResults: jest
           .fn()
           .mockResolvedValue({ contents: [], outcomes: [], piiMasks: null }),
@@ -160,6 +163,29 @@ describe('ExecuteRunUseCase', () => {
       {
         execute: jest.fn(),
       } as unknown as ExecuteRunViaRuntimeUseCase,
+    );
+  });
+
+  it('passes the effective model internet policy into initial tool assembly', async () => {
+    const thread = createMockThread();
+    findThreadUseCase.execute.mockResolvedValue({
+      thread,
+      isLongChat: false,
+    });
+
+    await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('How can I register my address?'),
+      }),
+    );
+
+    expect(toolAssemblyService.buildRunContext).toHaveBeenCalledWith(
+      thread,
+      [],
+      true,
+      false,
+      false,
     );
   });
 

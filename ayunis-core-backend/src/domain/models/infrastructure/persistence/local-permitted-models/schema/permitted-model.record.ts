@@ -34,6 +34,9 @@ export class PermittedModelRecord extends BaseRecord {
   @Column({ nullable: false, default: false })
   anonymousOnly: boolean;
 
+  @Column({ nullable: false, default: true })
+  internetAccessEnabled: boolean;
+
   @Column({
     type: 'enum',
     enum: PermittedModelScope,

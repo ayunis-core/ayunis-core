@@ -6,5 +6,6 @@ export class CreateTeamPermittedModelCommand {
     public readonly orgId: UUID,
     public readonly teamId: UUID,
     public readonly anonymousOnly?: boolean,
+    public readonly internetAccessEnabled?: boolean,
   ) {}
 }

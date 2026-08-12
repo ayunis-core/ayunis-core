@@ -77,6 +77,7 @@ interface Harness {
   provider: MockProvider;
   providerSignal: () => AbortSignal | undefined;
   countTokens: jest.Mock;
+  buildRunContext: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -273,6 +274,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThreadUseCase,
     inferenceUsageGuard,
     toolAssemblyService,
+    { execute: jest.fn().mockResolvedValue(false) } as never,
     backendToolAdapter,
     skillActivationService,
     anonymizeTextForThreadUseCase,
@@ -307,6 +309,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     provider,
     providerSignal: () => providerSignal,
     countTokens,
+    buildRunContext,
   };
 }
 
@@ -333,6 +336,20 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       code: 'UNEXPECTED_RUN_ERROR',
       statusCode: 500,
     });
+  });
+
+  it('passes the effective model internet policy into initial tool assembly', async () => {
+    const { useCase, buildRunContext } = buildHarness();
+
+    await useCase.execute(userCommand());
+
+    expect(buildRunContext).toHaveBeenCalledWith(
+      expect.objectContaining({ id: threadId }),
+      [],
+      false,
+      false,
+      false,
+    );
   });
 
   it('streams a plain-chat turn, persisting and metering the assistant message', async () => {

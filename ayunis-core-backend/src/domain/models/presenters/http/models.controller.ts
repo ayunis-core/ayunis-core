@@ -213,6 +213,7 @@ export class ModelsController {
       createPermittedModelDto.modelId,
       orgId,
       createPermittedModelDto.anonymousOnly,
+      createPermittedModelDto.internetAccessEnabled,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -273,6 +274,7 @@ export class ModelsController {
       permittedModelId: id,
       orgId,
       anonymousOnly: updatePermittedModelDto.anonymousOnly,
+      internetAccessEnabled: updatePermittedModelDto.internetAccessEnabled,
     });
     const model = await this.updatePermittedModelUseCase.execute(command);
     if (model instanceof PermittedLanguageModel) {

@@ -7,6 +7,13 @@ import type {
 } from '../../domain/permitted-model.entity';
 import type { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 
+export interface UpdatePermittedModelParams {
+  id: UUID;
+  orgId: UUID;
+  anonymousOnly?: boolean;
+  internetAccessEnabled?: boolean;
+}
+
 export type FindOneParams =
   | {
       id: UUID;
@@ -68,7 +75,7 @@ export abstract class PermittedModelsRepository {
     orgId: UUID;
     teamId?: UUID;
   }): Promise<PermittedLanguageModel>;
-  abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
+  abstract update(params: UpdatePermittedModelParams): Promise<PermittedModel>;
   abstract findAllByCatalogModelId(
     catalogModelId: UUID,
   ): Promise<PermittedModel[]>;

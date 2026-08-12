@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   FindOneParams,
   PermittedModelsRepository,
+  UpdatePermittedModelParams,
 } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
@@ -346,26 +347,29 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     ) as PermittedLanguageModel;
   }
 
-  async update(permittedModel: PermittedModel): Promise<PermittedModel> {
-    this.logger.log('update', {
-      id: permittedModel.id,
-      orgId: permittedModel.orgId,
-      anonymousOnly: permittedModel.anonymousOnly,
-    });
-
+  async update(params: UpdatePermittedModelParams): Promise<PermittedModel> {
+    this.logger.log('update', params);
+    const patch = {
+      ...(params.anonymousOnly !== undefined && {
+        anonymousOnly: params.anonymousOnly,
+      }),
+      ...(params.internetAccessEnabled !== undefined && {
+        internetAccessEnabled: params.internetAccessEnabled,
+      }),
+    };
     const updateResult = await this.permittedModelRepository.update(
-      { id: permittedModel.id, orgId: permittedModel.orgId },
-      { anonymousOnly: permittedModel.anonymousOnly },
+      { id: params.id, orgId: params.orgId },
+      patch,
     );
 
     if (updateResult.affected === 0) {
       throw new Error(
-        `Permitted model with id ${permittedModel.id} and orgId ${permittedModel.orgId} not found`,
+        `Permitted model with id ${params.id} and orgId ${params.orgId} not found`,
       );
     }
 
     const updatedModel = await this.permittedModelRepository.findOneOrFail({
-      where: { id: permittedModel.id },
+      where: { id: params.id },
       relations: { model: true },
     });
 

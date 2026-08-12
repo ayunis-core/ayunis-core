@@ -48,6 +48,10 @@ export class ModelWithConfigResponseDtoMapper {
         isPermitted,
         isDefault,
         anonymousOnly: permittedModel?.anonymousOnly,
+        internetAccessEnabled:
+          model instanceof LanguageModel
+            ? permittedModel?.internetAccessEnabled
+            : undefined,
         ...this.languageModelFields(model),
       };
     });

@@ -883,6 +883,11 @@ export interface ModelWithConfigResponseDto {
    * @nullable
    */
   anonymousOnly: boolean | null;
+  /**
+   * Whether built-in internet tools are enabled. Null for non-language or non-permitted models.
+   * @nullable
+   */
+  internetAccessEnabled?: boolean | null;
   /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
   tier?: ModelWithConfigResponseDtoTier;
   /** User-facing description of the model, shown in the model selector info card. Maintained by super admins. */
@@ -936,15 +941,19 @@ export interface ModelProviderInfoResponseDto {
 }
 
 export interface CreatePermittedModelDto {
-  /** The id of the model */
-  modelId: string;
   /** Whether this model should enforce anonymous mode */
   anonymousOnly?: boolean;
+  /** Whether built-in internet search and website content tools are enabled for this permitted model */
+  internetAccessEnabled?: boolean;
+  /** The id of the model */
+  modelId: string;
 }
 
 export interface UpdatePermittedModelDto {
   /** Whether this model should enforce anonymous mode */
-  anonymousOnly: boolean;
+  anonymousOnly?: boolean;
+  /** Whether built-in internet search and website content tools are enabled for this permitted model */
+  internetAccessEnabled?: boolean;
 }
 
 /**
@@ -1022,6 +1031,8 @@ export interface PermittedLanguageModelResponseDto {
   isDefault: boolean;
   /** Whether this model enforces anonymous mode */
   anonymousOnly: boolean;
+  /** Whether built-in internet search and website content tools are enabled for this permitted model */
+  internetAccessEnabled: boolean;
   /**
    * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
    * @nullable
@@ -1177,10 +1188,12 @@ export interface SetOrgDefaultModelDto {
 }
 
 export interface CreateTeamPermittedModelDto {
-  /** The ID of the catalog model to permit for the team */
-  modelId: string;
   /** Whether this model should enforce anonymous mode */
   anonymousOnly?: boolean;
+  /** Whether built-in internet search and website content tools are enabled for this permitted model */
+  internetAccessEnabled?: boolean;
+  /** The ID of the catalog model to permit for the team */
+  modelId: string;
 }
 
 export interface SetTeamDefaultModelDto {

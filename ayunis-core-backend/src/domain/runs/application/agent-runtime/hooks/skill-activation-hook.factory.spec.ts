@@ -37,6 +37,7 @@ function buildHook(
     activeSkills: [],
     canUseTools: true,
     isAnonymous: false,
+    modelInternetAccessEnabled: false,
     integrations: new RuntimeToolIntegrationRegistry([]),
     activatedSkillName: overrides.activatedSkillName,
   };
@@ -62,7 +63,13 @@ describe('SkillActivationHookFactory', () => {
 
     await hook.afterToolCall!(ctx as never);
 
-    expect(buildRunContext).toHaveBeenCalledTimes(1);
+    expect(buildRunContext).toHaveBeenCalledWith(
+      { id: threadId },
+      [],
+      true,
+      false,
+      false,
+    );
     expect(ctx.setTools).toHaveBeenCalledWith([{ name: 'source_query' }]);
     expect(ctx.setInstructions).toHaveBeenCalledWith(
       'Use the newly activated sources.',

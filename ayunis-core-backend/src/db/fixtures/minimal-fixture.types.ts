@@ -139,6 +139,7 @@ export interface PermittedModelFixture {
   modelKey: ModelKey;
   isDefault: boolean;
   anonymousOnly: boolean;
+  internetAccessEnabled: boolean;
 }
 
 export interface SeedFixture {

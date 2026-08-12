@@ -85,7 +85,8 @@ export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;
   readonly updatePermittedModel?: (params: {
     permittedModelId: string;
-    anonymousOnly: boolean;
+    anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
   }) => void;
   readonly enableModel: (model: ModelWithConfigResponseDto) => void;
   readonly isEnabling: boolean;
@@ -161,6 +162,17 @@ export default function ModelTypeCard({
     });
   }
 
+  function handleInternetAccessToggle(
+    model: ModelWithConfigResponseDto,
+    internetAccessEnabled: boolean,
+  ) {
+    if (!model.permittedModelId || !updatePermittedModel) return;
+    updatePermittedModel({
+      permittedModelId: model.permittedModelId,
+      internetAccessEnabled,
+    });
+  }
+
   // Sort by hosting region (DE -> EU -> US), then alphabetically by display name
   const sortedModels = [...models].sort((a, b) => {
     const priorityDiff =
@@ -222,22 +234,44 @@ export default function ModelTypeCard({
                   </ItemContent>
                   <ItemActions>
                     {model.isPermitted && updatePermittedModel && (
-                      <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor={`${modelKey}-anonymous`}
-                          className="text-sm text-muted-foreground"
-                        >
-                          {t('models.anonymousOnly')}
-                        </Label>
+                      <>
+                        {model.type === 'language' && (
+                          <div className="flex items-center gap-2">
+                            <Label
+                              htmlFor={`${modelKey}-internet-access`}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {t('models.internetAccess')}
+                            </Label>
+                            <Switch
+                              id={`${modelKey}-internet-access`}
+                              checked={model.internetAccessEnabled ?? true}
+                              onCheckedChange={(internetAccessEnabled) =>
+                                handleInternetAccessToggle(
+                                  model,
+                                  internetAccessEnabled,
+                                )
+                              }
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Label
+                            htmlFor={`${modelKey}-anonymous`}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {t('models.anonymousOnly')}
+                          </Label>
 
-                        <Switch
-                          id={`${modelKey}-anonymous`}
-                          checked={model.anonymousOnly ?? false}
-                          onCheckedChange={(anonymousOnly) =>
-                            handleAnonymousOnlyToggle(model, anonymousOnly)
-                          }
-                        />
-                      </div>
+                          <Switch
+                            id={`${modelKey}-anonymous`}
+                            checked={model.anonymousOnly ?? false}
+                            onCheckedChange={(anonymousOnly) =>
+                              handleAnonymousOnlyToggle(model, anonymousOnly)
+                            }
+                          />
+                        </div>
+                      </>
                     )}
                     <div className="flex items-center gap-2">
                       <Label

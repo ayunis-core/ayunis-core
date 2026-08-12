@@ -88,6 +88,15 @@ export class ModelWithConfigResponseDto {
   })
   anonymousOnly?: boolean;
 
+  @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether built-in internet tools are enabled. Null for non-language or non-permitted models.',
+    nullable: true,
+    required: false,
+  })
+  internetAccessEnabled?: boolean;
+
   @ApiPropertyOptional({
     enum: ModelTier,
     description:

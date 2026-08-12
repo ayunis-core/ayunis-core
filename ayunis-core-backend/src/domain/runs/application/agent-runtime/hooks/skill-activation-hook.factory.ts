@@ -15,6 +15,7 @@ export interface SkillActivationHookParams {
   activeSkills: Skill[];
   canUseTools: boolean;
   isAnonymous: boolean;
+  modelInternetAccessEnabled: boolean;
   integrations: RuntimeToolIntegrationRegistry;
   activatedSkillName?: string;
 }
@@ -53,6 +54,7 @@ export class SkillActivationHookFactory {
             params.activeSkills,
             params.canUseTools,
             params.isAnonymous,
+            params.modelInternetAccessEnabled,
           );
         params.integrations.replaceTools(tools);
         ctx.setTools(this.backendToolAdapter.toRuntimeTools(tools));

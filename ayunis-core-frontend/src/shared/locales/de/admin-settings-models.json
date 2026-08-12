@@ -59,6 +59,7 @@
       "error": "Ein Fehler ist aufgetreten, während das Modell aktualisiert wurde."
     },
     "anonymousOnly": "Anonymer Modus",
+    "internetAccess": "Internetzugriff",
     "permitted": "Freigeschaltet",
     "tier": {
       "label": "Leistung",

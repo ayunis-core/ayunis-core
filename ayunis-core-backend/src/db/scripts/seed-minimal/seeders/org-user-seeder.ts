@@ -121,8 +121,12 @@ export class OrgUserSeeder extends OrgSeeder {
     models: SeededModels,
   ): Promise<void> {
     const repo = this.repo(PermittedModelRecord);
-    for (const { modelKey, isDefault, anonymousOnly } of ctx.fixture
-      .permittedModels) {
+    for (const {
+      modelKey,
+      isDefault,
+      anonymousOnly,
+      internetAccessEnabled,
+    } of ctx.fixture.permittedModels) {
       const model = models[modelKey];
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard against fixture/seed drift
       if (!model) {
@@ -133,7 +137,14 @@ export class OrgUserSeeder extends OrgSeeder {
       await this.findOrCreate(
         repo,
         { modelId, orgId },
-        () => ({ id: randomUUID(), modelId, orgId, isDefault, anonymousOnly }),
+        () => ({
+          id: randomUUID(),
+          modelId,
+          orgId,
+          isDefault,
+          anonymousOnly,
+          internetAccessEnabled,
+        }),
         {
           entity: 'Permitted model',
           name: `${modelKey} (default=${String(isDefault)})`,

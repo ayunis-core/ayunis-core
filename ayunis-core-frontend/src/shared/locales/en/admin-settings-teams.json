@@ -109,6 +109,7 @@
       "disableError": "Failed to disable model for team",
       "disableModelNotFound": "Model not found",
       "disableModelInvalid": "This model cannot be disabled for the team",
+      "updateNotFound": "Model not found",
       "updateError": "Failed to update model setting"
     },
     "removeMember": {

@@ -1,26 +1,26 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { UpdateTeamPermittedModelUseCase } from './update-team-permitted-model.use-case';
-import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { Team } from 'src/iam/teams/domain/team.entity';
-import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { randomUUID } from 'crypto';
 import {
   PermittedModelNotFoundError,
   PermittedModelNotInTeamError,
   TeamNotFoundInOrgError,
 } from '../../models.errors';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { randomUUID } from 'crypto';
+import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
+import { UpdateTeamPermittedModelUseCase } from './update-team-permitted-model.use-case';
 
 describe('UpdateTeamPermittedModelUseCase', () => {
   let useCase: UpdateTeamPermittedModelUseCase;
@@ -49,15 +49,15 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       findOne: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
-
     getTeamUseCase = {
-      execute: jest
-        .fn()
-        .mockResolvedValue(
-          new Team({ name: 'test-team', orgId, modelOverrideEnabled: false }),
-        ),
+      execute: jest.fn().mockResolvedValue(
+        new Team({
+          name: 'Digital Services',
+          orgId,
+          modelOverrideEnabled: false,
+        }),
+      ),
     } as unknown as jest.Mocked<GetTeamUseCase>;
-
     contextService = {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
@@ -74,7 +74,6 @@ describe('UpdateTeamPermittedModelUseCase', () => {
         { provide: ContextService, useValue: contextService },
       ],
     }).compile();
-
     useCase = module.get(UpdateTeamPermittedModelUseCase);
   });
 
@@ -87,41 +86,78 @@ describe('UpdateTeamPermittedModelUseCase', () => {
     });
   }
 
-  function makeTeamModel(anonymousOnly: boolean): PermittedLanguageModel {
+  function makeTeamModel(params?: {
+    anonymousOnly?: boolean;
+    internetAccessEnabled?: boolean;
+  }): PermittedLanguageModel {
     return new PermittedLanguageModel({
       id: permittedModelId,
       model: languageModel,
       orgId,
       scope: PermittedModelScope.TEAM,
       scopeId: teamId,
-      anonymousOnly,
+      anonymousOnly: params?.anonymousOnly,
+      internetAccessEnabled: params?.internetAccessEnabled,
     });
   }
 
-  it('should update anonymousOnly on a team permitted model', async () => {
+  it('updates anonymous mode without overwriting internet access', async () => {
     setAdminContext();
-    permittedModelsRepository.findOne.mockResolvedValue(makeTeamModel(false));
-    permittedModelsRepository.update.mockImplementation((model) =>
-      Promise.resolve(model),
+    const updated = makeTeamModel({
+      anonymousOnly: true,
+      internetAccessEnabled: false,
+    });
+    permittedModelsRepository.findOne.mockResolvedValue(
+      makeTeamModel({ internetAccessEnabled: false }),
+    );
+    permittedModelsRepository.update.mockResolvedValue(updated);
+
+    const result = await useCase.execute(
+      new UpdateTeamPermittedModelCommand({
+        permittedModelId,
+        orgId,
+        teamId,
+        anonymousOnly: true,
+      }),
     );
 
-    const command = new UpdateTeamPermittedModelCommand(
-      permittedModelId,
+    expect(result).toBe(updated);
+    expect(permittedModelsRepository.update).toHaveBeenCalledWith({
+      id: permittedModelId,
       orgId,
-      teamId,
-      true,
-    );
-    const result = await useCase.execute(command);
-
-    expect(result.anonymousOnly).toBe(true);
-    expect(result.scope).toBe(PermittedModelScope.TEAM);
-    expect(result.scopeId).toBe(teamId);
-    const updateArg = permittedModelsRepository.update.mock.calls[0][0];
-    expect(updateArg.id).toBe(permittedModelId);
-    expect(updateArg.anonymousOnly).toBe(true);
+      anonymousOnly: true,
+    });
   });
 
-  it('should throw UnauthorizedAccessError for non-admin users', async () => {
+  it('updates internet access without overwriting anonymous mode', async () => {
+    setAdminContext();
+    const updated = makeTeamModel({
+      anonymousOnly: true,
+      internetAccessEnabled: false,
+    });
+    permittedModelsRepository.findOne.mockResolvedValue(
+      makeTeamModel({ anonymousOnly: true }),
+    );
+    permittedModelsRepository.update.mockResolvedValue(updated);
+
+    const result = await useCase.execute(
+      new UpdateTeamPermittedModelCommand({
+        permittedModelId,
+        orgId,
+        teamId,
+        internetAccessEnabled: false,
+      }),
+    );
+
+    expect(result).toBe(updated);
+    expect(permittedModelsRepository.update).toHaveBeenCalledWith({
+      id: permittedModelId,
+      orgId,
+      internetAccessEnabled: false,
+    });
+  });
+
+  it('rejects non-admin users', async () => {
     contextService.get.mockImplementation((key) => {
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.USER;
@@ -129,66 +165,71 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       return undefined;
     });
 
-    const command = new UpdateTeamPermittedModelCommand(
-      permittedModelId,
-      orgId,
-      teamId,
-      true,
-    );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnauthorizedAccessError,
-    );
+    await expect(
+      useCase.execute(
+        new UpdateTeamPermittedModelCommand({
+          permittedModelId,
+          orgId,
+          teamId,
+          anonymousOnly: true,
+        }),
+      ),
+    ).rejects.toThrow(UnauthorizedAccessError);
   });
 
-  it('should throw TeamNotFoundInOrgError when team does not exist in org', async () => {
+  it('rejects a team outside the organization', async () => {
     setAdminContext();
     getTeamUseCase.execute.mockRejectedValue(new TeamNotFoundError(teamId));
 
-    const command = new UpdateTeamPermittedModelCommand(
-      permittedModelId,
-      orgId,
-      teamId,
-      true,
-    );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      TeamNotFoundInOrgError,
-    );
+    await expect(
+      useCase.execute(
+        new UpdateTeamPermittedModelCommand({
+          permittedModelId,
+          orgId,
+          teamId,
+          anonymousOnly: true,
+        }),
+      ),
+    ).rejects.toThrow(TeamNotFoundInOrgError);
   });
 
-  it('should throw PermittedModelNotFoundError when model not found', async () => {
+  it('rejects a missing permitted model', async () => {
     setAdminContext();
     permittedModelsRepository.findOne.mockResolvedValue(null);
 
-    const command = new UpdateTeamPermittedModelCommand(
-      permittedModelId,
-      orgId,
-      teamId,
-      true,
-    );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      PermittedModelNotFoundError,
-    );
+    await expect(
+      useCase.execute(
+        new UpdateTeamPermittedModelCommand({
+          permittedModelId,
+          orgId,
+          teamId,
+          anonymousOnly: true,
+        }),
+      ),
+    ).rejects.toThrow(PermittedModelNotFoundError);
   });
 
-  it('should throw PermittedModelNotInTeamError when model belongs to different team', async () => {
+  it('rejects a permitted model assigned to another team', async () => {
     setAdminContext();
-    const otherTeamModel = new PermittedLanguageModel({
-      id: permittedModelId,
-      model: languageModel,
-      orgId,
-      scope: PermittedModelScope.TEAM,
-      scopeId: randomUUID(),
-    });
-    permittedModelsRepository.findOne.mockResolvedValue(otherTeamModel);
+    permittedModelsRepository.findOne.mockResolvedValue(
+      new PermittedLanguageModel({
+        id: permittedModelId,
+        model: languageModel,
+        orgId,
+        scope: PermittedModelScope.TEAM,
+        scopeId: randomUUID(),
+      }),
+    );
 
-    const command = new UpdateTeamPermittedModelCommand(
-      permittedModelId,
-      orgId,
-      teamId,
-      true,
-    );
-    await expect(useCase.execute(command)).rejects.toThrow(
-      PermittedModelNotInTeamError,
-    );
+    await expect(
+      useCase.execute(
+        new UpdateTeamPermittedModelCommand({
+          permittedModelId,
+          orgId,
+          teamId,
+          anonymousOnly: true,
+        }),
+      ),
+    ).rejects.toThrow(PermittedModelNotInTeamError);
   });
 });

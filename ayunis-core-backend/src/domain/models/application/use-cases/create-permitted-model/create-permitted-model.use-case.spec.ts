@@ -146,6 +146,34 @@ describe('CreatePermittedModelUseCase', () => {
       });
     });
 
+    it('creates a permitted model with internet access disabled', async () => {
+      const command = new CreatePermittedModelCommand(
+        mockModelId,
+        mockOrgId,
+        false,
+        false,
+      );
+      const model = new LanguageModel({
+        id: mockModelId,
+        name: 'gpt-5.4',
+        displayName: 'GPT 5.4',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+      });
+      modelsRepository.findOne.mockResolvedValue(model);
+      permittedModelsRepository.create.mockImplementation((permittedModel) =>
+        Promise.resolve(permittedModel),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result.internetAccessEnabled).toBe(false);
+    });
+
     it('should throw ModelNotFoundError when model is not found', async () => {
       // Arrange
       const command = new CreatePermittedModelCommand(mockModelId, mockOrgId);

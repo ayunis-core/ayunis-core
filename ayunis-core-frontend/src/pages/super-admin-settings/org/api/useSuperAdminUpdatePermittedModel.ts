@@ -1,6 +1,7 @@
 import {
   useSuperAdminPermittedModelsControllerUpdatePermittedModel,
   type ModelWithConfigResponseDto,
+  type UpdatePermittedModelDto,
   getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey,
@@ -16,9 +17,8 @@ import {
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 import { invalidatePermittedModelQueries } from './invalidatePermittedModelQueries';
 
-interface UpdatePermittedModelParams {
+interface UpdatePermittedModelParams extends UpdatePermittedModelDto {
   permittedModelId: string;
-  anonymousOnly: boolean;
 }
 
 const UPDATE_ERROR_MAP: Record<string, string> = {
@@ -47,9 +47,7 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
         onMutate: async ({ id, data }) => {
           const updater = (models: ModelWithConfigResponseDto[]) =>
             models.map((model) =>
-              model.permittedModelId === id
-                ? { ...model, anonymousOnly: data.anonymousOnly }
-                : model,
+              model.permittedModelId === id ? { ...model, ...data } : model,
             );
           return Promise.all(
             availabilityQueryKeys.map((key) =>
@@ -76,11 +74,14 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
       },
     });
 
-  function updatePermittedModel(params: UpdatePermittedModelParams) {
+  function updatePermittedModel({
+    permittedModelId,
+    ...data
+  }: UpdatePermittedModelParams) {
     updatePermittedModelMutation.mutate({
       orgId,
-      id: params.permittedModelId,
-      data: { anonymousOnly: params.anonymousOnly },
+      id: permittedModelId,
+      data,
     });
   }
 

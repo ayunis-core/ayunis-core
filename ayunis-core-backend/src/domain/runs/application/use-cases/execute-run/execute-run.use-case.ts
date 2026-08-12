@@ -51,6 +51,8 @@ import { ConfigService } from '@nestjs/config';
 import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
+import { GetEffectiveModelInternetAccessQuery } from 'src/domain/models/application/use-cases/get-effective-model-internet-access/get-effective-model-internet-access.query';
+import { GetEffectiveModelInternetAccessUseCase } from 'src/domain/models/application/use-cases/get-effective-model-internet-access/get-effective-model-internet-access.use-case';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -65,6 +67,7 @@ export class ExecuteRunUseCase {
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
+    private readonly getEffectiveModelInternetAccessUseCase: GetEffectiveModelInternetAccessUseCase,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly messageCleanupService: MessageCleanupService,
     private readonly inferenceOrchestratorService: InferenceOrchestratorService,
@@ -96,6 +99,7 @@ export class ExecuteRunUseCase {
         streaming: command.streaming,
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
+        modelInternetAccessEnabled: prepared.modelInternetAccessEnabled,
         activeSkills: prepared.activeSkills,
         skillId:
           command.input instanceof RunUserInput
@@ -118,6 +122,7 @@ export class ExecuteRunUseCase {
     thread: Thread;
     model: PermittedLanguageModel;
     isAnonymous: boolean;
+    modelInternetAccessEnabled: boolean;
     tools: RunParams['tools'];
     instructions?: string;
     activeSkills: RunParams['activeSkills'];
@@ -140,6 +145,10 @@ export class ExecuteRunUseCase {
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
 
     const isAnonymous = thread.isAnonymous || model.anonymousOnly;
+    const modelInternetAccessEnabled =
+      await this.getEffectiveModelInternetAccessUseCase.execute(
+        new GetEffectiveModelInternetAccessQuery(model),
+      );
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
@@ -147,6 +156,7 @@ export class ExecuteRunUseCase {
         activeSkills,
         model.model.canUseTools,
         isAnonymous,
+        modelInternetAccessEnabled,
       );
 
     return {
@@ -155,6 +165,7 @@ export class ExecuteRunUseCase {
       thread,
       model,
       isAnonymous,
+      modelInternetAccessEnabled,
       tools,
       instructions,
       activeSkills,
@@ -385,6 +396,7 @@ export class ExecuteRunUseCase {
       params.activeSkills,
       params.model.canUseTools,
       params.isAnonymous,
+      params.modelInternetAccessEnabled,
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;
