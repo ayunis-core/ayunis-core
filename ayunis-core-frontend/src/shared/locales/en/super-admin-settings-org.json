@@ -273,7 +273,74 @@
     "models": "Models",
     "usage": "Usage",
     "crawlDomains": "Crawl Domains",
-    "addons": "Add-ons"
+    "addons": "Add-ons",
+    "sso": "SSO"
+  },
+  "sso": {
+    "title": "Single sign-on",
+    "description": "Connect this organization to its verified Zitadel broker organization.",
+    "emailDomain": "Verified email domain",
+    "zitadelOrgId": "Zitadel organization ID",
+    "domainVerified": "I verified ownership of this domain and completed the Zitadel setup.",
+    "mappingLocked": "Disable SSO before changing the domain or Zitadel organization mapping.",
+    "loadError": "The SSO connection could not be loaded.",
+    "cancel": "Cancel",
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "notConfigured": "Not configured"
+    },
+    "configure": {
+      "save": "Save connection",
+      "success": "SSO connection saved. It remains disabled until explicitly enabled."
+    },
+    "access": {
+      "title": "Access and provisioning",
+      "description": "Control runtime login and JIT account creation independently. Invitations remain available."
+    },
+    "jit": {
+      "label": "JIT provisioning",
+      "description": "Create an Ayunis user on the first valid municipal SSO login.",
+      "success": "JIT provisioning updated."
+    },
+    "enable": {
+      "button": "Enable SSO",
+      "title": "Enable this SSO connection?",
+      "description": "Review the exact routing mapping that will become active.",
+      "confirm": "I reviewed this domain and Zitadel organization mapping.",
+      "confirmButton": "Enable SSO",
+      "success": "SSO enabled."
+    },
+    "disable": {
+      "button": "Disable SSO",
+      "success": "SSO disabled. Local login remains available."
+    },
+    "validation": {
+      "emailDomain": {
+        "required": "Enter the verified email domain.",
+        "matches": "Enter a valid email domain.",
+        "invalid": "Enter a valid email domain."
+      },
+      "zitadelOrgId": {
+        "required": "Enter the Zitadel organization ID.",
+        "isNotEmpty": "Enter the Zitadel organization ID.",
+        "maxLength": "The Zitadel organization ID is too long.",
+        "matches": "The Zitadel organization ID cannot contain whitespace.",
+        "invalid": "Enter a valid Zitadel organization ID."
+      },
+      "domainVerified": {
+        "required": "Confirm domain ownership and the Zitadel setup."
+      },
+      "invalid": "Review the entered SSO connection."
+    },
+    "errors": {
+      "conflict": "This domain or Zitadel organization is already assigned to another organization.",
+      "mustDisable": "Disable SSO before changing its routing mapping.",
+      "changed": "The connection changed while you were reviewing it. Reload and try again.",
+      "notFound": "No SSO connection exists for this organization.",
+      "invalid": "The SSO connection is incomplete or invalid.",
+      "unexpected": "The SSO connection could not be updated."
+    }
   },
   "addons": {
     "title": "Add-ons",

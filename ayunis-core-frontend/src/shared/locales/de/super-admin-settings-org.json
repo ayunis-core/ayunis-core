@@ -273,7 +273,74 @@
     "models": "Modelle",
     "usage": "Nutzung",
     "crawlDomains": "Crawl-Domains",
-    "addons": "Add-ons"
+    "addons": "Add-ons",
+    "sso": "SSO"
+  },
+  "sso": {
+    "title": "Single Sign-on",
+    "description": "Verbinden Sie diese Organisation mit ihrer verifizierten Zitadel-Broker-Organisation.",
+    "emailDomain": "Verifizierte E-Mail-Domain",
+    "zitadelOrgId": "Zitadel-Organisations-ID",
+    "domainVerified": "Ich habe die Domain-Inhaberschaft verifiziert und die Zitadel-Einrichtung abgeschlossen.",
+    "mappingLocked": "Deaktivieren Sie SSO, bevor Sie die Domain oder Zitadel-Organisationszuordnung ändern.",
+    "loadError": "Die SSO-Verbindung konnte nicht geladen werden.",
+    "cancel": "Abbrechen",
+    "status": {
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "notConfigured": "Nicht konfiguriert"
+    },
+    "configure": {
+      "save": "Verbindung speichern",
+      "success": "SSO-Verbindung gespeichert. Sie bleibt deaktiviert, bis sie ausdrücklich aktiviert wird."
+    },
+    "access": {
+      "title": "Zugriff und Bereitstellung",
+      "description": "Steuern Sie Anmeldung und JIT-Benutzeranlage unabhängig. Einladungen bleiben verfügbar."
+    },
+    "jit": {
+      "label": "JIT-Bereitstellung",
+      "description": "Beim ersten gültigen kommunalen SSO-Login einen Ayunis-Benutzer erstellen.",
+      "success": "JIT-Bereitstellung aktualisiert."
+    },
+    "enable": {
+      "button": "SSO aktivieren",
+      "title": "Diese SSO-Verbindung aktivieren?",
+      "description": "Prüfen Sie die genaue Routing-Zuordnung, die aktiviert wird.",
+      "confirm": "Ich habe diese Domain- und Zitadel-Organisationszuordnung geprüft.",
+      "confirmButton": "SSO aktivieren",
+      "success": "SSO aktiviert."
+    },
+    "disable": {
+      "button": "SSO deaktivieren",
+      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar."
+    },
+    "validation": {
+      "emailDomain": {
+        "required": "Geben Sie die verifizierte E-Mail-Domain ein.",
+        "matches": "Geben Sie eine gültige E-Mail-Domain ein.",
+        "invalid": "Geben Sie eine gültige E-Mail-Domain ein."
+      },
+      "zitadelOrgId": {
+        "required": "Geben Sie die Zitadel-Organisations-ID ein.",
+        "isNotEmpty": "Geben Sie die Zitadel-Organisations-ID ein.",
+        "maxLength": "Die Zitadel-Organisations-ID ist zu lang.",
+        "matches": "Die Zitadel-Organisations-ID darf keine Leerzeichen enthalten.",
+        "invalid": "Geben Sie eine gültige Zitadel-Organisations-ID ein."
+      },
+      "domainVerified": {
+        "required": "Bestätigen Sie Domain-Inhaberschaft und Zitadel-Einrichtung."
+      },
+      "invalid": "Prüfen Sie die eingegebene SSO-Verbindung."
+    },
+    "errors": {
+      "conflict": "Diese Domain oder Zitadel-Organisation ist bereits einer anderen Organisation zugeordnet.",
+      "mustDisable": "Deaktivieren Sie SSO, bevor Sie die Routing-Zuordnung ändern.",
+      "changed": "Die Verbindung wurde während der Prüfung geändert. Laden Sie neu und versuchen Sie es erneut.",
+      "notFound": "Für diese Organisation ist keine SSO-Verbindung vorhanden.",
+      "invalid": "Die SSO-Verbindung ist unvollständig oder ungültig.",
+      "unexpected": "Die SSO-Verbindung konnte nicht aktualisiert werden."
+    }
   },
   "addons": {
     "title": "Add-ons",
