@@ -8,6 +8,10 @@ import {
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
 import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
+import {
+  normalizeEmailDomain,
+  normalizeZitadelOrgId,
+} from 'src/iam/sso/domain/sso-connection-values';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 
 @Injectable()
@@ -26,6 +30,9 @@ export class SetOrgSsoEnabledUseCase {
     if (!existing) {
       throw new SsoConnectionNotFoundError(command.orgId);
     }
+    if (!this.matchesReviewedMapping(existing, command.reviewedMapping)) {
+      throw new SsoConnectionChangedError(command.orgId);
+    }
     if (existing.enabled === command.enabled) {
       return existing;
     }
@@ -42,5 +49,16 @@ export class SetOrgSsoEnabledUseCase {
       throw new SsoConnectionNotFoundError(command.orgId);
     }
     return updated;
+  }
+
+  private matchesReviewedMapping(
+    existing: OrgSsoConnection,
+    reviewed: SetOrgSsoEnabledCommand['reviewedMapping'],
+  ): boolean {
+    if (!reviewed) return true;
+    return (
+      normalizeEmailDomain(reviewed.emailDomain) === existing.emailDomain &&
+      normalizeZitadelOrgId(reviewed.zitadelOrgId) === existing.zitadelOrgId
+    );
   }
 }

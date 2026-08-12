@@ -1,0 +1,185 @@
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Put,
+} from '@nestjs/common';
+import {
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import type { UUID } from 'crypto';
+import {
+  CurrentUser,
+  UserProperty,
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
+import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
+import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
+import { ConfigureOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.use-case';
+import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
+import { GetOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.use-case';
+import {
+  type ReviewedSsoMapping,
+  SetOrgSsoEnabledCommand,
+} from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
+import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.command';
+import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
+import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
+import { ConfigureOrgSsoConnectionRequestDto } from 'src/iam/sso/presenters/http/dto/configure-org-sso-connection.request-dto';
+import { OrgSsoConnectionResourceDto } from 'src/iam/sso/presenters/http/dto/org-sso-connection.response-dto';
+import { SetOrgSsoEnabledRequestDto } from 'src/iam/sso/presenters/http/dto/set-org-sso-enabled.request-dto';
+import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
+import { SetOrgSsoStateRequestDto } from 'src/iam/sso/presenters/http/dto/set-org-sso-state.request-dto';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+
+interface SsoAuditEvent {
+  operation: string;
+  actorId: UUID;
+  orgId: UUID;
+  connection: OrgSsoConnection;
+  confirmation?: Record<string, boolean | string>;
+}
+
+@ApiTags('Super Admin SSO Connections')
+@Controller('super-admin/orgs/:orgId/sso')
+@SystemRoles(SystemRole.SUPER_ADMIN)
+@ApiForbiddenResponse({ description: 'The requester is not a super admin' })
+@ApiParam({ name: 'orgId', format: 'uuid' })
+export class SuperAdminSsoConnectionsController {
+  private readonly logger = new Logger(SuperAdminSsoConnectionsController.name);
+
+  constructor(
+    private readonly getConnectionUseCase: GetOrgSsoConnectionUseCase,
+    private readonly configureConnectionUseCase: ConfigureOrgSsoConnectionUseCase,
+    private readonly setEnabledUseCase: SetOrgSsoEnabledUseCase,
+    private readonly setJitUseCase: SetOrgSsoJitProvisioningUseCase,
+    private readonly responseMapper: OrgSsoConnectionResponseDtoMapper,
+  ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get an organization SSO connection' })
+  @ApiOkResponse({ type: OrgSsoConnectionResourceDto })
+  async get(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+  ): Promise<OrgSsoConnectionResourceDto> {
+    const connection = await this.find(orgId);
+    return this.responseMapper.toResource(connection);
+  }
+
+  @Put()
+  @ApiOperation({ summary: 'Configure an organization SSO connection' })
+  @ApiOkResponse({ type: OrgSsoConnectionResourceDto })
+  async configure(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+    @Body() dto: ConfigureOrgSsoConnectionRequestDto,
+    @CurrentUser(UserProperty.ID) actorId: UUID,
+  ): Promise<OrgSsoConnectionResourceDto> {
+    const connection = await this.configureConnectionUseCase.execute(
+      new ConfigureOrgSsoConnectionCommand(
+        orgId,
+        dto.emailDomain,
+        dto.zitadelOrgId,
+      ),
+    );
+    this.audit({
+      operation: 'configure',
+      actorId,
+      orgId,
+      connection,
+      confirmation: { domainVerified: dto.domainVerified },
+    });
+    return this.responseMapper.toResource(connection);
+  }
+
+  @Patch('enabled')
+  @ApiOperation({ summary: 'Enable or disable organization SSO' })
+  @ApiOkResponse({ type: OrgSsoConnectionResourceDto })
+  async setEnabled(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+    @Body() dto: SetOrgSsoEnabledRequestDto,
+    @CurrentUser(UserProperty.ID) actorId: UUID,
+  ): Promise<OrgSsoConnectionResourceDto> {
+    const reviewedMapping = this.getReviewedMapping(dto);
+    const connection = await this.setEnabledUseCase.execute(
+      new SetOrgSsoEnabledCommand(orgId, dto.enabled, reviewedMapping),
+    );
+    this.audit({
+      operation: 'set-enabled',
+      actorId,
+      orgId,
+      connection,
+      confirmation: reviewedMapping
+        ? {
+            confirmed: true,
+            reviewedEmailDomain: reviewedMapping.emailDomain,
+            reviewedZitadelOrgId: reviewedMapping.zitadelOrgId,
+          }
+        : undefined,
+    });
+    return this.responseMapper.toResource(connection);
+  }
+
+  @Patch('jit-provisioning')
+  @ApiOperation({ summary: 'Enable or disable JIT user provisioning' })
+  @ApiOkResponse({ type: OrgSsoConnectionResourceDto })
+  async setJitProvisioning(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+    @Body() dto: SetOrgSsoStateRequestDto,
+    @CurrentUser(UserProperty.ID) actorId: UUID,
+  ): Promise<OrgSsoConnectionResourceDto> {
+    const connection = await this.setJitUseCase.execute(
+      new SetOrgSsoJitProvisioningCommand(orgId, dto.enabled),
+    );
+    this.audit({
+      operation: 'set-jit',
+      actorId,
+      orgId,
+      connection,
+    });
+    return this.responseMapper.toResource(connection);
+  }
+
+  private find(orgId: UUID): Promise<OrgSsoConnection | null> {
+    return this.getConnectionUseCase.execute(
+      new GetOrgSsoConnectionQuery(orgId),
+    );
+  }
+
+  private getReviewedMapping(
+    dto: SetOrgSsoEnabledRequestDto,
+  ): ReviewedSsoMapping | undefined {
+    if (!dto.enabled) return undefined;
+    if (
+      dto.confirmed !== true ||
+      !dto.reviewedEmailDomain ||
+      !dto.reviewedZitadelOrgId
+    ) {
+      throw new BadRequestException(
+        'Enabling SSO requires confirmation of the reviewed broker mapping',
+      );
+    }
+    return {
+      emailDomain: dto.reviewedEmailDomain,
+      zitadelOrgId: dto.reviewedZitadelOrgId,
+    };
+  }
+
+  private audit(event: SsoAuditEvent): void {
+    this.logger.log('Superadmin changed SSO connection', {
+      operation: event.operation,
+      actorId: event.actorId,
+      orgId: event.orgId,
+      connection: this.responseMapper.toDto(event.connection),
+      confirmation: event.confirmation,
+    });
+  }
+}

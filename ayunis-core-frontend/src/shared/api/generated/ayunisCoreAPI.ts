@@ -46,6 +46,7 @@ import type {
   ChangeSubscriptionRequestDto,
   ChatCompletionRequestDto,
   CompleteMcpOAuthDto,
+  ConfigureOrgSsoConnectionRequestDto,
   ConfirmEmailDto,
   CourseModuleResponseDto,
   CrawlDomainGrantResponseDto,
@@ -131,6 +132,7 @@ import type {
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
   OrgMfaRequirementResponseDto,
+  OrgSsoConnectionResourceDto,
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
@@ -165,6 +167,8 @@ import type {
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
   SetOrgDefaultModelDto,
+  SetOrgSsoEnabledRequestDto,
+  SetOrgSsoStateRequestDto,
   SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
@@ -22098,6 +22102,294 @@ export const useMfaControllerResetUser = <TError = unknown,
       > => {
 
       const mutationOptions = getMfaControllerResetUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get an organization SSO connection
+ */
+export const superAdminSsoConnectionsControllerGet = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminSsoConnectionsControllerGetQueryKey = (orgId?: string,) => {
+    return [
+    `/super-admin/orgs/${orgId}/sso`
+    ] as const;
+    }
+
+    
+export const getSuperAdminSsoConnectionsControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminSsoConnectionsControllerGetQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>> = ({ signal }) => superAdminSsoConnectionsControllerGet(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminSsoConnectionsControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>>
+export type SuperAdminSsoConnectionsControllerGetQueryError = void
+
+
+export function useSuperAdminSsoConnectionsControllerGet<TData = Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSsoConnectionsControllerGet<TData = Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminSsoConnectionsControllerGet<TData = Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an organization SSO connection
+ */
+
+export function useSuperAdminSsoConnectionsControllerGet<TData = Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminSsoConnectionsControllerGetQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Configure an organization SSO connection
+ */
+export const superAdminSsoConnectionsControllerConfigure = (
+    orgId: string,
+    configureOrgSsoConnectionRequestDto: ConfigureOrgSsoConnectionRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: configureOrgSsoConnectionRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSsoConnectionsControllerConfigureMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>, TError,{orgId: string;data: ConfigureOrgSsoConnectionRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>, TError,{orgId: string;data: ConfigureOrgSsoConnectionRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSsoConnectionsControllerConfigure'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>, {orgId: string;data: ConfigureOrgSsoConnectionRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerConfigure(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerConfigureMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>>
+    export type SuperAdminSsoConnectionsControllerConfigureMutationBody = ConfigureOrgSsoConnectionRequestDto
+    export type SuperAdminSsoConnectionsControllerConfigureMutationError = void
+
+    /**
+ * @summary Configure an organization SSO connection
+ */
+export const useSuperAdminSsoConnectionsControllerConfigure = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>, TError,{orgId: string;data: ConfigureOrgSsoConnectionRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerConfigure>>,
+        TError,
+        {orgId: string;data: ConfigureOrgSsoConnectionRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSsoConnectionsControllerConfigureMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Enable or disable organization SSO
+ */
+export const superAdminSsoConnectionsControllerSetEnabled = (
+    orgId: string,
+    setOrgSsoEnabledRequestDto: SetOrgSsoEnabledRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/enabled`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgSsoEnabledRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSsoConnectionsControllerSetEnabledMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>, TError,{orgId: string;data: SetOrgSsoEnabledRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>, TError,{orgId: string;data: SetOrgSsoEnabledRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSsoConnectionsControllerSetEnabled'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>, {orgId: string;data: SetOrgSsoEnabledRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetEnabled(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetEnabledMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>>
+    export type SuperAdminSsoConnectionsControllerSetEnabledMutationBody = SetOrgSsoEnabledRequestDto
+    export type SuperAdminSsoConnectionsControllerSetEnabledMutationError = void
+
+    /**
+ * @summary Enable or disable organization SSO
+ */
+export const useSuperAdminSsoConnectionsControllerSetEnabled = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>, TError,{orgId: string;data: SetOrgSsoEnabledRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetEnabled>>,
+        TError,
+        {orgId: string;data: SetOrgSsoEnabledRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSsoConnectionsControllerSetEnabledMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Enable or disable JIT user provisioning
+ */
+export const superAdminSsoConnectionsControllerSetJitProvisioning = (
+    orgId: string,
+    setOrgSsoStateRequestDto: SetOrgSsoStateRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/jit-provisioning`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgSsoStateRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>, TError,{orgId: string;data: SetOrgSsoStateRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>, TError,{orgId: string;data: SetOrgSsoStateRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSsoConnectionsControllerSetJitProvisioning'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>, {orgId: string;data: SetOrgSsoStateRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetJitProvisioning(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetJitProvisioningMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>>
+    export type SuperAdminSsoConnectionsControllerSetJitProvisioningMutationBody = SetOrgSsoStateRequestDto
+    export type SuperAdminSsoConnectionsControllerSetJitProvisioningMutationError = void
+
+    /**
+ * @summary Enable or disable JIT user provisioning
+ */
+export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>, TError,{orgId: string;data: SetOrgSsoStateRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetJitProvisioning>>,
+        TError,
+        {orgId: string;data: SetOrgSsoStateRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

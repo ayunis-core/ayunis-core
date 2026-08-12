@@ -10467,6 +10467,166 @@
         "summary": "Reset a user’s two-factor auth (admin, lockout recovery)",
         "tags": ["mfa"]
       }
+    },
+    "/super-admin/orgs/{orgId}/sso": {
+      "get": {
+        "operationId": "SuperAdminSsoConnectionsController_get",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Get an organization SSO connection",
+        "tags": ["Super Admin SSO Connections"]
+      },
+      "put": {
+        "operationId": "SuperAdminSsoConnectionsController_configure",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigureOrgSsoConnectionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Configure an organization SSO connection",
+        "tags": ["Super Admin SSO Connections"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/sso/enabled": {
+      "patch": {
+        "operationId": "SuperAdminSsoConnectionsController_setEnabled",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgSsoEnabledRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Enable or disable organization SSO",
+        "tags": ["Super Admin SSO Connections"]
+      }
+    },
+    "/super-admin/orgs/{orgId}/sso/jit-provisioning": {
+      "patch": {
+        "operationId": "SuperAdminSsoConnectionsController_setJitProvisioning",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgSsoStateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Enable or disable JIT user provisioning",
+        "tags": ["Super Admin SSO Connections"]
+      }
     }
   },
   "info": {
@@ -18332,6 +18492,111 @@
           }
         },
         "required": ["required"]
+      },
+      "OrgSsoConnectionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "emailDomain": {
+            "type": "string",
+            "example": "stadt.example"
+          },
+          "domainVerifiedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "zitadelOrgId": {
+            "type": "string",
+            "example": "385820595704561666",
+            "nullable": true
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "jitProvisioningEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "orgId",
+          "emailDomain",
+          "domainVerifiedAt",
+          "zitadelOrgId",
+          "enabled",
+          "jitProvisioningEnabled"
+        ]
+      },
+      "OrgSsoConnectionResourceDto": {
+        "type": "object",
+        "properties": {
+          "connection": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OrgSsoConnectionResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["connection"]
+      },
+      "ConfigureOrgSsoConnectionRequestDto": {
+        "type": "object",
+        "properties": {
+          "emailDomain": {
+            "type": "string",
+            "example": "stadt.example"
+          },
+          "zitadelOrgId": {
+            "type": "string",
+            "example": "385820595704561666",
+            "maxLength": 255
+          },
+          "domainVerified": {
+            "type": "boolean",
+            "description": "Confirms the email domain was independently verified"
+          }
+        },
+        "required": ["emailDomain", "zitadelOrgId", "domainVerified"]
+      },
+      "SetOrgSsoEnabledRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "description": "Confirms the broker mapping was reviewed before enablement"
+          },
+          "reviewedEmailDomain": {
+            "type": "string",
+            "example": "stadt.example"
+          },
+          "reviewedZitadelOrgId": {
+            "type": "string",
+            "example": "385820595704561666"
+          }
+        },
+        "required": ["enabled"]
+      },
+      "SetOrgSsoStateRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["enabled"]
       }
     }
   }

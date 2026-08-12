@@ -10,14 +10,18 @@ import { PostgresOrgSsoConnectionsRepository } from 'src/iam/sso/infrastructure/
 import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/org-sso-connection.mapper';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
+import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
+import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrgSsoConnectionRecord, FederatedIdentityRecord]),
     OrgsModule,
   ],
+  controllers: [SuperAdminSsoConnectionsController],
   providers: [
     OrgSsoConnectionMapper,
+    OrgSsoConnectionResponseDtoMapper,
     {
       provide: OrgSsoConnectionsRepository,
       useClass: PostgresOrgSsoConnectionsRepository,
