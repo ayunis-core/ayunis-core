@@ -306,6 +306,32 @@ describe('MistralFileRetrieverHandler', () => {
       expect(mockClient.files.upload).toHaveBeenCalledTimes(1);
     });
 
+    it('classifies a PDF rejected by Mistral parsing as an unprocessable document', async () => {
+      const mistralError = createMistralError(
+        400,
+        '{"object":"error","message":"Document is not a valid PDF.","type":"document_parser_invalid_file","code":"3740"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        UnprocessableDocumentError,
+      );
+    });
+
+    it('does not classify a different rejection that only mentions the parser error type as a document error', async () => {
+      const mistralError = createMistralError(
+        400,
+        '{"message":"Unexpected document_parser_invalid_file value","type":"invalid_request"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+      mockClient.files.retrieve.mockResolvedValue({ id: 'file-123' });
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
+      );
+    });
+
     // The file id we uploaded is gone for reasons on Mistral's side, so unlike
     // a corrupt document this is worth retrying — it belongs with the provider
     // failures, not with the document errors above.
@@ -338,7 +364,7 @@ describe('MistralFileRetrieverHandler', () => {
     it('keeps Mistral 401 as FileRetrieverUnexpectedError — bad API key is our config bug', async () => {
       const mistralError = createMistralError(
         401,
-        '{"message":"Unauthorized"}',
+        '{"message":"Unauthorized","type":"document_parser_invalid_file"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
