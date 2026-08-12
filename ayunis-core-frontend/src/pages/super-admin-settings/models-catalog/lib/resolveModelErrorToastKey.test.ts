@@ -15,6 +15,8 @@ describe('resolveModelErrorToastKey', () => {
     ['MODEL_CREATION_FAILED', 'models.createError'],
     ['MODEL_UPDATE_FAILED', 'models.updateError'],
     ['MODEL_DELETION_FAILED', 'models.deleteError'],
+    ['MODEL_REFERENCED_BY_USAGE', 'models.referencedByUsage'],
+    ['MODEL_STILL_PERMITTED', 'models.stillPermitted'],
   ])('maps %s to %s', (code, expectedKey) => {
     expect(resolveModelErrorToastKey(code, 'models.updateError')).toBe(
       expectedKey,

@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import {
@@ -17,21 +19,45 @@ import { ModelMapper } from './mappers/model.mapper';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
-import { ModelAlreadyExistsError } from 'src/domain/models/application/models.errors';
+import {
+  ModelAlreadyExistsError,
+  ModelReferencedByUsageError,
+} from 'src/domain/models/application/models.errors';
 
 const PG_UNIQUE_VIOLATION = '23505';
+const PG_FOREIGN_KEY_VIOLATION = '23503';
 const MODEL_KEY_UNIQUE_CONSTRAINT = 'IDX_7c11834d93fa8eaf208a48d66a';
+const USAGE_MODEL_FOREIGN_KEY = 'FK_523206731b52aa6170a99d10bbf';
 
-function isModelKeyUniqueConstraintViolation(error: unknown): boolean {
+function isConstraintViolation(
+  error: unknown,
+  code: string,
+  constraint: string,
+): boolean {
   if (typeof error !== 'object' || error === null) {
     return false;
   }
   const record = error as Record<string, unknown>;
   const driverError = record.driverError as Record<string, unknown> | undefined;
-  const code = driverError?.code ?? record.code;
-  const constraint = driverError?.constraint ?? record.constraint;
   return (
-    code === PG_UNIQUE_VIOLATION && constraint === MODEL_KEY_UNIQUE_CONSTRAINT
+    (driverError?.code ?? record.code) === code &&
+    (driverError?.constraint ?? record.constraint) === constraint
+  );
+}
+
+function isModelKeyUniqueConstraintViolation(error: unknown): boolean {
+  return isConstraintViolation(
+    error,
+    PG_UNIQUE_VIOLATION,
+    MODEL_KEY_UNIQUE_CONSTRAINT,
+  );
+}
+
+function isUsageModelForeignKeyViolation(error: unknown): boolean {
+  return isConstraintViolation(
+    error,
+    PG_FOREIGN_KEY_VIOLATION,
+    USAGE_MODEL_FOREIGN_KEY,
   );
 }
 
@@ -43,6 +69,7 @@ export class LocalModelsRepository extends ModelsRepository {
     @InjectRepository(ModelRecord)
     private readonly localModelRepository: Repository<ModelRecord>,
     private readonly localModelMapper: ModelMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
@@ -68,6 +95,22 @@ export class LocalModelsRepository extends ModelsRepository {
     const model = await this.localModelRepository.findOne({ where });
 
     return model ? this.localModelMapper.toDomain(model) : undefined;
+  }
+
+  async withCatalogModelLocked<Result>(
+    id: UUID,
+    operation: (model: Model | undefined) => Promise<Result>,
+  ): Promise<Result> {
+    this.logger.log('withCatalogModelLocked', { id });
+
+    return await this.txHost.withTransaction(async () => {
+      const record = await this.txHost.tx.findOne(ModelRecord, {
+        where: { id },
+        lock: { mode: 'pessimistic_write' },
+      });
+      const model = record ? this.localModelMapper.toDomain(record) : undefined;
+      return await operation(model);
+    });
   }
 
   async findOneLanguage(id: UUID): Promise<LanguageModel | undefined> {
@@ -140,10 +183,16 @@ export class LocalModelsRepository extends ModelsRepository {
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
 
-    const result = await this.localModelRepository.delete({ id });
-
-    if (result.affected === 0) {
-      throw new Error(`Model with id ${id} not found`);
+    try {
+      const result = await this.txHost.tx.delete(ModelRecord, { id });
+      if (result.affected === 0) {
+        throw new Error(`Model with id ${id} not found`);
+      }
+    } catch (error) {
+      if (isUsageModelForeignKeyViolation(error)) {
+        throw new ModelReferencedByUsageError(id);
+      }
+      throw error;
     }
   }
 }

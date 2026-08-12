@@ -36,7 +36,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **UpdatePermittedModelUseCase** (`application/use-cases/update-permitted-model`): Updates a permitted model's flags (default, anonymous-only).
 - **CreatePermittedModelUseCase** (`application/use-cases/create-permitted-model`): Creates a new org-scoped permitted model entry.
 - **DeletePermittedModelUseCase** (`application/use-cases/delete-permitted-model`): Removes a permitted model entry and clears related defaults.
-- **DeleteModelUseCase** (`application/use-cases/delete-model`): Deletes a model from the catalog.
+- **DeleteModelUseCase** (`application/use-cases/delete-model`): Deletes an unreferenced model from the catalog only after its organization permissions have been removed through their dedicated flow. Permitted models return `MODEL_STILL_PERMITTED`; models referenced by historical usage return `MODEL_REFERENCED_BY_USAGE` with archival as the actionable alternative. The model row stays pessimistically locked through the checks and delete, so concurrent usage collection completes first and cannot be dropped; the usage FK is translated to the same conflict.
 - **GetPermittedModelsUseCase** (`application/use-cases/get-permitted-models`): Retrieves all permitted models for an org.
 - **GetPermittedModelUseCase** (`application/use-cases/get-permitted-model`): Retrieves a single permitted model by ID.
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.

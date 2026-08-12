@@ -17,6 +17,7 @@ describe('CreateEmbeddingModelUseCase', () => {
     modelsRepository = {
       findAll: jest.fn(),
       findOne: jest.fn(),
+      withCatalogModelLocked: jest.fn(),
       findOneLanguage: jest.fn(),
       findOneEmbedding: jest.fn(),
       findOneImageGeneration: jest.fn(),

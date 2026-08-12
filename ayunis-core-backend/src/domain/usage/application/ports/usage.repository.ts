@@ -65,6 +65,7 @@ export abstract class UsageRepository {
     startDate?: Date,
     endDate?: Date,
   ): Promise<Usage[]>;
+  abstract existsByModelId(modelId: UUID): Promise<boolean>;
   abstract getProviderUsage(
     params: ProviderUsageParams,
   ): Promise<ProviderUsage[]>;
