@@ -12,6 +12,9 @@ export enum SsoErrorCode {
   CONNECTION_CHANGED = 'SSO_CONNECTION_CHANGED',
   BROKER_NOT_CONFIGURED = 'SSO_BROKER_NOT_CONFIGURED',
   BROKER_RESPONSE_INVALID = 'SSO_BROKER_RESPONSE_INVALID',
+  CONNECTION_NOT_AVAILABLE = 'SSO_CONNECTION_NOT_AVAILABLE',
+  LOGIN_TRANSACTION_INVALID = 'SSO_LOGIN_TRANSACTION_INVALID',
+  ORGANIZATION_MISMATCH = 'SSO_ORGANIZATION_MISMATCH',
   UNEXPECTED = 'SSO_UNEXPECTED_ERROR',
 }
 
@@ -100,6 +103,36 @@ export class InvalidSsoBrokerResponseError extends SsoError {
       SsoErrorCode.BROKER_RESPONSE_INVALID,
       401,
       { field },
+    );
+  }
+}
+
+export class SsoConnectionNotAvailableError extends SsoError {
+  constructor() {
+    super(
+      'SSO is not available for this organization',
+      SsoErrorCode.CONNECTION_NOT_AVAILABLE,
+      404,
+    );
+  }
+}
+
+export class InvalidSsoLoginTransactionError extends SsoError {
+  constructor() {
+    super(
+      'SSO login transaction is invalid or expired',
+      SsoErrorCode.LOGIN_TRANSACTION_INVALID,
+      401,
+    );
+  }
+}
+
+export class SsoOrganizationMismatchError extends SsoError {
+  constructor() {
+    super(
+      'The authenticated identity does not belong to the requested organization',
+      SsoErrorCode.ORGANIZATION_MISMATCH,
+      401,
     );
   }
 }

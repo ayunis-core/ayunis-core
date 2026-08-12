@@ -1,0 +1,288 @@
+import { createHash } from 'crypto';
+import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
+import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
+import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
+import {
+  anEnabledSsoConnection,
+  SSO_TEST_ORG_ID,
+  SSO_TEST_ZITADEL_ORG_ID,
+} from 'src/iam/sso/application/testing/sso-login.fixtures';
+
+const TEST_STATE = 'oauth-state';
+const TEST_BROWSER_BINDING = 'browser-binding';
+
+describe(CompleteOrgSsoLoginUseCase.name, () => {
+  const callbackParameters = new URLSearchParams({
+    code: 'authorization-code',
+    state: TEST_STATE,
+  });
+
+  it('returns a validated identity when the callback matches the pinned organizations', async () => {
+    const transaction = pendingTransaction();
+    const transactions = {
+      save: jest.fn(),
+      consume: jest.fn().mockResolvedValue(transaction),
+      deleteExpired: jest.fn(),
+    };
+    const broker = {
+      createAuthorizationRequest: jest.fn(),
+      validateCallback: jest.fn().mockResolvedValue({
+        issuer: 'https://sso.ayunis.de',
+        subject: 'zitadel-user',
+        email: 'staff@demo.com',
+        emailVerified: true,
+        zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+      }),
+    };
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      transactions,
+      broker,
+      {
+        encrypt: jest.fn(),
+        decrypt: jest
+          .fn()
+          .mockReturnValueOnce('pkce-verifier')
+          .mockReturnValueOnce('oidc-nonce'),
+      },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).resolves.toMatchObject({
+      orgId: SSO_TEST_ORG_ID,
+      subject: 'zitadel-user',
+      zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+      postLoginPath: '/',
+    });
+    expect(transactions.consume).toHaveBeenCalledWith(
+      createHash('sha256').update(TEST_STATE).digest('hex'),
+      createHash('sha256').update(TEST_BROWSER_BINDING).digest('hex'),
+      expect.any(Date),
+    );
+  });
+
+  it('rejects a callback without a single state value', async () => {
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      {
+        save: jest.fn(),
+        consume: jest.fn(),
+        deleteExpired: jest.fn(),
+      },
+      { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+      { encrypt: jest.fn(), decrypt: jest.fn() },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          new URLSearchParams('code=authorization-code'),
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_LOGIN_TRANSACTION_INVALID' });
+  });
+
+  it('rejects a replayed or expired transaction', async () => {
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      {
+        save: jest.fn(),
+        consume: jest.fn().mockResolvedValue(null),
+        deleteExpired: jest.fn(),
+      },
+      { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+      { encrypt: jest.fn(), decrypt: jest.fn() },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_LOGIN_TRANSACTION_INVALID' });
+  });
+
+  it('rejects a broker organization that differs from the pinned organization', async () => {
+    const broker = {
+      createAuthorizationRequest: jest.fn(),
+      validateCallback: jest.fn().mockResolvedValue({
+        issuer: 'https://sso.ayunis.de',
+        subject: 'zitadel-user',
+        email: 'staff@other.example',
+        emailVerified: true,
+        zitadelOrgId: 'different-zitadel-org',
+      }),
+    };
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      {
+        save: jest.fn(),
+        consume: jest.fn().mockResolvedValue(pendingTransaction()),
+        deleteExpired: jest.fn(),
+      },
+      broker,
+      {
+        encrypt: jest.fn(),
+        decrypt: jest
+          .fn()
+          .mockReturnValueOnce('pkce-verifier')
+          .mockReturnValueOnce('oidc-nonce'),
+      },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_ORGANIZATION_MISMATCH' });
+  });
+
+  it('rejects an unverified broker email', async () => {
+    const useCase = useCaseWithIdentity({ emailVerified: false });
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({
+      code: 'SSO_BROKER_RESPONSE_INVALID',
+      metadata: { field: 'email_verified' },
+    });
+  });
+
+  it('rejects a verified broker email outside the configured domain', async () => {
+    const useCase = useCaseWithIdentity({
+      email: 'staff@other.example',
+    });
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_ORGANIZATION_MISMATCH' });
+  });
+
+  it.each([
+    ['disabled', anEnabledSsoConnection({ enabled: false })],
+    [
+      'remapped',
+      anEnabledSsoConnection({ zitadelOrgId: '385820595704561999' }),
+    ],
+  ])(
+    'rejects a callback when the connection was %s',
+    async (_case, mapping) => {
+      const useCase = useCaseWithIdentity({}, mapping);
+
+      await expect(
+        useCase.execute(
+          new CompleteOrgSsoLoginCommand(
+            callbackParameters,
+            TEST_BROWSER_BINDING,
+          ),
+        ),
+      ).rejects.toMatchObject({ code: 'SSO_CONNECTION_NOT_AVAILABLE' });
+    },
+  );
+
+  it('rejects a callback from a different browser before broker exchange', async () => {
+    const broker = {
+      createAuthorizationRequest: jest.fn(),
+      validateCallback: jest.fn(),
+    };
+    const useCase = new CompleteOrgSsoLoginUseCase(
+      {
+        save: jest.fn(),
+        consume: jest.fn().mockResolvedValue(null),
+        deleteExpired: jest.fn(),
+      },
+      broker,
+      { encrypt: jest.fn(), decrypt: jest.fn() },
+      connectionRepository(),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(callbackParameters, 'other-browser'),
+      ),
+    ).rejects.toMatchObject({ code: 'SSO_LOGIN_TRANSACTION_INVALID' });
+    expect(broker.validateCallback).not.toHaveBeenCalled();
+  });
+});
+
+function pendingTransaction(): SsoLoginTransaction {
+  return new SsoLoginTransaction({
+    stateHash: createHash('sha256').update(TEST_STATE).digest('hex'),
+    browserBindingHash: createHash('sha256')
+      .update(TEST_BROWSER_BINDING)
+      .digest('hex'),
+    postLoginPath: '/',
+    encryptedCodeVerifier: 'encrypted-verifier',
+    encryptedNonce: 'encrypted-nonce',
+    orgId: SSO_TEST_ORG_ID,
+    zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+  });
+}
+
+function connectionRepository(connection = anEnabledSsoConnection()) {
+  return {
+    findByOrgId: jest.fn().mockResolvedValue(connection),
+    findByEmailDomain: jest.fn(),
+    findByZitadelOrgId: jest.fn(),
+    save: jest.fn(),
+    updateConfigurationIfDisabled: jest.fn(),
+    setEnabled: jest.fn(),
+    setJitProvisioningEnabled: jest.fn(),
+    setJitProvisioningEnabledIfMappingMatches: jest.fn(),
+  };
+}
+
+function useCaseWithIdentity(
+  identityOverrides: Record<string, unknown>,
+  connection = anEnabledSsoConnection(),
+): CompleteOrgSsoLoginUseCase {
+  return new CompleteOrgSsoLoginUseCase(
+    {
+      save: jest.fn(),
+      consume: jest.fn().mockResolvedValue(pendingTransaction()),
+      deleteExpired: jest.fn(),
+    },
+    {
+      createAuthorizationRequest: jest.fn(),
+      validateCallback: jest.fn().mockResolvedValue({
+        issuer: 'https://sso.ayunis.de',
+        subject: 'zitadel-user',
+        email: 'staff@demo.com',
+        emailVerified: true,
+        zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+        ...identityOverrides,
+      }),
+    },
+    {
+      encrypt: jest.fn(),
+      decrypt: jest
+        .fn()
+        .mockReturnValueOnce('pkce-verifier')
+        .mockReturnValueOnce('oidc-nonce'),
+    },
+    connectionRepository(connection),
+  );
+}
