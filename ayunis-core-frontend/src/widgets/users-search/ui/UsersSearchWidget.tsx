@@ -8,6 +8,8 @@ interface UsersSearchWidgetProps {
   onSearchChange: (search?: string) => void;
   translationNamespace: string;
   placeholderKey: string;
+  /** Off for pages where the search box is not the primary control. */
+  autoFocus?: boolean;
 }
 
 export function UsersSearchWidget({
@@ -15,6 +17,7 @@ export function UsersSearchWidget({
   onSearchChange,
   translationNamespace,
   placeholderKey,
+  autoFocus = true,
 }: Readonly<UsersSearchWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
   const [localValue, setLocalValue] = useState<string | null>(null);
@@ -26,8 +29,10 @@ export function UsersSearchWidget({
 
   // Auto-focus search input on mount
   useEffect(() => {
-    searchInputRef.current?.focus();
-  }, []);
+    if (autoFocus) {
+      searchInputRef.current?.focus();
+    }
+  }, [autoFocus]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

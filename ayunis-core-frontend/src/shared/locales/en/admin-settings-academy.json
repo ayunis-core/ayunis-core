@@ -19,5 +19,27 @@
         "description": "Members must pass the certificate before using chat and renew it every 12 months. Renewing means completing the whole Academy again."
       }
     }
+  },
+  "overview": {
+    "title": "Certificate status by member",
+    "description": "Who has passed the AI certificate, when they passed, and whose certificate needs attention. Members whose certificate is due within 30 days count as expiring soon.",
+    "searchPlaceholder": "Search by name or email",
+    "empty": "No members match these filters",
+    "emptyDescription": "Clear the search or status filter to see everyone.",
+    "filter": {
+      "all": "All statuses"
+    },
+    "column": {
+      "member": "Member",
+      "lastPassed": "Last passed",
+      "renewalDue": "Renewal due",
+      "status": "Status"
+    },
+    "status": {
+      "valid": "Valid",
+      "expiringSoon": "Expiring soon",
+      "expired": "Expired",
+      "notPassed": "Not yet earned"
+    }
   }
 }
