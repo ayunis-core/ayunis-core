@@ -48,6 +48,7 @@ import { LocalPasswordSetTokensRepository } from './infrastructure/repositories/
 import { PasswordSetTokenCleanupTask } from './infrastructure/tasks/password-set-token-cleanup.task';
 import { FindUserByEmailUseCase } from './application/use-cases/find-user-by-email/find-user-by-email.use-case';
 import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
+import { FindAllUserSummariesByOrgIdUseCase } from './application/use-cases/find-all-user-summaries-by-org-id/find-all-user-summaries-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
 import { InvitesModule } from '../invites/invites.module';
@@ -127,6 +128,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     ValidatePasswordResetTokenUseCase,
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
+    FindAllUserSummariesByOrgIdUseCase,
     AdminTriggerPasswordResetUseCase,
     SuperAdminTriggerPasswordResetUseCase,
     SendSetInitialPasswordEmailUseCase,
@@ -155,6 +157,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     EmailConfirmationJwtService,
     FindUserByEmailUseCase,
     FindAllUserIdsByOrgIdUseCase,
+    FindAllUserSummariesByOrgIdUseCase,
     GetOrgAdminsUseCase,
     UsersRepository, // Export repository for seeding
   ],

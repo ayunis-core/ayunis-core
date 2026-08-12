@@ -2,6 +2,7 @@ import type { User } from '../../domain/user.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { SystemRole } from '../../domain/value-objects/system-role.enum';
+import type { UserSummary } from 'src/iam/users/domain/user-summary';
 
 export interface UsersPagination {
   limit: number;
@@ -25,6 +26,10 @@ export abstract class UsersRepository {
     filters?: UsersFilters,
   ): Promise<Paginated<User>>;
   abstract findAllIdsByOrgId(orgId: UUID): Promise<UUID[]>;
+  abstract findAllSummariesByOrgId(
+    orgId: UUID,
+    filters?: UsersFilters,
+  ): Promise<UserSummary[]>;
   abstract create(user: User): Promise<User>;
   abstract update(user: User): Promise<User>;
   abstract delete(id: UUID): Promise<void>;

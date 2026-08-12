@@ -4,6 +4,7 @@ import {
   UsersPagination,
   UsersFilters,
 } from 'src/iam/users/application/ports/users.repository';
+import type { UserSummary } from 'src/iam/users/domain/user-summary';
 import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -114,11 +115,14 @@ export class LocalUsersRepository extends UsersRepository {
     pagination: UsersPagination,
     filters?: UsersFilters,
   ): Promise<Paginated<User>> {
+    // The search term is free text over member names and emails, so it is
+    // counted rather than logged — it would otherwise persist personal data in
+    // centralized logs for their whole retention period.
     this.logger.log('findManyByOrgId', {
       orgId,
       limit: pagination.limit,
       offset: pagination.offset,
-      search: filters?.search,
+      hasSearch: filters?.search !== undefined,
     });
 
     const queryBuilder = this.userRepository
@@ -155,6 +159,26 @@ export class LocalUsersRepository extends UsersRepository {
       select: { id: true },
     });
     return users.map((user) => user.id);
+  }
+
+  async findAllSummariesByOrgId(
+    orgId: UUID,
+    filters?: UsersFilters,
+  ): Promise<UserSummary[]> {
+    this.logger.log('findAllSummariesByOrgId', {
+      orgId,
+      hasSearch: filters?.search !== undefined,
+    });
+    const search = filters?.search?.trim();
+    return this.userRepository.find({
+      where: search
+        ? [
+            { orgId, name: ILike(`%${search}%`) },
+            { orgId, email: ILike(`%${search}%`) },
+          ]
+        : { orgId },
+      select: { id: true, name: true, email: true },
+    });
   }
 
   async create(user: User): Promise<User> {

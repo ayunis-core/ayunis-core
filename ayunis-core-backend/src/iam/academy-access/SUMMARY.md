@@ -78,9 +78,35 @@ Deliberately **not** gated:
 - `GET status` — any authenticated user, **not** gated (a blocked user has to be
   able to read why). Returns the evaluation above.
 - `GET`/`PUT org-settings` — `@Roles(ADMIN)`.
+- `GET org-certificates` — `@Roles(ADMIN)`. The admin overview, see below.
+
+## Admin overview
+
+`ListOrgCertificateStatusesUseCase` pairs every member of the org with a
+`CertificateValidityStatus` (`not_passed`, `valid`, `expiring_soon`, `expired`),
+derived by the pure `resolveCertificateValidityStatus`. `expiring_soon` starts
+`EXPIRING_SOON_DAYS` (30) before expiry — deliberately the same moment the user
+gets their first expiry notification, so admin and member see the same thing.
+`expiring_soon`/`expired` can only occur in `required_annually`; a permanent pass
+never lapses, so `required_once` reports `valid` however old the pass is.
+
+The status is derived from data owned by two modules — the mode here, the
+completion dates in the academy — so it cannot be filtered or sorted in SQL
+without a cross-module join. The use case therefore loads the whole member list
+(`FindAllUserSummariesByOrgIdUseCase`, exported by `UsersModule` — id, name and
+email only, so an admin listing never pulls password hashes) plus one bulk
+completion lookup, then filters, sorts and paginates **in memory**. Two queries
+serve the screen. That trade buys the module boundary at the cost of
+scaling with org size; it is affordable for the municipality-sized orgs this
+product serves, and `total` describes the filtered set so the table cannot page
+past the end.
+
+Default order is most-urgent-first (`expired`, `expiring_soon`, `not_passed`,
+`valid`, then name), so the members an admin has to chase are on page one.
 
 ## Layout
 
-Standard hexagonal: `domain/` (settings entity + mode enum), `application/`
-(port, errors, decorator, guard, use cases), `infrastructure/persistence/postgres/`
-(record + mapper + repository), `presenters/http/`.
+Standard hexagonal: `domain/` (settings entity + mode and validity-status
+enums), `application/` (port, errors, decorator, guard, use cases, pure status
+util), `infrastructure/persistence/postgres/` (record + mapper + repository),
+`presenters/http/`.

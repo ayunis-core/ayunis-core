@@ -4964,6 +4964,39 @@ export interface UpsertOrgAcademyAccessSettingsDto {
   mode: AcademyAccessMode;
 }
 
+export type CertificateValidityStatus = typeof CertificateValidityStatus[keyof typeof CertificateValidityStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CertificateValidityStatus = {
+  not_passed: 'not_passed',
+  valid: 'valid',
+  expiring_soon: 'expiring_soon',
+  expired: 'expired',
+} as const;
+
+export interface OrgCertificateStatusResponseDto {
+  userId: string;
+  name: string;
+  email: string;
+  /**
+   * When the member last completed the academy, or null if they never have
+   * @nullable
+   */
+  completedAt: string | null;
+  /**
+   * When the certificate stops being valid. Only populated when the org requires annual renewal.
+   * @nullable
+   */
+  expiresAt: string | null;
+  status: CertificateValidityStatus;
+}
+
+export interface PaginatedOrgCertificateStatusesResponseDto {
+  data: OrgCertificateStatusResponseDto[];
+  pagination: PaginationDto;
+}
+
 export interface MfaStatusResponseDto {
   /** Whether the user has confirmed TOTP two-factor auth. */
   enabled: boolean;
@@ -5312,4 +5345,23 @@ export type RunsControllerSendMessageBody = {
 };
 
 export type RunsControllerSendMessage200 = RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto;
+
+export type AcademyAccessControllerListOrgCertificatesParams = {
+/**
+ * Search members by name or email
+ */
+search?: string;
+/**
+ * Only return members whose certificate is in this state
+ */
+status?: CertificateValidityStatus;
+/**
+ * Maximum number of members to return
+ */
+limit?: number;
+/**
+ * Number of members to skip
+ */
+offset?: number;
+};
 

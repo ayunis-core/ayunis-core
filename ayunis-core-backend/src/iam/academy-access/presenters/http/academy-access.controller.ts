@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpStatus, Logger, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Logger,
+  Put,
+  Query,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
@@ -18,9 +26,13 @@ import { GetOrgAcademyAccessSettingsUseCase } from '../../application/use-cases/
 import { GetOrgAcademyAccessSettingsQuery } from '../../application/use-cases/get-org-academy-access-settings/get-org-academy-access-settings.query';
 import { UpsertOrgAcademyAccessSettingsUseCase } from '../../application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.use-case';
 import { UpsertOrgAcademyAccessSettingsCommand } from '../../application/use-cases/upsert-org-academy-access-settings/upsert-org-academy-access-settings.command';
+import { ListOrgCertificateStatusesUseCase } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.use-case';
+import { ListOrgCertificateStatusesQuery } from 'src/iam/academy-access/application/use-cases/list-org-certificate-statuses/list-org-certificate-statuses.query';
 import { AcademyAccessStatusResponseDto } from './dto/academy-access-status-response.dto';
 import { OrgAcademyAccessSettingsResponseDto } from './dto/org-academy-access-settings-response.dto';
 import { UpsertOrgAcademyAccessSettingsDto } from './dto/upsert-org-academy-access-settings.dto';
+import { OrgCertificateStatusesQueryParamsDto } from './dto/org-certificate-statuses-query-params.dto';
+import { PaginatedOrgCertificateStatusesResponseDto } from './dto/org-certificate-status-response.dto';
 
 @ApiTags('Academy Access')
 @Controller('academy-access')
@@ -31,6 +43,7 @@ export class AcademyAccessController {
     private readonly evaluateAcademyAccessUseCase: EvaluateAcademyAccessUseCase,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly upsertOrgSettingsUseCase: UpsertOrgAcademyAccessSettingsUseCase,
+    private readonly listOrgCertificateStatusesUseCase: ListOrgCertificateStatusesUseCase,
   ) {}
 
   /**
@@ -85,5 +98,51 @@ export class AcademyAccessController {
       new UpsertOrgAcademyAccessSettingsCommand(orgId, dto.mode),
     );
     return { mode: settings.mode };
+  }
+
+  @Get('org-certificates')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: "Certificate standing of every member of the admin's org",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PaginatedOrgCertificateStatusesResponseDto,
+  })
+  async listOrgCertificates(
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Query() queryParams: OrgCertificateStatusesQueryParamsDto,
+  ): Promise<PaginatedOrgCertificateStatusesResponseDto> {
+    // The search term is free text over member names and emails, so it is
+    // counted rather than logged — it would otherwise persist personal data in
+    // centralized logs for their whole retention period.
+    this.logger.log('listOrgCertificates', {
+      orgId,
+      status: queryParams.status,
+      limit: queryParams.limit,
+      offset: queryParams.offset,
+      hasSearch: queryParams.search !== undefined,
+    });
+
+    const statuses = await this.listOrgCertificateStatusesUseCase.execute(
+      new ListOrgCertificateStatusesQuery({
+        orgId,
+        search: queryParams.search,
+        status: queryParams.status,
+        pagination: {
+          limit: queryParams.limit,
+          offset: queryParams.offset,
+        },
+      }),
+    );
+
+    return {
+      data: statuses.data.map((entry) => ({ ...entry })),
+      pagination: {
+        limit: statuses.limit,
+        offset: statuses.offset,
+        total: statuses.total,
+      },
+    };
   }
 }
