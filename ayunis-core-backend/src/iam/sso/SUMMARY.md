@@ -7,6 +7,8 @@ Federated identities use the exact validated OIDC issuer and subject as their du
 
 `ZitadelOidcBrokerClient` is the single OIDC relying-party adapter. It uses Authorization Code with PKCE, state, and nonce; pins the selected Zitadel organization in the authorization request; validates the response through `openid-client`; loads profile claims from UserInfo; and returns no broker tokens to callers. Its environment values are optional as a group so local authentication remains available before SSO is configured.
 
+Short-lived SSO login transactions are stored in Postgres for atomic one-time consumption. They contain a state hash, encrypted PKCE verifier and nonce, the pinned Ayunis and Zitadel organization IDs, and a ten-minute expiry. A scheduled cleanup removes expired records; broker tokens are never persisted.
+
 `OrgSsoConnection` owns normalized connection state, while `OrgSsoConnectionsRepository` defines lookups, persistence, and conditional updates for routing and runtime flags. The Postgres adapter reports database constraint violations without deciding application conflicts and uses conditional writes to prevent stale operator changes from overwriting newer state.
 
 For V1, reusable application use cases read and configure a verified domain and its Zitadel organization mapping. New mappings are disabled by default, repeated configuration is idempotent, and an enabled mapping must be disabled before its routing identifiers can change. Separate use cases control runtime enablement and JIT provisioning so Superadmin HTTP adapters and later automation can reuse the same boundary.
