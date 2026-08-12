@@ -20,6 +20,8 @@ export enum ModelErrorCode {
   INFERENCE_TIMEOUT = 'INFERENCE_TIMEOUT',
   MODEL_RATE_LIMIT_EXCEEDED = 'MODEL_RATE_LIMIT_EXCEEDED',
   MODEL_DELETION_FAILED = 'MODEL_DELETION_FAILED',
+  MODEL_REFERENCED_BY_USAGE = 'MODEL_REFERENCED_BY_USAGE',
+  MODEL_STILL_PERMITTED = 'MODEL_STILL_PERMITTED',
   CANNOT_DELETE_DEFAULT_MODEL = 'CANNOT_DELETE_DEFAULT_MODEL',
   CANNOT_DELETE_LAST_MODEL = 'CANNOT_DELETE_LAST_MODEL',
   MODEL_ALREADY_EXISTS = 'MODEL_ALREADY_EXISTS',
@@ -341,6 +343,28 @@ export class ModelDeletionFailedError extends ModelError {
       ModelErrorCode.MODEL_DELETION_FAILED,
       500,
       metadata,
+    );
+  }
+}
+
+export class ModelReferencedByUsageError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      'Cannot delete model because historical usage records reference it. Archive the model instead.',
+      ModelErrorCode.MODEL_REFERENCED_BY_USAGE,
+      409,
+      { ...metadata, modelId },
+    );
+  }
+}
+
+export class ModelStillPermittedError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      'Cannot delete model while it is permitted for organizations. Remove all model permissions first.',
+      ModelErrorCode.MODEL_STILL_PERMITTED,
+      409,
+      { ...metadata, modelId },
     );
   }
 }

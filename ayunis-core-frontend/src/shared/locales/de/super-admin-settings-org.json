@@ -369,6 +369,8 @@
     "updateError": "Modell konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "deleteSuccess": "Modell erfolgreich gelöscht",
     "deleteError": "Modell konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "referencedByUsage": "Das Modell hat historische Nutzungsdaten und kann nicht gelöscht werden. Archivieren Sie es stattdessen.",
+    "stillPermitted": "Das Modell ist noch für Organisationen freigegeben. Entfernen Sie zuerst alle Modellfreigaben.",
     "alreadyExists": "Ein Modell mit dieser Kennung existiert bereits.",
     "notFound": "Modell nicht gefunden. Es wurde möglicherweise gelöscht.",
     "invalid": "Einige Modelldaten sind ungültig. Bitte überprüfen Sie Ihre Eingaben.",

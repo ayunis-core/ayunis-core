@@ -1,9 +1,11 @@
-import { QueryFailedError, type Repository } from 'typeorm';
+import { QueryFailedError, type EntityManager, type Repository } from 'typeorm';
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { LocalModelsRepository } from './local-models.repository';
 import { ModelMapper } from './mappers/model.mapper';
-import type { ModelRecord } from './schema/model.record';
 import {
+  ModelRecord,
   EmbeddingModelRecord,
   ImageGenerationModelRecord,
   LanguageModelRecord,
@@ -16,12 +18,20 @@ import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embe
 import {
   ModelAlreadyExistsError,
   ModelErrorCode,
+  ModelReferencedByUsageError,
 } from 'src/domain/models/application/models.errors';
+
+const USAGE_MODEL_FOREIGN_KEY = 'FK_523206731b52aa6170a99d10bbf';
 
 describe('LocalModelsRepository', () => {
   let repository: LocalModelsRepository;
   let localModelRepository: jest.Mocked<Repository<ModelRecord>>;
   let mapper: ModelMapper;
+  let transactionManager: jest.Mocked<
+    Pick<EntityManager, 'delete' | 'findOne'>
+  >;
+  let withTransaction: jest.Mock;
+  let txHost: TransactionHost<TransactionalAdapterTypeOrm>;
 
   const modelId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -35,8 +45,20 @@ describe('LocalModelsRepository', () => {
     } as unknown as jest.Mocked<Repository<ModelRecord>>;
 
     mapper = new ModelMapper();
+    transactionManager = { delete: jest.fn(), findOne: jest.fn() };
+    withTransaction = jest.fn(async (callback: () => Promise<unknown>) =>
+      callback(),
+    );
+    txHost = {
+      tx: transactionManager as unknown as EntityManager,
+      withTransaction,
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
-    repository = new LocalModelsRepository(localModelRepository, mapper);
+    repository = new LocalModelsRepository(
+      localModelRepository,
+      mapper,
+      txHost,
+    );
   });
 
   const buildLanguageRecord = (): LanguageModelRecord => {
@@ -130,6 +152,74 @@ describe('LocalModelsRepository', () => {
       localModelRepository.save.mockRejectedValue(queryError);
 
       await expect(repository.save(model)).rejects.toBe(queryError);
+    });
+  });
+
+  describe('withCatalogModelLocked', () => {
+    it('locks the model row and runs the operation in the same transaction', async () => {
+      transactionManager.findOne.mockResolvedValue(buildLanguageRecord());
+      const operation = jest.fn().mockResolvedValue('deleted');
+
+      const result = await repository.withCatalogModelLocked(
+        modelId,
+        operation,
+      );
+
+      expect(result).toBe('deleted');
+      expect(withTransaction).toHaveBeenCalledTimes(1);
+      expect(transactionManager.findOne).toHaveBeenCalledWith(ModelRecord, {
+        where: { id: modelId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      expect(operation).toHaveBeenCalledWith(expect.any(LanguageModel));
+    });
+  });
+
+  describe('delete', () => {
+    it('deletes through the transaction manager', async () => {
+      transactionManager.delete.mockResolvedValue({
+        raw: [],
+        affected: 1,
+      });
+
+      await repository.delete(modelId);
+
+      expect(transactionManager.delete).toHaveBeenCalledWith(ModelRecord, {
+        id: modelId,
+      });
+      expect(localModelRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('maps a usage foreign-key violation to a model conflict', async () => {
+      transactionManager.delete.mockRejectedValue(
+        Object.assign(new Error('model is referenced by usage'), {
+          driverError: {
+            code: '23503',
+            constraint: USAGE_MODEL_FOREIGN_KEY,
+          },
+        }),
+      );
+
+      const result = repository.delete(modelId);
+
+      await expect(result).rejects.toBeInstanceOf(ModelReferencedByUsageError);
+      await expect(result).rejects.toMatchObject({
+        code: ModelErrorCode.MODEL_REFERENCED_BY_USAGE,
+        statusCode: 409,
+      });
+    });
+
+    it('keeps unrelated foreign-key violations visible', async () => {
+      const unrelatedError = Object.assign(
+        new Error('model is referenced elsewhere'),
+        {
+          code: '23503',
+          constraint: 'FK_unexpected_model_relation',
+        },
+      );
+      transactionManager.delete.mockRejectedValue(unrelatedError);
+
+      await expect(repository.delete(modelId)).rejects.toBe(unrelatedError);
     });
   });
 

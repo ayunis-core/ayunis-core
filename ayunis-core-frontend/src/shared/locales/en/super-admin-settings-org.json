@@ -369,6 +369,8 @@
     "updateError": "Failed to update model. Please try again.",
     "deleteSuccess": "Model deleted successfully",
     "deleteError": "Failed to delete model. Please try again.",
+    "referencedByUsage": "This model has historical usage data and cannot be deleted. Archive it instead.",
+    "stillPermitted": "This model is still available to organizations. Remove all model permissions first.",
     "alreadyExists": "A model with this identifier already exists.",
     "notFound": "Model not found. It may have been deleted.",
     "invalid": "Some model details are invalid. Please review them and try again.",

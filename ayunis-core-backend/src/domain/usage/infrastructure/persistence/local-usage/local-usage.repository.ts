@@ -101,6 +101,10 @@ export class LocalUsageRepository extends UsageRepository {
     return this.usageMapper.toDomainArray(records);
   }
 
+  async existsByModelId(modelId: UUID): Promise<boolean> {
+    return await this.usageRepository.existsBy({ modelId });
+  }
+
   async getProviderUsage(query: ProviderUsageParams): Promise<ProviderUsage[]> {
     // Get aggregated provider usage
     const providerStats = await getProviderStats({

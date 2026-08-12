@@ -7,7 +7,9 @@ type ModelErrorToastKey =
   | 'models.notFound'
   | 'models.invalid'
   | 'models.providerNotSupported'
-  | 'models.imageGenerationProviderNotSupported';
+  | 'models.imageGenerationProviderNotSupported'
+  | 'models.referencedByUsage'
+  | 'models.stillPermitted';
 
 const MODEL_ERROR_TOAST_KEYS: Record<string, ModelErrorToastKey> = {
   MODEL_ALREADY_EXISTS: 'models.alreadyExists',
@@ -20,6 +22,8 @@ const MODEL_ERROR_TOAST_KEYS: Record<string, ModelErrorToastKey> = {
   MODEL_CREATION_FAILED: 'models.createError',
   MODEL_UPDATE_FAILED: 'models.updateError',
   MODEL_DELETION_FAILED: 'models.deleteError',
+  MODEL_REFERENCED_BY_USAGE: 'models.referencedByUsage',
+  MODEL_STILL_PERMITTED: 'models.stillPermitted',
 };
 
 export function resolveModelErrorToastKey(

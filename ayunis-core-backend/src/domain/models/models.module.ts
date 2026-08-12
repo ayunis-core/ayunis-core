@@ -102,12 +102,14 @@ import { TeamPermittedModelValidator } from './application/services/team-permitt
 import { ModelPolicyService } from './application/services/model-policy.service';
 import { StorageModule } from '../storage/storage.module';
 import { MessagesModule } from '../messages/messages.module';
+import { UsageReferencesModule } from '../usage/usage-references.module';
 
 @Module({
   imports: [
     LocalPermittedModelsRepositoryModule,
     LocalUserDefaultModelsRepositoryModule,
     LocalModelsRepositoryModule,
+    UsageReferencesModule,
     OrgsModule,
     UsersModule,
     TeamsModule,
