@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from 'src/domain/messages/domain/message.entity';
+import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
@@ -188,7 +189,7 @@ export class ExecuteRunUseCase {
 
   private async *orchestrateRun(
     params: RunParams,
-  ): AsyncGenerator<RunStreamItem, void, void> {
+  ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
     this.logger.log('orchestrateRun', { threadId: params.thread.id });
     const iterations = 50;
     const breaker = new ToolFailureBreaker();
@@ -197,16 +198,15 @@ export class ExecuteRunUseCase {
     try {
       for (let i = 0; i < iterations; i++) {
         this.logger.debug('iteration', i);
-        const { userInput, toolResultInput } = this.parseInput(params.input);
-
-        yield* this.processToolResults(params, toolResultInput, breaker);
-
-        if (i === 0) {
-          yield* this.handleFirstIteration(params, userInput);
+        const assistantMessage = yield* this.runIteration(
+          params,
+          breaker,
+          i === 0,
+        );
+        if (!assistantMessage) {
+          succeeded = true;
+          return 'aborted';
         }
-
-        const assistantMessage =
-          yield* this.inferenceOrchestratorService.runInference(params);
 
         if (
           this.toolResultCollectorService.exitLoopAfterAgentResponse(
@@ -221,6 +221,7 @@ export class ExecuteRunUseCase {
         }
       }
       succeeded = true;
+      return 'completed';
     } catch (error) {
       // The breaker's tool-result transcript is complete and already
       // streamed — rolling it back would re-arm the pending tool calls.
@@ -244,6 +245,19 @@ export class ExecuteRunUseCase {
         );
       }
     }
+  }
+
+  private async *runIteration(
+    params: RunParams,
+    breaker: ToolFailureBreaker,
+    firstIteration: boolean,
+  ): AsyncGenerator<RunStreamItem, AssistantMessage | null, void> {
+    const { userInput, toolResultInput } = this.parseInput(params.input);
+    yield* this.processToolResults(params, toolResultInput, breaker);
+    if (firstIteration) {
+      yield* this.handleFirstIteration(params, userInput);
+    }
+    return yield* this.inferenceOrchestratorService.runInference(params);
   }
 
   private async *handleFirstIteration(

@@ -150,13 +150,14 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       execute,
     } as unknown as StreamInferenceUseCase;
     const savedMessages: AssistantMessage[] = [];
+    const saveAssistantMessage = jest
+      .fn()
+      .mockImplementation((command: { message: AssistantMessage }) => {
+        savedMessages.push(command.message);
+        return Promise.resolve(command.message);
+      });
     const saveAssistantMessageUseCase = {
-      execute: jest
-        .fn()
-        .mockImplementation((command: { message: AssistantMessage }) => {
-          savedMessages.push(command.message);
-          return Promise.resolve(command.message);
-        }),
+      execute: saveAssistantMessage,
     } as unknown as SaveAssistantMessageUseCase;
     const inferenceUsageGuard = {
       collectUsage: jest.fn(),
@@ -174,7 +175,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       contextService,
       eventEmitter,
     );
-    return { service, savedMessages };
+    return { service, savedMessages, saveAssistantMessage };
   };
 
   const consume = async (service: StreamingInferenceService) => {
@@ -192,6 +193,30 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     }
     return yielded;
   };
+
+  const consumeWithOutcome = async (service: StreamingInferenceService) => {
+    const stream = service.executeStreamingInference({
+      model,
+      messages: [],
+      tools: [],
+      threadId,
+      orgId,
+    });
+    for (;;) {
+      const next = await stream.next();
+      if (next.done) return next.value;
+    }
+  };
+
+  it('reports when the thread disappeared before final persistence', async () => {
+    const { service, saveAssistantMessage } = buildService([
+      StreamInferenceResponseChunk.text('Die Antwort ist fertig.'),
+      finishChunk('stop'),
+    ]);
+    saveAssistantMessage.mockResolvedValueOnce(null);
+
+    await expect(consumeWithOutcome(service)).resolves.toBe(false);
+  });
 
   it('persists a tool call whose streamed arguments form valid JSON', async () => {
     const { service, savedMessages } = buildService([

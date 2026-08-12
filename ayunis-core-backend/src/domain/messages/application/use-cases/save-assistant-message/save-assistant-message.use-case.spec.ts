@@ -5,7 +5,10 @@ import type { MessagesRepository } from '../../ports/messages.repository';
 import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageCreationError,
+  MessageThreadMissingError,
+} from '../../messages.errors';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -71,6 +74,19 @@ describe('SaveAssistantMessageUseCase', () => {
         messageId: message.id,
       }),
     );
+  });
+
+  it('should skip persistence when the repository reports a missing thread', async () => {
+    const threadId = randomUUID();
+    const message = new AssistantMessage({ threadId, content: [] });
+    const command = new SaveAssistantMessageCommand(message);
+
+    jest
+      .spyOn(mockMessagesRepository, 'create')
+      .mockRejectedValue(new MessageThreadMissingError(threadId));
+
+    await expect(useCase.execute(command)).resolves.toBeNull();
+    expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should throw MessageCreationError when repository fails', async () => {
