@@ -12,10 +12,17 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
+import {
+  EmptyOcrResultError,
+  FileRetrieverUnauthorizedError,
+  UnprocessableDocumentError,
+} from '../../file-retriever.errors';
+import { FileRetrieverType } from '../../../domain/value-objects/file-retriever-type.enum';
 
 describe('RetrieveFileContentUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
-  let mockHandler: Partial<FileRetrieverHandler>;
+  let mockMistralHandler: Partial<FileRetrieverHandler>;
+  let mockPdfParseHandler: Partial<FileRetrieverHandler>;
   let mockRegistry: Partial<FileRetrieverRegistry>;
   let mockContextService: Partial<ContextService>;
   let mockDocumentConverter: Partial<DocumentConverterPort>;
@@ -28,9 +35,14 @@ describe('RetrieveFileContentUseCase', () => {
   };
 
   beforeAll(async () => {
-    mockHandler = { processFile: jest.fn() };
+    mockMistralHandler = { processFile: jest.fn() };
+    mockPdfParseHandler = { processFile: jest.fn() };
     mockRegistry = {
-      getHandler: jest.fn().mockReturnValue(mockHandler),
+      getHandler: jest.fn((type: FileRetrieverType) =>
+        type === FileRetrieverType.MISTRAL
+          ? mockMistralHandler
+          : mockPdfParseHandler,
+      ) as FileRetrieverRegistry['getHandler'],
     };
     mockContextService = {
       get: jest.fn().mockReturnValue('123e4567-e89b-12d3-a456-426614174000'),
@@ -66,6 +78,20 @@ describe('RetrieveFileContentUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
+  it('rejects retrieval without organization context using a domain error', async () => {
+    jest.spyOn(mockContextService, 'get').mockReturnValueOnce(undefined);
+
+    await expect(
+      useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.from('budget report'),
+          fileName: 'budget-report.txt',
+          fileType: 'text/plain',
+        }),
+      ),
+    ).rejects.toBeInstanceOf(FileRetrieverUnauthorizedError);
+  });
+
   it('should return UTF-8 text content directly for TXT files', async () => {
     const textContent = 'Hello, this is plain text content.\nLine two.';
     const command = new RetrieveFileContentCommand({
@@ -81,7 +107,7 @@ describe('RetrieveFileContentUseCase', () => {
     expect(result.pages[0]).toBeInstanceOf(FileRetrieverPage);
     expect(result.pages[0].text).toBe(textContent);
     expect(result.pages[0].number).toBe(1);
-    expect(mockHandler.processFile).not.toHaveBeenCalled();
+    expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
   });
 
   it('should strip UTF-8 BOM from TXT files', async () => {
@@ -102,7 +128,7 @@ describe('RetrieveFileContentUseCase', () => {
     expect(result.pages).toHaveLength(1);
     expect(result.pages[0].text).toBe(textContent);
     expect(result.pages[0].text).not.toMatch(/^\uFEFF/);
-    expect(mockHandler.processFile).not.toHaveBeenCalled();
+    expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
   });
 
   it('should process PDF file successfully', async () => {
@@ -115,18 +141,85 @@ describe('RetrieveFileContentUseCase', () => {
       new FileRetrieverPage('processed content', 1),
     ]);
 
-    jest.spyOn(mockHandler, 'processFile').mockResolvedValue(expectedResult);
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockResolvedValue(expectedResult);
 
     const result = await useCase.execute(command);
 
     expect(result).toBe(expectedResult);
-    expect(mockHandler.processFile).toHaveBeenCalledWith(
+    expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
       expect.objectContaining({
         fileData: command.fileData,
         filename: command.fileName,
         fileType: command.fileType,
       }),
     );
+  });
+
+  it('falls back to local PDF parsing when Mistral returns zero pages', async () => {
+    const fallbackResult = new FileRetrieverResult([
+      new FileRetrieverPage('Locally extracted budget report', 1),
+    ]);
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockRejectedValue(new EmptyOcrResultError());
+    jest
+      .spyOn(mockPdfParseHandler, 'processFile')
+      .mockResolvedValue(fallbackResult);
+
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from('pdf content'),
+        fileName: 'budget-report.pdf',
+        fileType: 'application/pdf',
+      }),
+    );
+
+    expect(result).toBe(fallbackResult);
+    expect(mockPdfParseHandler.processFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps an empty Mistral response terminal when local parsing also extracts no text', async () => {
+    const emptyOcrError = new EmptyOcrResultError();
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockRejectedValue(emptyOcrError);
+    jest
+      .spyOn(mockPdfParseHandler, 'processFile')
+      .mockResolvedValue(
+        new FileRetrieverResult([new FileRetrieverPage('   ', 1)]),
+      );
+
+    await expect(
+      useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.from('image-only pdf'),
+          fileName: 'scanned-form.pdf',
+          fileType: 'application/pdf',
+        }),
+      ),
+    ).rejects.toBe(emptyOcrError);
+  });
+
+  it('does not fall back for deterministic Mistral document rejections', async () => {
+    const documentError = new UnprocessableDocumentError(
+      'Document is not a valid PDF',
+    );
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockRejectedValue(documentError);
+
+    await expect(
+      useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.from('invalid pdf'),
+          fileName: 'invalid.pdf',
+          fileType: 'application/pdf',
+        }),
+      ),
+    ).rejects.toBe(documentError);
+    expect(mockPdfParseHandler.processFile).not.toHaveBeenCalled();
   });
 
   it('should transcribe audio and wrap the transcript as a single page', async () => {
@@ -152,7 +245,7 @@ describe('RetrieveFileContentUseCase', () => {
     expect(result.pages).toHaveLength(1);
     expect(result.pages[0].text).toBe(transcript);
     expect(result.pages[0].number).toBe(1);
-    expect(mockHandler.processFile).not.toHaveBeenCalled();
+    expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
   });
 
   it('should convert DOCX to PDF via Gotenberg then process with Mistral', async () => {
@@ -165,7 +258,9 @@ describe('RetrieveFileContentUseCase', () => {
     jest
       .spyOn(mockDocumentConverter, 'convertToPdf')
       .mockResolvedValue(pdfBuffer);
-    jest.spyOn(mockHandler, 'processFile').mockResolvedValue(expectedResult);
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockResolvedValue(expectedResult);
 
     const command = new RetrieveFileContentCommand({
       fileData: docxBuffer,
@@ -180,7 +275,7 @@ describe('RetrieveFileContentUseCase', () => {
       docxBuffer,
       'report.docx',
     );
-    expect(mockHandler.processFile).toHaveBeenCalledWith(
+    expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
       expect.objectContaining({
         fileData: pdfBuffer,
         filename: 'report.pdf',

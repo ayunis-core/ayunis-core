@@ -3,9 +3,9 @@ import axios from 'axios';
 import type { AxiosError } from 'axios';
 import FormData from 'form-data';
 import { GotenbergConfig, gotenbergConfig } from 'src/config/gotenberg.config';
-import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { DocumentConverterPort } from '../../application/ports/document-converter.port';
 import {
+  DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileRetrieverError,
   FileTooLargeError,
@@ -35,33 +35,17 @@ export class GotenbergConverterService extends DocumentConverterPort {
     this.logger.debug(`Converting ${fileName} to PDF via Gotenberg`);
 
     try {
-      const response = await retryWithBackoff({
-        fn: () => {
-          const formData = new FormData();
-          formData.append('files', fileData, { filename: fileName });
-
-          return axios.post(
-            `${this.config.url}/forms/libreoffice/convert`,
-            formData,
-            {
-              headers: formData.getHeaders(),
-              responseType: 'arraybuffer',
-              timeout: this.TIMEOUT_MS,
-            },
-          );
+      const formData = new FormData();
+      formData.append('files', fileData, { filename: fileName });
+      const response = await axios.post(
+        `${this.config.url}/forms/libreoffice/convert`,
+        formData,
+        {
+          headers: formData.getHeaders(),
+          responseType: 'arraybuffer',
+          timeout: this.TIMEOUT_MS,
         },
-        maxRetries: 3,
-        delay: 2000,
-        retryIfError: (error) => {
-          if (axios.isAxiosError(error) && error.response?.status === 503) {
-            this.logger.warn(
-              `Gotenberg service busy, retrying... (${fileName})`,
-            );
-            return true;
-          }
-          return false;
-        },
-      });
+      );
 
       const pdfBuffer = Buffer.from(response.data as ArrayBuffer);
       this.logger.debug(
@@ -96,6 +80,10 @@ export class GotenbergConverterService extends DocumentConverterPort {
 
     if (status === 413) {
       return new FileTooLargeError();
+    }
+
+    if (status === 503) {
+      return new DocumentConversionUnavailableError(fileName);
     }
 
     if (status === 504 || error.code === 'ECONNABORTED') {

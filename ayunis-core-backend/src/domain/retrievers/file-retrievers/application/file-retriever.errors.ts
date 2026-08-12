@@ -8,6 +8,7 @@ export enum FileRetrieverErrorCode {
   PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   RETRIEVAL_FAILED = 'RETRIEVAL_FAILED',
+  DOCUMENT_CONVERSION_UNAVAILABLE = 'DOCUMENT_CONVERSION_UNAVAILABLE',
   UNPROCESSABLE_DOCUMENT = 'UNPROCESSABLE_DOCUMENT',
   INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
   FILE_TOO_LARGE = 'FILE_TOO_LARGE',
@@ -41,9 +42,9 @@ export class FileRetrieverProviderNotAvailableError extends FileRetrieverError {
 }
 
 /**
- * Extraction failed for a reason on our side of the boundary — the converter
- * being unreachable, an empty provider response — so it stays 500 and alerts
- * on first occurrence. A file we simply cannot read is
+ * Extraction failed for a reason on our side of the boundary — for example,
+ * the converter being unreachable — so it stays 500 and alerts on first
+ * occurrence. A file we simply cannot read is
  * {@link UnprocessableDocumentError} instead.
  */
 export class FileRetrievalFailedError extends FileRetrieverError {
@@ -67,6 +68,23 @@ export class UnprocessableDocumentError extends FileRetrieverError {
       FileRetrieverErrorCode.UNPROCESSABLE_DOCUMENT,
       422,
       metadata,
+    );
+  }
+}
+
+export class EmptyOcrResultError extends UnprocessableDocumentError {
+  constructor(metadata?: ErrorMetadata) {
+    super('No text could be extracted from the document', metadata);
+  }
+}
+
+export class DocumentConversionUnavailableError extends FileRetrieverError {
+  constructor(fileName: string) {
+    super(
+      'Document conversion is temporarily unavailable. Please try again later.',
+      FileRetrieverErrorCode.DOCUMENT_CONVERSION_UNAVAILABLE,
+      503,
+      { converter: 'gotenberg', upstreamStatus: 503, fileName },
     );
   }
 }
@@ -120,7 +138,7 @@ export class TooManyPagesError extends FileRetrieverError {
 export class FileRetrieverUnauthorizedError extends FileRetrieverError {
   constructor(metadata?: ErrorMetadata) {
     super(
-      'Invalid or missing API key for document processing service',
+      'User is not authenticated for file retrieval',
       FileRetrieverErrorCode.UNAUTHORIZED,
       401,
       metadata,

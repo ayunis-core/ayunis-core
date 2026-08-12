@@ -3,6 +3,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { MistralFileRetrieverHandler } from './mistral-file-retriever.handler';
 import {
+  EmptyOcrResultError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
@@ -141,10 +142,12 @@ describe('MistralFileRetrieverHandler', () => {
     // of ours: it must surface as the shared "we cannot read this document"
     // classification (422, terminal in the queue, user-visible message)
     // instead of alerting as UNEXPECTED_ERROR (AYC-655).
-    it('classifies a zero-page OCR response as an unprocessable document', async () => {
+    it('classifies a zero-page OCR response for local PDF fallback', async () => {
       mockClient.ocr.process.mockResolvedValue({ pages: [] });
 
-      await expect(handler.processFile(testFile)).rejects.toMatchObject({
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(EmptyOcrResultError);
+      await expect(result).rejects.toMatchObject({
         code: 'UNPROCESSABLE_DOCUMENT',
         statusCode: 422,
       });
@@ -316,6 +319,44 @@ describe('MistralFileRetrieverHandler', () => {
 
       await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
         UnprocessableDocumentError,
+      );
+    });
+
+    it('classifies Mistral invalid_file code 1901 as an unprocessable document without retrying', async () => {
+      const mistralError = createMistralError(
+        422,
+        '{"object":"error","message":"Could not get file.","type":"invalid_file","code":"1901","raw_status_code":422}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        UnprocessableDocumentError,
+      );
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
+    });
+
+    it('classifies Mistral invalid file format responses as unprocessable without retrying', async () => {
+      const mistralError = createMistralError(
+        422,
+        '{"detail":"Invalid file format.","message":"Received file with mimetype application/x-empty"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        UnprocessableDocumentError,
+      );
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps other Mistral 422 responses in the provider-unavailable taxonomy', async () => {
+      const mistralError = createMistralError(
+        422,
+        '{"detail":"Request rejected by OCR capacity policy"}',
+      );
+      mockClient.ocr.process.mockRejectedValue(mistralError);
+
+      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
+        ProviderRequestRejectedError,
       );
     });
 
