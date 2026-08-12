@@ -84,6 +84,7 @@ import type {
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
   DeleteAllPendingInvitesResponseDto,
+  DiscoverSsoDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -182,6 +183,7 @@ import type {
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
+  SsoDiscoveryResponseDto,
   SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -23065,3 +23067,254 @@ export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError =
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Discover enabled SSO from a work email
+ */
+export const ssoLoginControllerDiscover = (
+    discoverSsoDto: DiscoverSsoDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SsoDiscoveryResponseDto>(
+      {url: `/auth/sso/discover`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: discoverSsoDto, signal
+    },
+      );
+    }
+  
+
+
+export const getSsoLoginControllerDiscoverMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerDiscover>>, TError,{data: DiscoverSsoDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerDiscover>>, TError,{data: DiscoverSsoDto}, TContext> => {
+
+const mutationKey = ['ssoLoginControllerDiscover'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ssoLoginControllerDiscover>>, {data: DiscoverSsoDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  ssoLoginControllerDiscover(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SsoLoginControllerDiscoverMutationResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerDiscover>>>
+    export type SsoLoginControllerDiscoverMutationBody = DiscoverSsoDto
+    export type SsoLoginControllerDiscoverMutationError = unknown
+
+    /**
+ * @summary Discover enabled SSO from a work email
+ */
+export const useSsoLoginControllerDiscover = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerDiscover>>, TError,{data: DiscoverSsoDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ssoLoginControllerDiscover>>,
+        TError,
+        {data: DiscoverSsoDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSsoLoginControllerDiscoverMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Start SSO for an enabled organization
+ */
+export const ssoLoginControllerStart = (
+    orgId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<unknown>(
+      {url: `/auth/sso/organizations/${orgId}/start`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSsoLoginControllerStartQueryKey = (orgId?: string,) => {
+    return [
+    `/auth/sso/organizations/${orgId}/start`
+    ] as const;
+    }
+
+    
+export const getSsoLoginControllerStartQueryOptions = <TData = Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError = void>(orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSsoLoginControllerStartQueryKey(orgId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ssoLoginControllerStart>>> = ({ signal }) => ssoLoginControllerStart(orgId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(orgId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SsoLoginControllerStartQueryResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerStart>>>
+export type SsoLoginControllerStartQueryError = void
+
+
+export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError = void>(
+ orgId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoLoginControllerStart>>,
+          TError,
+          Awaited<ReturnType<typeof ssoLoginControllerStart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoLoginControllerStart>>,
+          TError,
+          Awaited<ReturnType<typeof ssoLoginControllerStart>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Start SSO for an enabled organization
+ */
+
+export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError = void>(
+ orgId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerStart>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSsoLoginControllerStartQueryOptions(orgId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Validate an organization-pinned OIDC callback
+ */
+export const ssoLoginControllerCallback = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/auth/sso/oidc/callback`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSsoLoginControllerCallbackQueryKey = () => {
+    return [
+    `/auth/sso/oidc/callback`
+    ] as const;
+    }
+
+    
+export const getSsoLoginControllerCallbackQueryOptions = <TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSsoLoginControllerCallbackQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ssoLoginControllerCallback>>> = ({ signal }) => ssoLoginControllerCallback(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SsoLoginControllerCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerCallback>>>
+export type SsoLoginControllerCallbackQueryError = unknown
+
+
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoLoginControllerCallback>>,
+          TError,
+          Awaited<ReturnType<typeof ssoLoginControllerCallback>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ssoLoginControllerCallback>>,
+          TError,
+          Awaited<ReturnType<typeof ssoLoginControllerCallback>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Validate an organization-pinned OIDC callback
+ */
+
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSsoLoginControllerCallbackQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+

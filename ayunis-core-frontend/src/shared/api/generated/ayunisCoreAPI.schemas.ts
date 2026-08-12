@@ -5194,6 +5194,15 @@ export interface SetOrgSsoStateRequestDto {
   enabled: boolean;
 }
 
+export interface DiscoverSsoDto {
+  email: string;
+}
+
+export interface SsoDiscoveryResponseDto {
+  available: boolean;
+  orgId?: string;
+}
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email
