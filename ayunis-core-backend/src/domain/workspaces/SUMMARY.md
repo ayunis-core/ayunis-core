@@ -50,6 +50,7 @@ workspaces/
 │   └── use-cases/
 │       ├── create-workspace/
 │       ├── find-all-workspaces/
+│       ├── find-workspaces-by-ids/
 │       ├── find-workspace/
 │       ├── update-workspace/
 │       └── delete-workspace/
@@ -81,7 +82,11 @@ workspaces/
 On deletion, the module emits `WorkspaceDeletionRequestedEvent` without
 importing favorites; `FavoritesModule` listens to clean up references.
 `ThreadsModule` depends on workspaces to validate a thread's `workspaceId`
-and listen for `WorkspaceDeletionRequestedEvent`.
+and listen for `WorkspaceDeletionRequestedEvent`. In the other direction the
+coupling is schema-level, not module-level: `getThreadStats` in the local
+repository reads the `threads` table directly (raw SQL) to derive per-workspace
+chat counts and last activity. Favorites resolves workspace
+metadata through the exported, user-scoped `FindWorkspacesByIdsUseCase`.
 
 The repository port is deliberately not exported — cross-module access goes
 through the exported use cases.

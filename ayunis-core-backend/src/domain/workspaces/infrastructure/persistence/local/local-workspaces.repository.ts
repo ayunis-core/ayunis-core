@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
-import { Repository } from 'typeorm';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import {
+  WorkspacesRepository,
+  type WorkspaceThreadStats,
+} from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { In, Repository } from 'typeorm';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
@@ -24,6 +27,42 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
       order: { updatedAt: 'DESC' },
     });
     return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]> {
+    if (ids.length === 0) return [];
+    const records = await this.repo.find({ where: { userId, id: In(ids) } });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  // Read-only seam onto the threads table by name. Importing the threads
+  // module here would reverse the threads → workspaces dependency and close a
+  // cycle, so this aggregate query stays raw SQL instead.
+  async getThreadStats(
+    workspaceIds: UUID[],
+  ): Promise<Map<UUID, WorkspaceThreadStats>> {
+    if (workspaceIds.length === 0) {
+      return new Map();
+    }
+    const rows: Array<{
+      workspaceId: UUID;
+      chatCount: number;
+      lastActivityAt: Date | null;
+    }> = await this.repo.manager.query(
+      `SELECT "workspaceId",
+              COUNT(*)::int AS "chatCount",
+              MAX(COALESCE("lastActivityAt", "createdAt")) AS "lastActivityAt"
+       FROM threads
+       WHERE "workspaceId" = ANY($1)
+       GROUP BY "workspaceId"`,
+      [workspaceIds],
+    );
+    return new Map(
+      rows.map((row) => [
+        row.workspaceId,
+        { chatCount: row.chatCount, lastActivityAt: row.lastActivityAt },
+      ]),
+    );
   }
 
   async findById(userId: UUID, id: UUID): Promise<Workspace | null> {
