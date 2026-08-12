@@ -4,6 +4,53 @@ import type { AxiosRequestConfig } from 'axios';
 
 const logger = new Logger('AnonymizeClient');
 
+interface AnonymizeTimingMetadata {
+  requestDurationMs: number;
+  queueDurationMs?: number;
+  modelLoadDurationMs?: number;
+  processingDurationMs?: number;
+  coldStart?: boolean;
+}
+
+function serverTimingKey(
+  name: string,
+):
+  | keyof Omit<AnonymizeTimingMetadata, 'requestDurationMs' | 'coldStart'>
+  | null {
+  switch (name) {
+    case 'queue':
+      return 'queueDurationMs';
+    case 'model_load':
+      return 'modelLoadDurationMs';
+    case 'processing':
+      return 'processingDurationMs';
+    default:
+      return null;
+  }
+}
+
+export function parseAnonymizeTimingMetadata(
+  headers: Record<string, unknown>,
+  requestDurationMs: number,
+): AnonymizeTimingMetadata {
+  const metadata: AnonymizeTimingMetadata = { requestDurationMs };
+  const serverTiming = headers['server-timing'];
+  if (typeof serverTiming === 'string') {
+    for (const entry of serverTiming.split(',')) {
+      const match = /^([a-z_]+);dur=([0-9.]+)$/.exec(entry.trim());
+      if (!match) continue;
+      const key = serverTimingKey(match[1]);
+      const value = Number(match[2]);
+      if (key && Number.isFinite(value)) metadata[key] = value;
+    }
+  }
+  const coldStart = headers['x-anonymize-cold-start'];
+  if (coldStart === 'true' || coldStart === 'false') {
+    metadata.coldStart = coldStart === 'true';
+  }
+  return metadata;
+}
+
 const anonymizeAxios = axios.create({
   baseURL: process.env.ANONYMIZE_SERVICE_URL || 'http://localhost:8002',
   // The anonymize service budgets ~30s of analysis work per request (its
@@ -45,8 +92,27 @@ export function toSlimTransportError(error: unknown): Error {
   return slim;
 }
 
+const requestStartedAt = new WeakMap<object, number>();
+
+anonymizeAxios.interceptors.request.use((config) => {
+  requestStartedAt.set(config, performance.now());
+  return config;
+});
+
 anonymizeAxios.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const startedAt = requestStartedAt.get(response.config);
+    if (startedAt !== undefined) {
+      logger.log(
+        'Anonymize request complete',
+        parseAnonymizeTimingMetadata(
+          response.headers,
+          Math.round((performance.now() - startedAt) * 100) / 100,
+        ),
+      );
+    }
+    return response;
+  },
   (error: unknown) => {
     if (isAxiosError(error) && error.response?.status === 500) {
       const data: unknown = error.response.data;

@@ -41,6 +41,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       textLength,
       entities,
     });
+    const startedAt = performance.now();
 
     try {
       const client = getMSPresidioPIIDetectionAPI();
@@ -57,14 +58,19 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         this.toDetection(text, result),
       );
 
-      this.logger.debug('PII detection complete', {
+      this.logger.log('PII detection complete', {
         textLength,
         detectionCount: detections.length,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
       });
 
       return detections;
     } catch (error: unknown) {
-      this.logger.error('PII detection failed', { error: error as Error });
+      this.logger.error('PII detection failed', {
+        textLength,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+        error: error as Error,
+      });
       // Every caller treats a service-call pipeline failure as fatal and
       // fail-closed (the user's message is blocked rather than sent unmasked),
       // so this catch is their single classification point. Transport failures
