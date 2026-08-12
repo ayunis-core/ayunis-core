@@ -6582,6 +6582,85 @@
         "tags": ["workspaces"]
       }
     },
+    "/favorites": {
+      "get": {
+        "operationId": "FavoritesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/WorkspaceFavoriteResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ThreadFavoriteResponseDto"
+                      }
+                    ],
+                    "discriminator": {
+                      "propertyName": "referenceType"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user favorites",
+        "tags": ["favorites"]
+      }
+    },
+    "/favorites/toggle": {
+      "patch": {
+        "operationId": "FavoritesController_toggle",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleFavoriteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The favorite was toggled"
+          }
+        },
+        "summary": "Favorite or unfavorite an authorized reference",
+        "tags": ["favorites"]
+      }
+    },
+    "/favorites/reorder": {
+      "patch": {
+        "operationId": "FavoritesController_reorder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderFavoritesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The favorites were reordered"
+          }
+        },
+        "summary": "Reorder the current user favorites",
+        "tags": ["favorites"]
+      }
+    },
     "/anonymization-settings/pii-whitelist": {
       "get": {
         "operationId": "AnonymizationSettingsController_get",
@@ -15908,6 +15987,98 @@
             "example": "#6b5bd6"
           }
         }
+      },
+      "WorkspaceFavoriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "number",
+            "minimum": 0
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referenceType": {
+            "type": "string",
+            "enum": ["workspace"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "referenceId",
+          "referenceType",
+          "name",
+          "icon",
+          "color"
+        ]
+      },
+      "ThreadFavoriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "number",
+            "minimum": 0
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referenceType": {
+            "type": "string",
+            "enum": ["thread"]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "position", "referenceId", "referenceType", "name"]
+      },
+      "ToggleFavoriteDto": {
+        "type": "object",
+        "properties": {
+          "referenceType": {
+            "type": "string",
+            "enum": ["workspace", "thread"]
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["referenceType", "referenceId"]
+      },
+      "ReorderFavoritesDto": {
+        "type": "object",
+        "properties": {
+          "favoriteIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["favoriteIds"]
       },
       "PiiWhitelistEntryDto": {
         "type": "object",
