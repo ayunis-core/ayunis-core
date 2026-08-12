@@ -13620,7 +13620,7 @@
           "fileType": {
             "type": "string",
             "description": "Type of file",
-            "enum": ["pdf", "docx", "pptx", "txt", "audio"]
+            "enum": ["pdf", "docx", "pptx", "txt", "eml", "audio"]
           }
         },
         "required": [

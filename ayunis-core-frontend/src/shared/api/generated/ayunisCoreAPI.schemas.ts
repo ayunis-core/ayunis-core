@@ -2235,6 +2235,7 @@ export const FileSourceResponseDtoFileType = {
   docx: 'docx',
   pptx: 'pptx',
   txt: 'txt',
+  eml: 'eml',
   audio: 'audio',
 } as const;
 

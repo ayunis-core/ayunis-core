@@ -29,6 +29,7 @@ import {
 } from '../hooks/usePendingImages';
 import { useImagePaste } from '../hooks/useImagePaste';
 import { useFileDrop } from '../hooks/useFileDrop';
+import { ACCEPTED_DOCUMENT_EXTENSIONS } from '../utils/fileHandlers';
 import { PendingImageThumbnail } from './PendingImageThumbnail';
 import { cn } from '@ayunis/ui/lib/cn';
 import { SourcesList } from './SourcesList';
@@ -205,15 +206,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       },
       isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
       isImageUploadEnabled: isVisionEnabled,
-      acceptedDocumentExtensions: [
-        '.pdf',
-        '.csv',
-        '.xlsx',
-        '.xls',
-        '.docx',
-        '.pptx',
-        '.txt',
-      ],
+      acceptedDocumentExtensions: ACCEPTED_DOCUMENT_EXTENSIONS,
     });
 
     useImperativeHandle(ref, () => ({

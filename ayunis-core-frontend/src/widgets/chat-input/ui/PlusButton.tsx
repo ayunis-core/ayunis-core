@@ -198,7 +198,7 @@ export default function PlusButton({
         type="file"
         hidden
         multiple
-        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.mp3,.m4a,.wav,.webm"
+        accept="image/*,.pdf,.csv,.xlsx,.xls,.docx,.pptx,.txt,.md,.eml,.mp3,.m4a,.wav,.webm"
         onChange={(e) => handleFileChange(e.target.files)}
         ref={fileInputRef}
       />

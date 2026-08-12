@@ -7,9 +7,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   detectFileType,
   getCanonicalMimeType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
+  isDocumentSourceFile,
   isSpreadsheetFile,
   isCSVFile,
   SUPPORTED_FILE_TYPES,
@@ -72,11 +70,7 @@ export class AddFileSourceToThreadUseCase {
     // for concurrent adds.
     assertThreadHasSourceCapacity(thread.sourceAssignments ?? []);
 
-    if (
-      isDocumentFile(detectedType) ||
-      isPlainTextFile(detectedType) ||
-      isAudioFile(detectedType)
-    ) {
+    if (isDocumentSourceFile(detectedType)) {
       return this.addDocumentSource(thread, command.file, detectedType);
     }
     if (isCSVFile(detectedType) || isSpreadsheetFile(detectedType)) {

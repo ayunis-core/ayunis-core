@@ -1,3 +1,16 @@
+// Document extensions accepted by the chat input (drag-drop + file picker).
+// Images are handled separately; tabular/audio types are covered elsewhere.
+export const ACCEPTED_DOCUMENT_EXTENSIONS = [
+  '.pdf',
+  '.csv',
+  '.xlsx',
+  '.xls',
+  '.docx',
+  '.pptx',
+  '.txt',
+  '.eml',
+];
+
 export function separateFilesByType(files: FileList): {
   images: File[];
   regularFiles: File[];

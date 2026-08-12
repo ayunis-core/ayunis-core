@@ -19,6 +19,7 @@ import {
   isAudioFile,
   MIME_TYPES,
 } from 'src/common/util/file-type';
+import { extractTextFromEml } from 'src/common/util/eml';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
@@ -52,6 +53,11 @@ export class RetrieveFileContentUseCase {
 
     if (fileType === 'txt') {
       const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
+      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
+    }
+
+    if (fileType === 'eml') {
+      const text = await extractTextFromEml(command.fileData);
       return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
     }
 

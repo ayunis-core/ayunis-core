@@ -26,6 +26,9 @@ export const MIME_TYPES = {
   // Markdown
   MD: 'text/markdown',
 
+  // Email (RFC 822 message, .eml)
+  EML: 'message/rfc822',
+
   // Audio — formats supported by the STT pipeline (Mistral voxtral).
   // Keep this list in sync with TranscribeUseCase's supportedMimeTypes.
   MP3: 'audio/mpeg',
@@ -47,6 +50,7 @@ export const FILE_EXTENSIONS = {
   CSV: '.csv',
   TXT: '.txt',
   MD: '.md',
+  EML: '.eml',
   MP3: '.mp3',
   M4A: '.m4a',
   WAV: '.wav',
@@ -59,6 +63,7 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'DOCX',
   'PPTX',
   'TXT',
+  'EML',
   'CSV',
   'XLSX',
   'XLS',
@@ -76,6 +81,7 @@ export type DetectedFileType =
   | 'xls'
   | 'csv'
   | 'txt'
+  | 'eml'
   | 'mp3'
   | 'm4a'
   | 'wav'
@@ -92,6 +98,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
   [MIME_TYPES.MD]: 'txt',
+  [MIME_TYPES.EML]: 'eml',
   [MIME_TYPES.MP3]: 'mp3',
   [MIME_TYPES.M4A]: 'm4a',
   [MIME_TYPES.M4A_ALT]: 'm4a',
@@ -109,6 +116,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
+  [FILE_EXTENSIONS.EML]: 'eml',
   [FILE_EXTENSIONS.MP3]: 'mp3',
   [FILE_EXTENSIONS.M4A]: 'm4a',
   [FILE_EXTENSIONS.WAV]: 'wav',
@@ -166,6 +174,13 @@ export function isCSVFile(fileType: DetectedFileType): boolean {
 }
 
 /**
+ * Check if the file type is an email message (.eml, RFC 822)
+ */
+export function isEmailFile(fileType: DetectedFileType): boolean {
+  return fileType === 'eml';
+}
+
+/**
  * Check if the file type is an audio file (MP3, M4A, WAV, WebM)
  */
 export function isAudioFile(fileType: DetectedFileType): boolean {
@@ -174,6 +189,21 @@ export function isAudioFile(fileType: DetectedFileType): boolean {
     fileType === 'm4a' ||
     fileType === 'wav' ||
     fileType === 'webm'
+  );
+}
+
+/**
+ * Files that flow through the single-page document processing path — the ones
+ * whose extracted content becomes one text/file source. This is the inverse of
+ * the tabular data sources ({@link isCSVFile} / {@link isSpreadsheetFile}),
+ * which fan out into one data source per sheet.
+ */
+export function isDocumentSourceFile(fileType: DetectedFileType): boolean {
+  return (
+    isDocumentFile(fileType) ||
+    isPlainTextFile(fileType) ||
+    isEmailFile(fileType) ||
+    isAudioFile(fileType)
   );
 }
 
@@ -188,6 +218,7 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   xls: MIME_TYPES.XLS,
   csv: MIME_TYPES.CSV,
   txt: MIME_TYPES.TXT,
+  eml: MIME_TYPES.EML,
   mp3: MIME_TYPES.MP3,
   m4a: MIME_TYPES.M4A,
   wav: MIME_TYPES.WAV,
