@@ -527,6 +527,38 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
+  it('persists only completed text when a controlled inference error interrupts the stream', async () => {
+    const interruptedStream = new Observable<StreamInferenceResponseChunk>(
+      (subscriber) => {
+        subscriber.next(
+          StreamInferenceResponseChunk.text('Die verfügbaren Quellen sind '),
+        );
+        subscriber.next(
+          toolCallChunk({
+            id: 'call_1',
+            name: 'internet_search',
+            argumentsDelta: '{"query":"Bürgerbüro Öffnungszeiten"}',
+          }),
+        );
+        const timer = setTimeout(
+          () =>
+            subscriber.error(
+              new InferenceFailedError('Provider inference failed'),
+            ),
+          20,
+        );
+        return () => clearTimeout(timer);
+      },
+    );
+    const execute = jest.fn().mockReturnValue(interruptedStream);
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toBeInstanceOf(InferenceFailedError);
+    expect(savedMessages[0].content).toEqual([
+      expect.objectContaining({ text: 'Die verfügbaren Quellen sind ' }),
+    ]);
+  });
+
   it('treats a tool call that streamed no arguments as an empty object', async () => {
     const { service, savedMessages } = buildService([
       toolCallChunk({ id: 'call_1', name: 'list_letterheads' }),

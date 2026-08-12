@@ -845,8 +845,8 @@ importers:
         specifier: workspace:*
         version: link:../inference
       '@mistralai/mistralai':
-        specifier: ^1.14.0
-        version: 1.15.1
+        specifier: ^2.4.1
+        version: 2.5.0(@opentelemetry/api@1.9.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
@@ -2654,9 +2654,6 @@ packages:
 
   '@microsoft/tsdoc@0.16.0':
     resolution: {integrity: sha512-xgAyonlVVS+q7Vc7qLW0UrJU7rSFcETRWsqdXZtjzRU8dF+6CkozTK4V4y1LwOX7j8r/vHphjDeMeGI4tNGeGA==}
-
-  '@mistralai/mistralai@1.15.1':
-    resolution: {integrity: sha512-fb995eiz3r0KsBGtRjFV+/iLbX+UpfalxpF+YitT3R6ukrPD4PN+FGwwmYcRFhNAzVzDUtTVxQYnjQWEnwV5nw==}
 
   '@mistralai/mistralai@2.5.0':
     resolution: {integrity: sha512-S/r6tkiUHblaDJGsb84WS0ePTF2YHVta2EoTi1NJqHNt5mfRRS2uE4v7hCYV134+an+fk6WgG3+aFfinJbQBjQ==}
@@ -14749,15 +14746,6 @@ snapshots:
       '@chevrotain/types': 11.1.2
 
   '@microsoft/tsdoc@0.16.0': {}
-
-  '@mistralai/mistralai@1.15.1':
-    dependencies:
-      ws: 8.21.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   '@mistralai/mistralai@2.5.0(@opentelemetry/api@1.9.1)':
     dependencies:
