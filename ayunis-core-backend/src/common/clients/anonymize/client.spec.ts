@@ -6,7 +6,7 @@ import {
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
-import { toSlimTransportError } from './client';
+import { parseAnonymizeTimingMetadata, toSlimTransportError } from './client';
 
 const RAW_USER_TEXT = 'Max Mustermann, geboren am 01.02.1980, wohnhaft in Bonn';
 
@@ -40,6 +40,33 @@ function axiosServerFailure(): AxiosError {
     response,
   );
 }
+
+describe('parseAnonymizeTimingMetadata', () => {
+  it('turns service timing headers into numeric log attributes', () => {
+    const metadata = parseAnonymizeTimingMetadata(
+      {
+        'server-timing':
+          'queue;dur=12.25, model_load;dur=0.50, processing;dur=345.75',
+        'x-anonymize-cold-start': 'false',
+      },
+      360.25,
+    );
+
+    expect(metadata).toEqual({
+      requestDurationMs: 360.25,
+      queueDurationMs: 12.25,
+      modelLoadDurationMs: 0.5,
+      processingDurationMs: 345.75,
+      coldStart: false,
+    });
+  });
+
+  it('keeps total duration observable when service headers are absent', () => {
+    expect(parseAnonymizeTimingMetadata({}, 60000)).toEqual({
+      requestDurationMs: 60000,
+    });
+  });
+});
 
 describe('toSlimTransportError', () => {
   it('strips the request payload so raw user text can never reach logs', () => {

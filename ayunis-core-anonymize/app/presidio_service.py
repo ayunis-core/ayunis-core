@@ -1,5 +1,5 @@
 import threading
-from typing import List, Optional
+
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_analyzer.predefined_recognizers import GLiNERRecognizer
@@ -64,8 +64,8 @@ class PresidioService:
     def analyze(
         self,
         text: str,
-        entities: Optional[List[str]] = None,
-    ) -> List[dict]:
+        entities: list[str] | None = None,
+    ) -> list[dict]:
         """
         Analyze text for PII entities.
 
@@ -93,8 +93,12 @@ class PresidioService:
         ]
 
 
-presidio_service: Optional[PresidioService] = None
+presidio_service: PresidioService | None = None
 _presidio_service_lock = threading.Lock()
+
+
+def is_presidio_service_loaded() -> bool:
+    return presidio_service is not None
 
 
 def get_presidio_service() -> PresidioService:

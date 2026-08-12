@@ -20,6 +20,7 @@ describe('PresidioAnonymizationProvider', () => {
   beforeEach(() => {
     provider = new PresidioAnonymizationProvider();
     jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'error').mockImplementation();
     mockAnalyzeTextAnalyzePost.mockReset();
   });
@@ -105,6 +106,23 @@ describe('PresidioAnonymizationProvider', () => {
     expect(detections[0]).toMatchObject({
       entityType: 'ORGANIZATION',
       text: 'Berlin University',
+    });
+  });
+
+  it('logs payload size and total client duration after detection', async () => {
+    const log = jest.spyOn(Logger.prototype, 'log');
+    jest
+      .spyOn(performance, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(456.78);
+    mockResults([]);
+
+    await provider.detect('Der Wetterbericht sagt Regen voraus');
+
+    expect(log).toHaveBeenCalledWith('PII detection complete', {
+      textLength: 35,
+      detectionCount: 0,
+      durationMs: 356.78,
     });
   });
 
