@@ -65,6 +65,19 @@
     "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "download": "Zertifikat herunterladen"
   },
+  "account": {
+    "title": "KI-Führerschein",
+    "lastPassed": "Zuletzt bestanden:",
+    "nextRenewal": "Nächste Erneuerung fällig:",
+    "expiredOn": "Abgelaufen am:",
+    "notPassedDescription": "Sie haben den KI-Führerschein noch nicht erworben.",
+    "action": "Zur Academy",
+    "status": {
+      "valid": "Gültig",
+      "expired": "Abgelaufen",
+      "notPassed": "Noch nicht erworben"
+    }
+  },
   "gate": {
     "title": "Zertifikat erforderlich",
     "description": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um ihn freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",

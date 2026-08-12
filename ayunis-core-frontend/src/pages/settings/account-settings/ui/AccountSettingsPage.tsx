@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from './PasswordSettingsPage';
 import { TwoFactorCard } from './TwoFactorCard';
+import { AcademyCertificateCard } from './AcademyCertificateCard';
 
 export default function AccountSettingsPage({
   user,
@@ -28,6 +29,7 @@ export default function AccountSettingsPage({
         <ProfileInformationCard user={user} />
         <PasswordSettingsPage />
         <TwoFactorCard />
+        <AcademyCertificateCard />
         {/* Account Actions */}
         <Card>
           <CardHeader>
