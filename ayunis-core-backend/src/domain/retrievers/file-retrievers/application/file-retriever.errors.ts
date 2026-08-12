@@ -1,15 +1,5 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  BadRequestException,
-  NotFoundException,
-  InternalServerErrorException,
-  UnauthorizedException,
-  PayloadTooLargeException,
-  UnprocessableEntityException,
-  ServiceUnavailableException,
-  GatewayTimeoutException,
-} from '@nestjs/common';
 
 /**
  * Error codes specific to the file retriever domain
@@ -36,38 +26,6 @@ export abstract class FileRetrieverError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    const payload = {
-      code: this.code,
-      message: this.message,
-      ...(this.metadata && { metadata: this.metadata }),
-    };
-
-    switch (this.statusCode) {
-      case 400:
-        return new BadRequestException(payload);
-      case 401:
-        return new UnauthorizedException(payload);
-      case 404:
-        return new NotFoundException(payload);
-      case 413:
-        return new PayloadTooLargeException(payload);
-      case 422:
-        return new UnprocessableEntityException(payload);
-      case 500:
-        return new InternalServerErrorException(payload);
-      case 503:
-        return new ServiceUnavailableException(payload);
-      case 504:
-        return new GatewayTimeoutException(payload);
-      default:
-        return new InternalServerErrorException(payload);
-    }
   }
 }
 

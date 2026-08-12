@@ -15,7 +15,12 @@ export class OpenAIErrorMapper {
    */
   toEnvelope(error: unknown): MappedOpenAIError {
     if (error instanceof ApplicationError) {
-      return mappedError(error.statusCode, error.message, error.code);
+      const clientResponse = error.toClientResponse();
+      return mappedError(
+        error.statusCode,
+        clientResponse.message,
+        clientResponse.code,
+      );
     }
     if (error instanceof HttpException) {
       const status = error.getStatus();

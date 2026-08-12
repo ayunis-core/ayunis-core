@@ -11,7 +11,7 @@ describe('UnexpectedArtifactError', () => {
     expect(error.cause).toBe(cause);
     expect(error.toHttpException().getResponse()).toEqual({
       code: 'ARTIFACT_UNEXPECTED',
-      message: 'Unexpected artifact error',
+      message: 'Internal server error',
     });
   });
 });
@@ -25,7 +25,7 @@ describe('ArtifactExportTimeoutError', () => {
     expect(error.toHttpException().getStatus()).toBe(504);
     expect(error.toHttpException().getResponse()).toEqual({
       code: 'ARTIFACT_EXPORT_TIMEOUT',
-      message: 'Artifact export timed out',
+      message: 'Internal server error',
     });
   });
 });

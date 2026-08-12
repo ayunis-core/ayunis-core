@@ -26,6 +26,14 @@ class QuotaExceededError extends ApplicationError {
   }
 }
 
+class UnexpectedRunError extends ApplicationError {
+  constructor() {
+    super('database connection string leaked', 'UNEXPECTED_RUN', 500, {
+      connectionString: 'postgres://user:secret@database/internal',
+    });
+  }
+}
+
 function sessionEvent(timestamp: string): RunEvent {
   return { type: 'session', streaming: true, threadId: THREAD_ID, timestamp };
 }
@@ -163,6 +171,27 @@ describe('RunSsePresenter', () => {
     expect(response.end).toHaveBeenCalledTimes(1);
   });
 
+  it('does not expose domain server-error details', async () => {
+    // eslint-disable-next-line require-yield, sonarjs/generator-without-yield
+    async function* failingSource(): AsyncGenerator<RunEvent> {
+      throw new UnexpectedRunError();
+    }
+
+    await stream(failingSource());
+
+    const errorFrame = response.write.mock.calls
+      .map(([chunk]: [string]) => chunk)
+      .find((chunk) => chunk.startsWith('id: execution-error'));
+    const payload = JSON.parse(
+      (errorFrame as string).split('data: ')[1],
+    ) as Record<string, unknown>;
+    expect(payload).toMatchObject({
+      code: 'UNEXPECTED_RUN',
+      message: 'Internal server error',
+    });
+    expect(payload.details).toBeUndefined();
+  });
+
   it('falls back to EXECUTION_ERROR for unexpected errors', async () => {
     // eslint-disable-next-line require-yield, sonarjs/generator-without-yield
     async function* failingSource(): AsyncGenerator<RunEvent> {
@@ -178,6 +207,7 @@ describe('RunSsePresenter', () => {
       (errorFrame as string).split('data: ')[1],
     ) as Record<string, unknown>;
     expect(payload.code).toBe('EXECUTION_ERROR');
+    expect(payload.message).toBe('Internal server error');
   });
 
   it('does not abort the event source after normal completion', async () => {

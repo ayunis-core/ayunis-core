@@ -1,6 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 
 export enum QuotaErrorCode {
   QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
@@ -14,17 +14,6 @@ export abstract class QuotaError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  toHttpException() {
-    return new HttpException(
-      {
-        code: this.code,
-        message: this.message,
-        ...(this.metadata && { metadata: this.metadata }),
-      },
-      this.statusCode,
-    );
   }
 }
 

@@ -28,7 +28,10 @@ import { RunNoModelFoundError } from '../../runs.errors';
 import { Thread } from '../../../../threads/domain/thread.entity';
 import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ApplicationError,
+  INTERNAL_SERVER_ERROR_MESSAGE,
+} from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { RunAnonymizationUnavailableError } from '../../runs.errors';
@@ -115,20 +118,15 @@ export class ExecuteRunAndSetTitleUseCase {
   }
 
   private toErrorEvent(error: unknown, threadId: UUID): RunErrorEvent {
+    const clientError =
+      error instanceof ApplicationError ? error.toClientResponse() : undefined;
     return {
       type: 'error',
-      message:
-        error instanceof Error
-          ? error.message
-          : 'An error occurred while executing the run',
+      message: clientError?.message ?? INTERNAL_SERVER_ERROR_MESSAGE,
       threadId,
       timestamp: new Date().toISOString(),
-      code: error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR',
-      details: {
-        error: error instanceof Error ? error.toString() : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'Unknown error',
-        ...(error instanceof ApplicationError && error.metadata),
-      },
+      code: clientError?.code ?? 'EXECUTION_ERROR',
+      details: clientError?.metadata,
     };
   }
 
