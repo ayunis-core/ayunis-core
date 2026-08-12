@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { useThreads } from '../api';
-import { useDeleteThread } from '@/features/useDeleteThread';
+import { useDeleteThread } from '@/features/thread-run';
 import { useChatsSidebarOpen } from '@/features/useChatsSidebarOpen';
 import { Button } from '@ayunis/ui/components/button';
 import {

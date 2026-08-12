@@ -3,8 +3,10 @@ import {
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { abortActiveThreadRun } from '../model/active-thread-run';
 
 interface UseDeleteChatParams {
+  onBeforeDelete?: () => void;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
@@ -18,6 +20,8 @@ export function useDeleteThread(params: UseDeleteChatParams) {
   });
 
   function deleteChat(threadId: string) {
+    params.onBeforeDelete?.();
+    abortActiveThreadRun(threadId);
     mutate(
       { id: threadId },
       {

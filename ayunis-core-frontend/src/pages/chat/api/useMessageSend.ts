@@ -15,6 +15,10 @@ import {
   getThreadsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import {
+  registerActiveThreadRun,
+  unregisterActiveThreadRun,
+} from '@/features/thread-run';
 
 export interface PendingImage {
   file: File;
@@ -65,6 +69,7 @@ export function useMessageSend(params: UseMessageSendParams) {
   const sendMessage = useCallback(
     // eslint-disable-next-line sonarjs/cognitive-complexity
     async (payload: SendMessagePayload) => {
+      let requestController: AbortController | null = null;
       try {
         // Clean up any existing connection
         if (abortControllerRef.current) {
@@ -74,8 +79,10 @@ export function useMessageSend(params: UseMessageSendParams) {
         isLoadingRef.current = true;
         wasAbortedRef.current = false;
         hadErrorRef.current = false;
-        abortControllerRef.current = new AbortController();
-        const signal = abortControllerRef.current.signal;
+        requestController = new AbortController();
+        abortControllerRef.current = requestController;
+        registerActiveThreadRun(params.threadId, requestController);
+        const signal = requestController.signal;
 
         const url = `${config.api.baseUrl}/runs/send-message`;
 
@@ -245,6 +252,9 @@ export function useMessageSend(params: UseMessageSendParams) {
           }
         }
       } finally {
+        if (requestController) {
+          unregisterActiveThreadRun(params.threadId, requestController);
+        }
         isLoadingRef.current = false;
 
         // Only invalidate queries if the request completed normally (not aborted)
@@ -335,10 +345,8 @@ export function useMessageSend(params: UseMessageSendParams) {
   );
 
   const abort = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     isLoadingRef.current = false;
     wasAbortedRef.current = true;
 
