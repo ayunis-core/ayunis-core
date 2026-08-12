@@ -1,11 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useTranslation } from 'react-i18next';
+import extractErrorData from '@/shared/api/extract-error-data';
+import { abortActiveThreadRun } from '@/features/thread-run';
 
 export function useDeleteChat(onSuccess?: () => void) {
   const { t } = useTranslation('chats');
@@ -18,8 +20,17 @@ export function useDeleteChat(onSuccess?: () => void) {
         showSuccess(t('delete.success'));
         onSuccess?.();
       },
-      onError: () => {
-        showError(t('delete.error'));
+      onError: (error) => {
+        try {
+          const { code } = extractErrorData(error);
+          if (code === 'THREAD_NOT_FOUND') {
+            showError(t('delete.notFound'));
+          } else {
+            showError(t('delete.error'));
+          }
+        } catch {
+          showError(t('delete.error'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({
@@ -31,6 +42,7 @@ export function useDeleteChat(onSuccess?: () => void) {
   });
 
   function deleteChat(chatId: string) {
+    abortActiveThreadRun(chatId);
     mutation.mutate({ id: chatId });
   }
 
