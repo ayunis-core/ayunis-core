@@ -19,6 +19,12 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
+  build: {
+    // Emit sourcemaps without referencing them from the bundles. The maps
+    // never ship (the Dockerfile deletes them); CI uploads them to AppSignal
+    // keyed by revision (see the sourcemaps job in build-images.yml).
+    sourcemap: "hidden",
+  },
   server: {
     port: port,
   },

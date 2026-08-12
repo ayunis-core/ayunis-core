@@ -6,6 +6,8 @@ import { Injectable } from '@nestjs/common';
 export class MeResponseDtoMapper {
   toDto(user: ActiveUser): MeResponseDto {
     return {
+      id: user.id,
+      orgId: user.orgId,
       email: user.email,
       role: user.role,
       systemRole: user.systemRole,

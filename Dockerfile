@@ -32,7 +32,15 @@ RUN pnpm install --frozen-lockfile
 # No .env is consulted: environment-specific frontend values are injected at
 # runtime via the backend's GET /config.js, so the same image serves every
 # environment.
-RUN pnpm --filter core-frontend-tanstack run build
+#
+# APP_REVISION (the git sha in CI, see build-images.yml) is inlined into the
+# frontend bundle so AppSignal reports carry the revision its sourcemaps were
+# uploaded under, and exported as ENV below so the backend reports the same
+# one. The maps themselves (vite build.sourcemap: 'hidden') are deleted —
+# they must not be publicly served; CI uploads them to AppSignal instead.
+ARG APP_REVISION
+RUN VITE_APP_REVISION=$APP_REVISION pnpm --filter core-frontend-tanstack run build
+RUN find ayunis-core-frontend/dist -name '*.map' -delete
 RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
 # Build the workspace packages the backend depends on (@ayunis/inference,
 # @ayunis/provider-anthropic, @ayunis/provider-openai, @ayunis/agent-runtime)
@@ -75,6 +83,10 @@ COPY --from=build /usr/src/app/ayunis-core-backend/appsignal-hooks.cjs ./appsign
 RUN mkdir -p uploads
 
 ENV NODE_ENV=production
+# Same revision the frontend bundle was built with (empty outside CI, where
+# appsignal.cjs falls back to the backend package version).
+ARG APP_REVISION
+ENV APP_REVISION=$APP_REVISION
 # Heap sized well below the container limit so allocations outside the V8 heap
 # (Chromium, file buffers) have room. Deliberately no
 # --heapsnapshot-near-heap-limit: a snapshot persists prompts, PII and
