@@ -65,6 +65,16 @@
     "downloadError": "The certificate could not be downloaded. Please try again.",
     "download": "Download certificate"
   },
+  "expiry": {
+    "title_one": "Your AI certificate expires in {{count}} day",
+    "title_other": "Your AI certificate expires in {{count}} days",
+    "description": "Renew it in the Academy to keep using Ayunis Core chat without interruption.",
+    "urgentDescription": "Renew it now — once it expires, Ayunis Core chat is locked until you pass the certificate again.",
+    "banner_one": "Your AI certificate expires in {{count}} day. Chat will be locked afterwards.",
+    "banner_other": "Your AI certificate expires in {{count}} days. Chat will be locked afterwards.",
+    "later": "Later",
+    "action": "Go to the academy"
+  },
   "account": {
     "title": "AI certificate (KI-Führerschein)",
     "lastPassed": "Last passed:",
@@ -74,6 +84,7 @@
     "action": "Go to the academy",
     "status": {
       "valid": "Valid",
+      "expiringSoon": "Expiring soon",
       "expired": "Expired",
       "notPassed": "Not yet earned"
     }

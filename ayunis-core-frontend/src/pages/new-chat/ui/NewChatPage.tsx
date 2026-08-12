@@ -18,7 +18,8 @@ import {
   SourceResponseDtoType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { AcademyGateNotice, useAcademyAccessStatus } from '@/features/academy';
+import { useAcademyAccessStatus } from '@/features/academy';
+import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';

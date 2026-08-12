@@ -65,6 +65,16 @@
     "downloadError": "Das Zertifikat konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
     "download": "Zertifikat herunterladen"
   },
+  "expiry": {
+    "title_one": "Ihr KI-Führerschein läuft in {{count}} Tag ab",
+    "title_other": "Ihr KI-Führerschein läuft in {{count}} Tagen ab",
+    "description": "Erneuern Sie ihn in der Academy, um den Ayunis Core Chat ohne Unterbrechung weiter zu nutzen.",
+    "urgentDescription": "Erneuern Sie ihn jetzt — nach Ablauf ist der Ayunis Core Chat gesperrt, bis Sie den KI-Führerschein erneut bestehen.",
+    "banner_one": "Ihr KI-Führerschein läuft in {{count}} Tag ab. Danach ist der Chat gesperrt.",
+    "banner_other": "Ihr KI-Führerschein läuft in {{count}} Tagen ab. Danach ist der Chat gesperrt.",
+    "later": "Später",
+    "action": "Zur Academy"
+  },
   "account": {
     "title": "KI-Führerschein",
     "lastPassed": "Zuletzt bestanden:",
@@ -74,6 +84,7 @@
     "action": "Zur Academy",
     "status": {
       "valid": "Gültig",
+      "expiringSoon": "Läuft bald ab",
       "expired": "Abgelaufen",
       "notPassed": "Noch nicht erworben"
     }

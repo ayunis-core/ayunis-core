@@ -7,7 +7,7 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@ayunis/ui/components/alert';
-import { useAcademyAccessStatus } from '../useAcademyAccessStatus';
+import { useAcademyAccessStatus } from '@/features/academy';
 
 interface AcademyGateNoticeProps {
   className?: string;
