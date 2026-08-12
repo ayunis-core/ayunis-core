@@ -82,6 +82,17 @@ export interface MemberFixture {
   creditLimit?: number;
 }
 
+/**
+ * Offsets are relative to seed time rather than absolute dates, so a fixture
+ * seeded once keeps hitting the same certificate state months later.
+ */
+export interface AcademyCompletionFixture {
+  email: string;
+  completedDaysAgo: number;
+  /** What the offset is meant to exercise — shown in the seed log. */
+  expectedState: string;
+}
+
 export interface OrgFixture {
   key: string;
   name: string;
@@ -91,6 +102,37 @@ export interface OrgFixture {
   teams: readonly string[];
   memberships: Readonly<Record<string, readonly string[]>>;
   teamLimits?: Readonly<Record<string, number>>;
+  /** Whether the org holds the academy add-on. Without it the academy is invisible. */
+  academyAddon?: boolean;
+  academyCompletions?: readonly AcademyCompletionFixture[];
+}
+
+export interface QuizAnswerOptionFixture {
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestionFixture {
+  text: string;
+  position: number;
+  options: readonly QuizAnswerOptionFixture[];
+}
+
+export interface CourseModuleFixture {
+  title: string;
+  description: string;
+  loomUrl: string;
+  position: number;
+}
+
+export interface AcademyChapterFixture {
+  title: string;
+  description: string;
+  position: number;
+  quizEnabled: boolean;
+  passThreshold: number;
+  modules: readonly CourseModuleFixture[];
+  quiz: readonly QuizQuestionFixture[];
 }
 
 export interface PermittedModelFixture {
@@ -111,4 +153,5 @@ export interface SeedFixture {
   platformConfig: { creditsPerEuro: number };
   orgs: readonly OrgFixture[];
   permittedModels: readonly PermittedModelFixture[];
+  academyChapters: readonly AcademyChapterFixture[];
 }

@@ -199,6 +199,34 @@ export const minimalFixture = {
         Engineering: 5000,
         'Project-X': 4000,
       },
+      // Only this org gets the add-on. Demo Org stays without it so the two
+      // logins cover both the academy and the "org cannot take the
+      // certificate at all" paths.
+      academyAddon: true,
+      // The admin is left without a completion on purpose: they are the one
+      // account that can earn the certificate live through the quiz.
+      academyCompletions: [
+        {
+          email: 'anna@usage.local',
+          completedDaysAgo: 10,
+          expectedState: 'valid',
+        },
+        {
+          email: 'ben@usage.local',
+          completedDaysAgo: 340,
+          expectedState: 'expiring soon — 1-month pop-up',
+        },
+        {
+          email: 'carla@usage.local',
+          completedDaysAgo: 361,
+          expectedState: 'expiring soon — final-week countdown banner',
+        },
+        {
+          email: 'dan@usage.local',
+          completedDaysAgo: 400,
+          expectedState: 'expired — chat gated in annual mode',
+        },
+      ],
     },
   ],
 
@@ -245,6 +273,70 @@ export const minimalFixture = {
       modelKey: 'imageGenerationModel',
       isDefault: true,
       anonymousOnly: false,
+    },
+  ],
+
+  // Academy content is platform-wide, not per-org. One quiz-enabled chapter is
+  // enough to earn the whole certificate, which keeps the manual walkthrough
+  // short: pass this quiz and Core unlocks immediately.
+  academyChapters: [
+    {
+      title: 'KI-Grundlagen',
+      description:
+        'Wie große Sprachmodelle arbeiten, wo ihre Grenzen liegen und was das für die Verwaltungsarbeit bedeutet.',
+      position: 1,
+      quizEnabled: true,
+      // With three questions an 80% threshold means all three must be right,
+      // so the fail path is one deliberate wrong answer away.
+      passThreshold: 80,
+      modules: [
+        {
+          title: 'Was ein Sprachmodell tut',
+          description:
+            'Eine kurze Einführung in Tokens, Kontext und Wahrscheinlichkeiten.',
+          loomUrl:
+            'https://www.loom.com/share/1e8d673f95e64c989f60a6885891777d',
+          position: 1,
+        },
+      ],
+      quiz: [
+        {
+          text: 'Worauf beruht die Antwort eines Sprachmodells?',
+          position: 1,
+          options: [
+            {
+              text: 'Auf einer Wahrscheinlichkeitsschätzung über das nächste Token',
+              isCorrect: true,
+            },
+            { text: 'Auf einer Datenbankabfrage', isCorrect: false },
+            { text: 'Auf einer festen Regelsammlung', isCorrect: false },
+          ],
+        },
+        {
+          text: 'Was gehört nicht in einen Prompt?',
+          position: 2,
+          options: [
+            {
+              text: 'Personenbezogene Daten ohne Rechtsgrundlage',
+              isCorrect: true,
+            },
+            { text: 'Der gewünschte Textstil', isCorrect: false },
+            { text: 'Ein Beispiel für das Zielformat', isCorrect: false },
+          ],
+        },
+        {
+          text: 'Wer verantwortet das Ergebnis einer KI-Antwort?',
+          position: 3,
+          options: [
+            {
+              text: 'Die Person, die es verwendet — Ergebnisse sind zu prüfen',
+              isCorrect: true,
+            },
+            { text: 'Der Modellanbieter', isCorrect: false },
+            { text: 'Niemand, es ist automatisiert', isCorrect: false },
+          ],
+        },
+      ],
     },
   ],
 } as const satisfies SeedFixture;
