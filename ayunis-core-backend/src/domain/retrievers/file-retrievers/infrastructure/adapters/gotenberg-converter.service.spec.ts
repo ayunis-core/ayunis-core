@@ -4,19 +4,13 @@ import axios from 'axios';
 import { GotenbergConverterService } from './gotenberg-converter.service';
 import { gotenbergConfig } from 'src/config/gotenberg.config';
 import {
+  DocumentConversionUnavailableError,
   FileRetrievalFailedError,
   FileTooLargeError,
   UnprocessableDocumentError,
 } from '../../application/file-retriever.errors';
 
 jest.mock('axios');
-
-// No retries in these tests: every case asserts the classification of a final
-// failure, and only 503 is retryable here anyway.
-jest.mock('src/common/util/retryWithBackoff', () => ({
-  __esModule: true,
-  default: ({ fn }: { fn: () => Promise<unknown> }) => fn(),
-}));
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -28,6 +22,7 @@ describe('GotenbergConverterService', () => {
   let service: GotenbergConverterService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GotenbergConverterService,
@@ -73,6 +68,22 @@ describe('GotenbergConverterService', () => {
     mockedAxios.post.mockRejectedValue(axiosErrorWithStatus(413));
 
     await expect(convert()).rejects.toBeInstanceOf(FileTooLargeError);
+  });
+
+  it('classifies a 503 as an actionable transient conversion failure for the queue to retry', async () => {
+    mockedAxios.post.mockRejectedValue(axiosErrorWithStatus(503));
+
+    const result = convert();
+    await expect(result).rejects.toBeInstanceOf(
+      DocumentConversionUnavailableError,
+    );
+    await expect(result).rejects.toMatchObject({
+      code: 'DOCUMENT_CONVERSION_UNAVAILABLE',
+      statusCode: 503,
+      message: expect.stringMatching(/try again later/i),
+      metadata: { converter: 'gotenberg', upstreamStatus: 503 },
+    });
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
   });
 
   // Gotenberg is our own service, so the cases below are outages we must keep

@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
   FileRetrieverPage,
@@ -14,6 +9,8 @@ import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
+  EmptyOcrResultError,
+  FileRetrieverUnauthorizedError,
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,
 } from '../../file-retriever.errors';
@@ -23,7 +20,7 @@ import {
   MIME_TYPES,
 } from 'src/common/util/file-type';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { DocumentConverterPort } from '../../ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
@@ -42,56 +39,46 @@ export class RetrieveFileContentUseCase {
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
 
+  @HandleUnexpectedErrors(FileRetrieverUnexpectedError)
   async execute(
     command: RetrieveFileContentCommand,
   ): Promise<FileRetrieverResult> {
     this.logger.debug(`Retrieving file content: ${command.fileName}`);
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new FileRetrieverUnauthorizedError();
     }
-    try {
-      const fileType = detectFileType(command.fileType, command.fileName);
+    const fileType = detectFileType(command.fileType, command.fileName);
 
-      if (fileType === 'txt') {
-        // TXT/MD: Read directly as UTF-8, no external service needed
-        const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
-        return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
-      }
-
-      if (fileType === 'pdf') {
-        return await this.processPdf(
-          command.fileData,
-          command.fileName,
-          command.fileType,
-        );
-      }
-
-      if (fileType === 'docx' || fileType === 'pptx') {
-        return await this.processOfficeDocument(
-          command.fileData,
-          command.fileName,
-        );
-      }
-
-      if (isAudioFile(fileType)) {
-        return await this.processAudio(
-          command.fileData,
-          command.fileName,
-          command.fileType,
-        );
-      }
-
-      throw new InvalidFileTypeError(fileType);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Unexpected error while retrieving file content', {
-        error: error as Error,
-      });
-      throw new FileRetrieverUnexpectedError(error as Error);
+    if (fileType === 'txt') {
+      const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
+      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
     }
+
+    if (fileType === 'pdf') {
+      return await this.processPdf(
+        command.fileData,
+        command.fileName,
+        command.fileType,
+      );
+    }
+
+    if (fileType === 'docx' || fileType === 'pptx') {
+      return await this.processOfficeDocument(
+        command.fileData,
+        command.fileName,
+      );
+    }
+
+    if (isAudioFile(fileType)) {
+      return await this.processAudio(
+        command.fileData,
+        command.fileName,
+        command.fileType,
+      );
+    }
+
+    throw new InvalidFileTypeError(fileType);
   }
 
   /**
@@ -102,12 +89,44 @@ export class RetrieveFileContentUseCase {
     fileName: string,
     mimeType: string,
   ): Promise<FileRetrieverResult> {
-    const handler = this.config.mistral.apiKey
-      ? this.fileRetrieverRegistry.getHandler(FileRetrieverType.MISTRAL)
-      : this.fileRetrieverRegistry.getHandler(FileRetrieverType.NPM_PDF_PARSE);
-
     const file = new File(fileData, fileName, mimeType);
-    return handler.processFile(file);
+    if (!this.config.mistral.apiKey) {
+      return this.fileRetrieverRegistry
+        .getHandler(FileRetrieverType.NPM_PDF_PARSE)
+        .processFile(file);
+    }
+
+    try {
+      return await this.fileRetrieverRegistry
+        .getHandler(FileRetrieverType.MISTRAL)
+        .processFile(file);
+    } catch (error) {
+      if (!(error instanceof EmptyOcrResultError)) throw error;
+      return this.processEmptyOcrFallback(file, error);
+    }
+  }
+
+  private async processEmptyOcrFallback(
+    file: File,
+    emptyOcrError: EmptyOcrResultError,
+  ): Promise<FileRetrieverResult> {
+    this.logger.warn('Mistral returned no pages; trying local PDF parsing', {
+      fileName: file.filename,
+    });
+    try {
+      const result = await this.fileRetrieverRegistry
+        .getHandler(FileRetrieverType.NPM_PDF_PARSE)
+        .processFile(file);
+      if (result.pages.some((page) => page.text.trim().length > 0)) {
+        return result;
+      }
+    } catch (error) {
+      this.logger.warn('Local PDF fallback failed', {
+        fileName: file.filename,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+    throw emptyOcrError;
   }
 
   /**

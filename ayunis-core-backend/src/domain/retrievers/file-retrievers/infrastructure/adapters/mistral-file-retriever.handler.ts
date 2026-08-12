@@ -5,6 +5,7 @@ import {
   FileRetrieverPage,
 } from '../../domain/file-retriever-result.entity';
 import {
+  EmptyOcrResultError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
@@ -116,9 +117,13 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     // response likewise means its document parser rejected the PDF itself.
     if (
       rejectsDocument(error, 'invalid_request_file') ||
-      rejectsDocument(error, 'document_parser_invalid_file')
+      rejectsDocument(error, 'document_parser_invalid_file') ||
+      isRecurringUnprocessableRejection(error)
     ) {
-      return new UnprocessableDocumentError(error.message, metadata);
+      return new UnprocessableDocumentError(
+        'The document could not be processed',
+        metadata,
+      );
     }
 
     // Every other OCR 4xx is the provider choking on a machine-generated
@@ -266,14 +271,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     });
 
     if (pages.length === 0) {
-      // Zero pages is a property of the document (nothing OCR could read),
-      // not a defect of ours: the 422 settles the queue job without further
-      // attempts and the message is what the user sees on the failed source
-      // (AYC-655).
-      throw new UnprocessableDocumentError(
-        'No text could be extracted from the document',
-        { model: this.MODEL_NAME, pageCount: 0 },
-      );
+      // This subtype lets the use case attempt local PDF parsing while keeping
+      // the same terminal 422 classification if the fallback also finds no text.
+      throw new EmptyOcrResultError({
+        model: this.MODEL_NAME,
+        pageCount: 0,
+      });
     }
 
     // Return the extracted text
@@ -285,16 +288,28 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
 function rejectsDocument(error: MistralError, errorType: string): boolean {
   if (error.statusCode !== 400) return false;
+  return parseErrorBody(error)?.type === errorType;
+}
 
+function isRecurringUnprocessableRejection(error: MistralError): boolean {
+  if (error.statusCode !== 422) return false;
+  const body = parseErrorBody(error);
+  return (
+    (body?.type === 'invalid_file' && body.code === '1901') ||
+    body?.detail === 'Invalid file format.'
+  );
+}
+
+function parseErrorBody(
+  error: MistralError,
+): Record<string, unknown> | undefined {
   try {
     const body: unknown = JSON.parse(error.body);
-    return (
-      typeof body === 'object' &&
-      body !== null &&
-      (body as Record<string, unknown>).type === errorType
-    );
+    return typeof body === 'object' && body !== null
+      ? (body as Record<string, unknown>)
+      : undefined;
   } catch {
-    return false;
+    return undefined;
   }
 }
 
