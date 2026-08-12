@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.25.0](https://github.com/ayunis-core/ayunis-core/compare/v2.24.0...v2.25.0) (2026-08-12)
+
+
+### Features
+
+* **academy:** show certificate status to members and admins (AYC-598) ([#1322](https://github.com/ayunis-core/ayunis-core/issues/1322)) ([e81dca6](https://github.com/ayunis-core/ayunis-core/commit/e81dca6fa82710543b076c9b7191f8d4e708ab2c))
+* **academy:** warn members before their certificate expires (AYC-599) ([#1323](https://github.com/ayunis-core/ayunis-core/issues/1323)) ([fdf6d9b](https://github.com/ayunis-core/ayunis-core/commit/fdf6d9bd59e03d4ff52b6f86a891c4439330d817))
+* **observability:** frontend appsignal sourcemaps, ignore rules and context tags (AYC-539) ([#1251](https://github.com/ayunis-core/ayunis-core/issues/1251)) ([2e57bf6](https://github.com/ayunis-core/ayunis-core/commit/2e57bf6e65c9c8fcd40c34190c5de8ea3369969e))
+
+
+### Bug Fixes
+
+* **artifacts:** prevent PDF export navigation stalls (AYC-558) ([#1327](https://github.com/ayunis-core/ayunis-core/issues/1327)) ([9211bc3](https://github.com/ayunis-core/ayunis-core/commit/9211bc35ea65926a594508b9f2144c7ef5a4716d))
+* **chat:** abort active run before thread deletion (AYC-688) ([#1337](https://github.com/ayunis-core/ayunis-core/issues/1337)) ([287e990](https://github.com/ayunis-core/ayunis-core/commit/287e990e95264faf7660e8961e9048b734f4928a))
+* **chat:** keep tool activity open until assistant responds (AYC-000) ([#1364](https://github.com/ayunis-core/ayunis-core/issues/1364)) ([de7ed62](https://github.com/ayunis-core/ayunis-core/commit/de7ed62b3c5dc87b9d33b2dec7578448dd59bc88))
+* **errors:** prevent internal details leaking from 5xx responses (AYC-440) ([#1366](https://github.com/ayunis-core/ayunis-core/issues/1366)) ([25adefe](https://github.com/ayunis-core/ayunis-core/commit/25adefefb62eb0230e0b5d3f0587af76975a7c57))
+* **marketplace:** classify expected installation outages (AYC-720) ([#1370](https://github.com/ayunis-core/ayunis-core/issues/1370)) ([26ccc9b](https://github.com/ayunis-core/ayunis-core/commit/26ccc9bb9e3868f795d83e267082e1e11bc2f50e))
+* **mistral:** accept string reference ids in streams (AYC-718) ([#1372](https://github.com/ayunis-core/ayunis-core/issues/1372)) ([d742d50](https://github.com/ayunis-core/ayunis-core/commit/d742d50865ba6918be8308672a2a3fad08c7d5e9))
+* **models:** reject deleting models referenced by usage (AYC-716) ([#1369](https://github.com/ayunis-core/ayunis-core/issues/1369)) ([74996b7](https://github.com/ayunis-core/ayunis-core/commit/74996b7707c6ed9d1bf606b806e7715a0e2d3db8))
+* **retrievers:** classify invalid Mistral OCR documents (AYC-615) ([#1328](https://github.com/ayunis-core/ayunis-core/issues/1328)) ([54fc494](https://github.com/ayunis-core/ayunis-core/commit/54fc4941062b5be2e2f8b163b92856995dde668b))
+* **retrievers:** harden document processing failures (AYC-569) ([#1371](https://github.com/ayunis-core/ayunis-core/issues/1371)) ([7e7fc8e](https://github.com/ayunis-core/ayunis-core/commit/7e7fc8e517232ce4da2b7637a5581db85623ae94))
+* **runs:** abort persistence when thread disappears (AYC-688) ([#1330](https://github.com/ayunis-core/ayunis-core/issues/1330)) ([428abcf](https://github.com/ayunis-core/ayunis-core/commit/428abcf4695bba65043ede3002635d4684801d62))
+* **teams:** search org users server-side in add member picker (AYC-714) ([#1365](https://github.com/ayunis-core/ayunis-core/issues/1365)) ([ebb8ff6](https://github.com/ayunis-core/ayunis-core/commit/ebb8ff62651535eadf307f577f813566a3fae54b))
+* **threads:** return not found for missing title updates (AYC-721) ([#1368](https://github.com/ayunis-core/ayunis-core/issues/1368)) ([d56aa06](https://github.com/ayunis-core/ayunis-core/commit/d56aa06abfcd403274cab125a66e38817d177e95))
+
+
+### Performance Improvements
+
+* **anonymize:** reduce analysis queue latency (AYC-662) ([#1373](https://github.com/ayunis-core/ayunis-core/issues/1373)) ([171e4c4](https://github.com/ayunis-core/ayunis-core/commit/171e4c42a53c08a03ca19f33a527f4e1a94b90dd))
+
+
+### Code Refactoring
+
+* **auth:** centralize frontend authorization checks (AYC-657) ([#1248](https://github.com/ayunis-core/ayunis-core/issues/1248)) ([8daf25b](https://github.com/ayunis-core/ayunis-core/commit/8daf25bb031b9ebf8fa09c528a6853ce161c3b51))
+
+
+### Miscellaneous
+
+* **agent-skills:** update skills AYC-000 ([#1363](https://github.com/ayunis-core/ayunis-core/issues/1363)) ([f203c29](https://github.com/ayunis-core/ayunis-core/commit/f203c29d3955a4191249c41dbeeea23f6c46db30))
+* **seed:** seed academy content and certificate states (AYC-253) ([#1324](https://github.com/ayunis-core/ayunis-core/issues/1324)) ([3ba1345](https://github.com/ayunis-core/ayunis-core/commit/3ba13451c2e03e4bce7fe3f76c8a1695000c3f98))
+
 ## [2.24.0](https://github.com/ayunis-core/ayunis-core/compare/v2.23.1...v2.24.0) (2026-08-11)
 
 
