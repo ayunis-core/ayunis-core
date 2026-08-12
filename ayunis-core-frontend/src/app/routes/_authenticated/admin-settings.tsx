@@ -1,6 +1,9 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 import { getMyPermissionsControllerGetMineQueryOptions } from '@/shared/api';
-import { allowedSettingsSections } from '@/features/permissions';
+import {
+  allowedSettingsSections,
+  createAuthorization,
+} from '@/features/permissions';
 
 function AdminSettingsLayout() {
   return <Outlet />;
@@ -15,7 +18,8 @@ export const Route = createFileRoute('/_authenticated/admin-settings')({
     const { permissions } = await queryClient.fetchQuery(
       getMyPermissionsControllerGetMineQueryOptions(),
     );
-    const allowed = allowedSettingsSections(user.role, permissions);
+    const authorization = createAuthorization(user.role, permissions);
+    const allowed = allowedSettingsSections(authorization);
 
     if (allowed.some((path) => location.pathname.startsWith(path))) {
       return;

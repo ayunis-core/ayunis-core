@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
+import { getMyPermissionsControllerGetMineQueryKey } from '@/shared/api';
 import { TeamsSettingsPage } from './TeamsSettingsPage';
 import type { Team } from '../model/types';
 
@@ -77,9 +79,24 @@ const createTeam = (overrides: Partial<Team> = {}): Team => ({
   ...overrides,
 });
 
+function renderTeamsSettingsPage(teams: Team[]) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(getMyPermissionsControllerGetMineQueryKey(), {
+    permissions: ['manage_teams'],
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <TeamsSettingsPage teams={teams} />
+    </QueryClientProvider>,
+  );
+}
+
 describe('TeamsSettingsPage', () => {
   it('shows only the create-first-team empty state when there are no teams', () => {
-    render(<TeamsSettingsPage teams={[]} />);
+    renderTeamsSettingsPage([]);
 
     expect(
       screen.queryByPlaceholderText('teams.filters.searchPlaceholder'),
@@ -88,7 +105,7 @@ describe('TeamsSettingsPage', () => {
   });
 
   it('shows the filters and list when teams exist', () => {
-    render(<TeamsSettingsPage teams={[createTeam()]} />);
+    renderTeamsSettingsPage([createTeam()]);
 
     expect(
       screen.getByPlaceholderText('teams.filters.searchPlaceholder'),
@@ -97,7 +114,7 @@ describe('TeamsSettingsPage', () => {
   });
 
   it('shows the no-matches empty state when a search has no team matches', () => {
-    render(<TeamsSettingsPage teams={[createTeam()]} />);
+    renderTeamsSettingsPage([createTeam()]);
 
     fireEvent.change(
       screen.getByPlaceholderText('teams.filters.searchPlaceholder'),
