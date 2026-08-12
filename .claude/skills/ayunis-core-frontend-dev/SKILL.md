@@ -58,6 +58,7 @@ Framework-level primitives live in the repository-root `packages/ui/` workspace 
 - Run shadcn registry commands from `packages/ui/`, whose `components.json` owns the aliases and registry configuration: `cd ../packages/ui && pnpm dlx shadcn@latest add <component>`.
 - Do not patch `packages/ui/src/components/` for a feature-specific use case. Wrap or compose the primitive in the relevant frontend `ui/` directory or `src/shared/ui/` instead.
 - Changes inside `packages/ui/` must remain application-independent and be intentional design-system work. If a primitive genuinely needs a new generic capability, confirm that scope with the user before changing it.
+- Every newly introduced `packages/ui/src/components/<name>.tsx` component must include a colocated `<name>.stories.tsx`. Cover its representative default state and meaningful generic variants, states, or interactions; compound components should be demonstrated as a usable composition.
 - Import primitives from their public subpaths, such as `@ayunis/ui/components/button`, and `cn` from `@ayunis/ui/lib/cn`. Do not reach into `packages/ui/src/` from the frontend.
 
 ### Reach for existing primitives and tokens
@@ -109,4 +110,5 @@ Use your harness's browser tooling to check the page renders and the console is 
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
 - [ ] UI primitives use public `@ayunis/ui` subpaths
+- [ ] New `packages/ui` components include representative Storybook stories
 - [ ] No feature-specific behavior added to `packages/ui/`

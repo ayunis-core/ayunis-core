@@ -17,6 +17,8 @@
     "./lib/*": "./src/lib/*.ts"
   },
   "scripts": {
+    "storybook": "storybook dev --no-open",
+    "storybook:build": "storybook build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "deps:check": "madge --circular --extensions ts,tsx src"
@@ -60,6 +62,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@storybook/addon-a11y": "10.5.7",
+    "@storybook/addon-docs": "10.5.7",
+    "@storybook/react-vite": "10.5.7",
+    "@tailwindcss/vite": "^4.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.0.3",
     "eslint": "^10.6.0",
@@ -78,6 +84,7 @@
     "react-hook-form": "^7.81.0",
     "recharts": "^2.15.4",
     "sonner": "^2.0.5",
+    "storybook": "10.5.7",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0"
