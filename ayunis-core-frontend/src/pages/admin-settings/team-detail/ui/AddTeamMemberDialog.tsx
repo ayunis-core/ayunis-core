@@ -23,6 +23,7 @@ import {
 } from '@ayunis/ui/components/combobox';
 import { useTeamsControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
 import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { useAddTeamMembers } from '../api/useAddTeamMembers';
 
 interface UserOption {
@@ -43,17 +44,24 @@ export function AddTeamMemberDialog({
 }: Readonly<AddTeamMemberDialogProps>) {
   const { t } = useTranslation('admin-settings-teams');
   const [selectedUsers, setSelectedUsers] = useState<UserOption[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
   const containerRef = useRef<HTMLDivElement>(null);
   const anchorRef = useComboboxAnchor();
 
   const { addTeamMembers, isAdding } = useAddTeamMembers(teamId, () => {
     setSelectedUsers([]);
+    setSearchQuery('');
     onOpenChange(false);
   });
 
-  // Fetch all users in the organization
+  // Search users server-side so members beyond the first page are reachable.
   const { data: usersResponse } = useUserControllerGetUsersInOrganization(
-    { limit: 100, offset: 0 },
+    {
+      limit: 100,
+      offset: 0,
+      search: debouncedSearch.trim() || undefined,
+    },
     { query: { enabled: open } },
   );
 
@@ -83,8 +91,16 @@ export function AddTeamMemberDialog({
     }
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setSelectedUsers([]);
+      setSearchQuery('');
+    }
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -100,6 +116,8 @@ export function AddTeamMemberDialog({
               value={selectedUsers}
               onValueChange={setSelectedUsers}
               isItemEqualToValue={(a, b) => a.value === b.value}
+              filter={null}
+              onInputValueChange={setSearchQuery}
             >
               <ComboboxChips ref={anchorRef}>
                 <ComboboxValue>
@@ -139,7 +157,7 @@ export function AddTeamMemberDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               {t('teamDetail.addMember.cancel')}
             </Button>
