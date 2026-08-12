@@ -3,6 +3,7 @@
 import createHttpError from 'http-errors';
 import { errors as undiciErrors } from 'undici';
 import { JobRetryScheduledError } from '../../domain/sources/infrastructure/queue/bullmq-job.helpers';
+import { MarketplaceUnavailableError } from '../../domain/marketplace/application/marketplace.errors';
 
 type UndiciRequest = {
   method?: string;
@@ -159,6 +160,7 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     new DOMException('This operation was aborted', 'AbortError'),
   'bullmq-retry-scheduled': () =>
     new JobRetryScheduledError(new Error('upstream failed')),
+  'marketplace-unavailable': () => new MarketplaceUnavailableError(),
   'oversized-request-body': () =>
     createHttpError(413, 'request entity too large', {
       type: 'entity.too.large',
