@@ -94,6 +94,17 @@ export function AddTeamMemberDialog({
     }
   };
 
+  const handleInputValueChange = (
+    value: string,
+    details: { reason: string },
+  ) => {
+    // Base UI clears the input after each pick in multi-select mode. Ignore
+    // that programmatic clear so the active search query (and its results)
+    // survive selecting a member and admins can add several matches in a row.
+    if (details.reason === 'item-press') return;
+    setSearchQuery(value);
+  };
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setSelectedUsers([]);
@@ -120,7 +131,7 @@ export function AddTeamMemberDialog({
               onValueChange={setSelectedUsers}
               isItemEqualToValue={(a, b) => a.value === b.value}
               filter={null}
-              onInputValueChange={setSearchQuery}
+              onInputValueChange={handleInputValueChange}
             >
               <ComboboxChips ref={anchorRef}>
                 <ComboboxValue>
