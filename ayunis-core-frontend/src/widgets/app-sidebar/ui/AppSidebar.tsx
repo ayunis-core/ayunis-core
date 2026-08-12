@@ -30,8 +30,8 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { ChatsSidebarGroup } from './ChatsSidebarGroup';
 import { FavoritesSidebarGroup } from './FavoritesSidebarGroup';
-import { useMe } from '../api/useMe';
-import { useLogout } from '../api/useLogout';
+import { useMe } from '@/widgets/app-sidebar/api/useMe';
+import { useLogout } from '@/widgets/app-sidebar/api/useLogout';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';

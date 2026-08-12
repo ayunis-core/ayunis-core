@@ -16,6 +16,7 @@ import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.en
 import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
 import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
+import { MapTool } from '../domain/tools/map-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -112,6 +113,12 @@ describe('ToolFactory', () => {
       expect(tool.name).toBe(ToolType.GENERATE_IMAGE);
     });
 
+    it('should create a MapTool', () => {
+      const tool = factory.createTool({ type: ToolType.MAP });
+      expect(tool).toBeInstanceOf(MapTool);
+      expect(tool.name).toBe(ToolType.MAP);
+    });
+
     it('should throw error for unsupported tool type', () => {
       expect(() =>
         factory.createTool({ type: 'UNSUPPORTED' as unknown as ToolType }),
@@ -156,6 +163,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.BAR_CHART);
       expect(types).toContain(ToolType.LINE_CHART);
       expect(types).toContain(ToolType.PIE_CHART);
+      expect(types).toContain(ToolType.MAP);
 
       expect(types).toContain(ToolType.ACTIVATE_SKILL);
       expect(types).toContain(ToolType.CREATE_SKILL);
@@ -172,7 +180,7 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
 
-      expect(types.length).toBe(28);
+      expect(types.length).toBe(29);
     });
   });
 });

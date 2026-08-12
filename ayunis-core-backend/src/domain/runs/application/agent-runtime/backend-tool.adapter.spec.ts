@@ -6,6 +6,7 @@ import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
@@ -65,7 +66,12 @@ describe('BackendToolAdapter', () => {
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it.each([new BarChartTool(), new LineChartTool(), new PieChartTool()])(
+  it.each([
+    new BarChartTool(),
+    new LineChartTool(),
+    new PieChartTool(),
+    new MapTool(),
+  ])(
     'acknowledges $name and continues without backend execution',
     async (backendTool) => {
       const [tool] = adapter.toRuntimeTools([backendTool]);

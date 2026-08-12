@@ -34,8 +34,8 @@ interface ToolExecutionOutcome {
 
 /**
  * Adapts backend catalog tools to the runtime's optional-execute contract.
- * Backend and hybrid tools delegate through `ExecuteToolUseCase`, charts
- * acknowledge without side effects, and externally handled widgets omit
+ * Backend and hybrid tools delegate through `ExecuteToolUseCase`, charts and
+ * maps acknowledge without side effects, and externally handled widgets omit
  * `execute` so the current run terminates after their tool phase.
  *
  * In anonymous threads, PII-returning tool output is redacted at production and

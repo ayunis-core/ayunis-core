@@ -11,6 +11,7 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'bar_chart',
   'line_chart',
   'pie_chart',
+  'map',
   'generate_image',
   'send_email',
   'create_calendar_event',
