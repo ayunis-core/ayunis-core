@@ -29,30 +29,42 @@ ayunis-core/
 
 Do NOT trust your own assessment of code correctness. Verify through observable behavior — lint, type-check, tests, and runtime. See the development skills below for specific validation sequences.
 
-### 2. Incremental Progress
+### 2. Evidence Before Diagnosis
+
+Principle 1 governs code you wrote. This one governs everything you *assert*: root causes, config values, provider behavior, "this is already fixed", "this should work".
+
+- **Reproduce before diagnosing.** A "likely root cause" derived from reading code and config is not an answer. Run the stack, trigger the failure, then explain it. Passing unit tests are not a substitute for one live request against the actual configured environment.
+- **Never recommend a config value you haven't verified.** An example value found in the repo (an API version, endpoint, model id) is not "the fix". Check it against current provider documentation and the deployed environment, or label it explicitly as unverified.
+- **Name the environment.** Staging and production run different config and different model deployments. State which environment/app your evidence came from before drawing a conclusion; evidence from the wrong environment invalidates the whole analysis.
+- **Report only failure modes the evidence supports.** Do not append extra suspected bugs or "regressions" inferred from general model knowledge to an incident report. If you have a hypothesis, label it as one to check — an unsupported claim presented alongside real findings costs more trust than it buys.
+- **Check what the code does today before proposing a design.** When assessing a ticket in a known repo, read the current implementation and say what it actually does now, rather than reasoning from the ticket's description of intended behavior.
+
+When an access path or tool fails, report the blocker immediately. Do not keep silently probing alternate routes — a named blocker is useful, a long invisible search is not.
+
+### 3. Incremental Progress
 
 - Make one change at a time
 - Validate after each change
 - Commit after each validated change
 - Never batch multiple logical changes
 
-### 3. Respect Boundaries
+### 4. Respect Boundaries
 
 - Read the target module's SUMMARY.md before making changes
 - Respect module boundaries — the `ayunis-core-backend` skill documents how cross-module work is done (application-layer code uses exported use cases from the target module, not ports/adapters; TypeORM schema records may reference records in other modules to declare foreign-key relations — see the `typeorm-migrations` skill)
 - Never edit generated code (e.g., the frontend API client)
 
-### 4. No Useless Comments
+### 5. No Useless Comments
 
 Only write a comment when it states something the code cannot: a non-obvious constraint, ordering requirement, or "why" (e.g., why an event fires *before* a delete). Never write comments that restate the name or body of the thing they annotate ("Returns the ids of every thread owned by a user" on `findAllIdsByUserId`, "// Delete the thread" above `threadsRepository.delete(...)`), narrate what the next line does, or summarize a well-named class a reader can grasp at a glance. If a comment would just paraphrase the code, improve the naming instead and write nothing.
 
-### 5. Simplest Sufficient Solution
+### 6. Simplest Sufficient Solution
 
 Lead with the solution a senior engineer would reach for, not the first mechanism that occurs to you. Before building bespoke machinery, ask whether this is a standard, already-solved problem — reach for the library/pattern/config that solves it directly.
 
 Watch for complexity creep. When a fix keeps growing — extra parameters, a watchdog, a budget, stall-reason plumbing — stop and name the tradeoff: *is the added complexity justified, or is a plainer approach enough?* Surface that question proactively rather than accreting machinery across iterations and waiting for the user to ask "is this worth it?". Often the right move is to challenge the constraint itself (e.g. "does a 300s ceiling even matter here?") instead of engineering around it.
 
-### 6. A Submitted PR Is Not Complete
+### 7. A Submitted PR Is Not Complete
 
 When work creates or updates a PR, submitting it is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
 
