@@ -111,6 +111,17 @@ const SUPPRESSIONS = [
     match: isCrawlerRequest,
   },
   {
+    id: 'marketplace-unavailable',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-720',
+    reason:
+      'Marketplace fetch failures are an expected external-dependency outcome ' +
+      'surfaced to the user as an actionable 503 and retained as a structured ' +
+      'warning. A single occurrence is not actionable operational signal, so ' +
+      'the deliberate protocol error must not open a first-occurrence incident.',
+    exceptionType: 'MARKETPLACE_UNAVAILABLE',
+  },
+  {
     id: 'abort-signal-cancellation',
     lever: 'ignoreErrors',
     ticket: 'AYC-651',

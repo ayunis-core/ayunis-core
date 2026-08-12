@@ -18,7 +18,10 @@ import {
   McpMissingRequiredConfigError,
   DuplicateMarketplaceMcpIntegrationError,
 } from '../../mcp.errors';
-import { MarketplaceIntegrationNotFoundError } from 'src/domain/marketplace/application/marketplace.errors';
+import {
+  MarketplaceIntegrationNotFoundError,
+  MarketplaceUnavailableError,
+} from 'src/domain/marketplace/application/marketplace.errors';
 import type { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import type { UUID } from 'crypto';
 
@@ -367,6 +370,21 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
         }),
       ),
     ).rejects.toThrow(DuplicateMarketplaceMcpIntegrationError);
+  });
+
+  it('does not persist anything when the marketplace is unavailable', async () => {
+    getMarketplaceIntegrationUseCase.execute.mockRejectedValue(
+      new MarketplaceUnavailableError(),
+    );
+
+    await expect(
+      useCase.execute(
+        new InstallMarketplaceIntegrationCommand('oparl-council-data', {}),
+      ),
+    ).rejects.toThrow(MarketplaceUnavailableError);
+
+    expect(repository.save).not.toHaveBeenCalled();
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
   it('should propagate MarketplaceIntegrationNotFoundError when integration is not found', async () => {

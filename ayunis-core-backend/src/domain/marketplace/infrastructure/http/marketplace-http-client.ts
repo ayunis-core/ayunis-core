@@ -7,6 +7,7 @@ import {
   SkillResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
 import { MarketplaceHttpError } from 'src/common/clients/marketplace/client';
+import { MarketplaceUnavailableError } from '../../application/marketplace.errors';
 
 @Injectable()
 export class MarketplaceHttpClient extends MarketplaceClient {
@@ -64,7 +65,7 @@ export class MarketplaceHttpClient extends MarketplaceClient {
         status:
           error instanceof MarketplaceHttpError ? error.status : undefined,
       });
-      throw error;
+      throw new MarketplaceUnavailableError();
     }
   }
 }

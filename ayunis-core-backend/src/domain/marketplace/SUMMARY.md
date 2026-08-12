@@ -33,7 +33,7 @@ The marketplace module provides integration with the external Ayunis Marketplace
 
 - `MarketplaceSkillNotFoundError` — Skill with given identifier not found (404)
 - `MarketplaceIntegrationNotFoundError` — Integration with given identifier not found (404)
-- `MarketplaceUnavailableError` — Marketplace service is unavailable (503)
+- `MarketplaceUnavailableError` — Marketplace service is unavailable (503); returns safe retry guidance to clients and is classified as an expected dependency failure rather than a first-occurrence AppSignal incident
 
 **Module Dependencies:**
 

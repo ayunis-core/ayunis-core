@@ -23,9 +23,13 @@ export class MarketplaceIntegrationNotFoundError extends ApplicationError {
 export class MarketplaceUnavailableError extends ApplicationError {
   constructor() {
     super(
-      'Marketplace service is currently unavailable',
+      'Marketplace service is currently unavailable. Please try again later.',
       'MARKETPLACE_UNAVAILABLE',
       503,
     );
+  }
+
+  override toClientResponse() {
+    return { code: this.code, message: this.message };
   }
 }
