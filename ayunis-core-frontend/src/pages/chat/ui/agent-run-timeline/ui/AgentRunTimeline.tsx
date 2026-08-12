@@ -47,6 +47,9 @@ export default function AgentRunTimeline({
           key={block.key}
           block={block}
           index={index}
+          hasFollowingText={unit.blocks
+            .slice(index + 1)
+            .some((candidate) => candidate.kind === 'text')}
           threadId={threadId}
           onOpenArtifact={onOpenArtifact}
         />
@@ -66,6 +69,7 @@ function hasInProgressStep(block: AgentRunBlock): boolean {
 interface RunBlockProps {
   block: AgentRunBlock;
   index: number;
+  hasFollowingText: boolean;
   threadId?: string;
   onOpenArtifact?: (artifactId: string) => void;
 }
@@ -73,11 +77,12 @@ interface RunBlockProps {
 function RunBlock({
   block,
   index,
+  hasFollowingText,
   threadId,
   onOpenArtifact,
 }: Readonly<RunBlockProps>) {
   if (block.kind === 'activity') {
-    return <ActivityBlock block={block} />;
+    return <ActivityBlock block={block} hasFollowingText={hasFollowingText} />;
   }
   if (block.kind === 'rich-tool' || block.kind === 'pending-tool') {
     return (
@@ -96,16 +101,20 @@ function RunBlock({
   );
 }
 
-function ActivityBlock({ block }: Readonly<{ block: ActivityRunBlock }>) {
+function ActivityBlock({
+  block,
+  hasFollowingText,
+}: Readonly<{ block: ActivityRunBlock; hasFollowingText: boolean }>) {
   const { t } = useTranslation('chat');
   const isActive = block.steps.some((step) => step.status === 'in_progress');
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
-  const [lastActive, setLastActive] = useState(isActive);
-  if (lastActive !== isActive) {
-    setLastActive(isActive);
+  const [previousHasFollowingText, setPreviousHasFollowingText] =
+    useState(hasFollowingText);
+  if (previousHasFollowingText !== hasFollowingText) {
+    setPreviousHasFollowingText(hasFollowingText);
     setUserOpen(null);
   }
-  const open = userOpen ?? isActive;
+  const open = userOpen ?? !hasFollowingText;
   const headerLabel = isActive
     ? t('chat.timeline.working')
     : t('chat.timeline.summary', { count: block.steps.length });

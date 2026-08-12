@@ -246,6 +246,52 @@ describe('AgentRunTimeline', () => {
     );
   });
 
+  it('keeps completed activity expanded until assistant text arrives', () => {
+    const activityBlock = {
+      kind: 'activity' as const,
+      key: 'completed-activity',
+      steps: [
+        {
+          kind: 'tool' as const,
+          key: 'completed-tool',
+          status: 'done' as const,
+          toolUse: {
+            type: 'tool_use' as const,
+            id: 'completed-tool',
+            name: 'internet_search',
+            params: {},
+          },
+        },
+      ],
+    };
+    const { rerender } = render(
+      <AgentRunTimeline
+        unit={{ ...unit, blocks: [activityBlock], isStreaming: true }}
+      />,
+    );
+
+    expect(screen.getByTestId('step-completed-tool')).toBeTruthy();
+
+    rerender(
+      <AgentRunTimeline
+        unit={{
+          ...unit,
+          blocks: [
+            activityBlock,
+            {
+              kind: 'text',
+              key: 'assistant-answer',
+              content: { type: 'text', text: 'answer' },
+            },
+          ],
+          isStreaming: true,
+        }}
+      />,
+    );
+
+    expect(screen.queryByTestId('step-completed-tool')).toBeNull();
+  });
+
   it('does not render the response-start orb after timeline content exists', () => {
     render(<AgentRunTimeline unit={{ ...unit, isStreaming: true }} />);
 
