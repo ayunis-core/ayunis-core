@@ -31,7 +31,7 @@ export class DoSomethingUseCase {
 
   constructor(
     private readonly entityRepository: EntityRepository,
-    // ... other dependencies (other use cases, infra services, etc.)
+    // ... other dependencies (other use cases, application services, ports)
   ) {}
 
   // Error handling — REQUIRED on every execute(), see Rule 1
@@ -39,7 +39,7 @@ export class DoSomethingUseCase {
   async execute(command: DoSomethingCommand): Promise<Entity> {
     this.logger.log('Doing something', { entityId: command.entityId });
 
-    // 1. Auth context — handling varies by project, see Rule 5 below
+    // 1. Auth context — handling varies by project, see Rule 6 below
 
     // 2. Precondition checks (existence, permissions, business rules)
     // (multi-tenant projects typically pass userId here for tenant isolation)
@@ -93,7 +93,22 @@ Use cases throw `ApplicationError` subclasses. The global exception filter conve
 
 A use case is a single business operation. Don't bundle multiple operations into one class with `execute1()` / `execute2()`. If you need two operations, write two use cases.
 
-### 4. Inject repositories via the repository class — never database clients directly
+### 4. Extract broader responsibilities into application services
+
+A use case represents one operation; it must not become the home for a broader capability. Extract cohesive policy, coordination, caching, batching, throttling, lifecycle management, or other independently testable and reusable behavior into a dedicated injectable service in the module.
+
+Place reusable application behavior in `application/services/` and inject that service into each consuming use case. If the behavior is a technical mechanism tied to infrastructure, define an application port and keep the concrete service in infrastructure; use cases must not import concrete adapters.
+
+Extract the responsibility when it has its own reason to change, owns state or lifecycle, can be named and tested independently, or could serve more than one operation. Keep code inline only when it is inseparable from that single use case.
+
+```typescript
+constructor(
+  private readonly policyService: EntityPolicyService,
+  private readonly externalCapability: ExternalCapabilityPort,
+) {}
+```
+
+### 5. Inject repositories via the repository class — never database clients directly
 
 Use cases depend on a repository class. They MUST NOT import a database client (TypeORM, Drizzle, raw `pg`, etc.) directly. This keeps the use case testable without a real database.
 
@@ -105,7 +120,7 @@ constructor(
 
 Whether `EntityRepository` is an **abstract class** with a separate concrete implementation bound via `{ provide: EntityRepository, useClass: ConcreteRepository }` (port/adapter pattern), or a **single concrete class** registered directly in `providers: [EntityRepository]`, is a project-level decision — see your project's structural conventions skill. In both cases the use case constructor looks the same: TypeScript reflection picks up the class as the DI token, so **no `@Inject()` decorator is needed**.
 
-### 5. Auth context — varies by project
+### 6. Auth context — varies by project
 
 Auth handling is a project-level convention. Common patterns:
 
@@ -121,7 +136,7 @@ Auth handling is a project-level convention. Common patterns:
 
 Whichever pattern your project uses, apply it consistently inside `execute()`. **Never** accept `userId` ad-hoc in some use cases and not others.
 
-### 6. Validate preconditions before mutating
+### 7. Validate preconditions before mutating
 
 Always check existence and permissions before performing writes:
 
@@ -134,7 +149,7 @@ if (!entity) {
 // Only then proceed with mutation
 ```
 
-### 7. Each module has its own errors file
+### 8. Each module has its own errors file
 
 Errors live in a module-specific errors file (e.g. `application/<module>.errors.ts`):
 
@@ -171,7 +186,7 @@ export class UnexpectedEntityError extends EntityError {
 
 Every module MUST have an `Unexpected*Error` class for the `@HandleUnexpectedErrors` decorator.
 
-### 8. Logger — use the class name, log entry
+### 9. Logger — use the class name, log entry
 
 ```typescript
 private readonly logger = new Logger(MyUseCase.name);
@@ -189,8 +204,10 @@ When creating or modifying a use case, verify:
 - [ ] `execute()` is decorated with `@HandleUnexpectedErrors(Unexpected*Error)`
 - [ ] No hand-written try/catch error boundary in `execute()`
 - [ ] No HTTP exceptions (`NotFoundException`, `UnauthorizedException`, etc.)
-- [ ] Auth context handled per the project's convention (Rule 5)
+- [ ] Auth context handled per the project's convention (Rule 6)
 - [ ] Preconditions checked before mutations (entity exists, permissions valid)
 - [ ] Repositories injected via DI token (interface), not concrete class
+- [ ] Broader reusable responsibilities are delegated to application services or ports
+- [ ] Use cases do not import concrete infrastructure services or adapters
 - [ ] Module has an `Unexpected*Error` class in its errors file
 - [ ] Logger uses class name, logs entry point (error logging is the decorator's job)

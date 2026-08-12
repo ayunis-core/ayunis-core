@@ -99,6 +99,26 @@ Every domain module ships a `SUMMARY.md`. Read it first when editing an existing
 └── [module].module.ts   # NestJS wiring
 ```
 
+### Extract module services by responsibility
+
+Keep each class focused on one cohesive responsibility. When a change introduces substantial state, lifecycle management, policy, coordination, caching, pooling, retrying, throttling, or other independently testable behavior, extract it into a dedicated injectable service in the same module instead of growing the existing use case or adapter.
+
+Use cases orchestrate reusable application services. Infrastructure adapters stay focused on translating between an application port and an external technology.
+
+Place the extracted service according to what it owns:
+
+- **`application/services/`** — reusable application or domain policy consumed by use cases.
+- **`infrastructure/.../*.service.ts`** — technical behavior tied to an SDK, transport, process lifecycle, cache, pool, queue, or another external mechanism. Application code depends on an application port rather than importing the concrete infrastructure service directly.
+
+Before extending an existing class, ask:
+
+1. Does the new behavior have a separate reason to change?
+2. Does it own independent state or lifecycle?
+3. Can it be named and tested independently?
+4. Could more than one operation or use case need it?
+
+If any answer is yes, prefer a dedicated module service, test it directly, and register it with the NestJS module. Keep a small behavior inline only when it is inseparable from the class's primary responsibility.
+
 ### File & class naming
 
 Suffixes carry structural meaning — the wrong one silently breaks the layer contract readers rely on and triggers review churn. **Before naming a new file, grep how the suffix is already used** (`find src -name "*.<suffix>.ts"`) and match that role.
@@ -153,6 +173,7 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 - [ ] DTOs have validation decorators
 - [ ] New entities have proper mappers
 - [ ] New module has a `SUMMARY.md` at its root (the repo convention; missing files are flagged by Bugbot)
+- [ ] New stateful or reusable responsibilities are extracted into dedicated module services
 
 ## Anti-Patterns
 
