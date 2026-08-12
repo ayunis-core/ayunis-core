@@ -23,6 +23,14 @@ const config = {
     gtmContainerId: runtimeEnv('VITE_GTM_CONTAINER_ID'),
     usercentricsSettingsId: runtimeEnv('VITE_USERCENTRICS_SETTINGS_ID'),
   },
+  map: {
+    tileUrl:
+      runtimeEnv('VITE_MAP_BASEMAP_TILE_URL')?.trim() ||
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution:
+      runtimeEnv('VITE_MAP_BASEMAP_ATTRIBUTION')?.trim() ||
+      '© OpenStreetMap contributors',
+  },
 } as const;
 
 export default config;

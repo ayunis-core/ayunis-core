@@ -70,6 +70,7 @@
         "create_spreadsheet": "Created spreadsheet",
         "update_spreadsheet": "Updated spreadsheet",
         "chart": "Created chart",
+        "map": "Created map",
         "generate_image": "Generated image",
         "send_email": "Drafted email",
         "create_calendar_event": "Created calendar event",
@@ -84,6 +85,11 @@
         "http": "Made HTTP request",
         "use_tool": "Used {{tool}}"
       }
+    },
+    "map": {
+      "loading": "Preparing map…",
+      "invalid": "This map cannot be displayed because its data is empty or invalid.",
+      "ariaLabel": "Interactive map: {{title}}"
     },
     "tools": {
       "internet_search": "Search the internet",

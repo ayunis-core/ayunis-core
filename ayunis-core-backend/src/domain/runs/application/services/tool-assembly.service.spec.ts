@@ -213,6 +213,23 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(matches[0].description).toBe('first');
   });
 
+  it('should include the map tool among the always-available tools', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      imageModelExecute: jest.fn().mockResolvedValue({}),
+    });
+
+    const tools = await service.assembleTools(
+      createMockThread(),
+      [],
+      new Map(),
+    );
+
+    expect(tools.map((tool: { type: ToolType }) => tool.type)).toContain(
+      ToolType.MAP,
+    );
+  });
+
   it('should include generate_image tool when org has a permitted image model', async () => {
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
