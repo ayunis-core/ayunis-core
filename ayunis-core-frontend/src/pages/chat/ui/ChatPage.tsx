@@ -8,12 +8,7 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import type { Thread, Message } from '../model/openapi';
-import {
-  getSendEmailBody,
-  extractPlainText,
-  replyTextToHtml,
-  looksLikeEmailReply,
-} from '../lib/compose-reply';
+import { useComposeReplyWriter } from '../hooks/useComposeReplyWriter';
 import { showError } from '@/shared/lib/toast';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -53,7 +48,6 @@ import type { PendingImage } from '../api/useMessageSend';
 import { reconcileMessages } from '../lib/reconcile-thread-messages';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
 import { useEmbedded } from '@/shared/contexts/embedded/useEmbedded';
-import { useOutlookCompose } from '@/features/outlook/useOutlookMail';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -74,8 +68,6 @@ export default function ChatPage({
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const isEmbedded = useEmbedded();
-  const { isCompose, setReplyBody } = useOutlookCompose();
-  const wasStreamingRef = useRef(false);
   const {
     models,
     isLoading: isLoadingModels,
@@ -119,6 +111,23 @@ export default function ChatPage({
   const lastSubmissionRef = useRef<{ text: string; images?: File[] } | null>(
     null,
   );
+  const [selectedSkillId, setSelectedSkillId] = useState<string>();
+  const [selectedSkillName, setSelectedSkillName] = useState<string>();
+
+  function handleSkillSelect(skillId: string, skillName: string) {
+    if (selectedSkillId === skillId) {
+      setSelectedSkillId(undefined);
+      setSelectedSkillName(undefined);
+    } else {
+      setSelectedSkillId(skillId);
+      setSelectedSkillName(skillName);
+    }
+  }
+
+  function handleSkillRemove() {
+    setSelectedSkillId(undefined);
+    setSelectedSkillName(undefined);
+  }
 
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
@@ -276,26 +285,7 @@ export default function ChatPage({
     },
   });
 
-  // Compose add-in: write the finished reply into the Outlook draft once it's
-  // done — a single clean write keeps the paragraph formatting. The "working"
-  // state is already visible in the chat while it streams.
-  useEffect(() => {
-    const justFinished = wasStreamingRef.current && !isStreaming;
-    wasStreamingRef.current = isStreaming;
-    if (!justFinished || !isCompose) return;
-    if (messages.length === 0) return;
-    const last = messages[messages.length - 1];
-    if (last.role !== 'assistant') return;
-    const emailDraft = getSendEmailBody(last);
-    if (emailDraft) {
-      setReplyBody(replyTextToHtml(emailDraft));
-      return;
-    }
-    const answer = extractPlainText(last);
-    if (answer && looksLikeEmailReply(answer)) {
-      setReplyBody(replyTextToHtml(answer));
-    }
-  }, [isStreaming, isCompose, messages, setReplyBody]);
+  useComposeReplyWriter(messages, isStreaming);
 
   // Send is gated while a fresh upload is in flight or while server-side
   // processing of an attached source hasn't finished — both are reasons we
@@ -307,6 +297,7 @@ export default function ChatPage({
   async function handleSend(
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
+    skillId?: string,
   ) {
     try {
       lastSubmissionRef.current = {
@@ -329,6 +320,7 @@ export default function ChatPage({
       await sendTextMessage({
         text: message,
         images,
+        skillId,
       });
     } catch {
       // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
@@ -455,10 +447,16 @@ export default function ChatPage({
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onAddIntegration={(integration) => addIntegration(integration.id)}
         onRemoveIntegration={removeIntegration}
-        onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
+        onSend={(m, imageFiles, skillId) =>
+          void handleSend(m, imageFiles, skillId)
+        }
         onCancel={handleSendCancelled}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
+        selectedSkillId={selectedSkillId}
+        selectedSkillName={selectedSkillName}
+        onSkillRemove={handleSkillRemove}
+        onSkillSelect={isEmbedded ? handleSkillSelect : undefined}
       />
     </>
   );
