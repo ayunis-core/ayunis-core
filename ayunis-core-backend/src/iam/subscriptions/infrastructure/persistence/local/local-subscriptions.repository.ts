@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 import {
@@ -23,20 +24,45 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   private readonly logger = new Logger(LocalSubscriptionsRepository.name);
 
   constructor(
-    @InjectRepository(SubscriptionRecord)
-    private readonly subscriptionRepository: Repository<SubscriptionRecord>,
-    @InjectRepository(SubscriptionBillingInfoRecord)
-    private readonly subscriptionBillingInfoRepository: Repository<SubscriptionBillingInfoRecord>,
     private readonly subscriptionMapper: SubscriptionMapper,
     private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
     private readonly dataSource: DataSource,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  // Outside an active transaction txHost.tx resolves to the adapter's fallback
+  // instance (dataSource.manager), so this is safe without a null check.
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get subscriptions(): Repository<SubscriptionRecord> {
+    return this.getManager().getRepository(SubscriptionRecord);
+  }
+
+  private get billingInfo(): Repository<SubscriptionBillingInfoRecord> {
+    return this.getManager().getRepository(SubscriptionBillingInfoRecord);
+  }
+
+  // Join the caller's transaction when there is one, so an outer rollback also
+  // undoes these writes. Standalone callers still get their own transaction.
+  //
+  // Must test isTransactionActive(): txHost.tx never returns undefined — outside
+  // a transaction it yields the adapter's fallback instance (dataSource.manager),
+  // so a truthiness check would silently skip opening a real transaction.
+  private runInTransaction<T>(
+    work: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    return this.txHost.isTransactionActive()
+      ? work(this.txHost.tx)
+      : this.dataSource.transaction(work);
+  }
+
   async findByOrgId(orgId: UUID): Promise<Subscription[]> {
     try {
-      const records = await this.subscriptionRepository.find({
+      const records = await this.subscriptions.find({
         where: {
           orgId,
         },
@@ -54,7 +80,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
   async findLatestByOrgId(orgId: UUID): Promise<Subscription | null> {
     try {
-      const record = await this.subscriptionRepository.findOne({
+      const record = await this.subscriptions.findOne({
         where: { orgId },
         relations: { billingInfo: true },
         order: { createdAt: 'DESC' },
@@ -72,7 +98,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
   async findAll(): Promise<Subscription[]> {
     try {
-      const records = await this.subscriptionRepository.find();
+      const records = await this.subscriptions.find();
       return records.map((record) => this.subscriptionMapper.toDomain(record));
     } catch (error) {
       this.logger.error(`Failed to find all subscriptions`, error);
@@ -82,7 +108,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
   async findActiveUsageBasedOrgIds(now: Date): Promise<UUID[]> {
     try {
-      const rows = await this.subscriptionRepository
+      const rows = await this.subscriptions
         .createQueryBuilder('subscription')
         .select('DISTINCT subscription.orgId', 'orgId')
         .where('subscription.type = :type', {
@@ -108,7 +134,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
       // Save subscription and billing info in a transaction to guarantee
       // the subscription row exists before the billing info FK references it.
-      await this.dataSource.transaction((manager) =>
+      await this.runInTransaction((manager) =>
         this.insertSubscriptionWithBilling(manager, record),
       );
 
@@ -130,7 +156,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
       // End the old subscription and insert the new one atomically so the org
       // is never left without a subscription (or with two active ones).
-      await this.dataSource.transaction(async (manager) => {
+      await this.runInTransaction(async (manager) => {
         if (disposition === OldSubscriptionDisposition.DELETE) {
           await manager.delete(SubscriptionRecord, oldSubscriptionId);
         } else {
@@ -175,7 +201,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
   async update(subscription: Subscription): Promise<Subscription> {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
-      await this.subscriptionRepository.save(record);
+      await this.subscriptions.save(record);
       this.logger.log(`Updated subscription with id ${subscription.id}`);
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {
@@ -193,7 +219,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     renewalCycleAnchor?: Date;
   }): Promise<Subscription> {
     try {
-      const record = await this.subscriptionRepository.findOne({
+      const record = await this.subscriptions.findOne({
         where: { id: params.subscriptionId },
         relations: { billingInfo: true },
       });
@@ -212,7 +238,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         record.renewalCycleAnchor = params.renewalCycleAnchor;
       }
 
-      const updatedRecord = await this.subscriptionRepository.save(record);
+      const updatedRecord = await this.subscriptions.save(record);
       this.logger.log(
         `Updated start date for subscription with id ${params.subscriptionId}`,
       );
@@ -235,7 +261,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         billingInfo,
         subscriptionId,
       );
-      await this.subscriptionBillingInfoRepository.save(record);
+      await this.billingInfo.save(record);
       this.logger.log(
         `Updated billing info for subscription with id ${subscriptionId}`,
       );
@@ -251,7 +277,7 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
   async delete(id: UUID): Promise<void> {
     try {
-      const result = await this.subscriptionRepository.delete(id);
+      const result = await this.subscriptions.delete(id);
       if (result.affected === 0) {
         this.logger.warn(`No subscription found with id ${id} to delete`);
       } else {

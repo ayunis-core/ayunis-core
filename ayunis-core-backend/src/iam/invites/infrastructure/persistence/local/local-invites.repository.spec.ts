@@ -21,13 +21,23 @@ function makeAcceptedInviteRecord(email: string): InviteRecord {
 
 describe('LocalInvitesRepository', () => {
   let inviteRepo: jest.Mocked<Pick<Repository<InviteRecord>, 'findOne'>>;
+  let txHost: {
+    tx: { getRepository: jest.Mock };
+    isTransactionActive: () => boolean;
+  };
   let repository: LocalInvitesRepository;
 
   beforeEach(() => {
     inviteRepo = { findOne: jest.fn() };
+    // Reads resolve through txHost.tx, which outside a transaction is the
+    // adapter's fallback manager rather than undefined.
+    txHost = {
+      tx: { getRepository: jest.fn().mockReturnValue(inviteRepo) },
+      isTransactionActive: () => false,
+    };
     repository = new LocalInvitesRepository(
-      inviteRepo as unknown as Repository<InviteRecord>,
       new InviteMapper(),
+      txHost as never,
     );
   });
 
@@ -57,6 +67,30 @@ describe('LocalInvitesRepository', () => {
       const result = await repository.findOneByEmail('missing@example.com');
 
       expect(result).toBeNull();
+    });
+  });
+
+  // AYC-627: writes must land in the caller's transaction, otherwise an outer
+  // rollback leaves committed rows behind.
+  describe('ambient transaction', () => {
+    it('resolves reads through the transactional entity manager', async () => {
+      const txRepo = { findOne: jest.fn().mockResolvedValue(null) };
+      txHost.tx = { getRepository: jest.fn().mockReturnValue(txRepo) };
+      txHost.isTransactionActive = () => true;
+
+      await repository.findOneByEmail('user@example.com');
+
+      expect(txRepo.findOne).toHaveBeenCalled();
+      expect(inviteRepo.findOne).not.toHaveBeenCalled();
+    });
+
+    it('never reads from the injected repository directly', async () => {
+      inviteRepo.findOne.mockResolvedValue(null);
+
+      await repository.findOneByEmail('user@example.com');
+
+      // routed via txHost.tx.getRepository, which the fixture maps back to inviteRepo
+      expect(txHost.tx.getRepository).toHaveBeenCalledWith(InviteRecord);
     });
   });
 });
