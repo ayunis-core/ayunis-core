@@ -18,7 +18,7 @@ describe('ApplicationError.toHttpException', () => {
     expect(exception.getStatus()).toBe(422);
   });
 
-  it('carries code, message, and metadata in the response body', () => {
+  it('carries code, message, and metadata in a client-error response', () => {
     const exception = new TestError(422).toHttpException();
 
     expect(exception.getResponse()).toEqual({
@@ -26,6 +26,17 @@ describe('ApplicationError.toHttpException', () => {
       message: 'test message',
       metadata: { detail: 'x' },
     });
+  });
+
+  it('does not expose the message or metadata in a server-error response', () => {
+    const error = new TestError(500);
+
+    expect(error.toHttpException().getResponse()).toEqual({
+      code: 'TEST_CODE',
+      message: 'Internal server error',
+    });
+    expect(error.message).toBe('test message');
+    expect(error.metadata).toEqual({ detail: 'x' });
   });
 
   it('falls back to BadRequestException for an unmapped status', () => {

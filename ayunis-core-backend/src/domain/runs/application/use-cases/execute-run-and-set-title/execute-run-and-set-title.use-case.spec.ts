@@ -290,6 +290,26 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       );
     });
 
+    it('does not expose server-error details in an SSE event', async () => {
+      executeRunUseCase.execute.mockRejectedValue(
+        new ProviderTimeoutError(
+          { provider: 'openai', host: 'internal.provider.example' },
+          new Error('socket timed out with apiKey=secret'),
+        ),
+      );
+
+      const events = await drain(useCase.execute(command()));
+      const errorEvent = events.find(
+        (event): event is RunErrorEvent => event.type === 'error',
+      );
+
+      expect(errorEvent).toMatchObject({
+        code: 'PROVIDER_UNAVAILABLE_TIMEOUT_OPENAI',
+        message: 'Internal server error',
+      });
+      expect(errorEvent?.details).toBeUndefined();
+    });
+
     // The SSE response is committed as 200 before the run executes, so the
     // global exception filter never sees run failures. The catch here is the
     // only place a classified provider outage can become an AppSignal

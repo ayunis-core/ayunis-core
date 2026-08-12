@@ -1,12 +1,5 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import {
-  NotFoundException,
-  InternalServerErrorException,
-  RequestTimeoutException,
-  UnprocessableEntityException,
-  PayloadTooLargeException,
-} from '@nestjs/common';
 
 /**
  * Error codes specific to the URL retriever domain
@@ -33,44 +26,6 @@ export abstract class UrlRetrieverError extends ApplicationError {
     metadata?: ErrorMetadata,
   ) {
     super(message, code, statusCode, metadata);
-  }
-
-  /**
-   * Convert to a NestJS HTTP exception
-   */
-  toHttpException() {
-    switch (this.statusCode) {
-      case 404:
-        return new NotFoundException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 408:
-        return new RequestTimeoutException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 413:
-        return new PayloadTooLargeException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      case 422:
-        return new UnprocessableEntityException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-      default:
-        return new InternalServerErrorException({
-          code: this.code,
-          message: this.message,
-          ...(this.metadata && { metadata: this.metadata }),
-        });
-    }
   }
 }
 

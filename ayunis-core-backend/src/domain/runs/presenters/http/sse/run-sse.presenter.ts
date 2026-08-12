@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  ApplicationError,
+  INTERNAL_SERVER_ERROR_MESSAGE,
+} from 'src/common/errors/base.error';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
 import type { RunErrorResponseDto } from '../dto/run-response.dto';
 import { RunEventResponseMapper } from '../mappers/run-event-response.mapper';
@@ -180,19 +183,15 @@ export class RunSsePresenter {
   ): void {
     this.logger.error('Error in run event stream', error);
 
-    // Preserve error code and metadata from domain errors (e.g.
-    // RUN_NO_MODEL_FOUND, retryAfterSeconds on QUOTA_EXCEEDED). Stack traces
-    // stay in logs and Sentry, never in client responses.
+    const clientError =
+      error instanceof ApplicationError ? error.toClientResponse() : undefined;
     const errorResponse: RunErrorResponseDto = {
       type: 'error',
-      message:
-        error instanceof Error
-          ? error.message
-          : 'An error occurred while executing the run',
+      message: clientError?.message ?? INTERNAL_SERVER_ERROR_MESSAGE,
       threadId,
       timestamp: new Date().toISOString(),
-      code: error instanceof ApplicationError ? error.code : 'EXECUTION_ERROR',
-      details: error instanceof ApplicationError ? error.metadata : undefined,
+      code: clientError?.code ?? 'EXECUTION_ERROR',
+      details: clientError?.metadata,
     };
 
     try {

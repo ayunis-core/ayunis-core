@@ -10,6 +10,15 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { OpenAIModelNotFoundError } from '../openai-compat.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
+
+class UnexpectedOpenAIError extends ApplicationError {
+  constructor() {
+    super('upstream API returned prompt content', 'UNEXPECTED_OPENAI', 500, {
+      prompt: 'confidential prompt',
+    });
+  }
+}
 
 describe('OpenAIErrorMapper', () => {
   const mapper = new OpenAIErrorMapper();
@@ -57,6 +66,14 @@ describe('OpenAIErrorMapper', () => {
       // 404 falls through to default → invalid_request_error.
       expect(result.body.error.type).toBe('invalid_request_error');
       expect(result.body.error.code).toBe('OPENAI_COMPAT_MODEL_NOT_FOUND');
+    });
+
+    it('does not expose a server-error message', () => {
+      const result = mapper.toEnvelope(new UnexpectedOpenAIError());
+
+      expect(result.status).toBe(500);
+      expect(result.body.error.code).toBe('UNEXPECTED_OPENAI');
+      expect(result.body.error.message).toBe('Internal server error');
     });
   });
 
