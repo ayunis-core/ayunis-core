@@ -50,6 +50,7 @@ ayunis-core/
 | [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
+| [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md) | Favorites | User-owned ordered references resolved for navigation |
 
 ### IAM Modules — Identity & Access Management
 
