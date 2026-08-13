@@ -20,6 +20,7 @@ export interface ValidatedOidcIdentity {
   issuer: string;
   subject: string;
   email: string;
+  name: string;
   emailVerified: boolean;
   zitadelOrgId: string;
   sessionId?: string;

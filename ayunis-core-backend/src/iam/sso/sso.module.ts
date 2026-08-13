@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { InvitesModule } from 'src/iam/invites/invites.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { UsersModule } from 'src/iam/users/users.module';
 import { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
@@ -27,6 +30,9 @@ import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks
 import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
+import { SsoProvisioningLock } from 'src/iam/sso/application/ports/sso-provisioning-lock';
+import { PostgresSsoProvisioningLock } from 'src/iam/sso/infrastructure/persistence/postgres/postgres-sso-provisioning-lock';
+import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 
 @Module({
   imports: [
@@ -36,6 +42,9 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
       SsoLoginTransactionRecord,
     ]),
     OrgsModule,
+    InvitesModule,
+    SubscriptionsModule,
+    UsersModule,
   ],
   controllers: [SuperAdminSsoConnectionsController, SsoLoginController],
   providers: [
@@ -62,6 +71,10 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
       provide: SsoLoginTransactionEncryptionPort,
       useClass: SsoLoginTransactionEncryptionService,
     },
+    {
+      provide: SsoProvisioningLock,
+      useClass: PostgresSsoProvisioningLock,
+    },
     ConfigureOrgSsoConnectionUseCase,
     SetOrgSsoEnabledUseCase,
     SetOrgSsoJitProvisioningUseCase,
@@ -69,6 +82,7 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
     DiscoverOrgSsoUseCase,
     StartOrgSsoLoginUseCase,
     CompleteOrgSsoLoginUseCase,
+    ProvisionOrgSsoUserUseCase,
     SsoLoginTransactionCleanupTask,
   ],
   exports: [
@@ -79,6 +93,7 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
     DiscoverOrgSsoUseCase,
     StartOrgSsoLoginUseCase,
     CompleteOrgSsoLoginUseCase,
+    ProvisionOrgSsoUserUseCase,
   ],
 })
 export class SsoModule {}

@@ -70,6 +70,7 @@ import { UserCountsRepository } from 'src/iam/users/application/ports/user-count
 import { LocalUserCountsRepository } from 'src/iam/users/infrastructure/repositories/local/local-user-counts.repository';
 import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
 import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
+import { PublishUserCreatedEventUseCase } from 'src/iam/users/application/use-cases/publish-user-created-event/publish-user-created-event.use-case';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/fi
     CreateFederatedUserUseCase,
     CountUsersByOrgIdUseCase,
     FindUsersByEmailsUseCase,
+    PublishUserCreatedEventUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -163,6 +165,7 @@ import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/fi
     CreateFederatedUserUseCase,
     CountUsersByOrgIdUseCase,
     FindUsersByEmailsUseCase,
+    PublishUserCreatedEventUseCase,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,

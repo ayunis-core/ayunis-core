@@ -22,6 +22,10 @@ import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
 import { UnexpectedInviteError } from '../../invites.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { Transactional } from '@nestjs-cls/transactional';
+import { PublishUserCreatedEventUseCase } from 'src/iam/users/application/use-cases/publish-user-created-event/publish-user-created-event.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -33,6 +37,8 @@ export class AcceptInviteUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
+    private readonly publishUserCreated: PublishUserCreatedEventUseCase,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -42,8 +48,7 @@ export class AcceptInviteUseCase {
     this.logger.log('execute', { hasToken: !!command.inviteToken });
 
     const invite = await this.resolveValidatedInvite(command);
-
-    await this.createUserUseCase.execute(
+    const preparedUser = await this.createUserUseCase.prepare(
       new CreateUserCommand({
         email: invite.email,
         password: command.password,
@@ -56,7 +61,8 @@ export class AcceptInviteUseCase {
       }),
     );
 
-    await this.invitesRepository.accept(invite.id);
+    const user = await this.acceptAndCreateUser(invite, preparedUser);
+    this.publishUserCreated.execute(user);
 
     this.logger.debug('Invite accepted successfully', {
       inviteId: invite.id,
@@ -68,6 +74,20 @@ export class AcceptInviteUseCase {
       email: invite.email,
       orgId: invite.orgId,
     };
+  }
+
+  @Transactional()
+  private async acceptAndCreateUser(
+    invite: Invite,
+    preparedUser: User,
+  ): Promise<User> {
+    await this.acquireAllocationLock.execute(invite.orgId);
+    this.rejectExpiredInvite(invite);
+    await this.rejectExistingUser(invite.email);
+    if (!(await this.invitesRepository.accept(invite.id))) {
+      throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
+    }
+    return this.createUserUseCase.createPreparedWithoutPublishing(preparedUser);
   }
 
   private async resolveValidatedInvite(
@@ -89,28 +109,14 @@ export class AcceptInviteUseCase {
       throw new InviteNotFoundError(payload.inviteId);
     }
 
-    const existingUser = await this.findUserByEmailUseCase.execute(
-      new FindUserByEmailQuery(invite.email),
-    );
-    if (existingUser) {
-      throw new UserAlreadyExistsError();
-    }
+    await this.rejectExistingUser(invite.email);
 
     if (invite.acceptedAt) {
       this.logger.error('Invite already accepted', { inviteId: invite.id });
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
 
-    if (invite.expiresAt < new Date()) {
-      this.logger.error('Invite expired', {
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
-      throw new InviteExpiredError({
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
-    }
+    this.rejectExpiredInvite(invite);
 
     if (
       !(await this.isValidPasswordUseCase.execute(
@@ -121,5 +127,24 @@ export class AcceptInviteUseCase {
     }
 
     return invite;
+  }
+
+  private async rejectExistingUser(email: string): Promise<void> {
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(email),
+    );
+    if (existingUser) throw new UserAlreadyExistsError();
+  }
+
+  private rejectExpiredInvite(invite: Invite): void {
+    if (invite.expiresAt >= new Date()) return;
+    this.logger.error('Invite expired', {
+      inviteId: invite.id,
+      expiresAt: invite.expiresAt,
+    });
+    throw new InviteExpiredError({
+      inviteId: invite.id,
+      expiresAt: invite.expiresAt,
+    });
   }
 }

@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ILike, IsNull, type Repository } from 'typeorm';
+import { IsNull, type FindOperator, type Repository } from 'typeorm';
 
 import { LocalInvitesRepository } from './local-invites.repository';
 import { InviteRecord } from './schema/invite.record';
@@ -20,7 +20,9 @@ function makeAcceptedInviteRecord(email: string): InviteRecord {
 }
 
 describe('LocalInvitesRepository', () => {
-  let inviteRepo: jest.Mocked<Pick<Repository<InviteRecord>, 'findOne'>>;
+  let inviteRepo: jest.Mocked<
+    Pick<Repository<InviteRecord>, 'findOne' | 'update'>
+  >;
   let txHost: {
     tx: { getRepository: jest.Mock };
     isTransactionActive: () => boolean;
@@ -28,7 +30,7 @@ describe('LocalInvitesRepository', () => {
   let repository: LocalInvitesRepository;
 
   beforeEach(() => {
-    inviteRepo = { findOne: jest.fn() };
+    inviteRepo = { findOne: jest.fn(), update: jest.fn() };
     // Reads resolve through txHost.tx, which outside a transaction is the
     // adapter's fallback manager rather than undefined.
     txHost = {
@@ -39,6 +41,32 @@ describe('LocalInvitesRepository', () => {
       new InviteMapper(),
       txHost as never,
     );
+  });
+
+  describe('accept', () => {
+    it('accepts only a still-pending invite', async () => {
+      inviteRepo.update.mockResolvedValue({
+        affected: 1,
+        raw: [],
+        generatedMaps: [],
+      });
+
+      await expect(repository.accept(randomUUID())).resolves.toBe(true);
+      expect(inviteRepo.update).toHaveBeenCalledWith(
+        expect.objectContaining({ acceptedAt: IsNull() }),
+        expect.objectContaining({ acceptedAt: expect.any(Date) }),
+      );
+    });
+
+    it('reports a concurrent acceptance without overwriting it', async () => {
+      inviteRepo.update.mockResolvedValue({
+        affected: 0,
+        raw: [],
+        generatedMaps: [],
+      });
+
+      await expect(repository.accept(randomUUID())).resolves.toBe(false);
+    });
   });
 
   describe('findOneByEmail', () => {
@@ -56,8 +84,14 @@ describe('LocalInvitesRepository', () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe(accepted.id);
 
-      const where = inviteRepo.findOne.mock.calls[0][0].where;
-      expect(where).toEqual({ email: ILike('user@example.com') });
+      const where = inviteRepo.findOne.mock.calls[0][0].where as {
+        email: FindOperator<string>;
+        acceptedAt?: FindOperator<Date>;
+      };
+      expect(where.email.type).toBe('raw');
+      expect(where.email.objectLiteralParameters).toEqual({
+        normalizedEmail: 'user@example.com',
+      });
       expect(where).not.toHaveProperty('acceptedAt', IsNull());
     });
 
@@ -67,6 +101,29 @@ describe('LocalInvitesRepository', () => {
       const result = await repository.findOneByEmail('missing@example.com');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('findOneByEmailAndOrg', () => {
+    it('uses exact case-insensitive equality for emails containing SQL wildcards', async () => {
+      inviteRepo.findOne.mockResolvedValue(null);
+      const orgId = randomUUID();
+
+      await repository.findOneByEmailAndOrg(
+        '  Anna_Schmidt@Example.com  ',
+        orgId,
+      );
+
+      const where = inviteRepo.findOne.mock.calls[0][0].where as {
+        email: FindOperator<string>;
+      };
+      expect(where.email.type).toBe('raw');
+      expect(where.email.objectLiteralParameters).toEqual({
+        normalizedEmail: 'anna_schmidt@example.com',
+      });
+      expect(where.email.getSql?.('invite.email')).toBe(
+        'LOWER(invite.email) = :normalizedEmail',
+      );
     });
   });
 

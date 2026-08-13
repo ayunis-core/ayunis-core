@@ -15,6 +15,9 @@ export enum SsoErrorCode {
   CONNECTION_NOT_AVAILABLE = 'SSO_CONNECTION_NOT_AVAILABLE',
   LOGIN_TRANSACTION_INVALID = 'SSO_LOGIN_TRANSACTION_INVALID',
   ORGANIZATION_MISMATCH = 'SSO_ORGANIZATION_MISMATCH',
+  ACCOUNT_LINK_REQUIRED = 'SSO_ACCOUNT_LINK_REQUIRED',
+  JIT_PROVISIONING_DISABLED = 'SSO_JIT_PROVISIONING_DISABLED',
+  INVITE_EXPIRED = 'SSO_INVITE_EXPIRED',
   UNEXPECTED = 'SSO_UNEXPECTED_ERROR',
 }
 
@@ -133,6 +136,36 @@ export class SsoOrganizationMismatchError extends SsoError {
       'The authenticated identity does not belong to the requested organization',
       SsoErrorCode.ORGANIZATION_MISMATCH,
       401,
+    );
+  }
+}
+
+export class SsoAccountLinkRequiredError extends SsoError {
+  constructor() {
+    super(
+      'This email already has an Ayunis account and must be linked before SSO can be used',
+      SsoErrorCode.ACCOUNT_LINK_REQUIRED,
+      409,
+    );
+  }
+}
+
+export class SsoJitProvisioningDisabledError extends SsoError {
+  constructor() {
+    super(
+      'This organization requires an invitation before the first SSO login',
+      SsoErrorCode.JIT_PROVISIONING_DISABLED,
+      403,
+    );
+  }
+}
+
+export class SsoInviteExpiredError extends SsoError {
+  constructor() {
+    super(
+      'The invitation for this SSO account has expired',
+      SsoErrorCode.INVITE_EXPIRED,
+      409,
     );
   }
 }
