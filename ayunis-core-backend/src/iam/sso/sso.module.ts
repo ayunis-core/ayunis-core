@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
@@ -16,6 +17,8 @@ import { SsoLoginTransactionEncryptionService } from 'src/iam/sso/infrastructure
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
 import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/org-sso-connection.mapper';
 import { PostgresOrgSsoConnectionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/org-sso-connections.repository';
+import { PostgresFederatedIdentitiesRepository } from 'src/iam/sso/infrastructure/persistence/postgres/federated-identities.repository';
+import { FederatedIdentityMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/federated-identity.mapper';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
 import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
@@ -37,10 +40,15 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
   controllers: [SuperAdminSsoConnectionsController, SsoLoginController],
   providers: [
     OrgSsoConnectionMapper,
+    FederatedIdentityMapper,
     OrgSsoConnectionResponseDtoMapper,
     {
       provide: OrgSsoConnectionsRepository,
       useClass: PostgresOrgSsoConnectionsRepository,
+    },
+    {
+      provide: FederatedIdentitiesRepository,
+      useClass: PostgresFederatedIdentitiesRepository,
     },
     {
       provide: OidcBrokerClient,

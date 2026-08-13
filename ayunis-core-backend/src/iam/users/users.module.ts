@@ -69,6 +69,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
 import { SuperAdminFindAllUsersUseCase } from './application/use-cases/super-admin-find-all-users/super-admin-find-all-users.use-case';
 import { SuperAdminUserListItemResponseDtoMapper } from './presenters/http/mappers/super-admin-user-list-item-response-dto.mapper';
 import { SuperAdminUserListController } from './presenters/http/super-admin-user-list.controller';
+import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/create-federated-user/create-federated-user.use-case';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { SuperAdminUserListController } from './presenters/http/super-admin-user
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -158,6 +160,7 @@ import { SuperAdminUserListController } from './presenters/http/super-admin-user
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
