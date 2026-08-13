@@ -105,6 +105,7 @@ describe('CreateInviteUseCase', () => {
 
     // Default: no existing invite
     invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
+    invitesRepository.findOneByEmail.mockResolvedValue(null);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -369,9 +370,42 @@ describe('CreateInviteUseCase', () => {
         userId: mockUserId,
       });
 
-      invitesRepository.findOneByEmailAndOrg.mockResolvedValue({
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      invitesRepository.findOneByEmail.mockResolvedValue({
         id: 'existing-invite-id',
         email: mockEmail,
+      } as any);
+
+      configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
+
+      // Act & Assert
+      await expect(useCase.execute(command)).rejects.toThrow(
+        EmailNotAvailableError,
+      );
+      expect(invitesRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw EmailNotAvailableError when an invite for the email exists in a different org (global unique constraint) instead of a 500', async () => {
+      // Regression for AYC-734: invites.email is globally unique. A pending
+      // invite for this email in another org is invisible to the org-scoped
+      // lookup, so the insert previously hit a DB unique violation and
+      // surfaced as a generic UnexpectedInviteError (500). It must be rejected
+      // up front with a clear domain error instead.
+      const command = new CreateInviteCommand({
+        email: 'schichler-koep@sveinfo.de',
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        userId: mockUserId,
+      });
+
+      // No user yet and no pending invite in THIS org...
+      findUserByEmailUseCase.execute.mockResolvedValue(null);
+      invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
+      // ...but an invite row already exists for this email in another org.
+      invitesRepository.findOneByEmail.mockResolvedValue({
+        id: 'existing-invite-id',
+        email: 'schichler-koep@sveinfo.de',
+        orgId: '123e4567-e89b-12d3-a456-426614174999',
       } as any);
 
       configService.get.mockReturnValueOnce([]); // auth.emailProviderBlacklist
