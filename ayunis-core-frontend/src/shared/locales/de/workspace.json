@@ -1,0 +1,17 @@
+{
+  "page": {
+    "breadcrumb": "Projekte",
+    "chatsTab": "Ihre Chats",
+    "emptyChats": "Noch keine Chats. Schreiben Sie oben einfach los.",
+    "pin": "Anheften",
+    "unpin": "Nicht mehr anheften",
+    "settings": "Einstellungen",
+    "newChat": "Neuer Chat"
+  },
+  "chat": {
+    "untitled": "Unbenannter Chat",
+    "pin": "Anheften",
+    "unpin": "Nicht mehr anheften",
+    "remove": "Aus Projekt entfernen"
+  }
+}
