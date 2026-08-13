@@ -67,7 +67,7 @@ export function SettingsSidebarWidget({
   ];
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="inset" data-testid="settings-sidebar">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
