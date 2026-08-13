@@ -9,6 +9,7 @@ import { GetActiveSubscriptionQuery } from 'src/iam/subscriptions/application/us
 import { UpdateSeatsUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.use-case';
 import { UpdateSeatsCommand } from 'src/iam/subscriptions/application/use-cases/update-seats/update-seats.command';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
+import { SeatBasedSubscription } from 'src/iam/subscriptions/domain/seat-based-subscription.entity';
 import {
   BulkInviteValidationFailedError,
   InvalidSeatsError,
@@ -21,6 +22,12 @@ import { UsersRepository } from 'src/iam/users/application/ports/users.repositor
 import { SubscriptionNotFoundError } from 'src/iam/subscriptions/application/subscription.errors';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { getInviteExpiresAt } from '../../services/invite-expiration.util';
+import {
+  ValidationError,
+  groupInviteRowsByEmail,
+  collectDuplicateEmailErrors,
+  collectInviteRowErrors,
+} from './create-bulk-invites.validation';
 
 interface BulkInviteResult {
   email: string;
@@ -38,12 +45,18 @@ interface CreateBulkInvitesResult {
   results: BulkInviteResult[];
 }
 
-interface ValidationError {
-  row: number;
-  email: string;
-  errorCode: string;
-  message: string;
+interface InviteDeliveryConfig {
+  hasEmailConfig: boolean;
+  frontendBaseUrl: string;
+  inviteAcceptEndpoint: string;
+  validDuration: string;
 }
+
+type InviteData = CreateBulkInvitesCommand['invites'][number];
+
+type ActiveSubscriptionResult = Awaited<
+  ReturnType<GetActiveSubscriptionUseCase['execute']>
+>;
 
 @Injectable()
 export class CreateBulkInvitesUseCase {
@@ -111,104 +124,44 @@ export class CreateBulkInvitesUseCase {
   private async validateAllInvites(
     command: CreateBulkInvitesCommand,
   ): Promise<ValidationError[]> {
-    const errors: ValidationError[] = [];
+    const emailRows = groupInviteRowsByEmail(command.invites);
+    const duplicateErrors = collectDuplicateEmailErrors(emailRows);
+
+    const uniqueEmails = [...emailRows.keys()];
+    const existingInviteEmails =
+      await this.findExistingInviteEmails(uniqueEmails);
+    const registeredUserEmails =
+      await this.findRegisteredUserEmails(uniqueEmails);
     const emailProviderBlacklist =
       this.configService.get<string[]>('auth.emailProviderBlacklist') ?? [];
 
-    // Check for duplicates within the request
-    const emailCounts = new Map<string, number[]>();
-    command.invites.forEach((invite, index) => {
-      const email = invite.email.toLowerCase();
-      const indices = emailCounts.get(email) || [];
-      indices.push(index + 1); // 1-indexed row numbers
-      emailCounts.set(email, indices);
+    const rowErrors = collectInviteRowErrors(command.invites, {
+      emailRows,
+      existingInviteEmails,
+      registeredUserEmails,
+      emailProviderBlacklist,
     });
 
-    const duplicateEmails: string[] = [];
-    emailCounts.forEach((indices, email) => {
-      if (indices.length > 1) {
-        duplicateEmails.push(email);
-        // Add error for all duplicate occurrences except the first
-        indices.slice(1).forEach((rowIndex) => {
-          errors.push({
-            row: rowIndex,
-            email,
-            errorCode: 'DUPLICATE_EMAIL_IN_REQUEST',
-            message: `Duplicate email in request (first occurrence at row ${indices[0]})`,
-          });
-        });
-      }
-    });
+    return [...duplicateErrors, ...rowErrors];
+  }
 
-    // Get all unique emails for batch lookup
-    const uniqueEmails = [
-      ...new Set(command.invites.map((i) => i.email.toLowerCase())),
-    ];
+  private async findExistingInviteEmails(
+    emails: string[],
+  ): Promise<Set<string>> {
+    // invites.email carries a GLOBAL unique constraint, so an invite row for
+    // any requested email — even in another org, or already accepted/orphaned —
+    // makes createMany fail with a DB unique violation (surfacing as a 500).
+    // Look invites up globally so those conflicts are reported as validation
+    // errors up front (AYC-735).
+    const existingInvites = await this.invitesRepository.findByEmails(emails);
+    return new Set(existingInvites.map((i) => i.email.toLowerCase()));
+  }
 
-    // Batch check for existing invites
-    const existingInvites = await this.invitesRepository.findByEmailsAndOrg(
-      uniqueEmails,
-      command.orgId,
-    );
-    const existingInviteEmails = new Set(
-      existingInvites.map((i) => i.email.toLowerCase()),
-    );
-
-    // Batch check for existing users
-    const existingUsers =
-      await this.usersRepository.findManyByEmails(uniqueEmails);
-    const existingUserEmails = new Set(
-      existingUsers.map((u) => u.email.toLowerCase()),
-    );
-
-    // Validate each invite
-    command.invites.forEach((invite, index) => {
-      const rowNumber = index + 1;
-      const email = invite.email.toLowerCase();
-
-      // Skip if already marked as duplicate
-      const isDuplicate =
-        duplicateEmails.includes(email) &&
-        emailCounts.get(email)![0] !== rowNumber;
-      if (isDuplicate) {
-        return;
-      }
-
-      // Check email provider blacklist
-      const emailProvider = email.split('@')[1]?.split('.')[0];
-      if (emailProvider && emailProviderBlacklist.includes(emailProvider)) {
-        errors.push({
-          row: rowNumber,
-          email: invite.email,
-          errorCode: 'EMAIL_PROVIDER_BLACKLISTED',
-          message: 'Email provider is not allowed',
-        });
-        return;
-      }
-
-      // Check if email already has a pending invite
-      if (existingInviteEmails.has(email)) {
-        errors.push({
-          row: rowNumber,
-          email: invite.email,
-          errorCode: 'EMAIL_ALREADY_INVITED',
-          message: 'Email already has a pending invite',
-        });
-        return;
-      }
-
-      // Check if email is already a user
-      if (existingUserEmails.has(email)) {
-        errors.push({
-          row: rowNumber,
-          email: invite.email,
-          errorCode: 'EMAIL_ALREADY_USER',
-          message: 'Email is already registered as a user',
-        });
-      }
-    });
-
-    return errors;
+  private async findRegisteredUserEmails(
+    emails: string[],
+  ): Promise<Set<string>> {
+    const existingUsers = await this.usersRepository.findManyByEmails(emails);
+    return new Set(existingUsers.map((u) => u.email.toLowerCase()));
   }
 
   private async handleSeatsForBulkInvites(
@@ -219,27 +172,7 @@ export class CreateBulkInvitesUseCase {
       return;
     }
 
-    let subscription: Awaited<
-      ReturnType<GetActiveSubscriptionUseCase['execute']>
-    > | null = null;
-
-    try {
-      subscription = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.userId,
-        }),
-      );
-    } catch (error) {
-      if (error instanceof SubscriptionNotFoundError) {
-        this.logger.debug('No active subscription found, proceeding', {
-          orgId: command.orgId,
-        });
-        return;
-      }
-      throw error;
-    }
-
+    const subscription = await this.fetchActiveSubscription(command);
     if (!subscription) {
       return;
     }
@@ -249,8 +182,6 @@ export class CreateBulkInvitesUseCase {
     if (!isSeatBased(sub)) {
       return;
     }
-
-    const inviteCount = command.invites.length;
 
     if (
       subscription.availableSeats !== null &&
@@ -262,41 +193,102 @@ export class CreateBulkInvitesUseCase {
       });
     }
 
-    // If not enough seats, increase seat count
-    if (
-      subscription.availableSeats !== null &&
-      subscription.availableSeats < inviteCount
-    ) {
-      const additionalSeatsNeeded = inviteCount - subscription.availableSeats;
-      await this.updateSeatsUseCase.execute(
-        new UpdateSeatsCommand({
+    await this.increaseSeatsIfNeeded(command, subscription, sub);
+  }
+
+  private async fetchActiveSubscription(
+    command: CreateBulkInvitesCommand,
+  ): Promise<ActiveSubscriptionResult | null> {
+    try {
+      return await this.getActiveSubscriptionUseCase.execute(
+        new GetActiveSubscriptionQuery({
           orgId: command.orgId,
           requestingUserId: command.userId,
-          noOfSeats: sub.noOfSeats + additionalSeatsNeeded,
         }),
       );
+    } catch (error) {
+      if (error instanceof SubscriptionNotFoundError) {
+        this.logger.debug('No active subscription found, proceeding', {
+          orgId: command.orgId,
+        });
+        return null;
+      }
+      throw error;
     }
+  }
+
+  private async increaseSeatsIfNeeded(
+    command: CreateBulkInvitesCommand,
+    subscription: ActiveSubscriptionResult,
+    sub: SeatBasedSubscription,
+  ): Promise<void> {
+    const inviteCount = command.invites.length;
+    if (
+      subscription.availableSeats === null ||
+      subscription.availableSeats >= inviteCount
+    ) {
+      return;
+    }
+
+    const additionalSeatsNeeded = inviteCount - subscription.availableSeats;
+    await this.updateSeatsUseCase.execute(
+      new UpdateSeatsCommand({
+        orgId: command.orgId,
+        requestingUserId: command.userId,
+        noOfSeats: sub.noOfSeats + additionalSeatsNeeded,
+      }),
+    );
   }
 
   private async processInvites(
     command: CreateBulkInvitesCommand,
   ): Promise<BulkInviteResult[]> {
-    const results: BulkInviteResult[] = [];
-    const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
-    const frontendBaseUrl = this.configService.get<string>(
-      'app.frontend.baseUrl',
-    );
-    const inviteAcceptEndpoint = this.configService.get<string>(
-      'app.frontend.inviteAcceptEndpoint',
-    );
-    const validDuration = this.configService.get<string>(
-      'auth.jwt.inviteExpiresIn',
-      '7d',
-    );
+    const deliveryConfig = this.resolveInviteDeliveryConfig();
+    const invites = this.buildInvites(command, deliveryConfig.validDuration);
 
-    // Create all invite entities upfront
+    // Batch insert all invites
+    await this.invitesRepository.createMany(invites);
+    this.logger.debug('Invites batch created successfully', {
+      count: invites.length,
+    });
+
+    // Process each invite for token generation and email sending
+    const results: BulkInviteResult[] = [];
+    for (let i = 0; i < invites.length; i++) {
+      results.push(
+        await this.deliverInvite(
+          invites[i],
+          command.invites[i],
+          deliveryConfig,
+        ),
+      );
+    }
+
+    return results;
+  }
+
+  private resolveInviteDeliveryConfig(): InviteDeliveryConfig {
+    return {
+      hasEmailConfig:
+        this.configService.get<boolean>('emails.hasConfig') ?? false,
+      frontendBaseUrl:
+        this.configService.get<string>('app.frontend.baseUrl') ?? '',
+      inviteAcceptEndpoint:
+        this.configService.get<string>('app.frontend.inviteAcceptEndpoint') ??
+        '',
+      validDuration: this.configService.get<string>(
+        'auth.jwt.inviteExpiresIn',
+        '7d',
+      ),
+    };
+  }
+
+  private buildInvites(
+    command: CreateBulkInvitesCommand,
+    validDuration: string,
+  ): Invite[] {
     const inviteExpiresAt = getInviteExpiresAt(validDuration);
-    const invites: Invite[] = command.invites.map(
+    return command.invites.map(
       (inviteData) =>
         new Invite({
           email: inviteData.email,
@@ -306,131 +298,122 @@ export class CreateBulkInvitesUseCase {
           expiresAt: inviteExpiresAt,
         }),
     );
+  }
 
-    // Batch insert all invites
-    await this.invitesRepository.createMany(invites);
+  private async deliverInvite(
+    invite: Invite,
+    inviteData: InviteData,
+    config: InviteDeliveryConfig,
+  ): Promise<BulkInviteResult> {
+    try {
+      const inviteToken = this.inviteJwtService.generateInviteToken({
+        inviteId: invite.id,
+      });
+      const inviteAcceptUrl = `${config.frontendBaseUrl}${config.inviteAcceptEndpoint}?token=${inviteToken}`;
 
-    this.logger.debug('Invites batch created successfully', {
-      count: invites.length,
-    });
-
-    // Process each invite for token generation and email sending
-    for (let i = 0; i < invites.length; i++) {
-      const invite = invites[i];
-      const inviteData = command.invites[i];
-
-      try {
-        // Generate JWT token for the invite
-        const inviteToken = this.inviteJwtService.generateInviteToken({
-          inviteId: invite.id,
-        });
-
-        const inviteAcceptUrl = `${frontendBaseUrl}${inviteAcceptEndpoint}?token=${inviteToken}`;
-
-        // Send email if config is available
-        if (hasEmailConfig) {
-          try {
-            await this.sendInvitationEmailUseCase.execute(
-              new SendInvitationEmailCommand(invite, inviteAcceptUrl),
-            );
-            results.push({
-              email: inviteData.email,
-              role: inviteData.role,
-              success: true,
-              url: null,
-              errorCode: null,
-              errorMessage: null,
-            });
-          } catch (emailError) {
-            this.logger.warn('Failed to send invitation email', {
-              email: inviteData.email,
-              error:
-                emailError instanceof Error
-                  ? emailError.message
-                  : 'Unknown error',
-            });
-
-            // Delete the invite since email delivery failed
-            try {
-              await this.invitesRepository.delete(invite.id);
-              this.logger.debug('Deleted invite after email sending failure', {
-                inviteId: invite.id,
-                email: inviteData.email,
-              });
-            } catch (deleteError) {
-              this.logger.error('Failed to delete invite after email failure', {
-                inviteId: invite.id,
-                email: inviteData.email,
-                error:
-                  deleteError instanceof Error
-                    ? deleteError.message
-                    : 'Unknown error',
-              });
-            }
-
-            results.push({
-              email: inviteData.email,
-              role: inviteData.role,
-              success: false,
-              url: null,
-              errorCode: 'EMAIL_SENDING_FAILED',
-              errorMessage:
-                emailError instanceof Error
-                  ? emailError.message
-                  : 'Failed to send invitation email',
-            });
-          }
-        } else {
-          // No email config - return URL
-          results.push({
-            email: inviteData.email,
-            role: inviteData.role,
-            success: true,
-            url: inviteAcceptUrl,
-            errorCode: null,
-            errorMessage: null,
-          });
-        }
-      } catch (error) {
-        this.logger.error('Failed to process invite', {
-          email: inviteData.email,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-
-        // Delete the invite since processing failed
-        try {
-          await this.invitesRepository.delete(invite.id);
-          this.logger.debug('Deleted invite after processing failure', {
-            inviteId: invite.id,
-            email: inviteData.email,
-          });
-        } catch (deleteError) {
-          this.logger.error(
-            'Failed to delete invite after processing failure',
-            {
-              inviteId: invite.id,
-              email: inviteData.email,
-              error:
-                deleteError instanceof Error
-                  ? deleteError.message
-                  : 'Unknown error',
-            },
-          );
-        }
-
-        results.push({
-          email: inviteData.email,
-          role: inviteData.role,
-          success: false,
-          url: null,
-          errorCode:
-            error instanceof ApplicationError ? error.code : 'UNEXPECTED_ERROR',
-          errorMessage:
-            error instanceof Error ? error.message : 'Unknown error',
-        });
+      if (!config.hasEmailConfig) {
+        // No email config - return URL
+        return this.buildSuccessResult(inviteData, inviteAcceptUrl);
       }
-    }
 
-    return results;
+      return await this.sendInviteEmail(invite, inviteData, inviteAcceptUrl);
+    } catch (error) {
+      this.logger.error('Failed to process invite', {
+        email: inviteData.email,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      await this.deleteInviteQuietly(
+        invite,
+        inviteData.email,
+        'processing failure',
+      );
+      return this.buildFailureResult(
+        inviteData,
+        error instanceof ApplicationError ? error.code : 'UNEXPECTED_ERROR',
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+    }
+  }
+
+  private async sendInviteEmail(
+    invite: Invite,
+    inviteData: InviteData,
+    inviteAcceptUrl: string,
+  ): Promise<BulkInviteResult> {
+    try {
+      await this.sendInvitationEmailUseCase.execute(
+        new SendInvitationEmailCommand(invite, inviteAcceptUrl),
+      );
+      return this.buildSuccessResult(inviteData, null);
+    } catch (emailError) {
+      this.logger.warn('Failed to send invitation email', {
+        email: inviteData.email,
+        error:
+          emailError instanceof Error ? emailError.message : 'Unknown error',
+      });
+      // Delete the invite since email delivery failed
+      await this.deleteInviteQuietly(
+        invite,
+        inviteData.email,
+        'email sending failure',
+      );
+      return this.buildFailureResult(
+        inviteData,
+        'EMAIL_SENDING_FAILED',
+        emailError instanceof Error
+          ? emailError.message
+          : 'Failed to send invitation email',
+      );
+    }
+  }
+
+  private async deleteInviteQuietly(
+    invite: Invite,
+    email: string,
+    context: string,
+  ): Promise<void> {
+    try {
+      await this.invitesRepository.delete(invite.id);
+      this.logger.debug(`Deleted invite after ${context}`, {
+        inviteId: invite.id,
+        email,
+      });
+    } catch (deleteError) {
+      this.logger.error(`Failed to delete invite after ${context}`, {
+        inviteId: invite.id,
+        email,
+        error:
+          deleteError instanceof Error ? deleteError.message : 'Unknown error',
+      });
+    }
+  }
+
+  private buildSuccessResult(
+    inviteData: InviteData,
+    url: string | null,
+  ): BulkInviteResult {
+    return {
+      email: inviteData.email,
+      role: inviteData.role,
+      success: true,
+      url,
+      errorCode: null,
+      errorMessage: null,
+    };
+  }
+
+  private buildFailureResult(
+    inviteData: InviteData,
+    errorCode: string,
+    errorMessage: string,
+  ): BulkInviteResult {
+    return {
+      email: inviteData.email,
+      role: inviteData.role,
+      success: false,
+      url: null,
+      errorCode,
+      errorMessage,
+    };
   }
 }

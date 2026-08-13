@@ -20,11 +20,13 @@ function makeAcceptedInviteRecord(email: string): InviteRecord {
 }
 
 describe('LocalInvitesRepository', () => {
-  let inviteRepo: jest.Mocked<Pick<Repository<InviteRecord>, 'findOne'>>;
+  let inviteRepo: jest.Mocked<
+    Pick<Repository<InviteRecord>, 'findOne' | 'createQueryBuilder'>
+  >;
   let repository: LocalInvitesRepository;
 
   beforeEach(() => {
-    inviteRepo = { findOne: jest.fn() };
+    inviteRepo = { findOne: jest.fn(), createQueryBuilder: jest.fn() };
     repository = new LocalInvitesRepository(
       inviteRepo as unknown as Repository<InviteRecord>,
       new InviteMapper(),
@@ -57,6 +59,51 @@ describe('LocalInvitesRepository', () => {
       const result = await repository.findOneByEmail('missing@example.com');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('findByEmails', () => {
+    // Regression test for AYC-735: invites.email is globally unique, so bulk
+    // validation must look up invites globally — case-insensitively and
+    // regardless of organization or acceptance status — otherwise a conflicting
+    // row (in another org, or accepted/orphaned) slips past validation and
+    // fails the batch insert with a DB unique violation surfaced as a 500.
+    it('queries globally and case-insensitively with no org/acceptance filter', async () => {
+      const accepted = makeAcceptedInviteRecord('user@example.com');
+      const where = jest.fn().mockReturnThis();
+      const andWhere = jest.fn().mockReturnThis();
+      const getMany = jest.fn().mockResolvedValue([accepted]);
+      inviteRepo.createQueryBuilder.mockReturnValue({
+        where,
+        andWhere,
+        getMany,
+      } as never);
+
+      const result = await repository.findByEmails([
+        'User@Example.com',
+        'Second@Example.com',
+      ]);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(accepted.id);
+
+      // Only a single, global WHERE on lowercased emails — no org or
+      // acceptedAt constraints.
+      expect(where).toHaveBeenCalledTimes(1);
+      expect(where).toHaveBeenCalledWith(
+        'LOWER(invite.email) IN (:...emails)',
+        {
+          emails: ['user@example.com', 'second@example.com'],
+        },
+      );
+      expect(andWhere).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty array without querying when no emails are given', async () => {
+      const result = await repository.findByEmails([]);
+
+      expect(result).toEqual([]);
+      expect(inviteRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
   });
 });

@@ -41,7 +41,7 @@ describe('CreateBulkInvitesUseCase', () => {
     const mockInvitesRepository = {
       create: jest.fn(),
       createMany: jest.fn(),
-      findByEmailsAndOrg: jest.fn(),
+      findByEmails: jest.fn(),
       deleteAllPendingByOrg: jest.fn(),
       delete: jest.fn(),
     };
@@ -128,6 +128,9 @@ describe('CreateBulkInvitesUseCase', () => {
       ...overrides,
     };
 
+    // The mocked ConfigService.get intentionally returns different value types
+    // per key (string[] | boolean | string), mirroring the real API.
+    // eslint-disable-next-line sonarjs/function-return-type
     configService.get.mockImplementation((key: string) => {
       switch (key) {
         case 'auth.emailProviderBlacklist':
@@ -160,7 +163,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
@@ -189,7 +192,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ hasEmailConfig: false });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
@@ -209,7 +212,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ hasEmailConfig: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
@@ -227,7 +230,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ hasEmailConfig: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       sendInvitationEmailUseCase.execute.mockRejectedValue(
@@ -251,7 +254,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockImplementation(() => {
         throw new Error('JWT generation failed');
@@ -275,7 +278,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ hasEmailConfig: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
@@ -307,7 +310,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -324,7 +327,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ emailProviderBlacklist: ['gmail'] });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -346,12 +349,93 @@ describe('CreateBulkInvitesUseCase', () => {
         role: UserRole.USER,
         expiresAt: new Date(Date.now() + 86400000),
       });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([existingInvite]);
+      invitesRepository.findByEmails.mockResolvedValue([existingInvite]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         BulkInviteValidationFailedError,
       );
+    });
+
+    // Regression for AYC-735: invites.email is globally unique, so an invite
+    // row for a requested email in ANOTHER org previously passed the org-scoped
+    // validation and only blew up on createMany with a DB unique violation
+    // (converted to a 500). It must be reported as EMAIL_ALREADY_INVITED and no
+    // rows must be inserted.
+    it('should report EMAIL_ALREADY_INVITED when an invite exists in another org', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [{ email: 'existing@example.com', role: UserRole.USER }],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      setupDefaultConfigMocks();
+      const otherOrgId = '123e4567-e89b-12d3-a456-426614174999' as any;
+      const inviteInOtherOrg = new Invite({
+        email: 'existing@example.com',
+        orgId: otherOrgId,
+        role: UserRole.USER,
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+      invitesRepository.findByEmails.mockResolvedValue([inviteInOtherOrg]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+
+      try {
+        await useCase.execute(command);
+        fail('Expected BulkInviteValidationFailedError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BulkInviteValidationFailedError);
+        const bulkError = error as BulkInviteValidationFailedError;
+        expect(bulkError.metadata?.errors).toEqual([
+          expect.objectContaining({
+            row: 1,
+            email: 'existing@example.com',
+            errorCode: 'EMAIL_ALREADY_INVITED',
+          }),
+        ]);
+      }
+      expect(invitesRepository.findByEmails).toHaveBeenCalledWith([
+        'existing@example.com',
+      ]);
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
+    });
+
+    // Regression for AYC-735: an accepted/orphaned invite row also holds the
+    // globally unique email and must block re-inviting via the bulk flow with a
+    // validation error rather than a 500.
+    it('should report EMAIL_ALREADY_INVITED when an accepted/orphaned invite row exists', async () => {
+      const command = new CreateBulkInvitesCommand({
+        invites: [{ email: 'accepted@example.com', role: UserRole.USER }],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+
+      setupDefaultConfigMocks();
+      const acceptedInvite = new Invite({
+        email: 'accepted@example.com',
+        orgId: mockOrgId,
+        role: UserRole.USER,
+        acceptedAt: new Date(Date.now() - 86400000),
+        expiresAt: new Date(Date.now() + 86400000),
+      });
+      invitesRepository.findByEmails.mockResolvedValue([acceptedInvite]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+
+      try {
+        await useCase.execute(command);
+        fail('Expected BulkInviteValidationFailedError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BulkInviteValidationFailedError);
+        const bulkError = error as BulkInviteValidationFailedError;
+        expect(bulkError.metadata?.errors).toEqual([
+          expect.objectContaining({
+            row: 1,
+            email: 'accepted@example.com',
+            errorCode: 'EMAIL_ALREADY_INVITED',
+          }),
+        ]);
+      }
+      expect(invitesRepository.createMany).not.toHaveBeenCalled();
     });
 
     it('should throw BulkInviteValidationFailedError when email is already a user', async () => {
@@ -362,7 +446,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       const existingUser = new User({
         id: 'user-id' as any,
         email: 'user@example.com',
@@ -392,7 +476,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ emailProviderBlacklist: ['gmail'] });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
 
       try {
@@ -461,7 +545,7 @@ describe('CreateBulkInvitesUseCase', () => {
       };
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
@@ -484,7 +568,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: false });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
@@ -504,7 +588,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
@@ -529,7 +613,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
@@ -555,7 +639,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
       getActiveSubscriptionUseCase.execute.mockRejectedValue(
@@ -576,7 +660,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       getActiveSubscriptionUseCase.execute.mockResolvedValue(
         createMockSubscription(-1, 10),
@@ -596,7 +680,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockRejectedValue(
+      invitesRepository.findByEmails.mockRejectedValue(
         new Error('Database connection failed'),
       );
 
@@ -616,7 +700,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks();
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       invitesRepository.createMany.mockRejectedValue(
         new Error('Database error'),
@@ -635,7 +719,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ isCloudHosted: true });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       getActiveSubscriptionUseCase.execute.mockRejectedValue(
         new Error('Unexpected subscription error'),
@@ -656,7 +740,7 @@ describe('CreateBulkInvitesUseCase', () => {
       });
 
       setupDefaultConfigMocks({ inviteExpiresIn: '24h' });
-      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      invitesRepository.findByEmails.mockResolvedValue([]);
       usersRepository.findManyByEmails.mockResolvedValue([]);
       inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
 
