@@ -109,6 +109,7 @@
       "disableError": "Modell konnte nicht für Team deaktiviert werden",
       "disableModelNotFound": "Modell nicht gefunden",
       "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden",
+      "updateNotFound": "Modell nicht gefunden",
       "updateError": "Modelleinstellung konnte nicht aktualisiert werden"
     },
     "removeMember": {

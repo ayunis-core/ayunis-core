@@ -236,43 +236,51 @@ export const minimalFixture = {
       modelKey: 'languageModel',
       isDefault: true,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       modelKey: 'anthropicLanguageModel',
       isDefault: false,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       modelKey: 'azureLanguageModel',
       isDefault: false,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       modelKey: 'openaiLanguageModel',
       isDefault: false,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       modelKey: 'mistralLanguageModel',
       isDefault: false,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       modelKey: 'geminiLanguageModel',
       isDefault: false,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       // Embedding model as default
       modelKey: 'embeddingModel',
       isDefault: true,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
     {
       // Image-generation model (always single-per-org, default-by-construction)
       modelKey: 'imageGenerationModel',
       isDefault: true,
       anonymousOnly: false,
+      internetAccessEnabled: true,
     },
   ],
 

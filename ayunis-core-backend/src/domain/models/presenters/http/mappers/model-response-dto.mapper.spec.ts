@@ -66,6 +66,7 @@ describe('ModelResponseDtoMapper', () => {
       model,
       orgId: '123e4567-e89b-12d3-a456-426614174555',
       isDefault: true,
+      internetAccessEnabled: false,
     });
 
     const dto = mapper.toDto(permittedModel);
@@ -81,6 +82,7 @@ describe('ModelResponseDtoMapper', () => {
       canVision: true,
       isDefault: true,
       anonymousOnly: false,
+      internetAccessEnabled: false,
       tier: ModelTier.MEDIUM,
     });
   });

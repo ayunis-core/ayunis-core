@@ -164,6 +164,7 @@ export class TeamPermittedModelsController {
       orgId,
       teamId,
       dto.anonymousOnly,
+      dto.internetAccessEnabled,
     );
     const created = await this.createTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toTeamPermittedModelDto(created);
@@ -193,12 +194,13 @@ export class TeamPermittedModelsController {
       permittedModelId: id,
       anonymousOnly: dto.anonymousOnly,
     });
-    const command = new UpdateTeamPermittedModelCommand(
-      id,
+    const command = new UpdateTeamPermittedModelCommand({
+      permittedModelId: id,
       orgId,
       teamId,
-      dto.anonymousOnly,
-    );
+      anonymousOnly: dto.anonymousOnly,
+      internetAccessEnabled: dto.internetAccessEnabled,
+    });
     const updated = await this.updateTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(updated);
   }

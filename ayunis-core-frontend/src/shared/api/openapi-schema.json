@@ -2849,7 +2849,6 @@
             "description": "Organization ID that owns the permitted model",
             "schema": {
               "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           },
@@ -2860,7 +2859,6 @@
             "description": "Permitted model ID to delete",
             "schema": {
               "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           }
@@ -2896,7 +2894,6 @@
             "description": "Organization ID that owns the permitted model",
             "schema": {
               "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           },
@@ -2907,7 +2904,6 @@
             "description": "Permitted model ID to update",
             "schema": {
               "format": "uuid",
-              "example": "123e4567-e89b-12d3-a456-426614174000",
               "type": "string"
             }
           }
@@ -11817,6 +11813,11 @@
             "description": "Whether this model enforces anonymous mode. Null if not permitted.",
             "nullable": true
           },
+          "internetAccessEnabled": {
+            "type": "boolean",
+            "description": "Whether built-in internet tools are enabled. Null for non-language or non-permitted models.",
+            "nullable": true
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -11883,16 +11884,22 @@
       "CreatePermittedModelDto": {
         "type": "object",
         "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "The id of the model",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model should enforce anonymous mode",
             "example": false,
             "default": false
+          },
+          "internetAccessEnabled": {
+            "type": "boolean",
+            "description": "Whether built-in internet search and website content tools are enabled for this permitted model",
+            "example": true,
+            "default": true
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The id of the model",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         },
         "required": ["modelId"]
@@ -11904,9 +11911,13 @@
             "type": "boolean",
             "description": "Whether this model should enforce anonymous mode",
             "example": true
+          },
+          "internetAccessEnabled": {
+            "type": "boolean",
+            "description": "Whether built-in internet search and website content tools are enabled for this permitted model",
+            "example": true
           }
-        },
-        "required": ["anonymousOnly"]
+        }
       },
       "PermittedLanguageModelResponseDto": {
         "type": "object",
@@ -11978,6 +11989,10 @@
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode"
           },
+          "internetAccessEnabled": {
+            "type": "boolean",
+            "description": "Whether built-in internet search and website content tools are enabled for this permitted model"
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -12003,7 +12018,8 @@
           "isReasoning",
           "canVision",
           "isDefault",
-          "anonymousOnly"
+          "anonymousOnly",
+          "internetAccessEnabled"
         ]
       },
       "PermittedEmbeddingModelResponseDto": {
@@ -12198,16 +12214,22 @@
       "CreateTeamPermittedModelDto": {
         "type": "object",
         "properties": {
-          "modelId": {
-            "type": "string",
-            "description": "The ID of the catalog model to permit for the team",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model should enforce anonymous mode",
             "example": false,
             "default": false
+          },
+          "internetAccessEnabled": {
+            "type": "boolean",
+            "description": "Whether built-in internet search and website content tools are enabled for this permitted model",
+            "example": true,
+            "default": true
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The ID of the catalog model to permit for the team",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         },
         "required": ["modelId"]

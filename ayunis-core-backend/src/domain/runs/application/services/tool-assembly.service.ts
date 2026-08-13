@@ -63,6 +63,7 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     canUseTools: boolean,
     isAnonymous: boolean,
+    modelInternetAccessEnabled = true,
   ): Promise<{ tools: Tool[]; instructions: string }> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
 
@@ -72,7 +73,12 @@ export class ToolAssemblyService {
     );
 
     const tools = canUseTools
-      ? await this.assembleTools(thread, activeSkills, slugMap)
+      ? await this.assembleTools(
+          thread,
+          activeSkills,
+          slugMap,
+          modelInternetAccessEnabled,
+        )
       : [];
 
     // Collect all sources from thread for the system prompt.
@@ -191,6 +197,7 @@ export class ToolAssemblyService {
     thread: Thread,
     _activeSkills: Skill[],
     slugMap: Map<string, string>,
+    modelInternetAccessEnabled = true,
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
@@ -217,8 +224,10 @@ export class ToolAssemblyService {
 
     tools.push(...(await this.assembleSkillManagementTools(slugMap)));
 
-    // Internet tools (website content + search) — gated by the org chat setting
-    tools.push(...(await this.assembleInternetTools()));
+    // Internet tools (website content + search) are gated by both policies.
+    tools.push(
+      ...(await this.assembleInternetTools(modelInternetAccessEnabled)),
+    );
 
     // Image generation tool — available when org has a permitted image model
     tools.push(
@@ -304,7 +313,15 @@ export class ToolAssemblyService {
    * chat settings. Web search additionally requires the provider to be
    * configured (`internetSearch.isAvailable`).
    */
-  private async assembleInternetTools(): Promise<Tool[]> {
+  private async assembleInternetTools(
+    modelInternetAccessEnabled: boolean,
+  ): Promise<Tool[]> {
+    if (!modelInternetAccessEnabled) {
+      this.logger.debug(
+        'Internet access disabled for model, skipping web tools',
+      );
+      return [];
+    }
     const orgChatSettings = await this.getOrgChatSettingsUseCase.execute();
     if (!orgChatSettings.internetSearchEnabled) {
       this.logger.debug('Internet access disabled for org, skipping web tools');

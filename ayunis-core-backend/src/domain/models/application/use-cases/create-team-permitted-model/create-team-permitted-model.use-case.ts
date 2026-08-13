@@ -61,6 +61,7 @@ export class CreateTeamPermittedModelUseCase {
       model,
       orgId: command.orgId,
       anonymousOnly: command.anonymousOnly,
+      internetAccessEnabled: command.internetAccessEnabled,
       scope: PermittedModelScope.TEAM,
       scopeId: command.teamId,
     });

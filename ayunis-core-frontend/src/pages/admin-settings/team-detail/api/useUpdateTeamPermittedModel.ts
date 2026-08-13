@@ -4,12 +4,15 @@ import {
   useTeamPermittedModelsControllerUpdateTeamPermittedModel,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  PermittedLanguageModelResponseDto,
+  UpdatePermittedModelDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 
-interface UpdateTeamPermittedModelParams {
+interface UpdateTeamPermittedModelParams extends UpdatePermittedModelDto {
   permittedModelId: string;
-  anonymousOnly: boolean;
 }
 
 export function useUpdateTeamPermittedModel(teamId: string) {
@@ -30,18 +33,25 @@ export function useUpdateTeamPermittedModel(teamId: string) {
           listQueryKey,
           (models) =>
             models?.map((model) =>
-              model.id === id
-                ? { ...model, anonymousOnly: data.anonymousOnly }
-                : model,
+              model.id === id ? { ...model, ...data } : model,
             ),
         );
         return { previous };
       },
-      onError: (_error, _vars, context) => {
+      onError: (error, _vars, context) => {
         if (context?.previous) {
           queryClient.setQueryData(listQueryKey, context.previous);
         }
-        showError(t('teamDetail.models.updateError'));
+        try {
+          const { code } = extractErrorData(error);
+          const key =
+            code === 'PERMITTED_MODEL_NOT_FOUND'
+              ? 'teamDetail.models.updateNotFound'
+              : 'teamDetail.models.updateError';
+          showError(t(key));
+        } catch {
+          showError(t('teamDetail.models.updateError'));
+        }
       },
       onSettled: () => {
         void queryClient.invalidateQueries({ queryKey: listQueryKey });
@@ -49,11 +59,14 @@ export function useUpdateTeamPermittedModel(teamId: string) {
     },
   });
 
-  function updateTeamPermittedModel(params: UpdateTeamPermittedModelParams) {
+  function updateTeamPermittedModel({
+    permittedModelId,
+    ...data
+  }: UpdateTeamPermittedModelParams) {
     mutation.mutate({
       teamId,
-      id: params.permittedModelId,
-      data: { anonymousOnly: params.anonymousOnly },
+      id: permittedModelId,
+      data,
     });
   }
 

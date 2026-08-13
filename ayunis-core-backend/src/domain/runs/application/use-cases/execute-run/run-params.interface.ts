@@ -17,6 +17,7 @@ export interface RunParams {
   streaming?: boolean;
   orgId: UUID;
   isAnonymous: boolean;
+  modelInternetAccessEnabled: boolean;
   activeSkills: Skill[];
   skillId?: UUID;
   skillInstructions?: string;

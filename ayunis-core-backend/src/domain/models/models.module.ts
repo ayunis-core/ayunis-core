@@ -91,6 +91,7 @@ import { MockImageGenerationHandler } from './infrastructure/image-generation/mo
 import { GenerateImageUseCase } from './application/use-cases/generate-image/generate-image.use-case';
 import { TeamsModule } from 'src/iam/teams/teams.module';
 import { GetEffectiveLanguageModelsUseCase } from './application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
+import { GetEffectiveModelInternetAccessUseCase } from './application/use-cases/get-effective-model-internet-access/get-effective-model-internet-access.use-case';
 import { CreateTeamPermittedModelUseCase } from './application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
 import { DeleteTeamPermittedModelUseCase } from './application/use-cases/delete-team-permitted-model/delete-team-permitted-model.use-case';
 import { UpdateTeamPermittedModelUseCase } from './application/use-cases/update-team-permitted-model/update-team-permitted-model.use-case';
@@ -289,6 +290,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     TeamPermittedModelValidator,
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
+    GetEffectiveModelInternetAccessUseCase,
     GetTeamPermittedModelsUseCase,
     GetTeamPermittedImageGenerationModelsUseCase,
     CreateTeamPermittedModelUseCase,
@@ -350,6 +352,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetEffectiveLanguageModelsUseCase,
+    GetEffectiveModelInternetAccessUseCase,
     // Use Cases
     GetInferenceUseCase,
     GenerateImageUseCase,

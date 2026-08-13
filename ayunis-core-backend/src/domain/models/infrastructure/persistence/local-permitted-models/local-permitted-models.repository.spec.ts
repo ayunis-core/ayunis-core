@@ -116,6 +116,56 @@ describe('LocalPermittedModelsRepository', () => {
     expect(result.model.provider).toBe(ModelProvider.AZURE);
   });
 
+  it('updates only the internet access policy when provided', async () => {
+    const reloadedRecord = new PermittedModelRecord();
+    reloadedRecord.id = newPermittedModelId;
+    permittedModelRepository.update.mockResolvedValue({
+      affected: 1,
+      raw: [],
+      generatedMaps: [],
+    });
+    permittedModelRepository.findOneOrFail.mockResolvedValue(reloadedRecord);
+    permittedModelMapper.toDomain.mockReturnValue(
+      createPermittedImageModel({ permittedModelId: newPermittedModelId }),
+    );
+
+    await repository.update({
+      id: newPermittedModelId,
+      orgId,
+      internetAccessEnabled: false,
+    });
+
+    expect(permittedModelRepository.update).toHaveBeenCalledWith(
+      { id: newPermittedModelId, orgId },
+      { internetAccessEnabled: false },
+    );
+  });
+
+  it('updates only anonymous mode when provided', async () => {
+    const reloadedRecord = new PermittedModelRecord();
+    reloadedRecord.id = newPermittedModelId;
+    permittedModelRepository.update.mockResolvedValue({
+      affected: 1,
+      raw: [],
+      generatedMaps: [],
+    });
+    permittedModelRepository.findOneOrFail.mockResolvedValue(reloadedRecord);
+    permittedModelMapper.toDomain.mockReturnValue(
+      createPermittedImageModel({ permittedModelId: newPermittedModelId }),
+    );
+
+    await repository.update({
+      id: newPermittedModelId,
+      orgId,
+      anonymousOnly: true,
+    });
+
+    expect(permittedModelRepository.update).toHaveBeenCalledWith(
+      { id: newPermittedModelId, orgId },
+      { anonymousOnly: true },
+    );
+  });
+
   it('creates a team-scoped image-generation permitted model', async () => {
     const teamId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
     const permittedModel = new PermittedModel({

@@ -18,6 +18,7 @@ export interface PreparedRuntimeRun extends PreparedRuntimeTools {
   orgId: UUID;
   userId: UUID;
   isAnonymous: boolean;
+  modelInternetAccessEnabled: boolean;
   instructions: string;
   activeSkills: Skill[];
   canUseTools: boolean;

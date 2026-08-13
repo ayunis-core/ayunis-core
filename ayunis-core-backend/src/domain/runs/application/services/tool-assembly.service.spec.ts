@@ -317,6 +317,48 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(toolTypes).toContain(ToolType.INTERNET_SEARCH);
   });
 
+  it('omits website content and internet search when the model policy is disabled', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      internetSearchIsAvailable: true,
+      orgChatSettingsExecute: jest
+        .fn()
+        .mockResolvedValue({ internetSearchEnabled: true }),
+    });
+
+    const tools = await service.assembleTools(
+      createMockThread(),
+      [],
+      new Map(),
+      false,
+    );
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);
+    expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
+  });
+
+  it('offers website content without search when the search provider is unavailable', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      internetSearchIsAvailable: false,
+      orgChatSettingsExecute: jest
+        .fn()
+        .mockResolvedValue({ internetSearchEnabled: true }),
+    });
+
+    const tools = await service.assembleTools(
+      createMockThread(),
+      [],
+      new Map(),
+      true,
+    );
+
+    const toolTypes = tools.map((t: { type: ToolType }) => t.type);
+    expect(toolTypes).toContain(ToolType.WEBSITE_CONTENT);
+    expect(toolTypes).not.toContain(ToolType.INTERNET_SEARCH);
+  });
+
   it('should omit website content and internet search when internet access is disabled', async () => {
     const { service } = await buildService({
       contextServiceGet: jest.fn().mockReturnValue(mockOrgId),

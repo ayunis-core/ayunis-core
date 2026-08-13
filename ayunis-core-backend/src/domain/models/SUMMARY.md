@@ -3,7 +3,7 @@ Multi-provider language, embedding, and image-generation model management system
 
 Models manages AI model definitions across providers (Ollama, Mistral, Anthropic, OpenAI, STACKIT), organization-level model permissions, user and org default selections, and inference routing for language, embedding, and image-generation workloads.
 
-The models module is the central registry for AI model configuration. The abstract `Model` entity splits into `LanguageModel` (with pricing, context window, tool choice support), `EmbeddingModel` (with dimensions), and `ImageGenerationModel`. `PermittedModel` controls which models an organization can use, with default and anonymous-only flags. `ModelProviderInfoEntity` describes provider metadata and hosting locations. Key use cases include CRUD for models and permitted models, managing org/user default model preferences, checking model permissions, retrieving provider info, and routing inference requests. The module integrates with **agents** and **threads** for model selection, **runs** for inference execution, **rag** for embedding model access, and **usage** for tracking token consumption and costs per provider.
+The models module is the central registry for AI model configuration. The abstract `Model` entity splits into `LanguageModel` (with pricing, context window, tool choice support), `EmbeddingModel` (with dimensions), and `ImageGenerationModel`. `PermittedModel` controls which models an organization can use, with default, anonymous-only, and built-in internet-access flags. Team-scoped language-model permits can further restrict internet access but cannot override a disabled organization-scoped permit. `ModelProviderInfoEntity` describes provider metadata and hosting locations. Key use cases include CRUD for models and permitted models, managing org/user default model preferences, checking model permissions, retrieving provider info, and routing inference requests. The module integrates with **agents** and **threads** for model selection, **runs** for inference execution, **rag** for embedding model access, and **usage** for tracking token consumption and costs per provider.
 
 ## Controllers
 
@@ -33,7 +33,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **UpdateLanguageModelUseCase** (`application/use-cases/update-language-model`): Updates an existing language model in the catalog.
 - **UpdateEmbeddingModelUseCase** (`application/use-cases/update-embedding-model`): Updates an existing embedding model in the catalog.
 - **UpdateImageGenerationModelUseCase** (`application/use-cases/update-image-generation-model`): Updates an existing image-generation model in the catalog, enforcing provider constraints via `ModelPolicyService`.
-- **UpdatePermittedModelUseCase** (`application/use-cases/update-permitted-model`): Updates a permitted model's flags (default, anonymous-only).
+- **UpdatePermittedModelUseCase** (`application/use-cases/update-permitted-model`): Partially updates a permitted model's independent policy flags (anonymous-only and built-in internet access).
 - **CreatePermittedModelUseCase** (`application/use-cases/create-permitted-model`): Creates a new org-scoped permitted model entry.
 - **DeletePermittedModelUseCase** (`application/use-cases/delete-permitted-model`): Removes a permitted model entry and clears related defaults.
 - **DeleteModelUseCase** (`application/use-cases/delete-model`): Deletes an unreferenced model from the catalog only after its organization permissions have been removed through their dedicated flow. Permitted models return `MODEL_STILL_PERMITTED`; models referenced by historical usage return `MODEL_REFERENCED_BY_USAGE` with archival as the actionable alternative. The model row stays pessimistically locked through the checks and delete, so concurrent usage collection completes first and cannot be dropped; the usage FK is translated to the same conflict.
@@ -49,6 +49,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.
 - **GetModelProviderInfoUseCase** (`application/use-cases/get-model-provider-info`): Retrieves provider metadata for a model.
 - **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective set of language models for a user, combining org and team scopes.
+- **GetEffectiveModelInternetAccessUseCase** (`application/use-cases/get-effective-model-internet-access`): Resolves the selected permit's internet policy; team-scoped permits require both the team and matching organization-scoped permit to allow access.
 - **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted language models.
 - **GetTeamPermittedImageGenerationModelsUseCase** (`application/use-cases/get-team-permitted-image-generation-models`): Retrieves team-scoped permitted image-generation models.
 - **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates a team-scoped permitted model entry.

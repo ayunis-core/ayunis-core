@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  applyDecorators,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -57,6 +58,125 @@ import { SetOrgDefaultModelDto } from './dto/set-org-default-model.dto';
 import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
+
+function GetPermittedModelsDocs() {
+  return applyDecorators(
+    Get(':orgId/permitted-models'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'Get all permitted models for a specific organization',
+      description:
+        'Retrieve all permitted models configured for the specified organization. This endpoint is only accessible to super admins.',
+    }),
+    ApiParam({
+      name: 'orgId',
+      description: 'Organization ID to retrieve permitted models for',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiOkResponse({
+      description: 'Successfully retrieved permitted models',
+      schema: {
+        type: 'array',
+        items: {
+          oneOf: [
+            { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+            { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
+            { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
+          ],
+        },
+      },
+    }),
+    ApiUnauthorizedResponse({
+      description: 'User not authenticated or not authorized as super admin',
+    }),
+    ApiInternalServerErrorResponse({ description: 'Internal server error' }),
+  );
+}
+
+function DeletePermittedModelDocs() {
+  return applyDecorators(
+    Delete(':orgId/permitted-models/:id'),
+    HttpCode(HttpStatus.NO_CONTENT),
+    ApiOperation({
+      summary: 'Delete a permitted model for a specific organization',
+      description:
+        'Delete a permitted model configured for the specified organization. This endpoint is only accessible to super admins.',
+    }),
+    ApiParam({
+      name: 'orgId',
+      description: 'Organization ID that owns the permitted model',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Permitted model ID to delete',
+      format: 'uuid',
+    }),
+    ApiResponse({
+      status: HttpStatus.NO_CONTENT,
+      description: 'Successfully deleted permitted model',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: 'Permitted model not found',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        'Cannot delete the last permitted language model or default model',
+    }),
+    ApiUnauthorizedResponse({
+      description: 'User not authenticated or not authorized as super admin',
+    }),
+    ApiInternalServerErrorResponse({ description: 'Internal server error' }),
+  );
+}
+
+function UpdatePermittedModelDocs() {
+  return applyDecorators(
+    Patch(':orgId/permitted-models/:id'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'Update a permitted model for a specific organization',
+      description:
+        'Update a permitted model configured for the specified organization. This endpoint is only accessible to super admins.',
+    }),
+    ApiParam({
+      name: 'orgId',
+      description: 'Organization ID that owns the permitted model',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Permitted model ID to update',
+      format: 'uuid',
+    }),
+    ApiBody({ type: UpdatePermittedModelDto }),
+    ApiOkResponse({
+      description: 'Successfully updated permitted model',
+      schema: {
+        oneOf: [
+          { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
+          { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
+          { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
+        ],
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: 'Permitted model not found',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: 'Invalid update data provided',
+    }),
+    ApiUnauthorizedResponse({
+      description: 'User not authenticated or not authorized as super admin',
+    }),
+    ApiInternalServerErrorResponse({ description: 'Internal server error' }),
+  );
+}
 
 @ApiTags('Super Admin Models')
 @Controller('super-admin/models')
@@ -228,38 +348,7 @@ export class SuperAdminPermittedModelsController {
     return this.modelResponseDtoMapper.toLanguageModelDto(model);
   }
 
-  @Get(':orgId/permitted-models')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Get all permitted models for a specific organization',
-    description:
-      'Retrieve all permitted models configured for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID to retrieve permitted models for',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiOkResponse({
-    description: 'Successfully retrieved permitted models',
-    schema: {
-      type: 'array',
-      items: {
-        oneOf: [
-          { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
-          { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
-          { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
-        ],
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @GetPermittedModelsDocs()
   async getPermittedModels(
     @Param('orgId') orgId: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
@@ -328,48 +417,12 @@ export class SuperAdminPermittedModelsController {
       dto.modelId,
       orgId,
       dto.anonymousOnly,
+      dto.internetAccessEnabled,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
 
-  @Delete(':orgId/permitted-models/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({
-    summary: 'Delete a permitted model for a specific organization',
-    description:
-      'Delete a permitted model configured for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID that owns the permitted model',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Permitted model ID to delete',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Successfully deleted permitted model',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Permitted model not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description:
-      'Cannot delete the last permitted language model or default model',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @DeletePermittedModelDocs()
   async deletePermittedModel(
     @Param('orgId') orgId: UUID,
     @Param('id') id: UUID,
@@ -385,50 +438,7 @@ export class SuperAdminPermittedModelsController {
     await this.deletePermittedModelUseCase.execute(command);
   }
 
-  @Patch(':orgId/permitted-models/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Update a permitted model for a specific organization',
-    description:
-      'Update a permitted model configured for the specified organization. This endpoint is only accessible to super admins.',
-  })
-  @ApiParam({
-    name: 'orgId',
-    description: 'Organization ID that owns the permitted model',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Permitted model ID to update',
-    format: 'uuid',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @ApiBody({ type: UpdatePermittedModelDto })
-  @ApiOkResponse({
-    description: 'Successfully updated permitted model',
-    schema: {
-      oneOf: [
-        { $ref: getSchemaPath(PermittedLanguageModelResponseDto) },
-        { $ref: getSchemaPath(PermittedEmbeddingModelResponseDto) },
-        { $ref: getSchemaPath(PermittedImageGenerationModelResponseDto) },
-      ],
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Permitted model not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid update data provided',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'User not authenticated or not authorized as super admin',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @UpdatePermittedModelDocs()
   async updatePermittedModel(
     @Param('orgId') orgId: UUID,
     @Param('id') id: UUID,
@@ -446,6 +456,7 @@ export class SuperAdminPermittedModelsController {
       permittedModelId: id,
       orgId,
       anonymousOnly: dto.anonymousOnly,
+      internetAccessEnabled: dto.internetAccessEnabled,
     });
     const updatedModel =
       await this.updatePermittedModelUseCase.execute(command);

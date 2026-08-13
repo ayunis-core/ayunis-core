@@ -6,6 +6,7 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   type ModelWithConfigResponseDto,
+  type UpdatePermittedModelDto,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
@@ -16,9 +17,8 @@ import {
   rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
 
-interface UpdatePermittedModelParams {
+interface UpdatePermittedModelParams extends UpdatePermittedModelDto {
   permittedModelId: string;
-  anonymousOnly: boolean;
 }
 
 const UPDATE_ERROR_MAP: Record<string, string> = {
@@ -39,9 +39,7 @@ export function useUpdatePermittedModel() {
       onMutate: async ({ id, data }) => {
         const updater = (models: ModelWithConfigResponseDto[]) =>
           models.map((model) =>
-            model.permittedModelId === id
-              ? { ...model, anonymousOnly: data.anonymousOnly }
-              : model,
+            model.permittedModelId === id ? { ...model, ...data } : model,
           );
         return Promise.all(
           availabilityQueryKeys.map((key) =>
@@ -75,10 +73,13 @@ export function useUpdatePermittedModel() {
     },
   });
 
-  function updatePermittedModel(params: UpdatePermittedModelParams) {
+  function updatePermittedModel({
+    permittedModelId,
+    ...data
+  }: UpdatePermittedModelParams) {
     updatePermittedModelMutation.mutate({
-      id: params.permittedModelId,
-      data: { anonymousOnly: params.anonymousOnly },
+      id: permittedModelId,
+      data,
     });
   }
 

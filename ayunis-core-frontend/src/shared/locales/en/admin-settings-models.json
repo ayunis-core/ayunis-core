@@ -59,6 +59,7 @@
       "error": "An error occurred while updating the permitted model."
     },
     "anonymousOnly": "Anonymous mode",
+    "internetAccess": "Internet access",
     "permitted": "Permitted",
     "tier": {
       "label": "Performance",

@@ -60,6 +60,8 @@ import { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model
 import { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
+import { GetEffectiveModelInternetAccessQuery } from 'src/domain/models/application/use-cases/get-effective-model-internet-access/get-effective-model-internet-access.query';
+import { GetEffectiveModelInternetAccessUseCase } from 'src/domain/models/application/use-cases/get-effective-model-internet-access/get-effective-model-internet-access.use-case';
 import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
 import type {
   PreparedRuntimeRun,
@@ -79,13 +81,6 @@ interface PreparedToolResultInput {
   masks: ThreadPiiMask[] | null;
 }
 
-/**
- * Runs a thread through the extracted `@ayunis/agent-runtime` loop instead of
- * the legacy in-module loop. Gated behind the `agentRuntimeEnabled` toggle in
- * `ExecuteRunUseCase`. Covers plain chat, tool loops (executable, hybrid and
- * display-only tools), anonymized threads (user input + PII tool output) and
- * skill activation (quick-action skillId + mid-loop `activate_skill`).
- */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
   private readonly logger = new Logger(ExecuteRunViaRuntimeUseCase.name);
@@ -95,6 +90,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
+    private readonly getEffectiveModelInternetAccessUseCase: GetEffectiveModelInternetAccessUseCase,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
@@ -145,8 +141,7 @@ export class ExecuteRunViaRuntimeUseCase {
       permittedModel.model,
     );
 
-    const isAnonymous =
-      found.thread.isAnonymous || permittedModel.anonymousOnly;
+    const policy = await this.resolveRunPolicy(found.thread, permittedModel);
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const canUseTools = permittedModel.model.canUseTools;
     const activated = await this.activateSkillIfRequested(
@@ -158,7 +153,8 @@ export class ExecuteRunViaRuntimeUseCase {
         activated.thread,
         activeSkills,
         canUseTools,
-        isAnonymous,
+        policy.isAnonymous,
+        policy.modelInternetAccessEnabled,
       );
 
     return {
@@ -166,13 +162,31 @@ export class ExecuteRunViaRuntimeUseCase {
       model: permittedModel.model,
       orgId,
       userId,
-      isAnonymous,
+      isAnonymous: policy.isAnonymous,
+      modelInternetAccessEnabled: policy.modelInternetAccessEnabled,
       instructions: appendSkillActivatedNote(instructions, activated.skillName),
       ...this.prepareTools(tools),
       activeSkills,
       canUseTools,
       skillInstructions: activated.skillInstructions,
       activatedSkillName: activated.skillName,
+    };
+  }
+
+  private async resolveRunPolicy(
+    thread: Thread,
+    permittedModel: NonNullable<Thread['model']>,
+  ): Promise<{
+    isAnonymous: boolean;
+    modelInternetAccessEnabled: boolean;
+  }> {
+    const modelInternetAccessEnabled =
+      await this.getEffectiveModelInternetAccessUseCase.execute(
+        new GetEffectiveModelInternetAccessQuery(permittedModel),
+      );
+    return {
+      isAnonymous: thread.isAnonymous || permittedModel.anonymousOnly,
+      modelInternetAccessEnabled,
     };
   }
 
@@ -327,6 +341,7 @@ export class ExecuteRunViaRuntimeUseCase {
         activeSkills: prepared.activeSkills,
         canUseTools: prepared.canUseTools,
         isAnonymous: prepared.isAnonymous,
+        modelInternetAccessEnabled: prepared.modelInternetAccessEnabled,
         integrations: prepared.toolIntegrations,
         activatedSkillName: prepared.activatedSkillName,
       }),

@@ -20,8 +20,6 @@ import type { ModelActions } from '@/widgets/model-type-card';
 import { TriangleAlert } from 'lucide-react';
 import type {
   ModelWithConfigResponseDto,
-  PermittedImageGenerationModelResponseDto,
-  PermittedLanguageModelResponseDto,
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { getTeamsControllerGetTeamQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
@@ -31,40 +29,13 @@ import { useCreateTeamPermittedModel } from '../api/useCreateTeamPermittedModel'
 import { useDeleteTeamPermittedModel } from '../api/useDeleteTeamPermittedModel';
 import { useUpdateTeamPermittedModel } from '../api/useUpdateTeamPermittedModel';
 import { useToggleModelOverride } from '../api/useToggleModelOverride';
+import { buildModelsForCard } from '../lib/buildModelsForCard';
 import { TeamDefaultModelCard } from './TeamDefaultModelCard';
 
 interface TeamModelsTabProps {
   readonly teamId: string;
   readonly teamName: string;
   readonly modelOverrideEnabled: boolean;
-}
-
-type TeamPermittedModel =
-  PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto;
-
-/**
- * Merges the org-permitted models with the team's overrides into the shape the
- * shared ModelTypeCard expects, flagging which models the team has enabled.
- */
-function buildModelsForCard(
-  orgModels: ModelWithConfigResponseDto[],
-  teamPermittedModels: TeamPermittedModel[],
-): ModelWithConfigResponseDto[] {
-  const permittedByModelId = new Map(
-    teamPermittedModels.map((m) => [m.modelId, m]),
-  );
-  return orgModels
-    .filter((model) => model.isPermitted)
-    .map((model) => {
-      const teamModel = permittedByModelId.get(model.modelId);
-      return {
-        ...model,
-        isPermitted: permittedByModelId.has(model.modelId),
-        isDefault: false,
-        permittedModelId: teamModel?.id ?? null,
-        anonymousOnly: teamModel?.anonymousOnly ?? null,
-      };
-    });
 }
 
 /**
