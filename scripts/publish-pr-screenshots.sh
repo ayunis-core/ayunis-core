@@ -67,21 +67,25 @@ section() { # <title> <viewport-suffix> <open>
 
 "
   for f in "${shots[@]}"; do
-    local name route gif_name
+    local name route gif gif_name scene
     name="$(basename "$f")"
     [[ "$name" == *"--${suffix}.png" ]] || continue
     route="${name%--"${suffix}".png}"
-    gif_name="${route}--${suffix}.gif"
     printed_any=true
     out+="**${route}**
 ![${name}](${raw_base}/${name})
 
 "
-    if [ -f "$SHOTS_DIR/$gif_name" ]; then
-      out+="![${gif_name}](${raw_base}/${gif_name})
+    for gif in "$SHOTS_DIR/${route}--"*--"${suffix}.gif"; do
+      [ -f "$gif" ] || continue
+      gif_name="$(basename "$gif")"
+      scene="${gif_name#"${route}"--}"
+      scene="${scene%--"${suffix}".gif}"
+      out+="_${scene}_
+![${gif_name}](${raw_base}/${gif_name})
 
 "
-    fi
+    done
   done
   out+="</details>"
   $printed_any && printf '%s\n' "$out"
