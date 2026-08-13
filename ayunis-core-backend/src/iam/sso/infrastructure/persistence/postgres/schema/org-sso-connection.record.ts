@@ -2,15 +2,13 @@ import type { UUID } from 'crypto';
 import { Check, Column, Entity, JoinColumn, OneToOne, Unique } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
-
-const DOMAIN_PATTERN =
-  '^([a-z0-9]|[a-z0-9][a-z0-9-]{0,61}[a-z0-9])([.]([a-z0-9]|[a-z0-9][a-z0-9-]{0,61}[a-z0-9]))+$';
+import { EMAIL_DOMAIN_PATTERN } from 'src/iam/sso/domain/sso-connection-values';
 
 @Entity({ name: 'org_sso_connections' })
 @Unique(['emailDomain'])
 @Unique(['zitadelOrgId'])
 @Check('"emailDomain" = lower(btrim("emailDomain"))')
-@Check(`"emailDomain" ~ '${DOMAIN_PATTERN}'`)
+@Check(`"emailDomain" ~ '${EMAIL_DOMAIN_PATTERN}'`)
 @Check(
   '"zitadelOrgId" IS NULL OR ("zitadelOrgId" <> \'\' AND "zitadelOrgId" = btrim("zitadelOrgId"))',
 )
