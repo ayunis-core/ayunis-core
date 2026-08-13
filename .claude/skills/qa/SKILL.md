@@ -7,6 +7,8 @@ description: Behaviour QA of a PR/branch before merge in ayunis-core — spin up
 
 Verify that a PR actually behaves to spec by **exercising it in the running app**, then leave the machine exactly as it was. This is behaviour verification, not code review — pair it with `/code-review` for the diff.
 
+Scripted regression coverage lives in `ayunis-core-e2e/` (see the `e2e` skill) — run the relevant specs first (`pnpm --filter ayunis-core-e2e test --grep "<area>"`, needs an `--e2e` stack); a green spec is evidence for its criterion. Spend manual QA effort on what the suite doesn't cover: the PR-specific behaviours, visuals, and edge cases. If the PR added a feature without a spec, flag it — that's a definition-of-done gap.
+
 ## Input
 
 A ticket ID (e.g. `AYC-2`), a PR number/URL, or a branch name. If none given, use the current branch. Optionally, explicit acceptance criteria — otherwise derive them (below).

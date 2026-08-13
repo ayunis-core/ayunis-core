@@ -50,7 +50,7 @@ describe('ImageGenerationHandlerRegistry', () => {
       );
     });
 
-    it('should return mock handler when app.isTest is true', () => {
+    it('should return mock handler when app.mockInference is true', () => {
       configService.get.mockReturnValue(true);
       registry.registerMockHandler(mockHandler);
 
@@ -59,7 +59,7 @@ describe('ImageGenerationHandlerRegistry', () => {
       expect(result).toBe(mockHandler);
     });
 
-    it('should throw descriptive error when mock handler not registered in test env', () => {
+    it('should throw descriptive error when mock handler not registered with mock inference enabled', () => {
       configService.get.mockReturnValue(true);
 
       expect(() => registry.getHandler(ModelProvider.AZURE)).toThrow(

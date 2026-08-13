@@ -20,6 +20,14 @@ function frontendConfig() {
 export const appConfig = registerAs('app', () => {
   // Treat unset/blank NODE_ENV like development (matches logger, AppSignal, seed scripts).
   const nodeEnv = (process.env.NODE_ENV ?? '').trim() || 'development';
+  const orgEventsWebhookUrl =
+    process.env.DISABLE_ORG_EVENTS_WEBHOOKS === 'true'
+      ? undefined
+      : process.env.ORG_EVENTS_WEBHOOK_URL;
+
+  if (nodeEnv === 'production' && process.env.MOCK_INFERENCE === 'true') {
+    throw new Error('MOCK_INFERENCE must not be enabled in production');
+  }
 
   return {
     port: process.env.PORT || 3000,
@@ -27,10 +35,12 @@ export const appConfig = registerAs('app', () => {
     isSelfHosted: process.env.APP_ENVIRONMENT === 'self-hosted',
     isCloudHosted: process.env.APP_ENVIRONMENT === 'cloud',
     frontend: frontendConfig(),
-    orgEventsWebhookUrl: process.env.ORG_EVENTS_WEBHOOK_URL,
+    orgEventsWebhookUrl,
     webhookSigningSecret: process.env.WEBHOOK_SIGNING_SECRET,
     isDevelopment: nodeEnv === 'development',
     isTest: nodeEnv === 'test',
     isProduction: nodeEnv === 'production',
+    // Replaces all LLM provider handlers with deterministic mocks (e2e stacks).
+    mockInference: nodeEnv === 'test' || process.env.MOCK_INFERENCE === 'true',
   };
 });

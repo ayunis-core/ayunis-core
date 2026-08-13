@@ -25,17 +25,18 @@ export class InferenceHandlerRegistry {
 
   /**
    * Returns the appropriate inference handler for the given provider.
-   * In test environments (NODE_ENV=test), always returns the mock handler
-   * to prevent external API calls and eliminate the need for real API keys.
-   * This ensures tests are fast, deterministic, and cost-free.
+   * When mock inference is enabled (NODE_ENV=test or MOCK_INFERENCE=true, e.g.
+   * e2e stacks), always returns the mock handler to prevent external API calls
+   * and eliminate the need for real API keys. This ensures tests are fast,
+   * deterministic, and cost-free.
    *
    * @param provider - The model provider (OpenAI, Anthropic, etc.)
    * @returns The inference handler (real or mock based on environment)
-   * @throws ModelProviderNotSupportedError if provider not registered (non-test only)
+   * @throws ModelProviderNotSupportedError if provider not registered (non-mock only)
    */
   getHandler(provider: ModelProvider): InferenceHandler {
-    const isTest = this.configService.get<boolean>('app.isTest');
-    if (isTest) {
+    const mockInference = this.configService.get<boolean>('app.mockInference');
+    if (mockInference) {
       this.logger.log('Using mock handler for non-streaming');
       return this.mockHandler;
     }

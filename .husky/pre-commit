@@ -30,6 +30,9 @@ FE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-frontend/src/
 # Backend: staged TS files
 BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|apps|libs|test)/.*\.ts$' || true)
 
+# E2E package: staged files that affect Playwright tests/support/generated API client
+E2E_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-e2e/.*\.(ts|tsx|json|md)$|^ayunis-core-e2e/(package\.json|orval\.config\.ts)$' || true)
+
 # Workspace packages (packages/*): staged TS/TSX files, plus the distinct package dirs touched
 PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.(ts|tsx)$' || true)
 PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
@@ -76,6 +79,7 @@ BE_DUPLICATION_STATUS_FILE="$STATUS_DIR/be_duplication.status"
 FE_DUPLICATION_STATUS_FILE="$STATUS_DIR/fe_duplication.status"
 FILE_SIZE_STATUS_FILE="$STATUS_DIR/file_size.status"
 MARKDOWNLINT_STATUS_FILE="$STATUS_DIR/markdownlint.status"
+E2E_STATUS_FILE="$STATUS_DIR/e2e.status"
 
 # Jobs
 run_fe_prettier() {
@@ -268,6 +272,27 @@ run_pkg_checks() {
   printf "%s" "$st" > "$STATUS_FILE"
 }
 
+run_e2e_checks() {
+  STATUS_FILE="$1"
+  print_section "E2E • lint, typecheck, generated API"
+  printf "%s\n" "$E2E_STAGED" | sed 's#^ayunis-core-e2e/##' | sed 's#^# - #'
+  st=0
+  (
+    cd ayunis-core-e2e >/dev/null 2>&1
+    pnpm run lint
+  ) || st=1
+  (
+    cd ayunis-core-e2e >/dev/null 2>&1
+    pnpm run typecheck
+  ) || st=1
+  (
+    cd ayunis-core-e2e >/dev/null 2>&1
+    pnpm run openapi:generate
+  ) || st=1
+  git diff --exit-code -- ayunis-core-e2e/src/clients/generated >/dev/null || st=1
+  printf "%s" "$st" > "$STATUS_FILE"
+}
+
 run_depcruise() {
   STATUS_FILE="$1"
   print_section "Dependencies • dependency-cruiser (backend)"
@@ -355,6 +380,9 @@ if [ -n "$BE_TS_STAGED" ]; then
   run_be_prettier "$BE_PRETTIER_STATUS_FILE" &
   run_be_tsc "$BE_TSC_STATUS_FILE" &
 fi
+if [ -n "$E2E_STAGED" ]; then
+  run_e2e_checks "$E2E_STATUS_FILE" &
+fi
 
 # Complexity gate (backend + workspace packages) — same check as CI.
 if [ -n "$COMPLEXITY_TS_STAGED" ]; then
@@ -406,6 +434,7 @@ BE_DUPLICATION_STATUS=$(cat "$BE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf 
 FE_DUPLICATION_STATUS=$(cat "$FE_DUPLICATION_STATUS_FILE" 2>/dev/null || printf "0")
 FILE_SIZE_STATUS=$(cat "$FILE_SIZE_STATUS_FILE" 2>/dev/null || printf "0")
 MARKDOWNLINT_STATUS=$(cat "$MARKDOWNLINT_STATUS_FILE" 2>/dev/null || printf "0")
+E2E_STATUS=$(cat "$E2E_STATUS_FILE" 2>/dev/null || printf "0")
 
 # Summary and exit code
 FAILED=0
@@ -490,6 +519,14 @@ if [ -n "$BE_TS_STAGED" ]; then
     printf "%b\n" "${GREEN}✅ Backend duplication check passed${NC}"
   fi
 
+fi
+if [ -n "$E2E_STAGED" ]; then
+  if [ "$E2E_STATUS" -ne 0 ]; then
+    printf "%b\n" "${RED}❌ E2E checks failed (lint/typecheck/generated API)${NC}"
+    FAILED=1
+  else
+    printf "%b\n" "${GREEN}✅ E2E checks passed${NC}"
+  fi
 fi
 if [ -n "$PKG_TS_STAGED" ]; then
   for entry in $PKG_STATUS_ENTRIES; do

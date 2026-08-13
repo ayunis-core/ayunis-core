@@ -38,7 +38,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build application
+      - name: Decide production build coverage
+        id: production-build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed_files="$(mktemp)"
+          gh pr diff ${{ github.event.pull_request.number }} --repo "$GITHUB_REPOSITORY" --name-only > "$changed_files"
+          if grep -Ev '^(ayunis-core-frontend/(src/.*|public/.*|index\.html$|package\.json$|tsconfig[^/]*\.json$|vite\.config\..*)|packages/ui/.*|pnpm-lock\.yaml$)$' "$changed_files" \
+            | grep -Eq '^(ayunis-core-frontend/|packages/ui/|pnpm-lock\.yaml$)'; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run TypeScript type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Run production build
+        if: steps.production-build.outputs.needed == 'true'
         run: pnpm run build
 
       - name: Run linter
