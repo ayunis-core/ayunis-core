@@ -32,7 +32,7 @@ import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { ModuleItem } from './ModuleItem';
 import { QuizSection } from './QuizSection';
 import { useReorderModules } from '../api/useReorderModules';
-import { moveById } from '../lib/sortOrder';
+import { moveById } from '@/shared/lib/move-by-id';
 
 interface ChapterCardProps {
   chapter: SuperAdminAcademyChapterResponseDto;

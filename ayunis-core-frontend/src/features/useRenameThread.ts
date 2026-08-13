@@ -1,8 +1,9 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
+  getFavoritesControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
-  axiosInstance,
+  threadsControllerUpdateTitle,
 } from '@/shared/api';
 
 interface RenameThreadParams {
@@ -16,7 +17,7 @@ interface UseRenameThreadParams {
 }
 
 async function renameThread({ threadId, title }: RenameThreadParams) {
-  await axiosInstance.patch(`/threads/${threadId}/title`, { title });
+  await threadsControllerUpdateTitle(threadId, { title });
 }
 
 export function useRenameThread(params: UseRenameThreadParams = {}) {
@@ -26,14 +27,15 @@ export function useRenameThread(params: UseRenameThreadParams = {}) {
     mutationFn: renameThread,
     onError: params.onError,
     onSuccess: (_data, variables) => {
-      // Invalidate queries to update the cache
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindAllQueryKey(),
       });
       void queryClient.invalidateQueries({
         queryKey: getThreadsControllerFindOneQueryKey(variables.threadId),
       });
-      // Then call the user's onSuccess callback
+      void queryClient.invalidateQueries({
+        queryKey: getFavoritesControllerFindAllQueryKey(),
+      });
       params.onSuccess?.();
     },
   });

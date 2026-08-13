@@ -22,7 +22,7 @@ describe('FavoriteReferenceResolver', () => {
           color: 'blue',
         },
       ],
-      threads: [{ id: THREAD_ID, title: null }],
+      threads: [{ id: THREAD_ID, title: null, workspaceId: WORKSPACE_ID }],
     });
     const favorites = [
       favorite(FavoriteReferenceType.Workspace, WORKSPACE_ID, 0),
@@ -45,6 +45,7 @@ describe('FavoriteReferenceResolver', () => {
         referenceType: FavoriteReferenceType.Thread,
         referenceId: THREAD_ID,
         name: null,
+        workspaceId: WORKSPACE_ID,
       },
     ]);
   });
