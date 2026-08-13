@@ -70,8 +70,10 @@ import { McpModule } from '../mcp/mcp.module';
     MessagesModule,
     OrgsModule,
     StorageModule,
-    WorkspacesModule,
-    FavoritesModule,
+    // Both sit on the favorites↔{threads,workspaces} module cycle — see the
+    // note in favorites.module.ts.
+    forwardRef(() => WorkspacesModule),
+    forwardRef(() => FavoritesModule),
     SharesModule,
     ThreadPiiMasksModule,
     McpModule,

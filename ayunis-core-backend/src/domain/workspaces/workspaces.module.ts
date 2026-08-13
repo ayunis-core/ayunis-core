@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { FavoritesModule } from 'src/domain/favorites/favorites.module';
 import { WorkspacesRepository } from './application/ports/workspaces-repository.port';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
@@ -13,7 +13,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
 import { FindWorkspacesByIdsUseCase } from './application/use-cases/find-workspaces-by-ids/find-workspaces-by-ids.use-case';
 
 @Module({
-  imports: [LocalWorkspacesRepositoryModule, FavoritesModule],
+  imports: [LocalWorkspacesRepositoryModule, forwardRef(() => FavoritesModule)],
   controllers: [WorkspacesController],
   providers: [
     {

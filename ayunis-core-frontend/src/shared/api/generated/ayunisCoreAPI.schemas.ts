@@ -3482,6 +3482,61 @@ export interface UpdateWorkspaceDto {
   color?: string;
 }
 
+export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceFavoriteResponseDtoReferenceType = {
+  workspace: 'workspace',
+} as const;
+
+export interface WorkspaceFavoriteResponseDto {
+  id: string;
+  /** @minimum 0 */
+  position: number;
+  referenceId: string;
+  referenceType: WorkspaceFavoriteResponseDtoReferenceType;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export type ThreadFavoriteResponseDtoReferenceType = typeof ThreadFavoriteResponseDtoReferenceType[keyof typeof ThreadFavoriteResponseDtoReferenceType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ThreadFavoriteResponseDtoReferenceType = {
+  thread: 'thread',
+} as const;
+
+export interface ThreadFavoriteResponseDto {
+  id: string;
+  /** @minimum 0 */
+  position: number;
+  referenceId: string;
+  referenceType: ThreadFavoriteResponseDtoReferenceType;
+  /** @nullable */
+  name: string | null;
+}
+
+export type ToggleFavoriteDtoReferenceType = typeof ToggleFavoriteDtoReferenceType[keyof typeof ToggleFavoriteDtoReferenceType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ToggleFavoriteDtoReferenceType = {
+  workspace: 'workspace',
+  thread: 'thread',
+} as const;
+
+export interface ToggleFavoriteDto {
+  referenceType: ToggleFavoriteDtoReferenceType;
+  referenceId: string;
+}
+
+export interface ReorderFavoritesDto {
+  favoriteIds: string[];
+}
+
 export interface PiiWhitelistEntryDto {
   /** PII category exempt from anonymization */
   category: PiiCategory;
@@ -5296,6 +5351,8 @@ export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload (max 25 MB) */
   file: Blob;
 };
+
+export type FavoritesControllerFindAll200Item = WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto;
 
 export type ArtifactsControllerExportParams = {
 /**
