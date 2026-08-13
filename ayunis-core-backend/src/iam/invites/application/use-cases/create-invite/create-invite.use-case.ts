@@ -105,24 +105,26 @@ export class CreateInviteUseCase {
     email: string,
     orgId: UUID,
   ): Promise<void> {
-    const existingInvite = await this.invitesRepository.findOneByEmailAndOrg(
-      email,
-      orgId,
-    );
-    if (existingInvite) {
-      throw new EmailNotAvailableError();
-    }
-
     const existingUser = await this.findUserByEmailUseCase.execute(
       new FindUserByEmailQuery(email),
     );
-    if (!existingUser) {
-      return;
+    if (existingUser) {
+      if (existingUser.orgId === orgId) {
+        throw new UserAlreadyExistsError();
+      }
+      throw new EmailNotAvailableError();
     }
-    if (existingUser.orgId === orgId) {
-      throw new UserAlreadyExistsError();
+
+    // invites.email carries a GLOBAL unique constraint, so at most one invite
+    // row can exist per email across all orgs. Any pre-existing invite — a
+    // pending invite in another org, or an orphaned accepted invite — is
+    // invisible to an org-scoped lookup yet still makes the insert fail with a
+    // DB unique violation, surfacing as a generic 500 instead of a clear
+    // error. Check globally and reject up front (AYC-734).
+    const existingInvite = await this.invitesRepository.findOneByEmail(email);
+    if (existingInvite) {
+      throw new EmailNotAvailableError();
     }
-    throw new EmailNotAvailableError();
   }
 
   private async ensureCloudSeatsAvailable(
