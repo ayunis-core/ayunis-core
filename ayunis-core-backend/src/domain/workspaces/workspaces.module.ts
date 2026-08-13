@@ -10,6 +10,7 @@ import { UpdateWorkspaceUseCase } from './application/use-cases/update-workspace
 import { DeleteWorkspaceUseCase } from './application/use-cases/delete-workspace/delete-workspace.use-case';
 import { WorkspacesController } from './presenters/http/workspaces.controller';
 import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapper';
+import { FindWorkspacesByIdsUseCase } from './application/use-cases/find-workspaces-by-ids/find-workspaces-by-ids.use-case';
 
 @Module({
   imports: [LocalWorkspacesRepositoryModule, FavoritesModule],
@@ -22,6 +23,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
+    FindWorkspacesByIdsUseCase,
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     WorkspaceDtoMapper,
@@ -30,6 +32,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
+    FindWorkspacesByIdsUseCase,
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
   ],
