@@ -51,6 +51,7 @@ ayunis-core/
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md) | Favorites | User-owned ordered references resolved for navigation |
+| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md) | Folders | Personal folders ("Projekte") that group a user's chats |
 
 ### IAM Modules — Identity & Access Management
 

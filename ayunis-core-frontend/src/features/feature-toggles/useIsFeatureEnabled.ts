@@ -19,3 +19,7 @@ export function useIsLetterheadsEnabled(): boolean {
 export function useIsSkillsEnabled(): boolean {
   return useIsFeatureEnabled('skillsEnabled');
 }
+
+export function useIsWorkspacesEnabled(): boolean {
+  return useIsFeatureEnabled('workspacesEnabled');
+}

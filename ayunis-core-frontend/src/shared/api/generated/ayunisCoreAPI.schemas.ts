@@ -19,6 +19,8 @@ export interface FeatureTogglesResponseDto {
   letterheadsEnabled: boolean;
   /** Whether the skills feature is enabled */
   skillsEnabled: boolean;
+  /** Whether the workspaces feature is enabled */
+  workspacesEnabled: boolean;
   /** Whether runs use the independent agent runtime */
   agentRuntimeEnabled: boolean;
 }
@@ -4706,6 +4708,51 @@ export interface UpdateQuizQuestionRequestDto {
    * @maxItems 6
    */
   options: QuizAnswerOptionRequestDto[];
+}
+
+export interface CreateWorkspaceDto {
+  /** Name of the workspace */
+  name: string;
+  /** What the workspace is for */
+  description?: string;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon?: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color?: string;
+}
+
+export interface WorkspaceResponseDto {
+  /** Unique identifier of the workspace */
+  id: string;
+  /** Name of the workspace */
+  name: string;
+  /**
+   * What the workspace is for
+   * @nullable
+   */
+  description: string | null;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color: string;
+  /** When the workspace was created */
+  createdAt: string;
+  /** When the workspace was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateWorkspaceDto {
+  /** Name of the workspace */
+  name?: string;
+  /**
+   * What the workspace is for. Send null to clear it.
+   * @nullable
+   */
+  description?: string | null;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon?: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color?: string;
 }
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }

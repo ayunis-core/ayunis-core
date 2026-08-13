@@ -159,6 +159,7 @@ export class EnvironmentVariables {
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_KNOWLEDGE_BASES_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_LETTERHEADS_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SKILLS_ENABLED?: string;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_WORKSPACES_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_AGENT_RUNTIME_ENABLED?: string;
 
   // Retention
