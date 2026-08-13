@@ -9,7 +9,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Logger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import { UUID } from 'crypto';
@@ -87,6 +87,15 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.threadMapper.toDomain(threadEntity);
   }
 
+  async findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]> {
+    if (ids.length === 0) return [];
+
+    const records = await this.threadRepository.find({
+      where: { userId, id: In(ids) },
+    });
+    return records.map((record) => this.threadMapper.toDomain(record));
+  }
+
   async findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,
@@ -99,12 +108,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       .createQueryBuilder('thread')
       .where('thread.userId = :userId', { userId });
 
-    if (filters?.search) {
-      queryBuilder.andWhere('thread.title ILIKE :search', {
-        search: `%${filters.search}%`,
-      });
-    }
-
+    this.applyFindAllFilters(queryBuilder, filters);
     this.applyFindAllRelations(queryBuilder, options);
 
     queryBuilder.orderBy('thread.createdAt', 'DESC');
@@ -131,6 +135,23 @@ export class LocalThreadsRepository extends ThreadsRepository {
       offset,
       total,
     });
+  }
+
+  private applyFindAllFilters(
+    queryBuilder: SelectQueryBuilder<ThreadRecord>,
+    filters?: ThreadsFindAllFilters,
+  ): void {
+    if (filters?.search) {
+      queryBuilder.andWhere('thread.title ILIKE :search', {
+        search: `%${filters.search}%`,
+      });
+    }
+
+    if (filters?.workspaceId) {
+      queryBuilder.andWhere('thread.workspaceId = :workspaceId', {
+        workspaceId: filters.workspaceId,
+      });
+    }
   }
 
   private applyFindAllRelations(
@@ -306,6 +327,39 @@ export class LocalThreadsRepository extends ThreadsRepository {
       select: { id: true },
     });
     return rows.map((row) => row.id);
+  }
+
+  async findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]> {
+    this.logger.log('findAllIdsByWorkspaceId', { workspaceId });
+    const rows = await this.threadRepository.find({
+      where: { workspaceId },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  async filterExistingIds(threadIds: UUID[]): Promise<UUID[]> {
+    if (threadIds.length === 0) return [];
+    const rows = await this.threadRepository.find({
+      where: { id: In(threadIds) },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
+  async assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void> {
+    this.logger.log('assignToWorkspace', { params });
+    const result = await this.threadRepository.update(
+      { id: params.threadId, userId: params.userId },
+      { workspaceId: params.workspaceId },
+    );
+    if (!result.affected) {
+      throw new ThreadNotFoundError(params.threadId, params.userId);
+    }
   }
 
   async removeSourceAssignmentsByOriginSkill(params: {

@@ -37,8 +37,13 @@ prevents duplicate favorites, and a user/position constraint protects order.
 
 ## Event Listeners
 
+- **`FavoriteThreadDeletionRequestedListener`** — Removes thread favorites
+  when `DeleteThreadUseCase` emits `ThreadDeletionRequestedEvent`.
 - **`FavoriteWorkspaceDeletionRequestedListener`** — Removes workspace
-  favorites when a workspace is deleted.
+  favorites when a workspace is deleted. Thread favorites for chats removed
+  by the workspace cascade are cleaned up by the threads module's
+  `ThreadsWorkspaceDeletionRequestedListener` instead, because cascade deletes
+  never emit `ThreadDeletionRequestedEvent`.
 
 ## Infrastructure
 

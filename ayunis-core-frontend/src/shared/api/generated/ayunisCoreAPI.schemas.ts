@@ -1815,6 +1815,8 @@ export interface CreateThreadDto {
   modelId?: string;
   /** Enable anonymous mode for this thread */
   isAnonymous?: boolean;
+  /** File the new thread under this workspace */
+  workspaceId?: string;
 }
 
 /**
@@ -2477,6 +2479,17 @@ export interface McpIntegrationSummaryResponseDto {
 export type GetThreadResponseDtoMessagesItem = UserMessageResponseDto | SystemMessageResponseDto | AssistantMessageResponseDto | ToolResultMessageResponseDto;
 
 export interface GetThreadResponseDto {
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+  /** Whether the thread is in anonymous mode (PII redaction enabled) */
+  isAnonymous: boolean;
+  /**
+   * The workspace this thread is filed under, if any
+   * @nullable
+   */
+  workspaceId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -2489,12 +2502,6 @@ export interface GetThreadResponseDto {
   messages: GetThreadResponseDtoMessagesItem[];
   /** Array of sources in the thread */
   sources: SourceResponseDto[];
-  /** Creation timestamp */
-  createdAt: string;
-  /** Last update timestamp */
-  updatedAt: string;
-  /** Whether the thread is in anonymous mode (PII redaction enabled) */
-  isAnonymous: boolean;
   /** Whether the thread has exceeded the token threshold for optimal performance */
   isLongChat: boolean;
   /** Knowledge bases attached to this thread */
@@ -2506,16 +2513,21 @@ export interface GetThreadResponseDto {
 }
 
 export interface GetThreadsResponseDtoItem {
-  /** Unique identifier for the thread */
-  id: string;
-  /** Title of the thread */
-  title?: string;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
   /** Whether the thread is in anonymous mode (PII redaction enabled) */
   isAnonymous: boolean;
+  /**
+   * The workspace this thread is filed under, if any
+   * @nullable
+   */
+  workspaceId: string | null;
+  /** Unique identifier for the thread */
+  id: string;
+  /** Title of the thread */
+  title?: string;
 }
 
 export interface GetThreadsResponseDto {
@@ -2532,6 +2544,14 @@ export interface UpdateThreadTitleDto {
    * @maxLength 200
    */
   title: string;
+}
+
+export interface AssignThreadWorkspaceDto {
+  /**
+   * The workspace to file this thread under. Send null to remove it from its workspace.
+   * @nullable
+   */
+  workspaceId: string | null;
 }
 
 export interface GeneratedImageUrlResponseDto {
@@ -3411,6 +3431,51 @@ export interface MarketplaceIntegrationResponseDto {
   createdAt: string;
   /** Last update timestamp */
   updatedAt: string;
+}
+
+export interface CreateWorkspaceDto {
+  /** Name of the workspace */
+  name: string;
+  /** What the workspace is for */
+  description?: string;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon?: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color?: string;
+}
+
+export interface WorkspaceResponseDto {
+  /** Unique identifier of the workspace */
+  id: string;
+  /** Name of the workspace */
+  name: string;
+  /**
+   * What the workspace is for
+   * @nullable
+   */
+  description: string | null;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color: string;
+  /** When the workspace was created */
+  createdAt: string;
+  /** When the workspace was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateWorkspaceDto {
+  /** Name of the workspace */
+  name?: string;
+  /**
+   * What the workspace is for. Send null to clear it.
+   * @nullable
+   */
+  description?: string | null;
+  /** Key of the workspace icon from the client icon catalogue */
+  icon?: string;
+  /** Palette key or #rrggbb literal for the workspace colour */
+  color?: string;
 }
 
 export interface PiiWhitelistEntryDto {
@@ -4710,51 +4775,6 @@ export interface UpdateQuizQuestionRequestDto {
   options: QuizAnswerOptionRequestDto[];
 }
 
-export interface CreateWorkspaceDto {
-  /** Name of the workspace */
-  name: string;
-  /** What the workspace is for */
-  description?: string;
-  /** Key of the workspace icon from the client icon catalogue */
-  icon?: string;
-  /** Palette key or #rrggbb literal for the workspace colour */
-  color?: string;
-}
-
-export interface WorkspaceResponseDto {
-  /** Unique identifier of the workspace */
-  id: string;
-  /** Name of the workspace */
-  name: string;
-  /**
-   * What the workspace is for
-   * @nullable
-   */
-  description: string | null;
-  /** Key of the workspace icon from the client icon catalogue */
-  icon: string;
-  /** Palette key or #rrggbb literal for the workspace colour */
-  color: string;
-  /** When the workspace was created */
-  createdAt: string;
-  /** When the workspace was last updated */
-  updatedAt: string;
-}
-
-export interface UpdateWorkspaceDto {
-  /** Name of the workspace */
-  name?: string;
-  /**
-   * What the workspace is for. Send null to clear it.
-   * @nullable
-   */
-  description?: string | null;
-  /** Key of the workspace icon from the client icon catalogue */
-  icon?: string;
-  /** Palette key or #rrggbb literal for the workspace colour */
-  color?: string;
-}
-
 export interface ChatCompletionRequestDto { [key: string]: unknown }
 
 /**
@@ -5219,6 +5239,10 @@ export type ThreadsControllerFindAllParams = {
  * Search threads by title
  */
 search?: string;
+/**
+ * Only threads filed under this workspace. Omit for all threads.
+ */
+workspaceId?: string;
 /**
  * Maximum number of threads to return (default: 50)
  */

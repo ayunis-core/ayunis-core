@@ -12,6 +12,7 @@ export interface ThreadsFindAllOptions {
 
 export interface ThreadsFindAllFilters {
   search?: string;
+  workspaceId?: UUID;
 }
 
 export interface ThreadsPagination {
@@ -41,6 +42,7 @@ export interface StaleThreadSourceRef {
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
+  abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
   abstract findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,
@@ -93,8 +95,21 @@ export abstract class ThreadsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void>;
+  /**
+   * `workspaceId: null` detaches the thread from its workspace.
+   * Throws `ThreadNotFoundError` when the user owns no such thread. Filing a
+   * chat is treated as an edit and bumps `updatedAt`.
+   */
+  abstract assignToWorkspace(params: {
+    threadId: UUID;
+    userId: UUID;
+    workspaceId: UUID | null;
+  }): Promise<void>;
   abstract delete(id: UUID, userId: UUID): Promise<void>;
   abstract findAllIdsByUserId(userId: UUID): Promise<UUID[]>;
+  abstract findAllIdsByWorkspaceId(workspaceId: UUID): Promise<UUID[]>;
+  /** Returns the subset of the given ids whose thread rows still exist. */
+  abstract filterExistingIds(threadIds: UUID[]): Promise<UUID[]>;
   abstract findAllByOrgIdWithSources(orgId: UUID): Promise<Thread[]>;
   /**
    * Returns a page of expired thread references (id + owner) for an org,

@@ -4,6 +4,7 @@ import { ReorderFavoritesUseCase } from './application/use-cases/reorder-favorit
 import { RemoveFavoriteReferenceUseCase } from './application/use-cases/remove-favorite-reference/remove-favorite-reference.use-case';
 import { LocalFavoritesRepositoryModule } from './infrastructure/persistence/local/local-favorites-repository.module';
 import { FavoriteWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
+import { FavoriteThreadDeletionRequestedListener } from './application/listeners/thread-deletion-requested.listener';
 
 @Module({
   imports: [LocalFavoritesRepositoryModule],
@@ -12,6 +13,7 @@ import { FavoriteWorkspaceDeletionRequestedListener } from './application/listen
     ReorderFavoritesUseCase,
     RemoveFavoriteReferenceUseCase,
     FavoriteWorkspaceDeletionRequestedListener,
+    FavoriteThreadDeletionRequestedListener,
   ],
   exports: [
     AddFavoriteUseCase,

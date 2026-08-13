@@ -1,9 +1,12 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.command';
+import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
+import { ThreadDeletionRequestedEvent } from '../../events/thread-deletion-requested.event';
 
 @Injectable()
 export class DeleteThreadUseCase {
@@ -13,6 +16,7 @@ export class DeleteThreadUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
@@ -45,7 +49,17 @@ export class DeleteThreadUseCase {
         return;
       }
 
+      const event = new ThreadDeletionRequestedEvent(command.id, userId, orgId);
+      event.deferCleanup('purge thread storage', () =>
+        this.purgeThreadStorage(command.id, orgId),
+      );
+      await this.eventEmitter.emitAsync(
+        ThreadDeletionRequestedEvent.EVENT_NAME,
+        event,
+      );
+
       await this.threadsRepository.delete(command.id, userId);
+      await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
 
       this.logger.log('Thread deleted successfully', {
         threadId: command.id,
@@ -59,8 +73,6 @@ export class DeleteThreadUseCase {
       });
       throw error;
     }
-
-    await this.purgeThreadStorage(command.id, orgId);
   }
 
   // MinIO blobs (message images, generated images) live outside the DB

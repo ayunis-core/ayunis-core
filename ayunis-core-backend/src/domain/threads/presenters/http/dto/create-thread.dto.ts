@@ -22,4 +22,14 @@ export class CreateThreadDto {
   @IsBoolean()
   @IsOptional()
   isAnonymous?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'File the new thread under this workspace',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsUUID()
+  @IsOptional()
+  workspaceId?: UUID;
 }

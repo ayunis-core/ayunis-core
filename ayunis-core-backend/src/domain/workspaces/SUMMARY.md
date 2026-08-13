@@ -27,9 +27,9 @@ The whole module sits behind the `workspacesEnabled` feature flag
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   *before* the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
-  to remove workspace favorites; the threads integration that deletes a
-  workspace's chats (and purges their object-storage assets, which no database
-  cascade can reach) arrives with the threads module changes.
+  to remove workspace favorites. The threads module deletes the workspace's
+  chats via its `threads.workspaceId` FK cascade and listens to this event to
+  purge their object-storage assets, which no database cascade can reach.
 - **Creation** — `CreateWorkspaceUseCase` saves the workspace, then calls
   `AddFavoriteUseCase` so new workspaces appear in the user's favorites.
 
@@ -80,7 +80,7 @@ workspaces/
 `CreateWorkspaceUseCase` imports `AddFavoriteUseCase` from the favorites module.
 On deletion, the module emits `WorkspaceDeletionRequestedEvent` without
 importing favorites; `FavoritesModule` listens to clean up references.
-`ThreadsModule` may depend on workspaces to validate a thread's `workspaceId`
+`ThreadsModule` depends on workspaces to validate a thread's `workspaceId`
 and listen for `WorkspaceDeletionRequestedEvent`.
 
 The repository port is deliberately not exported — cross-module access goes

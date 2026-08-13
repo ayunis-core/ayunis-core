@@ -6,6 +6,7 @@ import { CreateThreadCommand } from './create-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
+import { FindWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/find-workspace/find-workspace.use-case';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -47,6 +48,10 @@ describe('CreateThreadUseCase', () => {
       }),
     } as unknown as jest.Mocked<ContextService>;
 
+    const mockFindWorkspaceUseCase = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateThreadUseCase,
@@ -56,6 +61,10 @@ describe('CreateThreadUseCase', () => {
           useValue: mockGetPermittedLanguageModelUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: FindWorkspaceUseCase,
+          useValue: mockFindWorkspaceUseCase,
+        },
       ],
     }).compile();
 
