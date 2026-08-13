@@ -25,11 +25,11 @@ export class ImageGenerationHandlerRegistry {
   }
 
   getHandler(provider: ModelProvider): ImageGenerationHandler {
-    const isTest = this.configService.get<boolean>('app.isTest');
-    if (isTest) {
+    const mockInference = this.configService.get<boolean>('app.mockInference');
+    if (mockInference) {
       if (!this.mockHandler) {
         throw new Error(
-          'Mock image generation handler not registered. Call registerMockHandler() before using getHandler() in test environment.',
+          'Mock image generation handler not registered. Call registerMockHandler() before using getHandler() when mock inference is enabled.',
         );
       }
       this.logger.info('Using mock handler for image generation');

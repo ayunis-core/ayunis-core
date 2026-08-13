@@ -4,8 +4,8 @@ import {
   StreamInferenceInput,
 } from '../../application/ports/stream-inference.handler';
 import { StreamInferenceResponseChunk } from '../../application/ports/stream-inference.handler';
-import { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
+import { concatMap, delay } from 'rxjs/operators';
 import { Injectable } from '@nestjs/common';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
@@ -22,14 +22,15 @@ import type { Model } from '../../domain/model.entity';
  * - No API keys required
  * - Zero cost test runs
  *
- * Response format: Single chunk with "{provider}::{model}" text
- * (e.g., "openai::gpt-4o-mini")
+ * Response format: "{provider}::{model}" text (e.g., "openai::gpt-4o-mini")
  *
  * For chat naming requests (containing "Name this chat"), includes the
  * requested name in the response to simulate proper chat naming behavior.
  *
- * Unlike real streaming handlers that emit multiple chunks over time,
- * this mock emits a single chunk immediately using RxJS `of()` operator.
+ * The text is emitted as several delta chunks with a small delay between
+ * them. An instant single-chunk response completes faster than any real
+ * provider ever would and races client-side stream setup (observed as
+ * e2e chat runs stuck "in flight"), so the pacing is part of the contract.
  *
  * @see StreamInferenceHandlerRegistry.getHandler() - Routing logic
  * @see MockInferenceHandler - Non-streaming equivalent
@@ -65,27 +66,49 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
       }
     }
 
-    const chunk = new StreamInferenceResponseChunk({
-      textContentDelta: responseText,
-      toolCallsDelta: [],
-      thinkingDelta: null,
-    });
-    return of(chunk);
+    return from(splitIntoDeltas(responseText)).pipe(
+      concatMap((textContentDelta) =>
+        of(
+          new StreamInferenceResponseChunk({
+            textContentDelta,
+            toolCallsDelta: [],
+            thinkingDelta: null,
+          }),
+        ).pipe(delay(MOCK_CHUNK_DELAY_MS)),
+      ),
+    );
   }
 
   /**
-   * Deterministic provider for the agent-runtime path under NODE_ENV=test:
-   * emits a single text chunk of `{provider}::{model}`, mirroring `answer()`
-   * so runtime-backed specs stay fast, offline, and key-free.
+   * Deterministic provider for the agent-runtime path with mock inference
+   * enabled: emits `{provider}::{model}` as paced delta chunks, mirroring
+   * `answer()` so runtime-backed specs stay fast, offline, and key-free.
    */
   resolveProvider(model: Model): ModelProvider {
     const responseText = `${model.provider}::${model.name}`;
     return {
       name: responseText,
-      // eslint-disable-next-line @typescript-eslint/require-await -- generator satisfies the async ModelProvider.stream contract
       stream: async function* (): AsyncIterable<ProviderChunk> {
-        yield { textDelta: responseText, finishReason: 'stop' };
+        const deltas = splitIntoDeltas(responseText);
+        for (const [index, textDelta] of deltas.entries()) {
+          await new Promise((r) => setTimeout(r, MOCK_CHUNK_DELAY_MS));
+          yield {
+            textDelta,
+            finishReason: index === deltas.length - 1 ? 'stop' : undefined,
+          };
+        }
       },
     };
   }
+}
+
+const MOCK_CHUNK_DELAY_MS = 40;
+
+function splitIntoDeltas(text: string, parts = 3): string[] {
+  const size = Math.ceil(text.length / parts);
+  const deltas: string[] = [];
+  for (let i = 0; i < text.length; i += size) {
+    deltas.push(text.slice(i, i + size));
+  }
+  return deltas;
 }
