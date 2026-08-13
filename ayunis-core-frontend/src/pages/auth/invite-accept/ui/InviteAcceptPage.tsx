@@ -69,6 +69,7 @@ export default function InviteAcceptPage({
                 <FormLabel>{t('inviteAccept.name')}</FormLabel>
                 <FormControl>
                   <Input
+                    data-testid="invite-accept-name"
                     placeholder={t('inviteAccept.namePlaceholder')}
                     {...field}
                   />
@@ -85,6 +86,7 @@ export default function InviteAcceptPage({
                 <FormLabel>{t('inviteAccept.password')}</FormLabel>
                 <FormControl>
                   <PasswordInput
+                    data-testid="invite-accept-password"
                     placeholder={t('inviteAccept.passwordPlaceholder')}
                     {...field}
                   />
@@ -125,7 +127,12 @@ export default function InviteAcceptPage({
               )}
             />
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="invite-accept-submit"
+          >
             {isLoading
               ? t('inviteAccept.acceptingInvitation')
               : t('inviteAccept.acceptInvitationButton')}

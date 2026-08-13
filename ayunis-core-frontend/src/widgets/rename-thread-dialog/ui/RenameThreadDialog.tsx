@@ -117,6 +117,7 @@ export function RenameThreadDialog({
               <Input
                 ref={inputRef}
                 id="title"
+                data-testid="rename-input"
                 value={title}
                 onChange={handleTitleChange}
                 placeholder={t('sidebar.renameThreadPlaceholder')}
@@ -140,6 +141,7 @@ export function RenameThreadDialog({
             </Button>
             <Button
               type="submit"
+              data-testid="rename-submit"
               disabled={
                 isRenaming ||
                 !title.trim() ||

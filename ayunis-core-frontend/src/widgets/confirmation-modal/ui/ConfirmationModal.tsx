@@ -51,6 +51,7 @@ export default function ConfirmationModal() {
               variant="outline"
               onClick={handleCancel}
               disabled={isLoading}
+              data-testid="confirmation-cancel"
             >
               {options.cancelText ?? 'Cancel'}
             </Button>
@@ -58,6 +59,7 @@ export default function ConfirmationModal() {
               variant={isDangerous ? 'destructive' : 'default'}
               onClick={() => void handleConfirm()}
               disabled={isLoading}
+              data-testid="confirmation-confirm"
             >
               {isLoading ? 'Loading...' : (options.confirmText ?? 'Confirm')}
             </Button>

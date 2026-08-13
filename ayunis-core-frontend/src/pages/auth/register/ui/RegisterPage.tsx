@@ -107,6 +107,7 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-email"
                     placeholder={t('register.emailPlaceholder')}
                     type="email"
                     {...field}
@@ -125,6 +126,7 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-user-name"
                     placeholder={t('register.userNamePlaceholder')}
                     {...field}
                   />
@@ -142,6 +144,7 @@ export function RegisterPage({
                 <FormControl>
                   <Input
                     required
+                    data-testid="register-org-name"
                     placeholder={t('register.orgNamePlaceholder')}
                     {...field}
                   />
@@ -166,6 +169,7 @@ export function RegisterPage({
                 <FormControl>
                   <PasswordInput
                     required
+                    data-testid="register-password"
                     placeholder={t('register.passwordPlaceholder')}
                     {...field}
                   />
@@ -247,7 +251,12 @@ export function RegisterPage({
               )}
             />
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="register-submit"
+          >
             {isLoading
               ? t('register.creatingAccount')
               : t('register.createAccountButton')}
