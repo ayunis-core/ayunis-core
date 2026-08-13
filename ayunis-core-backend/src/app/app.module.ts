@@ -30,6 +30,7 @@ import { SkillTemplatesModule } from '../domain/skill-templates/skill-templates.
 import { AcademyModule } from '../domain/academy/academy.module';
 import { ArtifactsModule } from '../domain/artifacts/artifacts.module';
 import { LetterheadsModule } from '../domain/letterheads/letterheads.module';
+import { FavoritesModule } from '../domain/favorites/favorites.module';
 import { OpenAICompatModule } from '../domain/openai-compat/openai-compat.module';
 import { IamModule } from '../iam/iam.module';
 
@@ -138,6 +139,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     AcademyModule,
     ArtifactsModule,
     LetterheadsModule,
+    FavoritesModule,
     OpenAICompatModule,
     IamModule.register({
       authProvider:
