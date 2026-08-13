@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -28,6 +28,7 @@ export class UserRecord extends BaseRecord {
   @Column({ type: 'enum', enum: SystemRole, default: SystemRole.CUSTOMER })
   systemRole?: SystemRole;
 
+  @Index()
   @Column()
   orgId: UUID;
 

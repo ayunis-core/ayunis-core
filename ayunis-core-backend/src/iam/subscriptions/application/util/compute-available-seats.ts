@@ -17,21 +17,19 @@ export async function computeAvailableSeats(
     return null;
   }
 
-  const [invitesResult, usersResult] = await Promise.all([
-    getInvitesByOrgUseCase.execute(
-      new GetInvitesByOrgQuery({
-        orgId,
-        requestingUserId,
-        onlyOpen: true,
-      }),
-    ),
-    findUsersByOrgIdUseCase.execute(
-      new FindUsersByOrgIdQuery({
-        orgId,
-        pagination: { limit: 1000, offset: 0 },
-      }),
-    ),
-  ]);
+  const invitesResult = await getInvitesByOrgUseCase.execute(
+    new GetInvitesByOrgQuery({
+      orgId,
+      requestingUserId,
+      onlyOpen: true,
+    }),
+  );
+  const usersResult = await findUsersByOrgIdUseCase.execute(
+    new FindUsersByOrgIdQuery({
+      orgId,
+      pagination: { limit: 1000, offset: 0 },
+    }),
+  );
 
   const openInvitesCount = invitesResult.total ?? invitesResult.data.length;
   const userCount = usersResult.total ?? usersResult.data.length;

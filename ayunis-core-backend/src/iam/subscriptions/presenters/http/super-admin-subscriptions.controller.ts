@@ -49,7 +49,7 @@ import {
 
 import { UpdateSeatsCommand } from '../../application/use-cases/update-seats/update-seats.command';
 import { UpdateSeatsDto } from './dto/update-seats.dto';
-import { UpdateSeatsUseCase } from '../../application/use-cases/update-seats/update-seats.use-case';
+import { UpdateSeatsWithAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats-with-allocation-lock/update-seats-with-allocation-lock.use-case';
 import { UpdateBillingInfoDto } from './dto/update-billing-info.dto';
 import { UpdateBillingInfoUseCase } from '../../application/use-cases/update-billing-info/update-billing-info.use-case';
 import { UpdateBillingInfoCommand } from '../../application/use-cases/update-billing-info/update-billing-info.command';
@@ -90,7 +90,7 @@ export class SuperAdminSubscriptionsController {
     private readonly cancelSubscriptionUseCase: CancelSubscriptionUseCase,
     private readonly uncancelSubscriptionUseCase: UncancelSubscriptionUseCase,
     private readonly subscriptionResponseMapper: SubscriptionResponseMapper,
-    private readonly updateSeatsUseCase: UpdateSeatsUseCase,
+    private readonly updateSeatsUseCase: UpdateSeatsWithAllocationLockUseCase,
     private readonly updateBillingInfoUseCase: UpdateBillingInfoUseCase,
     private readonly updateStartDateUseCase: UpdateStartDateUseCase,
     private readonly updateMonthlyCreditsUseCase: UpdateMonthlyCreditsUseCase,
