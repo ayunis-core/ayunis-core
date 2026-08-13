@@ -13,6 +13,7 @@ export enum FileType {
   DOCX = 'docx',
   PPTX = 'pptx',
   TXT = 'txt',
+  EML = 'eml',
   AUDIO = 'audio',
 }
 

@@ -53,6 +53,8 @@ export class CreateProcessingSourceUseCase {
         return FileType.PPTX;
       case MIME_TYPES.TXT:
         return FileType.TXT;
+      case MIME_TYPES.EML:
+        return FileType.EML;
       case MIME_TYPES.MP3:
       case MIME_TYPES.M4A:
       case MIME_TYPES.WAV:

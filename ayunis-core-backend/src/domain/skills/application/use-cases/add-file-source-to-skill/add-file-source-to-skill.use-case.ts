@@ -8,9 +8,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import {
   detectFileType,
   getCanonicalMimeType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
+  isDocumentSourceFile,
   isSpreadsheetFile,
   isCSVFile,
   SUPPORTED_FILE_TYPES,
@@ -78,11 +76,7 @@ export class AddFileSourceToSkillUseCase {
     }
     assertSkillHasSourceCapacity(skill.sourceIds);
 
-    if (
-      isDocumentFile(detectedType) ||
-      isPlainTextFile(detectedType) ||
-      isAudioFile(detectedType)
-    ) {
+    if (isDocumentSourceFile(detectedType)) {
       return this.addDocumentSource(
         command.skillId,
         command.file,

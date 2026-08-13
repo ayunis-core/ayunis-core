@@ -2,6 +2,7 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isAudioFile,
+  isEmailFile,
   MIME_TYPES,
 } from './file-type';
 
@@ -199,6 +200,42 @@ describe('detectFileType', () => {
       expect(detectFileType('application/octet-stream', 'voice.webm')).toBe(
         'webm',
       );
+    });
+  });
+
+  describe('EML detection', () => {
+    it('returns "eml" when MIME type is message/rfc822', () => {
+      expect(detectFileType(MIME_TYPES.EML, 'message.eml')).toBe('eml');
+    });
+
+    it('returns "eml" from the .eml extension when MIME type is generic', () => {
+      expect(detectFileType('application/octet-stream', 'message.eml')).toBe(
+        'eml',
+      );
+    });
+
+    it('is case-insensitive for the .eml extension', () => {
+      expect(detectFileType('application/octet-stream', 'MESSAGE.EML')).toBe(
+        'eml',
+      );
+    });
+  });
+
+  describe('isEmailFile', () => {
+    it('returns true for eml', () => {
+      expect(isEmailFile('eml')).toBe(true);
+    });
+
+    it('returns false for non-email types', () => {
+      expect(isEmailFile('pdf')).toBe(false);
+      expect(isEmailFile('txt')).toBe(false);
+      expect(isEmailFile('unknown')).toBe(false);
+    });
+  });
+
+  describe('getCanonicalMimeType for eml', () => {
+    it('maps eml to message/rfc822', () => {
+      expect(getCanonicalMimeType('eml')).toBe('message/rfc822');
     });
   });
 

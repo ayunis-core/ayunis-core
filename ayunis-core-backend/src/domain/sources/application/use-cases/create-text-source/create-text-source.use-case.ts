@@ -149,6 +149,8 @@ export class CreateTextSourceUseCase {
         return FileType.PPTX;
       case MIME_TYPES.TXT:
         return FileType.TXT;
+      case MIME_TYPES.EML:
+        return FileType.EML;
       case MIME_TYPES.MP3:
       case MIME_TYPES.M4A:
       case MIME_TYPES.WAV:
@@ -158,7 +160,7 @@ export class CreateTextSourceUseCase {
         // This is a programming error - caller should validate/route file types before calling this use case
         throw new Error(
           `CreateTextSourceUseCase received unsupported file type: ${mimeType}. ` +
-            `This use case only handles PDF, DOCX, PPTX, TXT, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
+            `This use case only handles PDF, DOCX, PPTX, TXT, EML, and audio. Spreadsheets should be routed to CreateDataSourceUseCase.`,
         );
     }
   }

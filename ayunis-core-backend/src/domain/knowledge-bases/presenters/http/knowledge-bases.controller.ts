@@ -39,9 +39,7 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import {
   detectFileType,
-  isAudioFile,
-  isDocumentFile,
-  isPlainTextFile,
+  isDocumentSourceFile,
   getCanonicalMimeType,
 } from 'src/common/util/file-type';
 
@@ -376,14 +374,10 @@ export class KnowledgeBasesController {
     file: UploadedDocument,
   ): Promise<string> {
     const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (
-      !isDocumentFile(detectedType) &&
-      !isPlainTextFile(detectedType) &&
-      !isAudioFile(detectedType)
-    ) {
+    if (!isDocumentSourceFile(detectedType)) {
       await this.cleanupTempFile(file.path);
       throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, and audio files (MP3, M4A, WAV, WebM).`,
+        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
       );
     }
 

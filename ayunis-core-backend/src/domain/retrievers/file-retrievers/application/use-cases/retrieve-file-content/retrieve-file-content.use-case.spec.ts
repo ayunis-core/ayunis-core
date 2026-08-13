@@ -131,6 +131,33 @@ describe('RetrieveFileContentUseCase', () => {
     expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
   });
 
+  it('should extract text from an EML file as a single page', async () => {
+    const eml = Buffer.from(
+      [
+        'From: Alice <alice@example.com>',
+        'Subject: Anfrage',
+        'Content-Type: text/plain; charset=utf-8',
+        '',
+        'Inhalt der E-Mail.',
+      ].join('\r\n'),
+      'utf8',
+    );
+
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: eml,
+        fileName: 'anfrage.eml',
+        fileType: 'message/rfc822',
+      }),
+    );
+
+    expect(result.pages).toHaveLength(1);
+    expect(result.pages[0].number).toBe(1);
+    expect(result.pages[0].text).toContain('Subject: Anfrage');
+    expect(result.pages[0].text).toContain('Inhalt der E-Mail.');
+    expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
+  });
+
   it('should process PDF file successfully', async () => {
     const command = new RetrieveFileContentCommand({
       fileData: Buffer.from('test file content'),

@@ -76,6 +76,19 @@ describe('CreateProcessingSourceUseCase', () => {
     },
   );
 
+  it('should create a FileSource with PROCESSING status for EML', async () => {
+    const command = new CreateProcessingSourceCommand({
+      fileType: 'message/rfc822',
+      fileName: 'Anfrage.eml',
+    });
+
+    const result = await useCase.execute(command);
+
+    expect(result.fileType).toBe(FileType.EML);
+    expect(result.textType).toBe(TextType.FILE);
+    expect(result.status).toBe(SourceStatus.PROCESSING);
+  });
+
   it('should throw UnsupportedSourceFileTypeError for unsupported file types', async () => {
     const command = new CreateProcessingSourceCommand({
       fileType: 'image/jpeg',
