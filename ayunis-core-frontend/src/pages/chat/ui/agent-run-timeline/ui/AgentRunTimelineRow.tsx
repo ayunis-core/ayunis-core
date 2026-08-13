@@ -13,7 +13,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
-import { Badge } from '@ayunis/ui/components/badge';
 import { PiiText } from '@/widgets/markdown';
 import type { TimelineStep, StepStatus } from '../model/types';
 import { getToolActionLabel } from '../lib/get-tool-action-label';
@@ -179,16 +178,9 @@ function getStepView(
           </div>
         )}
         {hasResult && (
-          <Badge
-            variant="outline"
-            className="font-normal whitespace-normal text-left"
-          >
-            <div className="max-h-32 w-full overflow-y-auto">
-              <span className="text-xs text-muted-foreground whitespace-pre-wrap">
-                <PiiText>{step.result ?? ''}</PiiText>
-              </span>
-            </div>
-          </Badge>
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+            <PiiText>{step.result ?? ''}</PiiText>
+          </div>
         )}
       </>
     ),
