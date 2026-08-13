@@ -28,10 +28,7 @@ export abstract class InvitesRepository {
     email: string,
     orgId: UUID,
   ): Promise<Invite | null>;
-  abstract findByEmailsAndOrg(
-    emails: string[],
-    orgId: string,
-  ): Promise<Invite[]>;
+  abstract findByEmails(emails: string[]): Promise<Invite[]>;
   abstract accept(id: UUID): Promise<void>;
   abstract delete(id: UUID): Promise<void>;
   abstract deleteAllPendingByOrg(orgId: UUID): Promise<number>;
