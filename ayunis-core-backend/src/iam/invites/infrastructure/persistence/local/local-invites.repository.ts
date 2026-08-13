@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, IsNull } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { EntityManager, Repository, ILike, IsNull } from 'typeorm';
 import { UUID } from 'crypto';
 import {
   InvitesRepository,
@@ -17,10 +18,19 @@ export class LocalInvitesRepository implements InvitesRepository {
   private readonly logger = new Logger(LocalInvitesRepository.name);
 
   constructor(
-    @InjectRepository(InviteRecord)
-    private readonly inviteRepository: Repository<InviteRecord>,
     private readonly inviteMapper: InviteMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
+
+  // Outside an active transaction txHost.tx resolves to the adapter's fallback
+  // instance (dataSource.manager), so this is safe without a null check.
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get invites(): Repository<InviteRecord> {
+    return this.getManager().getRepository(InviteRecord);
+  }
 
   async create(invite: Invite): Promise<void> {
     this.logger.log('create', {
@@ -31,7 +41,7 @@ export class LocalInvitesRepository implements InvitesRepository {
       inviterId: invite.inviterId,
     });
     const entity = this.inviteMapper.toEntity(invite);
-    await this.inviteRepository.save(entity);
+    await this.invites.save(entity);
     this.logger.debug('Invite created successfully', { inviteId: invite.id });
   }
 
@@ -45,7 +55,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     const entities = invites.map((invite) =>
       this.inviteMapper.toEntity(invite),
     );
-    await this.inviteRepository.save(entities);
+    await this.invites.save(entities);
 
     this.logger.debug('Invites created successfully', {
       inviteCount: invites.length,
@@ -54,7 +64,7 @@ export class LocalInvitesRepository implements InvitesRepository {
 
   async findOne(id: UUID): Promise<Invite | null> {
     this.logger.log('findOne', { id });
-    const entity = await this.inviteRepository.findOne({ where: { id } });
+    const entity = await this.invites.findOne({ where: { id } });
 
     if (!entity) {
       this.logger.debug('Invite not found', { id });
@@ -76,7 +86,7 @@ export class LocalInvitesRepository implements InvitesRepository {
       search: filters?.search,
     });
 
-    const queryBuilder = this.inviteRepository
+    const queryBuilder = this.invites
       .createQueryBuilder('invite')
       .where('invite.orgId = :orgId', { orgId })
       .orderBy('invite.createdAt', 'DESC');
@@ -115,7 +125,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     // Deletion paths (delete-user, delete-invite-by-email) rely on this to
     // clean up already-accepted invites; filtering on acceptedAt would leave
     // them orphaned and block re-inviting the same email (AYC-299).
-    const entity = await this.inviteRepository.findOne({
+    const entity = await this.invites.findOne({
       where: { email: ILike(email) },
     });
     if (!entity) {
@@ -130,7 +140,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     orgId: UUID,
   ): Promise<Invite | null> {
     this.logger.log('findOneByEmailAndOrg', { email, orgId });
-    const entity = await this.inviteRepository.findOne({
+    const entity = await this.invites.findOne({
       where: { email: ILike(email), orgId, acceptedAt: IsNull() },
     });
     if (!entity) {
@@ -150,7 +160,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     // Convert emails to lowercase for case-insensitive comparison
     const lowerEmails = emails.map((e) => e.toLowerCase());
 
-    const entities = await this.inviteRepository
+    const entities = await this.invites
       .createQueryBuilder('invite')
       .where('invite.orgId = :orgId', { orgId })
       .andWhere('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
@@ -169,7 +179,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   async accept(id: UUID): Promise<void> {
     this.logger.log('accept', { id });
 
-    await this.inviteRepository.update(id, {
+    await this.invites.update(id, {
       acceptedAt: new Date(),
     });
 
@@ -178,14 +188,14 @@ export class LocalInvitesRepository implements InvitesRepository {
 
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
-    await this.inviteRepository.delete(id);
+    await this.invites.delete(id);
     this.logger.debug('Invite deleted successfully', { id });
   }
 
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
     this.logger.log('deleteAllPendingByOrg', { orgId });
 
-    const result = await this.inviteRepository.delete({
+    const result = await this.invites.delete({
       orgId,
       acceptedAt: IsNull(), // Only delete pending invites (not accepted)
     });

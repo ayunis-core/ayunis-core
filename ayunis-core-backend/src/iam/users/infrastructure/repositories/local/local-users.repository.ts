@@ -9,31 +9,41 @@ import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
-import { Repository, ILike, In } from 'typeorm';
+import { EntityManager, Repository, ILike, In } from 'typeorm';
 import { UserRecord } from './schema/user.record';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserMapper } from './mappers/user.mapper';
 import {
   UserNotFoundError,
   UserAlreadyExistsError,
 } from 'src/iam/users/application/users.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
   private readonly logger = new Logger(LocalUsersRepository.name);
 
   constructor(
-    @InjectRepository(UserRecord)
-    private readonly userRepository: Repository<UserRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
     this.logger.log('constructor');
   }
 
+  // Outside an active transaction txHost.tx resolves to the adapter's fallback
+  // instance (dataSource.manager), so this is safe without a null check.
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get users(): Repository<UserRecord> {
+    return this.getManager().getRepository(UserRecord);
+  }
+
   async findOneById(id: UUID): Promise<User | null> {
     this.logger.log('findOneById', { id });
-    const userEntity = await this.userRepository.findOne({ where: { id } });
+    const userEntity = await this.users.findOne({ where: { id } });
     if (!userEntity) {
       this.logger.warn('User not found by ID', { id });
       return null;
@@ -48,7 +58,7 @@ export class LocalUsersRepository extends UsersRepository {
       return [];
     }
 
-    const userRecords = await this.userRepository.find({
+    const userRecords = await this.users.find({
       where: { id: In(ids), orgId },
     });
 
@@ -57,7 +67,7 @@ export class LocalUsersRepository extends UsersRepository {
 
   async findOneByEmail(email: string): Promise<User | null> {
     this.logger.log('findOneByEmail', { email });
-    const userRecord = await this.userRepository.findOne({
+    const userRecord = await this.users.findOne({
       where: { email: ILike(email) },
     });
     if (!userRecord) {
@@ -77,7 +87,7 @@ export class LocalUsersRepository extends UsersRepository {
     // Convert emails to lowercase for case-insensitive comparison
     const lowerEmails = emails.map((e) => e.toLowerCase());
 
-    const userRecords = await this.userRepository
+    const userRecords = await this.users
       .createQueryBuilder('user')
       .where('LOWER(user.email) IN (:...emails)', { emails: lowerEmails })
       .getMany();
@@ -93,7 +103,7 @@ export class LocalUsersRepository extends UsersRepository {
   async findManyBySystemRole(role: SystemRole): Promise<User[]> {
     this.logger.log('findManyBySystemRole', { role });
 
-    const userRecords = await this.userRepository.find({
+    const userRecords = await this.users.find({
       where: { systemRole: role },
       order: { createdAt: 'DESC' },
     });
@@ -103,7 +113,7 @@ export class LocalUsersRepository extends UsersRepository {
 
   async findAdminsByOrgId(orgId: UUID): Promise<User[]> {
     this.logger.log('findAdminsByOrgId', { orgId });
-    const userRecords = await this.userRepository.find({
+    const userRecords = await this.users.find({
       where: { orgId, role: UserRole.ADMIN },
       order: { createdAt: 'DESC' },
     });
@@ -125,7 +135,7 @@ export class LocalUsersRepository extends UsersRepository {
       hasSearch: filters?.search !== undefined,
     });
 
-    const queryBuilder = this.userRepository
+    const queryBuilder = this.users
       .createQueryBuilder('user')
       .where('user.orgId = :orgId', { orgId })
       .orderBy('user.createdAt', 'DESC');
@@ -154,7 +164,7 @@ export class LocalUsersRepository extends UsersRepository {
 
   async findAllIdsByOrgId(orgId: UUID): Promise<UUID[]> {
     this.logger.log('findAllIdsByOrgId', { orgId });
-    const users = await this.userRepository.find({
+    const users = await this.users.find({
       where: { orgId },
       select: { id: true },
     });
@@ -170,7 +180,7 @@ export class LocalUsersRepository extends UsersRepository {
       hasSearch: filters?.search !== undefined,
     });
     const search = filters?.search?.trim();
-    return this.userRepository.find({
+    return this.users.find({
       where: search
         ? [
             { orgId, name: ILike(`%${search}%`) },
@@ -184,7 +194,7 @@ export class LocalUsersRepository extends UsersRepository {
   async create(user: User): Promise<User> {
     this.logger.log('create', { userId: user.id, email: user.email });
     // Check if user already exists by email (case-insensitive)
-    const existingUser = await this.userRepository.findOne({
+    const existingUser = await this.users.findOne({
       where: { email: ILike(user.email) },
     });
 
@@ -198,7 +208,7 @@ export class LocalUsersRepository extends UsersRepository {
     }
 
     const userEntity = UserMapper.toEntity(user);
-    const savedUserEntity = await this.userRepository.save(userEntity);
+    const savedUserEntity = await this.users.save(userEntity);
     this.logger.debug('User created successfully', {
       userId: savedUserEntity.id,
     });
@@ -208,7 +218,7 @@ export class LocalUsersRepository extends UsersRepository {
   async update(user: User): Promise<User> {
     this.logger.log('update', { userId: user.id });
     // Verify user exists
-    const existingUser = await this.userRepository.findOne({
+    const existingUser = await this.users.findOne({
       where: { id: user.id },
     });
 
@@ -220,7 +230,7 @@ export class LocalUsersRepository extends UsersRepository {
     }
 
     const userEntity = UserMapper.toEntity(user);
-    const savedUserEntity = await this.userRepository.save(userEntity);
+    const savedUserEntity = await this.users.save(userEntity);
     this.logger.debug('User updated successfully', {
       user: savedUserEntity,
     });
@@ -230,7 +240,7 @@ export class LocalUsersRepository extends UsersRepository {
   async delete(id: UUID): Promise<void> {
     this.logger.log('delete', { id });
     // Verify user exists
-    const existingUser = await this.userRepository.findOne({ where: { id } });
+    const existingUser = await this.users.findOne({ where: { id } });
 
     if (!existingUser) {
       this.logger.warn('Attempted to delete non-existent user', {
@@ -239,7 +249,7 @@ export class LocalUsersRepository extends UsersRepository {
       throw new UserNotFoundError(id);
     }
 
-    await this.userRepository.delete(id);
+    await this.users.delete(id);
     this.logger.debug('User deleted successfully', { userId: id });
   }
 

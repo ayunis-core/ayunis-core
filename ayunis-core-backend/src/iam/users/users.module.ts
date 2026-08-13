@@ -6,8 +6,8 @@ import { LocalUsersExportRepository } from './infrastructure/repositories/local/
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRecord } from './infrastructure/repositories/local/schema/user.record';
 import { PasswordSetTokenRecord } from './infrastructure/repositories/local/schema/password-set-token.record';
-import { Repository } from 'typeorm';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { HashingModule } from '../hashing/hashing.module';
 import { JwtConfigModule } from '../authentication/jwt.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
@@ -89,11 +89,11 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
   providers: [
     {
       provide: UsersRepository,
-      useFactory: (userRepository: Repository<UserRecord>) => {
+      useFactory: (txHost: TransactionHost<TransactionalAdapterTypeOrm>) => {
         // FUTURE: Implement cloud users repository when auth.provider === AuthProvider.CLOUD
-        return new LocalUsersRepository(userRepository);
+        return new LocalUsersRepository(txHost);
       },
-      inject: [getRepositoryToken(UserRecord)],
+      inject: [TransactionHost],
     },
     {
       provide: UsersExportRepository,
