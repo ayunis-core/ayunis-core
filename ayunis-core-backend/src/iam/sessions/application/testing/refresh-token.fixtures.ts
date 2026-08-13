@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { RefreshToken } from '../../domain/refresh-token.entity';
 import type { RefreshTokensRepository } from '../ports/refresh-tokens.repository';
+import { SessionAuthenticationMethod } from '../../domain/value-objects/session-authentication-method.enum';
 
 export const TEST_USER_ID = '22222222-2222-2222-2222-222222222222' as UUID;
 export const TEST_FAMILY_ID = '33333333-3333-3333-3333-333333333333' as UUID;
@@ -12,6 +13,7 @@ export function aRefreshToken(
     userId: UUID;
     familyId: UUID;
     tokenHash: string;
+    authenticationMethod: SessionAuthenticationMethod;
     expiresAt: Date;
     usedAt: Date | null;
     revokedAt: Date | null;
@@ -22,6 +24,8 @@ export function aRefreshToken(
     userId: overrides.userId ?? TEST_USER_ID,
     familyId: overrides.familyId ?? TEST_FAMILY_ID,
     tokenHash: overrides.tokenHash ?? 'sha256-hash',
+    authenticationMethod:
+      overrides.authenticationMethod ?? SessionAuthenticationMethod.PASSWORD,
     expiresAt:
       overrides.expiresAt ?? new Date(Date.now() + 7 * 24 * 3600 * 1000),
     usedAt: overrides.usedAt ?? null,

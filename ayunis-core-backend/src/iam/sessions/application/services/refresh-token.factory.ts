@@ -4,6 +4,7 @@ import { randomBytes, randomUUID, type UUID } from 'crypto';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import { getMillisecondsFromJwtExpiry } from 'src/common/util/jwt.util';
 import { RefreshToken } from '../../domain/refresh-token.entity';
+import type { SessionAuthenticationMethod } from '../../domain/value-objects/session-authentication-method.enum';
 
 /**
  * Builds opaque refresh tokens. The plaintext (32 random bytes, base64url) is
@@ -13,7 +14,11 @@ import { RefreshToken } from '../../domain/refresh-token.entity';
 export class RefreshTokenFactory {
   constructor(private readonly configService: ConfigService) {}
 
-  create(params: { userId: UUID; familyId: UUID }): {
+  create(params: {
+    userId: UUID;
+    familyId: UUID;
+    authenticationMethod: SessionAuthenticationMethod;
+  }): {
     token: RefreshToken;
     plaintext: string;
   } {
@@ -22,6 +27,7 @@ export class RefreshTokenFactory {
       userId: params.userId,
       familyId: params.familyId,
       tokenHash: sha256Hex(plaintext),
+      authenticationMethod: params.authenticationMethod,
       expiresAt: new Date(Date.now() + this.ttlMs()),
     });
     return { token, plaintext };

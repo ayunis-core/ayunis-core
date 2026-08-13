@@ -16,8 +16,8 @@ export class UserRecord extends BaseRecord {
   @Column({ nullable: false })
   name: string;
 
-  @Column()
-  passwordHash: string;
+  @Column({ type: 'varchar', nullable: true })
+  passwordHash: string | null;
 
   @Column({
     type: 'enum',

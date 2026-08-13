@@ -29,6 +29,10 @@ export class TriggerPasswordResetUseCase {
         this.logger.debug('User not found', { email: command.email });
         return;
       }
+      if (user.passwordHash === null) {
+        this.logger.debug('User has no local password', { userId: user.id });
+        return;
+      }
 
       await this.sendResetEmail(user);
     } catch (error) {

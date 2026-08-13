@@ -20,6 +20,7 @@ import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorato
 import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
 import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
 import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -156,6 +157,11 @@ describe('AuthenticationController', () => {
 
       await controller.login(mockRequest as Request, mockResponse as Response);
 
+      expect(mockLoginUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+        }),
+      );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'access_token',
         'access',
