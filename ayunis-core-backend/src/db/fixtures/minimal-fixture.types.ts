@@ -93,6 +93,23 @@ export interface AcademyCompletionFixture {
   expectedState: string;
 }
 
+/**
+ * A workspace ("Projekt") owned by the org's admin user. The icon is a key
+ * from the frontend catalogue (`shared/lib/workspace-appearance.ts`); the
+ * colour is either a palette key from that catalogue or a `#rrggbb` literal.
+ */
+export interface WorkspaceFixture {
+  name: string;
+  description?: string;
+  icon: string;
+  color: string;
+  /**
+   * Pinned workspaces get a favorites row for the org admin; their sidebar
+   * order follows the fixture order of the pinned entries.
+   */
+  pinned: boolean;
+}
+
 export interface OrgFixture {
   key: string;
   name: string;
@@ -105,6 +122,7 @@ export interface OrgFixture {
   /** Whether the org holds the academy add-on. Without it the academy is invisible. */
   academyAddon?: boolean;
   academyCompletions?: readonly AcademyCompletionFixture[];
+  workspaces?: readonly WorkspaceFixture[];
 }
 
 export interface QuizAnswerOptionFixture {

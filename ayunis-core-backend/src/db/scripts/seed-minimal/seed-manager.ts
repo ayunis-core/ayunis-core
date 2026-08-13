@@ -11,6 +11,7 @@ import { UsageSeeder } from './seeders/usage-seeder';
 import { CreditLimitSeeder } from './seeders/credit-limit-seeder';
 import { AcademyContentSeeder } from './seeders/academy-content-seeder';
 import { AcademyAccessSeeder } from './seeders/academy-access-seeder';
+import { WorkspaceSeeder } from './seeders/workspace-seeder';
 
 export class SeedManager {
   private readonly globalSeeders: GlobalSeeder[] = [
@@ -19,14 +20,16 @@ export class SeedManager {
     new AcademyContentSeeder(),
   ];
 
-  // AcademyAccessSeeder runs last: its per-chapter progress rows need both the
-  // org's users and the chapters the global seeders created.
+  // AcademyAccessSeeder runs after OrgUserSeeder: its per-chapter progress
+  // rows need both the org's users and the chapters the global seeders
+  // created.
   private readonly orgSeeders: OrgSeeder[] = [
     new OrgUserSeeder(),
     new BillingSeeder(),
     new UsageSeeder(),
     new CreditLimitSeeder(),
     new AcademyAccessSeeder(),
+    new WorkspaceSeeder(),
   ];
 
   constructor(private readonly runner: SeedRunner) {}
