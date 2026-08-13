@@ -25,6 +25,7 @@ import AddonsSection from './AddonsSection';
 import TrialSection from './TrialSection';
 import NoTrialSection from './NoTrialSection';
 import UsageTab from './UsageTab';
+import SsoSection from './SsoSection';
 import {
   Tabs,
   TabsList,
@@ -51,7 +52,8 @@ interface SuperAdminSettingsOrgPageProps {
     | 'trials'
     | 'usage'
     | 'crawl-domains'
-    | 'addons';
+    | 'addons'
+    | 'sso';
 }
 export default function SuperAdminSettingsOrgPage({
   org,
@@ -84,7 +86,8 @@ export default function SuperAdminSettingsOrgPage({
             | 'trials'
             | 'usage'
             | 'crawl-domains'
-            | 'addons',
+            | 'addons'
+            | 'sso',
         },
       });
     },
@@ -103,20 +106,23 @@ export default function SuperAdminSettingsOrgPage({
         onValueChange={handleTabChange}
         className="w-full"
       >
-        <TabsList>
-          <TabsTrigger value="org">{t('tabs.org')}</TabsTrigger>
-          <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
-          <TabsTrigger value="subscriptions">
-            {t('tabs.subscriptions')}
-          </TabsTrigger>
-          <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
-          <TabsTrigger value="models">{t('tabs.models')}</TabsTrigger>
-          <TabsTrigger value="crawl-domains">
-            {t('tabs.crawlDomains')}
-          </TabsTrigger>
-          <TabsTrigger value="addons">{t('tabs.addons')}</TabsTrigger>
-          <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList>
+            <TabsTrigger value="org">{t('tabs.org')}</TabsTrigger>
+            <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
+            <TabsTrigger value="subscriptions">
+              {t('tabs.subscriptions')}
+            </TabsTrigger>
+            <TabsTrigger value="trials">{t('tabs.trials')}</TabsTrigger>
+            <TabsTrigger value="models">{t('tabs.models')}</TabsTrigger>
+            <TabsTrigger value="crawl-domains">
+              {t('tabs.crawlDomains')}
+            </TabsTrigger>
+            <TabsTrigger value="addons">{t('tabs.addons')}</TabsTrigger>
+            <TabsTrigger value="usage">{t('tabs.usage')}</TabsTrigger>
+            <TabsTrigger value="sso">{t('tabs.sso')}</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="org" className="mt-4">
           <OrgDetails org={org} />
         </TabsContent>
@@ -198,6 +204,9 @@ export default function SuperAdminSettingsOrgPage({
         </TabsContent>
         <TabsContent value="usage" className="mt-4">
           <UsageTab orgId={org.id} />
+        </TabsContent>
+        <TabsContent value="sso" className="mt-4">
+          <SsoSection orgId={org.id} />
         </TabsContent>
       </Tabs>
     </SuperAdminSettingsLayout>

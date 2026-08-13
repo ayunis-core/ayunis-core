@@ -25,6 +25,7 @@ const searchSchema = z.object({
       'usage',
       'crawl-domains',
       'addons',
+      'sso',
     ])
     .optional(),
   usersSearch: z.string().optional(),
