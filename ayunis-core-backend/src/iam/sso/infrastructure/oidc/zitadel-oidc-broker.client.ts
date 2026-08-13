@@ -119,6 +119,7 @@ export class ZitadelOidcBrokerClient extends OidcBrokerClient {
       issuer,
       subject,
       email: this.requiredString(userInfo.email, 'email'),
+      name: this.displayName(userInfo),
       emailVerified: this.requiredBoolean(
         userInfo.email_verified,
         'email_verified',
@@ -223,7 +224,22 @@ export class ZitadelOidcBrokerClient extends OidcBrokerClient {
     return value;
   }
 
+  private displayName(userInfo: oidc.UserInfoResponse): string {
+    const name = this.optionalString(userInfo.name, 'name');
+    const preferredUsername = this.optionalString(
+      userInfo.preferred_username,
+      'preferred_username',
+    );
+    return (
+      name ?? preferredUsername ?? this.requiredString(userInfo.email, 'email')
+    );
+  }
+
   private optionalString(value: unknown, field: string): string | undefined {
-    return value === undefined ? undefined : this.requiredString(value, field);
+    if (value === undefined || value === null) return undefined;
+    if (typeof value !== 'string') {
+      throw new InvalidSsoBrokerResponseError(field);
+    }
+    return value.trim() || undefined;
   }
 }

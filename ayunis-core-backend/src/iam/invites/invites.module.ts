@@ -31,6 +31,8 @@ import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/u
 import { CreateInviteWithSeatReservationUseCase } from 'src/iam/invites/application/use-cases/create-invite-with-seat-reservation/create-invite-with-seat-reservation.use-case';
 import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
 import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
+import { FindPendingInviteByEmailAndOrgUseCase } from 'src/iam/invites/application/use-cases/find-pending-invite-by-email-and-org/find-pending-invite-by-email-and-org.use-case';
+import { AcceptPendingInviteUseCase } from 'src/iam/invites/application/use-cases/accept-pending-invite/accept-pending-invite.use-case';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -83,6 +85,8 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     CreateInviteWithSeatReservationUseCase,
     BulkInviteDeliveryService,
     BulkInviteValidatorService,
+    FindPendingInviteByEmailAndOrgUseCase,
+    AcceptPendingInviteUseCase,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,
@@ -100,6 +104,8 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     InviteJwtService,
     DeleteInviteByEmailUseCase,
     CountPendingInvitesByOrgIdUseCase,
+    FindPendingInviteByEmailAndOrgUseCase,
+    AcceptPendingInviteUseCase,
   ],
 })
 export class InvitesModule {}

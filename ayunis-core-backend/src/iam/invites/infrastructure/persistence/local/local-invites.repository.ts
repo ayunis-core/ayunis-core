@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { EntityManager, Repository, ILike, IsNull } from 'typeorm';
+import { EntityManager, Repository, IsNull } from 'typeorm';
 import { UUID } from 'crypto';
 import {
   InvitesRepository,
@@ -10,9 +10,10 @@ import {
   InvitesFilters,
 } from 'src/iam/invites/application/ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { InviteRecord } from './schema/invite.record';
-import { InviteMapper } from './mappers/invite.mapper';
+import { InviteRecord } from 'src/iam/invites/infrastructure/persistence/local/schema/invite.record';
+import { InviteMapper } from 'src/iam/invites/infrastructure/persistence/local/mappers/invite.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { exactEmail } from 'src/common/db/exact-email.operator';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
@@ -136,7 +137,7 @@ export class LocalInvitesRepository implements InvitesRepository {
     // clean up already-accepted invites; filtering on acceptedAt would leave
     // them orphaned and block re-inviting the same email (AYC-299).
     const entity = await this.invites.findOne({
-      where: { email: ILike(email) },
+      where: { email: exactEmail(email) },
     });
     if (!entity) {
       this.logger.debug({ email }, 'Invite not found by email');
@@ -151,7 +152,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   ): Promise<Invite | null> {
     this.logger.info({ email, orgId }, 'findOneByEmailAndOrg');
     const entity = await this.invites.findOne({
-      where: { email: ILike(email), orgId, acceptedAt: IsNull() },
+      where: { email: exactEmail(email), orgId, acceptedAt: IsNull() },
     });
     if (!entity) {
       this.logger.debug({ email, orgId }, 'Invite not found by email and org');
@@ -192,14 +193,16 @@ export class LocalInvitesRepository implements InvitesRepository {
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
-  async accept(id: UUID): Promise<void> {
+  async accept(id: UUID): Promise<boolean> {
     this.logger.info({ id }, 'accept');
 
-    await this.invites.update(id, {
-      acceptedAt: new Date(),
-    });
+    const result = await this.invites.update(
+      { id, acceptedAt: IsNull() },
+      { acceptedAt: new Date() },
+    );
 
     this.logger.debug({ id }, 'Invite accepted successfully');
+    return result.affected === 1;
   }
 
   async delete(id: UUID): Promise<void> {
