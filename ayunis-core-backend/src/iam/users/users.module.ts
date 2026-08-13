@@ -65,6 +65,7 @@ import { GetOrgAdminsUseCase } from './application/use-cases/get-org-admins/get-
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 import { ExportUsersUseCase } from './application/use-cases/export-users/export-users.use-case';
+import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/create-federated-user/create-federated-user.use-case';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -148,6 +150,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     CreateUserUseCase,
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
+    CreateFederatedUserUseCase,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,

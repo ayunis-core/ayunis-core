@@ -5,6 +5,8 @@ Each organization can have one SSO connection with a unique verified email domai
 
 Federated identities use the exact validated OIDC issuer and subject as their durable unique key and reference the internal Ayunis user. Organization and user deletion cascade to their corresponding SSO records. This module does not persist customer IdP credentials or the future self-service onboarding lifecycle, and it does not implement account linking, provisioning, or authorization decisions.
 
+`FederatedIdentitiesRepository` persists those mappings through the ambient transaction manager, allowing the provisioning phase to commit a user, its identity mapping, and invitation consumption as one unit. The database uniqueness constraint on `(issuer, subject)` remains the concurrency backstop.
+
 `ZitadelOidcBrokerClient` is the single OIDC relying-party adapter. It uses Authorization Code with PKCE, state, and nonce; pins the selected Zitadel organization in the authorization request; validates the response through `openid-client`; loads profile claims from UserInfo; and returns no broker tokens to callers. Its environment values are optional as a group so local authentication remains available before SSO is configured.
 
 Short-lived SSO login transactions are stored in Postgres for atomic one-time consumption. They contain hashes of the OIDC state and browser binding, a fixed allowlisted post-login path, encrypted PKCE verifier and nonce, the pinned Ayunis and Zitadel organization IDs, and a ten-minute expiry. State and browser binding must match in the atomic consume operation. A scheduled cleanup removes expired records; broker tokens are never persisted.
