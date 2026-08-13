@@ -60,6 +60,34 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
+  it('enables the exact mapping reviewed by the operator', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgId.mockResolvedValue(existing);
+
+    await useCase.execute(
+      new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
+        emailDomain: existing.emailDomain,
+        zitadelOrgId: existing.zitadelOrgId!,
+      }),
+    );
+
+    expect(repository.setEnabled).toHaveBeenCalledWith(existing, true);
+  });
+
+  it('rejects enablement when the reviewed mapping is stale', async () => {
+    repository.findByOrgId.mockResolvedValue(anOrgSsoConnection());
+
+    await expect(
+      useCase.execute(
+        new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
+          emailDomain: 'old.stadt.example',
+          zitadelOrgId: 'old-zitadel-org',
+        }),
+      ),
+    ).rejects.toBeInstanceOf(SsoConnectionChangedError);
+    expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
   it('reports a concurrently removed connection as not found', async () => {
     repository.findByOrgId
       .mockResolvedValueOnce(anOrgSsoConnection())

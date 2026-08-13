@@ -5025,6 +5025,47 @@ export interface UpdateOrgMfaRequirementRequestDto {
   required: boolean;
 }
 
+export interface OrgSsoConnectionResponseDto {
+  id: string;
+  orgId: string;
+  emailDomain: string;
+  domainVerifiedAt: string;
+  /** @nullable */
+  zitadelOrgId: string | null;
+  enabled: boolean;
+  jitProvisioningEnabled: boolean;
+}
+
+/**
+ * @nullable
+ */
+export type OrgSsoConnectionResourceDtoConnection = OrgSsoConnectionResponseDto | null;
+
+export interface OrgSsoConnectionResourceDto {
+  /** @nullable */
+  connection: OrgSsoConnectionResourceDtoConnection;
+}
+
+export interface ConfigureOrgSsoConnectionRequestDto {
+  emailDomain: string;
+  /** @maxLength 255 */
+  zitadelOrgId: string;
+  /** Confirms the email domain was independently verified */
+  domainVerified: boolean;
+}
+
+export interface SetOrgSsoEnabledRequestDto {
+  enabled: boolean;
+  /** Confirms the broker mapping was reviewed before enablement */
+  confirmed?: boolean;
+  reviewedEmailDomain?: string;
+  reviewedZitadelOrgId?: string;
+}
+
+export interface SetOrgSsoStateRequestDto {
+  enabled: boolean;
+}
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email
