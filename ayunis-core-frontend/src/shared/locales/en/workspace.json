@@ -2,11 +2,12 @@
   "page": {
     "breadcrumb": "Projects",
     "chatsTab": "Your chats",
-    "emptyChats": "No chats yet. Just start typing above.",
+    "emptyChats": "No chats yet. Chats you add to this project will appear here.",
     "pin": "Pin",
     "unpin": "Unpin",
     "settings": "Settings",
-    "newChat": "New chat"
+    "newChat": "New chat",
+    "truncatedChats": "Showing the first {{count}} chats"
   },
   "chat": {
     "untitled": "Untitled chat",

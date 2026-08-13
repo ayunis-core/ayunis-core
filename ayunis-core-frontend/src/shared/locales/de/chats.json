@@ -24,6 +24,7 @@
   },
   "delete": {
     "success": "Chat erfolgreich gelöscht!",
-    "error": "Chat konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    "error": "Chat konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Chat nicht gefunden"
   }
 }

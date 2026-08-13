@@ -12,7 +12,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { useDeleteChat } from '../api/useChatsSearch';
+import { useDeleteChat } from '@/features/useDeleteChat';
 
 interface ChatCardProps {
   chat: ChatListItem;
