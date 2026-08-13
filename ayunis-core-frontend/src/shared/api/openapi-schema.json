@@ -6582,6 +6582,321 @@
         "tags": ["workspaces"]
       }
     },
+    "/workspaces/{id}/context": {
+      "get": {
+        "operationId": "WorkspaceContextController_findContext",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceContextResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get workspace context",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skill-candidates": {
+      "get": {
+        "operationId": "WorkspaceContextController_listSkillCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceSkillCandidateResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-base-candidates": {
+      "get": {
+        "operationId": "WorkspaceContextController_listKnowledgeBaseCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceKnowledgeBaseCandidateResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}": {
+      "post": {
+        "operationId": "WorkspaceContextController_attachSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_detachSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}": {
+      "post": {
+        "operationId": "WorkspaceContextController_attachKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_detachKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/documents": {
+      "post": {
+        "operationId": "WorkspaceContextController_addDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/documents/{documentId}": {
+      "delete": {
+        "operationId": "WorkspaceContextController_removeDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/instruction": {
+      "patch": {
+        "operationId": "WorkspaceContextController_updateInstruction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceInstructionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
     "/favorites": {
       "get": {
         "operationId": "FavoritesController_findAll",
@@ -15921,6 +16236,12 @@
             "example": "Anfragen von Bürgerinnen und Bürgern bündeln",
             "nullable": true
           },
+          "instruction": {
+            "type": "string",
+            "description": "Instructions that apply to every chat in the workspace",
+            "example": "Answer with the tone and policies of the building department.",
+            "nullable": true
+          },
           "icon": {
             "type": "string",
             "description": "Key of the workspace icon from the client icon catalogue",
@@ -15956,6 +16277,7 @@
           "id",
           "name",
           "description",
+          "instruction",
           "icon",
           "color",
           "createdAt",
@@ -15987,6 +16309,170 @@
             "example": "#6b5bd6"
           }
         }
+      },
+      "WorkspaceSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "shortDescription"]
+      },
+      "WorkspaceKnowledgeBaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentCount": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "name", "description", "documentCount"]
+      },
+      "WorkspaceDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text", "data"]
+          },
+          "createdBy": {
+            "type": "string",
+            "enum": ["user", "llm", "system"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["processing", "ready", "failed"]
+          },
+          "processingError": {
+            "type": "object",
+            "nullable": true
+          },
+          "textType": {
+            "type": "string",
+            "enum": ["file", "web"]
+          },
+          "url": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "createdBy",
+          "status",
+          "processingError",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceContextResponseDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+            }
+          },
+          "knowledgeBases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
+            }
+          }
+        },
+        "required": ["instruction", "skills", "knowledgeBases", "documents"]
+      },
+      "WorkspaceSkillCandidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "isAttached": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "shortDescription", "isAttached"]
+      },
+      "WorkspaceKnowledgeBaseCandidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentCount": {
+            "type": "number"
+          },
+          "isAttached": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "description", "documentCount", "isAttached"]
+      },
+      "UpdateWorkspaceInstructionDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "description": "Instructions that apply to every chat in the workspace",
+            "nullable": true,
+            "maxLength": 10000
+          }
+        },
+        "required": ["instruction"]
       },
       "WorkspaceFavoriteResponseDto": {
         "type": "object",

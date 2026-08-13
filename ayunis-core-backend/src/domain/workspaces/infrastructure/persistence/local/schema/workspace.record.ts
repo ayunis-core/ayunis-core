@@ -12,6 +12,9 @@ export class WorkspaceRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 1000, nullable: true })
   description: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  instruction: string | null;
+
   @Column({ type: 'varchar', length: 64 })
   icon: string;
 

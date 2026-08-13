@@ -149,7 +149,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       mcpIntegrationIds: [integrationId],
       sourceAssignments: [],
     });
-    const tools = await service.assembleTools(thread, [], new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     // Backend names are canonical: the built-in and the MCP tool coexist —
     // wire-level collision handling is the providers' job.
@@ -191,7 +191,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       mcpIntegrationIds: [integrationId],
       sourceAssignments: [],
     });
-    const tools = await service.assembleTools(thread, [], new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const matches = tools.filter(
       (t: { name: string }) => t.name === 'notion.search',
@@ -207,7 +207,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
 
     const thread = createMockThread();
-    const tools = await service.assembleTools(thread, undefined, [], new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).toContain(ToolType.GENERATE_IMAGE);
@@ -224,7 +224,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
 
     const thread = createMockThread();
-    const tools = await service.assembleTools(thread, undefined, [], new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.GENERATE_IMAGE);
@@ -241,9 +241,9 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
     const thread = createMockThread();
 
-    await expect(
-      service.assembleTools(thread, undefined, [], new Map()),
-    ).rejects.toThrow(unexpectedError);
+    await expect(service.assembleTools(thread, new Map())).rejects.toThrow(
+      unexpectedError,
+    );
 
     expect(loggerSpy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -261,7 +261,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       });
 
     const thread = createMockThread();
-    const tools = await service.assembleTools(thread, undefined, [], new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.GENERATE_IMAGE);
@@ -294,7 +294,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       ].map((source) => new SourceAssignment({ source })),
     });
 
-    await service.assembleTools(thread, [], new Map());
+    await service.assembleTools(thread, new Map());
 
     const codeExecutionCall = assembleToolsUseCase.execute.mock.calls.find(
       ([cmd]: [{ type: ToolType }]) => cmd.type === ToolType.CODE_EXECUTION,
@@ -313,7 +313,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
 
     const thread = createMockThread();
-    const tools = await service.assembleTools(thread, undefined, new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).toContain(ToolType.WEBSITE_CONTENT);
@@ -330,7 +330,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     });
 
     const thread = createMockThread();
-    const tools = await service.assembleTools(thread, undefined, new Map());
+    const tools = await service.assembleTools(thread, new Map());
 
     const toolTypes = tools.map((t: { type: ToolType }) => t.type);
     expect(toolTypes).not.toContain(ToolType.WEBSITE_CONTENT);

@@ -33,6 +33,9 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
+import type { Source } from 'src/domain/sources/domain/source.entity';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -64,8 +67,11 @@ export class ToolAssemblyService {
     activeSkills: Skill[],
     canUseTools: boolean,
     isAnonymous: boolean,
+    workspaceContext?: WorkspaceRunContext,
   ): Promise<{ tools: Tool[]; instructions: string }> {
     const alwaysOnTemplates = await this.fetchAlwaysOnTemplates();
+
+    const projectSkills = workspaceContext?.skills ?? [];
 
     const { slugMap, skillEntries } = this.buildSkillSlugs(
       activeSkills,
@@ -73,13 +79,10 @@ export class ToolAssemblyService {
     );
 
     const tools = canUseTools
-      ? await this.assembleTools(thread, activeSkills, slugMap)
+      ? await this.assembleTools(thread, slugMap, workspaceContext)
       : [];
 
-    // Collect all sources from thread for the system prompt.
-    // All types and statuses are passed — the system prompt builder partitions
-    // them into ready / processing / failed sections.
-    const allSources = thread.sourceAssignments?.map((a) => a.source) ?? [];
+    const allSources = this.collectRunSources(thread, workspaceContext);
 
     const { orgSystemPrompt, userSystemPrompt } =
       await this.fetchSystemPrompts();
@@ -88,16 +91,62 @@ export class ToolAssemblyService {
       tools,
       currentTime: new Date(),
       sources: allSources,
-      // Only include skills in prompt when tools are enabled and skills feature is on,
-      // otherwise the prompt would instruct the model to use activate_skill which isn't available
-      skills: canUseTools && this.features.skillsEnabled ? skillEntries : [],
-      knowledgeBases: canUseTools ? thread.getUniqueKnowledgeBases() : [],
+      skills: this.resolvePromptSkills(skillEntries, canUseTools),
+      knowledgeBases: this.resolvePromptKnowledgeBases(
+        thread,
+        workspaceContext,
+        canUseTools,
+      ),
+      projectInstruction: workspaceContext?.instruction,
+      projectSkills,
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous,
     });
 
     return { tools, instructions };
+  }
+
+  private collectRunSources(
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+  ): Source[] {
+    return this.mergeById(
+      thread.sourceAssignments?.map((a) => a.source) ?? [],
+      workspaceContext?.runtimeSources ?? [],
+    );
+  }
+
+  private resolvePromptSkills(
+    skillEntries: SkillEntry[],
+    canUseTools: boolean,
+  ): SkillEntry[] {
+    if (!canUseTools || !this.features.skillsEnabled) return [];
+    return skillEntries;
+  }
+
+  private resolvePromptKnowledgeBases(
+    thread: Thread,
+    workspaceContext: WorkspaceRunContext | undefined,
+    canUseTools: boolean,
+  ): KnowledgeBaseSummary[] {
+    if (!canUseTools) return [];
+    return this.mergeById(
+      thread.getUniqueKnowledgeBases(),
+      workspaceContext?.runtimeKnowledgeBases ?? [],
+    );
+  }
+
+  private mergeById<T extends { id: string }>(base: T[], additional: T[]): T[] {
+    const result = [...base];
+    const seen = new Set(base.map((item) => item.id));
+    for (const item of additional) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        result.push(item);
+      }
+    }
+    return result;
   }
 
   /**
@@ -190,13 +239,13 @@ export class ToolAssemblyService {
 
   async assembleTools(
     thread: Thread,
-    _activeSkills: Skill[],
     slugMap: Map<string, string>,
+    workspaceContext?: WorkspaceRunContext,
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
     // Code execution tool is always available
-    tools.push(await this.assembleCodeExecutionTool(thread));
+    tools.push(await this.assembleCodeExecutionTool(thread, workspaceContext));
 
     // Always-available tools
     tools.push(
@@ -232,23 +281,31 @@ export class ToolAssemblyService {
       })),
     );
 
-    tools.push(...(await this.assembleSourceTools(thread)));
-    tools.push(...(await this.assembleKnowledgeTools(thread)));
+    tools.push(...(await this.assembleSourceTools(thread, workspaceContext)));
+    tools.push(
+      ...(await this.assembleKnowledgeTools(thread, workspaceContext)),
+    );
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
 
     // MCP tools/resources go last: their names are third-party and must not
     // shadow a built-in tool of the same name.
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(
-      ...(await this.mcpToolAssembler.assemble(thread, reservedNames)),
+      ...(await this.mcpToolAssembler.assemble(
+        thread,
+        reservedNames,
+        workspaceContext?.mcpIntegrationIds ?? [],
+      )),
     );
 
     return tools;
   }
 
-  private async assembleCodeExecutionTool(thread: Thread): Promise<Tool> {
-    const threadSources =
-      thread.sourceAssignments?.map((assignment) => assignment.source) ?? [];
+  private async assembleCodeExecutionTool(
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+  ): Promise<Tool> {
+    const threadSources = this.collectRunSources(thread, workspaceContext);
     // Match the system prompt's partitioning: PROCESSING/FAILED data sources
     // are announced there as pending/failed, so advertising them here as
     // available would contradict it and steer the model into doomed calls.
@@ -328,10 +385,14 @@ export class ToolAssemblyService {
     return tools;
   }
 
-  private async assembleSourceTools(thread: Thread): Promise<Tool[]> {
-    const threadTextSources = (thread.sourceAssignments ?? [])
-      .map((assignment) => assignment.source)
-      .filter((source): source is TextSource => source instanceof TextSource);
+  private async assembleSourceTools(
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+  ): Promise<Tool[]> {
+    const sources = this.collectRunSources(thread, workspaceContext);
+    const threadTextSources = sources.filter(
+      (source): source is TextSource => source instanceof TextSource,
+    );
 
     if (threadTextSources.length === 0) return [];
 
@@ -344,8 +405,14 @@ export class ToolAssemblyService {
     );
   }
 
-  private async assembleKnowledgeTools(thread: Thread): Promise<Tool[]> {
-    const knowledgeBases = thread.getUniqueKnowledgeBases();
+  private async assembleKnowledgeTools(
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+  ): Promise<Tool[]> {
+    const knowledgeBases = this.mergeById(
+      thread.getUniqueKnowledgeBases(),
+      workspaceContext?.runtimeKnowledgeBases ?? [],
+    );
     if (knowledgeBases.length === 0) return [];
 
     return Promise.all(

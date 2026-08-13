@@ -11,8 +11,9 @@ import {
   getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
+  workspaceContextControllerFindContext,
+  getWorkspaceContextControllerFindContextQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-
 const WORKSPACE_CHATS_LIMIT = 100;
 
 const queryDefaultModelOptions = () => ({
@@ -54,10 +55,19 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
           throw redirect({ to: '/workspaces' });
         });
 
-      const chats = await queryClient.fetchQuery({
-        queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
-        queryFn: () => threadsControllerFindAll(chatsParams),
-      });
+      const [chats, context] = await Promise.all([
+        queryClient.fetchQuery({
+          queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
+          queryFn: () => threadsControllerFindAll(chatsParams),
+        }),
+        queryClient
+          .fetchQuery({
+            queryKey:
+              getWorkspaceContextControllerFindContextQueryKey(workspaceId),
+            queryFn: () => workspaceContextControllerFindContext(workspaceId),
+          })
+          .catch(() => null),
+      ]);
 
       // The model queries only serve the embedded composer; a failure must
       // not take down the whole workspace page (chats and settings work
@@ -80,6 +90,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         selectedModelId: defaultModelResponse?.permittedLanguageModel?.id,
         isEmbeddingModelEnabled:
           embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
+        context,
       };
     },
   },
@@ -92,6 +103,7 @@ function RouteComponent() {
     chatCount,
     selectedModelId,
     isEmbeddingModelEnabled,
+    context,
   } = Route.useLoaderData();
   return (
     <WorkspacePage
@@ -100,6 +112,7 @@ function RouteComponent() {
       chatCount={chatCount}
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      context={context}
     />
   );
 }

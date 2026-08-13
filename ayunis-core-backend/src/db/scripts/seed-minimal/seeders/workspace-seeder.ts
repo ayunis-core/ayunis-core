@@ -1,16 +1,37 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 import { FavoriteRecord } from 'src/domain/favorites/infrastructure/persistence/local/schema/favorite.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
+import type { TextSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
+import { FileSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
+import { TextSourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import { WorkspaceKnowledgeBaseAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-knowledge-base-assignment.record';
+import { WorkspaceSkillAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-skill-assignment.record';
+import { WorkspaceSourceAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-source-assignment.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
+import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
+import { log } from '../../utils/seed-log';
 import { OrgSeeder } from './base-seeder';
 import type { SeedState } from '../seed-state';
-import type { OrgFixture } from '../seed-types';
+import type {
+  KnowledgeBaseFixture,
+  OrgFixture,
+  SeedDocumentFixture,
+  SkillFixture,
+  WorkspaceFixture,
+} from '../seed-types';
 
 /**
- * Seeds the org's workspaces ("Projekte", AYC-700), owned by the org admin.
- * Chats are deliberately not seeded — creating one in a workspace is two
- * clicks in the UI, while thread/message fixtures would be a project of their
- * own. The rows are invisible until FEATURE_WORKSPACES_ENABLED is on.
+ * Seeds the org's workspaces ("Projekte"), owned by the org admin, plus demo
+ * context for AYC-701: project instructions, assigned skills, assigned
+ * knowledge bases and direct project documents. The rows are invisible until
+ * FEATURE_WORKSPACES_ENABLED is on.
  *
  * Sidebar pin state and order are favorites rows, not workspace columns. The
  * app favorites a new workspace inside CreateWorkspaceUseCase; the seeder
@@ -26,47 +47,342 @@ export class WorkspaceSeeder extends OrgSeeder {
     }
 
     const orgId = ctx.getOrg(org.key).id;
-    const admin = ctx.getAdmin(org.key);
-    const favorites = this.repo(FavoriteRecord);
+    const adminId = ctx.getAdmin(org.key).id;
+    const skills = await this.seedSkills(adminId, org.skills ?? []);
+    const knowledgeBases = await this.seedKnowledgeBases(
+      orgId,
+      adminId,
+      org.knowledgeBases ?? [],
+    );
 
     for (const workspace of workspaces) {
-      const record = await this.findOrCreate(
-        this.repo(WorkspaceRecord),
-        { orgId, userId: admin.id, name: workspace.name },
-        () => ({
-          id: randomUUID(),
-          orgId,
-          userId: admin.id,
-          name: workspace.name,
-          description: workspace.description ?? null,
-          icon: workspace.icon,
-          color: workspace.color,
-        }),
-        { entity: 'Workspace', name: workspace.name },
-      );
-
-      if (!workspace.pinned) {
-        continue;
-      }
-      const maxPosition = await favorites.maximum('position', {
-        userId: admin.id,
-      });
-      await this.findOrCreate(
-        favorites,
-        {
-          userId: admin.id,
-          referenceType: FavoriteReferenceType.Workspace,
-          referenceId: record.id,
-        },
-        () => ({
-          id: randomUUID(),
-          userId: admin.id,
-          referenceType: FavoriteReferenceType.Workspace,
-          referenceId: record.id,
-          position: (maxPosition ?? -1) + 1,
-        }),
-        { entity: 'Favorite', name: workspace.name },
+      await this.seedWorkspace(
+        orgId,
+        adminId,
+        workspace,
+        skills,
+        knowledgeBases,
       );
     }
+  }
+
+  private async seedSkills(
+    userId: UUID,
+    fixtures: readonly SkillFixture[],
+  ): Promise<Map<string, SkillRecord>> {
+    const records = new Map<string, SkillRecord>();
+    for (const fixture of fixtures) {
+      const record = await this.findOrCreate(
+        this.repo(SkillRecord),
+        { userId, name: fixture.name },
+        () => ({ id: randomUUID(), userId, ...fixture }),
+        { entity: 'Skill', name: fixture.name },
+      );
+      records.set(fixture.name, record);
+    }
+    return records;
+  }
+
+  private async seedKnowledgeBases(
+    orgId: UUID,
+    userId: UUID,
+    fixtures: readonly KnowledgeBaseFixture[],
+  ): Promise<Map<string, KnowledgeBaseRecord>> {
+    const records = new Map<string, KnowledgeBaseRecord>();
+    for (const fixture of fixtures) {
+      const record = await this.seedKnowledgeBase(orgId, userId, fixture);
+      records.set(fixture.name, record);
+    }
+    return records;
+  }
+
+  private async seedKnowledgeBase(
+    orgId: UUID,
+    userId: UUID,
+    fixture: KnowledgeBaseFixture,
+  ): Promise<KnowledgeBaseRecord> {
+    const record = await this.findOrCreate(
+      this.repo(KnowledgeBaseRecord),
+      { orgId, userId, name: fixture.name },
+      () => ({
+        id: randomUUID(),
+        orgId,
+        userId,
+        name: fixture.name,
+        description: fixture.description,
+      }),
+      { entity: 'KnowledgeBase', name: fixture.name },
+    );
+    for (const document of fixture.documents) {
+      await this.seedDocument(document, record.id);
+    }
+    return record;
+  }
+
+  private async seedWorkspace(
+    orgId: UUID,
+    userId: UUID,
+    workspace: WorkspaceFixture,
+    skills: Map<string, SkillRecord>,
+    knowledgeBases: Map<string, KnowledgeBaseRecord>,
+  ): Promise<void> {
+    const record = await this.findOrCreateWorkspace(orgId, userId, workspace);
+    await this.syncWorkspaceInstruction(record, workspace.instruction ?? null);
+    await this.seedWorkspaceFavorites(userId, record, workspace);
+    await this.seedWorkspaceSkillAssignments(record.id, workspace, skills);
+    await this.seedWorkspaceKnowledgeBaseAssignments(
+      record.id,
+      workspace,
+      knowledgeBases,
+    );
+    await this.seedWorkspaceDocuments(record.id, workspace.documents ?? []);
+  }
+
+  private async findOrCreateWorkspace(
+    orgId: UUID,
+    userId: UUID,
+    workspace: WorkspaceFixture,
+  ): Promise<WorkspaceRecord> {
+    return this.findOrCreate(
+      this.repo(WorkspaceRecord),
+      { orgId, userId, name: workspace.name },
+      () => ({
+        id: randomUUID(),
+        orgId,
+        userId,
+        name: workspace.name,
+        description: workspace.description ?? null,
+        instruction: workspace.instruction ?? null,
+        icon: workspace.icon,
+        color: workspace.color,
+      }),
+      { entity: 'Workspace', name: workspace.name },
+    );
+  }
+
+  private async syncWorkspaceInstruction(
+    record: WorkspaceRecord,
+    instruction: string | null,
+  ): Promise<void> {
+    if (record.instruction === instruction) {
+      return;
+    }
+    record.instruction = instruction;
+    await this.repo(WorkspaceRecord).save(record);
+  }
+
+  private async seedWorkspaceFavorites(
+    userId: UUID,
+    record: WorkspaceRecord,
+    workspace: WorkspaceFixture,
+  ): Promise<void> {
+    if (!workspace.pinned) {
+      return;
+    }
+    const favorites = this.repo(FavoriteRecord);
+    const maxPosition = await favorites.maximum('position', { userId });
+    await this.findOrCreate(
+      favorites,
+      {
+        userId,
+        referenceType: FavoriteReferenceType.Workspace,
+        referenceId: record.id,
+      },
+      () => ({
+        id: randomUUID(),
+        userId,
+        referenceType: FavoriteReferenceType.Workspace,
+        referenceId: record.id,
+        position: (maxPosition ?? -1) + 1,
+      }),
+      { entity: 'Favorite', name: workspace.name },
+    );
+  }
+
+  private async seedWorkspaceSkillAssignments(
+    workspaceId: UUID,
+    workspace: WorkspaceFixture,
+    skills: Map<string, SkillRecord>,
+  ): Promise<void> {
+    for (const name of workspace.skillNames ?? []) {
+      const skill = this.requireFixtureRecord(skills, name, 'skill');
+      await this.findOrCreate(
+        this.repo(WorkspaceSkillAssignmentRecord),
+        { workspaceId, skillId: skill.id },
+        () => ({ id: randomUUID(), workspaceId, skillId: skill.id }),
+        { entity: 'WorkspaceSkillAssignment', name },
+      );
+    }
+  }
+
+  private async seedWorkspaceKnowledgeBaseAssignments(
+    workspaceId: UUID,
+    workspace: WorkspaceFixture,
+    knowledgeBases: Map<string, KnowledgeBaseRecord>,
+  ): Promise<void> {
+    for (const name of workspace.knowledgeBaseNames ?? []) {
+      const knowledgeBase = this.requireFixtureRecord(
+        knowledgeBases,
+        name,
+        'knowledge base',
+      );
+      await this.findOrCreate(
+        this.repo(WorkspaceKnowledgeBaseAssignmentRecord),
+        { workspaceId, knowledgeBaseId: knowledgeBase.id },
+        () => ({
+          id: randomUUID(),
+          workspaceId,
+          knowledgeBaseId: knowledgeBase.id,
+        }),
+        { entity: 'WorkspaceKnowledgeBaseAssignment', name },
+      );
+    }
+  }
+
+  private async seedWorkspaceDocuments(
+    workspaceId: UUID,
+    documents: readonly SeedDocumentFixture[],
+  ): Promise<void> {
+    for (const document of documents) {
+      const source = await this.seedDocument(document, null);
+      await this.findOrCreate(
+        this.repo(WorkspaceSourceAssignmentRecord),
+        { workspaceId, sourceId: source.id },
+        () => ({ id: randomUUID(), workspaceId, sourceId: source.id }),
+        { entity: 'WorkspaceSourceAssignment', name: document.name },
+      );
+    }
+  }
+
+  private async seedDocument(
+    document: SeedDocumentFixture,
+    knowledgeBaseId: UUID | null,
+  ): Promise<TextSourceRecord> {
+    const existing = await this.findSeedDocument(document, knowledgeBaseId);
+    if (existing) {
+      log('Source', document.name, false);
+      await this.seedDocumentDetails(existing, document.text);
+      return existing;
+    }
+
+    const source = await this.repo(TextSourceRecord).save(
+      this.repo(TextSourceRecord).create({
+        id: randomUUID(),
+        name: document.name,
+        knowledgeBaseId,
+        createdBy: SourceCreator.USER,
+        status: SourceStatus.READY,
+        processingError: null,
+        processingStartedAt: null,
+        textType: TextType.FILE,
+        fileType: FileType.TXT,
+        url: null,
+        maxDepth: null,
+      }),
+    );
+    log('Source', document.name, true);
+    await this.seedDocumentDetails(source, document.text);
+    return source;
+  }
+
+  private async findSeedDocument(
+    document: SeedDocumentFixture,
+    knowledgeBaseId: UUID | null,
+  ): Promise<TextSourceRecord | null> {
+    return this.repo(TextSourceRecord)
+      .createQueryBuilder('source')
+      .innerJoin('source.textSourceDetails', 'details')
+      .where('source.name = :name', { name: document.name })
+      .andWhere(
+        knowledgeBaseId === null
+          ? 'source.knowledgeBaseId IS NULL'
+          : 'source.knowledgeBaseId = :knowledgeBaseId',
+        { knowledgeBaseId },
+      )
+      .andWhere('details.text = :text', { text: document.text })
+      .getOne();
+  }
+
+  private async seedDocumentDetails(
+    source: TextSourceRecord,
+    text: string,
+  ): Promise<void> {
+    const details = await this.findOrCreate(
+      this.repo(FileSourceDetailsRecord),
+      { source: { id: source.id } },
+      () => ({ id: randomUUID(), source, text, fileType: FileType.TXT }),
+      { entity: 'FileSourceDetails', name: source.name },
+    );
+    await this.seedContentChunk(details, text, source.id, source.name);
+  }
+
+  private async seedContentChunk(
+    source: TextSourceDetailsRecord,
+    content: string,
+    sourceId: UUID,
+    name: string,
+  ): Promise<void> {
+    const chunk = await this.findOrCreate(
+      this.repo(SourceContentChunkRecord),
+      { source: { id: source.id } },
+      () => ({ id: randomUUID(), source, content, meta: {} }),
+      { entity: 'SourceContentChunk', name },
+    );
+    await this.seedRagIndex(sourceId, chunk, content, name);
+  }
+
+  private async seedRagIndex(
+    sourceId: UUID,
+    chunk: SourceContentChunkRecord,
+    content: string,
+    name: string,
+  ): Promise<void> {
+    const parent = await this.findOrCreate(
+      this.repo(ParentChunkRecord),
+      { relatedDocumentId: sourceId, relatedChunkId: chunk.id },
+      () => ({
+        id: randomUUID(),
+        relatedDocumentId: sourceId,
+        relatedChunkId: chunk.id,
+        content,
+      }),
+      { entity: 'ParentChunk', name },
+    );
+    await this.findOrCreate(
+      this.repo(ChildChunkRecord),
+      { parentId: parent.id },
+      () => ({
+        id: randomUUID(),
+        parentId: parent.id,
+        parent,
+        embedding1024: this.buildSeedEmbedding(content),
+        embedding1536: null,
+        embedding2560: null,
+      }),
+      { entity: 'ChildChunk', name },
+    );
+  }
+
+  private buildSeedEmbedding(content: string): number[] {
+    const values = Array.from({ length: 1024 }, (_, index) => {
+      const code = content.charCodeAt(index % content.length) || 1;
+      return (code % 97) / 97;
+    });
+    values[0] = 1;
+    return values;
+  }
+
+  private requireFixtureRecord<T>(
+    records: Map<string, T>,
+    name: string,
+    entity: string,
+  ): T {
+    const record = records.get(name);
+    if (!record) {
+      throw new Error(
+        `Workspace fixture references unknown ${entity} "${name}"`,
+      );
+    }
+    return record;
   }
 }

@@ -247,6 +247,7 @@ import type {
   UpdateUserNameDto,
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
+  UpdateWorkspaceInstructionDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -267,7 +268,12 @@ import type {
   UserSystemPromptResponseDto,
   UserUsageResponseDto,
   ValidationResponseDto,
-  WorkspaceResponseDto
+  WorkspaceContextControllerAddDocumentBody,
+  WorkspaceContextResponseDto,
+  WorkspaceDocumentResponseDto,
+  WorkspaceKnowledgeBaseCandidateResponseDto,
+  WorkspaceResponseDto,
+  WorkspaceSkillCandidateResponseDto
 } from './ayunisCoreAPI.schemas';
 
 import { customAxiosInstance } from '../client';
@@ -13479,6 +13485,681 @@ export const useWorkspacesControllerRemove = <TError = void,
       > => {
 
       const mutationOptions = getWorkspacesControllerRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get workspace context
+ */
+export const workspaceContextControllerFindContext = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceContextResponseDto>(
+      {url: `/workspaces/${id}/context`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceContextControllerFindContextQueryKey = (id?: string,) => {
+    return [
+    `/workspaces/${id}/context`
+    ] as const;
+    }
+
+    
+export const getWorkspaceContextControllerFindContextQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerFindContextQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>> = ({ signal }) => workspaceContextControllerFindContext(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceContextControllerFindContextQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>>
+export type WorkspaceContextControllerFindContextQueryError = unknown
+
+
+export function useWorkspaceContextControllerFindContext<TData = Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerFindContext>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerFindContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerFindContext<TData = Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerFindContext>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerFindContext>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerFindContext<TData = Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get workspace context
+ */
+
+export function useWorkspaceContextControllerFindContext<TData = Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerFindContext>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceContextControllerFindContextQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const workspaceContextControllerListSkillCandidates = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceSkillCandidateResponseDto[]>(
+      {url: `/workspaces/${id}/context/skill-candidates`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceContextControllerListSkillCandidatesQueryKey = (id?: string,) => {
+    return [
+    `/workspaces/${id}/context/skill-candidates`
+    ] as const;
+    }
+
+    
+export const getWorkspaceContextControllerListSkillCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerListSkillCandidatesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>> = ({ signal }) => workspaceContextControllerListSkillCandidates(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceContextControllerListSkillCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>>
+export type WorkspaceContextControllerListSkillCandidatesQueryError = unknown
+
+
+export function useWorkspaceContextControllerListSkillCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerListSkillCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerListSkillCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useWorkspaceContextControllerListSkillCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListSkillCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceContextControllerListSkillCandidatesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const workspaceContextControllerListKnowledgeBaseCandidates = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceKnowledgeBaseCandidateResponseDto[]>(
+      {url: `/workspaces/${id}/context/knowledge-base-candidates`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryKey = (id?: string,) => {
+    return [
+    `/workspaces/${id}/context/knowledge-base-candidates`
+    ] as const;
+    }
+
+    
+export const getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryOptions = <TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>> = ({ signal }) => workspaceContextControllerListKnowledgeBaseCandidates(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceContextControllerListKnowledgeBaseCandidatesQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>>
+export type WorkspaceContextControllerListKnowledgeBaseCandidatesQueryError = unknown
+
+
+export function useWorkspaceContextControllerListKnowledgeBaseCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerListKnowledgeBaseCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceContextControllerListKnowledgeBaseCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useWorkspaceContextControllerListKnowledgeBaseCandidates<TData = Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceContextControllerListKnowledgeBaseCandidates>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceContextControllerListKnowledgeBaseCandidatesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+export const workspaceContextControllerAttachSkill = (
+    id: string,
+    skillId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/context/skills/${skillId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerAttachSkillMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>, TError,{id: string;skillId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>, TError,{id: string;skillId: string}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerAttachSkill'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>, {id: string;skillId: string}> = (props) => {
+          const {id,skillId} = props ?? {};
+
+          return  workspaceContextControllerAttachSkill(id,skillId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerAttachSkillMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>>
+    
+    export type WorkspaceContextControllerAttachSkillMutationError = unknown
+
+    export const useWorkspaceContextControllerAttachSkill = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>, TError,{id: string;skillId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerAttachSkill>>,
+        TError,
+        {id: string;skillId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerAttachSkillMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerDetachSkill = (
+    id: string,
+    skillId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/context/skills/${skillId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerDetachSkillMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>, TError,{id: string;skillId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>, TError,{id: string;skillId: string}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerDetachSkill'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>, {id: string;skillId: string}> = (props) => {
+          const {id,skillId} = props ?? {};
+
+          return  workspaceContextControllerDetachSkill(id,skillId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerDetachSkillMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>>
+    
+    export type WorkspaceContextControllerDetachSkillMutationError = unknown
+
+    export const useWorkspaceContextControllerDetachSkill = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>, TError,{id: string;skillId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerDetachSkill>>,
+        TError,
+        {id: string;skillId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerDetachSkillMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerAttachKnowledgeBase = (
+    id: string,
+    knowledgeBaseId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerAttachKnowledgeBaseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerAttachKnowledgeBase'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
+          const {id,knowledgeBaseId} = props ?? {};
+
+          return  workspaceContextControllerAttachKnowledgeBase(id,knowledgeBaseId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerAttachKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>>
+    
+    export type WorkspaceContextControllerAttachKnowledgeBaseMutationError = unknown
+
+    export const useWorkspaceContextControllerAttachKnowledgeBase = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerAttachKnowledgeBase>>,
+        TError,
+        {id: string;knowledgeBaseId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerAttachKnowledgeBaseMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerDetachKnowledgeBase = (
+    id: string,
+    knowledgeBaseId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/context/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerDetachKnowledgeBaseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerDetachKnowledgeBase'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>, {id: string;knowledgeBaseId: string}> = (props) => {
+          const {id,knowledgeBaseId} = props ?? {};
+
+          return  workspaceContextControllerDetachKnowledgeBase(id,knowledgeBaseId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerDetachKnowledgeBaseMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>>
+    
+    export type WorkspaceContextControllerDetachKnowledgeBaseMutationError = unknown
+
+    export const useWorkspaceContextControllerDetachKnowledgeBase = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>, TError,{id: string;knowledgeBaseId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerDetachKnowledgeBase>>,
+        TError,
+        {id: string;knowledgeBaseId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerDetachKnowledgeBaseMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerAddDocument = (
+    id: string,
+    workspaceContextControllerAddDocumentBody: WorkspaceContextControllerAddDocumentBody,
+ signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, workspaceContextControllerAddDocumentBody.file)
+
+      return customAxiosInstance<WorkspaceDocumentResponseDto>(
+      {url: `/workspaces/${id}/context/documents`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerAddDocumentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>, TError,{id: string;data: WorkspaceContextControllerAddDocumentBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>, TError,{id: string;data: WorkspaceContextControllerAddDocumentBody}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerAddDocument'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>, {id: string;data: WorkspaceContextControllerAddDocumentBody}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceContextControllerAddDocument(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerAddDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>>
+    export type WorkspaceContextControllerAddDocumentMutationBody = WorkspaceContextControllerAddDocumentBody
+    export type WorkspaceContextControllerAddDocumentMutationError = unknown
+
+    export const useWorkspaceContextControllerAddDocument = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>, TError,{id: string;data: WorkspaceContextControllerAddDocumentBody}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerAddDocument>>,
+        TError,
+        {id: string;data: WorkspaceContextControllerAddDocumentBody},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerAddDocumentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerRemoveDocument = (
+    id: string,
+    documentId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/context/documents/${documentId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerRemoveDocumentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerRemoveDocument'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>, {id: string;documentId: string}> = (props) => {
+          const {id,documentId} = props ?? {};
+
+          return  workspaceContextControllerRemoveDocument(id,documentId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerRemoveDocumentMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>>
+    
+    export type WorkspaceContextControllerRemoveDocumentMutationError = unknown
+
+    export const useWorkspaceContextControllerRemoveDocument = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>, TError,{id: string;documentId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerRemoveDocument>>,
+        TError,
+        {id: string;documentId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerRemoveDocumentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+export const workspaceContextControllerUpdateInstruction = (
+    id: string,
+    updateWorkspaceInstructionDto: UpdateWorkspaceInstructionDto,
+ ) => {
+      
+      
+      return customAxiosInstance<WorkspaceResponseDto>(
+      {url: `/workspaces/${id}/context/instruction`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateWorkspaceInstructionDto
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceContextControllerUpdateInstructionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,{id: string;data: UpdateWorkspaceInstructionDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,{id: string;data: UpdateWorkspaceInstructionDto}, TContext> => {
+
+const mutationKey = ['workspaceContextControllerUpdateInstruction'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, {id: string;data: UpdateWorkspaceInstructionDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  workspaceContextControllerUpdateInstruction(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceContextControllerUpdateInstructionMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>>
+    export type WorkspaceContextControllerUpdateInstructionMutationBody = UpdateWorkspaceInstructionDto
+    export type WorkspaceContextControllerUpdateInstructionMutationError = unknown
+
+    export const useWorkspaceContextControllerUpdateInstruction = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>, TError,{id: string;data: UpdateWorkspaceInstructionDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceContextControllerUpdateInstruction>>,
+        TError,
+        {id: string;data: UpdateWorkspaceInstructionDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceContextControllerUpdateInstructionMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

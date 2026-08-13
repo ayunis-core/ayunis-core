@@ -109,6 +109,23 @@ export class KnowledgeBaseAccessService {
    * Resolves whether a knowledge base is shared with the given user.
    * Returns false for KB owners, even if the KB has been shared.
    */
+  async countSourcesByKnowledgeBaseIds(
+    knowledgeBaseIds: UUID[],
+  ): Promise<Map<UUID, number>> {
+    const entries = await Promise.all(
+      knowledgeBaseIds.map(
+        async (knowledgeBaseId) =>
+          [
+            knowledgeBaseId,
+            await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+              knowledgeBaseId,
+            ),
+          ] as const,
+      ),
+    );
+    return new Map(entries);
+  }
+
   async resolveIsShared(kbId: UUID, userId: UUID): Promise<boolean> {
     const kb = await this.knowledgeBaseRepository.findById(kbId);
     if (kb?.userId === userId) {

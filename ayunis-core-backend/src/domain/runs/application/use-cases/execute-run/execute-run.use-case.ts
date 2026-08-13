@@ -51,6 +51,9 @@ import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
 import { RunTelemetryService } from '../../services/run-telemetry.service';
+import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -72,6 +75,7 @@ export class ExecuteRunUseCase {
     private readonly runTelemetryService: RunTelemetryService,
     @InjectPinoLogger(ExecuteRunUseCase.name)
     private readonly logger: PinoLogger,
+    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
   ) {}
 
   async execute(
@@ -111,6 +115,7 @@ export class ExecuteRunUseCase {
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
         activeSkills: prepared.activeSkills,
+        workspaceContext: prepared.workspaceContext,
         skillId:
           command.input instanceof RunUserInput
             ? command.input.skillId
@@ -133,6 +138,7 @@ export class ExecuteRunUseCase {
     tools: RunParams['tools'];
     instructions?: string;
     activeSkills: RunParams['activeSkills'];
+    workspaceContext?: WorkspaceRunContext;
   }> {
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -149,6 +155,7 @@ export class ExecuteRunUseCase {
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
 
     const isAnonymous = thread.isAnonymous || model.anonymousOnly;
+    const workspaceContext = await this.buildWorkspaceContext(thread);
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
@@ -156,6 +163,7 @@ export class ExecuteRunUseCase {
         activeSkills,
         model.model.canUseTools,
         isAnonymous,
+        workspaceContext,
       );
 
     return {
@@ -167,7 +175,17 @@ export class ExecuteRunUseCase {
       tools,
       instructions,
       activeSkills,
+      workspaceContext,
     };
+  }
+
+  private async buildWorkspaceContext(
+    thread: Thread,
+  ): Promise<WorkspaceRunContext | undefined> {
+    if (!thread.workspaceId) return undefined;
+    return this.buildWorkspaceRunContextUseCase.execute(
+      new BuildWorkspaceRunContextQuery(thread.workspaceId),
+    );
   }
 
   private pickModel(thread: Thread): PermittedLanguageModel {
@@ -382,11 +400,13 @@ export class ExecuteRunUseCase {
       new FindThreadQuery(params.thread.id),
     );
     params.thread = refreshedThread;
+    params.workspaceContext = await this.buildWorkspaceContext(refreshedThread);
     const refreshed = await this.toolAssemblyService.buildRunContext(
       refreshedThread,
       params.activeSkills,
       params.model.canUseTools,
       params.isAnonymous,
+      params.workspaceContext,
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;
