@@ -39,8 +39,8 @@ import { CreateBulkInvitesResponseDto } from './dtos/create-bulk-invites-respons
 import { GetInvitesQueryParamsDto } from './dtos/get-invites-query-params.dto';
 
 // Import Use Cases
-import { CreateInviteUseCase } from '../../application/use-cases/create-invite/create-invite.use-case';
-import { CreateBulkInvitesUseCase } from '../../application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
+import { CreateInviteWithSeatReservationUseCase } from 'src/iam/invites/application/use-cases/create-invite-with-seat-reservation/create-invite-with-seat-reservation.use-case';
+import { CreateBulkInvitesUseCase } from 'src/iam/invites/application/use-cases/create-bulk-invites/create-bulk-invites.use-case';
 import { AcceptInviteUseCase } from '../../application/use-cases/accept-invite/accept-invite.use-case';
 import { DeleteInviteUseCase } from '../../application/use-cases/delete-invite/delete-invite.use-case';
 import { GetInvitesByOrgUseCase } from '../../application/use-cases/get-invites-by-org/get-invites-by-org.use-case';
@@ -76,7 +76,7 @@ export class InvitesController {
   private readonly logger = new Logger(InvitesController.name);
 
   constructor(
-    private readonly createInviteUseCase: CreateInviteUseCase,
+    private readonly createInviteUseCase: CreateInviteWithSeatReservationUseCase,
     private readonly createBulkInvitesUseCase: CreateBulkInvitesUseCase,
     private readonly acceptInviteUseCase: AcceptInviteUseCase,
     private readonly deleteInviteUseCase: DeleteInviteUseCase,

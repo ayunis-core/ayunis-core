@@ -31,6 +31,11 @@ import { UpdateStartDateUseCase } from './application/use-cases/update-start-dat
 import { UpdateMonthlyCreditsUseCase } from './application/use-cases/update-monthly-credits/update-monthly-credits.use-case';
 import { ChangeSubscriptionUseCase } from './application/use-cases/change-subscription/change-subscription.use-case';
 import { SubscriptionFactory } from './application/services/subscription-factory.service';
+import { SeatAllocationLock } from 'src/iam/subscriptions/application/ports/seat-allocation-lock';
+import { PostgresSeatAllocationLock } from 'src/iam/subscriptions/infrastructure/persistence/local/postgres-seat-allocation-lock';
+import { AssertSeatAvailableUseCase } from 'src/iam/subscriptions/application/use-cases/assert-seat-available/assert-seat-available.use-case';
+import { UpdateSeatsWithAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/update-seats-with-allocation-lock/update-seats-with-allocation-lock.use-case';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
 
 @Module({
   imports: [
@@ -48,6 +53,10 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     {
       provide: SubscriptionRepository,
       useClass: LocalSubscriptionsRepository,
+    },
+    {
+      provide: SeatAllocationLock,
+      useClass: PostgresSeatAllocationLock,
     },
     SubscriptionMapper,
     SubscriptionResponseMapper,
@@ -68,6 +77,9 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     GetMonthlyCreditLimitUseCase,
     ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
+    AssertSeatAvailableUseCase,
+    UpdateSeatsWithAllocationLockUseCase,
+    AcquireSeatAllocationLockUseCase,
   ],
   exports: [
     HasActiveSubscriptionUseCase,
@@ -77,6 +89,8 @@ import { SubscriptionFactory } from './application/services/subscription-factory
     GetMonthlyCreditLimitUseCase,
     ListUsageBasedSubscriptionOrgIdsUseCase,
     IsUsageBasedSubscriptionUseCase,
+    AssertSeatAvailableUseCase,
+    AcquireSeatAllocationLockUseCase,
   ],
 })
 export class SubscriptionsModule {}

@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
@@ -23,6 +30,10 @@ import {
 } from '../../invites.errors';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { User } from 'src/iam/users/domain/user.entity';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
+import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
+import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
 
 describe('CreateBulkInvitesUseCase', () => {
   let useCase: CreateBulkInvitesUseCase;
@@ -33,6 +44,7 @@ describe('CreateBulkInvitesUseCase', () => {
   let getActiveSubscriptionUseCase: jest.Mocked<GetActiveSubscriptionUseCase>;
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
+  let acquireAllocationLock: jest.Mocked<AcquireSeatAllocationLockUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -71,9 +83,16 @@ describe('CreateBulkInvitesUseCase', () => {
       execute: jest.fn(),
     };
 
+    const mockAcquireAllocationLock = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
+        BulkInviteDeliveryService,
+        BulkInviteValidatorService,
+        FindUsersByEmailsUseCase,
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: ConfigService, useValue: mockConfigService },
@@ -87,6 +106,10 @@ describe('CreateBulkInvitesUseCase', () => {
           provide: SendInvitationEmailUseCase,
           useValue: mockSendInvitationEmailUseCase,
         },
+        {
+          provide: AcquireSeatAllocationLockUseCase,
+          useValue: mockAcquireAllocationLock,
+        },
       ],
     }).compile();
 
@@ -98,6 +121,7 @@ describe('CreateBulkInvitesUseCase', () => {
     getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
     updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
+    acquireAllocationLock = module.get(AcquireSeatAllocationLockUseCase);
 
     // Mock logger
     jest.spyOn(Logger.prototype, 'log').mockImplementation();
@@ -128,24 +152,15 @@ describe('CreateBulkInvitesUseCase', () => {
       ...overrides,
     };
 
-    configService.get.mockImplementation((key: string) => {
-      switch (key) {
-        case 'auth.emailProviderBlacklist':
-          return defaults.emailProviderBlacklist;
-        case 'app.isCloudHosted':
-          return defaults.isCloudHosted;
-        case 'auth.jwt.inviteExpiresIn':
-          return defaults.inviteExpiresIn;
-        case 'emails.hasConfig':
-          return defaults.hasEmailConfig;
-        case 'app.frontend.baseUrl':
-          return defaults.frontendBaseUrl;
-        case 'app.frontend.inviteAcceptEndpoint':
-          return defaults.inviteAcceptEndpoint;
-        default:
-          return undefined;
-      }
-    });
+    const values: Record<string, unknown> = {
+      'auth.emailProviderBlacklist': defaults.emailProviderBlacklist,
+      'app.isCloudHosted': defaults.isCloudHosted,
+      'auth.jwt.inviteExpiresIn': defaults.inviteExpiresIn,
+      'emails.hasConfig': defaults.hasEmailConfig,
+      'app.frontend.baseUrl': defaults.frontendBaseUrl,
+      'app.frontend.inviteAcceptEndpoint': defaults.inviteAcceptEndpoint,
+    };
+    configService.get.mockImplementation((key: string) => values[key]);
   };
 
   describe('execute', () => {
@@ -173,12 +188,36 @@ describe('CreateBulkInvitesUseCase', () => {
       expect(result.results[0].success).toBe(true);
       expect(result.results[1].success).toBe(true);
       expect(invitesRepository.createMany).toHaveBeenCalledTimes(1);
+      expect(acquireAllocationLock.execute).toHaveBeenCalledWith(mockOrgId);
       expect(invitesRepository.createMany).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ email: 'user1@example.com' }),
           expect.objectContaining({ email: 'user2@example.com' }),
         ]),
       );
+    });
+
+    it('commits the seat reservation before sending invitation emails', async () => {
+      const calls: string[] = [];
+      const command = new CreateBulkInvitesCommand({
+        invites: [{ email: 'user1@example.com', role: UserRole.USER }],
+        orgId: mockOrgId,
+        userId: mockUserId,
+      });
+      setupDefaultConfigMocks({ hasEmailConfig: true });
+      invitesRepository.findByEmailsAndOrg.mockResolvedValue([]);
+      usersRepository.findManyByEmails.mockResolvedValue([]);
+      inviteJwtService.generateInviteToken.mockReturnValue('mock-token');
+      invitesRepository.createMany.mockImplementation(async () => {
+        calls.push('reserve');
+      });
+      sendInvitationEmailUseCase.execute.mockImplementation(async () => {
+        calls.push('email');
+      });
+
+      await useCase.execute(command);
+
+      expect(calls).toEqual(['reserve', 'email']);
     });
 
     it('should return invite URLs when email config is not available', async () => {

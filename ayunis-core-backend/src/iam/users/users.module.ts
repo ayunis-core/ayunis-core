@@ -66,6 +66,10 @@ import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-s
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 import { ExportUsersUseCase } from './application/use-cases/export-users/export-users.use-case';
 import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/create-federated-user/create-federated-user.use-case';
+import { UserCountsRepository } from 'src/iam/users/application/ports/user-counts.repository';
+import { LocalUserCountsRepository } from 'src/iam/users/infrastructure/repositories/local/local-user-counts.repository';
+import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
+import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
 
 @Module({
   imports: [
@@ -100,6 +104,10 @@ import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/
       provide: UsersExportRepository,
       useClass: LocalUsersExportRepository,
     },
+    {
+      provide: UserCountsRepository,
+      useClass: LocalUserCountsRepository,
+    },
     // Use cases
     FindUserByIdUseCase,
     FindUsersByIdsUseCase,
@@ -110,6 +118,8 @@ import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
     CreateFederatedUserUseCase,
+    CountUsersByOrgIdUseCase,
+    FindUsersByEmailsUseCase,
     ValidateUserUseCase,
     IsValidPasswordUseCase,
     UpdateUserNameUseCase,
@@ -151,6 +161,8 @@ import { CreateFederatedUserUseCase } from 'src/iam/users/application/use-cases/
     CreateAdminUserUseCase,
     CreateRegularUserUseCase,
     CreateFederatedUserUseCase,
+    CountUsersByOrgIdUseCase,
+    FindUsersByEmailsUseCase,
     SendConfirmationEmailUseCase,
     ValidateUserUseCase,
     FindUserByIdUseCase,
