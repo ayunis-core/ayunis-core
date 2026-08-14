@@ -11,6 +11,8 @@ import {
   TEST_USER_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { FindAllWorkspacesUseCase } from './find-all-workspaces.use-case';
+import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 describe('FindAllWorkspacesUseCase', () => {
   let useCase: FindAllWorkspacesUseCase;
@@ -42,22 +44,37 @@ describe('FindAllWorkspacesUseCase', () => {
 
   it('returns the caller’s workspaces with their chat stats', async () => {
     const workspace = aWorkspace();
-    repository.findAllByUserId.mockResolvedValue([workspace]);
+    repository.findAllByUserId.mockResolvedValue(
+      new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
+    );
     repository.getThreadStats.mockResolvedValue(
       new Map([[workspace.id, { chatCount: 3, lastActivityAt: null }]]),
     );
 
-    await expect(useCase.execute()).resolves.toEqual([
-      { workspace, chatCount: 3, lastActivityAt: workspace.updatedAt },
-    ]);
-    expect(repository.findAllByUserId).toHaveBeenCalledWith(TEST_USER_ID);
+    await expect(useCase.execute()).resolves.toEqual(
+      new Paginated({
+        data: [
+          { workspace, chatCount: 3, lastActivityAt: workspace.updatedAt },
+        ],
+        limit: 20,
+        offset: 0,
+        total: 1,
+      }),
+    );
+    expect(repository.findAllByUserId).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      expect.objectContaining({ limit: 20, offset: 0, sort: 'updatedAt' }),
+    );
   });
 
   it('reports zero chats for a workspace without stats', async () => {
     const workspace = aWorkspace();
-    repository.findAllByUserId.mockResolvedValue([workspace]);
+    repository.findAllByUserId.mockResolvedValue(
+      new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
+    );
 
-    const [item] = await useCase.execute();
+    const { data } = await useCase.execute();
+    const [item] = data;
 
     expect(item.chatCount).toBe(0);
     expect(item.lastActivityAt).toEqual(workspace.updatedAt);
@@ -68,12 +85,15 @@ describe('FindAllWorkspacesUseCase', () => {
       updatedAt: new Date('2026-08-02T10:00:00.000Z'),
     });
     const chatActivity = new Date('2026-08-05T10:00:00.000Z');
-    repository.findAllByUserId.mockResolvedValue([workspace]);
+    repository.findAllByUserId.mockResolvedValue(
+      new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
+    );
     repository.getThreadStats.mockResolvedValue(
       new Map([[workspace.id, { chatCount: 1, lastActivityAt: chatActivity }]]),
     );
 
-    const [item] = await useCase.execute();
+    const { data } = await useCase.execute();
+    const [item] = data;
 
     expect(item.lastActivityAt).toEqual(chatActivity);
   });
@@ -82,7 +102,9 @@ describe('FindAllWorkspacesUseCase', () => {
     const workspace = aWorkspace({
       updatedAt: new Date('2026-08-09T10:00:00.000Z'),
     });
-    repository.findAllByUserId.mockResolvedValue([workspace]);
+    repository.findAllByUserId.mockResolvedValue(
+      new Paginated({ data: [workspace], limit: 20, offset: 0, total: 1 }),
+    );
     repository.getThreadStats.mockResolvedValue(
       new Map([
         [
@@ -95,7 +117,8 @@ describe('FindAllWorkspacesUseCase', () => {
       ]),
     );
 
-    const [item] = await useCase.execute();
+    const { data } = await useCase.execute();
+    const [item] = data;
 
     expect(item.lastActivityAt).toEqual(workspace.updatedAt);
   });
@@ -103,6 +126,8 @@ describe('FindAllWorkspacesUseCase', () => {
   it('rejects an unauthenticated caller', async () => {
     await setup(createMockContextService({}));
 
-    await expect(useCase.execute()).rejects.toThrow(UnauthorizedAccessError);
+    await expect(useCase.execute(new FindAllWorkspacesQuery())).rejects.toThrow(
+      UnauthorizedAccessError,
+    );
   });
 });

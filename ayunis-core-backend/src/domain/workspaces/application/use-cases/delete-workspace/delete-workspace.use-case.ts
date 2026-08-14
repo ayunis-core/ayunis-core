@@ -6,6 +6,8 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
+import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
+import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
 import {
@@ -20,6 +22,7 @@ export class DeleteWorkspaceUseCase {
     @InjectPinoLogger(DeleteWorkspaceUseCase.name)
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly deleteSourceUseCase: DeleteSourceUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -50,9 +53,27 @@ export class DeleteWorkspaceUseCase {
       event,
     );
 
-    await this.workspacesRepository.delete(userId, command.id);
+    const sourceIds = await this.workspacesRepository.delete(
+      userId,
+      command.id,
+    );
+    this.deferWorkspaceSourceDeletion(event, sourceIds, workspace.orgId);
 
     await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
+  }
+
+  private deferWorkspaceSourceDeletion(
+    event: WorkspaceDeletionRequestedEvent,
+    sourceIds: UUID[],
+    orgId: UUID,
+  ): void {
+    for (const sourceId of sourceIds) {
+      event.deferCleanup(`workspace-source:${sourceId}`, () =>
+        this.deleteSourceUseCase.execute(
+          new DeleteSourceCommand(sourceId, orgId),
+        ),
+      );
+    }
   }
 
   private resolveUserId(): UUID {

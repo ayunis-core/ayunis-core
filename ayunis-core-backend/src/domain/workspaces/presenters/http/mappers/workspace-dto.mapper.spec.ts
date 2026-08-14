@@ -1,0 +1,42 @@
+import { Paginated } from 'src/common/pagination/paginated.entity';
+import { aWorkspace } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceDtoMapper } from './workspace-dto.mapper';
+
+describe('WorkspaceDtoMapper', () => {
+  const mapper = new WorkspaceDtoMapper();
+
+  it('maps a paginated workspace list with chat activity metadata', () => {
+    const workspace = aWorkspace({
+      name: 'Council Documents',
+      description: 'Municipal documents',
+    });
+    const lastActivityAt = new Date('2026-08-20T10:15:00.000Z');
+
+    const result = mapper.toPaginatedDto(
+      new Paginated({
+        data: [{ workspace, chatCount: 4, lastActivityAt }],
+        limit: 20,
+        offset: 0,
+        total: 1,
+      }),
+    );
+
+    expect(result).toEqual({
+      data: [
+        {
+          id: workspace.id,
+          name: workspace.name,
+          description: workspace.description,
+          instruction: workspace.instruction,
+          icon: workspace.icon,
+          color: workspace.color,
+          createdAt: workspace.createdAt.toISOString(),
+          updatedAt: workspace.updatedAt.toISOString(),
+          chatCount: 4,
+          lastActivityAt: lastActivityAt.toISOString(),
+        },
+      ],
+      pagination: { limit: 20, offset: 0, total: 1 },
+    });
+  });
+});

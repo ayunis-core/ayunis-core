@@ -1,10 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { LocalSourceRepositoryModule } from './infrastructure/persistence/local/local-source-repository.module';
-import { ModelsModule } from '../models/models.module';
-import { SplitterModule } from '../rag/splitters/splitter.module';
-import { RetrieverModule } from '../retrievers/retriever.module';
-import { IndexersModule } from '../rag/indexers/indexers.module';
-import { StorageModule } from '../storage/storage.module';
+import { ModelsModule } from 'src/domain/models/models.module';
+import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
+import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
+import { IndexersModule } from 'src/domain/rag/indexers/indexers.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
 import { DocumentProcessingModule } from './infrastructure/queue/document-processing.module';
 import { DataSourceProcessingModule } from './infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from './infrastructure/queue/url-crawl.module';
@@ -33,6 +33,7 @@ import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-u
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
 import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/start-url-crawl.use-case';
+import { ListSourcesByWorkspaceUseCase } from './application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     StartUrlCrawlUseCase,
+    ListSourcesByWorkspaceUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -98,6 +100,7 @@ import { StartUrlCrawlUseCase } from './application/use-cases/start-url-crawl/st
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
     StartUrlCrawlUseCase,
+    ListSourcesByWorkspaceUseCase,
   ],
 })
 export class SourcesModule {}

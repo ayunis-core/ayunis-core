@@ -7,6 +7,7 @@ function aWorkspace(overrides: Partial<Workspace>): Workspace {
     id: 'id',
     name: 'Workspace',
     description: null,
+    instruction: null,
     icon: 'folder',
     color: 'violet',
     createdAt: '2026-08-01T10:00:00.000Z',

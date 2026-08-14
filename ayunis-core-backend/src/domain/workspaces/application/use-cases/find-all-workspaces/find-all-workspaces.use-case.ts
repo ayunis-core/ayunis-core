@@ -7,6 +7,8 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { Paginated } from 'src/common/pagination/paginated.entity';
+import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
 
 export interface WorkspaceListItem {
   workspace: Workspace;
@@ -25,17 +27,20 @@ export class FindAllWorkspacesUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
-  async execute(): Promise<WorkspaceListItem[]> {
+  async execute(
+    query: FindAllWorkspacesQuery = new FindAllWorkspacesQuery(),
+  ): Promise<Paginated<WorkspaceListItem>> {
     this.logger.info('Finding all workspaces');
 
     const workspaces = await this.workspacesRepository.findAllByUserId(
       this.resolveUserId(),
+      query,
     );
     const stats = await this.workspacesRepository.getThreadStats(
-      workspaces.map((workspace) => workspace.id),
+      workspaces.data.map((workspace) => workspace.id),
     );
 
-    return workspaces.map((workspace) => {
+    const data = workspaces.data.map((workspace) => {
       const threadStats = stats.get(workspace.id);
       const chatActivity = threadStats?.lastActivityAt;
       return {
@@ -46,6 +51,13 @@ export class FindAllWorkspacesUseCase {
             ? chatActivity
             : workspace.updatedAt,
       };
+    });
+
+    return new Paginated({
+      data,
+      limit: workspaces.limit,
+      offset: workspaces.offset,
+      total: workspaces.total,
     });
   }
 

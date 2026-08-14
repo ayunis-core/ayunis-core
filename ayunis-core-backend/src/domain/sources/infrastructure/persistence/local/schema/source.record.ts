@@ -2,6 +2,7 @@ import {
   ChildEntity,
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToOne,
@@ -47,6 +48,7 @@ export abstract class SourceRecord extends BaseRecord {
   @Column({ type: 'timestamp', nullable: true })
   processingStartedAt: Date | null;
 
+  @Index()
   @Column({ nullable: true })
   knowledgeBaseId: UUID | null;
 

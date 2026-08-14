@@ -6,7 +6,10 @@ import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
-import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import {
+  SourceRepository,
+  type WorkspaceSourceListOptions,
+} from 'src/domain/sources/application/ports/source.repository';
 import { SourceMapper } from './mappers/source.mapper';
 import { TextSourceDetailsRecord } from './schema/text-source-details.record';
 import {
@@ -22,6 +25,7 @@ import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceContentChunkRecord } from './schema/source-content-chunk.record';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
@@ -95,6 +99,58 @@ export class LocalSourceRepository extends SourceRepository {
       .where('source.id IN (:...ids)', { ids })
       .getMany();
     return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findPaginatedByWorkspaceId(
+    options: WorkspaceSourceListOptions,
+  ): Promise<Paginated<Source>> {
+    this.logger.info(
+      {
+        workspaceId: options.workspaceId,
+        search: options.search,
+        limit: options.limit,
+        offset: options.offset,
+      },
+      'findPaginatedByWorkspaceId',
+    );
+
+    const queryBuilder = this.sourceRepository
+      .createQueryBuilder('source')
+      .leftJoinAndSelect(
+        'source.dataSourceDetails',
+        'dataSourceDetails',
+        'source.type = :dataType',
+        { dataType: 'data' },
+      )
+      .where(
+        `EXISTS (
+          SELECT 1
+          FROM workspace_source_assignments assignment
+          WHERE assignment."workspaceId" = :workspaceId
+            AND assignment."sourceId" = source.id
+        )`,
+        { workspaceId: options.workspaceId },
+      );
+
+    if (options.search) {
+      queryBuilder.andWhere('source.name ILIKE :search', {
+        search: `%${options.search}%`,
+      });
+    }
+
+    const [records, total] = await queryBuilder
+      .orderBy('LOWER(source.name)', 'ASC')
+      .addOrderBy('source.id', 'ASC')
+      .skip(options.offset)
+      .take(options.limit)
+      .getManyAndCount();
+
+    return new Paginated({
+      data: records.map((record) => this.mapper.toDomain(record)),
+      limit: options.limit,
+      offset: options.offset,
+      total,
+    });
   }
 
   async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
@@ -335,6 +391,9 @@ export class LocalSourceRepository extends SourceRepository {
       )
       .andWhere(
         `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
+      )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM workspace_source_assignments wsa WHERE wsa."sourceId" = s.id)`,
       )
       .getRawMany<{ id: UUID }>();
 

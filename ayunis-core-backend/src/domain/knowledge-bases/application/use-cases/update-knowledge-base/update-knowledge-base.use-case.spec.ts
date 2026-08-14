@@ -13,12 +13,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { UpdateKnowledgeBaseUseCase } from './update-knowledge-base.use-case';
 import { UpdateKnowledgeBaseCommand } from './update-knowledge-base.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateKnowledgeBaseUseCase', () => {
@@ -40,6 +40,8 @@ describe('UpdateKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

@@ -6,6 +6,8 @@ export enum WorkspaceErrorCode {
   WORKSPACE_INVALID_NAME = 'WORKSPACE_INVALID_NAME',
   WORKSPACE_INVALID_DESCRIPTION = 'WORKSPACE_INVALID_DESCRIPTION',
   WORKSPACE_INVALID_APPEARANCE = 'WORKSPACE_INVALID_APPEARANCE',
+  MISSING_FILE = 'MISSING_FILE',
+  WORKSPACE_SOURCE_LIMIT_EXCEEDED = 'WORKSPACE_SOURCE_LIMIT_EXCEEDED',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -63,6 +65,28 @@ export class InvalidWorkspaceAppearanceError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INVALID_APPEARANCE,
       400,
       { field, ...metadata },
+    );
+  }
+}
+
+export class MissingWorkspaceDocumentFileError extends WorkspaceError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No file was provided in the request',
+      WorkspaceErrorCode.MISSING_FILE,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class WorkspaceSourceLimitExceededError extends WorkspaceError {
+  constructor(maxSources: number, metadata?: ErrorMetadata) {
+    super(
+      `Workspace cannot have more than ${maxSources} sources`,
+      WorkspaceErrorCode.WORKSPACE_SOURCE_LIMIT_EXCEEDED,
+      400,
+      { maxSources, ...metadata },
     );
   }
 }
