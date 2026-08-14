@@ -1,4 +1,4 @@
-import { Module, Logger, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -55,6 +55,8 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
 import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-large.filter';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { LoggerModule } from 'nestjs-pino';
+import { createPinoLoggerConfig } from '../common/logger/pino-logger.config';
 
 @Module({
   imports: [
@@ -63,6 +65,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       load: rootConfigs,
       validate: validateEnv,
     }),
+    LoggerModule.forRoot(createPinoLoggerConfig()),
     ClsModule.forRoot({
       global: true,
       middleware: { mount: true },
@@ -164,7 +167,6 @@ import { IntegrationsModule } from '../integrations/integrations.module';
       provide: APP_FILTER,
       useClass: ApplicationErrorFilter,
     },
-    Logger,
     CookieParserMiddleware,
     SecurityHeadersMiddleware,
     IsCloudUseCase,
