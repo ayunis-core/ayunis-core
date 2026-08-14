@@ -22,12 +22,20 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import type { WorkspaceContextResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { WorkspaceContextPanel } from './WorkspaceContextSidePanel';
+import { WorkspaceContextHeaderActions } from './WorkspaceContextHeaderActions';
 
 interface ChatHeaderProps {
   readonly threadId: string;
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
   readonly workspaceId?: string | null;
+  readonly workspaceContext?: WorkspaceContextResponseDto;
+  readonly activeWorkspaceContextPanel?: WorkspaceContextPanel | null;
+  readonly onToggleWorkspaceContextPanel?: (
+    panel: WorkspaceContextPanel,
+  ) => void;
   readonly onRename: () => void;
   readonly onDelete: () => void;
 }
@@ -37,6 +45,9 @@ export default function ChatHeader({
   threadTitle,
   isAnonymous,
   workspaceId,
+  workspaceContext,
+  activeWorkspaceContextPanel,
+  onToggleWorkspaceContextPanel,
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
@@ -72,12 +83,21 @@ export default function ChatHeader({
     </Tooltip>
   ) : undefined;
 
+  const contextActions = workspaceContext ? (
+    <WorkspaceContextHeaderActions
+      context={workspaceContext}
+      activePanel={activeWorkspaceContextPanel ?? null}
+      onToggle={onToggleWorkspaceContextPanel}
+    />
+  ) : null;
+
   return (
     <ContentAreaHeader
       breadcrumbs={[parentCrumb, { label: displayTitle }]}
       badge={anonymousBadge}
       action={
         <div className="flex items-center gap-1">
+          {contextActions}
           {isWorkspacesEnabled && (
             <PinButton
               isPinned={isPinned}

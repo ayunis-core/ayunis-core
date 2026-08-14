@@ -2,7 +2,12 @@
   "page": {
     "breadcrumb": "Projekte",
     "chatsTab": "Ihre Chats",
-    "emptyChats": "Noch keine Chats. Chats, die Sie diesem Projekt hinzufügen, erscheinen hier.",
+    "knowledgeTab": "Wissen",
+    "skillsTab": "Fähigkeiten",
+    "instructionsTab": "Anweisungen",
+    "emptyChatsTitle": "Noch keine Chats",
+    "emptyChats": "Chats, die Sie diesem Projekt hinzufügen, erscheinen hier.",
+    "noChatResults": "Keine Chats gefunden.",
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
     "settings": "Einstellungen",
@@ -13,5 +18,90 @@
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
     "remove": "Aus Projekt entfernen"
+  },
+  "contextDock": {
+    "close": "Kontext schließen",
+    "skills": {
+      "title": "Fähigkeiten",
+      "toggle": "Fähigkeiten anzeigen",
+      "description": "In diesem Projekt immer aktiv — Sie müssen im Chat nichts auswählen.",
+      "empty": "Keine Fähigkeiten eingebunden"
+    },
+    "knowledge": {
+      "title": "Wissen",
+      "toggle": "Wissen anzeigen",
+      "knowledgeBases": "Wissensdatenbanken",
+      "documents": "Dateien",
+      "empty": "Kein Wissen eingebunden"
+    },
+    "instructions": {
+      "title": "Anweisungen",
+      "toggle": "Anweisungen anzeigen",
+      "empty": "Keine Anweisungen gespeichert"
+    }
+  },
+  "context": {
+    "loadError": {
+      "title": "Projektkontext konnte nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Projektwissen, Fähigkeiten oder Anweisungen bearbeiten."
+    },
+    "addDialog": {
+      "emptyTitle": "Nichts mehr hinzuzufügen",
+      "empty": "Es gibt keine weiteren Einträge zum Hinzufügen.",
+      "loading": "Einträge werden geladen …",
+      "cancel": "Abbrechen",
+      "confirm": "Hinzufügen"
+    },
+    "skills": {
+      "title": "Hinzugefügte Fähigkeiten",
+      "description": "In diesem Projekt immer aktiv — Sie müssen im Chat nichts auswählen.",
+      "add": "Fähigkeiten hinzufügen",
+      "addDescription": "Wählen Sie Fähigkeiten aus, die in diesem Projekt immer aktiv sein sollen.",
+      "emptyTitle": "Keine Fähigkeiten eingebunden",
+      "empty": "Noch keine Fähigkeiten in diesem Projekt.",
+      "detach": "Fähigkeit entfernen",
+      "attachSuccess": "Fähigkeit wurde zum Projekt hinzugefügt.",
+      "attachError": "Fähigkeit konnte nicht hinzugefügt werden.",
+      "detachSuccess": "Fähigkeit wurde aus dem Projekt entfernt.",
+      "detachError": "Fähigkeit konnte nicht entfernt werden."
+    },
+    "knowledge": {
+      "title": "Wissensdatenbanken",
+      "description": "Geteilte Wissensdatenbanken, die in allen Chats dieses Projekts verfügbar sind.",
+      "add": "Wissensdatenbanken hinzufügen",
+      "addDescription": "Wählen Sie Wissensdatenbanken aus, die in diesem Projekt verfügbar sein sollen.",
+      "emptyTitle": "Keine Wissensdatenbanken eingebunden",
+      "empty": "Noch keine Wissensdatenbanken eingebunden.",
+      "detach": "Wissensdatenbank entfernen",
+      "documentCount": "{{count}} Dokumente",
+      "attachSuccess": "Wissensdatenbank wurde zum Projekt hinzugefügt.",
+      "attachError": "Wissensdatenbank konnte nicht hinzugefügt werden.",
+      "detachSuccess": "Wissensdatenbank wurde aus dem Projekt entfernt.",
+      "detachError": "Wissensdatenbank konnte nicht entfernt werden."
+    },
+    "documents": {
+      "title": "Dateien",
+      "description": "Dateien, die direkt in dieses Projekt hochgeladen wurden und in Projektchats verfügbar sind.",
+      "upload": "Datei hochladen",
+      "emptyTitle": "Keine Dateien hochgeladen",
+      "empty": "Noch keine Dateien in diesem Projekt.",
+      "remove": "Datei entfernen",
+      "status": {
+        "processing": "Wird verarbeitet",
+        "failed": "Fehlgeschlagen"
+      },
+      "uploadSuccess": "Datei wurde hochgeladen und wird verarbeitet.",
+      "uploadError": "Datei konnte nicht hochgeladen werden.",
+      "removeSuccess": "Datei wurde entfernt.",
+      "removeError": "Datei konnte nicht entfernt werden."
+    },
+    "instructions": {
+      "title": "Anweisungen",
+      "description": "Anweisungen, die jedem Chat in diesem Projekt hinzugefügt werden.",
+      "placeholder": "Geben Sie Anweisungen ein, die für alle Chats in diesem Projekt gelten.",
+      "save": "Speichern",
+      "saveSuccess": "Anweisungen wurden gespeichert.",
+      "saveError": "Anweisungen konnten nicht gespeichert werden."
+    }
   }
 }
