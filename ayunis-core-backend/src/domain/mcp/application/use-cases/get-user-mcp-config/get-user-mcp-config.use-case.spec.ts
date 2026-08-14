@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetUserMcpConfigUseCase } from './get-user-mcp-config.use-case';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -92,6 +93,7 @@ describe('GetUserMcpConfigUseCase', () => {
     );
 
     useCase = new GetUserMcpConfigUseCase(
+      createPinoLoggerMock(),
       integrationRepository,
       userConfigRepository,
       contextService,

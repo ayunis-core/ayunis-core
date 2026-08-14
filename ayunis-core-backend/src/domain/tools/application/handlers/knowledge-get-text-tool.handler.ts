@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { KnowledgeGetTextTool } from '../../domain/tools/knowledge-get-text-tool.entity';
 import type { UUID } from 'crypto';
@@ -42,9 +43,9 @@ interface KnowledgeGetTextResult {
 
 @Injectable()
 export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(KnowledgeGetTextToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(KnowledgeGetTextToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly getDocumentTextUseCase: GetKnowledgeBaseDocumentTextUseCase,
     private readonly extractTextLinesUseCase: ExtractTextLinesUseCase,
     private readonly contextService: ContextService,
@@ -61,88 +62,10 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { orgId } = context;
-    this.logger.log('execute', { tool: tool.name, input });
+    this.logger.info({ tool: tool.name, input }, 'execute');
 
     try {
-      const validatedInput = tool.validateParams(input);
-      const {
-        knowledgeBaseId,
-        documentId,
-        startLine = 1,
-        numLines = 100,
-      } = validatedInput;
-      const endLine = startLine + numLines - 1;
-      const { maxLines, maxChars } = this.config.sourceGetText;
-
-      const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: 'User not authenticated',
-          exposeToLLM: false,
-        });
-      }
-
-      // Ownership check — returns metadata-only Source
-      const source = await this.getDocumentTextUseCase.execute(
-        new GetKnowledgeBaseDocumentTextQuery({
-          knowledgeBaseId: knowledgeBaseId as UUID,
-          documentId: documentId as UUID,
-          orgId,
-          userId,
-        }),
-      );
-
-      if (!(source instanceof TextSource)) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Document "${source.name}" is not a text source`,
-          exposeToLLM: true,
-        });
-      }
-
-      // Extract text lines at DB level
-      const dbEndLine = endLine === -1 ? MAX_END_LINE : endLine;
-      const dbResult = await this.extractTextLinesUseCase.execute(
-        new ExtractTextLinesQuery({
-          sourceId: source.id,
-          startLine,
-          endLine: dbEndLine,
-        }),
-      );
-
-      if (!dbResult) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: `Document text not found for "${source.name}"`,
-          exposeToLLM: true,
-        });
-      }
-
-      const extraction = validateTextExtraction({
-        toolName: tool.name,
-        dbResult,
-        startLine,
-        endLine,
-        maxLines,
-        maxChars,
-      });
-
-      return JSON.stringify(
-        this.buildResult({
-          knowledgeBaseId,
-          documentId,
-          documentName: source.name,
-          totalLines: extraction.totalLines,
-          startLine,
-          numLines,
-          actualStartLine: extraction.effectiveStartLine,
-          actualEndLine: extraction.effectiveEndLine,
-          truncated: extraction.truncated,
-          truncationReasons: extraction.truncationReasons,
-          text: extraction.extractedText,
-        }),
-      );
+      return await this.getText(tool, input, orgId);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -151,8 +74,111 @@ export class KnowledgeGetTextToolHandler extends ToolExecutionHandler {
     }
   }
 
+  private async getText(
+    tool: KnowledgeGetTextTool,
+    input: Record<string, unknown>,
+    orgId: UUID,
+  ): Promise<string> {
+    const validated = tool.validateParams(input);
+    const {
+      knowledgeBaseId,
+      documentId,
+      startLine = 1,
+      numLines = 100,
+    } = validated;
+    const endLine = startLine + numLines - 1;
+    const source = await this.getTextSource(
+      tool.name,
+      knowledgeBaseId as UUID,
+      documentId as UUID,
+      orgId,
+    );
+    const extraction = await this.extractText(
+      tool.name,
+      source,
+      startLine,
+      endLine,
+    );
+    return JSON.stringify(
+      this.buildResult({
+        knowledgeBaseId,
+        documentId,
+        documentName: source.name,
+        totalLines: extraction.totalLines,
+        startLine,
+        numLines,
+        actualStartLine: extraction.effectiveStartLine,
+        actualEndLine: extraction.effectiveEndLine,
+        truncated: extraction.truncated,
+        truncationReasons: extraction.truncationReasons,
+        text: extraction.extractedText,
+      }),
+    );
+  }
+
+  private async extractText(
+    toolName: string,
+    source: TextSource,
+    startLine: number,
+    endLine: number,
+  ): Promise<ReturnType<typeof validateTextExtraction>> {
+    const dbResult = await this.extractTextLinesUseCase.execute(
+      new ExtractTextLinesQuery({
+        sourceId: source.id,
+        startLine,
+        endLine: endLine === -1 ? MAX_END_LINE : endLine,
+      }),
+    );
+    if (!dbResult) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `Document text not found for "${source.name}"`,
+        exposeToLLM: true,
+      });
+    }
+    return validateTextExtraction({
+      toolName,
+      dbResult,
+      startLine,
+      endLine,
+      ...this.config.sourceGetText,
+    });
+  }
+
+  private async getTextSource(
+    toolName: string,
+    knowledgeBaseId: UUID,
+    documentId: UUID,
+    orgId: UUID,
+  ): Promise<TextSource> {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: 'User not authenticated',
+        exposeToLLM: false,
+      });
+    }
+    const source = await this.getDocumentTextUseCase.execute(
+      new GetKnowledgeBaseDocumentTextQuery({
+        knowledgeBaseId,
+        documentId,
+        orgId,
+        userId,
+      }),
+    );
+    if (!(source instanceof TextSource)) {
+      throw new ToolExecutionFailedError({
+        toolName,
+        message: `Document "${source.name}" is not a text source`,
+        exposeToLLM: true,
+      });
+    }
+    return source;
+  }
+
   private handleError(error: unknown, toolName: string): never {
-    this.logger.error('execute', error);
+    this.logger.error({ err: error }, 'execute');
 
     if (error instanceof KnowledgeBaseNotFoundError) {
       throw new ToolExecutionFailedError({

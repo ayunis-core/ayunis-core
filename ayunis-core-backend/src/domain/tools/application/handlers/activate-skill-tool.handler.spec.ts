@@ -1,6 +1,7 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ActivateSkillToolHandler } from './activate-skill-tool.handler';
 import { FindSkillByNameUseCase } from 'src/domain/skills/application/use-cases/find-skill-by-name/find-skill-by-name.use-case';
@@ -50,13 +51,15 @@ describe('ActivateSkillToolHandler', () => {
           provide: FindAlwaysOnTemplateByNameUseCase,
           useValue: mockFindAlwaysOnTemplateByName,
         },
+
+        {
+          provide: getLoggerToken(ActivateSkillToolHandler.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     handler = module.get<ActivateSkillToolHandler>(ActivateSkillToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

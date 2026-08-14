@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeQueryToolHandler } from './knowledge-query-tool.handler';
@@ -50,6 +52,11 @@ describe('KnowledgeQueryToolHandler', () => {
         {
           provide: ContextService,
           useValue: mockContextService,
+        },
+
+        {
+          provide: getLoggerToken(KnowledgeQueryToolHandler.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

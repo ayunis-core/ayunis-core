@@ -1,6 +1,8 @@
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { EnableMcpIntegrationUseCase } from './enable-mcp-integration.use-case';
 import { EnableMcpIntegrationCommand } from './enable-mcp-integration.command';
@@ -18,16 +20,16 @@ import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-object
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('EnableMcpIntegrationUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: EnableMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let contextService: ContextService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = 'org-123' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnableMcpIntegrationUseCase,
@@ -45,6 +47,11 @@ describe('EnableMcpIntegrationUseCase', () => {
             get: jest.fn(),
           },
         },
+
+        {
+          provide: getLoggerToken(EnableMcpIntegrationUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -57,8 +64,6 @@ describe('EnableMcpIntegrationUseCase', () => {
     contextService = module.get<ContextService>(ContextService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -107,9 +112,12 @@ describe('EnableMcpIntegrationUseCase', () => {
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
       expect(repository.save).toHaveBeenCalled();
-      expect(loggerLogSpy).toHaveBeenCalledWith('enableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'enableMcpIntegration',
+      );
     });
 
     it('should be idempotent - enabling already-enabled integration succeeds', async () => {
@@ -241,9 +249,9 @@ describe('EnableMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedMcpError,
       );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error enabling integration',
-        { error: unexpectedError },
       );
     });
 
@@ -259,7 +267,7 @@ describe('EnableMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
@@ -286,7 +294,7 @@ describe('EnableMcpIntegrationUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -313,9 +321,12 @@ describe('EnableMcpIntegrationUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('enableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'enableMcpIntegration',
+      );
     });
   });
 });

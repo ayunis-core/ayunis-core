@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CheckToolCapabilitiesQuery } from './check-tool-capabilities.query';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { DisplayableTool } from 'src/domain/tools/domain/displayable-tool.entity';
@@ -10,10 +11,13 @@ export interface ToolCapabilities {
 
 @Injectable()
 export class CheckToolCapabilitiesUseCase {
-  private readonly logger = new Logger(CheckToolCapabilitiesUseCase.name);
+  constructor(
+    @InjectPinoLogger(CheckToolCapabilitiesUseCase.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   execute(query: CheckToolCapabilitiesQuery): ToolCapabilities {
-    this.logger.log('execute', query.tool.name);
+    this.logger.info({ name: query.tool.name }, 'execute');
 
     return {
       isDisplayable: this.isDisplayable(query.tool),

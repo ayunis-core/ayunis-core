@@ -1,6 +1,8 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
@@ -24,13 +26,12 @@ import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp
 import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
 
 describe('DiscoverMcpCapabilitiesUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: DiscoverMcpCapabilitiesUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: jest.Mocked<McpClientService>;
   let contextService: jest.Mocked<ContextService>;
   let capabilityCache: McpCapabilityCacheService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
   let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
@@ -85,6 +86,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     });
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DiscoverMcpCapabilitiesUseCase,
@@ -110,6 +112,11 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
             get: jest.fn(),
           },
         },
+
+        {
+          provide: getLoggerToken(DiscoverMcpCapabilitiesUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -118,10 +125,6 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     mcpClientService = module.get(McpClientService);
     contextService = module.get(ContextService);
     capabilityCache = module.get(McpCapabilityCacheService);
-
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
     decoratorErrorSpy = jest
       .spyOn(PinoLogger.prototype, 'error')
       .mockImplementation();
@@ -194,18 +197,21 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         integration,
         mockUserId,
       );
-      expect(loggerLogSpy).toHaveBeenCalledWith('discoverMcpCapabilities', {
-        id: mockIntegrationId,
-      });
-      expect(loggerLogSpy).toHaveBeenCalledWith(
-        'discoverMcpCapabilitiesSucceeded',
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'discoverMcpCapabilities',
+      );
+      expect(logger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           id: mockIntegrationId,
           name: integration.name,
-          tools: 1,
+          toolCount: 1,
           resources: 2,
           prompts: 1,
         }),
+        'discoverMcpCapabilitiesSucceeded',
       );
     });
 
@@ -243,7 +249,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       ).rejects.toThrow(McpIntegrationNotFoundError);
 
       expect(mcpClientService.listTools).not.toHaveBeenCalled();
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('throws McpIntegrationAccessDeniedError for different organization', async () => {

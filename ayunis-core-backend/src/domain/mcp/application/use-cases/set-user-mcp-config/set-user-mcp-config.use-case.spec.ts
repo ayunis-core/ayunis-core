@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SetUserMcpConfigUseCase } from './set-user-mcp-config.use-case';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
 import type { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -111,6 +112,7 @@ describe('SetUserMcpConfigUseCase', () => {
     mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new SetUserMcpConfigUseCase(
+      createPinoLoggerMock(),
       integrationRepository,
       userConfigRepository,
       contextService,

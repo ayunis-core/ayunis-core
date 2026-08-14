@@ -1,6 +1,8 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DeleteMcpIntegrationUseCase } from './delete-mcp-integration.use-case';
@@ -20,6 +22,7 @@ import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-object
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('DeleteMcpIntegrationUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: DeleteMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let userConfigRepository: McpIntegrationUserConfigRepositoryPort;
@@ -28,8 +31,6 @@ describe('DeleteMcpIntegrationUseCase', () => {
   let mcpClientService: jest.Mocked<
     Pick<McpClientService, 'invalidateConnections'>
   >;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
   let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
@@ -56,6 +57,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
     });
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteMcpIntegrationUseCase,
@@ -83,6 +85,11 @@ describe('DeleteMcpIntegrationUseCase', () => {
             get: jest.fn(),
           },
         },
+
+        {
+          provide: getLoggerToken(DeleteMcpIntegrationUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -102,8 +109,6 @@ describe('DeleteMcpIntegrationUseCase', () => {
     mcpClientService = module.get(McpClientService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
     decoratorErrorSpy = jest
       .spyOn(PinoLogger.prototype, 'error')
       .mockImplementation();
@@ -135,9 +140,12 @@ describe('DeleteMcpIntegrationUseCase', () => {
       expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
         mockIntegration,
       );
-      expect(loggerLogSpy).toHaveBeenCalledWith('deleteMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'deleteMcpIntegration',
+      );
     });
 
     it('should delete associated user config records when deleting an integration', async () => {
@@ -284,7 +292,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
@@ -301,7 +309,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -318,9 +326,12 @@ describe('DeleteMcpIntegrationUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('deleteMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'deleteMcpIntegration',
+      );
     });
   });
 });

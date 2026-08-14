@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ToolExecutionFailedError } from '../tools.errors';
 import { HttpTool, HttpToolMethod } from '../../domain/tools/http-tool.entity';
 import {
@@ -8,7 +9,12 @@ import {
 
 @Injectable()
 export class HttpToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(HttpToolHandler.name);
+  constructor(
+    @InjectPinoLogger(HttpToolHandler.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   async execute(params: {
     tool: HttpTool;
@@ -16,47 +22,13 @@ export class HttpToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const requestInput = JSON.parse(
         validatedInput.bodyOrQueryParams,
       ) as Record<string, unknown>;
-      const options: RequestInit = {
-        method: tool.config.method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
-      // Add body only for POST requests
-      if (tool.config.method === HttpToolMethod.POST) {
-        options.body = JSON.stringify(requestInput);
-      }
-
-      // For GET requests, append parameters to URL
-      let url = tool.config.endpointUrl;
-      if (
-        tool.config.method === HttpToolMethod.GET &&
-        Object.keys(requestInput).length > 0
-      ) {
-        const queryParams = new URLSearchParams();
-        for (const [key, value] of Object.entries(requestInput)) {
-          if (value !== undefined && value !== null) {
-            queryParams.append(key, value as string);
-          }
-        }
-        url = `${url}?${queryParams.toString()}`;
-      }
-
-      const response = await fetch(url, options).catch(() => {
-        this.logger.warn('execute', 'Request to the given endpoint failed');
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: 'Request to the given endpoint failed',
-          exposeToLLM: true,
-        });
-      });
+      const response = await this.fetchResponse(tool, requestInput);
 
       const data = (await response.json()) as Record<string, unknown>;
       return JSON.stringify(data);
@@ -64,7 +36,7 @@ export class HttpToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -74,5 +46,47 @@ export class HttpToolHandler extends ToolExecutionHandler {
         },
       });
     }
+  }
+
+  private async fetchResponse(
+    tool: HttpTool,
+    input: Record<string, unknown>,
+  ): Promise<Response> {
+    const options: RequestInit = {
+      method: tool.config.method,
+      headers: { 'Content-Type': 'application/json' },
+      ...(tool.config.method === HttpToolMethod.POST && {
+        body: JSON.stringify(input),
+      }),
+    };
+    try {
+      return await fetch(this.buildUrl(tool, input), options);
+    } catch {
+      this.logger.warn(
+        { error: 'Request to the given endpoint failed' },
+        'execute',
+      );
+      throw new ToolExecutionFailedError({
+        toolName: tool.name,
+        message: 'Request to the given endpoint failed',
+        exposeToLLM: true,
+      });
+    }
+  }
+
+  private buildUrl(tool: HttpTool, input: Record<string, unknown>): string {
+    if (tool.config.method !== HttpToolMethod.GET) {
+      return tool.config.endpointUrl;
+    }
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value as string);
+      }
+    }
+    const query = queryParams.toString();
+    return query
+      ? `${tool.config.endpointUrl}?${query}`
+      : tool.config.endpointUrl;
   }
 }

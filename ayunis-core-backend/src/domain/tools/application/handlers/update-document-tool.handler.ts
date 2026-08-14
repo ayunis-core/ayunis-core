@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -13,9 +14,11 @@ import { UUID } from 'crypto';
 
 @Injectable()
 export class UpdateDocumentToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(UpdateDocumentToolHandler.name);
-
-  constructor(private readonly updateArtifactUseCase: UpdateArtifactUseCase) {
+  constructor(
+    @InjectPinoLogger(UpdateDocumentToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly updateArtifactUseCase: UpdateArtifactUseCase,
+  ) {
     super();
   }
 
@@ -25,7 +28,7 @@ export class UpdateDocumentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('Executing update_document tool');
+    this.logger.info('Executing update_document tool');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -58,7 +61,10 @@ export class UpdateDocumentToolHandler extends ToolExecutionHandler {
         });
       }
 
-      this.logger.error('Failed to execute update_document tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute update_document tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

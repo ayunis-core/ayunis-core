@@ -1,4 +1,5 @@
-import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
+import { Injectable, type OnModuleDestroy } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Client } from '@modelcontextprotocol/client';
 import { createHash } from 'crypto';
 import type {
@@ -21,7 +22,10 @@ interface CachedClient {
 
 @Injectable()
 export class McpClientPoolService implements OnModuleDestroy {
-  private readonly logger = new Logger(McpClientPoolService.name);
+  constructor(
+    @InjectPinoLogger(McpClientPoolService.name)
+    private readonly logger: PinoLogger,
+  ) {}
   private readonly clients = new Map<string, CachedClient>();
   private readonly liveClients = new Set<CachedClient>();
   private shuttingDown = false;
@@ -188,9 +192,12 @@ export class McpClientPoolService implements OnModuleDestroy {
     try {
       await client.close();
     } catch (error) {
-      this.logger.warn('Failed to close MCP client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      this.logger.warn(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Failed to close MCP client',
+      );
     }
   }
 }

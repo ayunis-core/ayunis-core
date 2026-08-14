@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -12,9 +13,9 @@ import { McpIntegrationUserConfigRecord } from './schema/mcp-integration-user-co
  */
 @Injectable()
 export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
-  private readonly logger = new Logger(McpIntegrationUserConfigRepository.name);
-
   constructor(
+    @InjectPinoLogger(McpIntegrationUserConfigRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(McpIntegrationUserConfigRecord)
     private readonly repository: Repository<McpIntegrationUserConfigRecord>,
   ) {
@@ -24,11 +25,14 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   async save(
     config: McpIntegrationUserConfig,
   ): Promise<McpIntegrationUserConfig> {
-    this.logger.log('save', {
-      configId: config.id,
-      integrationId: config.integrationId,
-      userId: config.userId,
-    });
+    this.logger.info(
+      {
+        configId: config.id,
+        integrationId: config.integrationId,
+        userId: config.userId,
+      },
+      'save',
+    );
 
     const record = this.toRecord(config);
     const saved = await this.repository.save(record);
@@ -39,7 +43,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationId: UUID,
     userId: UUID,
   ): Promise<McpIntegrationUserConfig | null> {
-    this.logger.log('findByIntegrationAndUser', { integrationId, userId });
+    this.logger.info({ integrationId, userId }, 'findByIntegrationAndUser');
 
     const record = await this.repository.findOne({
       where: { integrationId, userId },
@@ -56,10 +60,13 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     integrationIds: UUID[],
     userId: UUID,
   ): Promise<McpIntegrationUserConfig[]> {
-    this.logger.log('findByIntegrationIdsAndUser', {
-      count: integrationIds.length,
-      userId,
-    });
+    this.logger.info(
+      {
+        count: integrationIds.length,
+        userId,
+      },
+      'findByIntegrationIdsAndUser',
+    );
 
     if (integrationIds.length === 0) {
       return [];
@@ -73,7 +80,7 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
   }
 
   async deleteByIntegrationId(integrationId: UUID): Promise<void> {
-    this.logger.log('deleteByIntegrationId', { integrationId });
+    this.logger.info({ integrationId }, 'deleteByIntegrationId');
 
     await this.repository.delete({ integrationId });
   }

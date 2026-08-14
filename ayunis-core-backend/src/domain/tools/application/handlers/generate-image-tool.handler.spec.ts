@@ -1,6 +1,7 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { GenerateImageToolHandler } from './generate-image-tool.handler';
 import { GenerateImageTool } from '../../domain/tools/generate-image-tool.entity';
@@ -83,13 +84,15 @@ describe('GenerateImageToolHandler', () => {
           provide: CheckQuotaUseCase,
           useValue: mockCheckQuota,
         },
+
+        {
+          provide: getLoggerToken(GenerateImageToolHandler.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     handler = module.get<GenerateImageToolHandler>(GenerateImageToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

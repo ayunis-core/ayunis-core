@@ -1,4 +1,5 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   McpClientPort,
@@ -30,9 +31,9 @@ import { handleMcpOperationError } from './mcp-operation-error';
 
 @Injectable()
 export class McpClientService {
-  private readonly logger = new Logger(McpClientService.name);
-
   constructor(
+    @InjectPinoLogger(McpClientService.name)
+    private readonly logger: PinoLogger,
     private readonly mcpClient: McpClientPort,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
@@ -81,10 +82,13 @@ export class McpClientService {
       if (error instanceof McpAuthenticationError) {
         throw error;
       }
-      this.logger.error('Failed to build schema-configured connection config', {
-        error: error as Error,
-        integrationId: integration.id,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          integrationId: integration.id,
+        },
+        'Failed to build schema-configured connection config',
+      );
       throw new McpAuthenticationError('Authentication configuration failed');
     }
   }
@@ -217,10 +221,13 @@ export class McpClientService {
         throw error;
       }
 
-      this.logger.error('Failed to build connection config', {
-        error: error as Error,
-        integrationId: integration.id,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          integrationId: integration.id,
+        },
+        'Failed to build connection config',
+      );
       throw new McpAuthenticationError('Authentication configuration failed');
     }
   }
@@ -257,9 +264,12 @@ export class McpClientService {
           ? `Bearer ${decryptedToken}`
           : decryptedToken;
 
-      this.logger.log('Built connection config for bearer authentication', {
-        integrationId: integration.id,
-      });
+      this.logger.info(
+        {
+          integrationId: integration.id,
+        },
+        'Built connection config for bearer authentication',
+      );
     } else if (auth instanceof CustomHeaderMcpIntegrationAuth) {
       if (!auth.secret) {
         throw new McpAuthenticationError('Header secret not configured');
@@ -304,13 +314,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Lists all resources available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available resources
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listResources(
     integration: McpIntegration,
     userId?: UUID,
@@ -472,13 +475,6 @@ export class McpClientService {
     );
   }
 
-  /**
-   * Handles errors from MCP operations, with special handling for 401 responses.
-   *
-   * @param error The error that occurred
-   * @param integration The integration entity (for updating status)
-   * @param operation The operation name (for logging)
-   */
   private async handleOperationError(
     error: unknown,
     integration: McpIntegration,

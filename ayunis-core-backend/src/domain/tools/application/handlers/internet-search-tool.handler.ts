@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SearchWebUseCase } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.use-case';
 import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.command';
 import {
@@ -10,9 +11,11 @@ import { ToolExecutionFailedError } from '../tools.errors';
 
 @Injectable()
 export class InternetSearchToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(InternetSearchToolHandler.name);
-
-  constructor(private readonly searchWebUseCase: SearchWebUseCase) {
+  constructor(
+    @InjectPinoLogger(InternetSearchToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly searchWebUseCase: SearchWebUseCase,
+  ) {
     super();
   }
 
@@ -22,7 +25,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const results = await this.searchWebUseCase.execute(
@@ -33,7 +36,7 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

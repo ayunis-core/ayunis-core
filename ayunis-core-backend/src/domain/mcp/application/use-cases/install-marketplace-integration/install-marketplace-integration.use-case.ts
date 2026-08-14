@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
@@ -58,11 +59,9 @@ import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-cli
 
 @Injectable()
 export class InstallMarketplaceIntegrationUseCase {
-  private readonly logger = new Logger(
-    InstallMarketplaceIntegrationUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(InstallMarketplaceIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly configService: McpConfigService,
@@ -77,7 +76,7 @@ export class InstallMarketplaceIntegrationUseCase {
   async execute(
     command: InstallMarketplaceIntegrationCommand,
   ): Promise<MarketplaceMcpIntegration> {
-    this.logger.log('execute', { identifier: command.identifier });
+    this.logger.info({ identifier: command.identifier }, 'execute');
 
     const orgId = this.contextService.get('orgId');
     const userId = this.contextService.get('userId');
@@ -94,10 +93,13 @@ export class InstallMarketplaceIntegrationUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error installing marketplace integration', {
-        identifier: command.identifier,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          identifier: command.identifier,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Unexpected error installing marketplace integration',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }
@@ -207,12 +209,12 @@ export class InstallMarketplaceIntegrationUseCase {
       )
       .catch((error: unknown) => {
         this.logger.error(
-          'Failed to emit MarketplaceIntegrationInstalledEvent',
           {
             error: error instanceof Error ? error.message : 'Unknown error',
             identifier,
             orgId,
           },
+          'Failed to emit MarketplaceIntegrationInstalledEvent',
         );
       });
   }

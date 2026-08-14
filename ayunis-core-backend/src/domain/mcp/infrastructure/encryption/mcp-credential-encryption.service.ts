@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credential-encryption.port';
@@ -19,13 +20,16 @@ import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credent
  */
 @Injectable()
 export class McpCredentialEncryptionService extends McpCredentialEncryptionPort {
-  private readonly logger = new Logger(McpCredentialEncryptionService.name);
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16; // 128 bits
   private readonly authTagLength = 16; // 128 bits
   private readonly encryptionKey: Buffer;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(McpCredentialEncryptionService.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
 
     // Read and validate encryption key from environment
@@ -47,7 +51,7 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
     }
 
     this.encryptionKey = Buffer.from(keyHex, 'hex');
-    this.logger.log('McpCredentialEncryptionService initialized successfully');
+    this.logger.info('McpCredentialEncryptionService initialized successfully');
   }
 
   /**
@@ -85,9 +89,12 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
       const combined = Buffer.concat([iv, encrypted, authTag]);
       return Promise.resolve(combined.toString('base64'));
     } catch (error) {
-      this.logger.error('Failed to encrypt credential', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to encrypt credential',
+      );
       throw new Error('Failed to encrypt credential');
     }
   }
@@ -130,9 +137,12 @@ export class McpCredentialEncryptionService extends McpCredentialEncryptionPort 
 
       return Promise.resolve(decrypted.toString('utf8'));
     } catch (error) {
-      this.logger.error('Failed to decrypt credential', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to decrypt credential',
+      );
       throw new Error('Failed to decrypt credential');
     }
   }

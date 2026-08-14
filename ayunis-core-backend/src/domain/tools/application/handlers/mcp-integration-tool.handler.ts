@@ -2,7 +2,8 @@ import {
   ToolExecutionContext,
   ToolExecutionHandler,
 } from '../ports/execution.handler';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ExecuteMcpToolUseCase } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.use-case';
 import { McpIntegrationTool } from '../../domain/tools/mcp-integration-tool.entity';
 import { ExecuteMcpToolCommand } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command';
@@ -11,9 +12,11 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class McpIntegrationToolHandler implements ToolExecutionHandler {
-  private readonly logger = new Logger(McpIntegrationToolHandler.name);
-
-  constructor(private readonly executeMcpToolUseCase: ExecuteMcpToolUseCase) {}
+  constructor(
+    @InjectPinoLogger(McpIntegrationToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly executeMcpToolUseCase: ExecuteMcpToolUseCase,
+  ) {}
 
   async execute(params: {
     tool: McpIntegrationTool;
@@ -21,7 +24,7 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const result = await this.executeMcpToolUseCase.execute(
@@ -34,7 +37,7 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
       return JSON.stringify(result.content);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('error', error);
+      this.logger.error({ err: error }, 'error');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message:

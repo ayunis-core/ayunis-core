@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { InstallMarketplaceIntegrationUseCase } from './install-marketplace-integration.use-case';
 import { InstallMarketplaceIntegrationCommand } from './install-marketplace-integration.command';
 import type { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.use-case';
@@ -179,6 +180,7 @@ describe('InstallMarketplaceIntegrationUseCase', () => {
     };
 
     useCase = new InstallMarketplaceIntegrationUseCase(
+      createPinoLoggerMock(),
       getMarketplaceIntegrationUseCase,
       repository,
       configService,

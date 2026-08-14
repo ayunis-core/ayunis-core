@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
@@ -21,9 +22,9 @@ import {
 
 @Injectable()
 export class ActivateSkillToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(ActivateSkillToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(ActivateSkillToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly findSkillByNameUseCase: FindSkillByNameUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly skillActivationService: SkillActivationService,
@@ -39,7 +40,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { threadId } = context;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -78,7 +79,7 @@ export class ActivateSkillToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

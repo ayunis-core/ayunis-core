@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SourceQueryTool } from '../../domain/tools/source-query-tool.entity';
 import { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
@@ -14,9 +15,9 @@ import { handleEmbeddingError } from '../utils/embedding-error.utils';
 
 @Injectable()
 export class SourceQueryToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(SourceQueryToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(SourceQueryToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly getSourceByIdUseCase: GetTextSourceByIdUseCase,
     private readonly matchSourceContentChunksUseCase: QueryTextSourceUseCase,
   ) {
@@ -30,7 +31,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
   }): Promise<string> {
     const { tool, input, context } = params;
     const { orgId } = context;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const source = await this.getSourceByIdUseCase.execute(
@@ -62,7 +63,7 @@ export class SourceQueryToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       handleEmbeddingError(error, tool.name);
     }
   }

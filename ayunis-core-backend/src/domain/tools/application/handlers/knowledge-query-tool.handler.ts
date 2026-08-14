@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { KnowledgeQueryTool } from '../../domain/tools/knowledge-query-tool.entity';
 import type { UUID } from 'crypto';
 import { ToolExecutionFailedError } from '../tools.errors';
@@ -14,9 +15,9 @@ import { handleEmbeddingError } from '../utils/embedding-error.utils';
 
 @Injectable()
 export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(KnowledgeQueryToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(KnowledgeQueryToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly queryKnowledgeBaseUseCase: QueryKnowledgeBaseUseCase,
     private readonly contextService: ContextService,
   ) {
@@ -29,7 +30,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('execute', { tool: tool.name, input });
+    this.logger.info({ tool: tool.name, input }, 'execute');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -69,7 +70,7 @@ export class KnowledgeQueryToolHandler extends ToolExecutionHandler {
   }
 
   private handleError(error: unknown, toolName: string): never {
-    this.logger.error('execute', error);
+    this.logger.error({ err: error }, 'execute');
 
     if (error instanceof KnowledgeBaseNotFoundError) {
       throw new ToolExecutionFailedError({

@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -88,6 +90,10 @@ describe('McpIntegrationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [McpIntegrationsController],
       providers: [
+        {
+          provide: getLoggerToken(McpIntegrationsController.name),
+          useValue: createPinoLoggerMock(),
+        },
         McpIntegrationDtoMapper,
         McpIntegrationResponseMapper,
         PredefinedConfigDtoMapper,

@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetMcpIntegrationsByIdsQuery } from './get-mcp-integrations-by-ids.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -12,9 +13,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
  */
 @Injectable()
 export class GetMcpIntegrationsByIdsUseCase {
-  private readonly logger = new Logger(GetMcpIntegrationsByIdsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetMcpIntegrationsByIdsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
@@ -28,9 +29,12 @@ export class GetMcpIntegrationsByIdsUseCase {
   async execute(
     query: GetMcpIntegrationsByIdsQuery,
   ): Promise<McpIntegration[]> {
-    this.logger.log('getMcpIntegrationsByIds', {
-      count: query.integrationIds.length,
-    });
+    this.logger.info(
+      {
+        count: query.integrationIds.length,
+      },
+      'getMcpIntegrationsByIds',
+    );
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -55,9 +59,12 @@ export class GetMcpIntegrationsByIdsUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error getting integrations by IDs', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error getting integrations by IDs',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

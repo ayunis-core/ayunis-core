@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ToolExecutionContext,
@@ -42,9 +43,9 @@ type ValidatedGenerateImageInput = ReturnType<
 
 @Injectable()
 export class GenerateImageToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(GenerateImageToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(GenerateImageToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly generateImageUseCase: GenerateImageUseCase,
     private readonly saveGeneratedImageUseCase: SaveGeneratedImageUseCase,
@@ -61,7 +62,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    this.logger.log('Executing generate_image tool');
+    this.logger.info('Executing generate_image tool');
     try {
       return await this.runGeneration(params);
     } catch (error) {
@@ -200,7 +201,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
         exposeToLLM: true,
       });
     }
-    this.logger.error('Failed to load reference images', error);
+    this.logger.error({ err: error }, 'Failed to load reference images');
     return new ToolExecutionFailedError({
       toolName,
       message:
@@ -257,7 +258,7 @@ export class GenerateImageToolHandler extends ToolExecutionHandler {
     if (error instanceof ToolExecutionFailedError) {
       throw error;
     }
-    this.logger.error('Failed to execute generate_image tool', error);
+    this.logger.error({ err: error }, 'Failed to execute generate_image tool');
     // ApplicationError messages (quota, content policy, provider outage) are
     // curated for end users — expose them so the model can explain the
     // failure instead of retrying blind into the repeated-failure breaker

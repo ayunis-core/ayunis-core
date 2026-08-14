@@ -1,5 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
 import { ToolHandlerRegistry } from '../../tool-handler.registry';
@@ -38,10 +40,12 @@ describe('ExecuteToolUseCase', () => {
   let useCase: ExecuteToolUseCase;
   let mockToolHandlerRegistry: Partial<ToolHandlerRegistry>;
   let mockHandler: { execute: jest.Mock };
+  let logger: jest.Mocked<PinoLogger>;
 
   const mockContext = '123e4567-e89b-12d3-a456-426614174000' as any;
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     mockHandler = {
       execute: jest.fn(),
     };
@@ -54,6 +58,10 @@ describe('ExecuteToolUseCase', () => {
       providers: [
         ExecuteToolUseCase,
         { provide: ToolHandlerRegistry, useValue: mockToolHandlerRegistry },
+        {
+          provide: getLoggerToken(ExecuteToolUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -206,18 +214,20 @@ describe('ExecuteToolUseCase', () => {
       const input = {};
       const command = new ExecuteToolCommand(mockTool, input, mockContext);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
       mockHandler.execute.mockResolvedValue('result');
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('execute', {
-        toolName: 'Test Tool',
-        input,
-        parameters: mockTool.parameters,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          tool: { name: 'Test Tool' },
+          input,
+          tools: mockTool.parameters,
+        },
+        'execute',
+      );
     });
 
     it('strips schema-disallowed null params before invoking the handler', async () => {

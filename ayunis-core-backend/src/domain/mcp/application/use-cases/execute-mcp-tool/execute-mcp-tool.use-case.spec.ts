@@ -1,6 +1,8 @@
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { setError } from '@appsignal/nodejs';
 import { ExecuteMcpToolUseCase } from './execute-mcp-tool.use-case';
@@ -55,17 +57,16 @@ const buildCustom = () =>
   });
 
 describe('ExecuteMcpToolUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: ExecuteMcpToolUseCase;
   let repository: jest.Mocked<McpIntegrationsRepositoryPort>;
   let mcpClientService: {
     callTool: jest.Mock;
   };
   let contextService: jest.Mocked<ContextService>;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerWarnSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     repository = {
       findById: jest.fn(),
       save: jest.fn(),
@@ -90,14 +91,15 @@ describe('ExecuteMcpToolUseCase', () => {
         { provide: McpIntegrationsRepositoryPort, useValue: repository },
         { provide: McpClientService, useValue: mcpClientService },
         { provide: ContextService, useValue: contextService },
+
+        {
+          provide: getLoggerToken(ExecuteMcpToolUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
     useCase = module.get(ExecuteMcpToolUseCase);
-
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerWarnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -131,7 +133,19 @@ describe('ExecuteMcpToolUseCase', () => {
       },
       mockUserId,
     );
-    expect(loggerLogSpy).toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith(
+      {
+        operation: 'execute_tool',
+        integration: {
+          id: mockIntegrationId,
+          name: 'Predefined Integration',
+        },
+        tool: { name: mockToolName },
+        status: 'success',
+        durationMs: expect.any(Number),
+      },
+      '[MCP] operation=execute_tool',
+    );
   });
 
   it('returns error result when MCP client throws', async () => {
@@ -144,7 +158,20 @@ describe('ExecuteMcpToolUseCase', () => {
 
     expect(result.isError).toBe(true);
     expect(result.errorMessage).toBe('tool failed');
-    expect(loggerWarnSpy).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        operation: 'execute_tool',
+        integration: {
+          id: mockIntegrationId,
+          name: 'Predefined Integration',
+        },
+        tool: { name: mockToolName },
+        status: 'error',
+        error: 'tool failed',
+        durationMs: expect.any(Number),
+      },
+      '[MCP] operation=execute_tool',
+    );
   });
 
   // The soft-handled tool result is the only place classified MCP outages
@@ -239,7 +266,17 @@ describe('ExecuteMcpToolUseCase', () => {
     await expect(useCase.execute(buildCommand())).rejects.toBeInstanceOf(
       UnexpectedMcpError,
     );
-    expect(loggerErrorSpy).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        err: expect.any(Error),
+        operation: 'execute_tool',
+        integration: { id: mockIntegrationId },
+        tool: { name: mockToolName },
+        status: 'unexpected_error',
+        durationMs: expect.any(Number),
+      },
+      '[MCP] operation=execute_tool',
+    );
   });
 
   it('passes custom integrations to client service with userId', async () => {

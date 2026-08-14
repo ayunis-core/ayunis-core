@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RetrieveMcpResourceCommand } from './retrieve-mcp-resource.command';
 import { McpClientService } from '../../services/mcp-client.service';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -8,9 +9,9 @@ import { ValidateIntegrationAccessService } from '../../services/validate-integr
 
 @Injectable()
 export class RetrieveMcpResourceUseCase {
-  private readonly logger = new Logger(RetrieveMcpResourceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RetrieveMcpResourceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly mcpClientService: McpClientService,
     private readonly validateIntegrationAccess: ValidateIntegrationAccessService,
     private readonly contextService: ContextService,
@@ -19,11 +20,14 @@ export class RetrieveMcpResourceUseCase {
   async execute(
     command: RetrieveMcpResourceCommand,
   ): Promise<{ content: unknown; mimeType: string }> {
-    this.logger.log('retrieveMcpResource', {
-      integrationId: command.integrationId,
-      resourceUri: command.resourceUri,
-      parameters: command.parameters,
-    });
+    this.logger.info(
+      {
+        integrationId: command.integrationId,
+        url: command.resourceUri,
+        input: command.parameters,
+      },
+      'retrieveMcpResource',
+    );
     try {
       const integration = await this.validateIntegrationAccess.validate(
         command.integrationId,
@@ -44,11 +48,14 @@ export class RetrieveMcpResourceUseCase {
         throw error;
       }
 
-      this.logger.error('retrieveMcpResourceFailed', {
-        integrationId: command.integrationId,
-        resourceUri: command.resourceUri,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          integrationId: command.integrationId,
+          url: command.resourceUri,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'retrieveMcpResourceFailed',
+      );
       throw new UnexpectedMcpError(
         error instanceof Error ? error.message : 'Unknown error',
       );

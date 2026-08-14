@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetMcpIntegrationQuery } from './get-mcp-integration.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -12,15 +13,15 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetMcpIntegrationUseCase {
-  private readonly logger = new Logger(GetMcpIntegrationUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetMcpIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetMcpIntegrationQuery): Promise<McpIntegration> {
-    this.logger.log('getMcpIntegration', { id: query.integrationId });
+    this.logger.info({ id: query.integrationId }, 'getMcpIntegration');
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -46,9 +47,12 @@ export class GetMcpIntegrationUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error getting integration', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error getting integration',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SourceQueryToolHandler } from './source-query-tool.handler';
@@ -49,6 +51,11 @@ describe('SourceQueryToolHandler', () => {
         {
           provide: QueryTextSourceUseCase,
           useValue: mockQueryTextSourceUseCase,
+        },
+
+        {
+          provide: getLoggerToken(SourceQueryToolHandler.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

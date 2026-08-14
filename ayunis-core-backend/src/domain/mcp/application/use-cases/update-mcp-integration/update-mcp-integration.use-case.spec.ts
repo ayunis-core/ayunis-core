@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateMcpIntegrationUseCase } from './update-mcp-integration.use-case';
@@ -72,6 +73,7 @@ describe('UpdateMcpIntegrationUseCase', () => {
     mcpClientService = { invalidateConnections: jest.fn() };
 
     useCase = new UpdateMcpIntegrationUseCase(
+      createPinoLoggerMock(),
       repository,
       context,
       encryption,

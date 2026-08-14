@@ -1,4 +1,4 @@
-import type { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import type { McpIntegration } from '../../domain/mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
@@ -16,7 +16,7 @@ interface McpOperationErrorContext {
   userId?: UUID;
   oauthTokens?: McpOAuthUserTokenRepositoryPort;
   capabilityCache?: McpCapabilityCacheService;
-  logger: Logger;
+  logger: PinoLogger;
 }
 
 export async function handleMcpOperationError({
@@ -37,17 +37,17 @@ export async function handleMcpOperationError({
     );
   }
   if ((error as { status?: number }).status === 401) {
-    logger.warn(`Authentication failed for MCP operation: ${operation}`, {
-      integrationId: integration.id,
-    });
+    logger.warn(
+      { integrationId: integration.id, operation },
+      'Authentication failed for MCP operation',
+    );
     integration.updateConnectionStatus('error', 'Authentication failed');
     throw new McpAuthenticationError('Invalid authentication credentials');
   }
-  logger.error('Failed to execute MCP operation', {
-    error: error as Error,
-    integrationId: integration.id,
-    operation,
-  });
+  logger.error(
+    { err: error as Error, integrationId: integration.id, operation },
+    'Failed to execute MCP operation',
+  );
   throw error;
 }
 

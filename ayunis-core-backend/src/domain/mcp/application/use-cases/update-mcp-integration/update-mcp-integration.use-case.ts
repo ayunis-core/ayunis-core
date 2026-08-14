@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { UpdateMcpIntegrationCommand } from './update-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -25,9 +26,9 @@ import { McpClientService } from '../../services/mcp-client.service';
 
 @Injectable()
 export class UpdateMcpIntegrationUseCase {
-  private readonly logger = new Logger(UpdateMcpIntegrationUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateMcpIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
     private readonly credentialEncryption: McpCredentialEncryptionPort,
@@ -40,7 +41,7 @@ export class UpdateMcpIntegrationUseCase {
 
   @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(command: UpdateMcpIntegrationCommand): Promise<McpIntegration> {
-    this.logger.log('updateMcpIntegration', { id: command.integrationId });
+    this.logger.info({ id: command.integrationId }, 'updateMcpIntegration');
 
     const integration = await this.getAuthorizedIntegration(
       command.integrationId as UUID,

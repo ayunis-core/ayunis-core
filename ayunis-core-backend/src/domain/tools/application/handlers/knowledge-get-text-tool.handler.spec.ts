@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeGetTextToolHandler } from './knowledge-get-text-tool.handler';
@@ -70,6 +72,11 @@ describe('KnowledgeGetTextToolHandler', () => {
         {
           provide: toolsConfig.KEY,
           useValue: mockToolsConfig,
+        },
+
+        {
+          provide: getLoggerToken(KnowledgeGetTextToolHandler.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

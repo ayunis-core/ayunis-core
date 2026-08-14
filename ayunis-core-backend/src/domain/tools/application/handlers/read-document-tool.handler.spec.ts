@@ -1,6 +1,7 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ReadDocumentToolHandler } from './read-document-tool.handler';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
@@ -31,13 +32,15 @@ describe('ReadDocumentToolHandler', () => {
           provide: FindArtifactWithVersionsUseCase,
           useValue: mockFindArtifactUseCase,
         },
+
+        {
+          provide: getLoggerToken(ReadDocumentToolHandler.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     handler = module.get<ReadDocumentToolHandler>(ReadDocumentToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

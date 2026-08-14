@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -17,9 +18,9 @@ import {
 
 @Injectable()
 export class EditDocumentToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(EditDocumentToolHandler.name);
-
   constructor(
+    @InjectPinoLogger(EditDocumentToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly applyEditsToArtifactUseCase: ApplyEditsToArtifactUseCase,
   ) {
     super();
@@ -31,7 +32,7 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input } = params;
-    this.logger.log('Executing edit_document tool');
+    this.logger.info('Executing edit_document tool');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -54,36 +55,39 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
       const editWord = editCount === 1 ? 'edit' : 'edits';
       return `Document edited successfully. Applied ${editCount} ${editWord} to artifact ID: ${validatedInput.artifact_id}, version: ${version.versionNumber}`;
     } catch (error) {
-      if (error instanceof ToolExecutionFailedError) {
-        throw error;
-      }
-
-      // Map artifact errors to tool execution errors that can be retried by the LLM
-      if (error instanceof ArtifactExpectedVersionMismatchError) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: error.message,
-          exposeToLLM: true,
-        });
-      }
-
-      if (
-        error instanceof ArtifactEditNotFoundError ||
-        error instanceof ArtifactEditAmbiguousError
-      ) {
-        throw new ToolExecutionFailedError({
-          toolName: tool.name,
-          message: error.message,
-          exposeToLLM: true,
-        });
-      }
-
-      this.logger.error('Failed to execute edit_document tool', error);
-      throw new ToolExecutionFailedError({
-        toolName: tool.name,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        exposeToLLM: false,
-      });
+      this.handleError(error, tool.name);
     }
+  }
+
+  private handleError(error: unknown, toolName: string): never {
+    if (error instanceof ToolExecutionFailedError) {
+      throw error;
+    }
+    if (error instanceof ArtifactExpectedVersionMismatchError) {
+      throw this.toRetryableError(toolName, error.message);
+    }
+    if (
+      error instanceof ArtifactEditNotFoundError ||
+      error instanceof ArtifactEditAmbiguousError
+    ) {
+      throw this.toRetryableError(toolName, error.message);
+    }
+    this.logger.error({ err: error }, 'Failed to execute edit_document tool');
+    throw new ToolExecutionFailedError({
+      toolName,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      exposeToLLM: false,
+    });
+  }
+
+  private toRetryableError(
+    toolName: string,
+    message: string,
+  ): ToolExecutionFailedError {
+    return new ToolExecutionFailedError({
+      toolName,
+      message,
+      exposeToLLM: true,
+    });
   }
 }

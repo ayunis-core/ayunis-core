@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CreatePredefinedMcpIntegrationCommand } from './create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from './create-custom-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
@@ -31,9 +32,9 @@ import { McpOAuthClientConfigurationService } from '../../services/mcp-oauth-cli
 
 @Injectable()
 export class CreateMcpIntegrationUseCase {
-  private readonly logger = new Logger(CreateMcpIntegrationUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateMcpIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly registryService: PredefinedMcpIntegrationRegistry,
     private readonly contextService: ContextService,
@@ -76,7 +77,7 @@ export class CreateMcpIntegrationUseCase {
     command: CreatePredefinedMcpIntegrationCommand,
     orgId: UUID,
   ): Promise<PredefinedMcpIntegration> {
-    this.logger.log('createPredefinedIntegration', { slug: command.slug });
+    this.logger.info({ slug: command.slug }, 'createPredefinedIntegration');
 
     try {
       if (!this.registryService.isValidSlug(command.slug)) {
@@ -184,9 +185,7 @@ export class CreateMcpIntegrationUseCase {
     command: CreateCustomMcpIntegrationCommand,
     orgId: UUID,
   ): Promise<CustomMcpIntegration> {
-    this.logger.log('createCustomIntegration', {
-      serverUrl: command.serverUrl,
-    });
+    this.logger.info({ url: command.serverUrl }, 'createCustomIntegration');
 
     try {
       if (!this.isValidUrl(command.serverUrl)) {
@@ -271,9 +270,10 @@ export class CreateMcpIntegrationUseCase {
       throw error;
     }
 
-    this.logger.error(`Unexpected error creating ${kind} integration`, {
-      error: error as Error,
-    });
+    this.logger.error(
+      { err: error as Error, kind },
+      'Unexpected error creating integration',
+    );
     throw new UnexpectedMcpError('Unexpected error occurred');
   }
 
