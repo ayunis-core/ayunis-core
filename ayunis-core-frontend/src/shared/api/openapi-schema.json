@@ -10112,7 +10112,7 @@
     },
     "/auth/mfa/verify": {
       "post": {
-        "description": "Requires the MFA pending cookie set by a successful password login.",
+        "description": "Requires the MFA pending cookie set by successful authentication.",
         "operationId": "MfaLoginController_verify",
         "parameters": [],
         "requestBody": {
@@ -10958,16 +10958,79 @@
         "tags": ["SSO"]
       }
     },
+    "/auth/sso/link/start": {
+      "post": {
+        "operationId": "SsoLoginController_startLink",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoAuthorizationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start linking SSO to the current account",
+        "tags": ["SSO"]
+      }
+    },
     "/auth/sso/oidc/callback": {
       "get": {
         "operationId": "SsoLoginController_callback",
         "parameters": [],
         "responses": {
           "204": {
-            "description": "OIDC response validated"
+            "description": "Core session or MFA-pending cookie issued"
           }
         },
-        "summary": "Validate an organization-pinned OIDC callback",
+        "summary": "Complete an organization-pinned SSO login",
+        "tags": ["SSO"]
+      }
+    },
+    "/auth/sso/session/logout": {
+      "post": {
+        "operationId": "SsoLoginController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoLogoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke the Core session and prepare broker logout",
+        "tags": ["SSO"]
+      }
+    },
+    "/auth/sso/oidc/backchannel-logout": {
+      "post": {
+        "operationId": "SsoLoginController_backchannelLogout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SsoBackchannelLogoutRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Matching Core SSO sessions revoked"
+          }
+        },
+        "summary": "Process a signed broker back-channel logout",
         "tags": ["SSO"]
       }
     }
@@ -19223,6 +19286,41 @@
           }
         },
         "required": ["available"]
+      },
+      "SsoAuthorizationResponseDto": {
+        "type": "object",
+        "properties": {
+          "authorizationUrl": {
+            "type": "string",
+            "example": "https://sso.ayunis.de/oauth/v2/authorize?client_id=core"
+          }
+        },
+        "required": ["authorizationUrl"]
+      },
+      "SsoLogoutResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "brokerLogoutUrl": {
+            "type": "object",
+            "nullable": true,
+            "description": "Broker logout URL for the user agent, or null for Core-only logout"
+          }
+        },
+        "required": ["success", "brokerLogoutUrl"]
+      },
+      "SsoBackchannelLogoutRequestDto": {
+        "type": "object",
+        "properties": {
+          "logout_token": {
+            "type": "string",
+            "description": "Signed OpenID Connect logout token"
+          }
+        },
+        "required": ["logout_token"]
       }
     }
   }
