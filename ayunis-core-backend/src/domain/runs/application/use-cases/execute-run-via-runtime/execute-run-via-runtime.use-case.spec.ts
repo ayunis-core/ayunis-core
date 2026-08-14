@@ -6,6 +6,7 @@ import type {
 } from '@ayunis/agent-runtime';
 import type { ProviderChunk } from '@ayunis/inference';
 import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -19,6 +20,7 @@ import type { TextMessageContent } from 'src/domain/messages/domain/message-cont
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+import type { Skill as BackendSkill } from 'src/domain/skills/domain/skill.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
@@ -34,33 +36,35 @@ import type { ResolveModelProviderUseCase } from 'src/domain/models/application/
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
-import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
-import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { RunTelemetryService } from '../../services/run-telemetry.service';
-import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
-import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
-import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
-import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
-import { ToolUsedEvent } from '../../events/tool-used.event';
-import { RunMaxIterationsReachedError } from '../../runs.errors';
-import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
-import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
-import { CompleteTurnSelector } from '../../agent-runtime/complete-turn-selector';
-import type { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
-import type { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
+import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
+import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
+import type { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
-import { ExecuteRunCommand } from '../execute-run/execute-run.command';
-import { RunContextBudgetExceededError } from '../../runs.errors';
+} from 'src/domain/runs/domain/run-input.entity';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import { ExecuteRunViaRuntimeUseCase } from './execute-run-via-runtime.use-case';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -79,6 +83,7 @@ interface Harness {
   emitAsync: jest.Mock;
   anonymize: jest.Mock;
   activateOnThread: jest.Mock;
+  workspaceContextFetch: jest.Mock;
   createUser: jest.Mock;
   provider: MockProvider;
   providerSignal: () => AbortSignal | undefined;
@@ -98,6 +103,8 @@ interface HarnessOptions {
   providerRejects?: boolean;
   providerStream?: (request: ProviderRequest) => AsyncIterable<ProviderChunk>;
   tokensPerMessage?: number;
+  workspaceId?: UUID;
+  workspaceSkills?: BackendSkill[];
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -116,6 +123,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     model: permitted,
     messages: [],
     isAnonymous: overrides.anonymous ?? false,
+    workspaceId: overrides.workspaceId,
     getLastMessage: () => overrides.lastMessage,
   } as unknown as Thread;
 
@@ -177,10 +185,18 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const skillActivationService = {
     activateOnThread,
   } as unknown as SkillActivationService;
+  const workspaceContext = overrides.workspaceSkills
+    ? ({ skills: overrides.workspaceSkills } as unknown as WorkspaceRunContext)
+    : undefined;
+  const workspaceContextFetch = jest.fn().mockResolvedValue(workspaceContext);
+  const buildWorkspaceRunContextUseCase = {
+    execute: workspaceContextFetch,
+  } as unknown as BuildWorkspaceRunContextUseCase;
   const skillActivationHookFactory = new SkillActivationHookFactory(
     findThreadUseCase,
     toolAssemblyService,
     backendToolAdapter,
+    buildWorkspaceRunContextUseCase,
   );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
@@ -304,6 +320,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     toolResultCollector as ToolResultCollectorService,
     toolUsageHookFactory,
     contextBudgetHookFactory,
+    buildWorkspaceRunContextUseCase,
     createPinoLoggerMock(),
     createPinoLoggerMock(),
   );
@@ -319,6 +336,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     emitAsync,
     anonymize,
     activateOnThread,
+    workspaceContextFetch,
     createUser,
     provider,
     providerSignal: () => providerSignal,
@@ -1261,5 +1279,23 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       pendingImages: [],
       skillInstructions: 'Be a helpful clerk',
     });
+  });
+
+  it('rejects a quick action for a skill already assigned to the project', async () => {
+    const projectSkillId = randomUUID();
+    const { useCase, activateOnThread, provider, workspaceContextFetch } =
+      buildHarness({
+        workspaceId: randomUUID(),
+        workspaceSkills: [{ id: projectSkillId } as BackendSkill],
+      });
+
+    const command = userCommand(new RunUserInput('Hi', [], projectSkillId));
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      'Project skills are already active in this workspace',
+    );
+    expect(activateOnThread).not.toHaveBeenCalled();
+    expect(workspaceContextFetch).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(0);
   });
 });

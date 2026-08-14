@@ -9,7 +9,7 @@ import { CreateUserMessageCommand } from 'src/domain/messages/application/use-ca
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
 import { ToolFailureBreaker } from '@ayunis/agent-runtime';
-import type { ToolResultOutcome } from '../../services/tool-result-collector.service';
+import type { ToolResultOutcome } from 'src/domain/runs/application/services/tool-result-collector.service';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -17,7 +17,7 @@ import {
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
   RunToolRepeatedlyFailingError,
-} from '../../runs.errors';
+} from 'src/domain/runs/application/runs.errors';
 import {
   RunUserInput,
   RunToolResultInput,
@@ -25,7 +25,7 @@ import {
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { ExecuteRunCommand } from './execute-run.command';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { UUID } from 'crypto';
@@ -39,18 +39,22 @@ import {
   RunPiiMasksUpdate,
   RunStreamItem,
 } from 'src/domain/runs/domain/run-pii-masks-update.entity';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
+import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import { MessageCleanupService } from '../../services/message-cleanup.service';
-import { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { InferenceOrchestratorService } from 'src/domain/runs/application/services/inference-orchestrator.service';
 import type { RunParams } from './run-params.interface';
 import { ConfigService } from '@nestjs/config';
-import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
-import type { RunExecutionOutcome } from '../../run-execution-outcome';
-import { RunTelemetryService } from '../../services/run-telemetry.service';
+import { ExecuteRunViaRuntimeUseCase } from 'src/domain/runs/application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import { parseRunInput } from 'src/domain/runs/application/helpers/parse-run-input';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -70,6 +74,7 @@ export class ExecuteRunUseCase {
     private readonly configService: ConfigService,
     private readonly executeRunViaRuntimeUseCase: ExecuteRunViaRuntimeUseCase,
     private readonly runTelemetryService: RunTelemetryService,
+    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     @InjectPinoLogger(ExecuteRunUseCase.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -111,6 +116,7 @@ export class ExecuteRunUseCase {
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
         activeSkills: prepared.activeSkills,
+        workspaceContext: prepared.workspaceContext,
         skillId:
           command.input instanceof RunUserInput
             ? command.input.skillId
@@ -133,6 +139,7 @@ export class ExecuteRunUseCase {
     tools: RunParams['tools'];
     instructions?: string;
     activeSkills: RunParams['activeSkills'];
+    workspaceContext?: WorkspaceRunContext;
   }> {
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -149,6 +156,7 @@ export class ExecuteRunUseCase {
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
 
     const isAnonymous = thread.isAnonymous || model.anonymousOnly;
+    const workspaceContext = await this.buildWorkspaceContext(thread);
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
@@ -156,6 +164,7 @@ export class ExecuteRunUseCase {
         activeSkills,
         model.model.canUseTools,
         isAnonymous,
+        workspaceContext,
       );
 
     return {
@@ -167,7 +176,17 @@ export class ExecuteRunUseCase {
       tools,
       instructions,
       activeSkills,
+      workspaceContext,
     };
+  }
+
+  private async buildWorkspaceContext(
+    thread: Thread,
+  ): Promise<WorkspaceRunContext | undefined> {
+    if (!thread.workspaceId) return undefined;
+    return this.buildWorkspaceRunContextUseCase.execute(
+      new BuildWorkspaceRunContextQuery(thread.workspaceId),
+    );
   }
 
   private pickModel(thread: Thread): PermittedLanguageModel {
@@ -199,7 +218,6 @@ export class ExecuteRunUseCase {
           succeeded = true;
           return 'aborted';
         }
-
         if (this.shouldExitAfterResponse(assistantMessage, params)) {
           yield* this.processToolResults(
             params,
@@ -216,7 +234,6 @@ export class ExecuteRunUseCase {
       succeeded = true;
       return 'completed';
     } catch (error) {
-      // Preserve completed breaker transcripts so pending calls stay disarmed.
       preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
       if (error instanceof ApplicationError) throw error;
       this.logger.error({ err: error as Error }, 'Run execution failed');
@@ -225,7 +242,6 @@ export class ExecuteRunUseCase {
         { originalError: error as Error },
       );
     } finally {
-      // `finally` also covers generators closed after a client disconnect.
       if (!succeeded && !preserveTranscript) {
         await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
           params.thread.id,
@@ -233,7 +249,6 @@ export class ExecuteRunUseCase {
       }
     }
   }
-
   private shouldExitAfterResponse(
     message: AssistantMessage,
     params: RunParams,
@@ -243,13 +258,12 @@ export class ExecuteRunUseCase {
       params.tools,
     );
   }
-
   private async *runIteration(
     params: RunParams,
     breaker: ToolFailureBreaker,
     firstIteration: boolean,
   ): AsyncGenerator<RunStreamItem, AssistantMessage | null, void> {
-    const { userInput, toolResultInput } = this.parseInput(params.input);
+    const { userInput, toolResultInput } = parseRunInput(params.input);
     if (!firstIteration || toolResultInput) {
       yield* this.processToolResults(params, toolResultInput, breaker);
     }
@@ -277,18 +291,6 @@ export class ExecuteRunUseCase {
       }
       yield message;
     }
-  }
-
-  private parseInput(input: RunUserInput | RunToolResultInput): {
-    userInput: RunUserInput | null;
-    toolResultInput: RunToolResultInput | null;
-  } {
-    const userInput = input instanceof RunUserInput ? input : null;
-    const toolResultInput = input instanceof RunToolResultInput ? input : null;
-    if (!userInput && !toolResultInput) {
-      throw new RunInvalidInputError('Invalid input');
-    }
-    return { userInput, toolResultInput };
   }
 
   private async *processToolResults(
@@ -365,6 +367,15 @@ export class ExecuteRunUseCase {
 
   private async activateSkillOnThread(params: RunParams): Promise<void> {
     if (!params.skillId) return;
+    if (
+      params.workspaceContext?.skills.some(
+        (skill) => skill.id === params.skillId,
+      )
+    ) {
+      throw new RunInvalidInputError(
+        'Project skills are already active in this workspace',
+      );
+    }
 
     const { instructions, skillName } =
       await this.skillActivationService.activateOnThread(
@@ -382,11 +393,13 @@ export class ExecuteRunUseCase {
       new FindThreadQuery(params.thread.id),
     );
     params.thread = refreshedThread;
+    params.workspaceContext = await this.buildWorkspaceContext(refreshedThread);
     const refreshed = await this.toolAssemblyService.buildRunContext(
       refreshedThread,
       params.activeSkills,
       params.model.canUseTools,
       params.isAnonymous,
+      params.workspaceContext,
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;

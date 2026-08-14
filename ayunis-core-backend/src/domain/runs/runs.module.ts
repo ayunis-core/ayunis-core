@@ -49,6 +49,7 @@ import { ChatSettingsModule } from 'src/domain/chat-settings/chat-settings.modul
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     ArtifactsModule,
     LetterheadsModule,
     TokenCounterModule,
+    WorkspacesModule,
   ],
   controllers: [RunsController],
   providers: [

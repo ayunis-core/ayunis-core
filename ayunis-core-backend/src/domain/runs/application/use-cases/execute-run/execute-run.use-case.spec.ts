@@ -4,7 +4,7 @@ import {
   AnonymizationInputTooLongError,
 } from 'src/common/anonymization/application/anonymization.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { RunAnonymizationUnavailableError } from '../../runs.errors';
+import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
@@ -19,25 +19,27 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ExecuteRunUseCase } from './execute-run.use-case';
 import { ExecuteRunCommand } from './execute-run.command';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
-import type { CreditBudgetGuardService } from '../../services/credit-budget-guard.service';
-import type { CreditLimitGuardService } from '../../services/credit-limit-guard.service';
+import type { CreditBudgetGuardService } from 'src/domain/runs/application/services/credit-budget-guard.service';
+import type { CreditLimitGuardService } from 'src/domain/runs/application/services/credit-limit-guard.service';
 import type { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import type { CollectUsageAsyncService } from '../../services/collect-usage-async.service';
+import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { CollectUsageAsyncService } from 'src/domain/runs/application/services/collect-usage-async.service';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
-import { RunErrorCode } from '../../runs.errors';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
-import type { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
+import { RunErrorCode } from 'src/domain/runs/application/runs.errors';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import type { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import type { InferenceOrchestratorService } from 'src/domain/runs/application/services/inference-orchestrator.service';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { ConfigService } from '@nestjs/config';
-import type { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
-import type { RunTelemetryService } from '../../services/run-telemetry.service';
+import type { ExecuteRunViaRuntimeUseCase } from 'src/domain/runs/application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
+import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
+import type { RunParams } from './run-params.interface';
 
 describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
@@ -168,6 +170,9 @@ describe('ExecuteRunUseCase', () => {
       configService,
       executeRunViaRuntimeUseCase,
       runTelemetryService,
+      {
+        execute: jest.fn().mockResolvedValue(undefined),
+      } as unknown as BuildWorkspaceRunContextUseCase,
       createPinoLoggerMock(),
     );
   });
@@ -519,6 +524,25 @@ describe('ExecuteRunUseCase', () => {
       const secondCallParams = secondCall[0] as { instructions?: string };
       expect(secondCallParams.instructions).toContain(
         'Skill "Legal Research" has already been activated on this thread. Do not call activate_skill for this skill.',
+      );
+    });
+
+    it('rejects quick actions for skills already assigned to the project', async () => {
+      const skillId = randomUUID();
+      const activateSkillOnThread = (
+        useCase as unknown as {
+          activateSkillOnThread: (params: unknown) => Promise<void>;
+        }
+      ).activateSkillOnThread.bind(useCase);
+      const params = {
+        skillId,
+        workspaceContext: {
+          skills: [{ id: skillId }],
+        },
+      } as unknown as RunParams;
+
+      await expect(activateSkillOnThread(params)).rejects.toThrow(
+        'Project skills are already active in this workspace',
       );
     });
   });

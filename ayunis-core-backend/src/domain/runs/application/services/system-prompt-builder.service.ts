@@ -14,13 +14,16 @@ import {
 } from 'src/domain/sources/domain/sources/data-source.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { SkillEntry } from 'src/common/util/skill-slug';
-
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import { escapeXml } from './xml-escape';
 export interface SystemPromptBuildParams {
   tools: Tool[];
   currentTime: Date;
   sources?: Source[];
   skills?: SkillEntry[];
   knowledgeBases?: KnowledgeBaseSummary[];
+  projectInstruction?: string | null;
+  projectSkills?: Skill[];
   orgSystemPrompt?: string;
   userSystemPrompt?: string;
   isAnonymous?: boolean;
@@ -35,6 +38,8 @@ export class SystemPromptBuilderService {
       sources = [],
       skills = [],
       knowledgeBases = [],
+      projectInstruction,
+      projectSkills = [],
       orgSystemPrompt,
       userSystemPrompt,
       isAnonymous = false,
@@ -47,6 +52,10 @@ export class SystemPromptBuilderService {
       this.buildSkillsSection(skills),
       this.buildFilesSection(sources),
       this.buildKnowledgeBasesSection(knowledgeBases),
+      projectInstruction
+        ? this.buildProjectInstructionsSection(projectInstruction)
+        : '',
+      this.buildProjectSkillsSection(projectSkills),
       this.buildDataHandlingSection(),
       isAnonymous ? this.buildAnonymizationSection() : '',
       this.buildResponseGuidelines(),
@@ -265,18 +274,15 @@ For technical questions about the platform, configuration, or deployment, users 
     return `
 <organization_instructions>
 The following instructions were set by the user's organization administrator and apply to all members of the organization:
-
 ${orgSystemPrompt}
-</organization_instructions>
-`;
+</organization_instructions>`;
   }
 
   private buildUserInstructionsSection(userSystemPrompt: string): string {
     return `
 <user_instructions>
 ${userSystemPrompt}
-</user_instructions>
-`;
+</user_instructions>`;
   }
 
   private buildSkillsSection(skills: SkillEntry[]): string {
@@ -287,7 +293,7 @@ ${userSystemPrompt}
     const skillEntries = skills
       .map(
         (skill) =>
-          `  <skill>\n    <name>${this.escapeXml(skill.slug)}</name>\n    <description>${this.escapeXml(skill.description)}</description>\n  </skill>`,
+          `  <skill>\n    <name>${escapeXml(skill.slug)}</name>\n    <description>${escapeXml(skill.description)}</description>\n  </skill>`,
       )
       .join('\n');
 
@@ -297,6 +303,24 @@ Use the activate_skill tool to load a skill when the task matches its descriptio
 
 ${skillEntries}
 </available_skills>`;
+  }
+
+  private buildProjectInstructionsSection(instruction: string): string {
+    return `<project_instructions>\nThese instructions apply to every chat in this project.\n\n${escapeXml(instruction)}\n</project_instructions>`;
+  }
+
+  private buildProjectSkillsSection(skills: Skill[]): string {
+    if (skills.length === 0) return '';
+    const entries = skills.map((skill) => this.formatSkill(skill)).join('\n');
+    return `<project_skills>
+The following skills are active for this project. Apply their instructions without requiring the user to activate them manually.
+
+${entries}
+</project_skills>`;
+  }
+
+  private formatSkill(skill: Skill): string {
+    return `<skill name="${escapeXml(skill.name)}">\n${escapeXml(skill.instructions)}\n</skill>`;
   }
 
   private buildFilesSection(sources: Source[]): string {
@@ -349,7 +373,7 @@ ${skillEntries}
 
     const formatFile = (source: Source): string => {
       const type = this.getFileTypeLabel(source);
-      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+      return `<file id="${source.id}" name="${escapeXml(source.name)}" type="${type}" />`;
     };
 
     let section = `<available_files>
@@ -389,7 +413,7 @@ ${systemFiles.map(formatFile).join('\n')}
   private buildDataSourcesSection(sources: Source[]): string {
     const formatFile = (source: Source): string => {
       const type = this.getFileTypeLabel(source);
-      return `<file id="${source.id}" name="${this.escapeXml(source.name)}" type="${type}" />`;
+      return `<file id="${source.id}" name="${escapeXml(source.name)}" type="${type}" />`;
     };
 
     return `<available_data_sources>
@@ -404,7 +428,7 @@ ${sources.map(formatFile).join('\n')}
     const files = sources
       .map(
         (s) =>
-          `<file id="${s.id}" name="${this.escapeXml(s.name)}" status="processing" />`,
+          `<file id="${s.id}" name="${escapeXml(s.name)}" status="processing" />`,
       )
       .join('\n');
 
@@ -419,7 +443,7 @@ ${files}
     const files = sources
       .map(
         (s) =>
-          `<file id="${s.id}" name="${this.escapeXml(s.name)}" error="${this.escapeXml(s.processingError ?? 'Unknown error')}" />`,
+          `<file id="${s.id}" name="${escapeXml(s.name)}" error="${escapeXml(s.processingError ?? 'Unknown error')}" />`,
       )
       .join('\n');
 
@@ -457,8 +481,7 @@ ${files}
 
     const entries = knowledgeBases
       .map(
-        (kb) =>
-          `<knowledge_base id="${kb.id}" name="${this.escapeXml(kb.name)}" />`,
+        (kb) => `<knowledge_base id="${kb.id}" name="${escapeXml(kb.name)}" />`,
       )
       .join('\n');
 
@@ -467,14 +490,5 @@ The following knowledge bases are available. Use the knowledge_query tool to sea
 
 ${entries}
 </available_knowledge_bases>`;
-  }
-
-  private escapeXml(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
   }
 }
