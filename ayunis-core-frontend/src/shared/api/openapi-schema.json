@@ -2164,7 +2164,7 @@
     },
     "/models/default": {
       "get": {
-        "description": "Returns the applicable default model with fallback hierarchy: User default → Org default → First available model",
+        "description": "Returns the applicable default model with fallback hierarchy: User default \u2192 Org default \u2192 First available model",
         "operationId": "ModelsDefaultsController_getEffectiveDefaultModel",
         "parameters": [],
         "responses": {
@@ -6477,7 +6477,7 @@
             }
           }
         },
-        "summary": "List the current user’s workspaces",
+        "summary": "List the current user\u2019s workspaces",
         "tags": ["workspaces"]
       }
     },
@@ -6579,6 +6579,321 @@
           }
         },
         "summary": "Delete a workspace and every chat inside it",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context": {
+      "get": {
+        "operationId": "WorkspaceContextController_findContext",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceContextResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get workspace context",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skill-candidates": {
+      "get": {
+        "operationId": "WorkspaceContextController_listSkillCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceSkillCandidateResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-base-candidates": {
+      "get": {
+        "operationId": "WorkspaceContextController_listKnowledgeBaseCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceKnowledgeBaseCandidateResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/skills/{skillId}": {
+      "post": {
+        "operationId": "WorkspaceContextController_attachSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_detachSkill",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "skillId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/knowledge-bases/{knowledgeBaseId}": {
+      "post": {
+        "operationId": "WorkspaceContextController_attachKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      },
+      "delete": {
+        "operationId": "WorkspaceContextController_detachKnowledgeBase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/documents": {
+      "post": {
+        "operationId": "WorkspaceContextController_addDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/documents/{documentId}": {
+      "delete": {
+        "operationId": "WorkspaceContextController_removeDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/context/instruction": {
+      "patch": {
+        "operationId": "WorkspaceContextController_updateInstruction",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceInstructionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            }
+          }
+        },
         "tags": ["workspaces"]
       }
     },
@@ -8186,7 +8501,7 @@
     },
     "/super-admin/platform-config/fair-use-limits": {
       "get": {
-        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
+        "description": "Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only \u2014 runtime quota enforcement skips ZERO-tier models entirely. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_getFairUseLimits",
         "parameters": [],
         "responses": {
@@ -8211,7 +8526,7 @@
         "tags": ["Super Admin Platform Config"]
       },
       "put": {
-        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational — runtime quota enforcement skips ZERO-tier models. Super admin only.",
+        "description": "Update the messages-per-window limit for one model tier (zero, low, medium, or high). Storing a value for the zero tier is permitted but informational \u2014 runtime quota enforcement skips ZERO-tier models. Super admin only.",
         "operationId": "SuperAdminPlatformConfigController_setFairUseLimit",
         "parameters": [],
         "requestBody": {
@@ -9182,7 +9497,7 @@
     },
     "/academy/certificate": {
       "get": {
-        "description": "Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.",
+        "description": "Render the KI-F\u00fchrerschein certificate PDF for the current user. Available once the whole academy has been completed.",
         "operationId": "AcademyCertificateController_getCertificate",
         "parameters": [],
         "responses": {
@@ -10594,7 +10909,7 @@
             }
           }
         },
-        "summary": "Get the current user’s two-factor auth status",
+        "summary": "Get the current user\u2019s two-factor auth status",
         "tags": ["mfa"]
       }
     },
@@ -10692,7 +11007,7 @@
             }
           }
         },
-        "summary": "Get the org’s MFA requirement (admin)",
+        "summary": "Get the org\u2019s MFA requirement (admin)",
         "tags": ["mfa"]
       },
       "put": {
@@ -10720,7 +11035,7 @@
             }
           }
         },
-        "summary": "Set the org’s MFA requirement (admin)",
+        "summary": "Set the org\u2019s MFA requirement (admin)",
         "tags": ["mfa"]
       }
     },
@@ -10742,7 +11057,7 @@
             "description": "Two-factor auth reset"
           }
         },
-        "summary": "Reset a user’s two-factor auth (admin, lockout recovery)",
+        "summary": "Reset a user\u2019s two-factor auth (admin, lockout recovery)",
         "tags": ["mfa"]
       }
     },
@@ -11806,7 +12121,7 @@
           "street": {
             "type": "string",
             "description": "Street",
-            "example": "Musterstraße"
+            "example": "Musterstra\u00dfe"
           },
           "houseNumber": {
             "type": "string",
@@ -12758,13 +13073,13 @@
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
-            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "description": "Fair-use tier label assigned by super admins; drives quota bucket selection. Optional today \u2014 runtime fallback for untiered models is tracked in AYC-109.",
             "example": "medium"
           },
           "description": {
             "type": "string",
             "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
-            "example": "Geeignet für komplexe Aufgaben und lange Dokumente."
+            "example": "Geeignet f\u00fcr komplexe Aufgaben und lange Dokumente."
           }
         },
         "required": [
@@ -13007,14 +13322,14 @@
           },
           "tier": {
             "type": "string",
-            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today \u2014 runtime fallback for untiered models is tracked in AYC-109.",
             "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           },
           "description": {
             "type": "string",
             "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
-            "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
+            "example": "Geeignet f\u00fcr komplexe Aufgaben und lange Dokumente.",
             "maxLength": 500
           }
         },
@@ -13100,14 +13415,14 @@
           },
           "tier": {
             "type": "string",
-            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today — runtime fallback for untiered models is tracked in AYC-109.",
+            "description": "Fair-use tier label assigned by super admins; drives which fair-use quota bucket the model consumes. Optional today \u2014 runtime fallback for untiered models is tracked in AYC-109.",
             "enum": ["zero", "low", "medium", "high"],
             "example": "medium"
           },
           "description": {
             "type": "string",
             "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
-            "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
+            "example": "Geeignet f\u00fcr komplexe Aufgaben und lange Dokumente.",
             "maxLength": 500
           }
         },
@@ -13865,7 +14180,7 @@
           "result": {
             "type": "string",
             "description": "The result returned by the tool",
-            "example": "The current temperature in New York is 22°C with partly cloudy skies."
+            "example": "The current temperature in New York is 22\u00b0C with partly cloudy skies."
           }
         },
         "required": ["type", "toolId", "toolName", "result"]
@@ -14400,7 +14715,7 @@
             }
           },
           "piiMasks": {
-            "description": "PII mask dictionary for anonymous threads — resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads.",
+            "description": "PII mask dictionary for anonymous threads \u2014 resolves {{pii:...}} tokens in message text to their original values. Empty for non-anonymous threads.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PiiMaskResponseDto"
@@ -14903,7 +15218,7 @@
           },
           "creatorName": {
             "type": "string",
-            "description": "Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller’s organisation; otherwise null.",
+            "description": "Display name of the user who shared this skill with the current user. Non-null only for shared skills whose creator can be resolved within the caller\u2019s organisation; otherwise null.",
             "example": "Florian Obermeier",
             "nullable": true
           }
@@ -15132,10 +15447,10 @@
           },
           "orgConfigValues": {
             "type": "object",
-            "description": "Current org-level config values for schema-configured integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"••••••\".",
+            "description": "Current org-level config values for schema-configured integrations. Non-secret fields contain plaintext values. Secret fields are masked with \"\u2022\u2022\u2022\u2022\u2022\u2022\".",
             "example": {
               "endpointUrl": "https://example.com/api",
-              "apiToken": "••••••"
+              "apiToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
             }
           },
           "logoUrl": {
@@ -15517,9 +15832,9 @@
           },
           "configValues": {
             "type": "object",
-            "description": "Configuration values with secret values masked (keys present, values replaced with \"••••••\")",
+            "description": "Configuration values with secret values masked (keys present, values replaced with \"\u2022\u2022\u2022\u2022\u2022\u2022\")",
             "example": {
-              "personalToken": "••••••"
+              "personalToken": "\u2022\u2022\u2022\u2022\u2022\u2022"
             },
             "additionalProperties": {
               "type": "string"
@@ -15882,12 +16197,12 @@
           "name": {
             "type": "string",
             "description": "Name of the workspace",
-            "example": "Bürgeranfragen"
+            "example": "B\u00fcrgeranfragen"
           },
           "description": {
             "type": "string",
             "description": "What the workspace is for",
-            "example": "Anfragen von Bürgerinnen und Bürgern bündeln"
+            "example": "Anfragen von B\u00fcrgerinnen und B\u00fcrgern b\u00fcndeln"
           },
           "icon": {
             "type": "string",
@@ -15913,12 +16228,18 @@
           "name": {
             "type": "string",
             "description": "Name of the workspace",
-            "example": "Bürgeranfragen"
+            "example": "B\u00fcrgeranfragen"
           },
           "description": {
             "type": "string",
             "description": "What the workspace is for",
-            "example": "Anfragen von Bürgerinnen und Bürgern bündeln",
+            "example": "Anfragen von B\u00fcrgerinnen und B\u00fcrgern b\u00fcndeln",
+            "nullable": true
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Instructions that apply to every chat in the workspace",
+            "example": "Answer with the tone and policies of the building department.",
             "nullable": true
           },
           "icon": {
@@ -15956,6 +16277,7 @@
           "id",
           "name",
           "description",
+          "instruction",
           "icon",
           "color",
           "createdAt",
@@ -15968,12 +16290,12 @@
           "name": {
             "type": "string",
             "description": "Name of the workspace",
-            "example": "Bürgeranfragen"
+            "example": "B\u00fcrgeranfragen"
           },
           "description": {
             "type": "string",
             "description": "What the workspace is for. Send null to clear it.",
-            "example": "Anfragen von Bürgerinnen und Bürgern bündeln",
+            "example": "Anfragen von B\u00fcrgerinnen und B\u00fcrgern b\u00fcndeln",
             "nullable": true
           },
           "icon": {
@@ -15987,6 +16309,170 @@
             "example": "#6b5bd6"
           }
         }
+      },
+      "WorkspaceSkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "shortDescription"]
+      },
+      "WorkspaceKnowledgeBaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentCount": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "name", "description", "documentCount"]
+      },
+      "WorkspaceDocumentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text", "data"]
+          },
+          "createdBy": {
+            "type": "string",
+            "enum": ["user", "llm", "system"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["processing", "ready", "failed"]
+          },
+          "processingError": {
+            "type": "string",
+            "nullable": true
+          },
+          "textType": {
+            "type": "string",
+            "enum": ["file", "web"]
+          },
+          "url": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "createdBy",
+          "status",
+          "processingError",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceContextResponseDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "nullable": true
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSkillResponseDto"
+            }
+          },
+          "knowledgeBases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceKnowledgeBaseResponseDto"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceDocumentResponseDto"
+            }
+          }
+        },
+        "required": ["instruction", "skills", "knowledgeBases", "documents"]
+      },
+      "WorkspaceSkillCandidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "isAttached": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "shortDescription", "isAttached"]
+      },
+      "WorkspaceKnowledgeBaseCandidateResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentCount": {
+            "type": "number"
+          },
+          "isAttached": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "description", "documentCount", "isAttached"]
+      },
+      "UpdateWorkspaceInstructionDto": {
+        "type": "object",
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "description": "Instructions that apply to every chat in the workspace",
+            "nullable": true,
+            "maxLength": 10000
+          }
+        },
+        "required": ["instruction"]
       },
       "WorkspaceFavoriteResponseDto": {
         "type": "object",
@@ -16446,7 +16932,7 @@
           },
           "type": {
             "type": "string",
-            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
+            "description": "The kind of artifact \u2014 document (HTML) or diagram (mermaid)",
             "enum": ["document", "diagram", "spreadsheet"],
             "example": "document"
           },
@@ -16656,12 +17142,12 @@
           "name": {
             "type": "string",
             "description": "Name of the letterhead",
-            "example": "Stadtverwaltung Musterstadt — Neues Design"
+            "example": "Stadtverwaltung Musterstadt \u2014 Neues Design"
           },
           "description": {
             "type": "string",
             "description": "Description of the letterhead",
-            "example": "Überarbeitetes Briefpapier 2026"
+            "example": "\u00dcberarbeitetes Briefpapier 2026"
           },
           "firstPageMargins": {
             "type": "string",
@@ -17073,7 +17559,7 @@
         "type": "object",
         "properties": {
           "zero": {
-            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only — runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
+            "description": "Fair-use limit configured for zero-tier (unrestricted) models. Stored for UI symmetry only \u2014 runtime quota enforcement skips ZERO-tier models entirely, so this value is never consulted.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/FairUseTierLimitDto"
@@ -17413,7 +17899,7 @@
           "result": {
             "type": "string",
             "description": "The result data from the tool execution",
-            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75°F and a low of 60°F\",\"precipitation\":\"20%\"}"
+            "example": "{\"location\":\"New York\",\"forecast\":\"Partly cloudy with a high of 75\u00b0F and a low of 60\u00b0F\",\"precipitation\":\"20%\"}"
           }
         },
         "required": ["type", "toolId", "toolName", "result"]
@@ -17453,7 +17939,7 @@
           },
           "skillId": {
             "type": "string",
-            "description": "Skill ID to activate for this message — injects skill instructions and resources into the thread",
+            "description": "Skill ID to activate for this message \u2014 injects skill instructions and resources into the thread",
             "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "streaming": {
@@ -17704,7 +18190,7 @@
           "workContext": {
             "type": "string",
             "description": "The work context of the user",
-            "example": "Bescheide im Sozialamt, Protokolle für den Gemeinderat",
+            "example": "Bescheide im Sozialamt, Protokolle f\u00fcr den Gemeinderat",
             "maxLength": 1000
           }
         },
@@ -17721,7 +18207,7 @@
           "welcomeMessage": {
             "type": "string",
             "description": "A personalized welcome message for the user",
-            "example": "Willkommen, Maria! Schön, dass du da bist. Wie kann ich dir heute helfen?"
+            "example": "Willkommen, Maria! Sch\u00f6n, dass du da bist. Wie kann ich dir heute helfen?"
           }
         },
         "required": ["systemPrompt", "welcomeMessage"]
@@ -18739,7 +19225,7 @@
           },
           "prefixPreview": {
             "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "description": "Public preview of the API key \u2014 the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
             "example": "ayk_live_abc123def456..."
           },
           "expiresAt": {
@@ -18796,7 +19282,7 @@
           },
           "prefixPreview": {
             "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "description": "Public preview of the API key \u2014 the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
             "example": "ayk_live_abc123def456..."
           },
           "expiresAt": {
@@ -18828,7 +19314,7 @@
           },
           "secret": {
             "type": "string",
-            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "description": "The full plaintext API key. This is the only response that will ever contain it \u2014 store it securely and immediately. It cannot be retrieved later.",
             "example": "ayk_live_abc123def456ghi789..."
           }
         },
@@ -18871,7 +19357,7 @@
             "type": "string",
             "format": "date-time",
             "nullable": true,
-            "description": "When the user last completed the academy. Null when the gate does not apply — read GET /academy/progress for the completion date in that case."
+            "description": "When the user last completed the academy. Null when the gate does not apply \u2014 read GET /academy/progress for the completion date in that case."
           },
           "expiresAt": {
             "type": "string",
@@ -18999,7 +19485,7 @@
         "type": "object",
         "properties": {
           "recoveryCodes": {
-            "description": "Single-use recovery codes. Shown exactly once — the user must store them before continuing.",
+            "description": "Single-use recovery codes. Shown exactly once \u2014 the user must store them before continuing.",
             "example": ["A1B2C-D3E4F", "G5H6J-K7M8N"],
             "type": "array",
             "items": {
@@ -19014,7 +19500,7 @@
         "properties": {
           "required": {
             "type": "boolean",
-            "description": "Whether two-factor authentication is required for all users of the org. Enforced at each user’s next login.",
+            "description": "Whether two-factor authentication is required for all users of the org. Enforced at each user\u2019s next login.",
             "example": false
           }
         },
@@ -19025,7 +19511,7 @@
         "properties": {
           "required": {
             "type": "boolean",
-            "description": "Whether two-factor authentication is required for all users of the org. Takes effect at each user’s next login.",
+            "description": "Whether two-factor authentication is required for all users of the org. Takes effect at each user\u2019s next login.",
             "example": true
           }
         },

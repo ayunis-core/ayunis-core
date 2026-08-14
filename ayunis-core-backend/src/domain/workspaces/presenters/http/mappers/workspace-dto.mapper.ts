@@ -10,6 +10,7 @@ export class WorkspaceDtoMapper {
     dto.id = workspace.id;
     dto.name = workspace.name;
     dto.description = workspace.description;
+    dto.instruction = workspace.instruction;
     dto.icon = workspace.icon;
     dto.color = workspace.color;
     dto.createdAt = workspace.createdAt.toISOString();

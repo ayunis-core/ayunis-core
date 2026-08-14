@@ -336,6 +336,9 @@ export class LocalSourceRepository extends SourceRepository {
       .andWhere(
         `NOT EXISTS (SELECT 1 FROM agent_source_assignments asa WHERE asa."sourceId" = s.id)`,
       )
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM workspace_source_assignments wsa WHERE wsa."sourceId" = s.id)`,
+      )
       .getRawMany<{ id: UUID }>();
 
     return rows.map((row) => row.id);

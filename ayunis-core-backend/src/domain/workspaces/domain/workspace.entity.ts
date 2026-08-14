@@ -12,6 +12,7 @@ export class Workspace {
   public readonly createdAt: Date;
   public name: string;
   public description: string | null;
+  public instruction: string | null;
   public icon: string;
   public color: string;
   public updatedAt: Date;
@@ -22,6 +23,7 @@ export class Workspace {
     orgId: UUID;
     name: string;
     description?: string | null;
+    instruction?: string | null;
     icon?: string;
     color?: string;
     createdAt?: Date;
@@ -32,6 +34,7 @@ export class Workspace {
     this.orgId = params.orgId;
     this.name = params.name;
     this.description = params.description ?? null;
+    this.instruction = params.instruction ?? null;
     this.icon = params.icon ?? DEFAULT_WORKSPACE_ICON;
     this.color = params.color ?? DEFAULT_WORKSPACE_COLOR;
     this.createdAt = params.createdAt ?? new Date();
@@ -45,6 +48,11 @@ export class Workspace {
 
   describe(description: string | null): void {
     this.description = description;
+    this.touch();
+  }
+
+  instruct(instruction: string | null): void {
+    this.instruction = instruction;
     this.touch();
   }
 

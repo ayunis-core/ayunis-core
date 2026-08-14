@@ -145,6 +145,7 @@ import { KnowledgeBaseDtoMapper } from '../knowledge-bases/presenters/http/mappe
   exports: [
     SkillRepository,
     FindActiveSkillsUseCase,
+    FindAllSkillsUseCase,
     FindOneSkillUseCase,
     AddSourceToSkillUseCase,
     FindSkillByNameUseCase,

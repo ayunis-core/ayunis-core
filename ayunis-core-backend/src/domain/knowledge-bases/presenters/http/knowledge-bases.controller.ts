@@ -11,7 +11,6 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
@@ -25,23 +24,17 @@ import {
   ApiBodyOptions,
   ApiParamOptions,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
-import { randomUUID } from 'crypto';
 import * as fs from 'fs';
-
-const UPLOADS_DIR = './uploads';
-fs.mkdirSync(resolve(UPLOADS_DIR), { recursive: true });
 import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import {
-  detectFileType,
-  isDocumentSourceFile,
-  getCanonicalMimeType,
-} from 'src/common/util/file-type';
+  cleanupTempUploadFile,
+  createDocumentUploadInterceptor,
+  resolveDocumentUploadMimeType,
+  type UploadedDocument,
+} from 'src/common/http/document-upload';
 
 import { CreateKnowledgeBaseUseCase } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
 import { UpdateKnowledgeBaseUseCase } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
@@ -78,16 +71,6 @@ import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
-interface UploadedDocument {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-  path: string;
-}
-
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
   description: 'The UUID of the knowledge base',
@@ -109,20 +92,9 @@ const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
   },
 };
 
-/* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-const DocumentUploadInterceptor = FileInterceptor('file', {
-  storage: diskStorage({
-    destination: UPLOADS_DIR,
-    filename: (_req, file, cb) => {
-      cb(null, `${randomUUID()}${extname(file.originalname)}`);
-    },
-  }),
-  limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
-  // Browsers send the multipart filename as raw UTF-8 bytes; busboy defaults to
-  // latin1, which garbles umlauts and other non-ASCII characters into mojibake.
-  defParamCharset: 'utf8',
-});
-/* eslint-enable sonarjs/content-length */
+const DocumentUploadInterceptor = createDocumentUploadInterceptor(
+  KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES,
+);
 
 @ApiTags('knowledge-bases')
 @RequireFeature(FeatureFlag.KnowledgeBases)
@@ -340,7 +312,7 @@ export class KnowledgeBasesController {
       },
       'addDocument',
     );
-    const canonicalMimeType = await this.resolveDocumentMimeType(file);
+    const canonicalMimeType = this.resolveDocumentMimeType(file);
 
     try {
       return await this.processDocumentUpload(
@@ -373,26 +345,14 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
-  private async resolveDocumentMimeType(
-    file: UploadedDocument,
-  ): Promise<string> {
-    const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (!isDocumentSourceFile(detectedType)) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
-      );
-    }
-
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
-
-    return canonicalMimeType;
+  private resolveDocumentMimeType(file: UploadedDocument): string {
+    return resolveDocumentUploadMimeType({
+      file,
+      errorMessage: (reason, detectedType) =>
+        reason === 'missing-mime'
+          ? `Unable to determine MIME type for detected file type: ${detectedType}`
+          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
+    });
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -485,16 +445,6 @@ export class KnowledgeBasesController {
   }
 
   private async cleanupTempFile(filePath: string): Promise<void> {
-    try {
-      await fs.promises.unlink(filePath);
-    } catch (error) {
-      this.logger.warn(
-        {
-          fileName: filePath,
-          err: error as Error,
-        },
-        'Failed to clean up temp file',
-      );
-    }
+    await cleanupTempUploadFile(filePath, this.logger);
   }
 }

@@ -39,9 +39,19 @@ export function createMockWorkspacesRepository(): jest.Mocked<WorkspacesReposito
     findAllByIds: jest.fn().mockResolvedValue([]),
     getThreadStats: jest.fn().mockResolvedValue(new Map()),
     findById: jest.fn().mockResolvedValue(null),
+    attachSkill: jest.fn().mockResolvedValue(undefined),
+    detachSkill: jest.fn().mockResolvedValue(undefined),
+    attachKnowledgeBase: jest.fn().mockResolvedValue(undefined),
+    detachKnowledgeBase: jest.fn().mockResolvedValue(undefined),
+    attachSource: jest.fn().mockResolvedValue(undefined),
+    getContextRefs: jest.fn().mockResolvedValue({
+      skillIds: [],
+      knowledgeBases: [],
+      sourceIds: [],
+    }),
     save: jest
       .fn()
       .mockImplementation((workspace: Workspace) => Promise.resolve(workspace)),
-    delete: jest.fn().mockResolvedValue(undefined),
+    delete: jest.fn().mockResolvedValue([]),
   };
 }
