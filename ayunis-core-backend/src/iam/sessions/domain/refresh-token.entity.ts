@@ -9,6 +9,7 @@ export interface RefreshTokenParams {
   tokenHash: string;
   authenticationMethod: SessionAuthenticationMethod;
   zitadelSessionId?: string | null;
+  familyExpiresAt?: Date | null;
   expiresAt: Date;
   usedAt?: Date | null;
   revokedAt?: Date | null;
@@ -30,6 +31,7 @@ export class RefreshToken {
   tokenHash: string;
   authenticationMethod: SessionAuthenticationMethod;
   zitadelSessionId: string | null;
+  familyExpiresAt: Date | null;
   expiresAt: Date;
   usedAt: Date | null;
   revokedAt: Date | null;
@@ -44,6 +46,7 @@ export class RefreshToken {
     this.tokenHash = params.tokenHash;
     this.authenticationMethod = params.authenticationMethod;
     this.zitadelSessionId = params.zitadelSessionId ?? null;
+    this.familyExpiresAt = params.familyExpiresAt ?? null;
     this.expiresAt = params.expiresAt;
     this.usedAt = params.usedAt ?? null;
     this.revokedAt = params.revokedAt ?? null;

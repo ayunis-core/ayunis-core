@@ -7,6 +7,7 @@ export interface SsoOidcConfig {
   clientSecret?: string;
   callbackUrl?: string;
   allowInsecureRequests: boolean;
+  reauthenticationMaxAgeSeconds: number;
 }
 
 export const ssoOidcConfig = registerAs('ssoOidc', (): SsoOidcConfig => ({
@@ -17,4 +18,8 @@ export const ssoOidcConfig = registerAs('ssoOidc', (): SsoOidcConfig => ({
   allowInsecureRequests:
     process.env.NODE_ENV !== 'production' &&
     isLoopbackHttpUrl(process.env.SSO_OIDC_ISSUER ?? ''),
+  reauthenticationMaxAgeSeconds: parseInt(
+    process.env.SSO_REAUTH_MAX_AGE_SECONDS || '86400',
+    10,
+  ),
 }));
