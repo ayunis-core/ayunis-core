@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 export interface SsoLoginTransactionParams {
   id?: UUID;
@@ -10,6 +11,8 @@ export interface SsoLoginTransactionParams {
   encryptedNonce: string;
   orgId: UUID;
   zitadelOrgId: string;
+  purpose?: SsoLoginPurpose;
+  linkUserId?: UUID | null;
   expiresAt: Date;
   consumedAt?: Date;
   createdAt?: Date;
@@ -25,6 +28,8 @@ export class SsoLoginTransaction {
   readonly encryptedNonce: string;
   readonly orgId: UUID;
   readonly zitadelOrgId: string;
+  readonly purpose: SsoLoginPurpose;
+  readonly linkUserId: UUID | null;
   readonly expiresAt: Date;
   consumedAt?: Date;
   readonly createdAt: Date;
@@ -39,6 +44,8 @@ export class SsoLoginTransaction {
     this.encryptedNonce = params.encryptedNonce;
     this.orgId = params.orgId;
     this.zitadelOrgId = params.zitadelOrgId;
+    this.purpose = params.purpose ?? SsoLoginPurpose.LOGIN;
+    this.linkUserId = params.linkUserId ?? null;
     this.expiresAt = params.expiresAt;
     this.consumedAt = params.consumedAt;
     this.createdAt = params.createdAt ?? new Date();

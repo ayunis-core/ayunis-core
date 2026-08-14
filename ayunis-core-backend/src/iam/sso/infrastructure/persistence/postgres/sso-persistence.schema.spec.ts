@@ -1,8 +1,13 @@
 import { getMetadataArgsStorage } from 'typeorm';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
+import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
-type SsoRecord = typeof OrgSsoConnectionRecord | typeof FederatedIdentityRecord;
+type SsoRecord =
+  | typeof OrgSsoConnectionRecord
+  | typeof FederatedIdentityRecord
+  | typeof SsoLoginTransactionRecord;
 
 function uniqueColumnsFor(target: SsoRecord): string[][] {
   return getMetadataArgsStorage()
@@ -91,6 +96,24 @@ describe('SSO persistence schema', () => {
       {
         onDelete: 'CASCADE',
       },
+    );
+  });
+
+  it('binds account-link transactions to a Core user', () => {
+    expect(
+      columnFor(SsoLoginTransactionRecord, 'purpose')?.options,
+    ).toMatchObject({
+      enum: SsoLoginPurpose,
+      default: SsoLoginPurpose.LOGIN,
+    });
+    expect(
+      columnFor(SsoLoginTransactionRecord, 'linkUserId')?.options,
+    ).toMatchObject({ nullable: true });
+    expect(
+      relationFor(SsoLoginTransactionRecord, 'linkUser')?.options,
+    ).toMatchObject({ nullable: true, onDelete: 'CASCADE' });
+    expect(checksFor(SsoLoginTransactionRecord)).toContain(
+      `(purpose = 'login' AND link_user_id IS NULL) OR (purpose = 'link' AND link_user_id IS NOT NULL)`,
     );
   });
 });

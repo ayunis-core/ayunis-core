@@ -1,5 +1,5 @@
-import type { CompletedOrgSsoLogin } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
+import type { ValidatedOrgOidcIdentity } from 'src/iam/sso/application/models/validated-org-oidc-identity';
 
 export class ProvisionOrgSsoUserCommand {
-  constructor(public readonly login: CompletedOrgSsoLogin) {}
+  constructor(public readonly login: ValidatedOrgOidcIdentity) {}
 }

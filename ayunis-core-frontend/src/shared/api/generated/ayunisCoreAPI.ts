@@ -186,6 +186,7 @@ import type {
   SkillSourceResponseDto,
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
+  SsoAuthorizationResponseDto,
   SsoDiscoveryResponseDto,
   SubmitQuizRequestDto,
   SubscriptionResponseDto,
@@ -24418,6 +24419,69 @@ export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof sso
 
 
 
+/**
+ * @summary Start linking SSO to the current account
+ */
+export const ssoLoginControllerStartLink = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SsoAuthorizationResponseDto>(
+      {url: `/auth/sso/link/start`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSsoLoginControllerStartLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerStartLink>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerStartLink>>, TError,void, TContext> => {
+
+const mutationKey = ['ssoLoginControllerStartLink'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ssoLoginControllerStartLink>>, void> = () => {
+          
+
+          return  ssoLoginControllerStartLink()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SsoLoginControllerStartLinkMutationResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerStartLink>>>
+    
+    export type SsoLoginControllerStartLinkMutationError = unknown
+
+    /**
+ * @summary Start linking SSO to the current account
+ */
+export const useSsoLoginControllerStartLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerStartLink>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ssoLoginControllerStartLink>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getSsoLoginControllerStartLinkMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Complete an organization-pinned SSO login
  */

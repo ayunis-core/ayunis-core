@@ -18,6 +18,8 @@ export class SsoLoginTransactionMapper {
       encryptedNonce: record.encryptedNonce,
       orgId: record.orgId,
       zitadelOrgId: record.zitadelOrgId,
+      purpose: record.purpose,
+      linkUserId: record.linkUserId,
       expiresAt: record.expiresAt,
       consumedAt: record.consumedAt,
       createdAt: record.createdAt,
