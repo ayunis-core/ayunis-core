@@ -123,6 +123,12 @@ describe('validateEnv', () => {
       ).not.toThrow();
     });
 
+    it('rejects a non-positive SSO reauthentication window', () => {
+      expect(() =>
+        validateEnv(baseEnv({ SSO_REAUTH_MAX_AGE_SECONDS: '0' })),
+      ).toThrow(/SSO_REAUTH_MAX_AGE_SECONDS/);
+    });
+
     it('rejects an invalid SSO transaction encryption key', () => {
       expect(() =>
         validateEnv(

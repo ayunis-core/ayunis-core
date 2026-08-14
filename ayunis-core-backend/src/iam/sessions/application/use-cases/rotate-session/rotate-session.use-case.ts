@@ -7,6 +7,7 @@ import { RotateSessionCommand } from 'src/iam/sessions/application/use-cases/rot
 import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
 import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import {
   RefreshTokenExpiredError,
   RefreshTokenNotFoundError,
@@ -60,6 +61,10 @@ export class RotateSessionUseCase {
       familyId: current.familyId,
       authenticationMethod: current.authenticationMethod,
       zitadelSessionId: current.zitadelSessionId,
+      familyExpiresAt:
+        current.authenticationMethod === SessionAuthenticationMethod.SSO
+          ? current.expiresAt
+          : undefined,
     });
 
     const won = await this.refreshTokensRepository.markUsedAndInsertSuccessor(

@@ -85,6 +85,11 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsUrl({ require_protocol: true, require_tld: false })
   SSO_OIDC_CALLBACK_URL?: string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  SSO_REAUTH_MAX_AGE_SECONDS?: number;
 
   // Database
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) POSTGRES_PORT?: number;

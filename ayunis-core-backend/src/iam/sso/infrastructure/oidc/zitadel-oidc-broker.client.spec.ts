@@ -32,6 +32,7 @@ const config = {
   clientSecret: 'client-secret',
   callbackUrl: 'https://core.ayunis.de/api/auth/sso/oidc/callback',
   allowInsecureRequests: false,
+  reauthenticationMaxAgeSeconds: 86_400,
 };
 
 // URI is the protocol-defined event identifier, not a transport endpoint.
@@ -84,6 +85,7 @@ describe('ZitadelOidcBrokerClient', () => {
       code_challenge_method: 'S256',
       state: 'oauth-state',
       nonce: 'oidc-nonce',
+      max_age: '86400',
     });
     expect(oidc.ClientSecretBasic).toHaveBeenCalledWith(config.clientSecret);
     expect(oidc.discovery).toHaveBeenCalledWith(
@@ -147,6 +149,7 @@ describe('ZitadelOidcBrokerClient', () => {
         expectedState: 'oauth-state',
         expectedNonce: 'oidc-nonce',
         idTokenExpected: true,
+        maxAge: 86_400,
       },
     );
     expect(oidc.fetchUserInfo).toHaveBeenCalledWith(

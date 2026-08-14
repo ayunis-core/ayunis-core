@@ -82,6 +82,25 @@ describe('RotateSessionUseCase', () => {
       familyId: current.familyId,
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
+      familyExpiresAt: current.expiresAt,
+    });
+  });
+
+  it('keeps password session expiry sliding during rotation', async () => {
+    const current = aRefreshToken({
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+    });
+    repository.findByTokenHash.mockResolvedValue(current);
+    repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
+
+    await rotate();
+
+    expect(factory.create).toHaveBeenCalledWith({
+      userId: current.userId,
+      familyId: current.familyId,
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      zitadelSessionId: null,
+      familyExpiresAt: undefined,
     });
   });
 
