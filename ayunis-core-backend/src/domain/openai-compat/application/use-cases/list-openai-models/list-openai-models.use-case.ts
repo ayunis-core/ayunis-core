@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
@@ -10,9 +11,10 @@ import { ListOpenAIModelsQuery } from './list-openai-models.query';
 
 @Injectable()
 export class ListOpenAIModelsUseCase {
-  private readonly logger = new Logger(ListOpenAIModelsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListOpenAIModelsUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly modelMapper: OpenAIModelMapper,
   ) {}
@@ -20,7 +22,10 @@ export class ListOpenAIModelsUseCase {
   async execute(
     query: ListOpenAIModelsQuery,
   ): Promise<OpenAIModelListResponse> {
-    this.logger.log('Listing OpenAI-compatible models', { orgId: query.orgId });
+    this.logger.info(
+      { orgId: query.orgId },
+      'Listing OpenAI-compatible models',
+    );
 
     try {
       const permitted = await this.getPermittedLanguageModelsUseCase.execute(
@@ -40,9 +45,12 @@ export class ListOpenAIModelsUseCase {
       return this.modelMapper.toListResponse([...byName.values()]);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error listing OpenAI-compatible models', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error listing OpenAI-compatible models',
+      );
       throw new OpenAIUnexpectedError(error);
     }
   }

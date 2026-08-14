@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -38,7 +39,10 @@ describe('InferenceHandlerRegistry', () => {
             mistralHandler: MistralInferenceHandler,
             configService: any,
           ) => {
-            const registry = new InferenceHandlerRegistry(configService);
+            const registry = new InferenceHandlerRegistry(
+              createPinoLoggerMock(),
+              configService,
+            );
             registry.register(ModelProvider.MISTRAL, mistralHandler);
             return registry;
           },

@@ -1,5 +1,6 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -22,6 +23,7 @@ import { GetPermittedEmbeddingModelQuery } from './get-permitted-embedding-model
 import { GetPermittedEmbeddingModelUseCase } from './get-permitted-embedding-model.use-case';
 
 describe('GetPermittedEmbeddingModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
 
@@ -56,6 +58,10 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
 
     const module = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetPermittedEmbeddingModelUseCase.name),
+          useValue: logger,
+        },
         GetPermittedEmbeddingModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -67,8 +73,8 @@ describe('GetPermittedEmbeddingModelUseCase', () => {
 
     useCase = module.get(GetPermittedEmbeddingModelUseCase);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

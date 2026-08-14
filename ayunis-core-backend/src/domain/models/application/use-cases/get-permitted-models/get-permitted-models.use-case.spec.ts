@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { GetPermittedModelsUseCase } from './get-permitted-models.use-case';
 import { GetPermittedModelsQuery } from './get-permitted-models.query';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
@@ -8,6 +9,7 @@ import type { PermittedModel } from 'src/domain/models/domain/permitted-model.en
 import { ContextService } from 'src/common/context/services/context.service';
 
 describe('GetPermittedModelsUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: GetPermittedModelsUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let mockContextService: any;
@@ -28,6 +30,10 @@ describe('GetPermittedModelsUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetPermittedModelsUseCase.name),
+          useValue: logger,
+        },
         GetPermittedModelsUseCase,
         {
           provide: PermittedModelsRepository,
@@ -48,8 +54,8 @@ describe('GetPermittedModelsUseCase', () => {
     });
 
     // Mock logger
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.debug.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {
@@ -160,16 +166,16 @@ describe('GetPermittedModelsUseCase', () => {
 
       permittedModelsRepository.findAll.mockResolvedValue([]);
 
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
+      const debugSpy = logger.debug;
 
       // Act
       await useCase.execute(query);
 
       // Assert
-      expect(debugSpy).toHaveBeenCalledWith('Getting permitted models', {
-        orgId: mockOrgId,
-        filter,
-      });
+      expect(debugSpy).toHaveBeenCalledWith(
+        { orgId: mockOrgId, filter },
+        'Getting permitted models',
+      );
     });
 
     it('should handle repository errors', async () => {

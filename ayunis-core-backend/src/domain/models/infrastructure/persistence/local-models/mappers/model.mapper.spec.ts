@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ModelMapper } from './model.mapper';
 import {
   ImageGenerationModelRecord,
@@ -11,14 +11,16 @@ import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enu
 import type { UUID } from 'crypto';
 
 describe('ModelMapper', () => {
+  const logger = createPinoLoggerMock();
   let mapper: ModelMapper;
   let warnSpy: jest.SpyInstance;
 
   const mockId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(() => {
-    mapper = new ModelMapper();
-    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    logger.warn.mockReset();
+    mapper = new ModelMapper(logger);
+    warnSpy = logger.warn;
   });
 
   afterEach(() => {
@@ -84,12 +86,12 @@ describe('ModelMapper', () => {
       expect((domain as LanguageModel).tier).toBeUndefined();
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        'Encountered unknown model tier value, ignoring',
         expect.objectContaining({
           value: 'platinum',
           modelId: mockId,
           modelName: 'gpt-4',
         }),
+        'Encountered unknown model tier value, ignoring',
       );
     });
 

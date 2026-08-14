@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -14,9 +15,10 @@ import { GetDefaultModelQuery } from './get-default-model.query';
 
 @Injectable()
 export class GetDefaultModelUseCase {
-  private readonly logger = new Logger(GetDefaultModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetDefaultModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly userDefaultModelsRepository: UserDefaultModelsRepository,
     private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
@@ -24,7 +26,14 @@ export class GetDefaultModelUseCase {
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetDefaultModelQuery): Promise<PermittedLanguageModel> {
-    this.logger.log('execute', { query });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+        userId: query.userId,
+        blacklistedModelIds: query.blacklistedModelIds,
+      },
+      'execute',
+    );
     const { models, overrideTeamIds } =
       await this.getEffectiveLanguageModelsUseCase.execute(
         new GetEffectiveLanguageModelsQuery(query.orgId, query.userId),

@@ -10,8 +10,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -56,9 +56,10 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
   PermittedImageGenerationModelResponseDto,
 )
 export class TeamPermittedModelsController {
-  private readonly logger = new Logger(TeamPermittedModelsController.name);
-
   constructor(
+    @InjectPinoLogger(TeamPermittedModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly getTeamPermittedModelsUseCase: GetTeamPermittedModelsUseCase,
     private readonly getTeamPermittedImageGenerationModelsUseCase: GetTeamPermittedImageGenerationModelsUseCase,
     private readonly createTeamPermittedModelUseCase: CreateTeamPermittedModelUseCase,
@@ -85,7 +86,7 @@ export class TeamPermittedModelsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto[]> {
-    this.logger.log('listTeamPermittedModels', { teamId });
+    this.logger.info({ teamId }, 'listTeamPermittedModels');
     const query = new GetTeamPermittedModelsQuery(teamId, orgId);
     const models = await this.getTeamPermittedModelsUseCase.execute(query);
     return models.map((model) =>
@@ -113,7 +114,7 @@ export class TeamPermittedModelsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedImageGenerationModelResponseDto[]> {
-    this.logger.log('listTeamImageGenerationModels', { teamId });
+    this.logger.info({ teamId }, 'listTeamImageGenerationModels');
     const query = new GetTeamPermittedImageGenerationModelsQuery(teamId, orgId);
     const models =
       await this.getTeamPermittedImageGenerationModelsUseCase.execute(query);
@@ -155,10 +156,13 @@ export class TeamPermittedModelsController {
   ): Promise<
     PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto
   > {
-    this.logger.log('createTeamPermittedModel', {
-      teamId,
-      modelId: dto.modelId,
-    });
+    this.logger.info(
+      {
+        teamId,
+        modelId: dto.modelId,
+      },
+      'createTeamPermittedModel',
+    );
     const command = new CreateTeamPermittedModelCommand(
       dto.modelId,
       orgId,
@@ -188,11 +192,14 @@ export class TeamPermittedModelsController {
     @Body() dto: UpdatePermittedModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    this.logger.log('updateTeamPermittedModel', {
-      teamId,
-      permittedModelId: id,
-      anonymousOnly: dto.anonymousOnly,
-    });
+    this.logger.info(
+      {
+        teamId,
+        permittedModelId: id,
+        anonymousOnly: dto.anonymousOnly,
+      },
+      'updateTeamPermittedModel',
+    );
     const command = new UpdateTeamPermittedModelCommand(
       id,
       orgId,
@@ -218,10 +225,13 @@ export class TeamPermittedModelsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteTeamPermittedModel', {
-      teamId,
-      permittedModelId: id,
-    });
+    this.logger.info(
+      {
+        teamId,
+        permittedModelId: id,
+      },
+      'deleteTeamPermittedModel',
+    );
     const command = new DeleteTeamPermittedModelCommand(id, orgId, teamId);
     await this.deleteTeamPermittedModelUseCase.execute(command);
   }
@@ -244,10 +254,13 @@ export class TeamPermittedModelsController {
     @Body() dto: SetTeamDefaultModelDto,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PermittedLanguageModelResponseDto> {
-    this.logger.log('setTeamDefaultModel', {
-      teamId,
-      permittedModelId: dto.permittedModelId,
-    });
+    this.logger.info(
+      {
+        teamId,
+        permittedModelId: dto.permittedModelId,
+      },
+      'setTeamDefaultModel',
+    );
     const command = new SetTeamDefaultModelCommand(
       dto.permittedModelId,
       orgId,

@@ -2,7 +2,8 @@ import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity'
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelsRepository } from '../../ports/models.repository';
 import { CreatePermittedModelCommand } from './create-permitted-model.command';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -13,8 +14,10 @@ import { ModelPolicyService } from '../../services/model-policy.service';
 
 @Injectable()
 export class CreatePermittedModelUseCase {
-  private readonly logger = new Logger(CreatePermittedModelUseCase.name);
   constructor(
+    @InjectPinoLogger(CreatePermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
@@ -22,10 +25,13 @@ export class CreatePermittedModelUseCase {
   ) {}
 
   async execute(command: CreatePermittedModelCommand): Promise<PermittedModel> {
-    this.logger.log('execute', {
-      modelId: command.modelId,
-      orgId: command.orgId,
-    });
+    this.logger.info(
+      {
+        modelId: command.modelId,
+        orgId: command.orgId,
+      },
+      'execute',
+    );
     try {
       const orgId = this.contextService.get('orgId');
       const orgRole = this.contextService.get('role');
@@ -55,9 +61,12 @@ export class CreatePermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error creating permitted model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating permitted model',
+      );
       throw new UnexpectedModelError(error as Error);
     }
   }

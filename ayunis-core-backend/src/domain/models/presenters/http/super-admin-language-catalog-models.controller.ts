@@ -4,11 +4,11 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -45,11 +45,10 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   LanguageModelResponseDto,
 )
 export class SuperAdminLanguageCatalogModelsController {
-  private readonly logger = new Logger(
-    SuperAdminLanguageCatalogModelsController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminLanguageCatalogModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly createLanguageModelUseCase: CreateLanguageModelUseCase,
     private readonly updateLanguageModelUseCase: UpdateLanguageModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -85,14 +84,18 @@ export class SuperAdminLanguageCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
-    this.logger.log(
-      `Creating language model ${dto.name} by super admin ${userId}`,
+    this.logger.info(
+      { modelName: dto.name, userId },
+      'Creating language model by super admin',
     );
     const command = new CreateLanguageModelCommand(dto);
     const model = await this.createLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.log(`Successfully created language model ${model.id}`);
+    this.logger.info(
+      { modelId: model.id },
+      'Successfully created language model',
+    );
     return responseDto;
   }
 
@@ -133,12 +136,15 @@ export class SuperAdminLanguageCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateLanguageModelRequestDto,
   ): Promise<LanguageModelResponseDto> {
-    this.logger.log(`Updating language model ${id} by super admin ${userId}`);
+    this.logger.info(
+      { modelId: id, userId },
+      'Updating language model by super admin',
+    );
     const command = new UpdateLanguageModelCommand({ ...dto, id });
     const model = await this.updateLanguageModelUseCase.execute(command);
     const responseDto =
       this.catalogModelResponseDtoMapper.toLanguageModelDto(model);
-    this.logger.log(`Successfully updated language model ${id}`);
+    this.logger.info({ modelId: id }, 'Successfully updated language model');
     return responseDto;
   }
 }

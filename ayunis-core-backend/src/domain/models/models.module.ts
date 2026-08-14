@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
 import { ModelsController } from './presenters/http/models.controller';
 import { ModelsDefaultsController } from './presenters/http/models-defaults.controller';
 import { SuperAdminPermittedModelsController } from './presenters/http/super-admin-permitted-models.controller';
@@ -180,9 +181,13 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
         stackitHandler: StackitStreamInferenceHandler,
         scalewayHandler: ScalewayStreamInferenceHandler,
         mockHandler: MockStreamInferenceHandler,
+        logger: PinoLogger,
         configService: ConfigService,
       ) => {
-        const registry = new StreamInferenceHandlerRegistry(configService);
+        const registry = new StreamInferenceHandlerRegistry(
+          logger,
+          configService,
+        );
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
         registry.register(ModelProvider.BEDROCK, bedrockHandler);
@@ -212,6 +217,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
         StackitStreamInferenceHandler,
         ScalewayStreamInferenceHandler,
         MockStreamInferenceHandler,
+        getLoggerToken(StreamInferenceHandlerRegistry.name),
         ConfigService,
       ],
     },
@@ -231,9 +237,10 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
         stackitHandler: StackitInferenceHandler,
         scalewayHandler: ScalewayInferenceHandler,
         mockHandler: MockInferenceHandler,
+        logger: PinoLogger,
         configService: ConfigService,
       ) => {
-        const registry = new InferenceHandlerRegistry(configService);
+        const registry = new InferenceHandlerRegistry(logger, configService);
         registry.register(ModelProvider.MISTRAL, mistralHandler);
         registry.register(ModelProvider.OPENAI, openaiHandler);
         registry.register(ModelProvider.ANTHROPIC, anthropicHandler);
@@ -263,6 +270,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
         StackitInferenceHandler,
         ScalewayInferenceHandler,
         MockInferenceHandler,
+        getLoggerToken(InferenceHandlerRegistry.name),
         ConfigService,
       ],
     },
@@ -271,9 +279,13 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
       useFactory: (
         azureHandler: AzureImageGenerationHandler,
         mockHandler: MockImageGenerationHandler,
+        logger: PinoLogger,
         configService: ConfigService,
       ) => {
-        const registry = new ImageGenerationHandlerRegistry(configService);
+        const registry = new ImageGenerationHandlerRegistry(
+          logger,
+          configService,
+        );
         registry.register(ModelProvider.AZURE, azureHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
@@ -281,6 +293,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
       inject: [
         AzureImageGenerationHandler,
         MockImageGenerationHandler,
+        getLoggerToken(ImageGenerationHandlerRegistry.name),
         ConfigService,
       ],
     },

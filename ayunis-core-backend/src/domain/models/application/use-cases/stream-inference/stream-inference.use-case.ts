@@ -1,5 +1,6 @@
 import { Observable, catchError, throwError } from 'rxjs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
 import {
   StreamInferenceHandler,
@@ -19,8 +20,10 @@ import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.
 
 @Injectable()
 export class StreamInferenceUseCase {
-  private readonly logger = new Logger(StreamInferenceUseCase.name);
   constructor(
+    @InjectPinoLogger(StreamInferenceUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
   ) {}
 
@@ -46,10 +49,13 @@ export class StreamInferenceUseCase {
   ): Error {
     if (error instanceof ApplicationError) return error;
     if (isAbortError(error)) {
-      this.logger.log('Streaming inference aborted by client', {
-        model: input.model.name,
-        provider: input.model.provider,
-      });
+      this.logger.info(
+        {
+          model: input.model.name,
+          provider: input.model.provider,
+        },
+        'Streaming inference aborted by client',
+      );
       return new InferenceAbortedError();
     }
     const providerError = wrapProviderFailure(error, {
@@ -57,23 +63,29 @@ export class StreamInferenceUseCase {
       modelId: input.model.name,
     });
     if (providerError) {
-      this.logger.error('Provider unavailable during stream inference', {
-        code: providerError.code,
-        ...providerError.context,
-      });
+      this.logger.error(
+        {
+          code: providerError.code,
+          ...providerError.context,
+        },
+        'Provider unavailable during stream inference',
+      );
       return providerError;
     }
     const status = extractUpstreamStatus(error);
     const message = error instanceof Error ? error.message : String(error);
-    this.logger.error('Provider stream inference failed', {
-      model: input.model.name,
-      provider: input.model.provider,
-      messageCount: input.messages.length,
-      toolCount: input.tools.length,
-      toolChoice: input.toolChoice,
-      errorName: error instanceof Error ? error.name : 'Unknown',
-      status,
-    });
+    this.logger.error(
+      {
+        model: input.model.name,
+        provider: input.model.provider,
+        messageCount: input.messages.length,
+        toolCount: input.tools.length,
+        toolChoice: input.toolChoice,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        status,
+      },
+      'Provider stream inference failed',
+    );
     // Anthropic/Bedrock reject oversized images with "image exceeds N MB
     // maximum" — surface a distinct code so the UI can tell the user to shrink
     // it instead of showing a generic failure.

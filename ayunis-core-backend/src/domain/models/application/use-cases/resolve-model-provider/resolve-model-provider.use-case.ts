@@ -1,5 +1,6 @@
 import type { ModelProvider } from '@ayunis/inference';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { StreamInferenceHandlerRegistry } from '../../registry/stream-inference-handler.registry';
 import { UnexpectedModelError } from '../../models.errors';
@@ -13,18 +14,22 @@ import { ResolveModelProviderQuery } from './resolve-model-provider.query';
  */
 @Injectable()
 export class ResolveModelProviderUseCase {
-  private readonly logger = new Logger(ResolveModelProviderUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ResolveModelProviderUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly streamInferenceRegistry: StreamInferenceHandlerRegistry,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   execute(query: ResolveModelProviderQuery): Promise<ModelProvider> {
-    this.logger.log('Resolving model provider', {
-      model: query.model.name,
-      provider: query.model.provider,
-    });
+    this.logger.info(
+      {
+        model: query.model.name,
+        provider: query.model.provider,
+      },
+      'Resolving model provider',
+    );
     return Promise.resolve(
       this.streamInferenceRegistry
         .getHandler(query.model.provider)

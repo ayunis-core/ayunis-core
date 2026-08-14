@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UpdatePermittedModelCommand } from './update-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
@@ -20,98 +21,81 @@ import { ModelPolicyService } from '../../services/model-policy.service';
 
 @Injectable()
 export class UpdatePermittedModelUseCase {
-  private readonly logger = new Logger(UpdatePermittedModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdatePermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly contextService: ContextService,
     private readonly modelPolicy: ModelPolicyService,
   ) {}
 
   async execute(command: UpdatePermittedModelCommand): Promise<PermittedModel> {
-    this.logger.log('execute', {
-      id: command.permittedModelId,
-      orgId: command.orgId,
-      anonymousOnly: command.anonymousOnly,
-    });
-
-    try {
-      const orgId = this.contextService.get('orgId');
-      const orgRole = this.contextService.get('role');
-      const systemRole = this.contextService.get('systemRole');
-      const isOrgAdmin = orgRole === UserRole.ADMIN && orgId === command.orgId;
-      const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-
-      if (!isOrgAdmin && !isSuperAdmin) {
-        throw new UnauthorizedAccessError();
-      }
-
-      const existingModel = await this.permittedModelsRepository.findOne({
+    this.logger.info(
+      {
         id: command.permittedModelId,
-      });
-
-      if (!existingModel) {
-        throw new PermittedModelNotFoundError(command.permittedModelId);
-      }
-
-      // Verify the model belongs to the specified org
-      if (existingModel.orgId !== command.orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      this.modelPolicy.assertSupported(existingModel.model);
-
-      // Create updated model with new anonymousOnly value, preserving the correct type
-      let updatedModel: PermittedModel;
-      if (existingModel.model instanceof LanguageModel) {
-        updatedModel = new PermittedLanguageModel({
-          id: existingModel.id,
-          model: existingModel.model,
-          orgId: existingModel.orgId,
-          scope: existingModel.scope,
-          scopeId: existingModel.scopeId,
-          isDefault: existingModel.isDefault,
-          anonymousOnly: command.anonymousOnly,
-          createdAt: existingModel.createdAt,
-          updatedAt: new Date(),
-        });
-      } else if (existingModel.model instanceof EmbeddingModel) {
-        updatedModel = new PermittedEmbeddingModel({
-          id: existingModel.id,
-          model: existingModel.model,
-          orgId: existingModel.orgId,
-          scope: existingModel.scope,
-          scopeId: existingModel.scopeId,
-          isDefault: existingModel.isDefault,
-          anonymousOnly: command.anonymousOnly,
-          createdAt: existingModel.createdAt,
-          updatedAt: new Date(),
-        });
-      } else if (existingModel.model instanceof ImageGenerationModel) {
-        updatedModel = new PermittedImageGenerationModel({
-          id: existingModel.id,
-          model: existingModel.model,
-          orgId: existingModel.orgId,
-          scope: existingModel.scope,
-          scopeId: existingModel.scopeId,
-          isDefault: existingModel.isDefault,
-          anonymousOnly: command.anonymousOnly,
-          createdAt: existingModel.createdAt,
-          updatedAt: new Date(),
-        });
-      } else {
-        throw new Error(
-          `Unknown model type: ${existingModel.model.constructor.name}`,
-        );
-      }
-
-      return await this.permittedModelsRepository.update(updatedModel);
+        orgId: command.orgId,
+        anonymousOnly: command.anonymousOnly,
+      },
+      'execute',
+    );
+    try {
+      this.assertAuthorized(command);
+      const existing = await this.findExisting(command.permittedModelId);
+      if (existing.orgId !== command.orgId) throw new UnauthorizedAccessError();
+      this.modelPolicy.assertSupported(existing.model);
+      const updated = this.withAnonymousOnly(existing, command.anonymousOnly);
+      return await this.permittedModelsRepository.update(updated);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error updating permitted model', error);
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error({ err: error }, 'Error updating permitted model');
       throw error;
     }
+  }
+
+  private assertAuthorized(command: UpdatePermittedModelCommand): void {
+    const isOrgAdmin =
+      this.contextService.get('role') === UserRole.ADMIN &&
+      this.contextService.get('orgId') === command.orgId;
+    const isSuperAdmin =
+      this.contextService.get('systemRole') === SystemRole.SUPER_ADMIN;
+    if (!isOrgAdmin && !isSuperAdmin) throw new UnauthorizedAccessError();
+  }
+
+  private async findExisting(
+    id: UpdatePermittedModelCommand['permittedModelId'],
+  ): Promise<PermittedModel> {
+    const existing = await this.permittedModelsRepository.findOne({ id });
+    if (existing) return existing;
+    throw new PermittedModelNotFoundError(id);
+  }
+
+  private withAnonymousOnly(
+    existing: PermittedModel,
+    anonymousOnly: boolean,
+  ): PermittedModel {
+    const common = {
+      id: existing.id,
+      orgId: existing.orgId,
+      scope: existing.scope,
+      scopeId: existing.scopeId,
+      isDefault: existing.isDefault,
+      anonymousOnly,
+      createdAt: existing.createdAt,
+      updatedAt: new Date(),
+    };
+    if (existing.model instanceof LanguageModel) {
+      return new PermittedLanguageModel({ ...common, model: existing.model });
+    }
+    if (existing.model instanceof EmbeddingModel) {
+      return new PermittedEmbeddingModel({ ...common, model: existing.model });
+    }
+    if (existing.model instanceof ImageGenerationModel) {
+      return new PermittedImageGenerationModel({
+        ...common,
+        model: existing.model,
+      });
+    }
+    throw new Error(`Unknown model type: ${existing.model.constructor.name}`);
   }
 }

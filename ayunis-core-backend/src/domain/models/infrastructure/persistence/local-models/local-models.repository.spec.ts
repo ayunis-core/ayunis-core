@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { QueryFailedError, type EntityManager, type Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -44,7 +45,7 @@ describe('LocalModelsRepository', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<ModelRecord>>;
 
-    mapper = new ModelMapper();
+    mapper = new ModelMapper(createPinoLoggerMock());
     transactionManager = { delete: jest.fn(), findOne: jest.fn() };
     withTransaction = jest.fn(async (callback: () => Promise<unknown>) =>
       callback(),
@@ -55,6 +56,7 @@ describe('LocalModelsRepository', () => {
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
     repository = new LocalModelsRepository(
+      createPinoLoggerMock(),
       localModelRepository,
       mapper,
       txHost,

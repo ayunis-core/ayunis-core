@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { AzureImageGenerationHandler } from './azure.image-generation';
 import {
@@ -26,6 +26,7 @@ jest.mock('openai', () => {
 const mockAzureOpenAICtor = jest.mocked(AzureOpenAI);
 
 describe('AzureImageGenerationHandler', () => {
+  const logger = createPinoLoggerMock();
   let handler: AzureImageGenerationHandler;
   let configService: jest.Mocked<ConfigService>;
 
@@ -41,10 +42,10 @@ describe('AzureImageGenerationHandler', () => {
       get: jest.fn().mockReturnValue('mock-value'),
     } as unknown as jest.Mocked<ConfigService>;
 
-    handler = new AzureImageGenerationHandler(configService);
+    handler = new AzureImageGenerationHandler(logger, configService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
 
     mockImagesGenerate.mockReset();
     mockImagesEdit.mockReset();

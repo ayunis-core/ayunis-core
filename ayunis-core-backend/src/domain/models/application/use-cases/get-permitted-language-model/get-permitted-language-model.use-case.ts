@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +16,10 @@ import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.q
 
 @Injectable()
 export class GetPermittedLanguageModelUseCase {
-  private readonly logger = new Logger(GetPermittedLanguageModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetPermittedLanguageModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly getEffectiveLanguageModelsUseCase: GetEffectiveLanguageModelsUseCase,
     private readonly contextService: ContextService,
@@ -27,7 +29,10 @@ export class GetPermittedLanguageModelUseCase {
   async execute(
     query: GetPermittedLanguageModelQuery,
   ): Promise<PermittedLanguageModel> {
-    this.logger.log('getPermittedLanguageModel', { query });
+    this.logger.info(
+      { permittedModelId: query.id },
+      'getPermittedLanguageModel',
+    );
     const model = await this.permittedModelsRepository.findOneLanguage({
       id: query.id,
     });

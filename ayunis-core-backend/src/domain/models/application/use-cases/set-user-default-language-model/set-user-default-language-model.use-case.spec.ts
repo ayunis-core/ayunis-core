@@ -1,5 +1,6 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,6 +14,7 @@ import { SetUserDefaultLanguageModelCommand } from './set-user-default-language-
 import { SetUserDefaultLanguageModelUseCase } from './set-user-default-language-model.use-case';
 
 describe('SetUserDefaultLanguageModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   const userId = randomUUID();
   const otherUserId = randomUUID();
   const orgId = randomUUID();
@@ -58,6 +60,10 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
 
     const module = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(SetUserDefaultLanguageModelUseCase.name),
+          useValue: logger,
+        },
         SetUserDefaultLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -73,9 +79,9 @@ describe('SetUserDefaultLanguageModelUseCase', () => {
 
     useCase = module.get(SetUserDefaultLanguageModelUseCase);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.debug.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

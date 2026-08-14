@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { GetTeamPermittedModelsQuery } from './get-team-permitted-models.query';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -8,9 +9,10 @@ import { TeamPermittedModelValidator } from '../../services/team-permitted-model
 
 @Injectable()
 export class GetTeamPermittedModelsUseCase {
-  private readonly logger = new Logger(GetTeamPermittedModelsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetTeamPermittedModelsUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
   ) {}
@@ -18,10 +20,13 @@ export class GetTeamPermittedModelsUseCase {
   async execute(
     query: GetTeamPermittedModelsQuery,
   ): Promise<PermittedLanguageModel[]> {
-    this.logger.log('execute', {
-      teamId: query.teamId,
-      orgId: query.orgId,
-    });
+    this.logger.info(
+      {
+        teamId: query.teamId,
+        orgId: query.orgId,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(query.orgId);
@@ -35,7 +40,7 @@ export class GetTeamPermittedModelsUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error listing team permitted models', error);
+      this.logger.error({ err: error }, 'Error listing team permitted models');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
@@ -11,17 +12,21 @@ import { GenerateImageCommand } from './generate-image.command';
 
 @Injectable()
 export class GenerateImageUseCase {
-  private readonly logger = new Logger(GenerateImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GenerateImageUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly imageGenerationHandlerRegistry: ImageGenerationHandlerRegistry,
   ) {}
 
   async execute(command: GenerateImageCommand): Promise<ImageGenerationResult> {
-    this.logger.log('execute', {
-      model: command.model.name,
-      provider: command.model.provider,
-    });
+    this.logger.info(
+      {
+        model: command.model.name,
+        provider: command.model.provider,
+      },
+      'execute',
+    );
 
     try {
       const handler = this.imageGenerationHandlerRegistry.getHandler(
@@ -41,11 +46,14 @@ export class GenerateImageUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Image generation failed', {
-        model: command.model.name,
-        provider: command.model.provider,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          model: command.model.name,
+          provider: command.model.provider,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Image generation failed',
+      );
       const providerError = wrapProviderFailure(error, {
         provider: command.model.provider,
         modelId: command.model.name,

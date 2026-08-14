@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GenerateImageUseCase } from './generate-image.use-case';
 import { GenerateImageCommand } from './generate-image.command';
 import type { ImageGenerationHandlerRegistry } from '../../registry/image-generation-handler.registry';
@@ -15,6 +15,7 @@ import { ImageGenerationModel } from 'src/domain/models/domain/models/image-gene
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 describe('GenerateImageUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: GenerateImageUseCase;
   let registry: jest.Mocked<ImageGenerationHandlerRegistry>;
   let handler: jest.Mocked<ImageGenerationHandler>;
@@ -37,10 +38,10 @@ describe('GenerateImageUseCase', () => {
       registerMockHandler: jest.fn(),
     } as unknown as jest.Mocked<ImageGenerationHandlerRegistry>;
 
-    useCase = new GenerateImageUseCase(registry);
+    useCase = new GenerateImageUseCase(logger, registry);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

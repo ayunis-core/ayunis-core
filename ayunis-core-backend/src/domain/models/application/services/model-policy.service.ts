@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Model } from '../../domain/model.entity';
 import { EmbeddingModel } from '../../domain/models/embedding.model';
 import { ImageGenerationModel } from '../../domain/models/image-generation.model';
@@ -18,9 +19,10 @@ export const SUPPORTED_IMAGE_GENERATION_PROVIDERS: ModelProvider[] = [
 
 @Injectable()
 export class ModelPolicyService {
-  private readonly logger = new Logger(ModelPolicyService.name);
-
   constructor(
+    @InjectPinoLogger(ModelPolicyService.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
   ) {}
 
@@ -33,7 +35,8 @@ export class ModelPolicyService {
   assertSupportedImageGenerationProvider(provider: ModelProvider): void {
     if (!SUPPORTED_IMAGE_GENERATION_PROVIDERS.includes(provider)) {
       this.logger.warn(
-        `Unsupported provider for image generation: ${provider}`,
+        { provider },
+        'Unsupported provider for image generation',
       );
       throw new ImageGenerationModelProviderNotSupportedError(provider);
     }
@@ -66,8 +69,8 @@ export class ModelPolicyService {
       newModelId: candidate.model.id,
     };
     this.logger.error(
-      'Attempt to create a second permitted embedding model for org',
       metadata,
+      'Attempt to create a second permitted embedding model for org',
     );
     throw new MultipleEmbeddingModelsNotAllowedError(metadata);
   }
@@ -92,8 +95,8 @@ export class ModelPolicyService {
       newModelId: candidate.model.id,
     };
     this.logger.error(
-      'Attempt to create a second permitted image-generation model for org',
       metadata,
+      'Attempt to create a second permitted image-generation model for org',
     );
     throw new MultipleImageGenerationModelsNotAllowedError(metadata);
   }

@@ -5,21 +5,27 @@ import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
 } from '../../models.errors';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 
 @Injectable()
 export class CreateEmbeddingModelUseCase {
-  private readonly logger = new Logger(CreateEmbeddingModelUseCase.name);
-
-  constructor(private readonly modelsRepository: ModelsRepository) {}
+  constructor(
+    @InjectPinoLogger(CreateEmbeddingModelUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly modelsRepository: ModelsRepository,
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(command: CreateEmbeddingModelCommand): Promise<EmbeddingModel> {
-    this.logger.log('Creating embedding model', {
-      name: command.name,
-      provider: command.provider,
-    });
+    this.logger.info(
+      {
+        name: command.name,
+        provider: command.provider,
+      },
+      'Creating embedding model',
+    );
 
     const existingModel = await this.modelsRepository.findOne({
       name: command.name,
@@ -27,10 +33,13 @@ export class CreateEmbeddingModelUseCase {
     });
 
     if (existingModel) {
-      this.logger.warn('Embedding model already exists', {
-        name: command.name,
-        provider: command.provider,
-      });
+      this.logger.warn(
+        {
+          name: command.name,
+          provider: command.provider,
+        },
+        'Embedding model already exists',
+      );
       throw new ModelAlreadyExistsError(command.name, command.provider);
     }
 

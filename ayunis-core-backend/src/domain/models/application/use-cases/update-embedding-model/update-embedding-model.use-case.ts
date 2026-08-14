@@ -6,15 +6,17 @@ import {
   UnexpectedModelError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
 
 @Injectable()
 export class UpdateEmbeddingModelUseCase {
-  private readonly logger = new Logger(UpdateEmbeddingModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateEmbeddingModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly modelsRepository: ModelsRepository,
     private readonly clearDefaultsUseCase: ClearDefaultsByCatalogModelIdUseCase,
   ) {}
@@ -46,9 +48,12 @@ export class UpdateEmbeddingModelUseCase {
 
       // Clear defaults if model is being archived (for consistency, though embedding models typically don't have defaults)
       if (isBeingArchived) {
-        this.logger.log('Model is being archived, clearing defaults', {
-          modelId: command.id,
-        });
+        this.logger.info(
+          {
+            modelId: command.id,
+          },
+          'Model is being archived, clearing defaults',
+        );
         await this.clearDefaultsUseCase.execute(
           new ClearDefaultsByCatalogModelIdCommand(command.id),
         );

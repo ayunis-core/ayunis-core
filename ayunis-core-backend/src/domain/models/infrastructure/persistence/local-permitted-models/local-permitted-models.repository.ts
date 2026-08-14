@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   FindOneParams,
@@ -27,8 +28,10 @@ import { PermittedModelFinder } from './permitted-model-finder';
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
-  private readonly logger = new Logger(LocalPermittedModelsRepository.name);
   constructor(
+    @InjectPinoLogger(LocalPermittedModelsRepository.name)
+    private readonly logger: PinoLogger,
+
     @InjectRepository(PermittedModelRecord)
     private readonly permittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
@@ -62,9 +65,12 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findOrgDefaultLanguage(
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.log('findDefault', {
-      orgId,
-    });
+    this.logger.info(
+      {
+        orgId,
+      },
+      'findDefault',
+    );
     const permittedModel = await this.permittedModelRepository.findOne({
       where: {
         orgId,
@@ -84,9 +90,12 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     ) {
       return null;
     }
-    this.logger.debug('Default model found', {
-      permittedModel,
-    });
+    this.logger.debug(
+      {
+        permittedModel,
+      },
+      'Default model found',
+    );
     return this.permittedModelMapper.toDomain(
       permittedModel,
     ) as PermittedLanguageModel;
@@ -96,7 +105,7 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null> {
-    this.logger.log('findTeamDefaultLanguage', { teamId, orgId });
+    this.logger.info({ teamId, orgId }, 'findTeamDefaultLanguage');
     const permittedModel = await this.permittedModelRepository.findOne({
       where: {
         scopeId: teamId,
@@ -253,17 +262,20 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     orgId: UUID,
     modelId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteTeamScopedByOrgAndModelId', { orgId, modelId });
+    this.logger.info({ orgId, modelId }, 'deleteTeamScopedByOrgAndModelId');
     const result = await this.permittedModelRepository.delete({
       orgId,
       modelId,
       scope: PermittedModelScope.TEAM,
     });
-    this.logger.debug('Deleted team-scoped permitted models', {
-      orgId,
-      modelId,
-      affected: result.affected,
-    });
+    this.logger.debug(
+      {
+        orgId,
+        modelId,
+        affected: result.affected,
+      },
+      'Deleted team-scoped permitted models',
+    );
   }
 
   async setAsDefault(params: {
@@ -271,11 +283,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     orgId: UUID;
     teamId?: UUID;
   }): Promise<PermittedLanguageModel> {
-    this.logger.log('setAsDefault', {
-      id: params.id,
-      orgId: params.orgId,
-      teamId: params.teamId,
-    });
+    this.logger.info(
+      {
+        id: params.id,
+        orgId: params.orgId,
+        teamId: params.teamId,
+      },
+      'setAsDefault',
+    );
 
     const unsetWhere = this.buildUnsetDefaultWhere(params);
     const setWhere = this.buildSetDefaultWhere(params);
@@ -333,13 +348,16 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       );
     }
 
-    this.logger.debug('Model set as default', {
-      id: params.id,
-      orgId: params.orgId,
-      teamId: params.teamId,
-      modelName: updatedModel.model.name,
-      modelProvider: updatedModel.model.provider,
-    });
+    this.logger.debug(
+      {
+        id: params.id,
+        orgId: params.orgId,
+        teamId: params.teamId,
+        modelName: updatedModel.model.name,
+        modelProvider: updatedModel.model.provider,
+      },
+      'Model set as default',
+    );
 
     return this.permittedModelMapper.toDomain(
       updatedModel,
@@ -347,11 +365,14 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   }
 
   async update(permittedModel: PermittedModel): Promise<PermittedModel> {
-    this.logger.log('update', {
-      id: permittedModel.id,
-      orgId: permittedModel.orgId,
-      anonymousOnly: permittedModel.anonymousOnly,
-    });
+    this.logger.info(
+      {
+        id: permittedModel.id,
+        orgId: permittedModel.orgId,
+        anonymousOnly: permittedModel.anonymousOnly,
+      },
+      'update',
+    );
 
     const updateResult = await this.permittedModelRepository.update(
       { id: permittedModel.id, orgId: permittedModel.orgId },
@@ -375,33 +396,39 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
   async findAllByCatalogModelId(
     catalogModelId: UUID,
   ): Promise<PermittedModel[]> {
-    this.logger.log('findAllByCatalogModelId', { catalogModelId });
+    this.logger.info({ catalogModelId }, 'findAllByCatalogModelId');
 
     const permittedModels = await this.permittedModelRepository.find({
       where: { modelId: catalogModelId },
       relations: { model: true },
     });
 
-    this.logger.debug('Found permitted models by catalog model id', {
-      catalogModelId,
-      count: permittedModels.length,
-    });
+    this.logger.debug(
+      {
+        catalogModelId,
+        count: permittedModels.length,
+      },
+      'Found permitted models by catalog model id',
+    );
 
     return permittedModels.map((pm) => this.permittedModelMapper.toDomain(pm));
   }
 
   async unsetDefaultsByCatalogModelId(catalogModelId: UUID): Promise<void> {
-    this.logger.log('unsetDefaultsByCatalogModelId', { catalogModelId });
+    this.logger.info({ catalogModelId }, 'unsetDefaultsByCatalogModelId');
 
     const result = await this.permittedModelRepository.update(
       { modelId: catalogModelId, isDefault: true },
       { isDefault: false },
     );
 
-    this.logger.debug('Unset defaults for catalog model', {
-      catalogModelId,
-      affected: result.affected,
-    });
+    this.logger.debug(
+      {
+        catalogModelId,
+        affected: result.affected,
+      },
+      'Unset defaults for catalog model',
+    );
   }
 
   private buildUnsetDefaultWhere(params: {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -12,9 +13,10 @@ import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.
 
 @Injectable()
 export class GetConfiguredModelsByTypeUseCase {
-  private readonly logger = new Logger(GetConfiguredModelsByTypeUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetConfiguredModelsByTypeUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly modelsRepository: ModelsRepository,
     private readonly contextService: ContextService,
     private readonly configService: ConfigService,
@@ -28,10 +30,13 @@ export class GetConfiguredModelsByTypeUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('getConfiguredModelsByType', {
-      orgId: query.orgId,
-      type: query.type,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+        type: query.type,
+      },
+      'getConfiguredModelsByType',
+    );
     const allModels = await this.modelsRepository.findAll();
     const configuredModels = allModels.filter(
       (model) =>
@@ -39,10 +44,13 @@ export class GetConfiguredModelsByTypeUseCase {
         !model.isArchived &&
         this.hasApiKeyForProvider(model.provider),
     );
-    this.logger.debug('Configured models by type', {
-      type: query.type,
-      models: configuredModels,
-    });
+    this.logger.debug(
+      {
+        type: query.type,
+        models: configuredModels,
+      },
+      'Configured models by type',
+    );
     return configuredModels;
   }
 
@@ -56,7 +64,7 @@ export class GetConfiguredModelsByTypeUseCase {
 
     const configKey = this.modelProviderInfoRegistry.getConfigKey(provider);
     if (!configKey) {
-      this.logger.warn(`No config mapping found for provider: ${provider}`);
+      this.logger.warn({ provider }, 'No config mapping found for provider');
       return false;
     }
 

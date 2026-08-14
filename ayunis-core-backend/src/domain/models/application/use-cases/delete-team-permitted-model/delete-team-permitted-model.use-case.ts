@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { DeleteTeamPermittedModelCommand } from './delete-team-permitted-model.command';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -7,19 +8,23 @@ import { TeamPermittedModelValidator } from '../../services/team-permitted-model
 
 @Injectable()
 export class DeleteTeamPermittedModelUseCase {
-  private readonly logger = new Logger(DeleteTeamPermittedModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteTeamPermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
   ) {}
 
   async execute(command: DeleteTeamPermittedModelCommand): Promise<void> {
-    this.logger.log('execute', {
-      permittedModelId: command.permittedModelId,
-      orgId: command.orgId,
-      teamId: command.teamId,
-    });
+    this.logger.info(
+      {
+        permittedModelId: command.permittedModelId,
+        orgId: command.orgId,
+        teamId: command.teamId,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(command.orgId);
@@ -38,7 +43,7 @@ export class DeleteTeamPermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting team permitted model', error);
+      this.logger.error({ err: error }, 'Error deleting team permitted model');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

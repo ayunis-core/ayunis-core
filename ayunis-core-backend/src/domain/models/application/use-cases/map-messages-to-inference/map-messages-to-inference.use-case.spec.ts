@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -33,6 +34,7 @@ describe('MapMessagesToInferenceUseCase', () => {
     ]);
     const useCase = new MapMessagesToInferenceUseCase(
       {} as ImageContentService,
+      createPinoLoggerMock(),
     );
 
     const [mapped] = await useCase.execute(command);

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { ModelsRepository } from '../../ports/models.repository';
@@ -17,9 +18,10 @@ import { ImageGenerationModel } from 'src/domain/models/domain/models/image-gene
 
 @Injectable()
 export class CreateTeamPermittedModelUseCase {
-  private readonly logger = new Logger(CreateTeamPermittedModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateTeamPermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
@@ -29,11 +31,14 @@ export class CreateTeamPermittedModelUseCase {
   async execute(
     command: CreateTeamPermittedModelCommand,
   ): Promise<PermittedModel> {
-    this.logger.log('execute', {
-      modelId: command.modelId,
-      orgId: command.orgId,
-      teamId: command.teamId,
-    });
+    this.logger.info(
+      {
+        modelId: command.modelId,
+        orgId: command.orgId,
+        teamId: command.teamId,
+      },
+      'execute',
+    );
 
     this.validator.validateAdminAccess(command.orgId);
     await this.validator.validateTeamInOrg(command.teamId, command.orgId);

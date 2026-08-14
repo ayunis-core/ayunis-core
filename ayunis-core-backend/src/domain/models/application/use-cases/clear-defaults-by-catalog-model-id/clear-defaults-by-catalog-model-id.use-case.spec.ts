@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ClearDefaultsByCatalogModelIdUseCase } from './clear-defaults-by-catalog-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdCommand } from './clear-defaults-by-catalog-model-id.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
@@ -11,6 +12,7 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import type { UUID } from 'crypto';
 
 describe('ClearDefaultsByCatalogModelIdUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: ClearDefaultsByCatalogModelIdUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let userDefaultModelsRepository: jest.Mocked<UserDefaultModelsRepository>;
@@ -49,6 +51,10 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(ClearDefaultsByCatalogModelIdUseCase.name),
+          useValue: logger,
+        },
         ClearDefaultsByCatalogModelIdUseCase,
         {
           provide: PermittedModelsRepository,
@@ -68,8 +74,8 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
     userDefaultModelsRepository = module.get(UserDefaultModelsRepository);
 
     // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    logger.info.mockImplementation();
+    logger.debug.mockImplementation();
   });
 
   afterEach(() => {
@@ -215,7 +221,7 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
 
       permittedModelsRepository.findAllByCatalogModelId.mockResolvedValue([]);
 
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
+      const debugSpy = logger.debug;
 
       // Act
       await useCase.execute(command);
@@ -231,8 +237,8 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
         permittedModelsRepository.unsetDefaultsByCatalogModelId,
       ).not.toHaveBeenCalled();
       expect(debugSpy).toHaveBeenCalledWith(
-        'No permitted models found for catalog model',
         { catalogModelId: mockCatalogModelId },
+        'No permitted models found for catalog model',
       );
     });
 
@@ -308,30 +314,30 @@ describe('ClearDefaultsByCatalogModelIdUseCase', () => {
       userDefaultModelsRepository.deleteByPermittedModelIds.mockResolvedValue();
       permittedModelsRepository.unsetDefaultsByCatalogModelId.mockResolvedValue();
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
+      const logSpy = logger.info;
+      const debugSpy = logger.debug;
 
       // Act
       await useCase.execute(command);
 
       // Assert
       expect(logSpy).toHaveBeenCalledWith(
-        'Clearing defaults for archived catalog model',
         { catalogModelId: mockCatalogModelId },
+        'Clearing defaults for archived catalog model',
       );
       expect(debugSpy).toHaveBeenCalledWith(
-        'Found permitted models to clear defaults',
         {
           catalogModelId: mockCatalogModelId,
           permittedModelCount: 2,
         },
+        'Found permitted models to clear defaults',
       );
       expect(logSpy).toHaveBeenCalledWith(
-        'Successfully cleared all defaults for archived catalog model',
         {
           catalogModelId: mockCatalogModelId,
           affectedPermittedModels: 2,
         },
+        'Successfully cleared all defaults for archived catalog model',
       );
     });
   });

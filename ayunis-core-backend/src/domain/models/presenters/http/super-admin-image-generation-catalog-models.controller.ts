@@ -4,11 +4,11 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -45,11 +45,10 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   ImageGenerationModelResponseDto,
 )
 export class SuperAdminImageGenerationCatalogModelsController {
-  private readonly logger = new Logger(
-    SuperAdminImageGenerationCatalogModelsController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminImageGenerationCatalogModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly createImageGenerationModelUseCase: CreateImageGenerationModelUseCase,
     private readonly updateImageGenerationModelUseCase: UpdateImageGenerationModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -85,8 +84,9 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
-    this.logger.log(
-      `Creating image-generation model ${dto.name} by super admin ${userId}`,
+    this.logger.info(
+      { modelName: dto.name, userId },
+      'Creating image-generation model by super admin',
     );
     const command = new CreateImageGenerationModelCommand({
       name: dto.name,
@@ -137,10 +137,21 @@ export class SuperAdminImageGenerationCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateImageGenerationModelRequestDto,
   ): Promise<ImageGenerationModelResponseDto> {
-    this.logger.log(
-      `Updating image-generation model ${id} by super admin ${userId}`,
+    this.logger.info(
+      { modelId: id, userId },
+      'Updating image-generation model by super admin',
     );
-    const command = new UpdateImageGenerationModelCommand({
+    const model = await this.updateImageGenerationModelUseCase.execute(
+      this.toUpdateCommand(id, dto),
+    );
+    return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);
+  }
+
+  private toUpdateCommand(
+    id: UUID,
+    dto: UpdateImageGenerationModelRequestDto,
+  ): UpdateImageGenerationModelCommand {
+    return new UpdateImageGenerationModelCommand({
       id,
       name: dto.name,
       provider: dto.provider,
@@ -149,7 +160,5 @@ export class SuperAdminImageGenerationCatalogModelsController {
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
     });
-    const model = await this.updateImageGenerationModelUseCase.execute(command);
-    return this.catalogModelResponseDtoMapper.toImageGenerationModelDto(model);
   }
 }

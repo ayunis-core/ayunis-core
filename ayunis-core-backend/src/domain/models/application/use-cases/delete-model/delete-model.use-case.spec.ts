@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { ModelsRepository } from '../../ports/models.repository';
 import type { PermittedModelsRepository } from '../../ports/permitted-models.repository';
@@ -51,6 +52,7 @@ describe('DeleteModelUseCase', () => {
     };
     hasUsageForModelUseCase = { execute: jest.fn().mockResolvedValue(false) };
     useCase = new DeleteModelUseCase(
+      createPinoLoggerMock(),
       modelsRepository as unknown as ModelsRepository,
       permittedModelsRepository as unknown as PermittedModelsRepository,
       hasUsageForModelUseCase as unknown as HasUsageForModelUseCase,

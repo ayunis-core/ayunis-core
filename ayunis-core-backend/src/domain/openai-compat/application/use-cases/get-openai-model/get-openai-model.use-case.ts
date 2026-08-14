@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import {
   OpenAIModelNotFoundError,
@@ -11,17 +12,21 @@ import { GetOpenAIModelQuery } from './get-openai-model.query';
 
 @Injectable()
 export class GetOpenAIModelUseCase {
-  private readonly logger = new Logger(GetOpenAIModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetOpenAIModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly listOpenAIModelsUseCase: ListOpenAIModelsUseCase,
   ) {}
 
   async execute(query: GetOpenAIModelQuery): Promise<OpenAIModelObject> {
-    this.logger.log('Getting OpenAI-compatible model', {
-      orgId: query.orgId,
-      modelName: query.modelName,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+        modelName: query.modelName,
+      },
+      'Getting OpenAI-compatible model',
+    );
 
     try {
       const list = await this.listOpenAIModelsUseCase.execute(
@@ -34,9 +39,12 @@ export class GetOpenAIModelUseCase {
       return match;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting OpenAI-compatible model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error getting OpenAI-compatible model',
+      );
       throw new OpenAIUnexpectedError(error);
     }
   }

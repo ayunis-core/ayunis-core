@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { GetPermittedLanguageModelUseCase } from './get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from './get-permitted-language-model.query';
@@ -15,6 +16,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
 
 describe('GetPermittedLanguageModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: GetPermittedLanguageModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getEffectiveLanguageModelsUseCase: jest.Mocked<GetEffectiveLanguageModelsUseCase>;
@@ -49,6 +51,10 @@ describe('GetPermittedLanguageModelUseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetPermittedLanguageModelUseCase.name),
+          useValue: logger,
+        },
         GetPermittedLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -82,8 +88,8 @@ describe('GetPermittedLanguageModelUseCase', () => {
       GetEffectiveLanguageModelsUseCase,
     );
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

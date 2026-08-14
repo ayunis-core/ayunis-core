@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { bedrock } from '@ayunis/provider-anthropic/bedrock';
 import type { ModelProvider } from '@ayunis/inference';
@@ -13,10 +14,13 @@ import {
 @Injectable()
 export class BedrockStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
+    @InjectPinoLogger('RuntimeStreamInferenceHandler')
+    logger: PinoLogger,
+
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super(imageContentService);
+    super(logger, imageContentService);
   }
 
   protected createProvider(model: Model): ModelProvider {

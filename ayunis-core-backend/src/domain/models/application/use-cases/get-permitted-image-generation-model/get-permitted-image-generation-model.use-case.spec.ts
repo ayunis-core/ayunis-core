@@ -1,5 +1,6 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
@@ -24,6 +25,7 @@ import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/fi
 import { Team } from 'src/iam/teams/domain/team.entity';
 
 describe('GetPermittedImageGenerationModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   const orgId = randomUUID();
   const otherOrgId = randomUUID();
   const userId = randomUUID();
@@ -67,6 +69,14 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
 
     const module = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(ModelPolicyService.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
+          provide: getLoggerToken(GetPermittedImageGenerationModelUseCase.name),
+          useValue: logger,
+        },
         GetPermittedImageGenerationModelUseCase,
         ModelPolicyService,
         {
@@ -84,8 +94,8 @@ describe('GetPermittedImageGenerationModelUseCase', () => {
     useCase = module.get(GetPermittedImageGenerationModelUseCase);
     modelPolicy = module.get(ModelPolicyService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

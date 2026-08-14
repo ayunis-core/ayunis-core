@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetTeamDefaultModelUseCase } from './set-team-default-model.use-case';
@@ -75,6 +77,10 @@ describe('SetTeamDefaultModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(SetTeamDefaultModelUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         SetTeamDefaultModelUseCase,
         TeamPermittedModelValidator,
         {

@@ -1,6 +1,8 @@
 import type { Message as InferenceMessage } from '@ayunis/inference';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 import { toInferenceMessages } from '../../mappers/message.mapper';
@@ -15,17 +17,22 @@ import { MapMessagesToInferenceCommand } from './map-messages-to-inference.comma
  */
 @Injectable()
 export class MapMessagesToInferenceUseCase {
-  private readonly logger = new Logger(MapMessagesToInferenceUseCase.name);
-
-  constructor(private readonly imageContentService: ImageContentService) {}
+  constructor(
+    private readonly imageContentService: ImageContentService,
+    @InjectPinoLogger(MapMessagesToInferenceUseCase.name)
+    private readonly logger: PinoLogger = createMapMessagesLogger(),
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     command: MapMessagesToInferenceCommand,
   ): Promise<InferenceMessage[]> {
-    this.logger.log('Mapping thread messages to inference', {
-      count: command.messages.length,
-    });
+    this.logger.info(
+      {
+        count: command.messages.length,
+      },
+      'Mapping thread messages to inference',
+    );
     const messages = stripReplayedToolNulls(command.messages, command.tools);
     return toInferenceMessages(
       messages,
@@ -33,4 +40,10 @@ export class MapMessagesToInferenceUseCase {
       this.imageContentService,
     );
   }
+}
+
+function createMapMessagesLogger(): PinoLogger {
+  const logger = new PinoLogger(createPinoLoggerConfig());
+  logger.setContext(MapMessagesToInferenceUseCase.name);
+  return logger;
 }

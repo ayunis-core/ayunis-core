@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Logger, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Put } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
@@ -38,9 +39,10 @@ import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 @ApiTags('models')
 @Controller('models')
 export class ModelsDefaultsController {
-  private readonly logger = new Logger(ModelsDefaultsController.name);
-
   constructor(
+    @InjectPinoLogger(ModelsDefaultsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly setUserDefaultLanguageModelUseCase: SetUserDefaultLanguageModelUseCase,
     private readonly deleteUserDefaultModelUseCase: DeleteUserDefaultModelUseCase,
@@ -80,11 +82,14 @@ export class ModelsDefaultsController {
       if (error instanceof ModelNotFoundError) {
         return { permittedLanguageModel: undefined };
       }
-      this.logger.error('Failed to get effective default model', {
-        orgId,
-        userId,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      this.logger.error(
+        {
+          orgId,
+          userId,
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Failed to get effective default model',
+      );
       throw error;
     }
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import { UpdateTeamPermittedModelCommand } from './update-team-permitted-model.command';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
@@ -12,9 +13,10 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 
 @Injectable()
 export class UpdateTeamPermittedModelUseCase {
-  private readonly logger = new Logger(UpdateTeamPermittedModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateTeamPermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
   ) {}
@@ -22,12 +24,15 @@ export class UpdateTeamPermittedModelUseCase {
   async execute(
     command: UpdateTeamPermittedModelCommand,
   ): Promise<PermittedLanguageModel> {
-    this.logger.log('execute', {
-      permittedModelId: command.permittedModelId,
-      orgId: command.orgId,
-      teamId: command.teamId,
-      anonymousOnly: command.anonymousOnly,
-    });
+    this.logger.info(
+      {
+        permittedModelId: command.permittedModelId,
+        orgId: command.orgId,
+        teamId: command.teamId,
+        anonymousOnly: command.anonymousOnly,
+      },
+      'execute',
+    );
 
     try {
       this.validator.validateAdminAccess(command.orgId);
@@ -61,7 +66,7 @@ export class UpdateTeamPermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error updating team permitted model', error);
+      this.logger.error({ err: error }, 'Error updating team permitted model');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );

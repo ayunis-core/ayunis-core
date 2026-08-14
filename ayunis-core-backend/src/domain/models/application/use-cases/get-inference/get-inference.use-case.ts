@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetInferenceCommand } from './get-inference.command';
 import { InferenceHandlerRegistry } from '../../registry/inference-handler.registry';
 import {
@@ -18,21 +19,25 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 
 @Injectable()
 export class GetInferenceUseCase {
-  private readonly logger = new Logger(GetInferenceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetInferenceUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly inferenceHandlerRegistry: InferenceHandlerRegistry,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: GetInferenceCommand): Promise<InferenceResponse> {
-    this.logger.log('triggerInference', {
-      model: command.model.name,
-      messageCount: command.messages.length,
-      toolCount: command.tools.length,
-      toolChoice: command.toolChoice,
-      hasInstructions: Boolean(command.instructions),
-    });
+    this.logger.info(
+      {
+        model: command.model.name,
+        messageCount: command.messages.length,
+        toolCount: command.tools.length,
+        toolChoice: command.toolChoice,
+        hasInstructions: Boolean(command.instructions),
+      },
+      'triggerInference',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -93,22 +98,28 @@ export class GetInferenceUseCase {
       modelId: command.model.name,
     });
     if (providerError) {
-      this.logger.error('Provider unavailable during inference', {
-        code: providerError.code,
-        ...providerError.context,
-      });
+      this.logger.error(
+        {
+          code: providerError.code,
+          ...providerError.context,
+        },
+        'Provider unavailable during inference',
+      );
       throw providerError;
     }
     const status = extractUpstreamStatus(error);
-    this.logger.error('Provider inference failed', {
-      model: command.model.name,
-      provider: command.model.provider,
-      messageCount: command.messages.length,
-      toolCount: command.tools.length,
-      toolChoice: command.toolChoice,
-      errorName: error instanceof Error ? error.name : 'Unknown',
-      status,
-    });
+    this.logger.error(
+      {
+        model: command.model.name,
+        provider: command.model.provider,
+        messageCount: command.messages.length,
+        toolCount: command.tools.length,
+        toolChoice: command.toolChoice,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        status,
+      },
+      'Provider inference failed',
+    );
     throw new InferenceFailedError('Provider inference failed', { status });
   }
 }

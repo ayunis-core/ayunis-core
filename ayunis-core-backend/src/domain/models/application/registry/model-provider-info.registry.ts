@@ -2,7 +2,8 @@ import { ModelProviderInfoEntity } from '../../domain/model-provider-info.entity
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelProviderLocation } from '../../domain/value-objects/model-provider-locations.enum';
 import { ModelProviderInfoNotFoundError } from '../models.errors';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 /**
  * Extended provider configuration that includes the config key for API key lookup.
@@ -88,7 +89,10 @@ const MODEL_PROVIDER_CONFIGS: ModelProviderConfig[] = [
 
 @Injectable()
 export class ModelProviderInfoRegistry {
-  private readonly logger = new Logger(ModelProviderInfoRegistry.name);
+  constructor(
+    @InjectPinoLogger(ModelProviderInfoRegistry.name)
+    private readonly logger: PinoLogger,
+  ) {}
   private readonly modelProviderConfigs: ModelProviderConfig[] =
     MODEL_PROVIDER_CONFIGS;
 
@@ -100,7 +104,8 @@ export class ModelProviderInfoRegistry {
     );
     if (!modelProviderConfig) {
       this.logger.error(
-        `Model provider info not found for provider: ${provider}`,
+        { provider },
+        'Model provider info not found for provider',
       );
       throw new ModelProviderInfoNotFoundError(provider);
     }

@@ -5,11 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiExtraModels,
@@ -66,9 +66,10 @@ import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-re
 @ApiTags('models')
 @Controller('models')
 export class ModelsController {
-  private readonly logger = new Logger(ModelsController.name);
-
   constructor(
+    @InjectPinoLogger(ModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly createPermittedModelUseCase: CreatePermittedModelUseCase,
     private readonly getConfiguredModelsByTypeUseCase: GetConfiguredModelsByTypeUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
@@ -102,7 +103,7 @@ export class ModelsController {
   async getAvailableLanguageModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.log('getAvailableLanguageModels');
+    this.logger.info('getAvailableLanguageModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.LANGUAGE),
     );
@@ -133,7 +134,7 @@ export class ModelsController {
   async getAvailableEmbeddingModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.log('getAvailableEmbeddingModels');
+    this.logger.info('getAvailableEmbeddingModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.EMBEDDING),
     );
@@ -163,7 +164,7 @@ export class ModelsController {
   async getAvailableImageGenerationModels(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ModelWithConfigResponseDto[]> {
-    this.logger.log('getAvailableImageGenerationModels');
+    this.logger.info('getAvailableImageGenerationModels');
     const availableModels = await this.getConfiguredModelsByTypeUseCase.execute(
       new GetConfiguredModelsByTypeQuery(orgId, ModelType.IMAGE_GENERATION),
     );
@@ -187,7 +188,7 @@ export class ModelsController {
   })
   @ApiExtraModels(ModelProviderInfoResponseDto)
   getProviders(): ModelProviderInfoResponseDto[] {
-    this.logger.log('getProviders');
+    this.logger.info('getProviders');
     return this.modelProviderInfoRegistry
       .getAllProviderInfos()
       .map((info) => this.modelProviderInfoResponseDtoMapper.toDto(info));
@@ -368,7 +369,7 @@ export class ModelsController {
   getModelProviderInfo(
     @Param('provider') provider: ModelProvider,
   ): ModelProviderInfoResponseDto {
-    this.logger.log('getModelProviderInfo', { provider });
+    this.logger.info({ provider }, 'getModelProviderInfo');
     const query = new GetModelProviderInfoQuery(provider);
     const entity = this.getModelProviderInfoUseCase.execute(query);
     return this.modelProviderInfoResponseDtoMapper.toDto(entity);
