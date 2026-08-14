@@ -1,34 +1,38 @@
-import { useAuthenticationControllerLogout } from '@/shared/api/generated/ayunisCoreAPI';
+import { useSsoLoginControllerLogout } from '@/shared/api/generated/ayunisCoreAPI';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearAppsignalTags } from '@/shared/lib/appsignal';
+import { navigateToExternalUrl } from '@/features/sso';
+import { showError } from '@/shared/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 export function useLogout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
+  const logoutMutation = useSsoLoginControllerLogout();
 
-  const logoutMutation = useAuthenticationControllerLogout({
-    mutation: {
-      onSuccess: () => {
-        // Clear all queries to ensure user data is removed from cache
-        queryClient.clear();
-        clearAppsignalTags();
-        // Redirect to login page
-        void navigate({ to: '/login' });
-      },
-      onError: (error) => {
-        console.error('Logout failed:', error);
-        // Even if logout fails on the server, we should still redirect to login
-        // as the user intended to log out
-        queryClient.clear();
-        clearAppsignalTags();
-        void navigate({ to: '/login' });
-      },
-    },
-  });
+  function clearLocalState(): void {
+    queryClient.clear();
+    clearAppsignalTags();
+  }
 
   const logout = () => {
-    logoutMutation.mutate();
+    logoutMutation.mutate(undefined, {
+      onSuccess: ({ brokerLogoutUrl }) => {
+        clearLocalState();
+        if (brokerLogoutUrl) {
+          navigateToExternalUrl(brokerLogoutUrl);
+          return;
+        }
+        void navigate({ to: '/login' });
+      },
+      onError: () => {
+        clearLocalState();
+        showError(t('sidebar.logout.error'));
+        void navigate({ to: '/login' });
+      },
+    });
   };
 
   return {

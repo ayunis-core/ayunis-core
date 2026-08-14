@@ -19,7 +19,7 @@ export function buildSsoStartUrl(
 
 export function beginSso(orgId: string, postLoginPath?: string): void {
   rememberSsoPostLoginPath(postLoginPath);
-  window.location.assign(
+  navigateToExternalUrl(
     resolveSsoStartUrl(config.api.baseUrl, orgId, window.location.origin),
   );
 }
@@ -67,4 +67,8 @@ function normalizeInternalPath(path?: string): string | null {
   const url = new URL(path, window.location.origin);
   if (url.origin !== window.location.origin) return null;
   return `${url.pathname}${url.search}${url.hash}`;
+}
+
+export function navigateToExternalUrl(url: string): void {
+  window.location.assign(url);
 }

@@ -1,5 +1,5 @@
-import { SettingsLayout } from '../../settings-layout';
-import { ProfileInformationCard } from './ProfileInformationCard';
+import { SettingsLayout } from '@/pages/settings/settings-layout';
+import { ProfileInformationCard } from '@/pages/settings/account-settings/ui/ProfileInformationCard';
 import {
   Card,
   CardContent,
@@ -9,14 +9,19 @@ import {
 import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import PasswordSettingsPage from './PasswordSettingsPage';
-import { TwoFactorCard } from './TwoFactorCard';
-import { AcademyCertificateCard } from './AcademyCertificateCard';
+import PasswordSettingsPage from '@/pages/settings/account-settings/ui/PasswordSettingsPage';
+import { TwoFactorCard } from '@/pages/settings/account-settings/ui/TwoFactorCard';
+import { AcademyCertificateCard } from '@/pages/settings/account-settings/ui/AcademyCertificateCard';
+import { SsoAccountCard } from '@/pages/settings/account-settings/ui/SsoAccountCard';
 
 export default function AccountSettingsPage({
   user,
+  ssoAvailable,
+  ssoLinked,
 }: Readonly<{
   user: { name: string; email: string };
+  ssoAvailable: boolean;
+  ssoLinked: boolean;
 }>) {
   const { t } = useTranslation('settings');
 
@@ -27,6 +32,7 @@ export default function AccountSettingsPage({
     >
       <div className="space-y-4">
         <ProfileInformationCard user={user} />
+        {ssoAvailable && <SsoAccountCard linked={ssoLinked} />}
         <PasswordSettingsPage />
         <TwoFactorCard />
         <AcademyCertificateCard />
