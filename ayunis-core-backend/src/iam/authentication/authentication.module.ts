@@ -35,6 +35,8 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { ClsModule } from 'nestjs-cls';
 import { UserContextInterceptor } from './application/interceptors/user-context.interceptor';
 import { MfaLoginController } from './presenters/http/mfa-login.controller';
+import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
+import { MfaPendingJwtService } from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
 
 export interface AuthenticationConfig {
   provider?: AuthProvider;
@@ -98,6 +100,8 @@ const AUTHENTICATION_PROVIDERS: Provider[] = [
   RefreshTokenUseCase,
   RegisterUserUseCase,
   GetCurrentUserUseCase,
+  StartAuthenticatedSessionUseCase,
+  MfaPendingJwtService,
   // Strategies and Guards
   LocalStrategy,
   JwtStrategy,
@@ -117,6 +121,7 @@ const AUTHENTICATION_EXPORTS = [
   RefreshTokenUseCase,
   RegisterUserUseCase,
   GetCurrentUserUseCase,
+  StartAuthenticatedSessionUseCase,
   JwtAuthGuard,
 ];
 

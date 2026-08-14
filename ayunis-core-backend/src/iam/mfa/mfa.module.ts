@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HashingModule } from '../hashing/hashing.module';
 import { UsersModule } from '../users/users.module';
-import { JwtConfigModule } from '../authentication/jwt.module';
-import { MfaPendingJwtService } from './application/services/mfa-pending-jwt.service';
 import { UserTotpRecord } from './infrastructure/repositories/local/schema/user-totp.record';
 import { MfaRecoveryCodeRecord } from './infrastructure/repositories/local/schema/mfa-recovery-code.record';
 import { OrgMfaRequirementRecord } from './infrastructure/repositories/local/schema/org-mfa-requirement.record';
@@ -37,7 +35,6 @@ import { MfaController } from './presenters/http/mfa.controller';
     ]),
     HashingModule,
     UsersModule,
-    JwtConfigModule,
   ],
   controllers: [MfaController],
   providers: [
@@ -70,14 +67,12 @@ import { MfaController } from './presenters/http/mfa.controller';
     UpsertOrgMfaRequirementUseCase,
     ResetUserMfaUseCase,
     CheckMfaLoginRequirementUseCase,
-    MfaPendingJwtService,
   ],
   exports: [
     SetupTotpUseCase,
     ConfirmTotpUseCase,
     VerifyMfaCodeUseCase,
     CheckMfaLoginRequirementUseCase,
-    MfaPendingJwtService,
   ],
 })
 export class MfaModule {}

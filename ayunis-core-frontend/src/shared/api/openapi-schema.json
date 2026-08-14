@@ -10795,7 +10795,7 @@
     },
     "/auth/mfa/verify": {
       "post": {
-        "description": "Requires the MFA pending cookie set by a successful password login.",
+        "description": "Requires the MFA pending cookie set by successful authentication.",
         "operationId": "MfaLoginController_verify",
         "parameters": [],
         "requestBody": {

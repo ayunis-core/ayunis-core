@@ -22264,7 +22264,7 @@ export const useAuthenticationControllerLogout = <TError = unknown,
     }
     
 /**
- * Requires the MFA pending cookie set by a successful password login.
+ * Requires the MFA pending cookie set by successful authentication.
  * @summary Complete login with a TOTP or recovery code
  */
 export const mfaLoginControllerVerify = (

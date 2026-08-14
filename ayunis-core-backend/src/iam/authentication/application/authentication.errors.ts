@@ -12,6 +12,7 @@ export enum AuthenticationErrorCode {
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   UNEXPECTED_ERROR = 'UNEXPECTED_ERROR',
   REGISTRATION_DISABLED = 'REGISTRATION_DISABLED',
+  PENDING_LOGIN_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
 }
 
 /**
@@ -116,6 +117,21 @@ export class RegistrationDisabledError extends AuthenticationError {
     super(
       'Registration is disabled',
       AuthenticationErrorCode.REGISTRATION_DISABLED,
+      403,
+      metadata,
+    );
+  }
+}
+
+/**
+ * 403 avoids the refresh interceptor, which must not handle an incomplete
+ * authentication flow as an expired access session.
+ */
+export class InvalidMfaPendingTokenError extends AuthenticationError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The login attempt has expired. Please sign in again.',
+      AuthenticationErrorCode.PENDING_LOGIN_TOKEN_INVALID,
       403,
       metadata,
     );
