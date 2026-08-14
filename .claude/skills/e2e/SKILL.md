@@ -46,6 +46,11 @@ capture key routes at desktop + mobile into `screenshots-output/`. CI runs
 this automatically for frontend-touching PRs and posts a sticky comment with
 the images (`scripts/publish-pr-screenshots.sh`) — when a feature adds an
 important new page, add its route to `tests/screenshots/routes.shots.ts`.
+Keep screenshot selection review-focused: update `tests/screenshots/select-routes.mjs`
+so a PR only captures routes affected by the changed files, not every seeded
+baseline page. Screenshot fixtures must be robust in CI's mock-provider setup;
+for example, do not require document uploads unless the fixture also handles
+orgs with no available embedding model.
 
 ## Fixtures — import from `src/fixtures/test`, never `@playwright/test`
 

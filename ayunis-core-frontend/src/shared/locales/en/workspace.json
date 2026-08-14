@@ -2,6 +2,9 @@
   "page": {
     "breadcrumb": "Projects",
     "chatsTab": "Your chats",
+    "knowledgeTab": "Knowledge",
+    "skillsTab": "Skills",
+    "instructionsTab": "Instructions",
     "emptyChats": "No chats yet. Chats you add to this project will appear here.",
     "pin": "Pin",
     "unpin": "Unpin",
@@ -13,5 +16,90 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "remove": "Remove from project"
+  },
+  "contextDock": {
+    "close": "Close context",
+    "skills": {
+      "title": "Skills",
+      "toggle": "Show project skills",
+      "description": "Always active in this project — you do not need to select them in chat.",
+      "empty": "No project skills attached"
+    },
+    "knowledge": {
+      "title": "Knowledge",
+      "toggle": "Show project knowledge",
+      "knowledgeBases": "Knowledge bases",
+      "documents": "Files",
+      "empty": "No project knowledge attached"
+    },
+    "instructions": {
+      "title": "Instructions",
+      "toggle": "Show project instructions",
+      "empty": "No project instructions saved"
+    }
+  },
+  "context": {
+    "loadError": {
+      "title": "Project context could not be loaded",
+      "description": "Reload the page before editing project knowledge, skills, or instructions."
+    },
+    "addDialog": {
+      "emptyTitle": "Nothing left to add",
+      "empty": "There are no more items to add.",
+      "loading": "Loading items…",
+      "cancel": "Cancel",
+      "confirm": "Add"
+    },
+    "skills": {
+      "title": "Project skills",
+      "description": "Skills that are always active in every chat in this project.",
+      "add": "Add skills",
+      "addDescription": "Select skills that should always be active in this project.",
+      "emptyTitle": "No skills attached",
+      "empty": "No skills in this project yet.",
+      "detach": "Remove skill",
+      "attachSuccess": "Skill was added to the project.",
+      "attachError": "Skill could not be added.",
+      "detachSuccess": "Skill was removed from the project.",
+      "detachError": "Skill could not be removed."
+    },
+    "knowledge": {
+      "title": "Knowledge bases",
+      "description": "Shared knowledge bases available to all chats in this project.",
+      "add": "Add knowledge bases",
+      "addDescription": "Select knowledge bases that should be available in this project.",
+      "emptyTitle": "No knowledge bases attached",
+      "empty": "No knowledge bases attached yet.",
+      "detach": "Remove knowledge base",
+      "documentCount": "{{count}} documents",
+      "attachSuccess": "Knowledge base was added to the project.",
+      "attachError": "Knowledge base could not be added.",
+      "detachSuccess": "Knowledge base was removed from the project.",
+      "detachError": "Knowledge base could not be removed."
+    },
+    "documents": {
+      "title": "Project files",
+      "description": "Files uploaded directly to this project and available in project chats.",
+      "upload": "Upload file",
+      "emptyTitle": "No project files uploaded",
+      "empty": "No files in this project yet.",
+      "remove": "Remove file",
+      "status": {
+        "processing": "Processing",
+        "failed": "Failed"
+      },
+      "uploadSuccess": "File was uploaded and is being processed.",
+      "uploadError": "File could not be uploaded.",
+      "removeSuccess": "File was removed.",
+      "removeError": "File could not be removed."
+    },
+    "instructions": {
+      "title": "Project instructions",
+      "description": "Instructions that are added to every chat in this project.",
+      "placeholder": "Enter instructions that apply to every chat in this project.",
+      "save": "Save",
+      "saveSuccess": "Instructions were saved.",
+      "saveError": "Instructions could not be saved."
+    }
   }
 }
