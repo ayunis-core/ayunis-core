@@ -3,6 +3,7 @@ import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
+import { reportProviderUnavailableMetric } from 'src/common/errors/report-provider-unavailable-metric.helper';
 
 /**
  * Standard retry/retention options shared by the source processing queues:
@@ -142,6 +143,7 @@ export function classifyJobFailure(
   }
   // AppSignal needs an Error to report; a bare throwable would be dropped.
   const rethrow = error instanceof Error ? error : new Error(String(error));
+  reportProviderUnavailableMetric(rethrow);
   // Settling before the last attempt only sticks when BullMQ also stops
   // scheduling — rename so the remaining attempts never run.
   if (!isFinalAttempt(job) && rethrow.name !== 'UnrecoverableError') {

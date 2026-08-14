@@ -1,3 +1,4 @@
+import { Appsignal } from '@appsignal/nodejs';
 import type { Job } from 'bullmq';
 import {
   isFinalAttempt,
@@ -10,6 +11,19 @@ import {
   ProviderRequestRejectedError,
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
+
+const mockIncrementCounter = jest.fn();
+
+jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: {
+    client: {
+      metrics: jest.fn(() => ({ incrementCounter: mockIncrementCounter })),
+    },
+  },
+}));
+
+const incrementCounter = Appsignal.client.metrics()
+  .incrementCounter as jest.Mock;
 
 function jobWith(attemptsMade: number, attempts?: number): Job {
   return { attemptsMade, opts: { attempts } } as Job;
@@ -59,6 +73,8 @@ describe('isExpectedFailure', () => {
 });
 
 describe('classifyJobFailure', () => {
+  beforeEach(() => jest.clearAllMocks());
+
   const providerError = new Error(
     'API error occurred: Status 400 - File could not be fetched from url',
   );
@@ -208,13 +224,28 @@ describe('classifyJobFailure', () => {
       expect(rethrow).toBe(rejection);
     });
 
-    it('still retries provider timeouts, which may succeed later', () => {
+    it('does not increment when a worker retry remains and the operation can recover', () => {
       const timeout = new ProviderTimeoutError({ provider: 'mistral' });
 
       const { final, rethrow } = classifyJobFailure(jobWith(0, 3), timeout);
 
       expect(final).toBe(false);
       expect(rethrow).toBeInstanceOf(JobRetryScheduledError);
+      expect(incrementCounter).not.toHaveBeenCalled();
+    });
+
+    it('increments once with only the provider tag after worker retries are exhausted', () => {
+      const timeout = new ProviderTimeoutError({ provider: 'mistral' });
+
+      classifyJobFailure(jobWith(0, 3), timeout);
+      classifyJobFailure(jobWith(2, 3), timeout);
+
+      expect(incrementCounter).toHaveBeenCalledTimes(1);
+      expect(incrementCounter).toHaveBeenCalledWith(
+        'provider_unavailable_count',
+        1,
+        { provider: 'mistral' },
+      );
     });
 
     // 429 says nothing about the input (Mistral maps persistent rate limits
