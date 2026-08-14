@@ -1,12 +1,22 @@
-import { setError } from '@appsignal/nodejs';
+import { Appsignal, setError } from '@appsignal/nodejs';
 import { BadRequestException, BadGatewayException } from '@nestjs/common';
 import { ApplicationError } from './base.error';
 import { ProviderTimeoutError } from './provider.errors';
 import { reportUnexpectedError } from './report-unexpected-error.helper';
 
+const mockIncrementCounter = jest.fn();
+
 jest.mock('@appsignal/nodejs', () => ({
+  Appsignal: {
+    client: {
+      metrics: jest.fn(() => ({ incrementCounter: mockIncrementCounter })),
+    },
+  },
   setError: jest.fn(),
 }));
+
+const incrementCounter = Appsignal.client.metrics()
+  .incrementCounter as jest.Mock;
 
 class TestApplicationError extends ApplicationError {
   constructor(statusCode: number) {
@@ -70,6 +80,37 @@ describe('reportUnexpectedError', () => {
 
     reportUnexpectedError(wrapper);
 
+    expect(setError).toHaveBeenCalledWith(providerFailure);
+  });
+
+  it('increments the provider counter with only the provider tag on web reporting paths', () => {
+    reportUnexpectedError(new ProviderTimeoutError({ provider: 'bedrock' }));
+
+    expect(incrementCounter).toHaveBeenCalledWith(
+      'provider_unavailable_count',
+      1,
+      { provider: 'bedrock' },
+    );
+  });
+
+  it('does not double count the same provider failure through reporting wrappers', () => {
+    const providerFailure = new ProviderTimeoutError({ provider: 'azure' });
+    const wrapper = new TestApplicationError(503);
+    wrapper.cause = providerFailure;
+
+    reportUnexpectedError(providerFailure);
+    reportUnexpectedError(wrapper);
+
+    expect(incrementCounter).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reports the incident when custom metric reporting fails', () => {
+    const providerFailure = new ProviderTimeoutError({ provider: 'openai' });
+    incrementCounter.mockImplementationOnce(() => {
+      throw new Error('metrics unavailable');
+    });
+
+    expect(() => reportUnexpectedError(providerFailure)).not.toThrow();
     expect(setError).toHaveBeenCalledWith(providerFailure);
   });
 
