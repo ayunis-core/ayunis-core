@@ -14,6 +14,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import {
   ApiFoundResponse,
+  ApiConsumes,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -23,7 +24,11 @@ import type { UUID } from 'crypto';
 import type { CookieOptions, Request, Response } from 'express';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { Public } from 'src/common/guards/public.guard';
-import { setCookies, setMfaPendingCookie } from 'src/common/util/cookie.util';
+import {
+  clearCookies,
+  setCookies,
+  setMfaPendingCookie,
+} from 'src/common/util/cookie.util';
 import {
   CurrentUser,
   UserProperty,
@@ -39,6 +44,12 @@ import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/st
 import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { DiscoverSsoDto } from 'src/iam/sso/presenters/http/dto/discover-sso.request-dto';
 import { SsoAuthorizationResponseDto } from 'src/iam/sso/presenters/http/dto/sso-authorization.response-dto';
+import { CompleteSsoLogoutCommand } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.command';
+import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
+import { HandleSsoBackchannelLogoutCommand } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.command';
+import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
+import { SsoBackchannelLogoutRequestDto } from 'src/iam/sso/presenters/http/dto/sso-backchannel-logout.request-dto';
+import { SsoLogoutResponseDto } from 'src/iam/sso/presenters/http/dto/sso-logout.response-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
 
 const SSO_LOGIN_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
@@ -51,6 +62,8 @@ export class SsoLoginController {
     private readonly startOrgSsoLogin: StartOrgSsoLoginUseCase,
     private readonly completeSsoAuthentication: CompleteSsoAuthenticationUseCase,
     private readonly startSsoAccountLink: StartSsoAccountLinkUseCase,
+    private readonly completeSsoLogout: CompleteSsoLogoutUseCase,
+    private readonly handleSsoBackchannelLogout: HandleSsoBackchannelLogoutUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -131,6 +144,44 @@ export class SsoLoginController {
       this.setSessionCookies(response, result.session);
     }
     response.clearCookie(cookieName, this.correlationCookieOptions());
+  }
+
+  @Public()
+  @Post('session/logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Revoke the Core session and prepare broker logout',
+  })
+  @ApiOkResponse({ type: SsoLogoutResponseDto })
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SsoLogoutResponseDto> {
+    const refreshTokenName = this.configService.get<string>(
+      'auth.cookie.refreshTokenName',
+      'refresh_token',
+    );
+    const refreshToken = this.cookieValue(request, refreshTokenName);
+    const result = await this.completeSsoLogout.execute(
+      new CompleteSsoLogoutCommand(refreshToken),
+    );
+    clearCookies(response, this.configService);
+    return { success: true, ...result };
+  }
+
+  @Public()
+  @RateLimit({ limit: 3000, windowMs: 15 * 60 * 1000 })
+  @Post('oidc/backchannel-logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('application/x-www-form-urlencoded')
+  @ApiOperation({ summary: 'Process a signed broker back-channel logout' })
+  @ApiOkResponse({ description: 'Matching Core SSO sessions revoked' })
+  async backchannelLogout(
+    @Body() body: SsoBackchannelLogoutRequestDto,
+  ): Promise<void> {
+    await this.handleSsoBackchannelLogout.execute(
+      new HandleSsoBackchannelLogoutCommand(body.logout_token),
+    );
   }
 
   private setSessionCookies(

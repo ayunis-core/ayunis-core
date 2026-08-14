@@ -6,6 +6,7 @@ import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refr
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import { RefreshTokenRecord } from './schema/refresh-token.record';
 import { RefreshTokenMapper } from './mappers/refresh-token.mapper';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 /** Internal control flow: aborts the rotation transaction to roll it back. */
 class RotationLostError extends Error {}
@@ -89,6 +90,32 @@ export class LocalRefreshTokensRepository extends RefreshTokensRepository {
       .update(RefreshTokenRecord)
       .set({ revokedAt: () => 'NOW()' })
       .where('userId = :userId', { userId })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokeByZitadelSessionId(zitadelSessionId: string): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where('zitadelSessionId = :zitadelSessionId', { zitadelSessionId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.SSO,
+      })
+      .andWhere('revokedAt IS NULL')
+      .execute();
+  }
+
+  async revokeSsoForUser(userId: UUID): Promise<void> {
+    await this.repository
+      .createQueryBuilder()
+      .update(RefreshTokenRecord)
+      .set({ revokedAt: () => 'NOW()' })
+      .where('userId = :userId', { userId })
+      .andWhere('authenticationMethod = :authenticationMethod', {
+        authenticationMethod: SessionAuthenticationMethod.SSO,
+      })
       .andWhere('revokedAt IS NULL')
       .execute();
   }
