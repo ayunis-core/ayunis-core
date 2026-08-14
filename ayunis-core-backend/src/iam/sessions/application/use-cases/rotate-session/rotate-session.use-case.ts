@@ -3,16 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { sha256Hex } from 'src/common/util/sha256.util';
-import { RotateSessionCommand } from './rotate-session.command';
-import { RefreshTokensRepository } from '../../ports/refresh-tokens.repository';
-import { RefreshTokenFactory } from '../../services/refresh-token.factory';
+import { RotateSessionCommand } from 'src/iam/sessions/application/use-cases/rotate-session/rotate-session.command';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
+import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
 import { RefreshToken } from 'src/iam/sessions/domain/refresh-token.entity';
 import {
   RefreshTokenExpiredError,
   RefreshTokenNotFoundError,
   RefreshTokenReuseError,
   UnexpectedSessionsError,
-} from '../../sessions.errors';
+} from 'src/iam/sessions/application/sessions.errors';
 
 export interface RotateSessionResult {
   userId: UUID;
@@ -59,6 +59,7 @@ export class RotateSessionUseCase {
       userId: current.userId,
       familyId: current.familyId,
       authenticationMethod: current.authenticationMethod,
+      zitadelSessionId: current.zitadelSessionId,
     });
 
     const won = await this.refreshTokensRepository.markUsedAndInsertSuccessor(

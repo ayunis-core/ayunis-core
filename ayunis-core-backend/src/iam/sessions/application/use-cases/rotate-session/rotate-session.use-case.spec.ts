@@ -67,9 +67,10 @@ describe('RotateSessionUseCase', () => {
     expect(repository.revokeFamily).not.toHaveBeenCalled();
   });
 
-  it('preserves the family authentication method during rotation', async () => {
+  it('preserves SSO provenance during rotation', async () => {
     const current = aRefreshToken({
       authenticationMethod: SessionAuthenticationMethod.SSO,
+      zitadelSessionId: 'zitadel-session-id',
     });
     repository.findByTokenHash.mockResolvedValue(current);
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
@@ -80,6 +81,7 @@ describe('RotateSessionUseCase', () => {
       userId: current.userId,
       familyId: current.familyId,
       authenticationMethod: SessionAuthenticationMethod.SSO,
+      zitadelSessionId: 'zitadel-session-id',
     });
   });
 
