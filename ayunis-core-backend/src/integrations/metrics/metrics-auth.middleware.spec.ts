@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { MetricsAuthMiddleware } from './metrics-auth.middleware';
 import type { ConfigService } from '@nestjs/config';
 import type { Request, Response, NextFunction } from 'express';
@@ -25,6 +26,7 @@ function basicAuth(user: string, password: string): string {
 }
 
 describe('MetricsAuthMiddleware', () => {
+  const logger = createPinoLoggerMock();
   let next: NextFunction;
   let res: Response;
 
@@ -36,6 +38,7 @@ describe('MetricsAuthMiddleware', () => {
   describe('when credentials are not configured', () => {
     it('should pass through without authentication', () => {
       const middleware = new MetricsAuthMiddleware(
+        logger,
         createConfigService(undefined, undefined),
       );
 
@@ -49,6 +52,7 @@ describe('MetricsAuthMiddleware', () => {
   describe('when only user is configured', () => {
     it('should reject all requests with 401', () => {
       const middleware = new MetricsAuthMiddleware(
+        logger,
         createConfigService('admin', undefined),
       );
 
@@ -66,6 +70,7 @@ describe('MetricsAuthMiddleware', () => {
   describe('when only password is configured', () => {
     it('should reject all requests with 401', () => {
       const middleware = new MetricsAuthMiddleware(
+        logger,
         createConfigService(undefined, 'secret'),
       );
 
@@ -85,6 +90,7 @@ describe('MetricsAuthMiddleware', () => {
 
     beforeEach(() => {
       middleware = new MetricsAuthMiddleware(
+        logger,
         createConfigService('prometheus', 's3cret!'),
       );
     });
@@ -146,6 +152,7 @@ describe('MetricsAuthMiddleware', () => {
 
     it('should handle passwords containing colons', () => {
       const mw = new MetricsAuthMiddleware(
+        logger,
         createConfigService('prometheus', 'pass:with:colons'),
       );
 

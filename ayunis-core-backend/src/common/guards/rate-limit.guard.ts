@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -21,11 +17,12 @@ interface RateLimitRecord {
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
-  private readonly logger = new Logger(RateLimitGuard.name);
   private readonly store = new Map<string, RateLimitRecord>();
   private cleanupCounter = 0;
 
   constructor(
+    @InjectPinoLogger(RateLimitGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly configService: ConfigService,
   ) {}
@@ -82,13 +79,16 @@ export class RateLimitGuard implements CanActivate {
       };
       this.store.set(key, record);
 
-      this.logger.debug('Rate limit: new window started', {
-        clientIp,
-        key,
-        count: record.count,
-        limit: rateLimitOptions.limit,
-        resetTime: new Date(record.resetTime).toISOString(),
-      });
+      this.logger.debug(
+        {
+          clientIp,
+          key,
+          count: record.count,
+          limit: rateLimitOptions.limit,
+          resetTime: new Date(record.resetTime).toISOString(),
+        },
+        'Rate limit: new window started',
+      );
 
       return true;
     }
@@ -100,13 +100,16 @@ export class RateLimitGuard implements CanActivate {
       this.throwLimitExceeded(key, clientIp, rateLimitOptions, record, now);
     }
 
-    this.logger.debug('Rate limit: request allowed', {
-      clientIp,
-      key,
-      count: record.count,
-      limit: rateLimitOptions.limit,
-      remaining: rateLimitOptions.limit - record.count,
-    });
+    this.logger.debug(
+      {
+        clientIp,
+        key,
+        count: record.count,
+        limit: rateLimitOptions.limit,
+        remaining: rateLimitOptions.limit - record.count,
+      },
+      'Rate limit: request allowed',
+    );
 
     return true;
   }
@@ -120,13 +123,16 @@ export class RateLimitGuard implements CanActivate {
   ): never {
     const timeToReset = record.resetTime - now;
 
-    this.logger.warn('Rate limit exceeded', {
-      clientIp,
-      key,
-      count: record.count,
-      limit: rateLimitOptions.limit,
-      timeToResetMs: timeToReset,
-    });
+    this.logger.warn(
+      {
+        clientIp,
+        key,
+        count: record.count,
+        limit: rateLimitOptions.limit,
+        timeToResetMs: timeToReset,
+      },
+      'Rate limit exceeded',
+    );
 
     throw new RateLimitExceededError(
       rateLimitOptions.message ||

@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AnonymizeTextUseCase } from './anonymize-text.use-case';
 import { AnonymizeTextCommand } from './anonymize-text.command';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
@@ -8,11 +8,12 @@ import { PiiWhitelistEntry } from 'src/common/anonymization/domain/pii-whitelist
 describe('AnonymizeTextUseCase', () => {
   let useCase: AnonymizeTextUseCase;
   let detect: jest.Mock;
+  const logger = createPinoLoggerMock();
 
   beforeEach(() => {
     detect = jest.fn();
-    useCase = new AnonymizeTextUseCase({ detect });
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    logger.info.mockReset();
+    useCase = new AnonymizeTextUseCase(logger, { detect });
   });
 
   const text = 'Ich bin der Dani, erreichbar unter amt32@stadt-marl.de';

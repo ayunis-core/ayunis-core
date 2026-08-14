@@ -1,6 +1,7 @@
-import { Logger } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import puppeteer, { type Browser } from 'puppeteer-core';
 import { existsSync } from 'fs';
+import { createPinoLoggerConfig } from '../logger/pino-logger.config';
 
 /**
  * Lazily launched, shared headless-Chromium instance for PDF rendering.
@@ -8,9 +9,10 @@ import { existsSync } from 'fs';
  * (typically from the owning service's `onModuleDestroy`).
  */
 export class LazyChromiumBrowser {
-  private readonly logger = new Logger(LazyChromiumBrowser.name);
   private browser: Browser | null = null;
   private launchPromise: Promise<void> | null = null;
+
+  constructor(private readonly logger: PinoLogger = createBrowserLogger()) {}
 
   async get(): Promise<Browser> {
     if (this.browser?.connected) {
@@ -18,7 +20,7 @@ export class LazyChromiumBrowser {
     }
 
     if (!this.launchPromise) {
-      this.logger.log('Launching Puppeteer browser (lazy init)');
+      this.logger.info('Launching Puppeteer browser (lazy init)');
       this.launchPromise = this.launch().finally(() => {
         this.launchPromise = null;
       });
@@ -35,7 +37,7 @@ export class LazyChromiumBrowser {
     if (this.browser) {
       await this.browser.close();
       this.browser = null;
-      this.logger.log('Puppeteer browser closed');
+      this.logger.info('Puppeteer browser closed');
     }
   }
 
@@ -46,7 +48,7 @@ export class LazyChromiumBrowser {
       executablePath,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    this.logger.log(`Puppeteer browser launched (${executablePath})`);
+    this.logger.info({ executablePath }, 'Puppeteer browser launched');
   }
 
   private resolveChromePath(): string {
@@ -71,4 +73,10 @@ export class LazyChromiumBrowser {
       'No Chrome/Chromium executable found. Set PUPPETEER_EXECUTABLE_PATH.',
     );
   }
+}
+
+function createBrowserLogger(): PinoLogger {
+  const logger = new PinoLogger(createPinoLoggerConfig());
+  logger.setContext(LazyChromiumBrowser.name);
+  return logger;
 }

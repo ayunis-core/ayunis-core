@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { Counter, Histogram } from 'prom-client';
@@ -33,9 +34,9 @@ import { classifyInferenceError } from '../classify-inference-error.helper';
  */
 @Injectable()
 export class PrometheusMetricsListener {
-  private readonly logger = new Logger(PrometheusMetricsListener.name);
-
   constructor(
+    @InjectPinoLogger(PrometheusMetricsListener.name)
+    private readonly logger: PinoLogger,
     @InjectMetric(AYUNIS_USER_CREATIONS_TOTAL)
     private readonly userCreationsCounter: Counter<string>,
     @InjectMetric(AYUNIS_MESSAGES_TOTAL)

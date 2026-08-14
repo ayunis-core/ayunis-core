@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
@@ -30,6 +31,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   let capabilityCache: McpCapabilityCacheService;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
+  let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
@@ -120,6 +122,9 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     jest.spyOn(Logger.prototype, 'warn').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    decoratorErrorSpy = jest
+      .spyOn(PinoLogger.prototype, 'error')
+      .mockImplementation();
   });
 
   afterEach(() => {
@@ -412,9 +417,9 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       );
       expect((rejection as UnexpectedMcpError).cause).toBe(unexpectedError);
       expect((rejection as UnexpectedMcpError).metadata).toBeUndefined();
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(decoratorErrorSpy).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected use-case error',
-        expect.any(String),
       );
     });
   });

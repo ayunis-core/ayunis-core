@@ -1,5 +1,8 @@
-import type { Logger } from '@nestjs/common';
 import type { DeferredCleanupTask } from './deferred-cleanup.event';
+
+interface StructuredErrorLogger {
+  error(metadata: object, message: string): void;
+}
 
 /**
  * Runs deferred cleanup tasks after a successful row delete. Each task is
@@ -8,16 +11,19 @@ import type { DeferredCleanupTask } from './deferred-cleanup.event';
  */
 export async function runDeferredCleanup(
   tasks: DeferredCleanupTask[],
-  logger: Logger,
+  logger: StructuredErrorLogger,
 ): Promise<void> {
   for (const task of tasks) {
     try {
       await task.run();
     } catch (error) {
-      logger.error('Deferred cleanup task failed', {
-        label: task.label,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error(
+        {
+          label: task.label,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Deferred cleanup task failed',
+      );
     }
   }
 }

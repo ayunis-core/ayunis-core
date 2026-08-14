@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger, UnauthorizedException } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DeleteMcpIntegrationUseCase } from './delete-mcp-integration.use-case';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
@@ -29,6 +30,7 @@ describe('DeleteMcpIntegrationUseCase', () => {
   >;
   let loggerLogSpy: jest.SpyInstance;
   let loggerErrorSpy: jest.SpyInstance;
+  let decoratorErrorSpy: jest.SpyInstance;
 
   const mockOrgId = randomUUID();
   const mockIntegrationId = randomUUID();
@@ -102,6 +104,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
     // Spy on logger methods
     loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
     loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    decoratorErrorSpy = jest
+      .spyOn(PinoLogger.prototype, 'error')
+      .mockImplementation();
   });
 
   afterEach(() => {
@@ -261,9 +266,9 @@ describe('DeleteMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedMcpError,
       );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(decoratorErrorSpy).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected use-case error',
-        expect.any(String),
       );
     });
 

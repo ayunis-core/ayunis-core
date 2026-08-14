@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
@@ -54,9 +55,9 @@ import { IntegrationInstalledWebhookEvent } from '../domain/webhook-events/integ
  */
 @Injectable()
 export class WebhookDispatchListener {
-  private readonly logger = new Logger(WebhookDispatchListener.name);
-
   constructor(
+    @InjectPinoLogger(WebhookDispatchListener.name)
+    private readonly logger: PinoLogger,
     private readonly sendWebhookUseCase: SendWebhookUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
@@ -289,10 +290,13 @@ export class WebhookDispatchListener {
         new FindUserByIdQuery(userId),
       );
     } catch (error) {
-      this.logger.error('Failed to resolve user for webhook enrichment', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to resolve user for webhook enrichment',
+      );
       return null;
     }
   }
@@ -309,10 +313,13 @@ export class WebhookDispatchListener {
       );
       return org.name;
     } catch (error) {
-      this.logger.error('Failed to resolve org for webhook enrichment', {
-        orgId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          orgId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to resolve org for webhook enrichment',
+      );
       return undefined;
     }
   }
@@ -323,10 +330,13 @@ export class WebhookDispatchListener {
         new SendWebhookCommand(webhookEvent),
       );
     } catch (error) {
-      this.logger.error('Webhook dispatch failed', {
-        eventType: webhookEvent.eventType,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          eventType: webhookEvent.eventType,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Webhook dispatch failed',
+      );
     }
   }
 }

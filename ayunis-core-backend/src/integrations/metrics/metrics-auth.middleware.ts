@@ -1,4 +1,5 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import type { Request, Response, NextFunction } from 'express';
@@ -6,12 +7,15 @@ import type { MetricsConfig } from '../../config/metrics.config';
 
 @Injectable()
 export class MetricsAuthMiddleware implements NestMiddleware {
-  private readonly logger = new Logger(MetricsAuthMiddleware.name);
   private readonly user: string | undefined;
   private readonly password: string | undefined;
   private readonly authEnabled: boolean;
 
-  constructor(configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(MetricsAuthMiddleware.name)
+    private readonly logger: PinoLogger,
+    configService: ConfigService,
+  ) {
     const config = configService.get<MetricsConfig>('metrics')!;
     this.user = config.user;
     this.password = config.password;
