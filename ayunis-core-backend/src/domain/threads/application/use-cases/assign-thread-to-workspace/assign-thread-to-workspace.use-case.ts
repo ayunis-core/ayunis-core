@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -11,9 +12,9 @@ import { AssignThreadToWorkspaceCommand } from './assign-thread-to-workspace.com
 
 @Injectable()
 export class AssignThreadToWorkspaceUseCase {
-  private readonly logger = new Logger(AssignThreadToWorkspaceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AssignThreadToWorkspaceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
@@ -21,10 +22,13 @@ export class AssignThreadToWorkspaceUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: AssignThreadToWorkspaceCommand): Promise<void> {
-    this.logger.log('assignThreadToWorkspace', {
-      threadId: command.threadId,
-      workspaceId: command.workspaceId,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        workspaceId: command.workspaceId,
+      },
+      'assignThreadToWorkspace',
+    );
 
     const userId = this.resolveUserId();
 

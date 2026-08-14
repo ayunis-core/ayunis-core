@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -9,20 +10,23 @@ import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/applicati
 
 @Injectable()
 export class AddKnowledgeBaseToThreadUseCase {
-  private readonly logger = new Logger(AddKnowledgeBaseToThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddKnowledgeBaseToThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: AddKnowledgeBaseToThreadCommand): Promise<void> {
-    this.logger.log('execute', {
-      threadId: command.threadId,
-      knowledgeBaseId: command.knowledgeBaseId,
-      originSkillId: command.originSkillId,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        knowledgeBaseId: command.knowledgeBaseId,
+        originSkillId: command.originSkillId,
+      },
+      'execute',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {

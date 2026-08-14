@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -11,9 +12,9 @@ import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from '../use-cases/remove
 import { RemoveDirectKnowledgeBaseFromThreadsCommand } from '../use-cases/remove-direct-knowledge-base-from-threads/remove-direct-knowledge-base-from-threads.command';
 @Injectable()
 export class ShareDeletedListener {
-  private readonly logger = new Logger(ShareDeletedListener.name);
-
   constructor(
+    @InjectPinoLogger(ShareDeletedListener.name)
+    private readonly logger: PinoLogger,
     private readonly removeSkillSourcesFromThreads: RemoveSkillSourcesFromThreadsUseCase,
     private readonly removeKbAssignmentsByOriginSkill: RemoveKnowledgeBaseAssignmentsByOriginSkillUseCase,
     private readonly removeDirectKbFromThreads: RemoveDirectKnowledgeBaseFromThreadsUseCase,
@@ -34,13 +35,13 @@ export class ShareDeletedListener {
   private async handleSkillShareDeleted(
     event: ShareDeletedEvent,
   ): Promise<void> {
-    this.logger.log(
-      'Cleaning up thread assignments after skill share deletion',
+    this.logger.info(
       {
         skillId: event.entityId,
         ownerId: event.ownerId,
         remainingScopeCount: event.remainingScopes.length,
       },
+      'Cleaning up thread assignments after skill share deletion',
     );
 
     const lostAccessUserIds =
@@ -64,13 +65,13 @@ export class ShareDeletedListener {
   private async handleKnowledgeBaseShareDeleted(
     event: ShareDeletedEvent,
   ): Promise<void> {
-    this.logger.log(
-      'Cleaning up direct thread KB assignments after KB share deletion',
+    this.logger.info(
       {
         knowledgeBaseId: event.entityId,
         ownerId: event.ownerId,
         remainingScopeCount: event.remainingScopes.length,
       },
+      'Cleaning up direct thread KB assignments after KB share deletion',
     );
 
     const lostAccessUserIds =

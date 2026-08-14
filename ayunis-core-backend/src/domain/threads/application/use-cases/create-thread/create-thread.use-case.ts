@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Thread } from '../../../domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { CreateThreadCommand } from './create-thread.command';
@@ -17,9 +18,9 @@ import { FindWorkspaceQuery } from 'src/domain/workspaces/application/use-cases/
 
 @Injectable()
 export class CreateThreadUseCase {
-  private readonly logger = new Logger(CreateThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly contextService: ContextService,
@@ -28,7 +29,7 @@ export class CreateThreadUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: CreateThreadCommand): Promise<Thread> {
-    this.logger.log('execute');
+    this.logger.info('execute');
     const userId = this.contextService.get('userId');
     if (!userId) {
       throw new UnauthorizedException('User not authenticated');
@@ -57,10 +58,13 @@ export class CreateThreadUseCase {
         ...createdThread,
       });
     } catch (error) {
-      this.logger.error('Failed to create thread', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          err: error as Error,
+        },
+        'Failed to create thread',
+      );
       throw new ThreadCreationError(error as Error, userId);
     }
   }

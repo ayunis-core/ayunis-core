@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
@@ -10,9 +11,9 @@ import { ThreadDeletionRequestedEvent } from '../../events/thread-deletion-reque
 
 @Injectable()
 export class DeleteThreadUseCase {
-  private readonly logger = new Logger(DeleteThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
@@ -20,7 +21,7 @@ export class DeleteThreadUseCase {
   ) {}
 
   async execute(command: DeleteThreadCommand): Promise<void> {
-    this.logger.log('delete', { threadId: command.id });
+    this.logger.info({ threadId: command.id }, 'delete');
 
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
@@ -33,18 +34,14 @@ export class DeleteThreadUseCase {
       throw new UnauthorizedException('Organization context required');
     }
 
+    const logContext = { threadId: command.id, userId };
     try {
-      // First verify the thread exists and belongs to the user
       const thread = await this.threadsRepository.findOne(command.id, userId);
 
       if (!thread) {
-        // Idempotent delete: treat already-deleted threads as success
         this.logger.warn(
+          logContext,
           'Thread already deleted or not found, treating as success',
-          {
-            threadId: command.id,
-            userId,
-          },
         );
         return;
       }
@@ -61,16 +58,12 @@ export class DeleteThreadUseCase {
       await this.threadsRepository.delete(command.id, userId);
       await runDeferredCleanup(event.takeCleanupTasks(), this.logger);
 
-      this.logger.log('Thread deleted successfully', {
-        threadId: command.id,
-        userId,
-      });
+      this.logger.info(logContext, 'Thread deleted successfully');
     } catch (error) {
-      this.logger.error('Failed to delete thread', {
-        threadId: command.id,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to delete thread',
+      );
       throw error;
     }
   }
@@ -92,10 +85,13 @@ export class DeleteThreadUseCase {
         ]),
       );
     } catch (error) {
-      this.logger.error('Failed to purge storage for deleted thread', {
-        threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId,
+          err: error as Error,
+        },
+        'Failed to purge storage for deleted thread',
+      );
     }
   }
 }

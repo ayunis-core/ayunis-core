@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  Logger,
   Get,
   Param,
   ParseUUIDPipe,
@@ -13,6 +12,7 @@ import {
   NotFoundException,
   Query,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   CurrentUser,
@@ -62,9 +62,9 @@ import { ConfigService } from '@nestjs/config';
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadsController {
-  private readonly logger = new Logger(ThreadsController.name);
-
   constructor(
+    @InjectPinoLogger(ThreadsController.name)
+    private readonly logger: PinoLogger,
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findAllThreadsUseCase: FindAllThreadsUseCase,
@@ -106,9 +106,12 @@ export class ThreadsController {
   async create(
     @Body() createThreadDto: CreateThreadDto,
   ): Promise<GetThreadResponseDto> {
-    this.logger.log('create', {
-      modelId: createThreadDto.modelId,
-    });
+    this.logger.info(
+      {
+        modelId: createThreadDto.modelId,
+      },
+      'create',
+    );
     this.assertWorkspaceParamAllowed(createThreadDto.workspaceId);
     const thread = await this.createThreadUseCase.execute(
       new CreateThreadCommand({
@@ -152,7 +155,8 @@ export class ThreadsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Query() queryParams: FindAllThreadsQueryParamsDto,
   ): Promise<GetThreadsResponseDto> {
-    this.logger.log('findAll', { filters: queryParams });
+    const { search: text, ...safeQueryParams } = queryParams;
+    this.logger.info({ ...safeQueryParams, text }, 'findAll');
     this.assertWorkspaceParamAllowed(queryParams.workspaceId);
     const threads = await this.findAllThreadsUseCase.execute(
       new FindAllThreadsQuery(
@@ -189,7 +193,7 @@ export class ThreadsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<GetThreadResponseDto> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const result = await this.findThreadUseCase.execute(
       new FindThreadQuery(id),
     );
@@ -220,7 +224,7 @@ export class ThreadsController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
     await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
   }
 
@@ -245,7 +249,7 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateThreadTitleDto: UpdateThreadTitleDto,
   ): Promise<void> {
-    this.logger.log('updateTitle', { id, title: updateThreadTitleDto.title });
+    this.logger.info({ id, text: updateThreadTitleDto.title }, 'updateTitle');
     await this.updateThreadTitleUseCase.execute(
       new UpdateThreadTitleCommand({
         threadId: id,
@@ -271,7 +275,7 @@ export class ThreadsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: AssignThreadWorkspaceDto,
   ): Promise<void> {
-    this.logger.log('assignWorkspace', { id, workspaceId: dto.workspaceId });
+    this.logger.info({ id, workspaceId: dto.workspaceId }, 'assignWorkspace');
     await this.assignThreadToWorkspaceUseCase.execute(
       new AssignThreadToWorkspaceCommand({
         threadId: id,

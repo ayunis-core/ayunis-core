@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ResolveGeneratedImageUseCase } from './resolve-generated-image.use-case';
 import { ResolveGeneratedImageQuery } from './resolve-generated-image.query';
@@ -39,13 +39,11 @@ describe('ResolveGeneratedImageUseCase', () => {
     } as unknown as jest.Mocked<GetPresignedUrlUseCase>;
 
     useCase = new ResolveGeneratedImageUseCase(
+      createPinoLoggerMock(),
       threadsRepository,
       generatedImagesRepository,
       getPresignedUrlUseCase,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

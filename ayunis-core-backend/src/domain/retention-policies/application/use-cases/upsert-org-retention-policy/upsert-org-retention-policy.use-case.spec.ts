@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { UpsertOrgRetentionPolicyUseCase } from './upsert-org-retention-policy.use-case';
@@ -29,6 +31,10 @@ describe('UpsertOrgRetentionPolicyUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpsertOrgRetentionPolicyUseCase,
+        {
+          provide: getLoggerToken(UpsertOrgRetentionPolicyUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: RetentionPoliciesRepository, useValue: repository },
       ],
     }).compile();

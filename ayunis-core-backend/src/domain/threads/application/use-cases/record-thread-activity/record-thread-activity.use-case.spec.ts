@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { RecordThreadActivityUseCase } from './record-thread-activity.use-case';
@@ -17,6 +19,10 @@ describe('RecordThreadActivityUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RecordThreadActivityUseCase,
+        {
+          provide: getLoggerToken(RecordThreadActivityUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
       ],
     }).compile();

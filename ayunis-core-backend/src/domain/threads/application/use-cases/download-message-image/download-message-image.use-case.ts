@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -26,9 +27,9 @@ export interface MessageImageDownload {
 
 @Injectable()
 export class DownloadMessageImageUseCase {
-  private readonly logger = new Logger(DownloadMessageImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DownloadMessageImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly threadsRepository: ThreadsRepository,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
@@ -38,11 +39,14 @@ export class DownloadMessageImageUseCase {
   async execute(
     query: DownloadMessageImageQuery,
   ): Promise<MessageImageDownload> {
-    this.logger.log('Downloading message image', {
-      threadId: query.threadId,
-      messageId: query.messageId,
-      index: query.index,
-    });
+    this.logger.info(
+      {
+        threadId: query.threadId,
+        messageId: query.messageId,
+        index: query.index,
+      },
+      'Downloading message image',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {

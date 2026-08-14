@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
@@ -42,6 +44,10 @@ describe('EnforceRetentionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EnforceRetentionUseCase,
+        {
+          provide: getLoggerToken(EnforceRetentionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: RetentionPoliciesRepository, useValue: retentionRepo },
         { provide: FindExpiredThreadRefsByOrgUseCase, useValue: findExpired },
         { provide: DeleteThreadUseCase, useValue: deleteThread },

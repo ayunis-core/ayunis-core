@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ShareScopeType } from '../../domain/value-objects/share-scope-type.enum';
 import {
@@ -12,9 +13,9 @@ import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases
 
 @Injectable()
 export class ShareScopeResolverService {
-  private readonly logger = new Logger(ShareScopeResolverService.name);
-
   constructor(
+    @InjectPinoLogger(ShareScopeResolverService.name)
+    private readonly logger: PinoLogger,
     private readonly findAllUserIdsByOrgId: FindAllUserIdsByOrgIdUseCase,
     private readonly findAllUserIdsByTeamId: FindAllUserIdsByTeamIdUseCase,
   ) {}
@@ -61,9 +62,12 @@ export class ShareScopeResolverService {
           new FindAllUserIdsByTeamIdQuery(scope.scopeId),
         );
       default:
-        this.logger.warn('Unknown scope type', {
-          scopeType: scope.scopeType,
-        });
+        this.logger.warn(
+          {
+            scopeType: scope.scopeType,
+          },
+          'Unknown scope type',
+        );
         return [];
     }
   }

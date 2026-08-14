@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
 import { ThreadsRepository } from '../ports/threads.repository';
@@ -20,11 +21,9 @@ import { PurgeStoragePrefixesCommand } from 'src/domain/storage/application/use-
  */
 @Injectable()
 export class ThreadsUserDeletionRequestedListener {
-  private readonly logger = new Logger(
-    ThreadsUserDeletionRequestedListener.name,
-  );
-
   constructor(
+    @InjectPinoLogger(ThreadsUserDeletionRequestedListener.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
@@ -42,10 +41,13 @@ export class ThreadsUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.log('Deferring thread storage cleanup for deleted user', {
-        userId: event.userId,
-        threadCount: threadIds.length,
-      });
+      this.logger.info(
+        {
+          userId: event.userId,
+          threadCount: threadIds.length,
+        },
+        'Deferring thread storage cleanup for deleted user',
+      );
 
       const prefixes = threadIds.flatMap((threadId) => [
         `${event.orgId}/${threadId}/`,
@@ -57,10 +59,13 @@ export class ThreadsUserDeletionRequestedListener {
         );
       });
     } catch (error) {
-      this.logger.error('Failed to resolve thread storage for deleted user', {
-        userId: event.userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId: event.userId,
+          err: error as Error,
+        },
+        'Failed to resolve thread storage for deleted user',
+      );
     }
   }
 }

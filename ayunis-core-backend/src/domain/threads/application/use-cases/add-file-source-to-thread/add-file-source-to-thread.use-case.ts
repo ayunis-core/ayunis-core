@@ -1,5 +1,6 @@
 import * as fs from 'fs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -37,9 +38,9 @@ import { AddFileSourceToThreadCommand } from './add-file-source-to-thread.comman
 
 @Injectable()
 export class AddFileSourceToThreadUseCase {
-  private readonly logger = new Logger(AddFileSourceToThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddFileSourceToThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
@@ -50,10 +51,13 @@ export class AddFileSourceToThreadUseCase {
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: AddFileSourceToThreadCommand): Promise<Source[]> {
-    this.logger.log('addFileSourceToThread', {
-      threadId: command.threadId,
-      fileName: command.file.originalname,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        fileName: command.file.originalname,
+      },
+      'addFileSourceToThread',
+    );
 
     const detectedType = detectFileType(
       command.file.mimetype,
@@ -149,10 +153,13 @@ export class AddFileSourceToThreadUseCase {
           ),
         );
       } catch (cleanupError) {
-        this.logger.error('Failed to delete sources after attach failure', {
-          sourceIds: sources.map((source) => source.id),
-          error: cleanupError as Error,
-        });
+        this.logger.error(
+          {
+            sourceIds: sources.map((source) => source.id),
+            err: cleanupError as Error,
+          },
+          'Failed to delete sources after attach failure',
+        );
       }
       throw error;
     }

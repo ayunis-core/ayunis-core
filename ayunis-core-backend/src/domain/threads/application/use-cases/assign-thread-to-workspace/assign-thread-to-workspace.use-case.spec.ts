@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
+
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -30,6 +32,10 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         AssignThreadToWorkspaceUseCase,
+        {
+          provide: getLoggerToken(AssignThreadToWorkspaceUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: threadsRepository },
         { provide: FindWorkspaceUseCase, useValue: findWorkspaceUseCase },
         {
@@ -40,11 +46,6 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     }).compile();
     useCase = module.get(AssignThreadToWorkspaceUseCase);
   }
-
-  beforeAll(() => {
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-  });
 
   beforeEach(async () => {
     await setup();

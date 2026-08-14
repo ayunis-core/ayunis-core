@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { Readable } from 'stream';
@@ -48,14 +48,12 @@ describe('DownloadReferenceImagesUseCase', () => {
     } as unknown as jest.Mocked<DownloadObjectUseCase>;
 
     useCase = new DownloadReferenceImagesUseCase(
+      createPinoLoggerMock(),
       contextService,
       threadsRepository,
       generatedImagesRepository,
       downloadObjectUseCase,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

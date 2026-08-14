@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 
@@ -57,6 +59,10 @@ describe('AddSourceToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddSourceToThreadUseCase,
+        {
+          provide: getLoggerToken(AddSourceToThreadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -64,9 +70,6 @@ describe('AddSourceToThreadUseCase', () => {
 
     useCase = module.get<AddSourceToThreadUseCase>(AddSourceToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

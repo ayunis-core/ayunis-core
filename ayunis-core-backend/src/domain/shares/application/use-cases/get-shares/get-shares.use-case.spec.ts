@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { GetSharesUseCase } from './get-shares.use-case';
@@ -46,6 +48,10 @@ describe('GetSharesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetSharesUseCase,
+        {
+          provide: getLoggerToken(GetSharesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SharesRepository,
           useValue: mockSharesRepository,

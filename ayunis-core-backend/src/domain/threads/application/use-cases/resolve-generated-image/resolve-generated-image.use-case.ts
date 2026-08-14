@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { GetPresignedUrlUseCase } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.use-case';
 import { GetPresignedUrlCommand } from 'src/domain/storage/application/use-cases/get-presigned-url/get-presigned-url.command';
@@ -20,9 +21,9 @@ export interface ResolveGeneratedImageResult {
 
 @Injectable()
 export class ResolveGeneratedImageUseCase {
-  private readonly logger = new Logger(ResolveGeneratedImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ResolveGeneratedImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
     private readonly getPresignedUrlUseCase: GetPresignedUrlUseCase,
@@ -31,10 +32,11 @@ export class ResolveGeneratedImageUseCase {
   async execute(
     query: ResolveGeneratedImageQuery,
   ): Promise<ResolveGeneratedImageResult> {
-    this.logger.log('execute', {
+    const logContext = {
       threadId: query.threadId,
       imageId: query.imageId,
-    });
+    };
+    this.logger.info(logContext, 'execute');
 
     try {
       const thread = await this.threadsRepository.findOne(
@@ -77,11 +79,10 @@ export class ResolveGeneratedImageUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to resolve generated image', {
-        threadId: query.threadId,
-        imageId: query.imageId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to resolve generated image',
+      );
       throw error;
     }
   }

@@ -1,4 +1,5 @@
-import { Controller, Get, Logger, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
@@ -12,9 +13,9 @@ import { GeneratedImageUrlResponseDto } from './dto/generated-image-url-response
 @ApiTags('threads')
 @Controller('threads')
 export class GeneratedImagesController {
-  private readonly logger = new Logger(GeneratedImagesController.name);
-
   constructor(
+    @InjectPinoLogger(GeneratedImagesController.name)
+    private readonly logger: PinoLogger,
     private readonly resolveGeneratedImageUseCase: ResolveGeneratedImageUseCase,
   ) {}
 
@@ -33,7 +34,7 @@ export class GeneratedImagesController {
     @Param('threadId', ParseUUIDPipe) threadId: UUID,
     @Param('imageId', ParseUUIDPipe) imageId: UUID,
   ): Promise<GeneratedImageUrlResponseDto> {
-    this.logger.log('resolve', { threadId, imageId });
+    this.logger.info({ threadId, imageId }, 'resolve');
 
     return this.resolveGeneratedImageUseCase.execute(
       new ResolveGeneratedImageQuery(threadId, imageId, userId),

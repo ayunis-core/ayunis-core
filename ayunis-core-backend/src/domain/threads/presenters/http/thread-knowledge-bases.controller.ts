@@ -4,10 +4,10 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
@@ -24,9 +24,9 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadKnowledgeBasesController {
-  private readonly logger = new Logger(ThreadKnowledgeBasesController.name);
-
   constructor(
+    @InjectPinoLogger(ThreadKnowledgeBasesController.name)
+    private readonly logger: PinoLogger,
     private readonly addKnowledgeBaseToThreadUseCase: AddKnowledgeBaseToThreadUseCase,
     private readonly removeKnowledgeBaseFromThreadUseCase: RemoveKnowledgeBaseFromThreadUseCase,
   ) {}
@@ -58,7 +58,7 @@ export class ThreadKnowledgeBasesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<void> {
-    this.logger.log('addKnowledgeBase', { threadId, knowledgeBaseId });
+    this.logger.info({ threadId, knowledgeBaseId }, 'addKnowledgeBase');
     await this.addKnowledgeBaseToThreadUseCase.execute(
       new AddKnowledgeBaseToThreadCommand(threadId, knowledgeBaseId),
     );
@@ -89,7 +89,7 @@ export class ThreadKnowledgeBasesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<void> {
-    this.logger.log('removeKnowledgeBase', { threadId, knowledgeBaseId });
+    this.logger.info({ threadId, knowledgeBaseId }, 'removeKnowledgeBase');
     await this.removeKnowledgeBaseFromThreadUseCase.execute(
       new RemoveKnowledgeBaseFromThreadCommand(threadId, knowledgeBaseId),
     );

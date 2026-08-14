@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddSourceCommand } from './add-source.command';
@@ -28,19 +29,22 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 
 @Injectable()
 export class AddSourceToThreadUseCase {
-  private readonly logger = new Logger(AddSourceToThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddSourceToThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: AddSourceCommand): Promise<void> {
-    this.logger.log('addSource', {
-      threadId: command.thread.id,
-      sourceId: command.source.id,
-    });
+    this.logger.info(
+      {
+        threadId: command.thread.id,
+        sourceId: command.source.id,
+      },
+      'addSource',
+    );
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -95,7 +99,7 @@ export class AddSourceToThreadUseCase {
     if (isUniqueConstraintViolation(error)) {
       return new SourceAlreadyAssignedError(command.source.id);
     }
-    this.logger.error('addSource', error);
+    this.logger.error({ err: error as Error }, 'addSource');
     return new SourceAdditionError(command.thread.id, error as Error);
   }
 }

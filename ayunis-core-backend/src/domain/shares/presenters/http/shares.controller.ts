@@ -7,10 +7,10 @@ import {
   Query,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiTags,
@@ -51,9 +51,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @ApiTags('shares')
 @Controller('shares')
 export class SharesController {
-  private readonly logger = new Logger(SharesController.name);
-
   constructor(
+    @InjectPinoLogger(SharesController.name)
+    private readonly logger: PinoLogger,
     private readonly createShareUseCase: CreateShareUseCase,
     private readonly deleteShareUseCase: DeleteShareUseCase,
     private readonly getSharesUseCase: GetSharesUseCase,
@@ -82,10 +82,13 @@ export class SharesController {
   async createSkillShare(
     @Body() dto: CreateSkillShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.log('createSkillShare', {
-      skillId: dto.skillId,
-      teamId: dto.teamId,
-    });
+    this.logger.info(
+      {
+        skillId: dto.skillId,
+        teamId: dto.teamId,
+      },
+      'createSkillShare',
+    );
 
     const command = dto.teamId
       ? new CreateTeamSkillShareCommand(dto.skillId as UUID, dto.teamId as UUID)
@@ -125,10 +128,13 @@ export class SharesController {
   async createKnowledgeBaseShare(
     @Body() dto: CreateKnowledgeBaseShareDto,
   ): Promise<ShareResponseDto> {
-    this.logger.log('createKnowledgeBaseShare', {
-      knowledgeBaseId: dto.knowledgeBaseId,
-      teamId: dto.teamId,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: dto.knowledgeBaseId,
+        teamId: dto.teamId,
+      },
+      'createKnowledgeBaseShare',
+    );
 
     const command = dto.teamId
       ? new CreateTeamKnowledgeBaseShareCommand(
@@ -180,7 +186,7 @@ export class SharesController {
     @Query('entityId', ParseUUIDPipe) entityId: UUID,
     @Query('entityType') entityType: SharedEntityType,
   ): Promise<ShareResponseDto[]> {
-    this.logger.log('getShares', { entityId, entityType });
+    this.logger.info({ entityId, entityType }, 'getShares');
 
     const shares = await this.getSharesUseCase.execute(
       new GetSharesQuery(entityId, entityType),
@@ -224,7 +230,7 @@ export class SharesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteShare(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('deleteShare', { id });
+    this.logger.info({ id }, 'deleteShare');
 
     await this.deleteShareUseCase.execute(id);
   }

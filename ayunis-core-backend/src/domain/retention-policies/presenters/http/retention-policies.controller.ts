@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Logger, Put } from '@nestjs/common';
+import { Body, Controller, Get, Put } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -25,9 +26,9 @@ import { RetentionPolicyResponseDto } from './dtos/retention-policy-response.dto
 @Controller('retention-policies')
 @ApiExtraModels(RetentionPolicyResponseDto)
 export class RetentionPoliciesController {
-  private readonly logger = new Logger(RetentionPoliciesController.name);
-
   constructor(
+    @InjectPinoLogger(RetentionPoliciesController.name)
+    private readonly logger: PinoLogger,
     private readonly getOrgRetentionPolicy: GetOrgRetentionPolicyUseCase,
     private readonly upsertOrgRetentionPolicy: UpsertOrgRetentionPolicyUseCase,
   ) {}
@@ -45,7 +46,7 @@ export class RetentionPoliciesController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<RetentionPolicyResponseDto> {
-    this.logger.log(`Getting retention policy for org ${orgId}`);
+    this.logger.info({ orgId }, 'Getting retention policy for org');
 
     const policy = await this.getOrgRetentionPolicy.execute(
       new GetOrgRetentionPolicyQuery(orgId),
@@ -71,9 +72,10 @@ export class RetentionPoliciesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdateRetentionPolicyRequestDto,
   ): Promise<RetentionPolicyResponseDto> {
-    this.logger.log(`Updating retention policy for org ${orgId}`, {
-      retentionDays: dto.retentionDays,
-    });
+    this.logger.info(
+      { orgId, retentionDays: dto.retentionDays },
+      'Updating retention policy for org',
+    );
 
     const policy = await this.upsertOrgRetentionPolicy.execute(
       new UpsertOrgRetentionPolicyCommand(orgId, dto.retentionDays),

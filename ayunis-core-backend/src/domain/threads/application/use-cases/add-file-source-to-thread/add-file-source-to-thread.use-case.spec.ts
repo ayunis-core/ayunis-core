@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 
@@ -65,6 +66,7 @@ describe('AddFileSourceToThreadUseCase', () => {
       get: jest.fn().mockReturnValue(orgId),
     } as unknown as ContextService;
     useCase = new AddFileSourceToThreadUseCase(
+      createPinoLoggerMock(),
       findThread,
       addSourceToThread,
       startDocumentProcessing,

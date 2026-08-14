@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -36,9 +37,9 @@ const MAX_REFERENCE_IMAGE_BYTES = 10 * 1024 * 1024;
 
 @Injectable()
 export class DownloadReferenceImagesUseCase {
-  private readonly logger = new Logger(DownloadReferenceImagesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DownloadReferenceImagesUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly threadsRepository: ThreadsRepository,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
@@ -49,11 +50,14 @@ export class DownloadReferenceImagesUseCase {
   async execute(
     query: DownloadReferenceImagesQuery,
   ): Promise<ReferenceImageDownload[]> {
-    this.logger.log('Downloading reference images', {
-      threadId: query.threadId,
-      uploadedImageCount: query.uploadedImageRefs.length,
-      generatedImageCount: query.generatedImageIds.length,
-    });
+    this.logger.info(
+      {
+        threadId: query.threadId,
+        uploadedImageCount: query.uploadedImageRefs.length,
+        generatedImageCount: query.generatedImageIds.length,
+      },
+      'Downloading reference images',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -153,10 +157,13 @@ export class DownloadReferenceImagesUseCase {
     if (data.length <= MAX_REFERENCE_IMAGE_BYTES) {
       return true;
     }
-    this.logger.warn('Skipping oversized reference image', {
-      objectName,
-      sizeBytes: data.length,
-    });
+    this.logger.warn(
+      {
+        fileName: objectName,
+        sizeBytes: data.length,
+      },
+      'Skipping oversized reference image',
+    );
     return false;
   }
 }
