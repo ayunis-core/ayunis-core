@@ -38,9 +38,10 @@ import {
   clearCookies,
   setMfaPendingCookie,
 } from 'src/common/util/cookie.util';
-import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
-import { CheckMfaLoginRequirementQuery } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.query';
-import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
+import { StartAuthenticatedSessionCommand } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.command';
+import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
+
+const LOGIN_BODY_DESCRIPTION = 'User credentials for authentication';
 
 // Import use cases
 import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
@@ -67,8 +68,7 @@ export class AuthenticationController {
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
     private readonly revokeSessionFamilyUseCase: RevokeSessionFamilyUseCase,
-    private readonly checkMfaLoginRequirementUseCase: CheckMfaLoginRequirementUseCase,
-    private readonly mfaPendingJwtService: MfaPendingJwtService,
+    private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
     private readonly configService: ConfigService,
     private readonly meResponseDtoMapper: MeResponseDtoMapper,
   ) {}
@@ -83,10 +83,7 @@ export class AuthenticationController {
     description:
       'Authenticate user with email and password. Sets authentication cookies on successful login.',
   })
-  @ApiBody({
-    type: LoginDto,
-    description: 'User credentials for authentication',
-  })
+  @ApiBody({ type: LoginDto, description: LOGIN_BODY_DESCRIPTION })
   @ApiResponse({
     status: HttpStatus.OK,
     description:
@@ -106,18 +103,20 @@ export class AuthenticationController {
     this.logger.log('login');
     const user = req.user as ActiveUser;
 
-    const mfaRequirement = await this.checkMfaLoginRequirementUseCase.execute(
-      new CheckMfaLoginRequirementQuery(user.id, user.orgId),
+    const result = await this.startAuthenticatedSession.execute(
+      new StartAuthenticatedSessionCommand(
+        user,
+        SessionAuthenticationMethod.PASSWORD,
+      ),
     );
-
-    if (mfaRequirement !== 'none') {
-      return this.respondMfaPending(res, user, mfaRequirement === 'enroll');
+    if (result.status === 'mfa_required') {
+      return this.respondMfaPending(
+        res,
+        result.mfaPendingToken,
+        result.enrollmentRequired,
+      );
     }
-
-    const tokens = await this.loginUseCase.execute(
-      new LoginCommand(user, SessionAuthenticationMethod.PASSWORD),
-    );
-    setCookies(res, tokens, this.configService, true);
+    setCookies(res, result.tokens, this.configService, true);
     return res.json({
       success: true,
       mfaRequired: false,
@@ -131,13 +130,9 @@ export class AuthenticationController {
    */
   private respondMfaPending(
     res: Response,
-    user: ActiveUser,
+    pendingToken: string,
     enrollmentRequired: boolean,
   ) {
-    const pendingToken = this.mfaPendingJwtService.generate({
-      userId: user.id,
-      enrollmentRequired,
-    });
     setMfaPendingCookie(res, pendingToken, this.configService);
     return res.json({
       success: true,

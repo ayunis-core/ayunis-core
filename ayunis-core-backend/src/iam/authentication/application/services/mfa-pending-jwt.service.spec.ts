@@ -3,8 +3,9 @@ import { Test } from '@nestjs/testing';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { MfaPendingJwtService } from './mfa-pending-jwt.service';
-import { InvalidMfaPendingTokenError } from '../mfa.errors';
+import { MfaPendingJwtService } from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
+import { InvalidMfaPendingTokenError } from 'src/iam/authentication/application/authentication.errors';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('MfaPendingJwtService', () => {
   const userId = 'user-id-123' as UUID;
@@ -30,12 +31,21 @@ describe('MfaPendingJwtService', () => {
   });
 
   it('round-trips a pending token with its payload', () => {
-    const token = service.generate({ userId, enrollmentRequired: true });
+    const token = service.generate({
+      userId,
+      enrollmentRequired: true,
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+      zitadelSessionId: '385820595704563912',
+    });
     const payload = service.verify(token);
 
     expect(payload.sub).toBe(userId);
     expect(payload.type).toBe('mfa_pending');
     expect(payload.enrollmentRequired).toBe(true);
+    expect(payload).toMatchObject({
+      authenticationMethod: SessionAuthenticationMethod.SSO,
+      zitadelSessionId: '385820595704563912',
+    });
   });
 
   it('rejects a session-style token without a type claim', () => {
@@ -52,6 +62,30 @@ describe('MfaPendingJwtService', () => {
     expect(() => service.verify(otherTypedToken)).toThrow(
       InvalidMfaPendingTokenError,
     );
+  });
+
+  it('defaults an in-flight legacy password challenge to password provenance', () => {
+    const legacyToken = jwtService.sign({
+      sub: userId,
+      type: 'mfa_pending',
+      enrollmentRequired: false,
+    });
+
+    expect(service.verify(legacyToken)).toMatchObject({
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      zitadelSessionId: null,
+    });
+  });
+
+  it('rejects unsupported authentication provenance', () => {
+    const invalid = jwtService.sign({
+      sub: userId,
+      type: 'mfa_pending',
+      enrollmentRequired: false,
+      authenticationMethod: 'broker',
+    });
+
+    expect(() => service.verify(invalid)).toThrow(InvalidMfaPendingTokenError);
   });
 
   it('rejects an expired pending token', () => {

@@ -7,7 +7,6 @@ export enum MfaErrorCode {
   MFA_ALREADY_ENABLED = 'MFA_ALREADY_ENABLED',
   MFA_NOT_ENABLED = 'MFA_NOT_ENABLED',
   MFA_REQUIRED_BY_ORG = 'MFA_REQUIRED_BY_ORG',
-  MFA_PENDING_TOKEN_INVALID = 'MFA_PENDING_TOKEN_INVALID',
   MFA_ENROLLMENT_NOT_ALLOWED = 'MFA_ENROLLMENT_NOT_ALLOWED',
   MFA_SELF_RESET_NOT_ALLOWED = 'MFA_SELF_RESET_NOT_ALLOWED',
   UNEXPECTED_MFA_ERROR = 'UNEXPECTED_MFA_ERROR',
@@ -63,21 +62,6 @@ export class MfaRequiredByOrgError extends ApplicationError {
       'Two-factor authentication is required by your organization and cannot be disabled',
       MfaErrorCode.MFA_REQUIRED_BY_ORG,
       409,
-      metadata,
-    );
-  }
-}
-
-/**
- * 403 (not 401) on purpose: 401 responses are intercepted by the token
- * refresh filter, which must never run for MFA pending-state failures.
- */
-export class InvalidMfaPendingTokenError extends ApplicationError {
-  constructor(metadata?: ErrorMetadata) {
-    super(
-      'The login attempt has expired. Please sign in again.',
-      MfaErrorCode.MFA_PENDING_TOKEN_INVALID,
-      403,
       metadata,
     );
   }
