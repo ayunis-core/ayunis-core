@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetTextSourceByIdUseCase } from './get-text-source-by-id.use-case';
@@ -19,6 +21,10 @@ describe('GetSourceByIdUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetTextSourceByIdUseCase,
+        {
+          provide: getLoggerToken(GetTextSourceByIdUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SourceRepository,
           useValue: mockSourceRepository,

@@ -1,4 +1,5 @@
-import { Logger } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -20,9 +21,9 @@ import { classifyJobFailure } from './bullmq-job.helpers';
 
 @Processor(URL_CRAWL_QUEUE, { concurrency: 2 })
 export class UrlCrawlConsumer extends WorkerHost {
-  private readonly logger = new Logger(UrlCrawlConsumer.name);
-
   constructor(
+    @InjectPinoLogger(UrlCrawlConsumer.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly crawlUrlUseCase: CrawlUrlUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
@@ -33,59 +34,53 @@ export class UrlCrawlConsumer extends WorkerHost {
   }
 
   async process(job: Job<UrlCrawlJobData>): Promise<void> {
+    this.logger.info(
+      {
+        jobId: job.id,
+        sourceId: job.data.sourceId,
+        url: job.data.rootUrl,
+      },
+      'Crawling URL source',
+    );
+    await this.contextService.run(() => this.processCrawl(job));
+  }
+
+  private async processCrawl(job: Job<UrlCrawlJobData>): Promise<void> {
     const { sourceId, orgId, userId, rootUrl, maxDepth } = job.data;
+    this.validateAndSetContext(orgId, userId);
 
-    this.logger.log('Crawling URL source', {
-      sourceId,
-      rootUrl,
-      jobId: job.id,
-    });
+    try {
+      const source = await this.loadSourceOrSkip(sourceId);
+      if (!source) return;
 
-    // Set up CLS context so downstream use cases (embeddings, etc.) work.
-    await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
+      const { text, chunks, title, pageCount } = await this.crawlAndBuild(
+        rootUrl,
+        orgId,
+        maxDepth,
+      );
+      // Re-checking prevents a concurrent deletion from being resurrected.
+      if (!(await this.isSourceStillProcessing(sourceId))) return;
 
-      try {
-        const source = await this.loadSourceOrSkip(sourceId);
-        if (!source) return;
-
-        const { text, chunks, title, pageCount } = await this.crawlAndBuild(
-          rootUrl,
-          orgId,
-          maxDepth,
+      if (title) source.name = title;
+      await this.sourceRepository.saveTextSource(source, { text, chunks });
+      await this.helper.index(sourceId, orgId, chunks);
+      await this.markSourceReady(sourceId);
+      this.logger.info(
+        { chunks: chunks.length, pages: pageCount, sourceId },
+        'URL crawl complete',
+      );
+    } catch (error) {
+      this.logger.error({ err: error as Error, sourceId }, 'URL crawl failed');
+      const { final, rethrow } = classifyJobFailure(job, error);
+      if (final) {
+        await this.helper.markFailed(
+          sourceId,
+          error instanceof Error ? error.message : 'Unknown crawl error',
         );
-
-        // Guard: re-check the source still exists and is PROCESSING before
-        // writing content. Prevents resurrection of deleted sources.
-        if (!(await this.isSourceStillProcessing(sourceId))) return;
-
-        if (title) source.name = title;
-        await this.sourceRepository.saveTextSource(source, { text, chunks });
-        await this.helper.index(sourceId, orgId, chunks);
-        await this.markSourceReady(sourceId);
-
-        this.logger.log('URL crawl complete', {
-          sourceId,
-          pages: pageCount,
-          chunks: chunks.length,
-        });
-      } catch (error) {
-        this.logger.error('URL crawl failed', {
-          sourceId,
-          error: error as Error,
-        });
-
-        const { final, rethrow } = classifyJobFailure(job, error);
-        if (final) {
-          await this.helper.markFailed(
-            sourceId,
-            error instanceof Error ? error.message : 'Unknown crawl error',
-          );
-          await this.helper.cleanupIndex(sourceId);
-        }
-        if (rethrow) throw rethrow;
+        await this.helper.cleanupIndex(sourceId);
       }
-    });
+      if (rethrow) throw rethrow;
+    }
   }
 
   private validateAndSetContext(
@@ -101,7 +96,7 @@ export class UrlCrawlConsumer extends WorkerHost {
   private async loadSourceOrSkip(sourceId: UUID): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (!source) {
-      this.logger.warn('Source not found, skipping', { sourceId });
+      this.logger.warn({ sourceId }, 'Source not found, skipping');
       return null;
     }
     if (!(source instanceof TextSource)) {
@@ -165,10 +160,13 @@ export class UrlCrawlConsumer extends WorkerHost {
   private async isSourceStillProcessing(sourceId: UUID): Promise<boolean> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
-      this.logger.warn('Source deleted or status changed mid-crawl', {
-        sourceId,
-        found: !!source,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          found: !!source,
+        },
+        'Source deleted or status changed mid-crawl',
+      );
       return false;
     }
     return true;
@@ -183,8 +181,8 @@ export class UrlCrawlConsumer extends WorkerHost {
     );
     if (!updated) {
       this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
+        'Conditional update to READY failed — source was deleted or status changed',
       );
       await this.helper.cleanupIndex(sourceId);
     }

@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { StorageObject } from '../../../domain/storage-object.entity';
@@ -14,18 +15,22 @@ import { StorageObjectUpload } from '../../../domain/storage-object-upload.entit
 
 @Injectable()
 export class UploadObjectUseCase {
-  private readonly logger = new Logger(UploadObjectUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UploadObjectUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
   async execute(command: UploadObjectCommand): Promise<StorageObject> {
-    this.logger.debug(`Uploading object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Uploading object',
+    );
 
     try {
       const bucketName = this.resolveTargetBucket(command);
@@ -39,11 +44,15 @@ export class UploadObjectUseCase {
         ),
       );
 
-      this.logger.debug(`Successfully uploaded object: ${command.objectName}`, {
-        bucket: bucketName,
-        size: result.size,
-        etag: result.etag,
-      });
+      this.logger.debug(
+        {
+          bucket: bucketName,
+          fileName: command.objectName,
+          size: result.size,
+          etag: result.etag,
+        },
+        'Successfully uploaded object',
+      );
 
       return new StorageObject(
         command.objectName,
@@ -63,8 +72,8 @@ export class UploadObjectUseCase {
       }
 
       this.logger.error(
-        `Failed to upload object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to upload object',
       );
       throw new UploadFailedError();
     }
@@ -106,8 +115,8 @@ export class UploadObjectUseCase {
       return true;
     } catch (error) {
       this.logger.error(
-        `Error checking if bucket exists: ${bucketName}`,
-        error,
+        { bucket: bucketName, err: error as Error },
+        'Error checking if bucket exists',
       );
       return false;
     }

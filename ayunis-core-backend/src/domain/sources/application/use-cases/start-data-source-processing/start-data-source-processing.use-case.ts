@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -39,9 +40,9 @@ interface SourcePlan {
  */
 @Injectable()
 export class StartDataSourceProcessingUseCase {
-  private readonly logger = new Logger(StartDataSourceProcessingUseCase.name);
-
   constructor(
+    @InjectPinoLogger(StartDataSourceProcessingUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly spreadsheetParser: SpreadsheetParserPort,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
@@ -55,10 +56,13 @@ export class StartDataSourceProcessingUseCase {
   async execute(
     command: StartDataSourceProcessingCommand,
   ): Promise<CSVDataSource[]> {
-    this.logger.log('Starting async data source processing', {
-      fileName: command.fileName,
-      kind: command.kind,
-    });
+    this.logger.info(
+      {
+        fileName: command.fileName,
+        kind: command.kind,
+      },
+      'Starting async data source processing',
+    );
 
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
@@ -183,10 +187,13 @@ export class StartDataSourceProcessingUseCase {
         }),
       );
     } catch (error) {
-      this.logger.error('Failed to enqueue data source processing job', {
-        sourceIds: batch.sources.map((source) => source.id),
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceIds: batch.sources.map((source) => source.id),
+          err: error as Error,
+        },
+        'Failed to enqueue data source processing job',
+      );
       await this.tryMarkSourcesFailed(
         batch.sources,
         'Failed to enqueue processing job',
@@ -202,10 +209,13 @@ export class StartDataSourceProcessingUseCase {
         new DeleteObjectCommand(minioPath),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up MinIO processing file', {
-        minioPath,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          fileName: minioPath,
+          err: err as Error,
+        },
+        'Failed to clean up MinIO processing file',
+      );
     }
   }
 
@@ -222,10 +232,13 @@ export class StartDataSourceProcessingUseCase {
           }),
         );
       } catch (err) {
-        this.logger.error('Failed to mark source as FAILED', {
-          sourceId: source.id,
-          error: err as Error,
-        });
+        this.logger.error(
+          {
+            sourceId: source.id,
+            err: err as Error,
+          },
+          'Failed to mark source as FAILED',
+        );
       }
     }
   }

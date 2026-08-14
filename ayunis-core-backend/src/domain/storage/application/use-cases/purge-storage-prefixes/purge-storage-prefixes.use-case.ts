@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ListObjectsUseCase } from '../list-objects/list-objects.use-case';
 import { ListObjectsCommand } from '../list-objects/list-objects.command';
 import { DeleteObjectUseCase } from '../delete-object/delete-object.use-case';
@@ -25,9 +26,9 @@ export interface PurgeStoragePrefixesResult {
  */
 @Injectable()
 export class PurgeStoragePrefixesUseCase {
-  private readonly logger = new Logger(PurgeStoragePrefixesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(PurgeStoragePrefixesUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly listObjectsUseCase: ListObjectsUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
@@ -35,9 +36,12 @@ export class PurgeStoragePrefixesUseCase {
   async execute(
     command: PurgeStoragePrefixesCommand,
   ): Promise<PurgeStoragePrefixesResult> {
-    this.logger.log('Purging storage prefixes', {
-      prefixCount: command.prefixes.length,
-    });
+    this.logger.info(
+      {
+        prefixCount: command.prefixes.length,
+      },
+      'Purging storage prefixes',
+    );
 
     const objectNames = await this.collectObjects(command.prefixes);
     if (objectNames.length === 0) {
@@ -45,7 +49,7 @@ export class PurgeStoragePrefixesUseCase {
     }
 
     const result = await this.deleteObjects(objectNames);
-    this.logger.log('Finished purging storage prefixes', { ...result });
+    this.logger.info({ ...result }, 'Finished purging storage prefixes');
     return result;
   }
 
@@ -62,10 +66,10 @@ export class PurgeStoragePrefixesUseCase {
           objectNames.add(name);
         }
       } catch (error) {
-        this.logger.error('Failed to list storage prefix', {
-          prefix,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          { err: error as Error, prefix },
+          'Failed to list storage prefix',
+        );
       }
     }
     return Array.from(objectNames);
@@ -96,10 +100,10 @@ export class PurgeStoragePrefixesUseCase {
       if (error instanceof ObjectNotFoundError) {
         return true;
       }
-      this.logger.warn('Failed to delete object from storage', {
-        objectName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error, fileName: objectName },
+        'Failed to delete object from storage',
+      );
       return false;
     }
   }

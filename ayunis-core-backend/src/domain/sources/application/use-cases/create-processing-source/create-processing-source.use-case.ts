@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -13,14 +14,19 @@ import { CreateProcessingSourceCommand } from './create-processing-source.comman
 
 @Injectable()
 export class CreateProcessingSourceUseCase {
-  private readonly logger = new Logger(CreateProcessingSourceUseCase.name);
-
-  constructor(private readonly sourceRepository: SourceRepository) {}
+  constructor(
+    @InjectPinoLogger(CreateProcessingSourceUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly sourceRepository: SourceRepository,
+  ) {}
 
   async execute(command: CreateProcessingSourceCommand): Promise<FileSource> {
-    this.logger.debug('Creating processing source', {
-      fileName: command.fileName,
-    });
+    this.logger.debug(
+      {
+        fileName: command.fileName,
+      },
+      'Creating processing source',
+    );
 
     try {
       const source = new FileSource({
@@ -34,9 +40,12 @@ export class CreateProcessingSourceUseCase {
       return (await this.sourceRepository.save(source)) as FileSource;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating processing source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating processing source',
+      );
       throw new UnexpectedSourceError('Error creating processing source', {
         error: error as Error,
       });

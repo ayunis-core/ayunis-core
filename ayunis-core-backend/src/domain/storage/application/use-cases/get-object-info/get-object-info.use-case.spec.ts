@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
@@ -27,6 +29,10 @@ describe('GetObjectInfoUseCase', () => {
       imports: [ConfigModule.forFeature(storageConfig)],
       providers: [
         GetObjectInfoUseCase,
+        {
+          provide: getLoggerToken(GetObjectInfoUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ObjectStoragePort, useValue: mockObjectStorage },
         {
           provide: storageConfig.KEY,

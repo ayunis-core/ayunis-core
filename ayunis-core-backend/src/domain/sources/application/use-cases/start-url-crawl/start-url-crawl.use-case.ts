@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -13,9 +15,9 @@ import { StartUrlCrawlCommand } from './start-url-crawl.command';
 
 @Injectable()
 export class StartUrlCrawlUseCase {
-  private readonly logger = new Logger(StartUrlCrawlUseCase.name);
-
   constructor(
+    @InjectPinoLogger(StartUrlCrawlUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly createProcessingUrlSourceUseCase: CreateProcessingUrlSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
     private readonly enqueueUrlCrawlUseCase: EnqueueUrlCrawlUseCase,
@@ -23,10 +25,10 @@ export class StartUrlCrawlUseCase {
   ) {}
 
   async execute(command: StartUrlCrawlCommand): Promise<UrlSource> {
-    this.logger.log('Starting async URL crawl', {
-      url: command.url,
-      maxDepth: command.maxDepth,
-    });
+    this.logger.info(
+      { maxDepth: command.maxDepth, url: command.url },
+      'Starting async URL crawl',
+    );
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -42,36 +44,41 @@ export class StartUrlCrawlUseCase {
         }),
       );
 
-      // 2. Enqueue BullMQ crawl job
-      try {
-        await this.enqueueUrlCrawlUseCase.execute(
-          new EnqueueUrlCrawlCommand({
-            sourceId: savedSource.id,
-            orgId,
-            userId,
-            rootUrl: command.url,
-            maxDepth: command.maxDepth,
-          }),
-        );
-      } catch (error) {
-        this.logger.error('Failed to enqueue URL crawl job', {
-          sourceId: savedSource.id,
-          error: error as Error,
-        });
-        await this.tryMarkSourceFailed(
-          savedSource,
-          'Failed to enqueue crawl job',
-        );
-        throw error;
-      }
+      await this.enqueueOrFail(savedSource, orgId, userId, command);
 
       return savedSource;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error starting URL crawl', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error starting URL crawl');
       throw new UnexpectedSourceError('Error starting URL crawl', {
         error: error as Error,
       });
+    }
+  }
+
+  private async enqueueOrFail(
+    source: UrlSource,
+    orgId: UUID,
+    userId: UUID,
+    command: StartUrlCrawlCommand,
+  ): Promise<void> {
+    try {
+      await this.enqueueUrlCrawlUseCase.execute(
+        new EnqueueUrlCrawlCommand({
+          sourceId: source.id,
+          orgId,
+          userId,
+          rootUrl: command.url,
+          maxDepth: command.maxDepth,
+        }),
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, sourceId: source.id },
+        'Failed to enqueue URL crawl job',
+      );
+      await this.tryMarkSourceFailed(source, 'Failed to enqueue crawl job');
+      throw error;
     }
   }
 
@@ -84,10 +91,13 @@ export class StartUrlCrawlUseCase {
         new MarkSourceFailedCommand({ sourceId: source.id, errorMessage }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as FAILED', {
-        sourceId: source.id,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId: source.id,
+          err: err as Error,
+        },
+        'Failed to mark source as FAILED',
+      );
     }
   }
 }

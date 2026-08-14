@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { CleanupSourceProcessingUseCase } from './cleanup-source-processing.use-case';
 import { CleanupSourceProcessingCommand } from './cleanup-source-processing.command';
@@ -32,6 +33,10 @@ describe('CleanupSourceProcessingUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CleanupSourceProcessingUseCase,
+        {
+          provide: getLoggerToken(CleanupSourceProcessingUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: DocumentProcessingPort, useValue: documentProcessingPort },
         { provide: UrlCrawlProcessingPort, useValue: urlCrawlProcessingPort },
         {
@@ -42,8 +47,6 @@ describe('CleanupSourceProcessingUseCase', () => {
     }).compile();
 
     useCase = module.get(CleanupSourceProcessingUseCase);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

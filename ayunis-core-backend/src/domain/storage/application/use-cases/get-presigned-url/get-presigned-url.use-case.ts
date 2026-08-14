@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { GetPresignedUrlCommand } from './get-presigned-url.command';
@@ -9,9 +10,9 @@ import { PresignedUrl } from 'src/domain/storage/domain/presigned-url.entity';
 
 @Injectable()
 export class GetPresignedUrlUseCase {
-  private readonly logger = new Logger(GetPresignedUrlUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetPresignedUrlUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
@@ -19,11 +20,12 @@ export class GetPresignedUrlUseCase {
 
   async execute(command: GetPresignedUrlCommand): Promise<PresignedUrl> {
     this.logger.debug(
-      `Generating presigned URL for object: ${command.objectName}`,
       {
         bucket: command.bucket,
         expiresIn: command.expiresIn,
+        fileName: command.objectName,
       },
+      'Generating presigned URL for object',
     );
 
     try {
@@ -53,7 +55,8 @@ export class GetPresignedUrlUseCase {
       );
 
       this.logger.debug(
-        `Successfully generated presigned URL for object: ${command.objectName}`,
+        { fileName: command.objectName },
+        'Successfully generated presigned URL for object',
       );
       return url;
     } catch (error) {
@@ -62,8 +65,8 @@ export class GetPresignedUrlUseCase {
       }
 
       this.logger.error(
-        `Failed to generate presigned URL for object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to generate presigned URL for object',
       );
       throw new DownloadFailedError();
     }

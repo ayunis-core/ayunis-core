@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -87,6 +89,10 @@ describe('StartDocumentProcessingUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StartDocumentProcessingUseCase,
+        {
+          provide: getLoggerToken(StartDocumentProcessingUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: CreateProcessingSourceUseCase,
           useValue: mockCreateProcessingSourceUseCase,

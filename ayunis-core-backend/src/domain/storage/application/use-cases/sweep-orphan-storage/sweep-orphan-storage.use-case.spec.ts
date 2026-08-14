@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import {
   ORPHAN_STORAGE_SAFETY_WINDOW_MS,
@@ -36,6 +37,10 @@ describe('SweepOrphanStorageUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SweepOrphanStorageUseCase,
+        {
+          provide: getLoggerToken(SweepOrphanStorageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ObjectStoragePort, useValue: objectStorage },
         { provide: FindAllOrgIdsUseCase, useValue: findAllOrgIdsUseCase },
         { provide: PurgeOrgStorageUseCase, useValue: purgeOrgStorageUseCase },
@@ -43,10 +48,6 @@ describe('SweepOrphanStorageUseCase', () => {
     }).compile();
 
     useCase = module.get(SweepOrphanStorageUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

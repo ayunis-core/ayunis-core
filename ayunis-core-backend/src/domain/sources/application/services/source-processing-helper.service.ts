@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { IngestBulkContentUseCase } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.use-case';
 import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
@@ -16,9 +17,9 @@ import type { TextSourceContentChunk } from '../../domain/source-content-chunk.e
  */
 @Injectable()
 export class SourceProcessingHelper {
-  private readonly logger = new Logger(SourceProcessingHelper.name);
-
   constructor(
+    @InjectPinoLogger(SourceProcessingHelper.name)
+    private readonly logger: PinoLogger,
     private readonly ingestBulkContentUseCase: IngestBulkContentUseCase,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
@@ -51,10 +52,13 @@ export class SourceProcessingHelper {
         new DeleteContentCommand({ documentId: sourceId }),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up partial vector index entries', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to clean up partial vector index entries',
+      );
     }
   }
 
@@ -64,10 +68,13 @@ export class SourceProcessingHelper {
         new MarkSourceFailedCommand({ sourceId, errorMessage }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as failed', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to mark source as failed',
+      );
     }
   }
 }

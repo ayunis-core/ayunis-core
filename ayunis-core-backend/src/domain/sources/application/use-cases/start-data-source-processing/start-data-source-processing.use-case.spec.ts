@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -58,6 +59,7 @@ describe('StartDataSourceProcessingUseCase', () => {
     } as unknown as ContextService;
 
     useCase = new StartDataSourceProcessingUseCase(
+      createPinoLoggerMock(),
       sourceRepository,
       parser,
       markSourceFailed,

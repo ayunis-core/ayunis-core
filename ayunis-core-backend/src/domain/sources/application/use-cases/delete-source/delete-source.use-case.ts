@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SourceRepository } from '../../ports/source.repository';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
@@ -12,9 +13,9 @@ import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeleteSourceUseCase {
-  private readonly logger = new Logger(DeleteSourceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteSourceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly deleteContentUseCase: DeleteContentUseCase,
     private readonly sourceRepository: SourceRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
@@ -22,7 +23,7 @@ export class DeleteSourceUseCase {
 
   @Transactional()
   async execute(command: DeleteSourceCommand): Promise<void> {
-    this.logger.debug(`Deleting source: ${command.sourceId}`);
+    this.logger.debug({ sourceId: command.sourceId }, 'Deleting source');
     try {
       const source = await this.sourceRepository.findById(command.sourceId);
 
@@ -41,15 +42,19 @@ export class DeleteSourceUseCase {
       await this.sourceRepository.delete(command.sourceId);
 
       this.logger.debug(
-        `Successfully deleted source and indexed content: ${command.sourceId}`,
+        { sourceId: command.sourceId },
+        'Successfully deleted source and indexed content',
       );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error deleting source',
+      );
       throw new UnexpectedSourceError('Error deleting source', {
         error: error as Error,
       });

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceRepository } from '../../ports/source.repository';
 import {
@@ -10,9 +11,11 @@ import { MarkSourceFailedCommand } from './mark-source-failed.command';
 
 @Injectable()
 export class MarkSourceFailedUseCase {
-  private readonly logger = new Logger(MarkSourceFailedUseCase.name);
-
-  constructor(private readonly sourceRepository: SourceRepository) {}
+  constructor(
+    @InjectPinoLogger(MarkSourceFailedUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly sourceRepository: SourceRepository,
+  ) {}
 
   async execute(command: MarkSourceFailedCommand): Promise<void> {
     try {
@@ -25,15 +28,21 @@ export class MarkSourceFailedUseCase {
       source.processingError = command.errorMessage;
       await this.sourceRepository.save(source);
 
-      this.logger.warn('Source marked as failed', {
-        sourceId: command.sourceId,
-        errorMessage: command.errorMessage,
-      });
+      this.logger.warn(
+        {
+          sourceId: command.sourceId,
+          err: new Error(command.errorMessage),
+        },
+        'Source marked as failed',
+      );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error marking source as failed', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error marking source as failed',
+      );
       throw new UnexpectedSourceError('Error marking source as failed', {
         error: error as Error,
       });

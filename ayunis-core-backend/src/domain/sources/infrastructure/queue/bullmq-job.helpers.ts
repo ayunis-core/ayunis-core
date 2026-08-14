@@ -1,4 +1,4 @@
-import type { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import type { Job, JobsOptions, Queue } from 'bullmq';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -174,27 +174,30 @@ function shouldScheduleRetry(
 export async function cancelQueueJob(
   queue: Queue,
   sourceId: UUID,
-  logger: Logger,
+  logger: PinoLogger,
 ): Promise<void> {
   try {
     const job = await queue.getJob(sourceId);
     if (!job) {
-      logger.debug('No job found to cancel', { sourceId });
+      logger.debug({ sourceId }, 'No job found to cancel');
       return;
     }
 
     const state = await job.getState();
     if (state === 'active') {
-      logger.debug('Job is active, skipping removal', { sourceId });
+      logger.debug({ sourceId }, 'Job is active, skipping removal');
       return;
     }
 
     await job.remove();
-    logger.log('Cancelled queued job', { sourceId, state });
+    logger.info({ sourceId, state }, 'Cancelled queued job');
   } catch (err) {
-    logger.warn('Best-effort job cancellation failed', {
-      sourceId,
-      error: err as Error,
-    });
+    logger.warn(
+      {
+        sourceId,
+        err: err as Error,
+      },
+      'Best-effort job cancellation failed',
+    );
   }
 }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -11,9 +12,9 @@ import { STANDARD_JOB_OPTIONS, cancelQueueJob } from './bullmq-job.helpers';
 
 @Injectable()
 export class UrlCrawlProducer extends UrlCrawlProcessingPort {
-  private readonly logger = new Logger(UrlCrawlProducer.name);
-
   constructor(
+    @InjectPinoLogger(UrlCrawlProducer.name)
+    private readonly logger: PinoLogger,
     @InjectQueue(URL_CRAWL_QUEUE)
     private readonly queue: Queue<UrlCrawlJobData>,
   ) {
@@ -21,11 +22,14 @@ export class UrlCrawlProducer extends UrlCrawlProcessingPort {
   }
 
   async enqueue(data: UrlCrawlJobData): Promise<void> {
-    this.logger.log('Enqueuing URL crawl job', {
-      sourceId: data.sourceId,
-      rootUrl: data.rootUrl,
-      maxDepth: data.maxDepth,
-    });
+    this.logger.info(
+      {
+        sourceId: data.sourceId,
+        url: data.rootUrl,
+        maxDepth: data.maxDepth,
+      },
+      'Enqueuing URL crawl job',
+    );
 
     await this.queue.add('crawl-url', data, {
       jobId: data.sourceId,

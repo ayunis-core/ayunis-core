@@ -1,3 +1,5 @@
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -13,15 +15,21 @@ import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 describe('MarkSourceFailedUseCase', () => {
   let useCase: MarkSourceFailedUseCase;
   let mockSourceRepository: jest.Mocked<SourceRepository>;
+  let logger: jest.Mocked<PinoLogger>;
 
   const sourceId = '44444444-4444-4444-4444-444444444444' as UUID;
 
   beforeEach(async () => {
     mockSourceRepository = createMockSourceRepository();
+    logger = createPinoLoggerMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarkSourceFailedUseCase,
+        {
+          provide: getLoggerToken(MarkSourceFailedUseCase.name),
+          useValue: logger,
+        },
         { provide: SourceRepository, useValue: mockSourceRepository },
       ],
     }).compile();
@@ -52,6 +60,15 @@ describe('MarkSourceFailedUseCase', () => {
     expect(savedSource.status).toBe(SourceStatus.FAILED);
     expect(savedSource.processingError).toBe(
       'Failed to upload file to storage',
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        sourceId,
+        err: expect.objectContaining({
+          message: 'Failed to upload file to storage',
+        }),
+      },
+      'Source marked as failed',
     );
   });
 

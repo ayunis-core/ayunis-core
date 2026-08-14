@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
   FileSource,
@@ -42,9 +43,9 @@ interface TextSourceWithContent {
 
 @Injectable()
 export class CreateTextSourceUseCase {
-  private readonly logger = new Logger(CreateTextSourceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateTextSourceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
@@ -72,7 +73,7 @@ export class CreateTextSourceUseCase {
       } else {
         throw new InvalidSourceTypeError(command.constructor.name);
       }
-      this.logger.debug('Saving source', { sourceId: result.source.id });
+      this.logger.debug({ sourceId: result.source.id }, 'Saving source');
       const saved = await this.sourceRepository.saveTextSource(result.source, {
         text: result.text,
         chunks: result.chunks,
@@ -85,9 +86,12 @@ export class CreateTextSourceUseCase {
       return saved;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating text source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating text source',
+      );
       throw new UnexpectedSourceError('Error creating text source', {
         error: error as Error,
       });
@@ -209,7 +213,7 @@ export class CreateTextSourceUseCase {
     chunks: TextSourceContentChunk[];
     orgId: UUID;
   }): Promise<void> {
-    this.logger.debug(`Indexing content for source: ${params.sourceId}`);
+    this.logger.debug({ sourceId: params.sourceId }, 'Indexing source content');
 
     // Step 1: Delete any existing index entries for this source
     // (handles re-upload/re-index scenarios, no-op for new sources)
@@ -231,7 +235,8 @@ export class CreateTextSourceUseCase {
     );
 
     this.logger.debug(
-      `Successfully indexed ${params.chunks.length} content blocks for source: ${params.sourceId}`,
+      { sourceId: params.sourceId, chunkCount: params.chunks.length },
+      'Successfully indexed source content',
     );
   }
 }

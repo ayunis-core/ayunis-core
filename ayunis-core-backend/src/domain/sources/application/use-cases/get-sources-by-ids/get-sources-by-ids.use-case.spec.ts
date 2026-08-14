@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetSourcesByIdsUseCase } from './get-sources-by-ids.use-case';
 import { GetSourcesByIdsQuery } from './get-sources-by-ids.query';
 import type { SourceRepository } from '../../ports/source.repository';
@@ -27,7 +28,10 @@ describe('GetSourcesByIdsUseCase', () => {
   beforeEach(() => {
     sourceRepository = createMockSourceRepository();
 
-    useCase = new GetSourcesByIdsUseCase(sourceRepository);
+    useCase = new GetSourcesByIdsUseCase(
+      createPinoLoggerMock(),
+      sourceRepository,
+    );
   });
 
   it('should return sources matching the provided IDs', async () => {

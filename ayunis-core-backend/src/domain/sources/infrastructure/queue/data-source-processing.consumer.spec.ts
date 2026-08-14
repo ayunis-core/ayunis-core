@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Job } from 'bullmq';
 import { DataSourceProcessingConsumer } from './data-source-processing.consumer';
 import type { DataSourceProcessingJobData } from '../../application/ports/data-source-processing.port';
@@ -78,6 +79,7 @@ describe('DataSourceProcessingConsumer', () => {
     } as unknown as ContextService;
 
     consumer = new DataSourceProcessingConsumer(
+      createPinoLoggerMock(),
       contextService,
       downloadObject,
       deleteObject,

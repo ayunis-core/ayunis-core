@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { PurgeOrgStorageUseCase } from './purge-org-storage.use-case';
 import { PurgeOrgStorageCommand } from './purge-org-storage.command';
 import { PurgeStoragePrefixesUseCase } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
@@ -21,6 +22,10 @@ describe('PurgeOrgStorageUseCase', () => {
       providers: [
         PurgeOrgStorageUseCase,
         {
+          provide: getLoggerToken(PurgeOrgStorageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,
         },
@@ -28,8 +33,6 @@ describe('PurgeOrgStorageUseCase', () => {
     }).compile();
 
     useCase = module.get(PurgeOrgStorageUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

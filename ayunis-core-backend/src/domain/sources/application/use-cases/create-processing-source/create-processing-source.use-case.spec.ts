@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateProcessingSourceUseCase } from './create-processing-source.use-case';
@@ -18,6 +20,10 @@ describe('CreateProcessingSourceUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateProcessingSourceUseCase,
+        {
+          provide: getLoggerToken(CreateProcessingSourceUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SourceRepository, useValue: mockSourceRepository },
       ],
     }).compile();

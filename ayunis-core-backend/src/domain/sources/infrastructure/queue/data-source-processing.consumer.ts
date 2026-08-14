@@ -1,4 +1,5 @@
-import { Logger } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -28,9 +29,9 @@ import {
 
 @Processor(DATA_SOURCE_PROCESSING_QUEUE, { concurrency: 2 })
 export class DataSourceProcessingConsumer extends WorkerHost {
-  private readonly logger = new Logger(DataSourceProcessingConsumer.name);
-
   constructor(
+    @InjectPinoLogger(DataSourceProcessingConsumer.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
@@ -42,54 +43,57 @@ export class DataSourceProcessingConsumer extends WorkerHost {
   }
 
   async process(job: Job<DataSourceProcessingJobData>): Promise<void> {
+    this.logger.info(
+      {
+        fileName: job.data.fileName,
+        jobId: job.id,
+        targetCount: job.data.targets.length,
+      },
+      'Processing data source file',
+    );
+    await this.contextService.run(() => this.processJob(job));
+  }
+
+  private async processJob(
+    job: Job<DataSourceProcessingJobData>,
+  ): Promise<void> {
     const { orgId, userId, minioPath, fileName, kind, targets } = job.data;
+    this.validateAndSetContext(orgId, userId);
 
-    this.logger.log('Processing data source file', {
-      fileName,
-      targetCount: targets.length,
-      jobId: job.id,
-    });
-
-    // Set up CLS context so downstream use cases work
-    await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
-
-      try {
-        const pending = await this.loadPendingTargets(targets);
-        if (pending.length === 0) {
-          this.logger.warn('No pending sources left for job, skipping', {
-            jobId: job.id,
-          });
-          await this.cleanupMinioFile(minioPath);
-          return;
-        }
-
-        const fileBuffer = await this.downloadFile(minioPath);
-        const sheets = await this.parseFile(fileBuffer, kind);
-        await this.fillSources(pending, sheets);
+    try {
+      const pending = await this.loadPendingTargets(targets);
+      if (pending.length === 0) {
+        this.logger.warn(
+          { jobId: job.id },
+          'No pending sources left for job, skipping',
+        );
         await this.cleanupMinioFile(minioPath);
-
-        this.logger.log('Data source processing complete', {
-          fileName,
-          sources: pending.length,
-        });
-      } catch (error) {
-        this.logger.error('Data source processing failed', {
-          fileName,
-          error: error as Error,
-        });
-
-        const { final, rethrow } = classifyJobFailure(job, error);
-        if (final) {
-          await this.markPendingTargetsFailed(
-            targets,
-            error instanceof Error ? error.message : 'Unknown processing error',
-          );
-          await this.cleanupMinioFile(minioPath);
-        }
-        if (rethrow) throw rethrow;
+        return;
       }
-    });
+
+      const fileBuffer = await this.downloadFile(minioPath);
+      const sheets = await this.parseFile(fileBuffer, kind);
+      await this.fillSources(pending, sheets);
+      await this.cleanupMinioFile(minioPath);
+      this.logger.info(
+        { fileName, sources: pending.length },
+        'Data source processing complete',
+      );
+    } catch (error) {
+      this.logger.error(
+        { err: error as Error, fileName },
+        'Data source processing failed',
+      );
+      const { final, rethrow } = classifyJobFailure(job, error);
+      if (final) {
+        await this.markPendingTargetsFailed(
+          targets,
+          error instanceof Error ? error.message : 'Unknown processing error',
+        );
+        await this.cleanupMinioFile(minioPath);
+      }
+      if (rethrow) throw rethrow;
+    }
   }
 
   private validateAndSetContext(
@@ -113,10 +117,13 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     for (const target of targets) {
       const source = await this.sourceRepository.findById(target.sourceId);
       if (source?.status !== SourceStatus.PROCESSING) {
-        this.logger.warn('Source missing or no longer processing, skipping', {
-          sourceId: target.sourceId,
-          found: !!source,
-        });
+        this.logger.warn(
+          {
+            sourceId: target.sourceId,
+            found: !!source,
+          },
+          'Source missing or no longer processing, skipping',
+        );
         continue;
       }
       if (!(source instanceof CSVDataSource)) {
@@ -131,9 +138,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         target.sourceId,
       );
       if (!alive) {
-        this.logger.warn('Source deleted mid-load, skipping', {
-          sourceId: target.sourceId,
-        });
+        this.logger.warn(
+          {
+            sourceId: target.sourceId,
+          },
+          'Source deleted mid-load, skipping',
+        );
         continue;
       }
       pending.push({ source, sheetName: target.sheetName });
@@ -188,9 +198,12 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       { headers: parsed.headers, rows: parsed.rows },
     );
     if (!dataWritten) {
-      this.logger.warn('Source deleted mid-processing, skipping', {
-        sourceId,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+        },
+        'Source deleted mid-processing, skipping',
+      );
       return;
     }
 
@@ -202,8 +215,8 @@ export class DataSourceProcessingConsumer extends WorkerHost {
     );
     if (!updated) {
       this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
+        'Conditional update to READY failed — source was deleted or status changed',
       );
     }
   }
@@ -230,10 +243,13 @@ export class DataSourceProcessingConsumer extends WorkerHost {
         new MarkSourceFailedCommand({ sourceId, errorMessage }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as FAILED', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to mark source as FAILED',
+      );
     }
   }
 

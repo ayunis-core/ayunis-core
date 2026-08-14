@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import * as Minio from 'minio';
 import { Readable } from 'stream';
@@ -31,11 +32,12 @@ export class MinioObjectStorageProvider
   extends ObjectStoragePort
   implements OnModuleInit
 {
-  private readonly logger = new Logger(MinioObjectStorageProvider.name);
   private client: Minio.Client;
   private defaultBucket: string;
 
   constructor(
+    @InjectPinoLogger(MinioObjectStorageProvider.name)
+    private readonly logger: PinoLogger,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
   ) {
@@ -55,7 +57,10 @@ export class MinioObjectStorageProvider
       // Add retry logic for MinIO connection
       await this.connectWithRetry();
     } catch (error) {
-      this.logger.error('Failed to initialize MinIO after retries', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to initialize MinIO after retries',
+      );
       // Don't throw - let the application start and handle MinIO errors per request
     }
   }
@@ -63,19 +68,21 @@ export class MinioObjectStorageProvider
   private async connectWithRetry(maxRetries = 10, delay = 2000): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.logger.log(
-          `Connecting to MinIO (attempt ${attempt}/${maxRetries})`,
-        );
+        this.logger.info({ attempt, maxRetries }, 'Connecting to MinIO');
         const bucketExists = await this.client.bucketExists(this.defaultBucket);
         if (!bucketExists) {
           await this.client.makeBucket(this.defaultBucket, 'eu-central-1');
-          this.logger.log(`Created MinIO bucket: ${this.defaultBucket}`);
+          this.logger.info(
+            { bucket: this.defaultBucket },
+            'Created MinIO bucket',
+          );
         }
-        this.logger.log('MinIO connection successful');
+        this.logger.info('MinIO connection successful');
         return;
       } catch (error) {
         this.logger.warn(
-          `MinIO connection attempt ${attempt} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          { attempt, err: error as Error },
+          'MinIO connection attempt failed',
         );
         if (attempt === maxRetries) {
           throw error;

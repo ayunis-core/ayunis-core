@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceRepository } from '../../ports/source.repository';
 import { GetSourcesByIdsQuery } from './get-sources-by-ids.query';
@@ -7,12 +8,14 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetSourcesByIdsUseCase {
-  private readonly logger = new Logger(GetSourcesByIdsUseCase.name);
-
-  constructor(private readonly sourceRepository: SourceRepository) {}
+  constructor(
+    @InjectPinoLogger(GetSourcesByIdsUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly sourceRepository: SourceRepository,
+  ) {}
 
   async execute(query: GetSourcesByIdsQuery): Promise<Source[]> {
-    this.logger.log('execute', { count: query.sourceIds.length });
+    this.logger.info({ count: query.sourceIds.length }, 'execute');
     try {
       if (query.sourceIds.length === 0) {
         return [];
@@ -20,9 +23,12 @@ export class GetSourcesByIdsUseCase {
       return await this.sourceRepository.findByIds(query.sourceIds);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting sources by IDs', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error getting sources by IDs',
+      );
       throw new UnexpectedSourceError(
         error instanceof Error ? error.message : 'Unknown error',
       );
