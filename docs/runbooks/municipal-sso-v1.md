@@ -8,6 +8,7 @@ Use this runbook after the municipality has supplied its IdP configuration throu
 - Verify control of the email domain and complete a test login through the customer IdP.
 - Create the municipality's Zitadel organization and configure its external IdP.
 - Record the Ayunis organization UUID, verified email domain, and Zitadel organization ID.
+- Verify the shared Ayunis Core OIDC application in Zitadel has the Core callback URL, `FRONTEND_BASEURL` as its post-logout redirect URI, and the public `/api/auth/sso/oidc/backchannel-logout` endpoint as its back-channel logout URI.
 
 ## Configure Core
 

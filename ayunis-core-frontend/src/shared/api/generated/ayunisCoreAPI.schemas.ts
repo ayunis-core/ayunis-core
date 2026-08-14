@@ -5388,6 +5388,20 @@ export interface SsoAuthorizationResponseDto {
   authorizationUrl: string;
 }
 
+export interface SsoLogoutResponseDto {
+  success: boolean;
+  /**
+   * Broker logout URL for the user agent, or null for Core-only logout
+   * @nullable
+   */
+  brokerLogoutUrl: string | null;
+}
+
+export interface SsoBackchannelLogoutRequestDto {
+  /** Signed OpenID Connect logout token */
+  logout_token: string;
+}
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email

@@ -37,6 +37,10 @@ import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.contro
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
 import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/link-federated-identity/link-federated-identity.use-case';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
+import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
+import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
+import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broker-logout.client';
 
 @Module({
   imports: [
@@ -49,6 +53,7 @@ import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/
     InvitesModule,
     SubscriptionsModule,
     UsersModule,
+    SessionsModule,
   ],
   controllers: [SuperAdminSsoConnectionsController, SsoLoginController],
   providers: [
@@ -63,10 +68,9 @@ import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/
       provide: FederatedIdentitiesRepository,
       useClass: PostgresFederatedIdentitiesRepository,
     },
-    {
-      provide: OidcBrokerClient,
-      useClass: ZitadelOidcBrokerClient,
-    },
+    ZitadelOidcBrokerClient,
+    { provide: OidcBrokerClient, useExisting: ZitadelOidcBrokerClient },
+    { provide: OidcBrokerLogoutClient, useExisting: ZitadelOidcBrokerClient },
     {
       provide: SsoLoginTransactionsRepository,
       useClass: PostgresSsoLoginTransactionsRepository,
@@ -91,6 +95,8 @@ import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/
     LinkFederatedIdentityUseCase,
     CompleteSsoAuthenticationUseCase,
     SsoAuthorizationTransactionService,
+    CompleteSsoLogoutUseCase,
+    HandleSsoBackchannelLogoutUseCase,
     SsoLoginTransactionCleanupTask,
   ],
   exports: [
