@@ -93,6 +93,23 @@ export interface AcademyCompletionFixture {
   expectedState: string;
 }
 
+export interface SeedDocumentFixture {
+  name: string;
+  text: string;
+}
+
+export interface SkillFixture {
+  name: string;
+  shortDescription: string;
+  instructions: string;
+}
+
+export interface KnowledgeBaseFixture {
+  name: string;
+  description: string;
+  documents: readonly SeedDocumentFixture[];
+}
+
 /**
  * A workspace ("Projekt") owned by the org's admin user. The icon is a key
  * from the frontend catalogue (`shared/lib/workspace-appearance.ts`); the
@@ -101,8 +118,12 @@ export interface AcademyCompletionFixture {
 export interface WorkspaceFixture {
   name: string;
   description?: string;
+  instruction?: string;
   icon: string;
   color: string;
+  skillNames?: readonly string[];
+  knowledgeBaseNames?: readonly string[];
+  documents?: readonly SeedDocumentFixture[];
   /**
    * Pinned workspaces get a favorites row for the org admin; their sidebar
    * order follows the fixture order of the pinned entries.
@@ -122,6 +143,8 @@ export interface OrgFixture {
   /** Whether the org holds the academy add-on. Without it the academy is invisible. */
   academyAddon?: boolean;
   academyCompletions?: readonly AcademyCompletionFixture[];
+  skills?: readonly SkillFixture[];
+  knowledgeBases?: readonly KnowledgeBaseFixture[];
   workspaces?: readonly WorkspaceFixture[];
 }
 
