@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { NonStreamingInferenceService } from './non-streaming-inference.service';
 import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
@@ -35,6 +36,7 @@ describe('NonStreamingInferenceService', () => {
       getInferenceUseCase as unknown as GetInferenceUseCase,
       mockContextService as never,
       mockEventEmitter as never,
+      createPinoLoggerMock(),
     );
   });
 

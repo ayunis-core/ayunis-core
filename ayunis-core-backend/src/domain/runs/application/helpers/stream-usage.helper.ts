@@ -1,6 +1,4 @@
-import { Logger } from '@nestjs/common';
-
-const logger = new Logger('StreamUsage');
+import type { PinoLogger } from 'nestjs-pino';
 
 /** The one facet of a stream chunk this helper reads — structural on purpose, so it needs no cross-module port import. */
 interface UsageBearingChunk {
@@ -14,6 +12,7 @@ interface UsageBearingChunk {
 
 export function extractUsageFromChunks(
   chunks: UsageBearingChunk[],
+  logger: PinoLogger,
 ): { inputTokens: number; outputTokens: number } | undefined {
   const usage = lastWinsUsage(chunks);
   const uncachedInputTokens = usage.inputTokens ?? 0;
@@ -28,11 +27,14 @@ export function extractUsageFromChunks(
     return undefined;
   }
   if (hasCache) {
-    logger.debug('Prompt cache activity', {
-      uncachedInputTokens,
-      cacheReadInputTokens: cacheRead,
-      cacheWriteInputTokens: cacheWrite,
-    });
+    logger.debug(
+      {
+        uncachedInputTokens,
+        cacheReadInputTokens: cacheRead,
+        cacheWriteInputTokens: cacheWrite,
+      },
+      'Prompt cache activity',
+    );
   }
   // Cached prompt tokens are billed as ordinary input: the provider's
   // inputTokens excludes tokens covered by the prompt cache, so without

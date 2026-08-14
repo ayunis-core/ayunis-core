@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -14,12 +15,12 @@ import { TokensConsumedEvent } from '../events/tokens-consumed.event';
  */
 @Injectable()
 export class CollectUsageAsyncService {
-  private readonly logger = new Logger(CollectUsageAsyncService.name);
-
   constructor(
     private readonly collectUsageUseCase: CollectUsageUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(CollectUsageAsyncService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   collect(
@@ -28,13 +29,16 @@ export class CollectUsageAsyncService {
     outputTokens: number,
     messageId?: UUID,
   ): void {
-    this.logger.debug('Collecting usage', {
-      modelId: model.id,
-      modelName: model.name,
-      inputTokens,
-      outputTokens,
-      messageId,
-    });
+    this.logger.debug(
+      {
+        modelId: model.id,
+        modelName: model.name,
+        inputTokens,
+        outputTokens,
+        messageId,
+      },
+      'Collecting usage',
+    );
 
     const userId = this.contextService.get('userId');
     const apiKeyId = this.contextService.get('apiKeyId');
@@ -64,9 +68,12 @@ export class CollectUsageAsyncService {
       )
       .then(() => this.emitTokensConsumed(event))
       .catch((error) => {
-        this.logger.debug('Usage collection failed', {
-          error: error as Error,
-        });
+        this.logger.debug(
+          {
+            err: error as Error,
+          },
+          'Usage collection failed',
+        );
       });
   }
 
@@ -74,9 +81,12 @@ export class CollectUsageAsyncService {
     try {
       await this.eventEmitter.emitAsync(TokensConsumedEvent.EVENT_NAME, event);
     } catch (err) {
-      this.logger.error('Failed to emit TokensConsumedEvent', {
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: err instanceof Error ? err.message : 'Unknown error',
+        },
+        'Failed to emit TokensConsumedEvent',
+      );
     }
   }
 }

@@ -1,5 +1,6 @@
 import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -88,8 +89,6 @@ interface PreparedToolResultInput {
  */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
-  private readonly logger = new Logger(ExecuteRunViaRuntimeUseCase.name);
-
   constructor(
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
@@ -112,13 +111,17 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
+    @InjectPinoLogger(ExecuteRunViaRuntimeUseCase.name)
+    private readonly logger: PinoLogger,
+    @InjectPinoLogger('RunEventStreamAdapter')
+    private readonly runEventStreamLogger: PinoLogger,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
-    this.logger.log('executeRunViaRuntime', { threadId: command.threadId });
+    this.logger.info({ threadId: command.threadId }, 'executeRunViaRuntime');
     const prepared = await this.prepareRun(command);
     return this.streamRun(prepared, command.input, command.signal);
   }
@@ -232,6 +235,7 @@ export class ExecuteRunViaRuntimeUseCase {
       const outcome = yield* adaptRunEventsToStream(
         await this.startRun(prepared, signal),
         prepared.thread.id,
+        this.runEventStreamLogger,
         prepared.toolIntegrations,
       );
       cleanupRequired = outcome === 'aborted';
@@ -246,7 +250,7 @@ export class ExecuteRunViaRuntimeUseCase {
         cleanupRequired = false;
       }
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Runtime run failed', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Runtime run failed');
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
@@ -472,9 +476,12 @@ export class ExecuteRunViaRuntimeUseCase {
         new RunExecutedEvent(userId, orgId),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit RunExecutedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+          },
+          'Failed to emit RunExecutedEvent',
+        );
       });
   }
 }

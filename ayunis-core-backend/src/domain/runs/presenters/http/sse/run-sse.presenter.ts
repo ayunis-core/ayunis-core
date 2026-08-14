@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
 import {
@@ -30,9 +31,11 @@ type RunEventSource = (signal: AbortSignal) => AsyncIterable<RunEvent>;
  */
 @Injectable()
 export class RunSsePresenter {
-  private readonly logger = new Logger(RunSsePresenter.name);
-
-  constructor(private readonly eventMapper: RunEventResponseMapper) {}
+  constructor(
+    private readonly eventMapper: RunEventResponseMapper,
+    @InjectPinoLogger(RunSsePresenter.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async stream(
     response: Response,
@@ -83,7 +86,7 @@ export class RunSsePresenter {
   ): Promise<void> {
     for await (const event of events) {
       if (state.disconnected) {
-        this.logger.log('Stopping event stream due to client disconnect');
+        this.logger.info('Stopping event stream due to client disconnect');
         break;
       }
 
@@ -109,15 +112,18 @@ export class RunSsePresenter {
     // Object wrapper so TS recognises async mutation from the handlers
     const state: ConnectionState = { disconnected: false };
     const disconnectHandler = () => {
-      this.logger.log('Client disconnected from SSE stream', { threadId });
+      this.logger.info({ threadId }, 'Client disconnected from SSE stream');
       state.disconnected = true;
       abortController.abort();
     };
     const errorHandler = (err: Error) => {
-      this.logger.warn('SSE response stream error', {
-        threadId,
-        error: err.message,
-      });
+      this.logger.warn(
+        {
+          threadId,
+          error: err.message,
+        },
+        'SSE response stream error',
+      );
       state.disconnected = true;
       abortController.abort(err);
     };
@@ -164,10 +170,13 @@ export class RunSsePresenter {
       } catch (err) {
         state.disconnected = true;
         abortController.abort(err);
-        this.logger.warn('SSE heartbeat write failed', {
-          threadId,
-          error: err instanceof Error ? err.message : String(err),
-        });
+        this.logger.warn(
+          {
+            threadId,
+            error: err instanceof Error ? err.message : String(err),
+          },
+          'SSE heartbeat write failed',
+        );
       }
     }, HEARTBEAT_INTERVAL_MS);
   }
@@ -181,7 +190,10 @@ export class RunSsePresenter {
     threadId: UUID,
     error: unknown,
   ): void {
-    this.logger.error('Error in run event stream', error);
+    this.logger.error(
+      { err: error instanceof Error ? error : new Error(String(error)) },
+      'Error in run event stream',
+    );
 
     const clientError =
       error instanceof ApplicationError ? error.toClientResponse() : undefined;
@@ -197,11 +209,16 @@ export class RunSsePresenter {
     try {
       this.writeEvent(response, 'execution-error', errorResponse);
     } catch (writeError) {
-      this.logger.warn('Failed to write SSE error event', {
-        threadId,
-        error:
-          writeError instanceof Error ? writeError.message : String(writeError),
-      });
+      this.logger.warn(
+        {
+          threadId,
+          error:
+            writeError instanceof Error
+              ? writeError.message
+              : String(writeError),
+        },
+        'Failed to write SSE error event',
+      );
     }
   }
 }

@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateSystemMessageUseCase } from './create-system-message.use-case';
@@ -22,6 +24,10 @@ describe('CreateSystemMessageUseCase', () => {
       providers: [
         CreateSystemMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
+        {
+          provide: getLoggerToken(CreateSystemMessageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
@@ -166,15 +172,18 @@ describe('CreateSystemMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating system message', {
-        threadId,
-      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+        },
+        'Creating system message',
+      );
     });
   });
 });

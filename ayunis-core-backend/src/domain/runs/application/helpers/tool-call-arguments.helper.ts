@@ -1,11 +1,9 @@
-import { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 import {
   InferenceFailedError,
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
-
-const logger = new Logger('ToolCallArguments');
 
 export interface CompletedToolCall {
   id: string | null;
@@ -41,6 +39,7 @@ export function parseFinalToolArguments(
 export function assertToolCallArgumentsIntact(
   toolCalls: Iterable<CompletedToolCall>,
   finishReason: string | null,
+  logger: PinoLogger,
 ): void {
   const calls = [...toolCalls].filter((call) => call.id && call.name);
   if (calls.length === 0) return;
@@ -57,13 +56,16 @@ export function assertToolCallArgumentsIntact(
   // not leave the run transcript for centralized logs. Length + finish reason
   // are enough to attribute the truncation (a token-limit cut shows up as
   // finishReason 'length' with a stable length across retries).
-  logger.warn('Model emitted unparseable tool call arguments', {
-    toolCalls: malformed.map((call) => ({
-      name: call.name,
-      argumentsLength: call.arguments.length,
-    })),
-    finishReason,
-  });
+  logger.warn(
+    {
+      toolCalls: malformed.map((call) => ({
+        toolName: call.name,
+        argumentsLength: call.arguments.length,
+      })),
+      finishReason,
+    },
+    'Model emitted unparseable tool call arguments',
+  );
   throw new InferenceFailedError(
     'model emitted unparseable tool call arguments',
     { toolNames: malformed.map((call) => call.name) },

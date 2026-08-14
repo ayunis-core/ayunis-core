@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
 
@@ -9,11 +10,12 @@ import { CleanupOrphanedImagesUseCase } from '../../application/use-cases/cleanu
  */
 @Injectable()
 export class OrphanedImagesCleanupTask {
-  private readonly logger = new Logger(OrphanedImagesCleanupTask.name);
   private isRunning = false;
 
   constructor(
     private readonly cleanupOrphanedImagesUseCase: CleanupOrphanedImagesUseCase,
+    @InjectPinoLogger(OrphanedImagesCleanupTask.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   /**
@@ -28,26 +30,33 @@ export class OrphanedImagesCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.log('Starting scheduled orphaned images cleanup');
+    this.logger.info('Starting scheduled orphaned images cleanup');
 
     try {
       const result = await this.cleanupOrphanedImagesUseCase.execute();
 
-      this.logger.log('Scheduled cleanup completed', {
-        scanned: result.scannedCount,
-        deleted: result.deletedCount,
-        failed: result.failedCount,
-      });
+      this.logger.info(
+        {
+          scanned: result.scannedCount,
+          deleted: result.deletedCount,
+          failed: result.failedCount,
+        },
+        'Scheduled cleanup completed',
+      );
 
       if (result.failedCount > 0) {
-        this.logger.warn('Some images failed to delete', {
-          errors: result.errors,
-        });
+        this.logger.warn(
+          { errors: result.errors },
+          'Some images failed to delete',
+        );
       }
     } catch (error) {
-      this.logger.error('Scheduled cleanup failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Scheduled cleanup failed',
+      );
     } finally {
       this.isRunning = false;
     }

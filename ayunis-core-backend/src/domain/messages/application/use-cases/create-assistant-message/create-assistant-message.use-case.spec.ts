@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateAssistantMessageUseCase } from './create-assistant-message.use-case';
@@ -38,6 +40,10 @@ describe('CreateAssistantMessageUseCase', () => {
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        {
+          provide: getLoggerToken(CreateAssistantMessageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
@@ -260,15 +266,18 @@ describe('CreateAssistantMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating assistant message', {
-        threadId,
-      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+        },
+        'Creating assistant message',
+      );
     });
   });
 });

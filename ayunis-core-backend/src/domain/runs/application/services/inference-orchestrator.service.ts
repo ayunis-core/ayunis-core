@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { CreateAssistantMessageUseCase } from 'src/domain/messages/application/use-cases/create-assistant-message/create-assistant-message.use-case';
@@ -19,8 +20,6 @@ const MAX_CONTEXT_TOKENS = 80000;
 
 @Injectable()
 export class InferenceOrchestratorService {
-  private readonly logger = new Logger(InferenceOrchestratorService.name);
-
   constructor(
     private readonly createAssistantMessageUseCase: CreateAssistantMessageUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
@@ -28,6 +27,8 @@ export class InferenceOrchestratorService {
     private readonly streamingInferenceService: StreamingInferenceService,
     private readonly nonStreamingInferenceService: NonStreamingInferenceService,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
+    @InjectPinoLogger(InferenceOrchestratorService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async *runInference(
@@ -47,7 +48,10 @@ export class InferenceOrchestratorService {
       return yield* this.runNonStreamingInference(params, trimmedMessages);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Inference failed', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Inference failed',
+      );
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Inference error',
         { originalError: error as Error },

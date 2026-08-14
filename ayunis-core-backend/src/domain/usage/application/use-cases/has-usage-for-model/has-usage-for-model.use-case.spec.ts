@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
@@ -12,6 +13,7 @@ describe('HasUsageForModelUseCase', () => {
     usageRepository = { existsByModelId: jest.fn() };
     useCase = new HasUsageForModelUseCase(
       usageRepository as unknown as UsageRepository,
+      createPinoLoggerMock(),
     );
   });
 

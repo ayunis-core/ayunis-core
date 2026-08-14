@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolUsedEvent } from '../../events/tool-used.event';
@@ -19,7 +20,10 @@ describe('ToolUsageHookFactory', () => {
         logoUrl: null,
       }),
     } as unknown as RuntimeToolIntegrationRegistry;
-    const hook = new ToolUsageHookFactory(eventEmitter).create({
+    const hook = new ToolUsageHookFactory(
+      eventEmitter,
+      createPinoLoggerMock(),
+    ).create({
       userId,
       orgId,
       integrations,

@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
 import type { RunEvent, ToolCallSnapshot } from '@ayunis/agent-runtime';
 import { DEFAULT_MAX_ITERATIONS } from '@ayunis/agent-runtime';
-import { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -30,8 +30,6 @@ import { reconstructRuntimeModelError } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
 import type { RunExecutionOutcome } from '../run-execution-outcome';
 
-const logger = new Logger('RunEventStreamAdapter');
-
 /** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
   id: UUID;
@@ -58,6 +56,7 @@ interface StreamingTurn {
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,
   threadId: UUID,
+  logger: PinoLogger,
   integrations?: RuntimeToolIntegrationRegistry,
 ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
   const assistant = new AssistantTurnAccumulator(threadId, integrations);
@@ -75,6 +74,7 @@ export async function* adaptRunEventsToStream(
       event,
       threadId,
       assistant.lastCompletedIteration(),
+      logger,
     );
     if (side instanceof ApplicationError) {
       pendingError = side;
@@ -169,6 +169,7 @@ function toSideStreamItem(
   event: RunEvent,
   threadId: UUID,
   iteration: number,
+  logger: PinoLogger,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'tool_result_message') {
     return toBackendToolResultMessage(
@@ -183,28 +184,29 @@ function toSideStreamItem(
       : null;
   }
   if (event.type === 'error') {
-    return mapRunError(event);
+    return mapRunError(event, logger);
   }
   if (event.type === 'finalization_error') {
-    return mapFinalizationError(event);
+    return mapFinalizationError(event, logger);
   }
   return null;
 }
 
 function mapFinalizationError(
   event: Extract<RunEvent, { type: 'finalization_error' }>,
+  logger: PinoLogger,
 ): ApplicationError | null {
   const context = {
     hookName: event.hookName,
     phase: 'runEnd',
     originalOutcome: event.outcome,
-    runtimeMessage: event.message,
+    message: event.message,
   };
   if (!event.critical) {
-    logger.warn('Best-effort agent runtime finalization hook failed', context);
+    logger.warn(context, 'Best-effort agent runtime finalization hook failed');
     return null;
   }
-  logger.error('Critical agent runtime finalization hook failed', context);
+  logger.error(context, 'Critical agent runtime finalization hook failed');
   return new RunExecutionFailedError('Agent runtime finalization failed', {
     hookName: event.hookName,
     phase: 'runEnd',
@@ -300,7 +302,10 @@ const RUN_ERROR_MAPPERS = new Map<
   ['CONTEXT_BUDGET_EXCEEDED', () => new RunContextBudgetExceededError()],
 ]);
 
-function mapRunError(event: RunErrorEvent): ApplicationError {
+function mapRunError(
+  event: RunErrorEvent,
+  logger: PinoLogger,
+): ApplicationError {
   if (event.code === 'ANONYMIZATION_UNAVAILABLE') {
     // Checked before the generic reconstruction: the run error keeps the
     // user-facing code and localized message, while the classified provider
@@ -319,10 +324,13 @@ function mapRunError(event: RunErrorEvent): ApplicationError {
   if (mapper) {
     return mapper(event);
   }
-  logger.error('Agent runtime failed', {
-    code: event.code,
-    runtimeMessage: event.message,
-    details: event.details,
-  });
+  logger.error(
+    {
+      code: event.code,
+      message: event.message,
+      details: event.details,
+    },
+    'Agent runtime failed',
+  );
   return new RunExecutionFailedError('Agent runtime failed');
 }

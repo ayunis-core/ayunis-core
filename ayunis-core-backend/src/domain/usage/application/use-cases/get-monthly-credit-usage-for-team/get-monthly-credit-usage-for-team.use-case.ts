@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetMonthlyCreditUsageForTeamQuery } from './get-monthly-credit-usage-for-team.query';
 import { UsageRepository } from '../../ports/usage.repository';
 import { UnexpectedUsageError } from '../../usage.errors';
@@ -10,13 +11,11 @@ import { FindAllUserIdsByTeamIdQuery } from 'src/iam/teams/application/use-cases
 // A team's consumption is the shared pool: the sum over its current members.
 @Injectable()
 export class GetMonthlyCreditUsageForTeamUseCase {
-  private readonly logger = new Logger(
-    GetMonthlyCreditUsageForTeamUseCase.name,
-  );
-
   constructor(
     private readonly usageRepository: UsageRepository,
     private readonly findAllUserIdsByTeamIdUseCase: FindAllUserIdsByTeamIdUseCase,
+    @InjectPinoLogger(GetMonthlyCreditUsageForTeamUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(
@@ -24,10 +23,13 @@ export class GetMonthlyCreditUsageForTeamUseCase {
   ): Promise<{ creditsUsed: number }> {
     const effectiveStart = getEffectiveMonthStart(query.since);
 
-    this.logger.log('Getting monthly credit usage for team', {
-      teamId: query.teamId,
-      effectiveStart: effectiveStart.toISOString(),
-    });
+    this.logger.info(
+      {
+        teamId: query.teamId,
+        effectiveStart: effectiveStart.toISOString(),
+      },
+      'Getting monthly credit usage for team',
+    );
 
     try {
       const memberIds = await this.findAllUserIdsByTeamIdUseCase.execute(
@@ -44,7 +46,10 @@ export class GetMonthlyCreditUsageForTeamUseCase {
       return { creditsUsed };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit usage for team', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get monthly credit usage for team',
+      );
       throw new UnexpectedUsageError(error as Error, {
         teamId: query.teamId,
       });

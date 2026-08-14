@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
 import { CountMessagesTokensCommand } from './count-messages-tokens.command';
@@ -6,12 +7,14 @@ import { extractTextFromContent } from '../../utils/message-text-extractor.util'
 
 @Injectable()
 export class CountMessagesTokensUseCase {
-  private readonly logger = new Logger(CountMessagesTokensUseCase.name);
-
-  constructor(private readonly countTokensUseCase: CountTokensUseCase) {}
+  constructor(
+    private readonly countTokensUseCase: CountTokensUseCase,
+    @InjectPinoLogger(CountMessagesTokensUseCase.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   execute(command: CountMessagesTokensCommand): number {
-    this.logger.log('execute', { messageCount: command.messages.length });
+    this.logger.info({ messageCount: command.messages.length }, 'execute');
 
     const allText = command.messages
       .flatMap((message) => message.content)

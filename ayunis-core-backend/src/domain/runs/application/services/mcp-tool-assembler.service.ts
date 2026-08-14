@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
@@ -24,11 +25,11 @@ type McpIntegrationMeta = { name: string; logoUrl: string | null };
  */
 @Injectable()
 export class McpToolAssemblerService {
-  private readonly logger = new Logger(McpToolAssemblerService.name);
-
   constructor(
     private readonly discoverMcpCapabilitiesUseCase: DiscoverMcpCapabilitiesUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
+    @InjectPinoLogger(McpToolAssemblerService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   /**
@@ -48,7 +49,8 @@ export class McpToolAssemblerService {
     );
     for (const duplicate of duplicates) {
       this.logger.warn(
-        `Duplicate MCP tool name '${duplicate.name}', skipping later occurrence`,
+        { toolName: duplicate.name },
+        'Duplicate MCP tool name, skipping later occurrence',
       );
     }
     return unique;
@@ -139,14 +141,15 @@ export class McpToolAssemblerService {
         const failedId = integrationIdList[index];
         const meta = integrationMetaMap.get(failedId);
         this.logger.warn(
-          `MCP integration '${meta?.name ?? failedId}' unavailable, skipping`,
           {
             integrationId: failedId,
+            integrationName: meta?.name,
             error:
               result.reason instanceof Error
                 ? result.reason.message
                 : 'Unknown error',
           },
+          'MCP integration unavailable, skipping',
         );
         // The skip is the only place run-time discovery outages surface, and
         // their raw transport duplicates are suppressed AppSignal-side

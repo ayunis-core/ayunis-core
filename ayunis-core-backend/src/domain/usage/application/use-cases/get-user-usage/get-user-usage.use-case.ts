@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetUserUsageQuery } from './get-user-usage.query';
 import {
   UsageRepository,
@@ -14,9 +15,11 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUserUsageUseCase {
-  private readonly logger = new Logger(GetUserUsageUseCase.name);
-
-  constructor(private readonly usageRepository: UsageRepository) {}
+  constructor(
+    private readonly usageRepository: UsageRepository,
+    @InjectPinoLogger(GetUserUsageUseCase.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   async execute(query: GetUserUsageQuery): Promise<UserUsageResult> {
     this.validateQuery(query);
@@ -25,7 +28,10 @@ export class GetUserUsageUseCase {
       return await this.usageRepository.getUserUsage(query);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get user usage', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get user usage',
+      );
       throw new UnexpectedUsageError(error as Error, {
         organizationId: query.organizationId,
       });

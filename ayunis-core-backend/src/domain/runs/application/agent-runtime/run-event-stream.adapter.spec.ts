@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { RunEvent, RunEventPayload } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -50,16 +51,21 @@ async function* eventsFrom(
 
 async function collect(
   events: AsyncIterable<RunEvent>,
+  logger = createPinoLoggerMock(),
 ): Promise<RunStreamItem[]> {
   const items: RunStreamItem[] = [];
-  for await (const item of adaptRunEventsToStream(events, threadId)) {
+  for await (const item of adaptRunEventsToStream(events, threadId, logger)) {
     items.push(item);
   }
   return items;
 }
 
 async function collectWithOutcome(events: AsyncIterable<RunEvent>) {
-  const generator = adaptRunEventsToStream(events, threadId);
+  const generator = adaptRunEventsToStream(
+    events,
+    threadId,
+    createPinoLoggerMock(),
+  );
   const items: RunStreamItem[] = [];
   for (;;) {
     const next = await generator.next();
@@ -371,6 +377,9 @@ describe('adaptRunEventsToStream', () => {
   });
 
   it('maps other error events to a client-safe run error', async () => {
+    const logger = createPinoLoggerMock();
+    const details = { provider: 'test-provider', statusCode: 503 };
+
     await expect(
       collect(
         eventsFrom([
@@ -378,13 +387,23 @@ describe('adaptRunEventsToStream', () => {
             type: 'error',
             code: 'PROVIDER_FAILED',
             message: 'upstream exposed internal provider details',
+            details,
           },
           { type: 'run_end', status: 'error', usage: {} },
         ]),
+        logger,
       ),
     ).rejects.toMatchObject<Partial<RunExecutionFailedError>>({
       message: 'Run execution failed: Agent runtime failed',
     });
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        code: 'PROVIDER_FAILED',
+        message: 'upstream exposed internal provider details',
+        details,
+      },
+      'Agent runtime failed',
+    );
   });
 
   it.each([

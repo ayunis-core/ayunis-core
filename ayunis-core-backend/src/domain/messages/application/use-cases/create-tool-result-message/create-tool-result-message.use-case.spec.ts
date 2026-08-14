@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateToolResultMessageUseCase } from './create-tool-result-message.use-case';
@@ -22,6 +24,10 @@ describe('CreateToolResultMessageUseCase', () => {
       providers: [
         CreateToolResultMessageUseCase,
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
+        {
+          provide: getLoggerToken(CreateToolResultMessageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
@@ -227,15 +233,18 @@ describe('CreateToolResultMessageUseCase', () => {
         .spyOn(mockMessagesRepository, 'create')
         .mockResolvedValue(expectedMessage);
 
-      const loggerSpy = jest.spyOn(useCase['logger'], 'log');
+      const loggerSpy = jest.spyOn(useCase['logger'], 'info');
 
       // Act
       await useCase.execute(command);
 
       // Assert
-      expect(loggerSpy).toHaveBeenCalledWith('Creating tool result message', {
-        threadId,
-      });
+      expect(loggerSpy).toHaveBeenCalledWith(
+        {
+          threadId,
+        },
+        'Creating tool result message',
+      );
     });
   });
 });

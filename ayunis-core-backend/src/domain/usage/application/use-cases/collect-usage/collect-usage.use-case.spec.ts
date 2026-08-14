@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -83,6 +85,10 @@ describe('CollectUsageUseCase', () => {
           useValue: mockGetCreditsPerEuroUseCase,
         },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        {
+          provide: getLoggerToken(CollectUsageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

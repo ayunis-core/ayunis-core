@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreditBudgetGuardService } from './credit-budget-guard.service';
@@ -32,6 +34,10 @@ describe('CreditBudgetGuardService', () => {
         {
           provide: GetMonthlyCreditUsageUseCase,
           useValue: mockGetMonthlyCreditUsage,
+        },
+        {
+          provide: getLoggerToken(CreditBudgetGuardService.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();
