@@ -1,16 +1,15 @@
 import type { Request, Response } from 'express';
+import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { SSO_TEST_ORG_ID } from 'src/iam/sso/application/testing/sso-login.fixtures';
-import type { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
+import type { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
 import type { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import type { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
-import type { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 
 describe(SsoLoginController.name, () => {
   const discovery = { execute: jest.fn() };
   const start = { execute: jest.fn() };
-  const complete = { execute: jest.fn() };
-  const provision = { execute: jest.fn() };
+  const completeAuthentication = { execute: jest.fn() };
   const configService = {
     get: jest.fn().mockImplementation((_key, defaultValue) => defaultValue),
   };
@@ -22,12 +21,13 @@ describe(SsoLoginController.name, () => {
   const controller = new SsoLoginController(
     discovery as unknown as DiscoverOrgSsoUseCase,
     start as unknown as StartOrgSsoLoginUseCase,
-    complete as unknown as CompleteOrgSsoLoginUseCase,
-    provision as unknown as ProvisionOrgSsoUserUseCase,
+    completeAuthentication as unknown as CompleteSsoAuthenticationUseCase,
     configService as never,
   );
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('returns only the organization routing result for email discovery', async () => {
     discovery.execute.mockResolvedValue({
@@ -77,7 +77,13 @@ describe(SsoLoginController.name, () => {
   });
 
   it('preserves duplicate callback parameters for strict state validation', async () => {
-    complete.execute.mockResolvedValue({ orgId: SSO_TEST_ORG_ID });
+    completeAuthentication.execute.mockResolvedValue({
+      postLoginPath: '/',
+      session: {
+        status: 'authenticated',
+        tokens: new AuthTokens('access', 'refresh'),
+      },
+    });
     const request = {
       originalUrl: '/api/auth/sso/oidc/callback?code=code&state=one&state=two',
       cookies: { ayunis_sso_login: 'browser-binding' },
@@ -85,11 +91,21 @@ describe(SsoLoginController.name, () => {
 
     await controller.callback(request, response);
 
-    const command = complete.execute.mock.calls[0][0];
+    const command = completeAuthentication.execute.mock.calls[0][0];
     expect(command.callbackParameters.getAll('state')).toEqual(['one', 'two']);
     expect(command.browserBinding).toBe('browser-binding');
-    expect(provision.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ login: { orgId: SSO_TEST_ORG_ID } }),
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store',
+    );
+    expect(response.cookie).toHaveBeenCalledWith(
+      'refresh_token',
+      'refresh',
+      expect.any(Object),
+    );
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'mfa_pending_token',
+      expect.any(Object),
     );
     expect(response.clearCookie).toHaveBeenCalledWith(
       'ayunis_sso_login',
@@ -97,8 +113,42 @@ describe(SsoLoginController.name, () => {
     );
   });
 
+  it('sets only the MFA pending cookie when Core MFA is required', async () => {
+    completeAuthentication.execute.mockResolvedValue({
+      postLoginPath: '/',
+      session: {
+        status: 'mfa_required',
+        mfaPendingToken: 'signed-pending-token',
+        enrollmentRequired: false,
+      },
+    });
+    const request = {
+      originalUrl: '/api/auth/sso/oidc/callback?code=code&state=state',
+      cookies: { ayunis_sso_login: 'browser-binding' },
+    } as unknown as Request;
+
+    await controller.callback(request, response);
+
+    expect(response.cookie).toHaveBeenCalledTimes(1);
+    expect(response.cookie).toHaveBeenCalledWith(
+      'mfa_pending_token',
+      'signed-pending-token',
+      expect.any(Object),
+    );
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'access_token',
+      expect.any(Object),
+    );
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'refresh_token',
+      expect.any(Object),
+    );
+  });
+
   it('keeps the correlation cookie when callback validation fails', async () => {
-    complete.execute.mockRejectedValue(new Error('invalid callback'));
+    completeAuthentication.execute.mockRejectedValue(
+      new Error('invalid callback'),
+    );
     const request = {
       originalUrl: '/api/auth/sso/oidc/callback?state=invalid',
       cookies: { ayunis_sso_login: 'browser-binding' },

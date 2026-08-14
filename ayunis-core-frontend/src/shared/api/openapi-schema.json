@@ -11647,10 +11647,10 @@
         "parameters": [],
         "responses": {
           "204": {
-            "description": "OIDC response validated"
+            "description": "Core session or MFA-pending cookie issued"
           }
         },
-        "summary": "Validate an organization-pinned OIDC callback",
+        "summary": "Complete an organization-pinned SSO login",
         "tags": ["SSO"]
       }
     }

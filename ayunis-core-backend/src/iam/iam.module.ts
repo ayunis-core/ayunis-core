@@ -62,7 +62,6 @@ const IAM_FEATURE_MODULES = [
   AcademyAccessModule,
   PermissionsModule,
   MfaModule,
-  SsoModule,
 ];
 
 // Global guard execution order is declared HERE — explicitly, in array
@@ -106,17 +105,22 @@ const GLOBAL_GUARD_PROVIDERS = [
 @Module({})
 export class IamModule {
   static register(options?: { authProvider?: AuthProvider }) {
+    const authenticationModule = AuthenticationModule.register({
+      provider: options?.authProvider,
+    });
+    const featureModules = [
+      ...IAM_FEATURE_MODULES,
+      SsoModule.register(authenticationModule),
+    ];
     return {
       module: IamModule,
       imports: [
         ConfigModule.forFeature(authenticationConfig),
-        AuthenticationModule.register({
-          provider: options?.authProvider,
-        }),
-        ...IAM_FEATURE_MODULES,
+        authenticationModule,
+        ...featureModules,
       ],
       providers: [...GLOBAL_GUARD_PROVIDERS],
-      exports: [AuthenticationModule, ...IAM_FEATURE_MODULES],
+      exports: [authenticationModule, ...featureModules],
     };
   }
 }
