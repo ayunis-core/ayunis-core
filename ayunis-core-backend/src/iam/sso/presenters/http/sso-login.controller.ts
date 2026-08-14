@@ -25,6 +25,8 @@ import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { Public } from 'src/common/guards/public.guard';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 import {
   clearCookies,
   clearMfaPendingCookie,
@@ -63,6 +65,7 @@ interface BrowserRedirect {
 }
 
 @ApiTags('SSO')
+@RequireFeature(FeatureFlag.SsoLogin)
 @Controller('auth/sso')
 export class SsoLoginController {
   constructor(

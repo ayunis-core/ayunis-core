@@ -1,15 +1,18 @@
 import { CircleCheck } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import OnboardingLayout from '@/layouts/onboarding-layout';
+import { takeSsoPostLoginPath } from '@/features/sso';
 
 export function SsoSuccessPage() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
+  const postLoginPath = useRef<string | null>(null);
 
   useEffect(() => {
-    void navigate({ to: '/chat', replace: true });
+    postLoginPath.current ??= takeSsoPostLoginPath();
+    void navigate({ to: postLoginPath.current, replace: true });
   }, [navigate]);
 
   return (

@@ -29,6 +29,7 @@ test('resets a forgotten password and signs in with the new one', async ({
   await expect(page).toHaveURL(/\/login/);
 
   await page.getByTestId('email').fill(org.admin.email);
+  await page.getByTestId('login-continue').click();
   await page.getByTestId('password').fill(newPassword);
   await page.getByTestId('submit').click();
   await expect(page).not.toHaveURL(/\/login/);

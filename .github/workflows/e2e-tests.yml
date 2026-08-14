@@ -217,6 +217,7 @@ jobs:
           MOCK_INFERENCE=true
           FEATURE_SKILLS_ENABLED=true
           FEATURE_WORKSPACES_ENABLED=true
+          FEATURE_SSO_LOGIN_ENABLED=true
 
           # Database
           POSTGRES_HOST=localhost

@@ -11776,6 +11776,11 @@
             "type": "boolean",
             "description": "Whether runs use the independent agent runtime",
             "example": false
+          },
+          "ssoLoginEnabled": {
+            "type": "boolean",
+            "description": "Whether employee-facing SSO login is enabled",
+            "example": false
           }
         },
         "required": [
@@ -11783,7 +11788,8 @@
           "letterheadsEnabled",
           "skillsEnabled",
           "workspacesEnabled",
-          "agentRuntimeEnabled"
+          "agentRuntimeEnabled",
+          "ssoLoginEnabled"
         ]
       },
       "UserResponseDto": {

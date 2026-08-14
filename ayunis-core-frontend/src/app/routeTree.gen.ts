@@ -52,7 +52,7 @@ import { Route as AuthenticatedAdminSettingsAcademyRouteImport } from './routes/
 import { Route as AuthenticatedAcademyChapterIdRouteImport } from './routes/_authenticated/academy.$chapterId'
 import { Route as onboardingSsoSuccessRouteImport } from './routes/(onboarding)/sso.success'
 import { Route as onboardingSsoErrorRouteImport } from './routes/(onboarding)/sso.error'
-import { Route as onboardingSsoOrgIdRouteImport } from './routes/(onboarding)/sso.$orgId'
+import { Route as onboardingSsoIdentifierRouteImport } from './routes/(onboarding)/sso.$identifier'
 import { Route as onboardingPasswordResetRouteImport } from './routes/(onboarding)/password.reset'
 import { Route as onboardingPasswordForgotRouteImport } from './routes/(onboarding)/password.forgot'
 import { Route as onboardingAccountActivateRouteImport } from './routes/(onboarding)/account.activate'
@@ -315,9 +315,9 @@ const onboardingSsoErrorRoute = onboardingSsoErrorRouteImport.update({
   path: '/sso/error',
   getParentRoute: () => rootRouteImport,
 } as any)
-const onboardingSsoOrgIdRoute = onboardingSsoOrgIdRouteImport.update({
-  id: '/(onboarding)/sso/$orgId',
-  path: '/sso/$orgId',
+const onboardingSsoIdentifierRoute = onboardingSsoIdentifierRouteImport.update({
+  id: '/(onboarding)/sso/$identifier',
+  path: '/sso/$identifier',
   getParentRoute: () => rootRouteImport,
 } as any)
 const onboardingPasswordResetRoute = onboardingPasswordResetRouteImport.update({
@@ -448,7 +448,7 @@ export interface FileRoutesByFullPath {
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
-  '/sso/$orgId': typeof onboardingSsoOrgIdRoute
+  '/sso/$identifier': typeof onboardingSsoIdentifierRoute
   '/sso/error': typeof onboardingSsoErrorRoute
   '/sso/success': typeof onboardingSsoSuccessRoute
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
@@ -511,7 +511,7 @@ export interface FileRoutesByTo {
   '/account/activate': typeof onboardingAccountActivateRoute
   '/password/forgot': typeof onboardingPasswordForgotRoute
   '/password/reset': typeof onboardingPasswordResetRoute
-  '/sso/$orgId': typeof onboardingSsoOrgIdRoute
+  '/sso/$identifier': typeof onboardingSsoIdentifierRoute
   '/sso/error': typeof onboardingSsoErrorRoute
   '/sso/success': typeof onboardingSsoSuccessRoute
   '/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
@@ -577,7 +577,7 @@ export interface FileRoutesById {
   '/(onboarding)/account/activate': typeof onboardingAccountActivateRoute
   '/(onboarding)/password/forgot': typeof onboardingPasswordForgotRoute
   '/(onboarding)/password/reset': typeof onboardingPasswordResetRoute
-  '/(onboarding)/sso/$orgId': typeof onboardingSsoOrgIdRoute
+  '/(onboarding)/sso/$identifier': typeof onboardingSsoIdentifierRoute
   '/(onboarding)/sso/error': typeof onboardingSsoErrorRoute
   '/(onboarding)/sso/success': typeof onboardingSsoSuccessRoute
   '/_authenticated/academy/$chapterId': typeof AuthenticatedAcademyChapterIdRoute
@@ -643,7 +643,7 @@ export interface FileRouteTypes {
     | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
-    | '/sso/$orgId'
+    | '/sso/$identifier'
     | '/sso/error'
     | '/sso/success'
     | '/academy/$chapterId'
@@ -706,7 +706,7 @@ export interface FileRouteTypes {
     | '/account/activate'
     | '/password/forgot'
     | '/password/reset'
-    | '/sso/$orgId'
+    | '/sso/$identifier'
     | '/sso/error'
     | '/sso/success'
     | '/academy/$chapterId'
@@ -771,7 +771,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/account/activate'
     | '/(onboarding)/password/forgot'
     | '/(onboarding)/password/reset'
-    | '/(onboarding)/sso/$orgId'
+    | '/(onboarding)/sso/$identifier'
     | '/(onboarding)/sso/error'
     | '/(onboarding)/sso/success'
     | '/_authenticated/academy/$chapterId'
@@ -835,7 +835,7 @@ export interface RootRouteChildren {
   onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingPasswordForgotRoute: typeof onboardingPasswordForgotRoute
   onboardingPasswordResetRoute: typeof onboardingPasswordResetRoute
-  onboardingSsoOrgIdRoute: typeof onboardingSsoOrgIdRoute
+  onboardingSsoIdentifierRoute: typeof onboardingSsoIdentifierRoute
   onboardingSsoErrorRoute: typeof onboardingSsoErrorRoute
   onboardingSsoSuccessRoute: typeof onboardingSsoSuccessRoute
 }
@@ -1143,11 +1143,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof onboardingSsoErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(onboarding)/sso/$orgId': {
-      id: '/(onboarding)/sso/$orgId'
-      path: '/sso/$orgId'
-      fullPath: '/sso/$orgId'
-      preLoaderRoute: typeof onboardingSsoOrgIdRouteImport
+    '/(onboarding)/sso/$identifier': {
+      id: '/(onboarding)/sso/$identifier'
+      path: '/sso/$identifier'
+      fullPath: '/sso/$identifier'
+      preLoaderRoute: typeof onboardingSsoIdentifierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(onboarding)/password/reset': {
@@ -1444,7 +1444,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingPasswordForgotRoute: onboardingPasswordForgotRoute,
   onboardingPasswordResetRoute: onboardingPasswordResetRoute,
-  onboardingSsoOrgIdRoute: onboardingSsoOrgIdRoute,
+  onboardingSsoIdentifierRoute: onboardingSsoIdentifierRoute,
   onboardingSsoErrorRoute: onboardingSsoErrorRoute,
   onboardingSsoSuccessRoute: onboardingSsoSuccessRoute,
 }

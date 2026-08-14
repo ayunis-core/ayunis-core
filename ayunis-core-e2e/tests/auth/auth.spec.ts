@@ -10,6 +10,7 @@ test.describe('authentication', () => {
     await page.goto('/login');
 
     await page.getByTestId('email').fill(org.admin.email);
+    await page.getByTestId('login-continue').click();
     await page.getByTestId('password').fill(org.admin.password);
     await page.getByTestId('submit').click();
 
@@ -23,6 +24,7 @@ test.describe('authentication', () => {
     await page.goto('/login');
 
     await page.getByTestId('email').fill(org.admin.email);
+    await page.getByTestId('login-continue').click();
     await page.getByTestId('password').fill('wrong-password');
     await page.getByTestId('submit').click();
 
@@ -35,5 +37,15 @@ test.describe('authentication', () => {
     await page.goto('/chat');
 
     await expect(page).toHaveURL(/\/login/);
+  });
+
+  test('shows an error for an unavailable direct SSO organization', async ({
+    page,
+  }) => {
+    await page.goto('/sso/not-configured.example');
+
+    await expect(page).toHaveURL(
+      /\/sso\/error\?code=SSO_CONNECTION_NOT_AVAILABLE/,
+    );
   });
 });

@@ -14,6 +14,7 @@ describe('AppController', () => {
         skillsEnabled: true,
         workspacesEnabled: true,
         agentRuntimeEnabled,
+        ssoLoginEnabled: false,
       };
       const controller = new AppController(
         { execute: jest.fn() } as unknown as IsCloudUseCase,
