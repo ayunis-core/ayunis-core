@@ -61,7 +61,7 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
         ),
       ),
     ).resolves.toMatchObject({
-      postLoginPath: '/',
+      redirectPath: '/',
       kind: 'authenticated',
       session: { status: 'authenticated' },
     });
@@ -102,7 +102,7 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
           'browser-binding',
         ),
       ),
-    ).resolves.toEqual({ kind: 'linked', postLoginPath: '/' });
+    ).resolves.toEqual({ kind: 'linked', redirectPath: '/' });
     expect(linkIdentity.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: '1972fa3b-a4e9-4a1b-8b2c-10323d376b80',
@@ -139,6 +139,41 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
           brokerMfaSatisfied: false,
         }),
       );
+    },
+  );
+
+  it.each([
+    {
+      enrollmentRequired: false,
+      redirectPath: '/two-factor?redirect=%2Fsso%2Fsuccess',
+    },
+    {
+      enrollmentRequired: true,
+      redirectPath: '/two-factor?redirect=%2Fsso%2Fsuccess&enroll=true',
+    },
+  ])(
+    'returns the Core MFA navigation path when enrollment is $enrollmentRequired',
+    async ({ enrollmentRequired, redirectPath }) => {
+      completeLogin.execute.mockResolvedValue({
+        postLoginPath: '/sso/success',
+        authenticationMethods: ['pwd'],
+        purpose: SsoLoginPurpose.LOGIN,
+        linkUserId: null,
+      });
+      startSession.execute.mockResolvedValue({
+        status: 'mfa_required',
+        mfaPendingToken: 'pending-token',
+        enrollmentRequired,
+      });
+
+      await expect(
+        useCase.execute(
+          new CompleteSsoAuthenticationCommand(
+            new URLSearchParams({ state: 'state' }),
+            'browser-binding',
+          ),
+        ),
+      ).resolves.toMatchObject({ redirectPath });
     },
   );
 });

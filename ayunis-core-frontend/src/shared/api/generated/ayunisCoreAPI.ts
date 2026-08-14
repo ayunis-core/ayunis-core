@@ -24493,7 +24493,7 @@ export const ssoLoginControllerCallback = (
 ) => {
       
       
-      return customAxiosInstance<void>(
+      return customAxiosInstance<unknown>(
       {url: `/auth/sso/oidc/callback`, method: 'GET', signal
     },
       );
@@ -24509,7 +24509,7 @@ export const getSsoLoginControllerCallbackQueryKey = () => {
     }
 
     
-export const getSsoLoginControllerCallbackQueryOptions = <TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
+export const getSsoLoginControllerCallbackQueryOptions = <TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
@@ -24528,10 +24528,10 @@ const {query: queryOptions} = options ?? {};
 }
 
 export type SsoLoginControllerCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerCallback>>>
-export type SsoLoginControllerCallbackQueryError = unknown
+export type SsoLoginControllerCallbackQueryError = void
 
 
-export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = void>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof ssoLoginControllerCallback>>,
@@ -24541,7 +24541,7 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof ssoLoginControllerCallback>>,
@@ -24551,7 +24551,7 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -24559,7 +24559,7 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
  * @summary Complete an organization-pinned SSO login
  */
 
-export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(
+export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = void>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

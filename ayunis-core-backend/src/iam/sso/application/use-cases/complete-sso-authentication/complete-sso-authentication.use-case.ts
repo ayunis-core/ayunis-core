@@ -22,13 +22,13 @@ import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 export interface SsoAuthenticationCompleted {
   kind: 'authenticated';
-  postLoginPath: string;
+  redirectPath: string;
   session: StartAuthenticatedSessionResult;
 }
 
 export interface SsoAccountLinkCompleted {
   kind: 'linked';
-  postLoginPath: string;
+  redirectPath: string;
 }
 
 export type CompleteSsoAuthenticationResult =
@@ -64,7 +64,7 @@ export class CompleteSsoAuthenticationUseCase {
       await this.linkFederatedIdentity.execute(
         new LinkFederatedIdentityCommand(login.linkUserId, login),
       );
-      return { kind: 'linked', postLoginPath: login.postLoginPath };
+      return { kind: 'linked', redirectPath: login.postLoginPath };
     }
     const user = await this.provisionOrgSsoUser.execute(
       new ProvisionOrgSsoUserCommand(login),
@@ -79,9 +79,19 @@ export class CompleteSsoAuthenticationUseCase {
     );
     return {
       kind: 'authenticated',
-      postLoginPath: login.postLoginPath,
+      redirectPath: this.redirectPath(login.postLoginPath, session),
       session,
     };
+  }
+
+  private redirectPath(
+    postLoginPath: string,
+    session: StartAuthenticatedSessionResult,
+  ): string {
+    if (session.status === 'authenticated') return postLoginPath;
+    const query = new URLSearchParams({ redirect: postLoginPath });
+    if (session.enrollmentRequired) query.set('enroll', 'true');
+    return `/two-factor?${query.toString()}`;
   }
 
   private toActiveUser(user: User): ActiveUser {

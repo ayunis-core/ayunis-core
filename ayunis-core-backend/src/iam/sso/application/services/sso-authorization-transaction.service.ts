@@ -7,7 +7,10 @@ import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/ss
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
 
-const POST_LOGIN_PATH = '/';
+const POST_LOGIN_PATH_BY_PURPOSE: Record<SsoLoginPurpose, string> = {
+  [SsoLoginPurpose.LOGIN]: '/sso/success',
+  [SsoLoginPurpose.LINK]: '/settings/account?ssoLinked=true',
+};
 const LOGIN_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 
 interface StartSsoAuthorizationTransaction {
@@ -41,7 +44,7 @@ export class SsoAuthorizationTransactionService {
       new SsoLoginTransaction({
         stateHash: this.hash(request.state),
         browserBindingHash: this.hash(browserBinding),
-        postLoginPath: POST_LOGIN_PATH,
+        postLoginPath: POST_LOGIN_PATH_BY_PURPOSE[input.purpose],
         encryptedCodeVerifier: this.encryption.encrypt(request.codeVerifier),
         encryptedNonce: this.encryption.encrypt(request.nonce),
         orgId: input.orgId,
