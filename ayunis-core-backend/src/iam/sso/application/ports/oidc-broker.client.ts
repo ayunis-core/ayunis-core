@@ -24,6 +24,7 @@ export interface ValidatedOidcIdentity {
   emailVerified: boolean;
   zitadelOrgId: string;
   sessionId?: string;
+  authenticationMethods: string[];
 }
 
 export abstract class OidcBrokerClient {

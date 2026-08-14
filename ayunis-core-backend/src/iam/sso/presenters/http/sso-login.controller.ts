@@ -23,16 +23,16 @@ import type { UUID } from 'crypto';
 import type { CookieOptions, Request, Response } from 'express';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { Public } from 'src/common/guards/public.guard';
-import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
-import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
+import { setCookies, setMfaPendingCookie } from 'src/common/util/cookie.util';
+import type { StartAuthenticatedSessionResult } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
+import { CompleteSsoAuthenticationCommand } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.command';
+import { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
 import { DiscoverOrgSsoQuery } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.query';
 import { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { DiscoverSsoDto } from 'src/iam/sso/presenters/http/dto/discover-sso.request-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
-import { ProvisionOrgSsoUserCommand } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.command';
-import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 
 const SSO_LOGIN_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -42,8 +42,7 @@ export class SsoLoginController {
   constructor(
     private readonly discoverOrgSso: DiscoverOrgSsoUseCase,
     private readonly startOrgSsoLogin: StartOrgSsoLoginUseCase,
-    private readonly completeOrgSsoLogin: CompleteOrgSsoLoginUseCase,
-    private readonly provisionOrgSsoUser: ProvisionOrgSsoUserUseCase,
+    private readonly completeSsoAuthentication: CompleteSsoAuthenticationUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -83,8 +82,10 @@ export class SsoLoginController {
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('oidc/callback')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Validate an organization-pinned OIDC callback' })
-  @ApiNoContentResponse({ description: 'OIDC response validated' })
+  @ApiOperation({ summary: 'Complete an organization-pinned SSO login' })
+  @ApiNoContentResponse({
+    description: 'Core session or MFA-pending cookie issued',
+  })
   async callback(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -93,13 +94,22 @@ export class SsoLoginController {
       .searchParams;
     const cookieName = this.correlationCookieName();
     const browserBinding = this.cookieValue(request, cookieName);
-    const login = await this.completeOrgSsoLogin.execute(
-      new CompleteOrgSsoLoginCommand(callbackParameters, browserBinding),
+    const { session } = await this.completeSsoAuthentication.execute(
+      new CompleteSsoAuthenticationCommand(callbackParameters, browserBinding),
     );
-    await this.provisionOrgSsoUser.execute(
-      new ProvisionOrgSsoUserCommand(login),
-    );
+    this.setSessionCookies(response, session);
     response.clearCookie(cookieName, this.correlationCookieOptions());
+  }
+
+  private setSessionCookies(
+    response: Response,
+    result: StartAuthenticatedSessionResult,
+  ): void {
+    if (result.status === 'authenticated') {
+      setCookies(response, result.tokens, this.configService, true);
+      return;
+    }
+    setMfaPendingCookie(response, result.mfaPendingToken, this.configService);
   }
 
   private correlationCookieName(): string {

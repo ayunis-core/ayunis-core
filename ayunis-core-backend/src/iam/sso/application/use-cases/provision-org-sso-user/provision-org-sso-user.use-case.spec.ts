@@ -271,6 +271,7 @@ function login() {
     zitadelOrgId: 'zitadel-org-1',
     orgId: ORG_ID,
     postLoginPath: '/',
+    authenticationMethods: ['pwd'],
   };
 }
 

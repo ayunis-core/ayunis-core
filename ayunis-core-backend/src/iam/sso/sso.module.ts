@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { type DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { InvitesModule } from 'src/iam/invites/invites.module';
@@ -28,11 +28,12 @@ import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistenc
 import { PostgresSsoLoginTransactionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-login-transactions.repository';
 import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-login-transaction-cleanup.task';
 import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
-import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
 import { SsoProvisioningLock } from 'src/iam/sso/application/ports/sso-provisioning-lock';
 import { PostgresSsoProvisioningLock } from 'src/iam/sso/infrastructure/persistence/postgres/postgres-sso-provisioning-lock';
 import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
+import { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
+import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/pr
     StartOrgSsoLoginUseCase,
     CompleteOrgSsoLoginUseCase,
     ProvisionOrgSsoUserUseCase,
+    CompleteSsoAuthenticationUseCase,
     SsoLoginTransactionCleanupTask,
   ],
   exports: [
@@ -96,4 +98,11 @@ import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/pr
     ProvisionOrgSsoUserUseCase,
   ],
 })
-export class SsoModule {}
+export class SsoModule {
+  static register(authenticationModule: DynamicModule): DynamicModule {
+    return {
+      module: SsoModule,
+      imports: [authenticationModule],
+    };
+  }
+}
