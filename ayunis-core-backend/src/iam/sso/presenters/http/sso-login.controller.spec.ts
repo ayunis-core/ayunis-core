@@ -4,12 +4,14 @@ import { SSO_TEST_ORG_ID } from 'src/iam/sso/application/testing/sso-login.fixtu
 import type { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
 import type { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import type { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
+import type { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 
 describe(SsoLoginController.name, () => {
   const discovery = { execute: jest.fn() };
   const start = { execute: jest.fn() };
   const completeAuthentication = { execute: jest.fn() };
+  const startLink = { execute: jest.fn() };
   const configService = {
     get: jest.fn().mockImplementation((_key, defaultValue) => defaultValue),
   };
@@ -22,6 +24,7 @@ describe(SsoLoginController.name, () => {
     discovery as unknown as DiscoverOrgSsoUseCase,
     start as unknown as StartOrgSsoLoginUseCase,
     completeAuthentication as unknown as CompleteSsoAuthenticationUseCase,
+    startLink as unknown as StartSsoAccountLinkUseCase,
     configService as never,
   );
 
@@ -79,6 +82,7 @@ describe(SsoLoginController.name, () => {
   it('preserves duplicate callback parameters for strict state validation', async () => {
     completeAuthentication.execute.mockResolvedValue({
       postLoginPath: '/',
+      kind: 'authenticated',
       session: {
         status: 'authenticated',
         tokens: new AuthTokens('access', 'refresh'),
@@ -108,6 +112,7 @@ describe(SsoLoginController.name, () => {
   it('sets only the MFA pending cookie when Core MFA is required', async () => {
     completeAuthentication.execute.mockResolvedValue({
       postLoginPath: '/',
+      kind: 'authenticated',
       session: {
         status: 'mfa_required',
         mfaPendingToken: 'signed-pending-token',
@@ -127,6 +132,44 @@ describe(SsoLoginController.name, () => {
       'signed-pending-token',
       expect.any(Object),
     );
+  });
+
+  it('starts an authenticated account-link transaction without redirecting', async () => {
+    startLink.execute.mockResolvedValue({
+      authorizationUrl: 'https://sso.ayunis.de/oauth/v2/authorize',
+      browserBinding: 'link-browser-binding',
+    });
+
+    await expect(
+      controller.startLink(
+        'd19130fa-f2e6-4c92-84a9-62a651269104',
+        SSO_TEST_ORG_ID,
+        response,
+      ),
+    ).resolves.toEqual({
+      authorizationUrl: 'https://sso.ayunis.de/oauth/v2/authorize',
+    });
+    expect(response.cookie).toHaveBeenCalledWith(
+      'ayunis_sso_login',
+      'link-browser-binding',
+      expect.objectContaining({ httpOnly: true, sameSite: 'lax', path: '/' }),
+    );
+  });
+
+  it('does not issue session cookies after account linking', async () => {
+    completeAuthentication.execute.mockResolvedValue({
+      kind: 'linked',
+      postLoginPath: '/',
+    });
+    const request = {
+      originalUrl: '/api/auth/sso/oidc/callback?code=code&state=state',
+      cookies: { ayunis_sso_login: 'browser-binding' },
+    } as unknown as Request;
+
+    await controller.callback(request, response);
+
+    expect(response.cookie).not.toHaveBeenCalled();
+    expect(response.clearCookie).toHaveBeenCalled();
   });
 
   it('keeps the correlation cookie when callback validation fails', async () => {

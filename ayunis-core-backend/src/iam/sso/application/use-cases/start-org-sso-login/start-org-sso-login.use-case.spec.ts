@@ -1,11 +1,13 @@
 import { createHash } from 'crypto';
 import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
+import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
 import { createMockOrgSsoConnectionsRepository } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
 import {
   anEnabledSsoConnection,
   SSO_TEST_ORG_ID,
 } from 'src/iam/sso/application/testing/sso-login.fixtures';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 describe(StartOrgSsoLoginUseCase.name, () => {
   it('stores only hashed state and encrypted secrets before redirecting', async () => {
@@ -31,9 +33,7 @@ describe(StartOrgSsoLoginUseCase.name, () => {
     };
     const useCase = new StartOrgSsoLoginUseCase(
       repository,
-      transactions,
-      broker,
-      encryption,
+      new SsoAuthorizationTransactionService(transactions, broker, encryption),
     );
 
     const result = await useCase.execute(
@@ -53,6 +53,8 @@ describe(StartOrgSsoLoginUseCase.name, () => {
         postLoginPath: '/',
         encryptedCodeVerifier: 'encrypted:pkce-verifier',
         encryptedNonce: 'encrypted:oidc-nonce',
+        purpose: SsoLoginPurpose.LOGIN,
+        linkUserId: null,
       }),
     );
     expect(JSON.stringify(transactions.save.mock.calls)).not.toContain(
@@ -72,13 +74,11 @@ describe(StartOrgSsoLoginUseCase.name, () => {
     repository.findByOrgId.mockResolvedValue(connection);
     const useCase = new StartOrgSsoLoginUseCase(
       repository,
-      {
-        save: jest.fn(),
-        consume: jest.fn(),
-        deleteExpired: jest.fn(),
-      },
-      { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
-      { encrypt: jest.fn(), decrypt: jest.fn() },
+      new SsoAuthorizationTransactionService(
+        { save: jest.fn(), consume: jest.fn(), deleteExpired: jest.fn() },
+        { createAuthorizationRequest: jest.fn(), validateCallback: jest.fn() },
+        { encrypt: jest.fn(), decrypt: jest.fn() },
+      ),
     );
 
     await expect(

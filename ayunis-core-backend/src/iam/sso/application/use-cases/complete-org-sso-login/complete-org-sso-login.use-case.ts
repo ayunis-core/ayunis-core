@@ -2,10 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import {
-  OidcBrokerClient,
-  type ValidatedOidcIdentity,
-} from 'src/iam/sso/application/ports/oidc-broker.client';
+import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
+import type { ValidatedOrgOidcIdentity } from 'src/iam/sso/application/models/validated-org-oidc-identity';
 import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
 import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
@@ -18,10 +16,12 @@ import {
 } from 'src/iam/sso/application/sso.errors';
 import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
 import { emailDomainFromAddress } from 'src/iam/sso/domain/sso-connection-values';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
-export interface CompletedOrgSsoLogin extends ValidatedOidcIdentity {
-  orgId: UUID;
+export interface CompletedOrgSsoLogin extends ValidatedOrgOidcIdentity {
   postLoginPath: string;
+  purpose: SsoLoginPurpose;
+  linkUserId: UUID | null;
 }
 
 @Injectable()
@@ -80,6 +80,8 @@ export class CompleteOrgSsoLoginUseCase {
       ...identity,
       orgId: transaction.orgId,
       postLoginPath: transaction.postLoginPath,
+      purpose: transaction.purpose,
+      linkUserId: transaction.linkUserId,
     };
   }
 

@@ -24,6 +24,10 @@ import type { CookieOptions, Request, Response } from 'express';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { Public } from 'src/common/guards/public.guard';
 import { setCookies, setMfaPendingCookie } from 'src/common/util/cookie.util';
+import {
+  CurrentUser,
+  UserProperty,
+} from 'src/iam/authentication/application/decorators/current-user.decorator';
 import type { StartAuthenticatedSessionResult } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 import { CompleteSsoAuthenticationCommand } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.command';
 import { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
@@ -31,7 +35,10 @@ import { DiscoverOrgSsoQuery } from 'src/iam/sso/application/use-cases/discover-
 import { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
+import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.command';
+import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { DiscoverSsoDto } from 'src/iam/sso/presenters/http/dto/discover-sso.request-dto';
+import { SsoAuthorizationResponseDto } from 'src/iam/sso/presenters/http/dto/sso-authorization.response-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
 
 const SSO_LOGIN_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
@@ -43,6 +50,7 @@ export class SsoLoginController {
     private readonly discoverOrgSso: DiscoverOrgSsoUseCase,
     private readonly startOrgSsoLogin: StartOrgSsoLoginUseCase,
     private readonly completeSsoAuthentication: CompleteSsoAuthenticationUseCase,
+    private readonly startSsoAccountLink: StartSsoAccountLinkUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -78,6 +86,28 @@ export class SsoLoginController {
     return { url: authorizationUrl, statusCode: HttpStatus.FOUND };
   }
 
+  @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
+  @Post('link/start')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Start linking SSO to the current account' })
+  @ApiOkResponse({ type: SsoAuthorizationResponseDto })
+  async startLink(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SsoAuthorizationResponseDto> {
+    const { authorizationUrl, browserBinding } =
+      await this.startSsoAccountLink.execute(
+        new StartSsoAccountLinkCommand(userId, orgId),
+      );
+    response.setHeader('Cache-Control', 'no-store');
+    response.cookie(this.correlationCookieName(), browserBinding, {
+      ...this.correlationCookieOptions(),
+      maxAge: SSO_LOGIN_COOKIE_MAX_AGE_MS,
+    });
+    return { authorizationUrl };
+  }
+
   @Public()
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('oidc/callback')
@@ -94,10 +124,12 @@ export class SsoLoginController {
       .searchParams;
     const cookieName = this.correlationCookieName();
     const browserBinding = this.cookieValue(request, cookieName);
-    const { session } = await this.completeSsoAuthentication.execute(
+    const result = await this.completeSsoAuthentication.execute(
       new CompleteSsoAuthenticationCommand(callbackParameters, browserBinding),
     );
-    this.setSessionCookies(response, session);
+    if (result.kind === 'authenticated') {
+      this.setSessionCookies(response, result.session);
+    }
     response.clearCookie(cookieName, this.correlationCookieOptions());
   }
 

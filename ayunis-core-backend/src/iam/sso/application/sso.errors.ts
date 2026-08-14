@@ -16,6 +16,8 @@ export enum SsoErrorCode {
   LOGIN_TRANSACTION_INVALID = 'SSO_LOGIN_TRANSACTION_INVALID',
   ORGANIZATION_MISMATCH = 'SSO_ORGANIZATION_MISMATCH',
   ACCOUNT_LINK_REQUIRED = 'SSO_ACCOUNT_LINK_REQUIRED',
+  ACCOUNT_LINK_CONFLICT = 'SSO_ACCOUNT_LINK_CONFLICT',
+  ACCOUNT_LINK_MISMATCH = 'SSO_ACCOUNT_LINK_MISMATCH',
   JIT_PROVISIONING_DISABLED = 'SSO_JIT_PROVISIONING_DISABLED',
   INVITE_EXPIRED = 'SSO_INVITE_EXPIRED',
   UNEXPECTED = 'SSO_UNEXPECTED_ERROR',
@@ -145,6 +147,26 @@ export class SsoAccountLinkRequiredError extends SsoError {
     super(
       'This email already has an Ayunis account and must be linked before SSO can be used',
       SsoErrorCode.ACCOUNT_LINK_REQUIRED,
+      409,
+    );
+  }
+}
+
+export class SsoAccountLinkConflictError extends SsoError {
+  constructor() {
+    super(
+      'This broker identity is already linked to another Ayunis account',
+      SsoErrorCode.ACCOUNT_LINK_CONFLICT,
+      409,
+    );
+  }
+}
+
+export class SsoAccountLinkMismatchError extends SsoError {
+  constructor() {
+    super(
+      'The broker identity does not match the authenticated Ayunis account',
+      SsoErrorCode.ACCOUNT_LINK_MISMATCH,
       409,
     );
   }

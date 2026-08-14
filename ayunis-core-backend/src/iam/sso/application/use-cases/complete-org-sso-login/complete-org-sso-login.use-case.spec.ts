@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.command';
 import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
 import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
+import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 import {
   anEnabledSsoConnection,
   SSO_TEST_ORG_ID,
@@ -60,12 +61,35 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
       subject: 'zitadel-user',
       zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
       postLoginPath: '/',
+      purpose: SsoLoginPurpose.LOGIN,
+      linkUserId: null,
     });
     expect(transactions.consume).toHaveBeenCalledWith(
       createHash('sha256').update(TEST_STATE).digest('hex'),
       createHash('sha256').update(TEST_BROWSER_BINDING).digest('hex'),
       expect.any(Date),
     );
+  });
+
+  it('returns the authenticated user binding for an account-link transaction', async () => {
+    const linkUserId = '6a3b4623-269b-46a1-8ced-8b80586105e4' as const;
+    const useCase = useCaseWithIdentity(
+      {},
+      anEnabledSsoConnection(),
+      pendingTransaction({ purpose: SsoLoginPurpose.LINK, linkUserId }),
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).resolves.toMatchObject({
+      purpose: SsoLoginPurpose.LINK,
+      linkUserId,
+    });
   });
 
   it('rejects a callback without a single state value', async () => {
@@ -228,7 +252,9 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
   });
 });
 
-function pendingTransaction(): SsoLoginTransaction {
+function pendingTransaction(
+  overrides: Partial<ConstructorParameters<typeof SsoLoginTransaction>[0]> = {},
+): SsoLoginTransaction {
   return new SsoLoginTransaction({
     stateHash: createHash('sha256').update(TEST_STATE).digest('hex'),
     browserBindingHash: createHash('sha256')
@@ -240,6 +266,7 @@ function pendingTransaction(): SsoLoginTransaction {
     orgId: SSO_TEST_ORG_ID,
     zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    ...overrides,
   });
 }
 
@@ -259,11 +286,12 @@ function connectionRepository(connection = anEnabledSsoConnection()) {
 function useCaseWithIdentity(
   identityOverrides: Record<string, unknown>,
   connection = anEnabledSsoConnection(),
+  transaction = pendingTransaction(),
 ): CompleteOrgSsoLoginUseCase {
   return new CompleteOrgSsoLoginUseCase(
     {
       save: jest.fn(),
-      consume: jest.fn().mockResolvedValue(pendingTransaction()),
+      consume: jest.fn().mockResolvedValue(transaction),
       deleteExpired: jest.fn(),
     },
     {
