@@ -36,6 +36,7 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import type { ConfigService } from '@nestjs/config';
 import type { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 import type { RunTelemetryService } from '../../services/run-telemetry.service';
+import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
 
@@ -168,6 +169,9 @@ describe('ExecuteRunUseCase', () => {
       configService,
       executeRunViaRuntimeUseCase,
       runTelemetryService,
+      {
+        execute: jest.fn().mockResolvedValue(undefined),
+      } as unknown as BuildWorkspaceRunContextUseCase,
       createPinoLoggerMock(),
     );
   });

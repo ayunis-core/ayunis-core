@@ -10,6 +10,7 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+import type { Skill as BackendSkill } from 'src/domain/skills/domain/skill.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
@@ -64,6 +65,8 @@ import type {
   PreparedRuntimeRun,
   PreparedRuntimeTools,
 } from './execute-run-via-runtime.types';
+import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 
 const RUNTIME_MAX_ITERATIONS = 50;
 const MAX_CONTEXT_TOKENS = 80000;
@@ -109,6 +112,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
+    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     @InjectPinoLogger(ExecuteRunViaRuntimeUseCase.name)
     private readonly logger: PinoLogger,
     @InjectPinoLogger('RunEventStreamAdapter')
@@ -154,13 +158,12 @@ export class ExecuteRunViaRuntimeUseCase {
       command,
       found.thread,
     );
-    const { tools, instructions } =
-      await this.toolAssemblyService.buildRunContext(
-        activated.thread,
-        activeSkills,
-        canUseTools,
-        isAnonymous,
-      );
+    const { tools, instructions } = await this.buildRunContext({
+      thread: activated.thread,
+      activeSkills,
+      canUseTools,
+      isAnonymous,
+    });
 
     return {
       thread: activated.thread,
@@ -175,6 +178,26 @@ export class ExecuteRunViaRuntimeUseCase {
       skillInstructions: activated.skillInstructions,
       activatedSkillName: activated.skillName,
     };
+  }
+
+  private async buildRunContext(params: {
+    thread: Thread;
+    activeSkills: BackendSkill[];
+    canUseTools: boolean;
+    isAnonymous: boolean;
+  }): Promise<{ tools: BackendTool[]; instructions: string }> {
+    const workspaceContext = params.thread.workspaceId
+      ? await this.buildWorkspaceRunContextUseCase.execute(
+          new BuildWorkspaceRunContextQuery(params.thread.workspaceId),
+        )
+      : undefined;
+    return this.toolAssemblyService.buildRunContext(
+      params.thread,
+      params.activeSkills,
+      params.canUseTools,
+      params.isAnonymous,
+      workspaceContext,
+    );
   }
 
   private prepareTools(backendTools: BackendTool[]): PreparedRuntimeTools {

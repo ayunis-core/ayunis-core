@@ -41,6 +41,7 @@ import type { RunTelemetryService } from '../../services/run-telemetry.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
+import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
 import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
@@ -177,10 +178,14 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const skillActivationService = {
     activateOnThread,
   } as unknown as SkillActivationService;
+  const buildWorkspaceRunContextUseCase = {
+    execute: jest.fn().mockResolvedValue(undefined),
+  } as unknown as BuildWorkspaceRunContextUseCase;
   const skillActivationHookFactory = new SkillActivationHookFactory(
     findThreadUseCase,
     toolAssemblyService,
     backendToolAdapter,
+    buildWorkspaceRunContextUseCase,
   );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
@@ -304,6 +309,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     toolResultCollector as ToolResultCollectorService,
     toolUsageHookFactory,
     contextBudgetHookFactory,
+    buildWorkspaceRunContextUseCase,
     createPinoLoggerMock(),
     createPinoLoggerMock(),
   );
