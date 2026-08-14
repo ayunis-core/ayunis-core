@@ -133,6 +133,46 @@ export const minimalFixture = {
       members: [],
       teams: [],
       memberships: {},
+      skills: [
+        {
+          name: 'Bürgerfreundlich formulieren',
+          shortDescription:
+            'Schreibt Antworten klar, verbindlich und in einfacher Sprache.',
+          instructions:
+            'Formuliere immer bürgernah, vermeide Amtsdeutsch und schließe mit einem konkreten nächsten Schritt.',
+        },
+        {
+          name: 'Einsatzlage strukturieren',
+          shortDescription:
+            'Ordnet Feuerwehr-Informationen nach Lage, Maßnahmen und offenen Punkten.',
+          instructions:
+            'Strukturiere Einsatzinformationen in Lage, Risiken, Maßnahmen, Zuständigkeiten und offene Rückfragen.',
+        },
+      ],
+      knowledgeBases: [
+        {
+          name: 'Bürgerbüro Wissensbasis',
+          description:
+            'Demo-Unterlagen zu Öffnungszeiten, Meldebescheinigung und Standardantworten.',
+          documents: [
+            {
+              name: 'Bürgerbüro FAQ.txt',
+              text: 'Das Bürgerbüro ist montags bis freitags von 08:00 bis 12:00 Uhr geöffnet. Für Meldebescheinigungen wird ein gültiger Ausweis benötigt. Termine können online oder telefonisch vereinbart werden.',
+            },
+          ],
+        },
+        {
+          name: 'Feuerwehr Einsatzwissen',
+          description:
+            'Demo-Unterlagen zu Fahrzeugen, Alarmstufen und Einsatznotizen.',
+          documents: [
+            {
+              name: 'Fahrzeugübersicht.txt',
+              text: 'Die Feuerwehr verfügt über ein HLF 20, eine Drehleiter und einen Einsatzleitwagen. Bei Alarmstufe 2 wird zusätzlich die Nachbarwehr informiert.',
+            },
+          ],
+        },
+      ],
       // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,
       // both list views and the manual ordering without clicking anything.
       // Only visible while FEATURE_WORKSPACES_ENABLED is on.
@@ -141,21 +181,44 @@ export const minimalFixture = {
           name: 'Bürgeranfragen',
           description:
             'Anfragen von Bürgerinnen und Bürgern bündeln und beantworten',
+          instruction:
+            'Antworte im Namen der Stadtverwaltung. Sei freundlich, präzise und nenne benötigte Unterlagen ausdrücklich.',
           icon: 'usercheck',
           color: 'violet',
+          skillNames: ['Bürgerfreundlich formulieren'],
+          knowledgeBaseNames: ['Bürgerbüro Wissensbasis'],
+          documents: [
+            {
+              name: 'Projektbriefing Bürgeranfragen.txt',
+              text: 'Dieses Projekt bündelt Bürgeranfragen. Priorität haben verständliche Antworten, klare Zuständigkeiten und Hinweise auf digitale Services.',
+            },
+          ],
           pinned: true,
         },
         {
           name: 'Feuerwehr',
           description: 'Einsätze, Fahrzeuge und Ausrüstung',
+          instruction:
+            'Fasse einsatzbezogene Informationen sachlich zusammen und markiere unbestätigte Angaben deutlich.',
           icon: 'flame',
           color: 'rose',
+          skillNames: ['Einsatzlage strukturieren'],
+          knowledgeBaseNames: ['Feuerwehr Einsatzwissen'],
+          documents: [
+            {
+              name: 'Projektbriefing Feuerwehr.txt',
+              text: 'Dieses Projekt unterstützt bei Einsatznachbereitung, Materiallisten und Kommunikation mit Verwaltung und Leitstelle.',
+            },
+          ],
           pinned: true,
         },
         {
           name: 'Gebühren & Finanzen',
+          instruction:
+            'Erkläre Gebühren nachvollziehbar und weise auf mögliche Satzungsgrundlagen hin.',
           icon: 'euro',
           color: '#2c7a4b',
+          skillNames: ['Bürgerfreundlich formulieren'],
           pinned: false,
         },
       ],
