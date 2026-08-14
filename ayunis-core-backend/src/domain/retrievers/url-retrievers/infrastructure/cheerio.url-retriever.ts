@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import {
@@ -27,14 +28,17 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
-  private readonly logger = new Logger(CheerioUrlRetrieverHandler.name);
   private readonly defaultTimeout: number;
   private readonly maxDownloadBytes: number;
 
   // `url.timeout` and `url.maxDownloadBytes` always resolve — the `url` config
   // factory applies its own defaults (5s / 25 MB) — so read them with
   // getOrThrow rather than duplicating those defaults as dead fallbacks here.
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(CheerioUrlRetrieverHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
     this.defaultTimeout = this.configService.getOrThrow<number>('url.timeout');
     this.maxDownloadBytes = this.configService.getOrThrow<number>(
@@ -51,7 +55,10 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   }
 
   private async fetchRaw(input: UrlRetrieverInput): Promise<RawUrlResponse> {
-    this.logger.debug(`Retrieving URL: ${input.url} with Cheerio handler`);
+    this.logger.debug(
+      { url: input.url },
+      'Retrieving URL with Cheerio handler',
+    );
 
     const timeout = this.resolveTimeout(input);
     const controller = new AbortController();
@@ -303,8 +310,8 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     }
 
     this.logger.error(
-      `HTTP URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      error instanceof Error ? error.stack : 'Unknown error',
+      { err: error as Error, url },
+      'HTTP URL retrieval failed',
     );
 
     // Transport classification is attached for debuggability only — a dead

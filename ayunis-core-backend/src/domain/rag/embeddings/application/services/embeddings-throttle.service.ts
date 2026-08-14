@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import PQueue from 'p-queue';
 import { EmbeddingPriority } from '../../domain/embedding-priority.enum';
@@ -32,10 +33,13 @@ const INGESTION_PRIORITY = 0;
  */
 @Injectable()
 export class EmbeddingsThrottleService {
-  private readonly logger = new Logger(EmbeddingsThrottleService.name);
   private sharedQueue: PriorityQueue | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    @InjectPinoLogger(EmbeddingsThrottleService.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {}
 
   run<T>(priority: EmbeddingPriority, fn: () => Promise<T>): Promise<T> {
     const queue = this.getQueue();
@@ -57,7 +61,7 @@ export class EmbeddingsThrottleService {
     const concurrency =
       this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
       DEFAULT_MAX_CONCURRENCY;
-    this.logger.log('Embeddings throttle initialized', { concurrency });
+    this.logger.info({ concurrency }, 'Embeddings throttle initialized');
     return new PQueue({ concurrency });
   }
 }

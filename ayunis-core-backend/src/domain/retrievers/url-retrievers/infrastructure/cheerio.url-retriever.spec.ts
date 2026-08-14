@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { CheerioUrlRetrieverHandler } from './cheerio.url-retriever';
 import {
@@ -74,7 +75,7 @@ function streamedResponse({
 
 function makeHandler(): CheerioUrlRetrieverHandler {
   const config = { getOrThrow: () => 5000 } as unknown as ConfigService;
-  return new CheerioUrlRetrieverHandler(config);
+  return new CheerioUrlRetrieverHandler(createPinoLoggerMock(), config);
 }
 
 function makeHandlerWithCap(
@@ -84,7 +85,10 @@ function makeHandlerWithCap(
     getOrThrow: (key: string) =>
       key === 'url.maxDownloadBytes' ? maxDownloadBytes : 5000,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(
+    createPinoLoggerMock(),
+    config,
+  );
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }
@@ -94,7 +98,10 @@ function makeHandlerWithTimeout(timeoutMs: number): CheerioUrlRetrieverHandler {
     getOrThrow: (key: string) =>
       key === 'url.timeout' ? timeoutMs : 25 * 1024 * 1024,
   } as unknown as ConfigService;
-  const handler = new CheerioUrlRetrieverHandler(config);
+  const handler = new CheerioUrlRetrieverHandler(
+    createPinoLoggerMock(),
+    config,
+  );
   jest.spyOn(handler['logger'], 'error').mockImplementation(() => undefined);
   return handler;
 }

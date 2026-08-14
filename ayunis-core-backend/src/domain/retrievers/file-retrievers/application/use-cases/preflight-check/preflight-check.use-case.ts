@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { PreflightCheckCommand } from './preflight-check.command';
 import { TooManyPagesError } from '../../file-retriever.errors';
@@ -8,9 +9,9 @@ import PdfParse from 'pdf-parse';
 
 @Injectable()
 export class PreflightCheckUseCase {
-  private readonly logger = new Logger(PreflightCheckUseCase.name);
-
   constructor(
+    @InjectPinoLogger(PreflightCheckUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(retrievalConfig.KEY)
     private readonly config: ConfigType<typeof retrievalConfig>,
   ) {}
@@ -44,14 +45,16 @@ export class PreflightCheckUseCase {
       // If pdf-parse fails to read metadata, let it through — the actual
       // processing step will handle or fail on the content itself
       this.logger.warn(
-        `Could not read PDF metadata for preflight: ${(error as Error).message}`,
+        { err: error as Error, fileName },
+        'Could not read PDF metadata for preflight',
       );
       return;
     }
 
     if (pageCount > maxPages) {
       this.logger.warn(
-        `PDF "${fileName}" has ${pageCount} pages (max: ${maxPages})`,
+        { fileName, pageCount, maxPages },
+        'PDF exceeds the page limit',
       );
       throw new TooManyPagesError({ fileName, pageCount, maxPages });
     }

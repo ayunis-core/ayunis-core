@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import { StaanInternetSearchHandler } from './staan-internet-search.handler';
 import { InternetSearchResult } from '../../domain/internet-search-result.entity';
@@ -16,6 +17,7 @@ describe('StaanInternetSearchHandler', () => {
       }),
     };
     handler = new StaanInternetSearchHandler(
+      createPinoLoggerMock(),
       configService as unknown as ConfigService,
     );
   });

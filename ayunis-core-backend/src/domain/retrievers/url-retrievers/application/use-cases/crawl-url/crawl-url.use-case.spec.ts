@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -61,6 +63,10 @@ async function buildUseCase(
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       CrawlUrlUseCase,
+      {
+        provide: getLoggerToken(CrawlUrlUseCase.name),
+        useValue: createPinoLoggerMock(),
+      },
       { provide: RetrieveUrlUseCase, useValue: retriever },
     ],
   }).compile();
@@ -326,12 +332,13 @@ describe('CrawlUrlUseCase', () => {
 
     await useCase.execute(new CrawlUrlCommand('https://acme.test/', ORG_ID, 1));
 
-    const logged = warnSpy.mock.calls.map((call) => String(call[0])).join('\n');
-    expect(logged).toContain('Skipping page during crawl');
-    expect(logged).toContain('https://acme.test/doc'); // redacted path retained
-    expect(logged).not.toContain('SECRET123'); // signed token dropped
-    expect(logged).not.toContain('token=');
-    expect(logged).toContain('PROVIDER_NOT_AVAILABLE'); // stable code, not raw msg
+    expect(warnSpy).toHaveBeenCalledWith(
+      {
+        url: 'https://acme.test/doc',
+        errorType: 'PROVIDER_NOT_AVAILABLE',
+      },
+      'Skipping page during crawl',
+    );
   });
 
   it('propagates the error when the root page fails to fetch', async () => {

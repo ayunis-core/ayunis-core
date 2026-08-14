@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InternetSearchHandler } from '../../application/ports/internet-search.handler';
 import { InternetSearchResult } from '../../domain/internet-search-result.entity';
 import { ConfigService } from '@nestjs/config';
@@ -31,33 +32,30 @@ type BraveSearchErrorResult = {
 
 @Injectable()
 export class BraveInternetSearchHandler implements InternetSearchHandler {
-  private readonly logger = new Logger(BraveInternetSearchHandler.name);
-
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    @InjectPinoLogger(BraveInternetSearchHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {}
 
   async search(query: string): Promise<InternetSearchResult[]> {
-    this.logger.debug('Using Brave internet search handler', {
-      query,
-    });
+    this.logger.debug({ input: query }, 'Using Brave internet search handler');
     try {
       const response = await fetch(...this.buildRequest(query));
       const data = (await response.json()) as
         BraveSearchResult | BraveSearchErrorResult;
       if ('error' in data) {
-        this.logger.error('Brave search error', {
-          error: data.error,
-        });
+        this.logger.error({ response: data.error }, 'Brave search error');
         throw new Error(data.error.detail);
       }
       const results = this.mapResults(data);
-      this.logger.debug('Processed results', {
-        results,
-      });
+      this.logger.debug(
+        { resultCount: results.length },
+        'Processed search results',
+      );
       return results;
     } catch (error) {
-      this.logger.error('Error searching web', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error searching web');
       throw error;
     }
   }

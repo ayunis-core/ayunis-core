@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
@@ -20,16 +21,16 @@ const PDF_MIME_TYPE = 'application/pdf';
 
 @Injectable()
 export class RetrieveUrlUseCase {
-  private readonly logger = new Logger(RetrieveUrlUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RetrieveUrlUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly handler: UrlRetrieverHandler,
     private readonly assertCrawlDomainAccessUseCase: AssertCrawlDomainAccessUseCase,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
   ) {}
 
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
-    this.logger.debug(`Retrieving URL: ${command.url}`);
+    this.logger.debug({ url: command.url }, 'Retrieving URL');
 
     // Org-scoped crawl gate — runs BEFORE the try/catch so a thrown
     // CrawlDomainAccessDeniedError (404) is not swallowed into a retriever
@@ -115,10 +116,7 @@ export class RetrieveUrlUseCase {
     }
 
     // Otherwise log and convert to appropriate domain error
-    this.logger.error(
-      `URL retrieval failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      error instanceof Error ? error.stack : 'Unknown error',
-    );
+    this.logger.error({ err: error as Error, url }, 'URL retrieval failed');
 
     throw new UrlRetrieverProviderNotAvailableError(
       this.handler.constructor.name,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { InternetSearchHandler } from '../../application/ports/internet-search.handler';
 import { InternetSearchResult } from '../../domain/internet-search-result.entity';
@@ -18,22 +19,24 @@ type StaanSearchResult = {
 
 @Injectable()
 export class StaanInternetSearchHandler implements InternetSearchHandler {
-  private readonly logger = new Logger(StaanInternetSearchHandler.name);
-
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    @InjectPinoLogger(StaanInternetSearchHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {}
 
   async search(query: string): Promise<InternetSearchResult[]> {
-    this.logger.debug('Using Staan internet search handler', { query });
+    this.logger.debug({ input: query }, 'Using Staan internet search handler');
 
     const response = await fetch(...this.buildRequest(query));
 
     // fetch does not throw on HTTP error status — check explicitly.
     if (!response.ok) {
       const detail = await response.text();
-      this.logger.error('Staan search error', {
-        status: response.status,
-        detail,
-      });
+      this.logger.error(
+        { status: response.status, response: detail },
+        'Staan search error',
+      );
       throw new Error(`Staan search failed with status ${response.status}`);
     }
 

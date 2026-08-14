@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import axios from 'axios';
 import type { AxiosError } from 'axios';
 import FormData from 'form-data';
@@ -14,11 +15,12 @@ import {
 
 @Injectable()
 export class GotenbergConverterService extends DocumentConverterPort {
-  private readonly logger = new Logger(GotenbergConverterService.name);
   /** 10 minutes — large documents can take a while to convert */
   private readonly TIMEOUT_MS = 10 * 60 * 1000;
 
   constructor(
+    @InjectPinoLogger(GotenbergConverterService.name)
+    private readonly logger: PinoLogger,
     @Inject(gotenbergConfig.KEY)
     private readonly config: GotenbergConfig,
   ) {
@@ -32,7 +34,7 @@ export class GotenbergConverterService extends DocumentConverterPort {
    * @returns PDF file as a Buffer
    */
   async convertToPdf(fileData: Buffer, fileName: string): Promise<Buffer> {
-    this.logger.debug(`Converting ${fileName} to PDF via Gotenberg`);
+    this.logger.debug({ fileName }, 'Converting document to PDF via Gotenberg');
 
     try {
       const formData = new FormData();
@@ -49,7 +51,8 @@ export class GotenbergConverterService extends DocumentConverterPort {
 
       const pdfBuffer = Buffer.from(response.data as ArrayBuffer);
       this.logger.debug(
-        `Gotenberg conversion complete: ${fileName} → ${pdfBuffer.length} bytes PDF`,
+        { fileName, pdfBytes: pdfBuffer.length },
+        'Gotenberg conversion complete',
       );
 
       return pdfBuffer;

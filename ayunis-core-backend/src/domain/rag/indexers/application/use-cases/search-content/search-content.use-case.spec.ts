@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SearchContentUseCase } from './search-content.use-case';
@@ -37,6 +39,10 @@ describe('SearchContentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SearchContentUseCase,
+        {
+          provide: getLoggerToken(SearchContentUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: IndexRegistry, useValue: mockRegistry },
       ],
     }).compile();

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EmbeddingsHandler } from '../../application/ports/embeddings.handler';
 import { Embedding } from '../../domain/embedding.entity';
 import { Mistral } from '@mistralai/mistralai';
@@ -17,10 +18,13 @@ const EMBEDDINGS_TIMEOUT_MS = 30_000;
 
 @Injectable()
 export class MistralEmbeddingsHandler extends EmbeddingsHandler {
-  private readonly logger = new Logger(MistralEmbeddingsHandler.name);
   private readonly mistral: Mistral;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(MistralEmbeddingsHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
     this.mistral = new Mistral({
       apiKey: this.configService.get('embeddings.mistral.apiKey'),
@@ -33,10 +37,7 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
   }
 
   async embed(input: string[], model: EmbeddingModel): Promise<Embedding[]> {
-    this.logger.log('embed', {
-      model: model.name,
-      input: input.length,
-    });
+    this.logger.info({ model: model.name, inputCount: input.length }, 'embed');
     const embeddingsBatchResponse = await retryWithBackoff({
       fn: () =>
         this.mistral.embeddings.create({
@@ -49,11 +50,8 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
         const isTransient = isTransientMistralError(error);
         if (isTransient) {
           this.logger.warn(
+            { err: error },
             'Retrying Mistral embeddings after transient error',
-            {
-              name: error.name,
-              message: error.message,
-            },
           );
         }
         return isTransient;
@@ -62,17 +60,19 @@ export class MistralEmbeddingsHandler extends EmbeddingsHandler {
 
     return embeddingsBatchResponse.data.map((data) => {
       if (!data.embedding) {
-        this.logger.error('No embedding returned from Mistral', {
-          data,
-        });
+        this.logger.error(
+          { model: model.name },
+          'No embedding returned from Mistral',
+        );
         throw new NoEmbeddingsReturnedError(EmbeddingsProvider.MISTRAL, {
           data,
         });
       }
       if (data.index === undefined) {
-        this.logger.error('No index returned from Mistral', {
-          data,
-        });
+        this.logger.error(
+          { model: model.name },
+          'No index returned from Mistral',
+        );
         throw new NoEmbeddingsReturnedError(EmbeddingsProvider.MISTRAL, {
           data,
         });

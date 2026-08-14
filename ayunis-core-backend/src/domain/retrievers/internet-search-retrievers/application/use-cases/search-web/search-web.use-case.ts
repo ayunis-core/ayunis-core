@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InternetSearchHandler } from '../../ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
@@ -7,13 +8,15 @@ import { UnexpectedInternetSearchError } from '../../internet-search.errors';
 
 @Injectable()
 export class SearchWebUseCase {
-  private readonly logger = new Logger(SearchWebUseCase.name);
-
-  constructor(private readonly internetSearchHandler: InternetSearchHandler) {}
+  constructor(
+    @InjectPinoLogger(SearchWebUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly internetSearchHandler: InternetSearchHandler,
+  ) {}
 
   async execute(command: SearchWebCommand): Promise<InternetSearchResult[]> {
     try {
-      this.logger.debug(`Searching web for: ${command.query}`);
+      this.logger.debug({ input: command.query }, 'Searching web');
 
       return this.internetSearchHandler.search(command.query);
     } catch (error) {
@@ -21,8 +24,8 @@ export class SearchWebUseCase {
         throw error;
       }
       this.logger.error(
-        `Unexpected error searching web for: ${command.query}`,
-        error,
+        { err: error as Error, input: command.query },
+        'Unexpected error searching web',
       );
       throw new UnexpectedInternetSearchError(error as Error);
     }
