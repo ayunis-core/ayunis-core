@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SYSTEM_ROLES_KEY } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
 import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
@@ -14,18 +15,21 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 const SUPER_ADMIN_ID = '33333333-3333-3333-3333-333333333333';
 
 function createController() {
+  const logger = createPinoLoggerMock();
   const getConnection = { execute: jest.fn() };
   const configureConnection = { execute: jest.fn() };
   const setEnabled = { execute: jest.fn() };
   const setJit = { execute: jest.fn() };
   return {
     controller: new SuperAdminSsoConnectionsController(
+      logger,
       getConnection as never,
       configureConnection as never,
       setEnabled as never,
       setJit as never,
       new OrgSsoConnectionResponseDtoMapper(),
     ),
+    logger,
     getConnection,
     configureConnection,
     setEnabled,
@@ -53,7 +57,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
   });
 
   it('configures a verified connection through the application use case', async () => {
-    const { controller, configureConnection } = createController();
+    const { controller, configureConnection, logger } = createController();
     const connection = anOrgSsoConnection({ jitProvisioningEnabled: true });
     configureConnection.execute.mockResolvedValue(connection);
 
@@ -75,10 +79,26 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       ),
     );
     expect(result.connection).toMatchObject({ orgId: TEST_ORG_ID });
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connection: expect.objectContaining({
+          domain: 'stadt.example',
+          zitadelOrgId: 'zitadel-org-1',
+        }),
+        confirmation: { domainVerified: true },
+      }),
+      'Superadmin changed SSO connection',
+    );
+    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
+      'connection.emailDomain',
+    );
+    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
+      'confirmation.domain',
+    );
   });
 
   it('updates runtime enablement independently', async () => {
-    const { controller, setEnabled } = createController();
+    const { controller, setEnabled, logger } = createController();
     setEnabled.execute.mockResolvedValue(anOrgSsoConnection({ enabled: true }));
 
     const result = await controller.setEnabled(
@@ -99,6 +119,19 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       }),
     );
     expect(result.connection).toMatchObject({ enabled: true });
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        confirmation: {
+          confirmed: true,
+          domain: 'stadt.example',
+          reviewedZitadelOrgId: 'zitadel-org-1',
+        },
+      }),
+      'Superadmin changed SSO connection',
+    );
+    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
+      'confirmation.reviewedEmailDomain',
+    );
   });
 
   it('updates JIT provisioning independently', async () => {

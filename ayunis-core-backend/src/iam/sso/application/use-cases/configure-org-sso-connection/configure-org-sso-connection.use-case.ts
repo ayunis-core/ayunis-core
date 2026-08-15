@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
 import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -24,9 +25,9 @@ import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-ca
 
 @Injectable()
 export class ConfigureOrgSsoConnectionUseCase {
-  private readonly logger = new Logger(ConfigureOrgSsoConnectionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ConfigureOrgSsoConnectionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: OrgSsoConnectionsRepository,
     private readonly findOrgById: FindOrgByIdUseCase,
   ) {}
@@ -36,10 +37,13 @@ export class ConfigureOrgSsoConnectionUseCase {
     command: ConfigureOrgSsoConnectionCommand,
   ): Promise<OrgSsoConnection> {
     const { emailDomain, zitadelOrgId } = this.normalizeConfiguration(command);
-    this.logger.log('Configuring organization SSO connection', {
-      orgId: command.orgId,
-      emailDomain,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        domain: emailDomain,
+      },
+      'Configuring organization SSO connection',
+    );
 
     await this.findOrgById.execute(new FindOrgByIdQuery(command.orgId));
     const [existing, domainOwner, zitadelOrgOwner] = await Promise.all([

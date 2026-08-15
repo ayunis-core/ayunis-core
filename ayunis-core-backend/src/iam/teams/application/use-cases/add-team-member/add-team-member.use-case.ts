@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -16,9 +18,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class AddTeamMemberUseCase {
-  private readonly logger = new Logger(AddTeamMemberUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddTeamMemberUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
@@ -27,90 +29,85 @@ export class AddTeamMemberUseCase {
 
   async execute(command: AddTeamMemberCommand): Promise<TeamMember> {
     const orgId = this.contextService.get('orgId');
+    if (!orgId) throw new UnauthorizedAccessError();
 
-    if (!orgId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    this.logger.log('execute', {
-      teamId: command.teamId,
-      userId: command.userId,
-      orgId,
-    });
+    this.logger.info(
+      { teamId: command.teamId, userId: command.userId, orgId },
+      'execute',
+    );
 
     try {
-      // Verify team exists and belongs to organization
-      const team = await this.teamsRepository.findById(command.teamId);
-
-      if (!team) {
-        this.logger.error('Team not found', { teamId: command.teamId });
-        throw new TeamNotFoundError(command.teamId);
-      }
-
-      if (team.orgId !== orgId) {
-        this.logger.error('Team does not belong to organization', {
-          teamId: command.teamId,
-          teamOrgId: team.orgId,
-          requestOrgId: orgId,
-        });
-        throw new TeamNotFoundError(command.teamId);
-      }
-
-      // Verify user exists (throws UserNotFoundError if not found)
-      const user = await this.findUserByIdUseCase.execute(
-        new FindUserByIdQuery(command.userId),
+      return await this.addMember(command, orgId);
+    } catch (error) {
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        { err: error as Error, teamId: command.teamId, userId: command.userId },
+        'Failed to add team member',
       );
+      throw error;
+    }
+  }
 
-      // Verify user belongs to same organization
-      if (user.orgId !== orgId) {
-        this.logger.error('User does not belong to organization', {
-          userId: command.userId,
-          userOrgId: user.orgId,
-          requestOrgId: orgId,
-        });
-        throw new UserNotInSameOrgError(command.userId);
-      }
+  private async addMember(
+    command: AddTeamMemberCommand,
+    orgId: UUID,
+  ): Promise<TeamMember> {
+    await this.assertTeamBelongsToOrg(command.teamId, orgId);
+    await this.assertUserBelongsToOrg(command.userId, orgId);
+    await this.assertNotMember(command.teamId, command.userId);
 
-      // Check if user is already a member
-      const existingMember =
-        await this.teamMembersRepository.findByTeamIdAndUserId(
-          command.teamId,
-          command.userId,
-        );
-
-      if (existingMember) {
-        this.logger.error('User is already a team member', {
-          teamId: command.teamId,
-          userId: command.userId,
-        });
-        throw new UserAlreadyTeamMemberError(command.teamId, command.userId);
-      }
-
-      // Create team member
-      const teamMember = new TeamMember({
-        teamId: command.teamId,
-        userId: command.userId,
-      });
-
-      const createdMember = await this.teamMembersRepository.create(teamMember);
-
-      this.logger.debug('Team member added successfully', {
+    const createdMember = await this.teamMembersRepository.create(
+      new TeamMember({ teamId: command.teamId, userId: command.userId }),
+    );
+    this.logger.debug(
+      {
         teamId: command.teamId,
         userId: command.userId,
         memberId: createdMember.id,
-      });
+      },
+      'Team member added successfully',
+    );
+    return createdMember;
+  }
 
-      return createdMember;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to add team member', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        teamId: command.teamId,
-        userId: command.userId,
-      });
-      throw error;
+  private async assertTeamBelongsToOrg(
+    teamId: UUID,
+    orgId: UUID,
+  ): Promise<void> {
+    const team = await this.teamsRepository.findById(teamId);
+    if (!team) {
+      this.logger.error({ teamId }, 'Team not found');
+      throw new TeamNotFoundError(teamId);
     }
+    if (team.orgId !== orgId) {
+      this.logger.error(
+        { teamId, teamOrgId: team.orgId, requestOrgId: orgId },
+        'Team does not belong to organization',
+      );
+      throw new TeamNotFoundError(teamId);
+    }
+  }
+
+  private async assertUserBelongsToOrg(
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<void> {
+    const user = await this.findUserByIdUseCase.execute(
+      new FindUserByIdQuery(userId),
+    );
+    if (user.orgId === orgId) return;
+    this.logger.error(
+      { userId, userOrgId: user.orgId, requestOrgId: orgId },
+      'User does not belong to organization',
+    );
+    throw new UserNotInSameOrgError(userId);
+  }
+
+  private async assertNotMember(teamId: UUID, userId: UUID): Promise<void> {
+    const existingMember =
+      await this.teamMembersRepository.findByTeamIdAndUserId(teamId, userId);
+    if (!existingMember) return;
+    this.logger.error({ teamId, userId }, 'User is already a team member');
+    throw new UserAlreadyTeamMemberError(teamId, userId);
   }
 }

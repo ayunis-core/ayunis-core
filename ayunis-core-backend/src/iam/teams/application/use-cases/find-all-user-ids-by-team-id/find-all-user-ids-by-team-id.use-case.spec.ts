@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { FindAllUserIdsByTeamIdUseCase } from './find-all-user-ids-by-team-id.use-case';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
@@ -17,6 +19,10 @@ describe('FindAllUserIdsByTeamIdUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllUserIdsByTeamIdUseCase,
+        {
+          provide: getLoggerToken(FindAllUserIdsByTeamIdUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: TeamMembersRepository,
           useValue: teamMembersRepository,

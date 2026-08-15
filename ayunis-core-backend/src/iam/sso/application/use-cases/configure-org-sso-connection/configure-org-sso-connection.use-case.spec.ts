@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { SsoConnectionUniqueConstraintError } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
@@ -32,6 +33,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     repository = createMockOrgSsoConnectionsRepository();
     findOrgById = { execute: jest.fn().mockResolvedValue(anOrg()) };
     useCase = new ConfigureOrgSsoConnectionUseCase(
+      createPinoLoggerMock(),
       repository,
       findOrgById as unknown as FindOrgByIdUseCase,
     );

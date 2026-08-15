@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamMembersRepository } from 'src/iam/teams/application/ports/team-members.repository';
 import { TeamMember } from 'src/iam/teams/domain/team-member.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,21 +11,21 @@ import { Paginated, PaginatedQueryParams } from 'src/common/pagination';
 
 @Injectable()
 export class LocalTeamMembersRepository extends TeamMembersRepository {
-  private readonly logger = new Logger(LocalTeamMembersRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalTeamMembersRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(TeamMemberRecord)
     private readonly teamMemberRepository: Repository<TeamMemberRecord>,
   ) {
     super();
-    this.logger.log('constructor');
+    this.logger.info('constructor');
   }
 
   async findByTeamId(
     teamId: UUID,
     pagination: PaginatedQueryParams,
   ): Promise<Paginated<TeamMember>> {
-    this.logger.log('findByTeamId', { teamId, pagination });
+    this.logger.info({ teamId, pagination }, 'findByTeamId');
 
     const [records, total] = await this.teamMemberRepository.findAndCount({
       where: { teamId },
@@ -34,10 +35,13 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
       take: pagination.limit,
     });
 
-    this.logger.debug('Team members found', {
-      teamId,
-      count: records.length,
-    });
+    this.logger.debug(
+      {
+        teamId,
+        count: records.length,
+      },
+      'Team members found',
+    );
 
     return new Paginated({
       data: records.map((record) => TeamMemberMapper.toDomain(record)),
@@ -51,7 +55,7 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     teamId: UUID,
     userId: UUID,
   ): Promise<TeamMember | null> {
-    this.logger.log('findByTeamIdAndUserId', { teamId, userId });
+    this.logger.info({ teamId, userId }, 'findByTeamIdAndUserId');
 
     const record = await this.teamMemberRepository.findOne({
       where: { teamId, userId },
@@ -59,20 +63,23 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
     });
 
     if (!record) {
-      this.logger.debug('Team member not found', { teamId, userId });
+      this.logger.debug({ teamId, userId }, 'Team member not found');
       return null;
     }
 
-    this.logger.debug('Team member found', { teamId, userId });
+    this.logger.debug({ teamId, userId }, 'Team member found');
     return TeamMemberMapper.toDomain(record);
   }
 
   async create(teamMember: TeamMember): Promise<TeamMember> {
-    this.logger.log('create', {
-      id: teamMember.id,
-      teamId: teamMember.teamId,
-      userId: teamMember.userId,
-    });
+    this.logger.info(
+      {
+        id: teamMember.id,
+        teamId: teamMember.teamId,
+        userId: teamMember.userId,
+      },
+      'create',
+    );
 
     const record = TeamMemberMapper.toRecord(teamMember);
     const savedRecord = await this.teamMemberRepository.save(record);
@@ -83,45 +90,51 @@ export class LocalTeamMembersRepository extends TeamMembersRepository {
       relations: ['user'],
     });
 
-    this.logger.debug('Team member created successfully', {
-      id: savedRecord.id,
-    });
+    this.logger.debug(
+      {
+        id: savedRecord.id,
+      },
+      'Team member created successfully',
+    );
 
     return TeamMemberMapper.toDomain(reloadedRecord!);
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     await this.teamMemberRepository.delete(id);
-    this.logger.debug('Team member deleted successfully', { id });
+    this.logger.debug({ id }, 'Team member deleted successfully');
   }
 
   async deleteByTeamIdAndUserId(teamId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('deleteByTeamIdAndUserId', { teamId, userId });
+    this.logger.info({ teamId, userId }, 'deleteByTeamIdAndUserId');
 
     await this.teamMemberRepository.delete({ teamId, userId });
-    this.logger.debug('Team member deleted successfully', { teamId, userId });
+    this.logger.debug({ teamId, userId }, 'Team member deleted successfully');
   }
 
   async findAllUserIdsByTeamId(teamId: UUID): Promise<UUID[]> {
-    this.logger.log('findAllUserIdsByTeamId', { teamId });
+    this.logger.info({ teamId }, 'findAllUserIdsByTeamId');
 
     const records = await this.teamMemberRepository.find({
       where: { teamId },
       select: ['userId'],
     });
 
-    this.logger.debug('All team member user IDs found', {
-      teamId,
-      count: records.length,
-    });
+    this.logger.debug(
+      {
+        teamId,
+        count: records.length,
+      },
+      'All team member user IDs found',
+    );
 
     return records.map((record) => record.userId);
   }
 
   async countByTeamIds(teamIds: UUID[]): Promise<Map<UUID, number>> {
-    this.logger.log('countByTeamIds', { count: teamIds.length });
+    this.logger.info({ count: teamIds.length }, 'countByTeamIds');
 
     const counts = new Map<UUID, number>(teamIds.map((id) => [id, 0]));
     if (teamIds.length === 0) {

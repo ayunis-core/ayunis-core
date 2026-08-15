@@ -3,10 +3,10 @@ import {
   Get,
   Put,
   Body,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -37,9 +37,9 @@ import { SetAppAlertRequestDto } from './dto/set-app-alert-request.dto';
 @Controller('super-admin/platform-config')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminPlatformConfigController {
-  private readonly logger = new Logger(SuperAdminPlatformConfigController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminPlatformConfigController.name)
+    private readonly logger: PinoLogger,
     private readonly getCreditsPerEuroUseCase: GetCreditsPerEuroUseCase,
     private readonly setCreditsPerEuroUseCase: SetCreditsPerEuroUseCase,
     private readonly getFairUseLimitsUseCase: GetFairUseLimitsUseCase,
@@ -71,7 +71,7 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async getCreditsPerEuro(): Promise<CreditsPerEuroResponseDto> {
-    this.logger.log('Getting credits-per-euro configuration');
+    this.logger.info('Getting credits-per-euro configuration');
     const creditsPerEuro = await this.getCreditsPerEuroUseCase.execute();
     return { creditsPerEuro };
   }
@@ -100,12 +100,15 @@ export class SuperAdminPlatformConfigController {
   async setCreditsPerEuro(
     @Body() dto: SetCreditsPerEuroRequestDto,
   ): Promise<void> {
-    this.logger.log(`Setting credits-per-euro to ${dto.creditsPerEuro}`);
+    this.logger.info(
+      { creditsPerEuro: dto.creditsPerEuro },
+      'Setting credits-per-euro',
+    );
     const command = new SetCreditsPerEuroCommand({
       creditsPerEuro: dto.creditsPerEuro,
     });
     await this.setCreditsPerEuroUseCase.execute(command);
-    this.logger.log('Successfully updated credits-per-euro configuration');
+    this.logger.info('Successfully updated credits-per-euro configuration');
   }
 
   @Get('fair-use-limits')
@@ -127,7 +130,7 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async getFairUseLimits(): Promise<FairUseLimitsResponseDto> {
-    this.logger.log('Getting fair-use limits configuration');
+    this.logger.info('Getting fair-use limits configuration');
     const limits = await this.getFairUseLimitsUseCase.execute();
     return limits;
   }
@@ -154,8 +157,9 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async setFairUseLimit(@Body() dto: SetFairUseLimitRequestDto): Promise<void> {
-    this.logger.log(
-      `Setting fair-use limit for tier '${dto.tier}' to ${dto.limit}/${dto.windowMs}ms`,
+    this.logger.info(
+      { tier: dto.tier, limit: dto.limit, windowMs: dto.windowMs },
+      'Setting fair-use limit',
     );
     const command = new SetFairUseLimitCommand({
       tier: dto.tier,
@@ -163,7 +167,7 @@ export class SuperAdminPlatformConfigController {
       windowMs: dto.windowMs,
     });
     await this.setFairUseLimitUseCase.execute(command);
-    this.logger.log('Successfully updated fair-use limit');
+    this.logger.info('Successfully updated fair-use limit');
   }
 
   @Put('image-fair-use-limit')
@@ -190,15 +194,16 @@ export class SuperAdminPlatformConfigController {
   async setImageFairUseLimit(
     @Body() dto: SetImageFairUseLimitRequestDto,
   ): Promise<void> {
-    this.logger.log(
-      `Setting image fair-use limit to ${dto.limit}/${dto.windowMs}ms`,
+    this.logger.info(
+      { limit: dto.limit, windowMs: dto.windowMs },
+      'Setting image fair-use limit',
     );
     const command = new SetImageFairUseLimitCommand({
       limit: dto.limit,
       windowMs: dto.windowMs,
     });
     await this.setImageFairUseLimitUseCase.execute(command);
-    this.logger.log('Successfully updated image fair-use limit');
+    this.logger.info('Successfully updated image fair-use limit');
   }
 
   @Put('app-alert')
@@ -224,12 +229,12 @@ export class SuperAdminPlatformConfigController {
     description: 'Internal server error',
   })
   async setAppAlert(@Body() dto: SetAppAlertRequestDto): Promise<void> {
-    this.logger.log(`Setting app alert: enabled=${dto.enabled}`);
+    this.logger.info({ enabled: dto.enabled }, 'Setting app alert');
     const command = new SetAppAlertCommand({
       enabled: dto.enabled,
       message: dto.message,
     });
     await this.setAppAlertUseCase.execute(command);
-    this.logger.log('Successfully updated app alert banner');
+    this.logger.info('Successfully updated app alert banner');
   }
 }

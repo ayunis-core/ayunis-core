@@ -6,8 +6,8 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -35,9 +35,9 @@ import { MarkWelcomeVideoSeenCommand } from '../../application/use-cases/mark-we
 @ApiTags('Onboarding')
 @Controller('onboarding')
 export class OnboardingController {
-  private readonly logger = new Logger(OnboardingController.name);
-
   constructor(
+    @InjectPinoLogger(OnboardingController.name)
+    private readonly logger: PinoLogger,
     private readonly getOnboardingUseCase: GetOnboardingUseCase,
     private readonly updateOnboardingUseCase: UpdateOnboardingUseCase,
     private readonly markWelcomeVideoSeenUseCase: MarkWelcomeVideoSeenUseCase,
@@ -63,7 +63,7 @@ export class OnboardingController {
   async getOnboarding(
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.log('getOnboarding');
+    this.logger.info('getOnboarding');
 
     const onboarding = await this.getOnboardingUseCase.execute(
       new GetOnboardingQuery(currentUserId),
@@ -91,7 +91,7 @@ export class OnboardingController {
   async markWelcomeVideoSeen(
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.log('markWelcomeVideoSeen');
+    this.logger.info('markWelcomeVideoSeen');
 
     const onboarding = await this.markWelcomeVideoSeenUseCase.execute(
       new MarkWelcomeVideoSeenCommand(currentUserId),
@@ -125,10 +125,13 @@ export class OnboardingController {
     @Body() updateOnboardingDto: UpdateOnboardingDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<OnboardingResponseDto> {
-    this.logger.log('updateOnboarding', {
-      completedStepIdsCount: updateOnboardingDto.completedStepIds.length,
-      hidden: updateOnboardingDto.hidden,
-    });
+    this.logger.info(
+      {
+        completedStepIdsCount: updateOnboardingDto.completedStepIds.length,
+        hidden: updateOnboardingDto.hidden,
+      },
+      'updateOnboarding',
+    );
 
     const onboarding = await this.updateOnboardingUseCase.execute(
       new UpdateOnboardingCommand(

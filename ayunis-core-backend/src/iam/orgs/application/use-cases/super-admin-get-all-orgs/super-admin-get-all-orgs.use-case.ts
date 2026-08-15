@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { OrgsRepository } from '../../ports/orgs.repository';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -9,25 +10,31 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class SuperAdminGetAllOrgsUseCase {
-  private readonly logger = new Logger(SuperAdminGetAllOrgsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminGetAllOrgsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly orgsRepository: OrgsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: SuperAdminGetAllOrgsQuery): Promise<Paginated<Org>> {
-    this.logger.log('superAdminGetAllOrgs', {
-      limit: query.limit,
-      offset: query.offset,
-      search: query.search,
-    });
+    this.logger.info(
+      {
+        limit: query.limit,
+        offset: query.offset,
+        text: query.search,
+      },
+      'superAdminGetAllOrgs',
+    );
 
     const systemRole = this.contextService.get('systemRole');
     if (systemRole !== SystemRole.SUPER_ADMIN) {
-      this.logger.warn('Non-super admin attempted to list all orgs', {
-        systemRole,
-      });
+      this.logger.warn(
+        {
+          systemRole,
+        },
+        'Non-super admin attempted to list all orgs',
+      );
       throw new OrgUnauthorizedError('Super admin privileges required');
     }
 

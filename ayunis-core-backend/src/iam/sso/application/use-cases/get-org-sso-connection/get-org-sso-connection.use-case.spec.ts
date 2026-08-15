@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
@@ -11,7 +12,10 @@ describe(GetOrgSsoConnectionUseCase.name, () => {
     const repository = createMockOrgSsoConnectionsRepository();
     const connection = anOrgSsoConnection();
     repository.findByOrgId.mockResolvedValue(connection);
-    const useCase = new GetOrgSsoConnectionUseCase(repository);
+    const useCase = new GetOrgSsoConnectionUseCase(
+      createPinoLoggerMock(),
+      repository,
+    );
 
     await expect(
       useCase.execute(new GetOrgSsoConnectionQuery(TEST_ORG_ID)),
@@ -20,7 +24,10 @@ describe(GetOrgSsoConnectionUseCase.name, () => {
 
   it('returns null when the organization has no SSO connection', async () => {
     const repository = createMockOrgSsoConnectionsRepository();
-    const useCase = new GetOrgSsoConnectionUseCase(repository);
+    const useCase = new GetOrgSsoConnectionUseCase(
+      createPinoLoggerMock(),
+      repository,
+    );
 
     await expect(
       useCase.execute(new GetOrgSsoConnectionQuery(TEST_ORG_ID)),

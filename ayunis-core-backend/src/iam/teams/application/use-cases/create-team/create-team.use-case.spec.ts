@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { CreateTeamUseCase } from './create-team.use-case';
 import { CreateTeamCommand } from './create-team.command';
@@ -33,6 +35,10 @@ describe('CreateTeamUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateTeamUseCase,
+        {
+          provide: getLoggerToken(CreateTeamUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: TeamsRepository, useValue: mockTeamsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

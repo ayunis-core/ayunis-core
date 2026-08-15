@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { UpdateOnboardingUseCase } from './update-onboarding.use-case';
@@ -18,6 +20,10 @@ describe('UpdateOnboardingUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateOnboardingUseCase,
+        {
+          provide: getLoggerToken(UpdateOnboardingUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: OnboardingRepository, useValue: mockOnboardingRepository },
       ],
     }).compile();

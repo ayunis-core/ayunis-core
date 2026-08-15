@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { FindOrgByIdUseCase } from './find-org-by-id.use-case';
 import { FindOrgByIdQuery } from './find-org-by-id.query';
@@ -19,6 +21,10 @@ describe('FindOrgByIdUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindOrgByIdUseCase,
+        {
+          provide: getLoggerToken(FindOrgByIdUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: OrgsRepository, useValue: mockOrgsRepository },
       ],
     }).compile();

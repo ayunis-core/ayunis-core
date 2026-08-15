@@ -1,7 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfigKey } from '../../../domain/platform-config-keys.enum';
-import { FairUseLimitsByTier } from '../../../domain/fair-use-limits';
+import {
+  FairUseLimit,
+  FairUseLimitsByTier,
+} from '../../../domain/fair-use-limits';
 
 const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -33,75 +37,55 @@ const DEFAULT_FAIR_USE_LIMITS: FairUseLimitsByTier = {
 
 @Injectable()
 export class GetFairUseLimitsUseCase {
-  private readonly logger = new Logger(GetFairUseLimitsUseCase.name);
   private readonly warnedKeys = new Set<PlatformConfigKey>();
 
   constructor(
+    @InjectPinoLogger(GetFairUseLimitsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly configRepository: PlatformConfigRepositoryPort,
   ) {}
 
   async execute(): Promise<FairUseLimitsByTier> {
-    const [
-      zeroLimit,
-      zeroWindow,
-      lowLimit,
-      lowWindow,
-      mediumLimit,
-      mediumWindow,
-      highLimit,
-      highWindow,
-      imagesLimit,
-      imagesWindow,
-    ] = await Promise.all([
-      this.readPositiveNumber(
+    const [zero, low, medium, high, images] = await Promise.all([
+      this.readLimits(
         PlatformConfigKey.FAIR_USE_ZERO_LIMIT,
-        DEFAULT_FAIR_USE_LIMITS.zero.limit,
-      ),
-      this.readPositiveNumber(
         PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS,
-        DEFAULT_FAIR_USE_LIMITS.zero.windowMs,
+        DEFAULT_FAIR_USE_LIMITS.zero,
       ),
-      this.readPositiveNumber(
+      this.readLimits(
         PlatformConfigKey.FAIR_USE_LOW_LIMIT,
-        DEFAULT_FAIR_USE_LIMITS.low.limit,
-      ),
-      this.readPositiveNumber(
         PlatformConfigKey.FAIR_USE_LOW_WINDOW_MS,
-        DEFAULT_FAIR_USE_LIMITS.low.windowMs,
+        DEFAULT_FAIR_USE_LIMITS.low,
       ),
-      this.readPositiveNumber(
+      this.readLimits(
         PlatformConfigKey.FAIR_USE_MEDIUM_LIMIT,
-        DEFAULT_FAIR_USE_LIMITS.medium.limit,
-      ),
-      this.readPositiveNumber(
         PlatformConfigKey.FAIR_USE_MEDIUM_WINDOW_MS,
-        DEFAULT_FAIR_USE_LIMITS.medium.windowMs,
+        DEFAULT_FAIR_USE_LIMITS.medium,
       ),
-      this.readPositiveNumber(
+      this.readLimits(
         PlatformConfigKey.FAIR_USE_HIGH_LIMIT,
-        DEFAULT_FAIR_USE_LIMITS.high.limit,
-      ),
-      this.readPositiveNumber(
         PlatformConfigKey.FAIR_USE_HIGH_WINDOW_MS,
-        DEFAULT_FAIR_USE_LIMITS.high.windowMs,
+        DEFAULT_FAIR_USE_LIMITS.high,
       ),
-      this.readPositiveNumber(
+      this.readLimits(
         PlatformConfigKey.FAIR_USE_IMAGES_LIMIT,
-        DEFAULT_FAIR_USE_LIMITS.images.limit,
-      ),
-      this.readPositiveNumber(
         PlatformConfigKey.FAIR_USE_IMAGES_WINDOW_MS,
-        DEFAULT_FAIR_USE_LIMITS.images.windowMs,
+        DEFAULT_FAIR_USE_LIMITS.images,
       ),
     ]);
+    return { zero, low, medium, high, images };
+  }
 
-    return {
-      zero: { limit: zeroLimit, windowMs: zeroWindow },
-      low: { limit: lowLimit, windowMs: lowWindow },
-      medium: { limit: mediumLimit, windowMs: mediumWindow },
-      high: { limit: highLimit, windowMs: highWindow },
-      images: { limit: imagesLimit, windowMs: imagesWindow },
-    };
+  private async readLimits(
+    limitKey: PlatformConfigKey,
+    windowKey: PlatformConfigKey,
+    defaults: FairUseLimit,
+  ): Promise<FairUseLimit> {
+    const [limit, windowMs] = await Promise.all([
+      this.readPositiveNumber(limitKey, defaults.limit),
+      this.readPositiveNumber(windowKey, defaults.windowMs),
+    ]);
+    return { limit, windowMs };
   }
 
   private async readPositiveNumber(
@@ -113,8 +97,8 @@ export class GetFairUseLimitsUseCase {
     if (!config) {
       this.warnOnce(key, () =>
         this.logger.warn(
-          `Platform config key '${key}' is not set; falling back to default`,
           { key, defaultValue },
+          'Platform config key is not set; falling back to default',
         ),
       );
       return defaultValue;
@@ -124,8 +108,8 @@ export class GetFairUseLimitsUseCase {
     if (!Number.isFinite(parsed) || parsed <= 0) {
       this.warnOnce(key, () =>
         this.logger.warn(
-          `Platform config key '${key}' has an invalid value; falling back to default`,
           { key, storedValue: config.value, defaultValue },
+          'Platform config key has an invalid value; falling back to default',
         ),
       );
       return defaultValue;

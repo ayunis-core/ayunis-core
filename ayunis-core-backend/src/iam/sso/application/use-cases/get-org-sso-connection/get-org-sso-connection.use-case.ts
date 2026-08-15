@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { UnexpectedSsoError } from 'src/iam/sso/application/sso.errors';
@@ -7,17 +8,22 @@ import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.ent
 
 @Injectable()
 export class GetOrgSsoConnectionUseCase {
-  private readonly logger = new Logger(GetOrgSsoConnectionUseCase.name);
-
-  constructor(private readonly repository: OrgSsoConnectionsRepository) {}
+  constructor(
+    @InjectPinoLogger(GetOrgSsoConnectionUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly repository: OrgSsoConnectionsRepository,
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(
     query: GetOrgSsoConnectionQuery,
   ): Promise<OrgSsoConnection | null> {
-    this.logger.log('Getting organization SSO connection', {
-      orgId: query.orgId,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+      },
+      'Getting organization SSO connection',
+    );
     return this.repository.findByOrgId(query.orgId);
   }
 }
