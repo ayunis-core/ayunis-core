@@ -13,8 +13,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
 import { ConfigService } from '@nestjs/config';
-import { WinstonModule } from 'nest-winston';
-import { logger } from './common/logger/logger';
+import { Logger as PinoNestLogger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -29,8 +28,9 @@ class Bootstrap {
 
   public static async start() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      logger: WinstonModule.createLogger({ instance: logger }),
+      bufferLogs: true,
     });
+    app.useLogger(app.get(PinoNestLogger));
 
     this.configureApp(app);
     this.configureHttpTimeouts(app);

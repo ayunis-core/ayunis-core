@@ -15,6 +15,8 @@ import { RemoveSuperAdminCommand } from 'src/cli/application/commands/users/remo
 import { rootConfigs } from 'src/config/root-configs';
 import { validateEnv } from 'src/config/env.validation';
 import dataSource from 'src/db/datasource';
+import { LoggerModule } from 'nestjs-pino';
+import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
 
 /**
  * CLI Module for administrative commands
@@ -34,6 +36,7 @@ import dataSource from 'src/db/datasource';
       load: rootConfigs,
       validate: validateEnv,
     }),
+    LoggerModule.forRoot(createPinoLoggerConfig()),
     ClsModule.forRoot({
       global: true,
       plugins: [
