@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
@@ -19,17 +20,20 @@ export interface InviteJwtPayload {
 
 @Injectable()
 export class InviteJwtService {
-  private readonly logger = new Logger(InviteJwtService.name);
-
   constructor(
+    @InjectPinoLogger(InviteJwtService.name)
+    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   generateInviteToken(params: { inviteId: UUID }): string {
-    this.logger.log('generateInviteToken', {
-      inviteId: params.inviteId,
-    });
+    this.logger.info(
+      {
+        inviteId: params.inviteId,
+      },
+      'generateInviteToken',
+    );
 
     const payload: InviteJwtPayload = {
       inviteId: params.inviteId,
@@ -45,17 +49,20 @@ export class InviteJwtService {
   }
 
   verifyInviteToken(token: string): InviteJwtPayload {
-    this.logger.log('verifyInviteToken');
+    this.logger.info('verifyInviteToken');
 
     try {
       const payload = this.jwtService.verify<Partial<InviteJwtPayload>>(token);
       const inviteId = this.extractInviteId(payload);
 
-      this.logger.debug('Invite token verified successfully', { inviteId });
+      this.logger.debug({ inviteId }, 'Invite token verified successfully');
 
       return { inviteId, type: INVITE_TOKEN_TYPE };
     } catch (error: unknown) {
-      this.logger.error('Invite token verification failed', { error });
+      this.logger.error(
+        { err: error as Error },
+        'Invite token verification failed',
+      );
 
       if (error instanceof InvalidInviteTokenError) {
         throw error;

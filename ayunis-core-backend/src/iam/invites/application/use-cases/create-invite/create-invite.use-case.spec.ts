@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { CreateInviteUseCase } from './create-invite.use-case';
 import { CreateInviteCommand } from './create-invite.command';
@@ -32,6 +33,7 @@ describe('CreateInviteUseCase', () => {
   let updateSeatsUseCase: jest.Mocked<UpdateSeatsUseCase>;
   let sendInvitationEmailUseCase: jest.Mocked<SendInvitationEmailUseCase>;
   let findUserByEmailUseCase: jest.Mocked<FindUserByEmailUseCase>;
+  let logger: ReturnType<typeof createPinoLoggerMock>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as any;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as any;
@@ -72,9 +74,14 @@ describe('CreateInviteUseCase', () => {
       execute: jest.fn(),
     };
 
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateInviteUseCase,
+        {
+          provide: getLoggerToken(CreateInviteUseCase.name),
+          useValue: logger,
+        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: InviteJwtService, useValue: mockInviteJwtService },
@@ -106,11 +113,6 @@ describe('CreateInviteUseCase', () => {
     // Default: no existing invite
     invitesRepository.findOneByEmailAndOrg.mockResolvedValue(null);
     invitesRepository.findOneByEmail.mockResolvedValue(null);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -529,15 +531,14 @@ describe('CreateInviteUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       invitesRepository.create.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedInviteError,
       );
-      expect(errorSpy).toHaveBeenCalledWith('Error creating invite', {
-        error: 'Database connection failed',
-      });
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: repositoryError },
+        'Error creating invite',
+      );
     });
 
     it('should parse different time formats correctly', async () => {

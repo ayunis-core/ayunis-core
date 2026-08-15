@@ -8,9 +8,9 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  Logger,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -73,9 +73,9 @@ import { DeleteAllPendingInvitesCommand } from '../../application/use-cases/dele
 @ApiTags('invites')
 @Controller('invites')
 export class InvitesController {
-  private readonly logger = new Logger(InvitesController.name);
-
   constructor(
+    @InjectPinoLogger(InvitesController.name)
+    private readonly logger: PinoLogger,
     private readonly createInviteUseCase: CreateInviteUseCase,
     private readonly createBulkInvitesUseCase: CreateBulkInvitesUseCase,
     private readonly acceptInviteUseCase: AcceptInviteUseCase,
@@ -114,12 +114,15 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() createInviteDto: CreateInviteDto,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log('create', {
-      userId,
-      email: createInviteDto.email,
-      orgId,
-      role: createInviteDto.role,
-    });
+    this.logger.info(
+      {
+        userId,
+        email: createInviteDto.email,
+        orgId,
+        role: createInviteDto.role,
+      },
+      'create',
+    );
 
     const { invite, token } = await this.createInviteUseCase.execute(
       new CreateInviteCommand({
@@ -152,24 +155,33 @@ export class InvitesController {
 
     const hasEmailConfig = this.configService.get<boolean>('emails.hasConfig');
     if (!hasEmailConfig) {
-      this.logger.debug('Email configuration not available, returning URL', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
+      this.logger.debug(
+        {
+          inviteId: invite.id,
+          email: invite.email,
+        },
+        'Email configuration not available, returning URL',
+      );
       return { url: inviteAcceptUrl };
     }
 
-    this.logger.debug('Sending invitation email', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+      },
+      'Sending invitation email',
+    );
     await this.sendInvitationEmailUseCase.execute(
       new SendInvitationEmailCommand(invite, inviteAcceptUrl),
     );
-    this.logger.debug('Invitation email sent successfully', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+      },
+      'Invitation email sent successfully',
+    );
     return { url: null };
   }
 
@@ -198,11 +210,14 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: CreateBulkInvitesDto,
   ): Promise<CreateBulkInvitesResponseDto> {
-    this.logger.log('createBulk', {
-      userId,
-      orgId,
-      inviteCount: dto.invites.length,
-    });
+    this.logger.info(
+      {
+        userId,
+        orgId,
+        inviteCount: dto.invites.length,
+      },
+      'createBulk',
+    );
 
     const result = await this.createBulkInvitesUseCase.execute(
       new CreateBulkInvitesCommand({
@@ -215,6 +230,7 @@ export class InvitesController {
     return result;
   }
 
+  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   @Get()
   @ApiOperation({
     summary: "Get all invites for current user's organization",
@@ -249,7 +265,16 @@ export class InvitesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: GetInvitesQueryParamsDto,
   ): Promise<PaginatedInvitesListResponseDto> {
-    this.logger.log('getInvites', { userId, orgId, ...queryParams });
+    this.logger.info(
+      {
+        userId,
+        orgId,
+        input: queryParams.search,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+      },
+      'getInvites',
+    );
 
     const invites = await this.getInvitesByOrgUseCase.execute(
       new GetInvitesByOrgQuery({
@@ -289,7 +314,7 @@ export class InvitesController {
   async getInviteByToken(
     @Param('token') token: string,
   ): Promise<InviteDetailResponseDto> {
-    this.logger.log('getInviteByToken', { hasToken: !!token });
+    this.logger.info({ hasToken: !!token }, 'getInviteByToken');
 
     const inviteWithOrg = await this.getInviteByTokenUseCase.execute(
       new GetInviteByTokenQuery(token),
@@ -319,9 +344,12 @@ export class InvitesController {
   async acceptInvite(
     @Body() acceptInviteDto: AcceptInviteDto,
   ): Promise<AcceptInviteResponseDto> {
-    this.logger.log('acceptInvite', {
-      hasToken: !!acceptInviteDto.inviteToken,
-    });
+    this.logger.info(
+      {
+        hasToken: !!acceptInviteDto.inviteToken,
+      },
+      'acceptInvite',
+    );
 
     const result = await this.acceptInviteUseCase.execute(
       new AcceptInviteCommand({
@@ -365,7 +393,7 @@ export class InvitesController {
   async resendExpiredInvite(
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<CreateInviteResponseDto> {
-    this.logger.log('resendExpiredInvite', { inviteId });
+    this.logger.info({ inviteId }, 'resendExpiredInvite');
 
     const { invite, token } = await this.resendExpiredInviteUseCase.execute(
       new ResendExpiredInviteCommand(inviteId),
@@ -394,7 +422,7 @@ export class InvitesController {
   async deleteAllPending(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<DeleteAllPendingInvitesResponseDto> {
-    this.logger.log('deleteAllPending', { orgId });
+    this.logger.info({ orgId }, 'deleteAllPending');
 
     const result = await this.deleteAllPendingInvitesUseCase.execute(
       new DeleteAllPendingInvitesCommand(orgId),
@@ -429,7 +457,7 @@ export class InvitesController {
   async deleteInvite(
     @Param('id', ParseUUIDPipe) inviteId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteInvite', { inviteId });
+    this.logger.info({ inviteId }, 'deleteInvite');
 
     await this.deleteInviteUseCase.execute(new DeleteInviteCommand(inviteId));
   }

@@ -1,5 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { VerifyMfaCodeUseCase } from './verify-mfa-code.use-case';
 import { VerifyMfaCodeCommand } from './verify-mfa-code.command';
@@ -61,6 +63,10 @@ describe('VerifyMfaCodeUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         VerifyMfaCodeUseCase,
+        {
+          provide: getLoggerToken(VerifyMfaCodeUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: UserTotpsRepository, useValue: userTotps },
         { provide: MfaRecoveryCodesRepository, useValue: recoveryCodes },
         { provide: TotpSecretEncryptionPort, useValue: encryption },

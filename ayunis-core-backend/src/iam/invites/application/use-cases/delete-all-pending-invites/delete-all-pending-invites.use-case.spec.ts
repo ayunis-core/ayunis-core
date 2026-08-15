@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { DeleteAllPendingInvitesUseCase } from './delete-all-pending-invites.use-case';
 import { DeleteAllPendingInvitesCommand } from './delete-all-pending-invites.command';
 import { InvitesRepository } from '../../ports/invites.repository';
@@ -8,6 +9,7 @@ import { InvitesRepository } from '../../ports/invites.repository';
 describe('DeleteAllPendingInvitesUseCase', () => {
   let useCase: DeleteAllPendingInvitesUseCase;
   let invitesRepository: jest.Mocked<InvitesRepository>;
+  let logger: ReturnType<typeof createPinoLoggerMock>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001';
 
@@ -16,9 +18,14 @@ describe('DeleteAllPendingInvitesUseCase', () => {
       deleteAllPendingByOrg: jest.fn(),
     };
 
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteAllPendingInvitesUseCase,
+        {
+          provide: getLoggerToken(DeleteAllPendingInvitesUseCase.name),
+          useValue: logger,
+        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
       ],
     }).compile();
@@ -27,10 +34,6 @@ describe('DeleteAllPendingInvitesUseCase', () => {
       DeleteAllPendingInvitesUseCase,
     );
     invitesRepository = module.get(InvitesRepository);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   afterEach(() => {
@@ -90,18 +93,15 @@ describe('DeleteAllPendingInvitesUseCase', () => {
 
     it('should log execution details', async () => {
       const command = new DeleteAllPendingInvitesCommand(mockOrgId);
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
-
       invitesRepository.deleteAllPendingByOrg.mockResolvedValue(3);
 
       await useCase.execute(command);
 
-      expect(logSpy).toHaveBeenCalledWith('execute', { orgId: mockOrgId });
-      expect(debugSpy).toHaveBeenCalledWith('All pending invites deleted', {
-        orgId: mockOrgId,
-        deletedCount: 3,
-      });
+      expect(logger.info).toHaveBeenCalledWith({ orgId: mockOrgId }, 'execute');
+      expect(logger.debug).toHaveBeenCalledWith(
+        { orgId: mockOrgId, deletedCount: 3 },
+        'All pending invites deleted',
+      );
     });
   });
 });

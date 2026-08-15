@@ -5,12 +5,12 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
@@ -44,9 +44,9 @@ import { UpdateOrgMfaRequirementRequestDto } from './dtos/update-org-mfa-require
 @ApiTags('mfa')
 @Controller('mfa')
 export class MfaController {
-  private readonly logger = new Logger(MfaController.name);
-
   constructor(
+    @InjectPinoLogger(MfaController.name)
+    private readonly logger: PinoLogger,
     private readonly getMfaStatusUseCase: GetMfaStatusUseCase,
     private readonly setupTotpUseCase: SetupTotpUseCase,
     private readonly confirmTotpUseCase: ConfirmTotpUseCase,
@@ -79,7 +79,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @CurrentUser(UserProperty.EMAIL) email: string,
   ): Promise<MfaSetupResponseDto> {
-    this.logger.log('setup', { userId });
+    this.logger.info({ userId }, 'setup');
     return this.setupTotpUseCase.execute(new SetupTotpCommand(userId, email));
   }
 
@@ -95,7 +95,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: MfaCodeRequestDto,
   ): Promise<RecoveryCodesResponseDto> {
-    this.logger.log('confirm', { userId });
+    this.logger.info({ userId }, 'confirm');
     const recoveryCodes = await this.confirmTotpUseCase.execute(
       new ConfirmTotpCommand(userId, dto.code),
     );
@@ -118,7 +118,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: MfaCodeRequestDto,
   ): Promise<{ success: boolean }> {
-    this.logger.log('disable', { userId });
+    this.logger.info({ userId }, 'disable');
     await this.disableMfaUseCase.execute(
       new DisableMfaCommand(userId, orgId, dto.code),
     );
@@ -146,7 +146,7 @@ export class MfaController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdateOrgMfaRequirementRequestDto,
   ): Promise<OrgMfaRequirementResponseDto> {
-    this.logger.log('updateOrgRequirement', { orgId, required: dto.required });
+    this.logger.info({ orgId, required: dto.required }, 'updateOrgRequirement');
     const requirement = await this.upsertOrgMfaRequirementUseCase.execute(
       new UpsertOrgMfaRequirementCommand(orgId, dto.required),
     );
@@ -163,7 +163,7 @@ export class MfaController {
   async resetUser(
     @Param('userId', ParseUUIDPipe) targetUserId: UUID,
   ): Promise<{ success: boolean }> {
-    this.logger.log('resetUser', { targetUserId });
+    this.logger.info({ targetUserId }, 'resetUser');
     await this.resetUserMfaUseCase.execute(
       new ResetUserMfaCommand(targetUserId),
     );

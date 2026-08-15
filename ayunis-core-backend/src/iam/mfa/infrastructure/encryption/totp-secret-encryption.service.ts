@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-encryption.port';
@@ -12,13 +13,16 @@ import { TotpSecretEncryptionPort } from '../../application/ports/totp-secret-en
  */
 @Injectable()
 export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
-  private readonly logger = new Logger(TotpSecretEncryptionService.name);
   private readonly algorithm = 'aes-256-gcm';
   private readonly ivLength = 16;
   private readonly authTagLength = 16;
   private readonly encryptionKey: Buffer;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(TotpSecretEncryptionService.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
 
     const keyHex = this.configService.get<string>('MFA_ENCRYPTION_KEY');
@@ -58,9 +62,12 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
       const combined = Buffer.concat([iv, encrypted, authTag]);
       return Promise.resolve(combined.toString('base64'));
     } catch (error) {
-      this.logger.error('Failed to encrypt TOTP secret', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to encrypt TOTP secret',
+      );
       throw new Error('Failed to encrypt TOTP secret');
     }
   }
@@ -91,9 +98,12 @@ export class TotpSecretEncryptionService extends TotpSecretEncryptionPort {
 
       return Promise.resolve(decrypted.toString('utf8'));
     } catch (error) {
-      this.logger.error('Failed to decrypt TOTP secret', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to decrypt TOTP secret',
+      );
       throw new Error('Failed to decrypt TOTP secret');
     }
   }

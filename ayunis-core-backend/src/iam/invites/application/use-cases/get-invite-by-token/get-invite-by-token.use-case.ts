@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { GetInviteByTokenQuery } from './get-invite-by-token.query';
 import {
@@ -28,30 +29,33 @@ export interface InviteWithOrgDetails {
 
 @Injectable()
 export class GetInviteByTokenUseCase {
-  private readonly logger = new Logger(GetInviteByTokenUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetInviteByTokenUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly inviteJwtService: InviteJwtService,
   ) {}
 
   async execute(query: GetInviteByTokenQuery): Promise<InviteWithOrgDetails> {
-    this.logger.log('execute', { hasToken: !!query.token });
+    this.logger.info({ hasToken: !!query.token }, 'execute');
 
     // Verify and decode the JWT token
     let payload: InviteJwtPayload;
     try {
       payload = this.inviteJwtService.verifyInviteToken(query.token);
     } catch (error) {
-      this.logger.error('Invalid invite token', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Invalid invite token',
+      );
       throw new InvalidInviteTokenError('Token verification failed');
     }
     const invite = await this.invitesRepository.findOne(payload.inviteId);
     if (!invite) {
-      this.logger.error('Invite not found', { inviteId: payload.inviteId });
+      this.logger.error({ inviteId: payload.inviteId }, 'Invite not found');
       throw new InviteNotFoundError(payload.inviteId);
     }
 
@@ -70,11 +74,14 @@ export class GetInviteByTokenUseCase {
       status = InviteStatus.PENDING;
     }
 
-    this.logger.debug('Found invite with org details', {
-      inviteId: invite.id,
-      email: invite.email,
-      orgName: org.name,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+        name: org.name,
+      },
+      'Found invite with org details',
+    );
 
     return {
       id: invite.id,

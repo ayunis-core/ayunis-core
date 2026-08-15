@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import { RevokeOtherSessionsForUserCommand } from './revoke-other-sessions-for-user.command';
@@ -13,15 +14,15 @@ import { UnexpectedSessionsError } from '../../sessions.errors';
  */
 @Injectable()
 export class RevokeOtherSessionsForUserUseCase {
-  private readonly logger = new Logger(RevokeOtherSessionsForUserUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RevokeOtherSessionsForUserUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSessionsError)
   async execute(command: RevokeOtherSessionsForUserCommand): Promise<void> {
-    this.logger.log('revokeOtherSessionsForUser', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'revokeOtherSessionsForUser');
 
     const current = command.currentRefreshToken
       ? await this.refreshTokensRepository.findByTokenHash(

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
@@ -10,9 +11,9 @@ import { DisableMfaCommand } from './disable-mfa.command';
 
 @Injectable()
 export class DisableMfaUseCase {
-  private readonly logger = new Logger(DisableMfaUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DisableMfaUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly orgMfaRequirementsRepository: OrgMfaRequirementsRepository,
@@ -20,7 +21,7 @@ export class DisableMfaUseCase {
   ) {}
 
   async execute(command: DisableMfaCommand): Promise<void> {
-    this.logger.log('disableMfa', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'disableMfa');
 
     try {
       // Checked before code verification so no recovery code is consumed on
@@ -40,7 +41,7 @@ export class DisableMfaUseCase {
       await this.userTotpsRepository.deleteByUserId(command.userId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error disabling MFA', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error disabling MFA');
       throw new UnexpectedMfaError(error);
     }
   }

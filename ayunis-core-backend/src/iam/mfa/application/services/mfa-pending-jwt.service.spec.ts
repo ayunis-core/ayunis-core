@@ -1,5 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
@@ -16,6 +18,10 @@ describe('MfaPendingJwtService', () => {
       imports: [JwtModule.register({ secret: 'test-secret' })],
       providers: [
         MfaPendingJwtService,
+        {
+          provide: getLoggerToken(MfaPendingJwtService.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: ConfigService,
           useValue: {

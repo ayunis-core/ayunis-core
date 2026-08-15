@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateSessionUseCase } from './create-session.use-case';
 import { CreateSessionCommand } from './create-session.command';
 import {
@@ -23,8 +23,11 @@ describe('CreateSessionUseCase', () => {
       }),
       newFamilyId: jest.fn().mockReturnValue(TEST_FAMILY_ID),
     };
-    useCase = new CreateSessionUseCase(repository, factory as never);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    useCase = new CreateSessionUseCase(
+      createPinoLoggerMock(),
+      repository,
+      factory as never,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());

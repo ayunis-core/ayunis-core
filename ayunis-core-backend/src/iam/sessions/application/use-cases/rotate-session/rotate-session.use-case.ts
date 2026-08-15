@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -21,9 +22,9 @@ export interface RotateSessionResult {
 
 @Injectable()
 export class RotateSessionUseCase {
-  private readonly logger = new Logger(RotateSessionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RotateSessionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
     private readonly refreshTokenFactory: RefreshTokenFactory,
     private readonly configService: ConfigService,
@@ -41,10 +42,13 @@ export class RotateSessionUseCase {
     if (current.isRevoked()) {
       // Presenting a revoked token means the family is compromised.
       await this.refreshTokensRepository.revokeFamily(current.familyId);
-      this.logger.warn('Refresh token reuse detected (revoked token)', {
-        userId: current.userId,
-        familyId: current.familyId,
-      });
+      this.logger.warn(
+        {
+          userId: current.userId,
+          familyId: current.familyId,
+        },
+        'Refresh token reuse detected (revoked token)',
+      );
       throw new RefreshTokenReuseError();
     }
     if (current.isExpired()) {
@@ -82,10 +86,13 @@ export class RotateSessionUseCase {
     }
 
     await this.refreshTokensRepository.revokeFamily(current.familyId);
-    this.logger.warn('Refresh token reuse detected (post-grace replay)', {
-      userId: current.userId,
-      familyId: current.familyId,
-    });
+    this.logger.warn(
+      {
+        userId: current.userId,
+        familyId: current.familyId,
+      },
+      'Refresh token reuse detected (post-grace replay)',
+    );
     throw new RefreshTokenReuseError();
   }
 
