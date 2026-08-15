@@ -4,12 +4,12 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -42,11 +42,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('super-admin/academy')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAcademyCourseModulesController {
-  private readonly logger = new Logger(
-    SuperAdminAcademyCourseModulesController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminAcademyCourseModulesController.name)
+    private readonly logger: PinoLogger,
     private readonly createCourseModuleUseCase: CreateCourseModuleUseCase,
     private readonly updateCourseModuleUseCase: UpdateCourseModuleUseCase,
     private readonly deleteCourseModuleUseCase: DeleteCourseModuleUseCase,
@@ -79,7 +77,7 @@ export class SuperAdminAcademyCourseModulesController {
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
     @Body() dto: CreateCourseModuleRequestDto,
   ): Promise<CourseModuleResponseDto> {
-    this.logger.log(`Creating academy module in chapter ${chapterId}`);
+    this.logger.info({ chapterId }, 'Creating academy module');
     const courseModule = await this.createCourseModuleUseCase.execute(
       new CreateCourseModuleCommand({
         chapterId,
@@ -121,8 +119,9 @@ export class SuperAdminAcademyCourseModulesController {
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
     @Body() dto: ReorderCourseModulesRequestDto,
   ): Promise<void> {
-    this.logger.log(
-      `Reordering ${dto.courseModuleIds.length} modules of chapter ${chapterId}`,
+    this.logger.info(
+      { chapterId, courseModuleCount: dto.courseModuleIds.length },
+      'Reordering academy modules',
     );
     await this.reorderCourseModulesUseCase.execute(
       new ReorderCourseModulesCommand({
@@ -157,7 +156,7 @@ export class SuperAdminAcademyCourseModulesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateCourseModuleRequestDto,
   ): Promise<CourseModuleResponseDto> {
-    this.logger.log(`Updating academy module ${id}`);
+    this.logger.info({ courseModuleId: id }, 'Updating academy module');
     const courseModule = await this.updateCourseModuleUseCase.execute(
       new UpdateCourseModuleCommand({
         courseModuleId: id,
@@ -191,7 +190,7 @@ export class SuperAdminAcademyCourseModulesController {
   async deleteCourseModule(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
-    this.logger.log(`Deleting academy module ${id}`);
+    this.logger.info({ courseModuleId: id }, 'Deleting academy module');
     await this.deleteCourseModuleUseCase.execute(
       new DeleteCourseModuleCommand({ courseModuleId: id }),
     );

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -9,9 +10,9 @@ import { UserSystemPromptMapper } from './mappers/user-system-prompt.mapper';
 
 @Injectable()
 export class LocalUserSystemPromptsRepository extends UserSystemPromptsRepository {
-  private readonly logger = new Logger(LocalUserSystemPromptsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalUserSystemPromptsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(UserSystemPromptRecord)
     private readonly repository: Repository<UserSystemPromptRecord>,
     private readonly mapper: UserSystemPromptMapper,
@@ -20,12 +21,12 @@ export class LocalUserSystemPromptsRepository extends UserSystemPromptsRepositor
   }
 
   async findByUserId(userId: UUID): Promise<UserSystemPrompt | null> {
-    this.logger.log('findByUserId', { userId });
+    this.logger.info({ userId }, 'findByUserId');
 
     const record = await this.repository.findOne({ where: { userId } });
 
     if (!record) {
-      this.logger.debug('No user system prompt found', { userId });
+      this.logger.debug({ userId }, 'No user system prompt found');
       return null;
     }
 
@@ -33,7 +34,7 @@ export class LocalUserSystemPromptsRepository extends UserSystemPromptsRepositor
   }
 
   async upsert(userSystemPrompt: UserSystemPrompt): Promise<UserSystemPrompt> {
-    this.logger.log('upsert', { userId: userSystemPrompt.userId });
+    this.logger.info({ userId: userSystemPrompt.userId }, 'upsert');
 
     const record = this.mapper.toRecord(userSystemPrompt);
 
@@ -48,19 +49,22 @@ export class LocalUserSystemPromptsRepository extends UserSystemPromptsRepositor
       where: { userId: userSystemPrompt.userId },
     });
 
-    this.logger.debug('User system prompt upserted', {
-      userId: userSystemPrompt.userId,
-      id: savedRecord.id,
-    });
+    this.logger.debug(
+      {
+        userId: userSystemPrompt.userId,
+        id: savedRecord.id,
+      },
+      'User system prompt upserted',
+    );
 
     return this.mapper.toDomain(savedRecord);
   }
 
   async deleteByUserId(userId: UUID): Promise<void> {
-    this.logger.log('deleteByUserId', { userId });
+    this.logger.info({ userId }, 'deleteByUserId');
 
     await this.repository.delete({ userId });
 
-    this.logger.debug('User system prompt deleted', { userId });
+    this.logger.debug({ userId }, 'User system prompt deleted');
   }
 }

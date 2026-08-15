@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
@@ -28,9 +29,9 @@ const CERTIFICATE_DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
 
 @Injectable()
 export class GetAcademyCertificateUseCase {
-  private readonly logger = new Logger(GetAcademyCertificateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetAcademyCertificateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly completionRepository: AcademyCompletionRepository,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly certificateRenderer: CertificateRendererPort,
@@ -40,7 +41,7 @@ export class GetAcademyCertificateUseCase {
   async execute(
     query: GetAcademyCertificateQuery,
   ): Promise<AcademyCertificateFile> {
-    this.logger.log('Getting academy certificate', { userId: query.userId });
+    this.logger.info({ userId: query.userId }, 'Getting academy certificate');
 
     const completion = await this.completionRepository.findByUser(query.userId);
     if (!completion) {

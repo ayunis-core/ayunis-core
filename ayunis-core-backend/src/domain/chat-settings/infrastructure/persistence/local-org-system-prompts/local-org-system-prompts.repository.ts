@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -9,9 +10,9 @@ import { OrgSystemPromptMapper } from './mappers/org-system-prompt.mapper';
 
 @Injectable()
 export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository {
-  private readonly logger = new Logger(LocalOrgSystemPromptsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalOrgSystemPromptsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(OrgSystemPromptRecord)
     private readonly repository: Repository<OrgSystemPromptRecord>,
     private readonly mapper: OrgSystemPromptMapper,
@@ -20,12 +21,12 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
   }
 
   async findByOrgId(orgId: UUID): Promise<OrgSystemPrompt | null> {
-    this.logger.log('findByOrgId', { orgId });
+    this.logger.info({ orgId }, 'findByOrgId');
 
     const record = await this.repository.findOne({ where: { orgId } });
 
     if (!record) {
-      this.logger.debug('No org system prompt found', { orgId });
+      this.logger.debug({ orgId }, 'No org system prompt found');
       return null;
     }
 
@@ -33,7 +34,7 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
   }
 
   async upsert(orgSystemPrompt: OrgSystemPrompt): Promise<OrgSystemPrompt> {
-    this.logger.log('upsert', { orgId: orgSystemPrompt.orgId });
+    this.logger.info({ orgId: orgSystemPrompt.orgId }, 'upsert');
 
     const record = this.mapper.toRecord(orgSystemPrompt);
 
@@ -48,19 +49,22 @@ export class LocalOrgSystemPromptsRepository extends OrgSystemPromptsRepository 
       where: { orgId: orgSystemPrompt.orgId },
     });
 
-    this.logger.debug('Org system prompt upserted', {
-      orgId: orgSystemPrompt.orgId,
-      id: savedRecord.id,
-    });
+    this.logger.debug(
+      {
+        orgId: orgSystemPrompt.orgId,
+        id: savedRecord.id,
+      },
+      'Org system prompt upserted',
+    );
 
     return this.mapper.toDomain(savedRecord);
   }
 
   async deleteByOrgId(orgId: UUID): Promise<void> {
-    this.logger.log('deleteByOrgId', { orgId });
+    this.logger.info({ orgId }, 'deleteByOrgId');
 
     await this.repository.delete({ orgId });
 
-    this.logger.debug('Org system prompt deleted', { orgId });
+    this.logger.debug({ orgId }, 'Org system prompt deleted');
   }
 }

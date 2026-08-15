@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CrawlDomainGrant } from 'src/domain/crawl-domain-grants/domain/crawl-domain-grant.entity';
 import { normalizeHost } from 'src/domain/crawl-domain-grants/domain/crawl-domain.util';
@@ -13,17 +14,20 @@ import { GrantCrawlDomainCommand } from './grant-crawl-domain.command';
 
 @Injectable()
 export class GrantCrawlDomainUseCase {
-  private readonly logger = new Logger(GrantCrawlDomainUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GrantCrawlDomainUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly crawlDomainGrantRepository: CrawlDomainGrantRepository,
   ) {}
 
   async execute(command: GrantCrawlDomainCommand): Promise<CrawlDomainGrant> {
-    this.logger.log('Granting crawl domain', {
-      orgId: command.orgId,
-      domain: command.domain,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        domain: command.domain,
+      },
+      'Granting crawl domain',
+    );
 
     try {
       const domain = this.normalize(command.domain);
@@ -42,9 +46,12 @@ export class GrantCrawlDomainUseCase {
       return await this.crawlDomainGrantRepository.create(grant);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error granting crawl domain', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error granting crawl domain',
+      );
       throw new UnexpectedCrawlDomainGrantError('grant', {
         error: error as Error,
       });

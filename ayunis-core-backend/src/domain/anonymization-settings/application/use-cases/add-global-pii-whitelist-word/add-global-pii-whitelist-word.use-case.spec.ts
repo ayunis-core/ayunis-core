@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
@@ -17,7 +18,10 @@ describe('AddGlobalPiiWhitelistWordUseCase', () => {
     delete: jest.fn(),
   };
 
-  const useCase = new AddGlobalPiiWhitelistWordUseCase(repository);
+  const useCase = new AddGlobalPiiWhitelistWordUseCase(
+    createPinoLoggerMock(),
+    repository,
+  );
   const superAdminId = randomUUID();
 
   beforeEach(() => {

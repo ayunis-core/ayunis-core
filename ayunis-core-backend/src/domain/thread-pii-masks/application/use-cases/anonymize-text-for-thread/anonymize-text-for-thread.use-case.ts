@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
@@ -27,9 +28,9 @@ export interface ThreadAnonymizationResult extends AnonymizationResult {
  */
 @Injectable()
 export class AnonymizeTextForThreadUseCase {
-  private readonly logger = new Logger(AnonymizeTextForThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AnonymizeTextForThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: ThreadPiiMaskRepository,
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
@@ -39,10 +40,8 @@ export class AnonymizeTextForThreadUseCase {
   async execute(
     command: AnonymizeTextForThreadCommand,
   ): Promise<ThreadAnonymizationResult> {
-    this.logger.debug('Anonymizing text for thread', {
-      orgId: command.orgId,
-      threadId: command.threadId,
-    });
+    const logContext = { orgId: command.orgId, threadId: command.threadId };
+    this.logger.debug(logContext, 'Anonymizing text for thread');
 
     try {
       const entries = await this.getPiiWhitelistUseCase.execute(
@@ -76,13 +75,10 @@ export class AnonymizeTextForThreadUseCase {
       return { ...result, masks: [...existing, ...created] };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-
-      this.logger.error('Failed to anonymize text for thread', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        threadId: command.threadId,
-      });
-
+      this.logger.error(
+        { err: error as Error, ...logContext },
+        'Failed to anonymize text for thread',
+      );
       throw new UnexpectedThreadPiiMasksError('anonymize', {
         orgId: command.orgId,
         threadId: command.threadId,

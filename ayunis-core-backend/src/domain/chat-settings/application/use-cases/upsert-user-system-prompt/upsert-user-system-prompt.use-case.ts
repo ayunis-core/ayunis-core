@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UpsertUserSystemPromptCommand } from './upsert-user-system-prompt.command';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
@@ -9,9 +10,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpsertUserSystemPromptUseCase {
-  private readonly logger = new Logger(UpsertUserSystemPromptUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpsertUserSystemPromptUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userSystemPromptsRepository: UserSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -23,7 +24,7 @@ export class UpsertUserSystemPromptUseCase {
     if (!userId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.log('execute', { userId });
+    this.logger.info({ userId }, 'execute');
 
     try {
       const userSystemPrompt = new UserSystemPrompt({
@@ -34,15 +35,21 @@ export class UpsertUserSystemPromptUseCase {
       const result =
         await this.userSystemPromptsRepository.upsert(userSystemPrompt);
 
-      this.logger.debug('User system prompt upserted', {
-        userId,
-        id: result.id,
-      });
+      this.logger.debug(
+        {
+          userId,
+          id: result.id,
+        },
+        'User system prompt upserted',
+      );
 
       return result;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to upsert user system prompt', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to upsert user system prompt',
+      );
       throw new UnexpectedChatSettingsError(error as Error);
     }
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -10,11 +11,9 @@ import { GlobalAnonymizationWhitelistWordMapper } from './mappers/global-anonymi
 
 @Injectable()
 export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonymizationWhitelistRepository {
-  private readonly logger = new Logger(
-    PostgresGlobalAnonymizationWhitelistRepository.name,
-  );
-
   constructor(
+    @InjectPinoLogger(PostgresGlobalAnonymizationWhitelistRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(GlobalAnonymizationWhitelistWordRecord)
     private readonly repository: Repository<GlobalAnonymizationWhitelistWordRecord>,
   ) {
@@ -38,7 +37,7 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
     category: PiiCategory,
     word: string,
   ): Promise<GlobalAnonymizationWhitelistWord | null> {
-    this.logger.debug('findByCategoryAndWord', { category });
+    this.logger.debug({ category }, 'findByCategoryAndWord');
 
     const record = await this.repository.findOne({
       where: { category, wordLowercase: word.trim().toLowerCase() },
@@ -52,7 +51,7 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
   async create(
     word: GlobalAnonymizationWhitelistWord,
   ): Promise<GlobalAnonymizationWhitelistWord> {
-    this.logger.debug('create', { category: word.category });
+    this.logger.debug({ category: word.category }, 'create');
 
     const record = await this.repository.save(
       GlobalAnonymizationWhitelistWordMapper.toRecord(word),
@@ -68,7 +67,7 @@ export class PostgresGlobalAnonymizationWhitelistRepository extends GlobalAnonym
   }
 
   async delete(id: UUID): Promise<boolean> {
-    this.logger.debug('delete', { id });
+    this.logger.debug({ id }, 'delete');
 
     const result = await this.repository.delete({ id });
     return (result.affected ?? 0) > 0;

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
@@ -33,9 +34,9 @@ export interface QuizAttemptResult {
 
 @Injectable()
 export class SubmitChapterQuizUseCase {
-  private readonly logger = new Logger(SubmitChapterQuizUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SubmitChapterQuizUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
     private readonly progressRepository: AcademyChapterProgressRepository,
@@ -43,10 +44,13 @@ export class SubmitChapterQuizUseCase {
   ) {}
 
   async execute(command: SubmitChapterQuizCommand): Promise<QuizAttemptResult> {
-    this.logger.log('Submitting chapter quiz', {
-      userId: command.userId,
-      chapterId: command.chapterId,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        chapterId: command.chapterId,
+      },
+      'Submitting chapter quiz',
+    );
     try {
       const chapter = await this.loadQuizChapter(command.chapterId);
       const pool = await this.quizQuestionRepository.findAllByChapter(
@@ -63,9 +67,12 @@ export class SubmitChapterQuizUseCase {
       return { ...grade, academyCompleted };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error submitting chapter quiz', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error submitting chapter quiz',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

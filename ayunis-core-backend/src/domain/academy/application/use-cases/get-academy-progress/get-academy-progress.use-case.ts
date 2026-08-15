@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
@@ -31,15 +32,15 @@ export interface AcademyProgressView {
 
 @Injectable()
 export class GetAcademyProgressUseCase {
-  private readonly logger = new Logger(GetAcademyProgressUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetAcademyProgressUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly progressRepository: AcademyChapterProgressRepository,
     private readonly completionRepository: AcademyCompletionRepository,
   ) {}
 
   async execute(query: GetAcademyProgressQuery): Promise<AcademyProgressView> {
-    this.logger.log('Getting academy progress', { userId: query.userId });
+    this.logger.info({ userId: query.userId }, 'Getting academy progress');
     try {
       const progress = await this.progressRepository.findAllByUser(
         query.userId,
@@ -64,9 +65,12 @@ export class GetAcademyProgressUseCase {
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting academy progress', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error getting academy progress',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

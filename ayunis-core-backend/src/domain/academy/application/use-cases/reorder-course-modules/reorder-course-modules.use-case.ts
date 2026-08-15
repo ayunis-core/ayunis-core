@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
@@ -11,18 +12,21 @@ import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
 
 @Injectable()
 export class ReorderCourseModulesUseCase {
-  private readonly logger = new Logger(ReorderCourseModulesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ReorderCourseModulesUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly chapterRepository: AcademyChapterRepository,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
   async execute(command: ReorderCourseModulesCommand): Promise<void> {
-    this.logger.log('Reordering academy modules', {
-      chapterId: command.chapterId,
-      count: command.courseModuleIds.length,
-    });
+    this.logger.info(
+      {
+        chapterId: command.chapterId,
+        count: command.courseModuleIds.length,
+      },
+      'Reordering academy modules',
+    );
     try {
       const chapter = await this.chapterRepository.findOne(command.chapterId);
       if (!chapter) {
@@ -38,9 +42,12 @@ export class ReorderCourseModulesUseCase {
       );
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error reordering academy modules', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error reordering academy modules',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

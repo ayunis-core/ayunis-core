@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UpdateCourseModuleUseCase } from './update-course-module.use-case';
 import { UpdateCourseModuleCommand } from './update-course-module.command';
@@ -20,6 +21,10 @@ describe('UpdateCourseModuleUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(UpdateCourseModuleUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         UpdateCourseModuleUseCase,
         {
           provide: AcademyCourseModuleRepository,
@@ -30,9 +35,6 @@ describe('UpdateCourseModuleUseCase', () => {
 
     useCase = module.get<UpdateCourseModuleUseCase>(UpdateCourseModuleUseCase);
     courseModuleRepository = module.get(AcademyCourseModuleRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

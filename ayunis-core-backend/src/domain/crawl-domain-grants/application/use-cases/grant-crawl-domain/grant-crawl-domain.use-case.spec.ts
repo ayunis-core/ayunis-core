@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { GrantCrawlDomainUseCase } from './grant-crawl-domain.use-case';
 import { GrantCrawlDomainCommand } from './grant-crawl-domain.command';
@@ -26,7 +27,7 @@ function makeRepo(
 describe('GrantCrawlDomainUseCase', () => {
   it('normalizes the input to a host and creates the grant when the domain is free', async () => {
     const repo = makeRepo(null);
-    const useCase = new GrantCrawlDomainUseCase(repo);
+    const useCase = new GrantCrawlDomainUseCase(createPinoLoggerMock(), repo);
 
     const result = await useCase.execute(
       new GrantCrawlDomainCommand(ORG_A, 'https://Intranet.Customer.DE/wiki'),
@@ -43,7 +44,7 @@ describe('GrantCrawlDomainUseCase', () => {
       domain: 'intranet.customer.de',
     });
     const repo = makeRepo(existing);
-    const useCase = new GrantCrawlDomainUseCase(repo);
+    const useCase = new GrantCrawlDomainUseCase(createPinoLoggerMock(), repo);
 
     const result = await useCase.execute(
       new GrantCrawlDomainCommand(ORG_A, 'intranet.customer.de'),
@@ -58,7 +59,10 @@ describe('GrantCrawlDomainUseCase', () => {
       orgId: ORG_A,
       domain: 'intranet.customer.de',
     });
-    const useCase = new GrantCrawlDomainUseCase(makeRepo(existing));
+    const useCase = new GrantCrawlDomainUseCase(
+      createPinoLoggerMock(),
+      makeRepo(existing),
+    );
 
     await expect(
       useCase.execute(
@@ -68,7 +72,10 @@ describe('GrantCrawlDomainUseCase', () => {
   });
 
   it('rejects an unparseable domain with a 400', async () => {
-    const useCase = new GrantCrawlDomainUseCase(makeRepo(null));
+    const useCase = new GrantCrawlDomainUseCase(
+      createPinoLoggerMock(),
+      makeRepo(null),
+    );
 
     await expect(
       useCase.execute(new GrantCrawlDomainCommand(ORG_A, 'not a domain')),

@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { AnonymizeTextForThreadUseCase } from './anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
@@ -38,6 +38,7 @@ describe('AnonymizeTextForThreadUseCase', () => {
       ],
     });
     useCase = new AnonymizeTextForThreadUseCase(
+      createPinoLoggerMock(),
       { findByThreadId, saveMany },
       { execute: whitelistExecute } as unknown as GetPiiWhitelistUseCase,
       {
@@ -45,8 +46,6 @@ describe('AnonymizeTextForThreadUseCase', () => {
       } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   const command = () =>

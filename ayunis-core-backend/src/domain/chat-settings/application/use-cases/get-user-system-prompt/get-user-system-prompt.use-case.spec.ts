@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetUserSystemPromptUseCase } from './get-user-system-prompt.use-case';
 import type { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
@@ -23,6 +24,7 @@ describe('GetUserSystemPromptUseCase', () => {
     };
 
     useCase = new GetUserSystemPromptUseCase(
+      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

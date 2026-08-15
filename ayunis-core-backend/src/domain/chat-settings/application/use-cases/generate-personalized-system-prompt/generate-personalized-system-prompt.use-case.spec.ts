@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GeneratePersonalizedSystemPromptUseCase } from './generate-personalized-system-prompt.use-case';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
 import { PersonalizedSystemPromptGenerationError } from '../../chat-settings.errors';
@@ -72,6 +73,7 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
     };
 
     useCase = new GeneratePersonalizedSystemPromptUseCase(
+      createPinoLoggerMock(),
       getInferenceUseCase as unknown as GetInferenceUseCase,
       getDefaultModelUseCase as unknown as GetDefaultModelUseCase,
       upsertUserSystemPromptUseCase as unknown as UpsertUserSystemPromptUseCase,
