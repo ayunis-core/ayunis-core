@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -7,9 +8,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteOrgSystemPromptUseCase {
-  private readonly logger = new Logger(DeleteOrgSystemPromptUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteOrgSystemPromptUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly orgSystemPromptsRepository: OrgSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -19,15 +20,18 @@ export class DeleteOrgSystemPromptUseCase {
     if (!orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.log('execute', { orgId });
+    this.logger.info({ orgId }, 'execute');
 
     try {
       await this.orgSystemPromptsRepository.deleteByOrgId(orgId);
 
-      this.logger.debug('Org system prompt deleted', { orgId });
+      this.logger.debug({ orgId }, 'Org system prompt deleted');
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to delete org system prompt', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to delete org system prompt',
+      );
       throw new UnexpectedChatSettingsError(error as Error);
     }
   }

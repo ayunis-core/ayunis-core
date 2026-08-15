@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
 import { GlobalWhitelistWordNotFoundError } from '../../anonymization-settings.errors';
@@ -12,7 +13,10 @@ describe('DeleteGlobalPiiWhitelistWordUseCase', () => {
     delete: jest.fn(),
   };
 
-  const useCase = new DeleteGlobalPiiWhitelistWordUseCase(repository);
+  const useCase = new DeleteGlobalPiiWhitelistWordUseCase(
+    createPinoLoggerMock(),
+    repository,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();

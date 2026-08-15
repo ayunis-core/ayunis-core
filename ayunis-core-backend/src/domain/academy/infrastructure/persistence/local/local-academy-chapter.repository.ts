@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -11,9 +12,9 @@ import { ChapterNotFoundError } from 'src/domain/academy/application/academy.err
 
 @Injectable()
 export class LocalAcademyChapterRepository implements AcademyChapterRepository {
-  private readonly logger = new Logger(LocalAcademyChapterRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalAcademyChapterRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(AcademyChapterRecord)
     private readonly repository: Repository<AcademyChapterRecord>,
     private readonly dataSource: DataSource,
@@ -21,7 +22,7 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   ) {}
 
   async findAllWithCourseModules(): Promise<AcademyChapter[]> {
-    this.logger.log('findAllWithCourseModules');
+    this.logger.info('findAllWithCourseModules');
     const records = await this.repository.find({
       relations: { courseModules: true },
       order: {
@@ -34,7 +35,7 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async findAllWithQuizContent(): Promise<AcademyChapter[]> {
-    this.logger.log('findAllWithQuizContent');
+    this.logger.info('findAllWithQuizContent');
     const records = await this.repository.find({
       relations: { courseModules: true, quizQuestions: true },
       order: {
@@ -48,7 +49,7 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async findOne(id: UUID): Promise<AcademyChapter | null> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const record = await this.repository.findOne({
       where: { id },
       relations: { courseModules: true },
@@ -59,13 +60,13 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async findAllIds(): Promise<UUID[]> {
-    this.logger.log('findAllIds');
+    this.logger.info('findAllIds');
     const records = await this.repository.find({ select: { id: true } });
     return records.map((record) => record.id);
   }
 
   async findQuizEnabledIds(): Promise<UUID[]> {
-    this.logger.log('findQuizEnabledIds');
+    this.logger.info('findQuizEnabledIds');
     const records = await this.repository.find({
       where: { quizEnabled: true },
       select: { id: true },
@@ -74,26 +75,26 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async findMaxPosition(): Promise<number | null> {
-    this.logger.log('findMaxPosition');
+    this.logger.info('findMaxPosition');
     return this.repository.maximum('position');
   }
 
   async create(chapter: AcademyChapter): Promise<AcademyChapter> {
-    this.logger.log('create', { title: chapter.title });
+    this.logger.info({ title: chapter.title }, 'create');
     const record = this.mapper.chapterToRecord(chapter);
     const saved = await this.repository.save(record);
     return this.mapper.chapterToDomain(saved);
   }
 
   async update(chapter: AcademyChapter): Promise<AcademyChapter> {
-    this.logger.log('update', { id: chapter.id });
+    this.logger.info({ id: chapter.id }, 'update');
     const record = this.mapper.chapterToRecord(chapter);
     const saved = await this.repository.save(record);
     return this.mapper.chapterToDomain(saved);
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new ChapterNotFoundError(id);
@@ -101,7 +102,7 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   }
 
   async updatePositions(orderedIds: UUID[]): Promise<void> {
-    this.logger.log('updatePositions', { count: orderedIds.length });
+    this.logger.info({ count: orderedIds.length }, 'updatePositions');
     await this.dataSource.transaction(async (manager) => {
       for (const [index, id] of orderedIds.entries()) {
         await manager.update(AcademyChapterRecord, { id }, { position: index });

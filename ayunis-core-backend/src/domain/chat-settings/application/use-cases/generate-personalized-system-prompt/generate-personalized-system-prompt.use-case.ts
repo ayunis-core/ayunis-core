@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GeneratePersonalizedSystemPromptCommand } from './generate-personalized-system-prompt.command';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import { GetInferenceCommand } from 'src/domain/models/application/use-cases/get-inference/get-inference.command';
@@ -31,11 +32,9 @@ export interface GeneratePersonalizedSystemPromptResult {
 
 @Injectable()
 export class GeneratePersonalizedSystemPromptUseCase {
-  private readonly logger = new Logger(
-    GeneratePersonalizedSystemPromptUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(GeneratePersonalizedSystemPromptUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
     private readonly upsertUserSystemPromptUseCase: UpsertUserSystemPromptUseCase,
@@ -55,7 +54,7 @@ export class GeneratePersonalizedSystemPromptUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('execute', { userId });
+    this.logger.info({ userId }, 'execute');
 
     try {
       const permittedModel = await this.getDefaultModelUseCase.execute(
@@ -84,10 +83,13 @@ export class GeneratePersonalizedSystemPromptUseCase {
       return { systemPrompt, welcomeMessage };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to generate personalized system prompt', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId,
+          err: error as Error,
+        },
+        'Failed to generate personalized system prompt',
+      );
       throw new PersonalizedSystemPromptGenerationError(
         error instanceof Error ? error : undefined,
       );
@@ -153,9 +155,10 @@ export class GeneratePersonalizedSystemPromptUseCase {
         model,
       );
     } catch (error) {
-      this.logger.warn('Welcome message generation failed, using fallback', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error },
+        'Welcome message generation failed, using fallback',
+      );
       return '';
     }
   }

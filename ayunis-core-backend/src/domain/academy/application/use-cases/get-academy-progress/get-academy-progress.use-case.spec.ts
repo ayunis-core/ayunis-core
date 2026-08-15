@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetAcademyProgressUseCase } from './get-academy-progress.use-case';
 import { GetAcademyProgressQuery } from './get-academy-progress.query';
@@ -21,6 +22,10 @@ describe('GetAcademyProgressUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetAcademyProgressUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         GetAcademyProgressUseCase,
         {
           provide: AcademyChapterProgressRepository,
@@ -36,8 +41,6 @@ describe('GetAcademyProgressUseCase', () => {
     useCase = module.get(GetAcademyProgressUseCase);
     progressRepository = module.get(AcademyChapterProgressRepository);
     completionRepository = module.get(AcademyCompletionRepository);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

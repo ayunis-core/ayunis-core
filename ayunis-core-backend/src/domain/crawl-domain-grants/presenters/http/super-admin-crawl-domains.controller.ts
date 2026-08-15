@@ -5,10 +5,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -37,9 +37,9 @@ import { CrawlDomainGrantResponseDto } from './dtos/crawl-domain-grant-response.
 @Controller('super-admin/crawl-domains')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminCrawlDomainsController {
-  private readonly logger = new Logger(SuperAdminCrawlDomainsController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminCrawlDomainsController.name)
+    private readonly logger: PinoLogger,
     private readonly listOrgCrawlDomainsUseCase: ListOrgCrawlDomainsUseCase,
     private readonly grantCrawlDomainUseCase: GrantCrawlDomainUseCase,
     private readonly revokeCrawlDomainUseCase: RevokeCrawlDomainUseCase,
@@ -55,7 +55,7 @@ export class SuperAdminCrawlDomainsController {
   async list(
     @Param('orgId') orgId: UUID,
   ): Promise<CrawlDomainGrantResponseDto[]> {
-    this.logger.log('list', { orgId });
+    this.logger.info({ orgId }, 'list');
 
     const grants = await this.listOrgCrawlDomainsUseCase.execute(
       new ListOrgCrawlDomainsQuery(orgId),
@@ -81,7 +81,7 @@ export class SuperAdminCrawlDomainsController {
     @Param('orgId') orgId: UUID,
     @Body() dto: GrantCrawlDomainRequestDto,
   ): Promise<CrawlDomainGrantResponseDto> {
-    this.logger.log('grant', { orgId, domain: dto.domain });
+    this.logger.info({ orgId, domain: dto.domain }, 'grant');
 
     const grant = await this.grantCrawlDomainUseCase.execute(
       new GrantCrawlDomainCommand(orgId, dto.domain),
@@ -104,7 +104,7 @@ export class SuperAdminCrawlDomainsController {
     @Param('orgId') orgId: UUID,
     @Param('grantId') grantId: UUID,
   ): Promise<void> {
-    this.logger.log('revoke', { orgId, grantId });
+    this.logger.info({ orgId, grantId }, 'revoke');
 
     await this.revokeCrawlDomainUseCase.execute(
       new RevokeCrawlDomainCommand(orgId, grantId),

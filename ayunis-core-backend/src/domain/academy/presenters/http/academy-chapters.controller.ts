@@ -1,4 +1,5 @@
-import { Controller, Get, HttpCode, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiInternalServerErrorResponse,
   ApiOkResponse,
@@ -17,9 +18,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('academy/chapters')
 @RequireAddon(AddonType.AYUNIS_CORE_ACADEMY)
 export class AcademyChaptersController {
-  private readonly logger = new Logger(AcademyChaptersController.name);
-
   constructor(
+    @InjectPinoLogger(AcademyChaptersController.name)
+    private readonly logger: PinoLogger,
     private readonly getAcademyContentUseCase: GetAcademyContentUseCase,
     private readonly responseMapper: AcademyResponseDtoMapper,
   ) {}
@@ -40,7 +41,7 @@ export class AcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getChapters(): Promise<AcademyChapterResponseDto[]> {
-    this.logger.log('Getting academy chapters');
+    this.logger.info('Getting academy chapters');
     const chapters = await this.getAcademyContentUseCase.execute(
       new GetAcademyContentQuery(),
     );

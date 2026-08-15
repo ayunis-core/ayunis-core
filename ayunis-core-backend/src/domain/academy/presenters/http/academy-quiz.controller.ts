@@ -4,11 +4,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ApiInternalServerErrorResponse,
@@ -40,9 +40,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('academy')
 @RequireAddon(AddonType.AYUNIS_CORE_ACADEMY)
 export class AcademyQuizController {
-  private readonly logger = new Logger(AcademyQuizController.name);
-
   constructor(
+    @InjectPinoLogger(AcademyQuizController.name)
+    private readonly logger: PinoLogger,
     private readonly getChapterQuizUseCase: GetChapterQuizUseCase,
     private readonly submitChapterQuizUseCase: SubmitChapterQuizUseCase,
     private readonly getAcademyProgressUseCase: GetAcademyProgressUseCase,
@@ -65,7 +65,7 @@ export class AcademyQuizController {
   async getChapterQuiz(
     @Param('chapterId', ParseUUIDPipe) chapterId: UUID,
   ): Promise<QuizQuestionForTakingResponseDto[]> {
-    this.logger.log(`Getting quiz for chapter ${chapterId}`);
+    this.logger.info({ chapterId }, 'Getting quiz for chapter');
     const questions = await this.getChapterQuizUseCase.execute(
       new GetChapterQuizQuery({ chapterId }),
     );
@@ -90,7 +90,7 @@ export class AcademyQuizController {
     @Body() dto: SubmitQuizRequestDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<QuizResultResponseDto> {
-    this.logger.log(`Submitting quiz for chapter ${chapterId}`);
+    this.logger.info({ chapterId }, 'Submitting quiz for chapter');
     const result = await this.submitChapterQuizUseCase.execute(
       new SubmitChapterQuizCommand({ userId, chapterId, answers: dto.answers }),
     );
@@ -112,7 +112,7 @@ export class AcademyQuizController {
   async getProgress(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<AcademyProgressResponseDto> {
-    this.logger.log('Getting academy progress');
+    this.logger.info('Getting academy progress');
     const progress = await this.getAcademyProgressUseCase.execute(
       new GetAcademyProgressQuery({ userId }),
     );

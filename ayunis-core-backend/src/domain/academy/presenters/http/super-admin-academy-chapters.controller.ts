@@ -5,12 +5,12 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -46,11 +46,9 @@ import { AcademyResponseDtoMapper } from './mappers/academy-response-dto.mapper'
 @Controller('super-admin/academy/chapters')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAcademyChaptersController {
-  private readonly logger = new Logger(
-    SuperAdminAcademyChaptersController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminAcademyChaptersController.name)
+    private readonly logger: PinoLogger,
     private readonly getAcademyManagementContentUseCase: GetAcademyManagementContentUseCase,
     private readonly createChapterUseCase: CreateChapterUseCase,
     private readonly updateChapterUseCase: UpdateChapterUseCase,
@@ -75,7 +73,7 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getChapters(): Promise<SuperAdminAcademyChapterResponseDto[]> {
-    this.logger.log('Getting academy chapters');
+    this.logger.info('Getting academy chapters');
     const chapters = await this.getAcademyManagementContentUseCase.execute(
       new GetAcademyManagementContentQuery(),
     );
@@ -101,7 +99,7 @@ export class SuperAdminAcademyChaptersController {
   async createChapter(
     @Body() dto: CreateChapterRequestDto,
   ): Promise<AcademyChapterResponseDto> {
-    this.logger.log(`Creating academy chapter: ${dto.title}`);
+    this.logger.info({ title: dto.title }, 'Creating academy chapter');
     const chapter = await this.createChapterUseCase.execute(
       new CreateChapterCommand({
         title: dto.title,
@@ -135,7 +133,10 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async reorderChapters(@Body() dto: ReorderChaptersRequestDto): Promise<void> {
-    this.logger.log(`Reordering ${dto.chapterIds.length} academy chapters`);
+    this.logger.info(
+      { chapterCount: dto.chapterIds.length },
+      'Reordering academy chapters',
+    );
     await this.reorderChaptersUseCase.execute(
       new ReorderChaptersCommand({ chapterIds: dto.chapterIds }),
     );
@@ -166,7 +167,7 @@ export class SuperAdminAcademyChaptersController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateChapterRequestDto,
   ): Promise<AcademyChapterResponseDto> {
-    this.logger.log(`Updating academy chapter ${id}`);
+    this.logger.info({ chapterId: id }, 'Updating academy chapter');
     const chapter = await this.updateChapterUseCase.execute(
       new UpdateChapterCommand({
         chapterId: id,
@@ -200,7 +201,7 @@ export class SuperAdminAcademyChaptersController {
   })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async deleteChapter(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log(`Deleting academy chapter ${id}`);
+    this.logger.info({ chapterId: id }, 'Deleting academy chapter');
     await this.deleteChapterUseCase.execute(
       new DeleteChapterCommand({ chapterId: id }),
     );

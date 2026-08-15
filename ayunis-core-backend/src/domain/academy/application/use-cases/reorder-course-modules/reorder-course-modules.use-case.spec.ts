@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { ReorderCourseModulesUseCase } from './reorder-course-modules.use-case';
 import { ReorderCourseModulesCommand } from './reorder-course-modules.command';
@@ -34,6 +35,10 @@ describe('ReorderCourseModulesUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(ReorderCourseModulesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         ReorderCourseModulesUseCase,
         { provide: AcademyChapterRepository, useValue: mockChapterRepository },
         {
@@ -48,9 +53,6 @@ describe('ReorderCourseModulesUseCase', () => {
     );
     chapterRepository = module.get(AcademyChapterRepository);
     courseModuleRepository = module.get(AcademyCourseModuleRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

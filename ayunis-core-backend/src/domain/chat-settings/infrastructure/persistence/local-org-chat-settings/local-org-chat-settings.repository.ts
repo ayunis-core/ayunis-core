@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -9,9 +10,9 @@ import { OrgChatSettingsMapper } from './mappers/org-chat-settings.mapper';
 
 @Injectable()
 export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
-  private readonly logger = new Logger(LocalOrgChatSettingsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalOrgChatSettingsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(OrgChatSettingsRecord)
     private readonly repository: Repository<OrgChatSettingsRecord>,
     private readonly mapper: OrgChatSettingsMapper,
@@ -20,12 +21,12 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<OrgChatSettings | null> {
-    this.logger.log('findByOrgId', { orgId });
+    this.logger.info({ orgId }, 'findByOrgId');
 
     const record = await this.repository.findOne({ where: { orgId } });
 
     if (!record) {
-      this.logger.debug('No org chat settings found', { orgId });
+      this.logger.debug({ orgId }, 'No org chat settings found');
       return null;
     }
 
@@ -33,7 +34,7 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
   }
 
   async upsert(orgChatSettings: OrgChatSettings): Promise<OrgChatSettings> {
-    this.logger.log('upsert', { orgId: orgChatSettings.orgId });
+    this.logger.info({ orgId: orgChatSettings.orgId }, 'upsert');
 
     const record = this.mapper.toRecord(orgChatSettings);
 
@@ -48,10 +49,13 @@ export class LocalOrgChatSettingsRepository extends OrgChatSettingsRepository {
       where: { orgId: orgChatSettings.orgId },
     });
 
-    this.logger.debug('Org chat settings upserted', {
-      orgId: orgChatSettings.orgId,
-      id: savedRecord.id,
-    });
+    this.logger.debug(
+      {
+        orgId: orgChatSettings.orgId,
+        id: savedRecord.id,
+      },
+      'Org chat settings upserted',
+    );
 
     return this.mapper.toDomain(savedRecord);
   }

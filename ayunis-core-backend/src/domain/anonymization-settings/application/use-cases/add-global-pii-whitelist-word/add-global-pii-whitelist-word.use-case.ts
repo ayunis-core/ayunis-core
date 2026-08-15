@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GlobalAnonymizationWhitelistRepository } from '../../ports/global-anonymization-whitelist.repository';
 import {
@@ -11,9 +12,9 @@ import type { AddGlobalPiiWhitelistWordCommand } from './add-global-pii-whitelis
 
 @Injectable()
 export class AddGlobalPiiWhitelistWordUseCase {
-  private readonly logger = new Logger(AddGlobalPiiWhitelistWordUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddGlobalPiiWhitelistWordUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: GlobalAnonymizationWhitelistRepository,
   ) {}
 
@@ -21,9 +22,12 @@ export class AddGlobalPiiWhitelistWordUseCase {
   async execute(
     command: AddGlobalPiiWhitelistWordCommand,
   ): Promise<GlobalAnonymizationWhitelistWord> {
-    this.logger.log('Adding global PII whitelist word', {
-      category: command.category,
-    });
+    this.logger.info(
+      {
+        category: command.category,
+      },
+      'Adding global PII whitelist word',
+    );
 
     const word = command.word.trim();
     if (word.length === 0) {

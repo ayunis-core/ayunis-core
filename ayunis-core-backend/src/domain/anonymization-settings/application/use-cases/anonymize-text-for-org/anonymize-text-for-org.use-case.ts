@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizeTextUseCase } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.use-case';
 import { AnonymizeTextCommand } from 'src/common/anonymization/application/use-cases/anonymize-text/anonymize-text.command';
@@ -17,9 +18,9 @@ import type { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.comman
  */
 @Injectable()
 export class AnonymizeTextForOrgUseCase {
-  private readonly logger = new Logger(AnonymizeTextForOrgUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AnonymizeTextForOrgUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: AnonymizationWhitelistRepository,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly anonymizeTextUseCase: AnonymizeTextUseCase,
@@ -28,7 +29,7 @@ export class AnonymizeTextForOrgUseCase {
   async execute(
     command: AnonymizeTextForOrgCommand,
   ): Promise<AnonymizationResult> {
-    this.logger.debug('Anonymizing text for org', { orgId: command.orgId });
+    this.logger.debug({ orgId: command.orgId }, 'Anonymizing text for org');
 
     try {
       const entries = await this.repository.findByOrgId(command.orgId);
@@ -46,10 +47,13 @@ export class AnonymizeTextForOrgUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to anonymize text for org', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to anonymize text for org',
+      );
 
       throw new UnexpectedAnonymizationSettingsError('anonymize', {
         orgId: command.orgId,

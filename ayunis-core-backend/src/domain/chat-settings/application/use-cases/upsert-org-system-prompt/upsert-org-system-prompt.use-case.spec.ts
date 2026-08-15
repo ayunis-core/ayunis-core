@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpsertOrgSystemPromptUseCase } from './upsert-org-system-prompt.use-case';
 import { UpsertOrgSystemPromptCommand } from './upsert-org-system-prompt.command';
 import type { OrgSystemPromptsRepository } from '../../ports/org-system-prompts.repository';
@@ -24,6 +25,7 @@ describe('UpsertOrgSystemPromptUseCase', () => {
     };
 
     useCase = new UpsertOrgSystemPromptUseCase(
+      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

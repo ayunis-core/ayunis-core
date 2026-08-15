@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { AnonymizeTextForOrgUseCase } from './anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from './anonymize-text-for-org.command';
@@ -27,6 +27,7 @@ describe('AnonymizeTextForOrgUseCase', () => {
       replacements: [],
     });
     useCase = new AnonymizeTextForOrgUseCase(
+      createPinoLoggerMock(),
       {
         findByOrgId,
         replaceForOrg: jest.fn(),
@@ -36,8 +37,6 @@ describe('AnonymizeTextForOrgUseCase', () => {
       } as unknown as GetGlobalPiiWhitelistUseCase,
       { execute: anonymizeExecute } as unknown as AnonymizeTextUseCase,
     );
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('passes the org whitelist to the anonymization use case', async () => {

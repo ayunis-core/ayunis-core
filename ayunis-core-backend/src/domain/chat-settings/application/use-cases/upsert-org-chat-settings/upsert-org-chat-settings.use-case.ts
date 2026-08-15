@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command';
 import { OrgChatSettings } from 'src/domain/chat-settings/domain/org-chat-settings.entity';
 import { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
@@ -9,9 +10,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpsertOrgChatSettingsUseCase {
-  private readonly logger = new Logger(UpsertOrgChatSettingsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpsertOrgChatSettingsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly orgChatSettingsRepository: OrgChatSettingsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -23,7 +24,7 @@ export class UpsertOrgChatSettingsUseCase {
     if (!orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.log('execute', { orgId });
+    this.logger.info({ orgId }, 'execute');
 
     try {
       const orgChatSettings = new OrgChatSettings({
@@ -34,17 +35,23 @@ export class UpsertOrgChatSettingsUseCase {
       const result =
         await this.orgChatSettingsRepository.upsert(orgChatSettings);
 
-      this.logger.debug('Org chat settings upserted', {
-        orgId,
-        id: result.id,
-      });
+      this.logger.debug(
+        {
+          orgId,
+          id: result.id,
+        },
+        'Org chat settings upserted',
+      );
 
       return result;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to upsert org chat settings', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to upsert org chat settings',
+      );
       throw new UnexpectedChatSettingsError(error as Error);
     }
   }

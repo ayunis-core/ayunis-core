@@ -5,10 +5,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiBadRequestResponse,
@@ -40,11 +40,9 @@ import { GlobalPiiWhitelistWordDto } from './dtos/global-pii-whitelist-word.dto'
 @Controller('super-admin/anonymization-whitelist')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAnonymizationWhitelistController {
-  private readonly logger = new Logger(
-    SuperAdminAnonymizationWhitelistController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminAnonymizationWhitelistController.name)
+    private readonly logger: PinoLogger,
     private readonly getGlobalPiiWhitelistUseCase: GetGlobalPiiWhitelistUseCase,
     private readonly addGlobalPiiWhitelistWordUseCase: AddGlobalPiiWhitelistWordUseCase,
     private readonly deleteGlobalPiiWhitelistWordUseCase: DeleteGlobalPiiWhitelistWordUseCase,
@@ -55,7 +53,7 @@ export class SuperAdminAnonymizationWhitelistController {
   @ApiResponse({ status: HttpStatus.OK, type: [GlobalPiiWhitelistWordDto] })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async list(): Promise<GlobalPiiWhitelistWordDto[]> {
-    this.logger.log('list');
+    this.logger.info('list');
 
     const words = await this.getGlobalPiiWhitelistUseCase.execute();
     return words.map((word) => this.toDto(word));
@@ -75,7 +73,7 @@ export class SuperAdminAnonymizationWhitelistController {
     @Body() dto: AddGlobalPiiWhitelistWordRequestDto,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<GlobalPiiWhitelistWordDto> {
-    this.logger.log('add', { category: dto.category });
+    this.logger.info({ category: dto.category }, 'add');
 
     const word = await this.addGlobalPiiWhitelistWordUseCase.execute(
       new AddGlobalPiiWhitelistWordCommand(dto.category, dto.word, userId),
@@ -93,7 +91,7 @@ export class SuperAdminAnonymizationWhitelistController {
   @ApiNotFoundResponse({ description: 'Word not found' })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async remove(@Param('wordId') wordId: UUID): Promise<void> {
-    this.logger.log('remove', { wordId });
+    this.logger.info({ wordId }, 'remove');
 
     await this.deleteGlobalPiiWhitelistWordUseCase.execute(
       new DeleteGlobalPiiWhitelistWordCommand(wordId),

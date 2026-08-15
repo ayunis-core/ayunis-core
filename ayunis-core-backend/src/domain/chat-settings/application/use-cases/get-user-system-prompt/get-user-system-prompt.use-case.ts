@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UserSystemPrompt } from 'src/domain/chat-settings/domain/user-system-prompt.entity';
 import { UserSystemPromptsRepository } from '../../ports/user-system-prompts.repository';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -8,9 +9,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetUserSystemPromptUseCase {
-  private readonly logger = new Logger(GetUserSystemPromptUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetUserSystemPromptUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userSystemPromptsRepository: UserSystemPromptsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -20,22 +21,25 @@ export class GetUserSystemPromptUseCase {
     if (!userId) {
       throw new UnauthorizedAccessError();
     }
-    this.logger.log('execute', { userId });
+    this.logger.info({ userId }, 'execute');
 
     try {
       const userSystemPrompt =
         await this.userSystemPromptsRepository.findByUserId(userId);
 
       if (userSystemPrompt) {
-        this.logger.debug('User system prompt found', { userId });
+        this.logger.debug({ userId }, 'User system prompt found');
       } else {
-        this.logger.debug('No user system prompt found', { userId });
+        this.logger.debug({ userId }, 'No user system prompt found');
       }
 
       return userSystemPrompt;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get user system prompt', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to get user system prompt',
+      );
       throw new UnexpectedChatSettingsError(error as Error);
     }
   }

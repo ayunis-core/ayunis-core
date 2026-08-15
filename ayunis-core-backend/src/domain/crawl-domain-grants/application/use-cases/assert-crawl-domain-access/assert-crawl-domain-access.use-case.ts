@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
 import {
@@ -18,9 +19,9 @@ import { InvalidCrawlDomainError } from 'src/domain/crawl-domain-grants/domain/c
  */
 @Injectable()
 export class AssertCrawlDomainAccessUseCase {
-  private readonly logger = new Logger(AssertCrawlDomainAccessUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AssertCrawlDomainAccessUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly crawlDomainGrantRepository: CrawlDomainGrantRepository,
   ) {}
 
@@ -35,17 +36,23 @@ export class AssertCrawlDomainAccessUseCase {
 
       const grant = await this.crawlDomainGrantRepository.findByDomain(host);
       if (grant && grant.orgId !== command.orgId) {
-        this.logger.warn('Blocked cross-org crawl of a restricted domain', {
-          host,
-          orgId: command.orgId,
-        });
+        this.logger.warn(
+          {
+            domain: host,
+            orgId: command.orgId,
+          },
+          'Blocked cross-org crawl of a restricted domain',
+        );
         throw new CrawlDomainAccessDeniedError({ domain: host });
       }
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error asserting crawl domain access', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error asserting crawl domain access',
+      );
       throw new UnexpectedCrawlDomainGrantError('assert', {
         error: error as Error,
       });

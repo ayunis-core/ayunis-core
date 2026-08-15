@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpsertOrgChatSettingsUseCase } from './upsert-org-chat-settings.use-case';
 import { UpsertOrgChatSettingsCommand } from './upsert-org-chat-settings.command';
 import type { OrgChatSettingsRepository } from '../../ports/org-chat-settings.repository';
@@ -24,6 +25,7 @@ describe('UpsertOrgChatSettingsUseCase', () => {
     };
 
     useCase = new UpsertOrgChatSettingsUseCase(
+      createPinoLoggerMock(),
       repository,
       contextService as unknown as ContextService,
     );

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyCourseModuleRepository } from '../../ports/academy-course-module.repository';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
@@ -10,18 +11,21 @@ import { UpdateCourseModuleCommand } from './update-course-module.command';
 
 @Injectable()
 export class UpdateCourseModuleUseCase {
-  private readonly logger = new Logger(UpdateCourseModuleUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateCourseModuleUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly courseModuleRepository: AcademyCourseModuleRepository,
   ) {}
 
   async execute(
     command: UpdateCourseModuleCommand,
   ): Promise<AcademyCourseModule> {
-    this.logger.log('Updating academy module', {
-      courseModuleId: command.courseModuleId,
-    });
+    this.logger.info(
+      {
+        courseModuleId: command.courseModuleId,
+      },
+      'Updating academy module',
+    );
     try {
       const existing = await this.courseModuleRepository.findOne(
         command.courseModuleId,
@@ -45,9 +49,12 @@ export class UpdateCourseModuleUseCase {
       return await this.courseModuleRepository.update(updated);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error updating academy module', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error updating academy module',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

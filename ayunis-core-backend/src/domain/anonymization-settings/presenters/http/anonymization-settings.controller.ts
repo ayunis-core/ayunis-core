@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Logger, Put } from '@nestjs/common';
+import { Body, Controller, Get, Put } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -25,9 +26,9 @@ import type { AnonymizationWhitelistEntry } from '../../domain/anonymization-whi
 @Controller('anonymization-settings')
 @ApiExtraModels(PiiWhitelistResponseDto)
 export class AnonymizationSettingsController {
-  private readonly logger = new Logger(AnonymizationSettingsController.name);
-
   constructor(
+    @InjectPinoLogger(AnonymizationSettingsController.name)
+    private readonly logger: PinoLogger,
     private readonly getPiiWhitelistUseCase: GetPiiWhitelistUseCase,
     private readonly updatePiiWhitelistUseCase: UpdatePiiWhitelistUseCase,
   ) {}
@@ -43,7 +44,7 @@ export class AnonymizationSettingsController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<PiiWhitelistResponseDto> {
-    this.logger.log(`Getting PII whitelist for org ${orgId}`);
+    this.logger.info({ orgId }, 'Getting PII whitelist for org');
 
     const entries = await this.getPiiWhitelistUseCase.execute(
       new GetPiiWhitelistQuery(orgId),
@@ -67,7 +68,7 @@ export class AnonymizationSettingsController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpdatePiiWhitelistRequestDto,
   ): Promise<PiiWhitelistResponseDto> {
-    this.logger.log(`Updating PII whitelist for org ${orgId}`);
+    this.logger.info({ orgId }, 'Updating PII whitelist for org');
 
     const entries = await this.updatePiiWhitelistUseCase.execute(
       new UpdatePiiWhitelistCommand(

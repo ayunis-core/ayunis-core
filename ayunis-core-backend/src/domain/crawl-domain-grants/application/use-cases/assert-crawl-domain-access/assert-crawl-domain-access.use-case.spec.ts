@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AssertCrawlDomainAccessUseCase } from './assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from './assert-crawl-domain-access.command';
 import type { CrawlDomainGrantRepository } from '../../ports/crawl-domain-grant.repository';
@@ -23,6 +24,7 @@ function repoReturning(
 describe('AssertCrawlDomainAccessUseCase', () => {
   it('allows when no grant exists for the host', async () => {
     const useCase = new AssertCrawlDomainAccessUseCase(
+      createPinoLoggerMock(),
       repoReturning(() => null),
     );
     await expect(
@@ -41,6 +43,7 @@ describe('AssertCrawlDomainAccessUseCase', () => {
       domain: 'intranet.customer.de',
     });
     const useCase = new AssertCrawlDomainAccessUseCase(
+      createPinoLoggerMock(),
       repoReturning(() => grant),
     );
     await expect(
@@ -53,14 +56,17 @@ describe('AssertCrawlDomainAccessUseCase', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('blocks with a 404 access-denied error when the host is granted to another org', async () => {
+  it('logs blocked cross-org crawls with object-first metadata', async () => {
     const grant = new CrawlDomainGrant({
       orgId: ORG_A,
       domain: 'intranet.customer.de',
     });
+    const logger = createPinoLoggerMock();
     const useCase = new AssertCrawlDomainAccessUseCase(
+      logger,
       repoReturning(() => grant),
     );
+
     await expect(
       useCase.execute(
         new AssertCrawlDomainAccessCommand(
@@ -69,10 +75,15 @@ describe('AssertCrawlDomainAccessUseCase', () => {
         ),
       ),
     ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+    expect(logger.warn).toHaveBeenCalledWith(
+      { domain: 'intranet.customer.de', orgId: ORG_B },
+      'Blocked cross-org crawl of a restricted domain',
+    );
   });
 
   it('does not block a different host under the same registrable domain (exact-host match)', async () => {
     const useCase = new AssertCrawlDomainAccessUseCase(
+      createPinoLoggerMock(),
       repoReturning((domain) =>
         domain === 'intranet.customer.de'
           ? new CrawlDomainGrant({
@@ -91,7 +102,10 @@ describe('AssertCrawlDomainAccessUseCase', () => {
 
   it('queries the repository with the exact lowercased host (no port)', async () => {
     const repo = repoReturning(() => null);
-    const useCase = new AssertCrawlDomainAccessUseCase(repo);
+    const useCase = new AssertCrawlDomainAccessUseCase(
+      createPinoLoggerMock(),
+      repo,
+    );
     await useCase.execute(
       new AssertCrawlDomainAccessCommand(
         'https://Intranet.Customer.DE:8443/x',

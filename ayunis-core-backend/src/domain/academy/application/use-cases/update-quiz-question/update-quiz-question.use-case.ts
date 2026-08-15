@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyQuizQuestionRepository } from '../../ports/academy-quiz-question.repository';
 import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
@@ -11,18 +12,21 @@ import { UpdateQuizQuestionCommand } from './update-quiz-question.command';
 
 @Injectable()
 export class UpdateQuizQuestionUseCase {
-  private readonly logger = new Logger(UpdateQuizQuestionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateQuizQuestionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly quizQuestionRepository: AcademyQuizQuestionRepository,
   ) {}
 
   async execute(
     command: UpdateQuizQuestionCommand,
   ): Promise<AcademyQuizQuestion> {
-    this.logger.log('Updating academy quiz question', {
-      quizQuestionId: command.quizQuestionId,
-    });
+    this.logger.info(
+      {
+        quizQuestionId: command.quizQuestionId,
+      },
+      'Updating academy quiz question',
+    );
     try {
       assertValidQuizOptions(command.options);
       const existing = await this.quizQuestionRepository.findOne(
@@ -43,9 +47,12 @@ export class UpdateQuizQuestionUseCase {
       return await this.quizQuestionRepository.update(updated);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error updating academy quiz question', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error updating academy quiz question',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }

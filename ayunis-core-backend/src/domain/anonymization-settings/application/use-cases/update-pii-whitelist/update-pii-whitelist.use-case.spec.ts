@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { UpdatePiiWhitelistUseCase } from './update-pii-whitelist.use-case';
 import { UpdatePiiWhitelistCommand } from './update-pii-whitelist.command';
@@ -26,9 +26,7 @@ describe('UpdatePiiWhitelistUseCase', () => {
       findByOrgId: jest.fn(),
       replaceForOrg,
     } as unknown as AnonymizationWhitelistRepository;
-    useCase = new UpdatePiiWhitelistUseCase(repository);
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    useCase = new UpdatePiiWhitelistUseCase(createPinoLoggerMock(), repository);
   });
 
   it('replaces the whitelist with validated entries', async () => {

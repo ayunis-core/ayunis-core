@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
 import { UnexpectedAcademyError } from '../../academy.errors';
@@ -13,9 +14,9 @@ import { GetAcademyCompletionQuery } from './get-academy-completion.query';
  */
 @Injectable()
 export class GetAcademyCompletionUseCase {
-  private readonly logger = new Logger(GetAcademyCompletionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetAcademyCompletionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly completionRepository: AcademyCompletionRepository,
   ) {}
 
@@ -23,7 +24,7 @@ export class GetAcademyCompletionUseCase {
   async execute(
     query: GetAcademyCompletionQuery,
   ): Promise<AcademyCompletionView> {
-    this.logger.debug('Getting academy completion', { userId: query.userId });
+    this.logger.debug({ userId: query.userId }, 'Getting academy completion');
 
     const completion = await this.completionRepository.findByUser(query.userId);
     if (!completion) {

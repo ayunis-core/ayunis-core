@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AcademyChapterRepository } from '../../ports/academy-chapter.repository';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
@@ -10,14 +11,19 @@ import { UpdateChapterCommand } from './update-chapter.command';
 
 @Injectable()
 export class UpdateChapterUseCase {
-  private readonly logger = new Logger(UpdateChapterUseCase.name);
-
-  constructor(private readonly chapterRepository: AcademyChapterRepository) {}
+  constructor(
+    @InjectPinoLogger(UpdateChapterUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly chapterRepository: AcademyChapterRepository,
+  ) {}
 
   async execute(command: UpdateChapterCommand): Promise<AcademyChapter> {
-    this.logger.log('Updating academy chapter', {
-      chapterId: command.chapterId,
-    });
+    this.logger.info(
+      {
+        chapterId: command.chapterId,
+      },
+      'Updating academy chapter',
+    );
     try {
       const existing = await this.chapterRepository.findOne(command.chapterId);
       if (!existing) {
@@ -50,9 +56,12 @@ export class UpdateChapterUseCase {
       });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error updating academy chapter', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error updating academy chapter',
+      );
       throw new UnexpectedAcademyError(error);
     }
   }
