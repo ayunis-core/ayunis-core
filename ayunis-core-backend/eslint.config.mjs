@@ -115,6 +115,34 @@ export default tseslint.config(
       'sonarjs/no-hardcoded-passwords': 'warn',
     },
   },
+  {
+    files: ['src/**/*.ts'],
+    // Bootstrap's static Nest Logger delegates to Pino after app.useLogger;
+    // application code must inject PinoLogger directly instead.
+    ignores: ['src/main.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@nestjs/common',
+              importNames: ['Logger'],
+              message: 'Inject PinoLogger from nestjs-pino instead.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "NewExpression[callee.name='Logger'], NewExpression[callee.type='MemberExpression'][callee.property.name='Logger']",
+          message: 'Inject PinoLogger instead of constructing Logger.',
+        },
+      ],
+    },
+  },
   // Relaxed rules for test files
   {
     files: ['**/*.spec.ts', '**/*.test.ts', '**/*.e2e-spec.ts', 'test/**/*.ts'],
