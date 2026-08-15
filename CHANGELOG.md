@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.26.0](https://github.com/ayunis-core/ayunis-core/compare/v2.25.0...v2.26.0) (2026-08-15)
+
+
+### Features
+
+* **auth:** manage SSO connections in Superadmin (AYC-640) ([#1378](https://github.com/ayunis-core/ayunis-core/issues/1378)) ([f3018aa](https://github.com/ayunis-core/ayunis-core/commit/f3018aa3b55f7850f8030b3d75c19ad5d89b338e))
+* **logging:** enforce pino-only backend (AYC-760) ([#1431](https://github.com/ayunis-core/ayunis-core/issues/1431)) ([b61cd3f](https://github.com/ayunis-core/ayunis-core/commit/b61cd3f907b07274e7bfe36cb3090951a100e3f3))
+* **observability:** count provider outage failures (AYC-740) ([#1398](https://github.com/ayunis-core/ayunis-core/issues/1398)) ([3c5b3ec](https://github.com/ayunis-core/ayunis-core/commit/3c5b3ec75bfdf4542716677738d7bdc12d062f61))
+* **workspaces:** group chats into projects with sidebar, pinning and pickers (AYC-700) ([#1389](https://github.com/ayunis-core/ayunis-core/issues/1389)) ([e9121b7](https://github.com/ayunis-core/ayunis-core/commit/e9121b7b6f9a86c770d910bec9ef2c6ea1603e70))
+
+
+### Bug Fixes
+
+* **chat:** show full tool source text without clipped rounded container (AYC-731) ([#1381](https://github.com/ayunis-core/ayunis-core/issues/1381)) ([50bb851](https://github.com/ayunis-core/ayunis-core/commit/50bb851635678875fac6ed74834b7a59cb6aa64a))
+* **invites:** reject globally-existing email invites to prevent 500 (AYC-734) ([#1383](https://github.com/ayunis-core/ayunis-core/issues/1383)) ([184ce4c](https://github.com/ayunis-core/ayunis-core/commit/184ce4c309dba17d93780063892e3d8f1b18d62f))
+* **sources:** support .eml email file uploads (AYC-725) ([#1380](https://github.com/ayunis-core/ayunis-core/issues/1380)) ([f059f63](https://github.com/ayunis-core/ayunis-core/commit/f059f634dd5b3a1ef175673871f9d6cbcab1b635))
+
+
+### Code Refactoring
+
+* **iam:** join the ambient transaction in provisioning repositories (AYC-627) ([#1382](https://github.com/ayunis-core/ayunis-core/issues/1382)) ([2429e88](https://github.com/ayunis-core/ayunis-core/commit/2429e8886d33031ce857a5b21e0aee3cffad1594))
+
+
+### Miscellaneous
+
+* **seed:** seed demo workspaces for local development (AYC-700) ([#1347](https://github.com/ayunis-core/ayunis-core/issues/1347)) ([bd68bbc](https://github.com/ayunis-core/ayunis-core/commit/bd68bbc6b8fd4f655a2549569b4627380047d2b7))
+
 ## [2.25.0](https://github.com/ayunis-core/ayunis-core/compare/v2.24.0...v2.25.0) (2026-08-12)
 
 
