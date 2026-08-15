@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 import { SweepOrphanStorageUseCase } from '../../application/use-cases/sweep-orphan-storage/sweep-orphan-storage.use-case';
 
 /**
@@ -32,13 +33,15 @@ export class OrphanStorageSweepTask {
     this.logger.info('Starting scheduled orphan storage sweep');
 
     try {
-      const result = await this.sweepOrphanStorageUseCase.execute();
-      this.logger.info(
-        {
-          ...result,
-        },
-        'Scheduled orphan storage sweep completed',
-      );
+      await checkIn.cron('orphan_storage_sweep', async () => {
+        const result = await this.sweepOrphanStorageUseCase.execute();
+        this.logger.info(
+          {
+            ...result,
+          },
+          'Scheduled orphan storage sweep completed',
+        );
+      });
     } catch (error) {
       this.logger.error(
         { err: error as Error },

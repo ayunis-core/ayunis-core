@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 
 import { ListUsageBasedSubscriptionOrgIdsUseCase } from 'src/iam/subscriptions/application/use-cases/list-usage-based-subscription-org-ids/list-usage-based-subscription-org-ids.use-case';
 
@@ -28,13 +29,15 @@ export class BudgetAlertEvaluationTask {
   async handleDailyEvaluation(): Promise<void> {
     this.logger.info('Running daily budget alert evaluation sweep');
     try {
-      const orgIds =
-        await this.listUsageBasedSubscriptionOrgIdsUseCase.execute();
-      // Sequential on purpose: the sweep is not latency-sensitive, and one
-      // org at a time keeps the load on the database and mail transport flat.
-      for (const orgId of orgIds) {
-        await this.budgetAlertEvaluator.evaluate(orgId);
-      }
+      await checkIn.cron('budget_alert_evaluation', async () => {
+        const orgIds =
+          await this.listUsageBasedSubscriptionOrgIdsUseCase.execute();
+        // Sequential on purpose: the sweep is not latency-sensitive, and one
+        // org at a time keeps the load on the database and mail transport flat.
+        for (const orgId of orgIds) {
+          await this.budgetAlertEvaluator.evaluate(orgId);
+        }
+      });
     } catch (error) {
       // Only the org listing can throw — the evaluator never rejects.
       this.logger.error(
