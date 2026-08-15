@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { DeleteIpAllowlistUseCase } from './delete-ip-allowlist.use-case';
 import { DeleteIpAllowlistCommand } from './delete-ip-allowlist.command';
 import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
@@ -23,7 +24,11 @@ describe('DeleteIpAllowlistUseCase', () => {
       invalidateCache: jest.fn(),
     };
 
-    useCase = new DeleteIpAllowlistUseCase(repository, guard);
+    useCase = new DeleteIpAllowlistUseCase(
+      createPinoLoggerMock(),
+      repository,
+      guard,
+    );
   });
 
   it('should delete the allow list for the given org', async () => {

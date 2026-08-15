@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AddonType } from 'src/iam/addons/domain/value-objects/addon-type.enum';
@@ -23,9 +24,9 @@ export interface AcademyAccessEvaluation {
 
 @Injectable()
 export class EvaluateAcademyAccessUseCase {
-  private readonly logger = new Logger(EvaluateAcademyAccessUseCase.name);
-
   constructor(
+    @InjectPinoLogger(EvaluateAcademyAccessUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly isAddonActiveUseCase: IsAddonActiveUseCase,
     private readonly getAcademyCompletionUseCase: GetAcademyCompletionUseCase,
@@ -53,10 +54,13 @@ export class EvaluateAcademyAccessUseCase {
       new IsAddonActiveQuery(query.orgId, AddonType.AYUNIS_CORE_ACADEMY),
     );
     if (!addonActive) {
-      this.logger.warn('Academy gate configured but add-on inactive', {
-        orgId: query.orgId,
-        mode: settings.mode,
-      });
+      this.logger.warn(
+        {
+          orgId: query.orgId,
+          mode: settings.mode,
+        },
+        'Academy gate configured but add-on inactive',
+      );
       return this.ungated(settings.mode);
     }
 

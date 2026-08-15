@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SeedDefaultRolePermissionsUseCase } from './seed-default-role-permissions.use-case';
 import { SeedDefaultRolePermissionsCommand } from './seed-default-role-permissions.command';
 import type { RolePermissionsRepository } from '../../ports/role-permissions.repository';
@@ -18,6 +19,7 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
   beforeEach(() => {
     repository = { setForRole: jest.fn(), setForRoles: jest.fn() };
     useCase = new SeedDefaultRolePermissionsUseCase(
+      createPinoLoggerMock(),
       repository as unknown as RolePermissionsRepository,
     );
   });

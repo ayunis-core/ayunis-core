@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
@@ -28,6 +29,7 @@ describe('UsageBasedSubscriptionGuard', () => {
     reflectorValues = {};
     isUsageBased = { execute: jest.fn() };
     guard = new UsageBasedSubscriptionGuard(
+      createPinoLoggerMock(),
       reflector,
       isUsageBased as unknown as IsUsageBasedSubscriptionUseCase,
     );

@@ -1,4 +1,5 @@
-import { Controller, Get, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CurrentUser } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
@@ -9,9 +10,9 @@ import { MyPermissionsResponseDto } from './dtos/my-permissions-response.dto';
 @ApiTags('Permissions')
 @Controller('permissions')
 export class MyPermissionsController {
-  private readonly logger = new Logger(MyPermissionsController.name);
-
   constructor(
+    @InjectPinoLogger(MyPermissionsController.name)
+    private readonly logger: PinoLogger,
     private readonly getMyPermissionsUseCase: GetMyPermissionsUseCase,
   ) {}
 
@@ -23,7 +24,7 @@ export class MyPermissionsController {
   async getMine(
     @CurrentUser() user: ActiveUser,
   ): Promise<MyPermissionsResponseDto> {
-    this.logger.log('getMine', { userId: user.id });
+    this.logger.info({ userId: user.id }, 'getMine');
 
     const permissions = await this.getMyPermissionsUseCase.execute(
       new GetMyPermissionsQuery(user.orgId, user.role),

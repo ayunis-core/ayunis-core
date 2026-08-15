@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { EvaluateAcademyAccessUseCase } from './evaluate-academy-access.use-case';
 import { EvaluateAcademyAccessQuery } from './evaluate-academy-access.query';
@@ -26,6 +27,10 @@ describe('EvaluateAcademyAccessUseCase', () => {
       providers: [
         EvaluateAcademyAccessUseCase,
         {
+          provide: getLoggerToken(EvaluateAcademyAccessUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: GetOrgAcademyAccessSettingsUseCase,
           useValue: { execute: jest.fn() },
         },
@@ -43,9 +48,6 @@ describe('EvaluateAcademyAccessUseCase', () => {
     getAcademyCompletionUseCase = module.get(GetAcademyCompletionUseCase);
 
     isAddonActiveUseCase.execute.mockResolvedValue(true);
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

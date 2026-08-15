@@ -6,10 +6,10 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Put,
   Req,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -39,9 +39,9 @@ import { getClientIp } from 'src/common/util/ip.util';
 @Controller('ip-allowlist')
 @ApiExtraModels(IpAllowlistResponseDto)
 export class IpAllowlistController {
-  private readonly logger = new Logger(IpAllowlistController.name);
-
   constructor(
+    @InjectPinoLogger(IpAllowlistController.name)
+    private readonly logger: PinoLogger,
     private readonly getIpAllowlistUseCase: GetIpAllowlistUseCase,
     private readonly updateIpAllowlistUseCase: UpdateIpAllowlistUseCase,
     private readonly deleteIpAllowlistUseCase: DeleteIpAllowlistUseCase,
@@ -58,7 +58,7 @@ export class IpAllowlistController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<IpAllowlistResponseDto> {
-    this.logger.log(`Getting IP allow list for org ${orgId}`);
+    this.logger.info({ orgId }, 'Getting IP allow list for org');
 
     const query = new GetIpAllowlistQuery(orgId);
     const allowlist = await this.getIpAllowlistUseCase.execute(query);
@@ -84,7 +84,7 @@ export class IpAllowlistController {
     @Body() dto: UpdateIpAllowlistRequestDto,
     @Req() req: Request,
   ): Promise<IpAllowlistResponseDto> {
-    this.logger.log(`Updating IP allow list for org ${orgId}`);
+    this.logger.info({ orgId }, 'Updating IP allow list for org');
 
     const clientIp = getClientIp(req);
     if (!clientIp) {
@@ -104,7 +104,7 @@ export class IpAllowlistController {
   })
   @ApiResponse({ status: 204, description: 'IP allow list removed' })
   async remove(@CurrentUser(UserProperty.ORG_ID) orgId: UUID): Promise<void> {
-    this.logger.log(`Deleting IP allow list for org ${orgId}`);
+    this.logger.info({ orgId }, 'Deleting IP allow list for org');
 
     const command = new DeleteIpAllowlistCommand(orgId);
     await this.deleteIpAllowlistUseCase.execute(command);

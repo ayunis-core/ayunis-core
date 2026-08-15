@@ -1,5 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PermissionsGuard } from './permissions.guard';
 import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
@@ -45,7 +45,7 @@ function createGuard(options: {
     }),
   } as unknown as ExecutionContext;
 
-  const guard = new PermissionsGuard(reflector, {
+  const guard = new PermissionsGuard(createPinoLoggerMock(), reflector, {
     execute,
   } as unknown as HasPermissionUseCase);
 
@@ -53,10 +53,6 @@ function createGuard(options: {
 }
 
 describe('PermissionsGuard', () => {
-  beforeEach(() => {
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-  });
-
   afterEach(() => {
     jest.restoreAllMocks();
   });

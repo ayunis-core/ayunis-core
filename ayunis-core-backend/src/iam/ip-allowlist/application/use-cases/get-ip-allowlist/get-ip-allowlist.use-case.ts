@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { UnexpectedIpAllowlistError } from '../../ip-allowlist.errors';
@@ -7,22 +8,27 @@ import type { IpAllowlist } from 'src/iam/ip-allowlist/domain/ip-allowlist.entit
 
 @Injectable()
 export class GetIpAllowlistUseCase {
-  private readonly logger = new Logger(GetIpAllowlistUseCase.name);
-
-  constructor(private readonly repository: IpAllowlistRepository) {}
+  constructor(
+    @InjectPinoLogger(GetIpAllowlistUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly repository: IpAllowlistRepository,
+  ) {}
 
   async execute(query: GetIpAllowlistQuery): Promise<IpAllowlist | null> {
-    this.logger.debug('Getting IP allowlist', { orgId: query.orgId });
+    this.logger.debug({ orgId: query.orgId }, 'Getting IP allowlist');
 
     try {
       return await this.repository.findByOrgId(query.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to get IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: query.orgId,
+        },
+        'Failed to get IP allowlist',
+      );
 
       throw new UnexpectedIpAllowlistError('get', {
         orgId: query.orgId,

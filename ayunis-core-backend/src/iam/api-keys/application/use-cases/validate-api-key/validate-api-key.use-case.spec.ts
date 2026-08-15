@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ValidateApiKeyUseCase } from './validate-api-key.use-case';
 import { ValidateApiKeyCommand } from './validate-api-key.command';
@@ -49,6 +50,10 @@ describe('ValidateApiKeyUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ValidateApiKeyUseCase,
+        {
+          provide: getLoggerToken(ValidateApiKeyUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: CompareHashUseCase, useValue: mockCompareHashUseCase },
       ],
@@ -57,11 +62,6 @@ describe('ValidateApiKeyUseCase', () => {
     useCase = module.get(ValidateApiKeyUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     compareHashUseCase = module.get(CompareHashUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns the api key on a valid, active, unexpired token', async () => {

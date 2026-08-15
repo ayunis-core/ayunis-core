@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -9,11 +10,9 @@ import { OrgAcademyAccessSettingsMapper } from './mappers/org-academy-access-set
 
 @Injectable()
 export class PostgresOrgAcademyAccessSettingsRepository extends OrgAcademyAccessSettingsRepository {
-  private readonly logger = new Logger(
-    PostgresOrgAcademyAccessSettingsRepository.name,
-  );
-
   constructor(
+    @InjectPinoLogger(PostgresOrgAcademyAccessSettingsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(OrgAcademyAccessSettingsRecord)
     private readonly repository: Repository<OrgAcademyAccessSettingsRecord>,
     private readonly mapper: OrgAcademyAccessSettingsMapper,
@@ -29,7 +28,7 @@ export class PostgresOrgAcademyAccessSettingsRepository extends OrgAcademyAccess
   async upsert(
     settings: OrgAcademyAccessSettings,
   ): Promise<OrgAcademyAccessSettings> {
-    this.logger.log('upsert', { orgId: settings.orgId, mode: settings.mode });
+    this.logger.info({ orgId: settings.orgId, mode: settings.mode }, 'upsert');
 
     await this.repository.upsert(this.mapper.toRecord(settings), {
       conflictPaths: ['orgId'],

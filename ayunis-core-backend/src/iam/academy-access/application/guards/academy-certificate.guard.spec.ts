@@ -1,5 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
@@ -65,7 +65,6 @@ describe('AcademyCertificateGuard', () => {
     evaluateAcademyAccessUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<EvaluateAcademyAccessUseCase>;
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -73,6 +72,7 @@ describe('AcademyCertificateGuard', () => {
   function guardFor(overrides: ContextOverrides) {
     const { context, reflector } = createContext(overrides);
     const guard = new AcademyCertificateGuard(
+      createPinoLoggerMock(),
       reflector,
       evaluateAcademyAccessUseCase,
     );

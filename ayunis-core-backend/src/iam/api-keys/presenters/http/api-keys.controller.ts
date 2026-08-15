@@ -5,11 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -37,9 +37,9 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 @Controller('api-keys')
 @ApiExtraModels(CreateApiKeyDto, ApiKeyResponseDto, CreateApiKeyResponseDto)
 export class ApiKeysController {
-  private readonly logger = new Logger(ApiKeysController.name);
-
   constructor(
+    @InjectPinoLogger(ApiKeysController.name)
+    private readonly logger: PinoLogger,
     private readonly createApiKeyUseCase: CreateApiKeyUseCase,
     private readonly listApiKeysByOrgUseCase: ListApiKeysByOrgUseCase,
     private readonly revokeApiKeyUseCase: RevokeApiKeyUseCase,
@@ -60,7 +60,7 @@ export class ApiKeysController {
     description: 'User is not authorized to view API keys',
   })
   async listApiKeys(): Promise<ApiKeyResponseDto[]> {
-    this.logger.log('Listing API keys for organization');
+    this.logger.info('Listing API keys for organization');
     const apiKeys = await this.listApiKeysByOrgUseCase.execute();
     return this.apiKeyDtoMapper.toDtoList(apiKeys);
   }
@@ -87,7 +87,7 @@ export class ApiKeysController {
   async createApiKey(
     @Body() dto: CreateApiKeyDto,
   ): Promise<CreateApiKeyResponseDto> {
-    this.logger.log('Creating API key', { name: dto.name });
+    this.logger.info({ name: dto.name }, 'Creating API key');
     const command = new CreateApiKeyCommand(dto.name, dto.expiresAt ?? null);
     const { apiKey, secret } = await this.createApiKeyUseCase.execute(command);
     return this.apiKeyDtoMapper.toCreateDto(apiKey, secret);
@@ -106,7 +106,7 @@ export class ApiKeysController {
   })
   @ApiResponse({ status: 404, description: 'API key not found' })
   async revokeApiKey(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('Revoking API key', { id });
+    this.logger.info({ id }, 'Revoking API key');
     await this.revokeApiKeyUseCase.execute(new RevokeApiKeyCommand(id));
   }
 }

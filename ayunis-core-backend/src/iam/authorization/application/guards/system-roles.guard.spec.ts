@@ -1,5 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SystemRolesGuard } from './system-roles.guard';
 import { SYSTEM_ROLES_KEY } from '../decorators/system-roles.decorator';
@@ -55,7 +55,7 @@ describe('SystemRolesGuard', () => {
 
   it('should allow access when no system-roles metadata is set on the route', () => {
     const { context, reflector } = createContext({ roles: undefined });
-    const guard = new SystemRolesGuard(reflector);
+    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -65,7 +65,7 @@ describe('SystemRolesGuard', () => {
       roles: [SystemRole.SUPER_ADMIN],
       user: superAdmin,
     });
-    const guard = new SystemRolesGuard(reflector);
+    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
 
     expect(guard.canActivate(context)).toBe(true);
   });
@@ -75,15 +75,13 @@ describe('SystemRolesGuard', () => {
       roles: [SystemRole.SUPER_ADMIN],
       user: customer,
     });
-    const guard = new SystemRolesGuard(reflector);
+    const guard = new SystemRolesGuard(createPinoLoggerMock(), reflector);
 
     expect(guard.canActivate(context)).toBe(false);
   });
 
   it('should log a warning with audit context when the system role is rejected', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createPinoLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: customer,
@@ -91,13 +89,12 @@ describe('SystemRolesGuard', () => {
       url: '/api/admin/instance/config',
       ip: '203.0.113.9',
     });
-    const guard = new SystemRolesGuard(reflector);
+    const guard = new SystemRolesGuard(logger, reflector);
 
     guard.canActivate(context);
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    const [message, meta] = warnSpy.mock.calls[0];
-    expect(message).toMatch(/role/i);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    const [meta, message] = logger.warn.mock.calls[0];
     expect(meta).toEqual(
       expect.objectContaining({
         userId: customer.id,
@@ -109,25 +106,20 @@ describe('SystemRolesGuard', () => {
         clientIp: '203.0.113.9',
       }),
     );
-
-    warnSpy.mockRestore();
+    expect(message).toMatch(/role/i);
   });
 
   it('should log a warning when no authenticated user is present', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
+    const logger = createPinoLoggerMock();
     const { context, reflector } = createContext({
       roles: [SystemRole.SUPER_ADMIN],
       user: undefined,
     });
-    const guard = new SystemRolesGuard(reflector);
+    const guard = new SystemRolesGuard(logger, reflector);
 
     const result = guard.canActivate(context);
 
     expect(result).toBe(false);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-
-    warnSpy.mockRestore();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 });

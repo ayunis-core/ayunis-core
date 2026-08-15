@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -21,9 +17,9 @@ interface RequestWithUser extends Request {
 
 @Injectable()
 export class AddonGuard implements CanActivate {
-  private readonly logger = new Logger(AddonGuard.name);
-
   constructor(
+    @InjectPinoLogger(AddonGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly isAddonActiveUseCase: IsAddonActiveUseCase,
   ) {}
@@ -52,9 +48,10 @@ export class AddonGuard implements CanActivate {
       if (isPublic) {
         return true;
       }
-      this.logger.warn('No principal found on request when checking addon', {
-        requiredAddon,
-      });
+      this.logger.warn(
+        { requiredAddon },
+        'No principal found on request when checking addon',
+      );
       return false;
     }
 
@@ -63,18 +60,24 @@ export class AddonGuard implements CanActivate {
         new IsAddonActiveQuery(orgId, requiredAddon),
       );
       if (!isActive) {
-        this.logger.warn('Access denied: required addon not active', {
-          orgId,
-          requiredAddon,
-        });
+        this.logger.warn(
+          {
+            orgId,
+            requiredAddon,
+          },
+          'Access denied: required addon not active',
+        );
       }
       return isActive;
     } catch (error) {
-      this.logger.error('Error checking addon', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId,
-        requiredAddon,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId,
+          requiredAddon,
+        },
+        'Error checking addon',
+      );
       return false;
     }
   }

@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/no-hardcoded-ip -- test fixtures require hardcoded IPs */
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpdateIpAllowlistUseCase } from './update-ip-allowlist.use-case';
 import { UpdateIpAllowlistCommand } from './update-ip-allowlist.command';
 import type { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
@@ -33,7 +34,11 @@ describe('UpdateIpAllowlistUseCase', () => {
     repository.upsert.mockImplementation(async (entity) => entity);
     repository.findByOrgId.mockResolvedValue(null);
 
-    useCase = new UpdateIpAllowlistUseCase(repository, guard);
+    useCase = new UpdateIpAllowlistUseCase(
+      createPinoLoggerMock(),
+      repository,
+      guard,
+    );
   });
 
   it('should save valid CIDRs when admin IP is within the new allow list', async () => {

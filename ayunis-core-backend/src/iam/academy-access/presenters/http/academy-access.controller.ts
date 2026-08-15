@@ -1,12 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Logger,
-  Put,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Put, Query } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiOperation,
   ApiResponse,
@@ -37,9 +30,9 @@ import { PaginatedOrgCertificateStatusesResponseDto } from './dto/org-certificat
 @ApiTags('Academy Access')
 @Controller('academy-access')
 export class AcademyAccessController {
-  private readonly logger = new Logger(AcademyAccessController.name);
-
   constructor(
+    @InjectPinoLogger(AcademyAccessController.name)
+    private readonly logger: PinoLogger,
     private readonly evaluateAcademyAccessUseCase: EvaluateAcademyAccessUseCase,
     private readonly getOrgSettingsUseCase: GetOrgAcademyAccessSettingsUseCase,
     private readonly upsertOrgSettingsUseCase: UpsertOrgAcademyAccessSettingsUseCase,
@@ -92,7 +85,7 @@ export class AcademyAccessController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: UpsertOrgAcademyAccessSettingsDto,
   ): Promise<OrgAcademyAccessSettingsResponseDto> {
-    this.logger.log('upsertOrgSettings', { orgId, mode: dto.mode });
+    this.logger.info({ orgId, mode: dto.mode }, 'upsertOrgSettings');
 
     const settings = await this.upsertOrgSettingsUseCase.execute(
       new UpsertOrgAcademyAccessSettingsCommand(orgId, dto.mode),
@@ -116,13 +109,16 @@ export class AcademyAccessController {
     // The search term is free text over member names and emails, so it is
     // counted rather than logged — it would otherwise persist personal data in
     // centralized logs for their whole retention period.
-    this.logger.log('listOrgCertificates', {
-      orgId,
-      status: queryParams.status,
-      limit: queryParams.limit,
-      offset: queryParams.offset,
-      hasSearch: queryParams.search !== undefined,
-    });
+    this.logger.info(
+      {
+        orgId,
+        status: queryParams.status,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        hasSearch: queryParams.search !== undefined,
+      },
+      'listOrgCertificates',
+    );
 
     const statuses = await this.listOrgCertificateStatusesUseCase.execute(
       new ListOrgCertificateStatusesQuery({

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { randomBytes } from 'crypto';
 import { QueryFailedError } from 'typeorm';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
@@ -23,9 +24,9 @@ const MAX_PREFIX_COLLISION_RETRIES = 1;
 
 @Injectable()
 export class CreateApiKeyUseCase {
-  private readonly logger = new Logger(CreateApiKeyUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateApiKeyUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly contextService: ContextService,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -41,7 +42,7 @@ export class CreateApiKeyUseCase {
 
     const trimmedName = command.name.trim();
 
-    this.logger.log('execute', { orgId });
+    this.logger.info({ orgId }, 'execute');
 
     if (!trimmedName) {
       throw new ApiKeyInvalidInputError('Name cannot be empty');
@@ -62,7 +63,7 @@ export class CreateApiKeyUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to create API key', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Failed to create API key');
       throw new UnexpectedApiKeyError();
     }
   }
@@ -86,17 +87,23 @@ export class CreateApiKeyUseCase {
 
       try {
         const created = await this.apiKeysRepository.create(apiKey);
-        this.logger.debug('API key created', {
-          id: created.id,
-          orgId: params.orgId,
-        });
+        this.logger.debug(
+          {
+            id: created.id,
+            orgId: params.orgId,
+          },
+          'API key created',
+        );
         return { apiKey: created, secret };
       } catch (error) {
         if (!isUniquePrefixViolation(error)) throw error;
-        this.logger.warn('API key prefix collision, retrying', {
-          orgId: params.orgId,
-          attempt,
-        });
+        this.logger.warn(
+          {
+            orgId: params.orgId,
+            attempt,
+          },
+          'API key prefix collision, retrying',
+        );
       }
     }
 

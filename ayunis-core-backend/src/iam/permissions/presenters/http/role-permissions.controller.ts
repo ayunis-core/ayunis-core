@@ -4,11 +4,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseEnumPipe,
   Put,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import {
@@ -28,9 +28,9 @@ import { UpdateRolePermissionsDto } from './dtos/update-role-permissions.dto';
 @Controller('role-permissions')
 @Roles(UserRole.ADMIN)
 export class RolePermissionsController {
-  private readonly logger = new Logger(RolePermissionsController.name);
-
   constructor(
+    @InjectPinoLogger(RolePermissionsController.name)
+    private readonly logger: PinoLogger,
     private readonly getRolePermissionsUseCase: GetRolePermissionsUseCase,
     private readonly updateRolePermissionsUseCase: UpdateRolePermissionsUseCase,
   ) {}
@@ -44,7 +44,7 @@ export class RolePermissionsController {
   async get(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<RolePermissionsResponseDto> {
-    this.logger.log('get', { orgId });
+    this.logger.info({ orgId }, 'get');
 
     const roles = await this.getRolePermissionsUseCase.execute(
       new GetRolePermissionsQuery(orgId),
@@ -63,7 +63,7 @@ export class RolePermissionsController {
     @Param('role', new ParseEnumPipe(UserRole)) role: UserRole,
     @Body() dto: UpdateRolePermissionsDto,
   ): Promise<void> {
-    this.logger.log('update', { orgId, role, count: dto.permissions.length });
+    this.logger.info({ orgId, role, count: dto.permissions.length }, 'update');
 
     await this.updateRolePermissionsUseCase.execute(
       new UpdateRolePermissionsCommand(orgId, role, dto.permissions),

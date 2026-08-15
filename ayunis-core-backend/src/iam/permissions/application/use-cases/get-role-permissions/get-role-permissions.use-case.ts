@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { RolePermissionsRepository } from '../../ports/role-permissions.repository';
@@ -14,15 +15,15 @@ export interface RolePermissionSet {
 
 @Injectable()
 export class GetRolePermissionsUseCase {
-  private readonly logger = new Logger(GetRolePermissionsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetRolePermissionsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly rolePermissionsRepository: RolePermissionsRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedPermissionError)
   async execute(query: GetRolePermissionsQuery): Promise<RolePermissionSet[]> {
-    this.logger.log('Getting role permissions', { orgId: query.orgId });
+    this.logger.info({ orgId: query.orgId }, 'Getting role permissions');
 
     const grants = await this.rolePermissionsRepository.findByOrgId(
       query.orgId,

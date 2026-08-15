@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { RolePermissionsRepository } from '../../ports/role-permissions.repository';
@@ -7,8 +7,6 @@ import { HasPermissionQuery } from './has-permission.query';
 
 @Injectable()
 export class HasPermissionUseCase {
-  private readonly logger = new Logger(HasPermissionUseCase.name);
-
   constructor(
     private readonly rolePermissionsRepository: RolePermissionsRepository,
   ) {}

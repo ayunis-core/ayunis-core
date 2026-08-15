@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RolePermissionsRepository } from '../../ports/role-permissions.repository';
 import { isConfigurableRole } from '../../../domain/default-role-permissions.constants';
@@ -10,19 +11,22 @@ import { UpdateRolePermissionsCommand } from './update-role-permissions.command'
 
 @Injectable()
 export class UpdateRolePermissionsUseCase {
-  private readonly logger = new Logger(UpdateRolePermissionsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateRolePermissionsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly rolePermissionsRepository: RolePermissionsRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedPermissionError)
   async execute(command: UpdateRolePermissionsCommand): Promise<void> {
-    this.logger.log('Updating role permissions', {
-      orgId: command.orgId,
-      role: command.role,
-      count: command.permissions.length,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        role: command.role,
+        count: command.permissions.length,
+      },
+      'Updating role permissions',
+    );
 
     if (!isConfigurableRole(command.role)) {
       throw new RoleNotConfigurableError(command.role);
