@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
@@ -14,9 +15,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteKnowledgeBaseUseCase {
-  private readonly logger = new Logger(DeleteKnowledgeBaseUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteKnowledgeBaseUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly getSourcesByKnowledgeBaseIdUseCase: GetSourcesByKnowledgeBaseIdUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
@@ -24,10 +25,13 @@ export class DeleteKnowledgeBaseUseCase {
 
   @Transactional()
   async execute(command: DeleteKnowledgeBaseCommand): Promise<void> {
-    this.logger.log('Deleting knowledge base', {
-      knowledgeBaseId: command.knowledgeBaseId,
-      userId: command.userId,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: command.knowledgeBaseId,
+        userId: command.userId,
+      },
+      'Deleting knowledge base',
+    );
 
     try {
       const existing = await this.knowledgeBaseRepository.findById(
@@ -50,11 +54,14 @@ export class DeleteKnowledgeBaseUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error deleting knowledge base',
+      );
       throw new UnexpectedKnowledgeBaseError('Error deleting knowledge base', {
-        error: error as Error,
+        err: error as Error,
       });
     }
   }

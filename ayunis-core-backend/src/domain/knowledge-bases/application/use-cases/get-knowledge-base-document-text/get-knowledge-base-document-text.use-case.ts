@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { GetKnowledgeBaseDocumentTextQuery } from './get-knowledge-base-document-text.query';
 import {
@@ -10,20 +11,21 @@ import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access
 
 @Injectable()
 export class GetKnowledgeBaseDocumentTextUseCase {
-  private readonly logger = new Logger(
-    GetKnowledgeBaseDocumentTextUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(GetKnowledgeBaseDocumentTextUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
   ) {}
 
   async execute(query: GetKnowledgeBaseDocumentTextQuery): Promise<Source> {
-    this.logger.debug('Getting document text from knowledge base', {
-      knowledgeBaseId: query.knowledgeBaseId,
-      documentId: query.documentId,
-    });
+    this.logger.debug(
+      {
+        knowledgeBaseId: query.knowledgeBaseId,
+        documentId: query.documentId,
+      },
+      'Getting document text from knowledge base',
+    );
 
     const knowledgeBase =
       await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(

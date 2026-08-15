@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -7,9 +8,9 @@ import { SkillRepository } from '../ports/skill.repository';
 
 @Injectable()
 export class ShareDeletedListener {
-  private readonly logger = new Logger(ShareDeletedListener.name);
-
   constructor(
+    @InjectPinoLogger(ShareDeletedListener.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly shareScopeResolver: ShareScopeResolverService,
@@ -21,11 +22,14 @@ export class ShareDeletedListener {
       return;
     }
 
-    this.logger.log('Cleaning up skill activations after share deletion', {
-      skillId: event.entityId,
-      ownerId: event.ownerId,
-      remainingScopeCount: event.remainingScopes.length,
-    });
+    this.logger.info(
+      {
+        skillId: event.entityId,
+        ownerId: event.ownerId,
+        remainingScopeCount: event.remainingScopes.length,
+      },
+      'Cleaning up skill activations after share deletion',
+    );
 
     if (event.remainingScopes.length === 0) {
       await this.skillRepository.deactivateAllExceptOwner(

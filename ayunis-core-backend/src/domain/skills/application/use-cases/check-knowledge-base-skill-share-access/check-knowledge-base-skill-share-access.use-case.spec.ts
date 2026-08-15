@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from './check-knowledge-base-skill-share-access.use-case';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from './check-knowledge-base-skill-share-access.query';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -24,6 +26,12 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
       providers: [
         CheckKnowledgeBaseSkillShareAccessUseCase,
         {
+          provide: getLoggerToken(
+            CheckKnowledgeBaseSkillShareAccessUseCase.name,
+          ),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SkillRepository,
           useValue: { findSkillsByKnowledgeBaseAndOwners: jest.fn() },
         },
@@ -37,8 +45,6 @@ describe('CheckKnowledgeBaseSkillShareAccessUseCase', () => {
     useCase = module.get(CheckKnowledgeBaseSkillShareAccessUseCase);
     skillRepository = module.get(SkillRepository);
     findSharesByScopeUseCase = module.get(FindSharesByScopeUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

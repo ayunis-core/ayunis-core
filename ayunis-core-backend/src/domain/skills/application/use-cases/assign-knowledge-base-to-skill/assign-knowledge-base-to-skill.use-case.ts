@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -17,9 +18,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class AssignKnowledgeBaseToSkillUseCase {
-  private readonly logger = new Logger(AssignKnowledgeBaseToSkillUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AssignKnowledgeBaseToSkillUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getKnowledgeBasesByIdsUseCase: GetKnowledgeBasesByIdsUseCase,
@@ -28,10 +29,13 @@ export class AssignKnowledgeBaseToSkillUseCase {
 
   @Transactional()
   async execute(command: AssignKnowledgeBaseToSkillCommand): Promise<Skill> {
-    this.logger.log('Assigning knowledge base to skill', {
-      skillId: command.skillId,
-      knowledgeBaseId: command.knowledgeBaseId,
-    });
+    this.logger.info(
+      {
+        skillId: command.skillId,
+        knowledgeBaseId: command.knowledgeBaseId,
+      },
+      'Assigning knowledge base to skill',
+    );
 
     try {
       const userId = this.contextService.get('userId');
@@ -66,9 +70,12 @@ export class AssignKnowledgeBaseToSkillUseCase {
       return await this.skillRepository.update(updatedSkill);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Unexpected error assigning knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error assigning knowledge base',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

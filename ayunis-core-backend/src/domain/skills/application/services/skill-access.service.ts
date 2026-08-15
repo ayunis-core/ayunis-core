@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { SkillRepository } from '../ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
@@ -22,8 +22,6 @@ export interface SkillUserContextBatch {
 
 @Injectable()
 export class SkillAccessService {
-  private readonly logger = new Logger(SkillAccessService.name);
-
   constructor(
     private readonly skillRepository: SkillRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,

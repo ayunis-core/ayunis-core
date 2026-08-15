@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { ListSkillSourcesUseCase } from './list-skill-sources.use-case';
 import { ListSkillSourcesQuery } from './list-skill-sources.query';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -68,6 +70,10 @@ describe('ListSkillSourcesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListSkillSourcesUseCase,
+        {
+          provide: getLoggerToken(ListSkillSourcesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         {
           provide: GetSourcesByIdsUseCase,
@@ -86,9 +92,6 @@ describe('ListSkillSourcesUseCase', () => {
     getSourcesByIdsUseCase = module.get(GetSourcesByIdsUseCase);
     contextService = module.get(ContextService);
     findShareByEntityUseCase = module.get(FindShareByEntityUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

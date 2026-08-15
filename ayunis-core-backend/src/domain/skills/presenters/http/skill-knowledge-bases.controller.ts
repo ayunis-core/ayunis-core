@@ -5,10 +5,10 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { AssignKnowledgeBaseToSkillUseCase } from '../../application/use-cases/assign-knowledge-base-to-skill/assign-knowledge-base-to-skill.use-case';
@@ -36,9 +36,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('skills')
 export class SkillKnowledgeBasesController {
-  private readonly logger = new Logger(SkillKnowledgeBasesController.name);
-
   constructor(
+    @InjectPinoLogger(SkillKnowledgeBasesController.name)
+    private readonly logger: PinoLogger,
     private readonly assignKnowledgeBaseToSkillUseCase: AssignKnowledgeBaseToSkillUseCase,
     private readonly unassignKnowledgeBaseFromSkillUseCase: UnassignKnowledgeBaseFromSkillUseCase,
     private readonly listSkillKnowledgeBasesUseCase: ListSkillKnowledgeBasesUseCase,
@@ -78,7 +78,7 @@ export class SkillKnowledgeBasesController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('assignKnowledgeBase', { skillId, knowledgeBaseId });
+    this.logger.info({ skillId, knowledgeBaseId }, 'assignKnowledgeBase');
 
     const skill = await this.assignKnowledgeBaseToSkillUseCase.execute(
       new AssignKnowledgeBaseToSkillCommand(skillId, knowledgeBaseId),
@@ -120,7 +120,7 @@ export class SkillKnowledgeBasesController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('unassignKnowledgeBase', { skillId, knowledgeBaseId });
+    this.logger.info({ skillId, knowledgeBaseId }, 'unassignKnowledgeBase');
 
     const skill = await this.unassignKnowledgeBaseFromSkillUseCase.execute(
       new UnassignKnowledgeBaseFromSkillCommand(skillId, knowledgeBaseId),
@@ -151,7 +151,7 @@ export class SkillKnowledgeBasesController {
   async listSkillKnowledgeBases(
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
   ): Promise<KnowledgeBaseResponseDto[]> {
-    this.logger.log('listSkillKnowledgeBases', { skillId });
+    this.logger.info({ skillId }, 'listSkillKnowledgeBases');
 
     const knowledgeBases = await this.listSkillKnowledgeBasesUseCase.execute(
       new ListSkillKnowledgeBasesQuery(skillId),

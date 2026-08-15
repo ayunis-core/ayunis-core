@@ -7,13 +7,13 @@ import {
   Param,
   Body,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ApiTags,
@@ -128,9 +128,9 @@ const DocumentUploadInterceptor = FileInterceptor('file', {
 @RequireFeature(FeatureFlag.KnowledgeBases)
 @Controller('knowledge-bases')
 export class KnowledgeBasesController {
-  private readonly logger = new Logger(KnowledgeBasesController.name);
-
   constructor(
+    @InjectPinoLogger(KnowledgeBasesController.name)
+    private readonly logger: PinoLogger,
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
@@ -157,8 +157,7 @@ export class KnowledgeBasesController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Body() dto: CreateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('create', { name: dto.name, userId });
-
+    this.logger.info({ name: dto.name, userId }, 'create');
     const knowledgeBase = await this.createKnowledgeBaseUseCase.execute(
       new CreateKnowledgeBaseCommand({
         name: dto.name,
@@ -167,7 +166,6 @@ export class KnowledgeBasesController {
         orgId,
       }),
     );
-
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
   }
 
@@ -183,10 +181,8 @@ export class KnowledgeBasesController {
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<KnowledgeBaseListResponseDto> {
-    this.logger.log('findAll', { userId });
-
+    this.logger.info({ userId }, 'findAll');
     const results = await this.knowledgeBaseAccessService.findAllAccessible();
-
     return {
       data: results.map((r) =>
         this.knowledgeBaseDtoMapper.toDto(r.knowledgeBase, r.isShared),
@@ -211,11 +207,9 @@ export class KnowledgeBasesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('findOne', { id });
-
+    this.logger.info({ id }, 'findOne');
     const { knowledgeBase, isShared } =
       await this.knowledgeBaseAccessService.findOneAccessible(id);
-
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
   }
 
@@ -241,8 +235,7 @@ export class KnowledgeBasesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateKnowledgeBaseDto,
   ): Promise<KnowledgeBaseResponseDto> {
-    this.logger.log('update', { id, name: dto.name, userId });
-
+    this.logger.info({ id, name: dto.name, userId }, 'update');
     const knowledgeBase = await this.updateKnowledgeBaseUseCase.execute(
       new UpdateKnowledgeBaseCommand({
         knowledgeBaseId: id,
@@ -251,7 +244,6 @@ export class KnowledgeBasesController {
         description: dto.description,
       }),
     );
-
     return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
   }
 
@@ -274,8 +266,7 @@ export class KnowledgeBasesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<void> {
-    this.logger.log('delete', { id, userId });
-
+    this.logger.info({ id, userId }, 'delete');
     await this.deleteKnowledgeBaseUseCase.execute(
       new DeleteKnowledgeBaseCommand({ knowledgeBaseId: id, userId }),
     );
@@ -301,10 +292,8 @@ export class KnowledgeBasesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseDocumentListResponseDto> {
-    this.logger.log('listDocuments', { knowledgeBaseId: id, userId });
-
+    this.logger.info({ knowledgeBaseId: id, userId }, 'listDocuments');
     await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(id);
-
     const sources = await this.listDocumentsUseCase.execute(
       new ListKnowledgeBaseDocumentsQuery(id),
     );
@@ -344,30 +333,44 @@ export class KnowledgeBasesController {
       throw new MissingFileError();
     }
 
-    this.logger.log('addDocument', {
-      knowledgeBaseId: id,
-      fileName: file.originalname,
-    });
-
+    this.logger.info(
+      {
+        knowledgeBaseId: id,
+        fileName: file.originalname,
+      },
+      'addDocument',
+    );
     const canonicalMimeType = await this.resolveDocumentMimeType(file);
 
     try {
-      const fileData = await fs.promises.readFile(file.path);
-
-      const source = await this.addDocumentUseCase.execute(
-        new AddDocumentToKnowledgeBaseCommand({
-          knowledgeBaseId: id,
-          userId,
-          fileData,
-          fileName: file.originalname,
-          fileType: canonicalMimeType,
-        }),
+      return await this.processDocumentUpload(
+        userId,
+        id,
+        file,
+        canonicalMimeType,
       );
-
-      return this.knowledgeBaseDtoMapper.toDocumentDto(source);
     } finally {
       await this.cleanupTempFile(file.path);
     }
+  }
+
+  private async processDocumentUpload(
+    userId: UUID,
+    knowledgeBaseId: UUID,
+    file: UploadedDocument,
+    fileType: string,
+  ): Promise<KnowledgeBaseDocumentResponseDto> {
+    const fileData = await fs.promises.readFile(file.path);
+    const source = await this.addDocumentUseCase.execute(
+      new AddDocumentToKnowledgeBaseCommand({
+        knowledgeBaseId,
+        userId,
+        fileData,
+        fileName: file.originalname,
+        fileType,
+      }),
+    );
+    return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
   private async resolveDocumentMimeType(
@@ -415,12 +418,14 @@ export class KnowledgeBasesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: AddUrlToKnowledgeBaseDto,
   ): Promise<KnowledgeBaseDocumentResponseDto> {
-    this.logger.log('addUrl', {
-      knowledgeBaseId: id,
-      url: dto.url,
-      maxDepth: dto.maxDepth,
-    });
-
+    this.logger.info(
+      {
+        knowledgeBaseId: id,
+        url: dto.url,
+        maxDepth: dto.maxDepth,
+      },
+      'addUrl',
+    );
     const source = await this.addUrlUseCase.execute(
       new AddUrlToKnowledgeBaseCommand({
         knowledgeBaseId: id,
@@ -462,12 +467,14 @@ export class KnowledgeBasesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('documentId', ParseUUIDPipe) documentId: UUID,
   ): Promise<void> {
-    this.logger.log('removeDocument', {
-      knowledgeBaseId: id,
-      documentId,
-      userId,
-    });
-
+    this.logger.info(
+      {
+        knowledgeBaseId: id,
+        documentId,
+        userId,
+      },
+      'removeDocument',
+    );
     await this.removeDocumentUseCase.execute(
       new RemoveDocumentFromKnowledgeBaseCommand({
         knowledgeBaseId: id,
@@ -481,10 +488,13 @@ export class KnowledgeBasesController {
     try {
       await fs.promises.unlink(filePath);
     } catch (error) {
-      this.logger.warn('Failed to clean up temp file', {
-        filePath,
-        error: error as Error,
-      });
+      this.logger.warn(
+        {
+          fileName: filePath,
+          err: error as Error,
+        },
+        'Failed to clean up temp file',
+      );
     }
   }
 }

@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -7,7 +9,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-import { Logger } from '@nestjs/common';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UnassignKnowledgeBaseFromSkillUseCase } from './unassign-knowledge-base-from-skill.use-case';
 import { UnassignKnowledgeBaseFromSkillCommand } from './unassign-knowledge-base-from-skill.command';
@@ -46,6 +47,10 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UnassignKnowledgeBaseFromSkillUseCase,
+        {
+          provide: getLoggerToken(UnassignKnowledgeBaseFromSkillUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -54,9 +59,6 @@ describe('UnassignKnowledgeBaseFromSkillUseCase', () => {
     useCase = module.get(UnassignKnowledgeBaseFromSkillUseCase);
     skillRepository = module.get(SkillRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

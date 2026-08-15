@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillRepository } from '../../ports/skill.repository';
 import { CreateSkillCommand } from './create-skill.command';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
@@ -13,15 +14,15 @@ import { InvalidSkillNameError } from 'src/domain/skills/domain/skill.entity';
 
 @Injectable()
 export class CreateSkillUseCase {
-  private readonly logger = new Logger(CreateSkillUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateSkillUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: CreateSkillCommand): Promise<Skill> {
-    this.logger.log('Creating skill', { name: command.name });
+    this.logger.info({ name: command.name }, 'Creating skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -57,7 +58,7 @@ export class CreateSkillUseCase {
         error instanceof InvalidSkillNameError
       )
         throw error;
-      this.logger.error('Error creating skill', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error creating skill');
       throw new UnexpectedSkillError(error);
     }
   }

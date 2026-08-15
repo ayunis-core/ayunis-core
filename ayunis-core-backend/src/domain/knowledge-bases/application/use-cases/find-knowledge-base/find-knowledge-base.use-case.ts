@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
@@ -10,17 +11,20 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindKnowledgeBaseUseCase {
-  private readonly logger = new Logger(FindKnowledgeBaseUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindKnowledgeBaseUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
   async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBase> {
-    this.logger.log('Finding knowledge base', {
-      id: query.id,
-      userId: query.userId,
-    });
+    this.logger.info(
+      {
+        id: query.id,
+        userId: query.userId,
+      },
+      'Finding knowledge base',
+    );
 
     try {
       const knowledgeBase = await this.knowledgeBaseRepository.findById(
@@ -35,11 +39,14 @@ export class FindKnowledgeBaseUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error finding knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error finding knowledge base',
+      );
       throw new UnexpectedKnowledgeBaseError('Error finding knowledge base', {
-        error: error as Error,
+        err: error as Error,
       });
     }
   }

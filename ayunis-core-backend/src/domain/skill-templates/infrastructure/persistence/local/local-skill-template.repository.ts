@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -19,13 +20,14 @@ const PG_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class LocalSkillTemplateRepository implements SkillTemplateRepository {
-  private readonly logger = new Logger(LocalSkillTemplateRepository.name);
   private readonly childRepos: Record<
     DistributionMode,
     Repository<SkillTemplateRecord>
   >;
 
   constructor(
+    @InjectPinoLogger(LocalSkillTemplateRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(SkillTemplateRecord)
     private readonly repository: Repository<SkillTemplateRecord>,
     @InjectRepository(AlwaysOnSkillTemplateRecord)
@@ -41,17 +43,20 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   }
 
   async create(skillTemplate: SkillTemplate): Promise<SkillTemplate> {
-    this.logger.log('create', { name: skillTemplate.name });
+    this.logger.info({ name: skillTemplate.name }, 'create');
     const record = this.mapper.toRecord(skillTemplate);
     const saved = await this.saveOrThrow(record, skillTemplate.name);
     return this.mapper.toDomain(saved);
   }
 
   async update(skillTemplate: SkillTemplate): Promise<SkillTemplate> {
-    this.logger.log('update', {
-      id: skillTemplate.id,
-      name: skillTemplate.name,
-    });
+    this.logger.info(
+      {
+        id: skillTemplate.id,
+        name: skillTemplate.name,
+      },
+      'update',
+    );
     const exists = await this.repository.findOne({
       where: { id: skillTemplate.id },
     });
@@ -64,7 +69,7 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new SkillTemplateNotFoundError(id);
@@ -72,14 +77,14 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   }
 
   async findOne(id: UUID): Promise<SkillTemplate | null> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const record = await this.repository.findOne({ where: { id } });
     if (!record) return null;
     return this.mapper.toDomain(record);
   }
 
   async findAll(): Promise<SkillTemplate[]> {
-    this.logger.log('findAll');
+    this.logger.info('findAll');
     const records = await this.repository.find({
       order: { createdAt: 'DESC' },
     });
@@ -87,7 +92,7 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   }
 
   async findByName(name: string): Promise<SkillTemplate | null> {
-    this.logger.log('findByName', { name });
+    this.logger.info({ name }, 'findByName');
     const record = await this.repository.findOne({ where: { name } });
     if (!record) return null;
     return this.mapper.toDomain(record);
@@ -96,7 +101,7 @@ export class LocalSkillTemplateRepository implements SkillTemplateRepository {
   async findActiveByMode<T extends SkillTemplate = SkillTemplate>(
     mode: DistributionMode,
   ): Promise<T[]> {
-    this.logger.log('findActiveByMode', { mode });
+    this.logger.info({ mode }, 'findActiveByMode');
     const childRepo = this.childRepos[mode];
     const records = await childRepo.find({
       where: { isActive: true },

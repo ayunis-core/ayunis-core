@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ToggleSkillActiveCommand } from './toggle-skill-active.command';
@@ -10,9 +11,9 @@ import { SkillAccessService } from '../../services/skill-access.service';
 
 @Injectable()
 export class ToggleSkillActiveUseCase {
-  private readonly logger = new Logger(ToggleSkillActiveUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ToggleSkillActiveUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly skillAccessService: SkillAccessService,
     private readonly contextService: ContextService,
@@ -25,7 +26,7 @@ export class ToggleSkillActiveUseCase {
     isPinned: boolean;
     isShared: boolean;
   }> {
-    this.logger.log('Toggling skill active', { skillId: command.skillId });
+    this.logger.info({ skillId: command.skillId }, 'Toggling skill active');
     try {
       // findAccessibleSkill validates userId and throws UnauthorizedAccessError
       const skill = await this.skillAccessService.findAccessibleSkill(
@@ -57,9 +58,12 @@ export class ToggleSkillActiveUseCase {
       return { skill, isActive, isPinned, isShared };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error toggling skill active', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error toggling skill active',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

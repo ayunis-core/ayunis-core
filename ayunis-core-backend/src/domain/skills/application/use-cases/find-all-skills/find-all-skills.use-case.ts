@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { SkillRepository } from '../../ports/skill.repository';
 import { FindAllSkillsQuery } from './find-all-skills.query';
@@ -32,16 +33,16 @@ export interface FindAllSkillsResult {
  */
 @Injectable()
 export class FindAllSkillsUseCase {
-  private readonly logger = new Logger(FindAllSkillsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindAllSkillsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindAllSkillsQuery): Promise<FindAllSkillsResult> {
-    this.logger.log('Finding all skills', query);
+    this.logger.info(query, 'Finding all skills');
 
     const userId = this.contextService.get('userId');
     if (!userId) {
@@ -61,16 +62,19 @@ export class FindAllSkillsUseCase {
 
     const ownedSkillIds = ownedSkills.map((s) => s.id);
 
-    this.logger.debug('Found owned skills', { count: ownedSkills.length });
+    this.logger.debug({ count: ownedSkills.length }, 'Found owned skills');
 
     // 2. Extract shared skill IDs and deduplicate against owned
     const sharedSkillIds = shares
       .map((s) => (s as SkillShare).skillId)
       .filter((id) => !ownedSkillIds.includes(id));
 
-    this.logger.debug('Found shared skills after deduplication', {
-      count: sharedSkillIds.length,
-    });
+    this.logger.debug(
+      {
+        count: sharedSkillIds.length,
+      },
+      'Found shared skills after deduplication',
+    );
 
     // 3. Fetch shared skills
     const sharedSkills =

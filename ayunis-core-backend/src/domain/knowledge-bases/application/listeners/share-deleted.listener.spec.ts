@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { KnowledgeBaseShareDeletedListener } from './share-deleted.listener';
@@ -91,6 +93,10 @@ describe('KnowledgeBaseShareDeletedListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         KnowledgeBaseShareDeletedListener,
+        {
+          provide: getLoggerToken(KnowledgeBaseShareDeletedListener.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: skillRepository },
         { provide: SharesRepository, useValue: sharesRepository },
         {

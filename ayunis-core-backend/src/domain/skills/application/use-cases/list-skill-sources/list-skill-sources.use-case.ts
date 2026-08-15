@@ -1,9 +1,5 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ListSkillSourcesQuery } from './list-skill-sources.query';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -20,9 +16,9 @@ import { Skill } from '../../../domain/skill.entity';
 
 @Injectable()
 export class ListSkillSourcesUseCase {
-  private readonly logger = new Logger(ListSkillSourcesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListSkillSourcesUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getSourcesByIdsUseCase: GetSourcesByIdsUseCase,
@@ -31,7 +27,7 @@ export class ListSkillSourcesUseCase {
   ) {}
 
   async execute(query: ListSkillSourcesQuery): Promise<Source[]> {
-    this.logger.log('Listing sources for skill', { skillId: query.skillId });
+    this.logger.info({ skillId: query.skillId }, 'Listing sources for skill');
 
     try {
       const userId = this.contextService.get('userId');
@@ -58,9 +54,12 @@ export class ListSkillSourcesUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error listing skill sources', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing skill sources',
+      );
       throw new UnexpectedSkillError(error);
     }
   }
@@ -70,19 +69,17 @@ export class ListSkillSourcesUseCase {
     userId: UUID,
   ): Promise<Skill | null> {
     const ownedSkill = await this.skillRepository.findOne(skillId, userId);
-    if (ownedSkill) {
-      return ownedSkill;
-    }
+    return ownedSkill ?? this.findSharedSkill(skillId);
+  }
 
+  private async findSharedSkill(skillId: UUID): Promise<Skill | null> {
     const share = await this.findShareByEntityUseCase.execute(
       new FindShareByEntityQuery(SharedEntityType.SKILL, skillId),
     );
-
-    if (share) {
-      const skills = await this.skillRepository.findByIds([skillId]);
-      return skills.length > 0 ? skills[0] : null;
+    if (!share) {
+      return null;
     }
-
-    return null;
+    const skills = await this.skillRepository.findByIds([skillId]);
+    return skills[0] ?? null;
   }
 }

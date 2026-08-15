@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -13,9 +14,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
  */
 @Injectable()
 export class GetKnowledgeBasesByIdsUseCase {
-  private readonly logger = new Logger(GetKnowledgeBasesByIdsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetKnowledgeBasesByIdsUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(KnowledgeBaseRepository)
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly contextService: ContextService,
@@ -28,9 +29,12 @@ export class GetKnowledgeBasesByIdsUseCase {
    * @returns Array of KnowledgeBase entities (missing/unauthorized IDs omitted)
    */
   async execute(query: GetKnowledgeBasesByIdsQuery): Promise<KnowledgeBase[]> {
-    this.logger.log('getKnowledgeBasesByIds', {
-      count: query.knowledgeBaseIds.length,
-    });
+    this.logger.info(
+      {
+        count: query.knowledgeBaseIds.length,
+      },
+      'getKnowledgeBasesByIds',
+    );
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -51,9 +55,12 @@ export class GetKnowledgeBasesByIdsUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error getting knowledge bases by IDs', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error getting knowledge bases by IDs',
+      );
       throw new UnexpectedKnowledgeBaseError('Unexpected error occurred');
     }
   }

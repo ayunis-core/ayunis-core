@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { FindActiveAlwaysOnTemplatesUseCase } from './find-active-always-on-templates.use-case';
 import { FindActiveAlwaysOnTemplatesQuery } from './find-active-always-on-templates.query';
 import type { SkillTemplateRepository } from '../../ports/skill-template.repository';
@@ -31,7 +32,10 @@ describe('FindActiveAlwaysOnTemplatesUseCase', () => {
       findByName: jest.fn(),
     };
 
-    useCase = new FindActiveAlwaysOnTemplatesUseCase(repository);
+    useCase = new FindActiveAlwaysOnTemplatesUseCase(
+      createPinoLoggerMock(),
+      repository,
+    );
   });
 
   it('should return active always-on templates from repository', async () => {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
 import { AddSourceCommand } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source.command';
@@ -26,9 +27,9 @@ export interface SkillActivationResult {
 
 @Injectable()
 export class SkillActivationService {
-  private readonly logger = new Logger(SkillActivationService.name);
-
   constructor(
+    @InjectPinoLogger(SkillActivationService.name)
+    private readonly logger: PinoLogger,
     private readonly skillAccessService: SkillAccessService,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
@@ -47,10 +48,13 @@ export class SkillActivationService {
     skillId: UUID,
     thread: Thread,
   ): Promise<SkillActivationResult> {
-    this.logger.log('Activating skill on thread', {
-      skillId,
-      threadId: thread.id,
-    });
+    this.logger.info(
+      {
+        skillId,
+        threadId: thread.id,
+      },
+      'Activating skill on thread',
+    );
 
     const skill = await this.skillAccessService.findAccessibleSkill(skillId);
 
@@ -72,10 +76,13 @@ export class SkillActivationService {
         new SkillUsedEvent(userId, orgId, skill.id, skill.name),
       )
       .catch((error: unknown) => {
-        this.logger.error('Failed to emit SkillUsedEvent', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          skillId: skill.id,
-        });
+        this.logger.error(
+          {
+            err: error as Error,
+            skillId: skill.id,
+          },
+          'Failed to emit SkillUsedEvent',
+        );
       });
   }
 
@@ -89,11 +96,14 @@ export class SkillActivationService {
     );
     const sources = allSources.filter((source) => {
       if (source.status !== SourceStatus.READY) {
-        this.logger.warn('Skipping non-ready source', {
-          sourceId: source.id,
-          status: source.status,
-          threadId: thread.id,
-        });
+        this.logger.warn(
+          {
+            sourceId: source.id,
+            status: source.status,
+            threadId: thread.id,
+          },
+          'Skipping non-ready source',
+        );
         return false;
       }
       return true;
@@ -105,10 +115,13 @@ export class SkillActivationService {
         );
       } catch (error) {
         if (error instanceof SourceAlreadyAssignedError) {
-          this.logger.log('Source already assigned to thread, skipping', {
-            sourceId: source.id,
-            threadId: thread.id,
-          });
+          this.logger.info(
+            {
+              sourceId: source.id,
+              threadId: thread.id,
+            },
+            'Source already assigned to thread, skipping',
+          );
           continue;
         }
         throw error;
@@ -129,11 +142,11 @@ export class SkillActivationService {
       } catch (error) {
         if (error instanceof McpIntegrationNotFoundError) {
           this.logger.warn(
-            'MCP integration not found, skipping (stale reference)',
             {
               mcpIntegrationId,
               threadId: thread.id,
             },
+            'MCP integration not found, skipping (stale reference)',
           );
           continue;
         }
@@ -159,11 +172,11 @@ export class SkillActivationService {
       } catch (error) {
         if (error instanceof KnowledgeBaseNotFoundError) {
           this.logger.warn(
-            'Knowledge base not found, skipping (stale reference)',
             {
               knowledgeBaseId,
               threadId: thread.id,
             },
+            'Knowledge base not found, skipping (stale reference)',
           );
           continue;
         }

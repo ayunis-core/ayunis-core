@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -7,7 +9,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-import { Logger } from '@nestjs/common';
 import { AssignKnowledgeBaseToSkillUseCase } from './assign-knowledge-base-to-skill.use-case';
 import { AssignKnowledgeBaseToSkillCommand } from './assign-knowledge-base-to-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -56,6 +57,10 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AssignKnowledgeBaseToSkillUseCase,
+        {
+          provide: getLoggerToken(AssignKnowledgeBaseToSkillUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         {
           provide: GetKnowledgeBasesByIdsUseCase,
@@ -69,9 +74,6 @@ describe('AssignKnowledgeBaseToSkillUseCase', () => {
     skillRepository = module.get(SkillRepository);
     getKnowledgeBasesByIdsUseCase = module.get(GetKnowledgeBasesByIdsUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

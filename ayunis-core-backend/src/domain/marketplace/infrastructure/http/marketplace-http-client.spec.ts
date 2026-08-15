@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { MarketplaceUnavailableError } from '../../application/marketplace.errors';
 import { MarketplaceHttpError } from 'src/common/clients/marketplace/client';
 import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI';
@@ -22,7 +23,7 @@ describe('MarketplaceHttpClient', () => {
     getIntegrationByIdentifier.mockRejectedValue(
       new MarketplaceHttpError('Request failed with status code 502', 502),
     );
-    const client = new MarketplaceHttpClient();
+    const client = new MarketplaceHttpClient(createPinoLoggerMock());
 
     await expect(
       client.getIntegrationByIdentifier('oparl-council-data'),

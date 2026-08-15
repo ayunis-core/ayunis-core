@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { InstallSkillFromMarketplaceUseCase } from './install-skill-from-marketplace.use-case';
 import { InstallSkillFromMarketplaceCommand } from './install-skill-from-marketplace.command';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -52,6 +53,7 @@ describe('InstallSkillFromMarketplaceUseCase', () => {
     } as unknown as jest.Mocked<EventEmitter2>;
 
     useCase = new InstallSkillFromMarketplaceUseCase(
+      createPinoLoggerMock(),
       skillInstallationService,
       contextService,
       eventEmitter,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
@@ -20,9 +21,9 @@ export interface KnowledgeBaseWithShareStatus {
 
 @Injectable()
 export class KnowledgeBaseAccessService {
-  private readonly logger = new Logger(KnowledgeBaseAccessService.name);
-
   constructor(
+    @InjectPinoLogger(KnowledgeBaseAccessService.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
@@ -140,18 +141,24 @@ export class KnowledgeBaseAccessService {
 
     const ownedKbIds = new Set(ownedKbs.map((kb) => kb.id));
 
-    this.logger.debug('Found owned knowledge bases', {
-      count: ownedKbs.length,
-    });
+    this.logger.debug(
+      {
+        count: ownedKbs.length,
+      },
+      'Found owned knowledge bases',
+    );
 
     // 2. Extract shared KB IDs and deduplicate against owned
     const sharedKbIds = shares
       .map((s) => s.entityId)
       .filter((id) => !ownedKbIds.has(id));
 
-    this.logger.debug('Found shared knowledge bases after deduplication', {
-      count: sharedKbIds.length,
-    });
+    this.logger.debug(
+      {
+        count: sharedKbIds.length,
+      },
+      'Found shared knowledge bases after deduplication',
+    );
 
     // 3. Fetch shared KBs
     const sharedKbs =

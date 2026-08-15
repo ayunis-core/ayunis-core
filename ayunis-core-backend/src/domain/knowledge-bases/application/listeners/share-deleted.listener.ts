@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ShareDeletedEvent } from 'src/domain/shares/application/events/share-deleted.event';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
@@ -18,9 +19,9 @@ import {
 
 @Injectable()
 export class KnowledgeBaseShareDeletedListener {
-  private readonly logger = new Logger(KnowledgeBaseShareDeletedListener.name);
-
   constructor(
+    @InjectPinoLogger(KnowledgeBaseShareDeletedListener.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     @Inject(SharesRepository)
@@ -35,11 +36,14 @@ export class KnowledgeBaseShareDeletedListener {
       return;
     }
 
-    this.logger.log('Cascading KB share deletion through skills and threads', {
-      knowledgeBaseId: event.entityId,
-      ownerId: event.ownerId,
-      remainingScopeCount: event.remainingScopes.length,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: event.entityId,
+        ownerId: event.ownerId,
+        remainingScopeCount: event.remainingScopes.length,
+      },
+      'Cascading KB share deletion through skills and threads',
+    );
 
     const lostAccessUserIds =
       await this.shareScopeResolver.resolveLostAccessUserIds(event);
@@ -66,10 +70,13 @@ export class KnowledgeBaseShareDeletedListener {
       affectedSkillIds,
     );
 
-    this.logger.log('Removed KB from affected skills', {
-      knowledgeBaseId: event.entityId,
-      affectedSkillCount: affectedSkillIds.length,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: event.entityId,
+        affectedSkillCount: affectedSkillIds.length,
+      },
+      'Removed KB from affected skills',
+    );
 
     // For each affected skill that is itself shared, clean up thread KB
     // assignments that originated from that skill (for ALL users, since the
@@ -108,12 +115,12 @@ export class KnowledgeBaseShareDeletedListener {
         ),
       );
 
-      this.logger.log(
-        'Removed KB thread assignments originating from shared skill',
+      this.logger.info(
         {
           skillId: skill.id,
           userCount: allUserIds.length,
         },
+        'Removed KB thread assignments originating from shared skill',
       );
     }
   }

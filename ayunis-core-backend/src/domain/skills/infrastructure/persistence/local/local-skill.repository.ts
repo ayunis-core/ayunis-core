@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 import { randomUUID, UUID } from 'crypto';
@@ -23,9 +24,9 @@ const SKILL_RELATIONS = [
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
-  private readonly logger = new Logger(LocalSkillRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalSkillRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(SkillRecord)
     private readonly skillRepository: Repository<SkillRecord>,
     @InjectRepository(SkillActivationRecord)
@@ -68,7 +69,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async create(skill: Skill): Promise<Skill> {
-    this.logger.log('create', { name: skill.name, userId: skill.userId });
+    this.logger.info({ name: skill.name, userId: skill.userId }, 'create');
 
     const record = this.skillMapper.toRecord(skill);
     const saved = await this.skillRepository.save(record);
@@ -113,7 +114,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async update(skill: Skill): Promise<Skill> {
-    this.logger.log('update', { id: skill.id, name: skill.name });
+    this.logger.info({ id: skill.id, name: skill.name }, 'update');
 
     const manager = this.getManager();
 
@@ -165,7 +166,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async delete(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('delete', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'delete');
 
     const result = await this.skillRepository.delete({ id: skillId, userId });
     if (result.affected === 0) {
@@ -174,7 +175,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findOne(id: UUID, userId: UUID): Promise<Skill | null> {
-    this.logger.log('findOne', { id, userId });
+    this.logger.info({ id, userId }, 'findOne');
 
     const record = await this.skillRepository.findOne({
       where: { id, userId },
@@ -186,7 +187,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findAllByOwner(userId: UUID): Promise<Skill[]> {
-    this.logger.log('findAllByOwner', { userId });
+    this.logger.info({ userId }, 'findAllByOwner');
 
     const records = await this.skillRepository.find({
       where: { userId },
@@ -197,7 +198,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findActiveByOwner(userId: UUID): Promise<Skill[]> {
-    this.logger.log('findActiveByOwner', { userId });
+    this.logger.info({ userId }, 'findActiveByOwner');
 
     const activations = await this.activationRepository.find({
       where: { userId },
@@ -216,7 +217,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findByNameAndOwner(name: string, userId: UUID): Promise<Skill | null> {
-    this.logger.log('findByNameAndOwner', { name, userId });
+    this.logger.info({ name, userId }, 'findByNameAndOwner');
 
     const record = await this.skillRepository.findOne({
       where: { name, userId },
@@ -228,7 +229,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('activateSkill', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'activateSkill');
 
     const manager = this.getManager();
 
@@ -249,14 +250,14 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async deactivateSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('deactivateSkill', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'deactivateSkill');
 
     const manager = this.getManager();
     await manager.delete(SkillActivationRecord, { skillId, userId });
   }
 
   async deactivateAllExceptOwner(skillId: UUID, ownerId: UUID): Promise<void> {
-    this.logger.log('deactivateAllExceptOwner', { skillId, ownerId });
+    this.logger.info({ skillId, ownerId }, 'deactivateAllExceptOwner');
 
     const manager = this.getManager();
     await manager
@@ -273,11 +274,14 @@ export class LocalSkillRepository implements SkillRepository {
     ownerId: UUID,
     retainUserIds: Set<UUID>,
   ): Promise<void> {
-    this.logger.log('deactivateUsersNotInSet', {
-      skillId,
-      ownerId,
-      retainCount: retainUserIds.size,
-    });
+    this.logger.info(
+      {
+        skillId,
+        ownerId,
+        retainCount: retainUserIds.size,
+      },
+      'deactivateUsersNotInSet',
+    );
 
     const manager = this.getManager();
     const keepIds = [ownerId, ...retainUserIds];
@@ -292,7 +296,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async isSkillActive(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('isSkillActive', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'isSkillActive');
 
     const count = await this.activationRepository.count({
       where: { skillId, userId },
@@ -302,7 +306,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<Skill[]> {
-    this.logger.log('findByIds', { count: ids.length });
+    this.logger.info({ count: ids.length }, 'findByIds');
 
     if (ids.length === 0) return [];
 
@@ -315,7 +319,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async getActiveSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.log('getActiveSkillIds', { userId });
+    this.logger.info({ userId }, 'getActiveSkillIds');
 
     const activations = await this.activationRepository.find({
       where: { userId },
@@ -326,7 +330,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async pinSkill(skillId: UUID, userId: UUID): Promise<void> {
-    this.logger.log('pinSkill', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'pinSkill');
 
     const manager = this.getManager();
     const result = await manager
@@ -345,7 +349,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('toggleSkillPinned', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'toggleSkillPinned');
 
     const manager = this.getManager();
 
@@ -364,7 +368,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
-    this.logger.log('isSkillPinned', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'isSkillPinned');
 
     const manager = this.getManager();
     const count = await manager.count(SkillActivationRecord, {
@@ -375,7 +379,7 @@ export class LocalSkillRepository implements SkillRepository {
   }
 
   async getPinnedSkillIds(userId: UUID): Promise<Set<UUID>> {
-    this.logger.log('getPinnedSkillIds', { userId });
+    this.logger.info({ userId }, 'getPinnedSkillIds');
 
     const manager = this.getManager();
     const activations = await manager.find(SkillActivationRecord, {
@@ -390,10 +394,13 @@ export class LocalSkillRepository implements SkillRepository {
     knowledgeBaseId: UUID,
     ownerIds: UUID[],
   ): Promise<Skill[]> {
-    this.logger.log('findSkillsByKnowledgeBaseAndOwners', {
-      knowledgeBaseId,
-      ownerCount: ownerIds.length,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId,
+        ownerCount: ownerIds.length,
+      },
+      'findSkillsByKnowledgeBaseAndOwners',
+    );
 
     if (ownerIds.length === 0) return [];
 
@@ -419,10 +426,13 @@ export class LocalSkillRepository implements SkillRepository {
     knowledgeBaseId: UUID,
     skillIds: UUID[],
   ): Promise<void> {
-    this.logger.log('removeKnowledgeBaseFromSkills', {
-      knowledgeBaseId,
-      skillCount: skillIds.length,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId,
+        skillCount: skillIds.length,
+      },
+      'removeKnowledgeBaseFromSkills',
+    );
 
     if (skillIds.length === 0) return;
 

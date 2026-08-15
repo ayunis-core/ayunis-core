@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { FindAllSkillsUseCase } from './find-all-skills.use-case';
 import { FindAllSkillsQuery } from './find-all-skills.query';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -67,6 +69,10 @@ describe('FindAllSkillsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllSkillsUseCase,
+        {
+          provide: getLoggerToken(FindAllSkillsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         {
           provide: FindSharesByScopeUseCase,
@@ -79,10 +85,6 @@ describe('FindAllSkillsUseCase', () => {
     useCase = module.get<FindAllSkillsUseCase>(FindAllSkillsUseCase);
     skillRepository = module.get(SkillRepository);
     findSharesByScopeUseCase = module.get(FindSharesByScopeUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

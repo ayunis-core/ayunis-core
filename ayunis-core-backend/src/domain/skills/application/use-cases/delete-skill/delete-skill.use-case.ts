@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { DeleteSkillCommand } from './delete-skill.command';
@@ -9,16 +10,16 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteSkillUseCase {
-  private readonly logger = new Logger(DeleteSkillUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteSkillUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @Transactional()
   async execute(command: DeleteSkillCommand): Promise<void> {
-    this.logger.log('Deleting skill', { skillId: command.skillId });
+    this.logger.info({ skillId: command.skillId }, 'Deleting skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -33,7 +34,7 @@ export class DeleteSkillUseCase {
       await this.skillRepository.delete(command.skillId, userId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deleting skill', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error deleting skill');
       throw new UnexpectedSkillError(error);
     }
   }

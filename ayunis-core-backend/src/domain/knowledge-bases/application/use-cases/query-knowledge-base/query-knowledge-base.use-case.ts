@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
 import {
@@ -8,6 +9,7 @@ import {
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
 import { SearchMultiContentQuery } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.query';
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
+import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -23,9 +25,9 @@ export interface KnowledgeBaseQueryResult {
 
 @Injectable()
 export class QueryKnowledgeBaseUseCase {
-  private readonly logger = new Logger(QueryKnowledgeBaseUseCase.name);
-
   constructor(
+    @InjectPinoLogger(QueryKnowledgeBaseUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly findContentChunksByIdsUseCase: FindContentChunksByIdsUseCase,
     private readonly searchContentUseCase: SearchContentUseCase,
@@ -42,11 +44,14 @@ export class QueryKnowledgeBaseUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error querying knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error querying knowledge base',
+      );
       throw new UnexpectedKnowledgeBaseError('Error querying knowledge base', {
-        error: error as Error,
+        err: error as Error,
       });
     }
   }
@@ -56,9 +61,12 @@ export class QueryKnowledgeBaseUseCase {
   ): Promise<KnowledgeBaseQueryResult[]> {
     const orgId = this.contextService.get('orgId');
 
-    this.logger.debug('Querying knowledge base', {
-      knowledgeBaseId: query.knowledgeBaseId,
-    });
+    this.logger.debug(
+      {
+        knowledgeBaseId: query.knowledgeBaseId,
+      },
+      'Querying knowledge base',
+    );
 
     const knowledgeBase =
       await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
@@ -91,36 +99,40 @@ export class QueryKnowledgeBaseUseCase {
       }),
     );
 
+    return this.resolveResults(indexEntries);
+  }
+
+  private async resolveResults(
+    indexEntries: IndexEntry[],
+  ): Promise<KnowledgeBaseQueryResult[]> {
     if (indexEntries.length === 0) {
       return [];
     }
 
-    // Fetch only the matched chunks by ID (single query)
     const chunkIds = indexEntries.map((entry) => entry.relatedChunkId);
     const chunkResults = await this.findContentChunksByIdsUseCase.execute(
       new FindContentChunksByIdsQuery(chunkIds),
     );
-
-    // Build a lookup map for quick access
-    const chunkMap = new Map(chunkResults.map((r) => [r.chunk.id, r]));
-
-    const results: KnowledgeBaseQueryResult[] = [];
-
-    for (const entry of indexEntries) {
+    const chunkMap = new Map(
+      chunkResults.map((result) => [result.chunk.id, result]),
+    );
+    const results = indexEntries.flatMap((entry) => {
       const match = chunkMap.get(entry.relatedChunkId);
-      if (match) {
-        results.push({
-          chunk: match.chunk,
-          sourceName: match.sourceName,
-          sourceId: match.sourceId,
-        });
-      }
-    }
+      return match
+        ? [
+            {
+              chunk: match.chunk,
+              sourceName: match.sourceName,
+              sourceId: match.sourceId,
+            },
+          ]
+        : [];
+    });
 
     this.logger.debug(
-      `Found ${results.length} results for knowledge base query`,
+      { resultCount: results.length },
+      'Found results for knowledge base query',
     );
-
     return results;
   }
 }

@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -40,6 +42,10 @@ describe('SkillCreatorNameService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SkillCreatorNameService,
+        {
+          provide: getLoggerToken(SkillCreatorNameService.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: FindUsersByIdsUseCase,
           useValue: mockFindUsersByIdsUseCase,

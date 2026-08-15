@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { EntityManager, Repository } from 'typeorm';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -56,6 +57,7 @@ describe('LocalSkillRepository', () => {
     const mapper = {} as SkillMapper;
 
     repository = new LocalSkillRepository(
+      createPinoLoggerMock(),
       skillRepo,
       activationRepo,
       mapper,

@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { KnowledgeBasesUserDeletionRequestedListener } from './user-deletion-requested.listener';
 import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
@@ -32,6 +34,12 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
       providers: [
         KnowledgeBasesUserDeletionRequestedListener,
         {
+          provide: getLoggerToken(
+            KnowledgeBasesUserDeletionRequestedListener.name,
+          ),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: KnowledgeBaseRepository,
           useValue: knowledgeBaseRepository,
         },
@@ -43,8 +51,6 @@ describe('KnowledgeBasesUserDeletionRequestedListener', () => {
     }).compile();
 
     listener = module.get(KnowledgeBasesUserDeletionRequestedListener);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

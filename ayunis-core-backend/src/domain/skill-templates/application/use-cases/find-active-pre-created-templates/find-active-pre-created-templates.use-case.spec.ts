@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { FindActivePreCreatedTemplatesUseCase } from './find-active-pre-created-templates.use-case';
 import { FindActivePreCreatedTemplatesQuery } from './find-active-pre-created-templates.query';
 import type { SkillTemplateRepository } from '../../ports/skill-template.repository';
@@ -31,7 +32,10 @@ describe('FindActivePreCreatedTemplatesUseCase', () => {
       findByName: jest.fn(),
     };
 
-    useCase = new FindActivePreCreatedTemplatesUseCase(repository);
+    useCase = new FindActivePreCreatedTemplatesUseCase(
+      createPinoLoggerMock(),
+      repository,
+    );
   });
 
   it('should return active pre-created templates from repository', async () => {

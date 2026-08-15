@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ObjectLiteral, Repository } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { randomUUID } from 'crypto';
@@ -110,6 +111,7 @@ describe('LocalSkillTemplateRepository', () => {
     mockPreCreatedRepo = createMockRepo<PreCreatedCopySkillTemplateRecord>();
 
     repo = new LocalSkillTemplateRepository(
+      createPinoLoggerMock(),
       mockTypeOrmRepo,
       mockAlwaysOnRepo,
       mockPreCreatedRepo,
