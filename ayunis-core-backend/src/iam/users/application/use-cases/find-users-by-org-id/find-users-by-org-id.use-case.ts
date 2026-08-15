@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from '../../ports/users.repository';
 import { FindUsersByOrgIdQuery } from './find-users-by-org-id.query';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -12,21 +13,24 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 
 @Injectable()
 export class FindUsersByOrgIdUseCase {
-  private readonly logger = new Logger(FindUsersByOrgIdUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindUsersByOrgIdUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}
 
   async execute(query: FindUsersByOrgIdQuery): Promise<Paginated<User>> {
-    this.logger.log('findManyByOrgId', {
-      orgId: query.orgId,
-      limit: query.limit,
-      offset: query.offset,
-      search: query.search,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+        limit: query.limit,
+        offset: query.offset,
+        hasSearch: query.search !== undefined,
+      },
+      'findManyByOrgId',
+    );
     const systemRole = this.contextService.get('systemRole');
     const orgRole = this.contextService.get('role');
     // Listing org users is allowed for super-admins, org admins (admins hold

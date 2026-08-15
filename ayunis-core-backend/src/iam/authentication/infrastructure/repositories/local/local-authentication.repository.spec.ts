@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LocalAuthenticationRepository } from './local-authentication.repository';
@@ -29,16 +30,16 @@ describe('LocalAuthenticationRepository', () => {
         LocalAuthenticationRepository,
         { provide: JwtService, useValue: { sign: jest.fn() } },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: getLoggerToken(LocalAuthenticationRepository.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     repository = module.get(LocalAuthenticationRepository);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

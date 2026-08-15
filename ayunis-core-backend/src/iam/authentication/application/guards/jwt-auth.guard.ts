@@ -1,4 +1,5 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
@@ -11,9 +12,9 @@ import { RefreshTokenReuseError } from 'src/iam/sessions/application/sessions.er
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  private readonly logger = new Logger(JwtAuthGuard.name);
-
   constructor(
+    @InjectPinoLogger(JwtAuthGuard.name)
+    private readonly logger: PinoLogger,
     private reflector: Reflector,
     private refreshTokenUseCase: RefreshTokenUseCase,
     private configService: ConfigService,
@@ -86,9 +87,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         // client stops presenting the compromised token.
         clearCookies(response, this.configService);
       }
-      this.logger.debug('JwtAuthGuard canActivate: token refresh failed', {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      this.logger.debug(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'JwtAuthGuard canActivate: token refresh failed',
+      );
       return false;
     }
   }

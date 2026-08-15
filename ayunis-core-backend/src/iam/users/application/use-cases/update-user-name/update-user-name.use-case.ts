@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserNameCommand } from './update-user-name.command';
@@ -9,58 +10,64 @@ import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
 export class UpdateUserNameUseCase {
-  private readonly logger = new Logger(UpdateUserNameUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateUserNameUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UpdateUserNameCommand): Promise<User> {
-    this.logger.log('updateUserName', {
-      userId: command.userId,
-      newName: command.newName,
-    });
+    this.logger.info(
+      { userId: command.userId, name: command.newName },
+      'updateUserName',
+    );
 
     try {
-      const user = await this.usersRepository.findOneById(command.userId);
-      if (!user) {
-        throw new UserNotFoundError(command.userId);
-      }
-      this.logger.debug('user found', {
-        userId: user.id,
-        currentName: user.name,
-      });
-      user.name = command.newName;
-      const updatedUser = await this.usersRepository.update(user);
-      this.logger.log('user name updated successfully', {
-        userId: updatedUser.id,
-        newName: updatedUser.name,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          UserUpdatedEvent.EVENT_NAME,
-          new UserUpdatedEvent(updatedUser.id, updatedUser.orgId, updatedUser),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit UserUpdatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId: updatedUser.id,
-          });
-        });
-
-      return updatedUser;
+      return await this.updateName(command);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Failed to update user name', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: command.userId,
-        newName: command.newName,
-      });
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: command.userId,
+          name: command.newName,
+        },
+        'Failed to update user name',
+      );
       throw new UserUnexpectedError(error as Error);
     }
+  }
+
+  private async updateName(command: UpdateUserNameCommand): Promise<User> {
+    const user = await this.usersRepository.findOneById(command.userId);
+    if (!user) throw new UserNotFoundError(command.userId);
+
+    this.logger.debug({ userId: user.id, name: user.name }, 'user found');
+    user.name = command.newName;
+    const updatedUser = await this.usersRepository.update(user);
+    this.logger.info(
+      { userId: updatedUser.id, name: updatedUser.name },
+      'user name updated successfully',
+    );
+    this.emitUserUpdated(updatedUser);
+    return updatedUser;
+  }
+
+  private emitUserUpdated(user: User): void {
+    this.eventEmitter
+      .emitAsync(
+        UserUpdatedEvent.EVENT_NAME,
+        new UserUpdatedEvent(user.id, user.orgId, user),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          },
+          'Failed to emit UserUpdatedEvent',
+        );
+      });
   }
 }

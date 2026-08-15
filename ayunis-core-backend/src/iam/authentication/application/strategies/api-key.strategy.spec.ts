@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ApiKeyStrategy } from './api-key.strategy';
 import { ValidateApiKeyUseCase } from 'src/iam/api-keys/application/use-cases/validate-api-key/validate-api-key.use-case';
@@ -26,13 +27,15 @@ describe('ApiKeyStrategy', () => {
       providers: [
         ApiKeyStrategy,
         { provide: ValidateApiKeyUseCase, useValue: mockValidateApiKey },
+        {
+          provide: getLoggerToken(ApiKeyStrategy.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     strategy = module.get(ApiKeyStrategy);
     validateApiKey = module.get(ValidateApiKeyUseCase);
-
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   it('returns the principal on a valid token', async () => {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UUID } from 'crypto';
@@ -21,9 +22,9 @@ export interface EmailConfirmationJwtPayload {
 
 @Injectable()
 export class EmailConfirmationJwtService {
-  private readonly logger = new Logger(EmailConfirmationJwtService.name);
-
   constructor(
+    @InjectPinoLogger(EmailConfirmationJwtService.name)
+    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -32,10 +33,13 @@ export class EmailConfirmationJwtService {
     userId: UUID;
     email: string;
   }): string {
-    this.logger.log('generateEmailConfirmationToken', {
-      userId: params.userId,
-      email: params.email,
-    });
+    this.logger.info(
+      {
+        userId: params.userId,
+        email: params.email,
+      },
+      'generateEmailConfirmationToken',
+    );
 
     const payload: EmailConfirmationJwtPayload = {
       userId: params.userId,
@@ -52,7 +56,7 @@ export class EmailConfirmationJwtService {
   }
 
   verifyEmailConfirmationToken(token: string): EmailConfirmationJwtPayload {
-    this.logger.log('verifyEmailConfirmationToken');
+    this.logger.info('verifyEmailConfirmationToken');
 
     try {
       const payload =
@@ -66,10 +70,13 @@ export class EmailConfirmationJwtService {
         throw new InvalidEmailConfirmationTokenError('Invalid token payload');
       }
 
-      this.logger.debug('Email confirmation token verified successfully', {
-        userId: payload.userId,
-        email: payload.email,
-      });
+      this.logger.debug(
+        {
+          userId: payload.userId,
+          email: payload.email,
+        },
+        'Email confirmation token verified successfully',
+      );
 
       return {
         userId: payload.userId,
@@ -77,9 +84,12 @@ export class EmailConfirmationJwtService {
         type: EMAIL_CONFIRMATION_TOKEN_TYPE,
       };
     } catch (error: unknown) {
-      this.logger.error('Email confirmation token verification failed', {
-        error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Email confirmation token verification failed',
+      );
 
       if (error instanceof InvalidEmailConfirmationTokenError) {
         throw error;

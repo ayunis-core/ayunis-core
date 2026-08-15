@@ -7,11 +7,11 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  Logger,
   UnauthorizedException,
   Post,
   Query,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -60,9 +60,9 @@ import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 @ApiTags('Users')
 @Controller('users')
 export class UserController {
-  private readonly logger = new Logger(UserController.name);
-
   constructor(
+    @InjectPinoLogger(UserController.name)
+    private readonly logger: PinoLogger,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly updateUserRoleUseCase: UpdateUserRoleUseCase,
@@ -113,13 +113,28 @@ export class UserController {
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
-    this.logger.log('getUsersInOrganization', { orgId, ...queryParams });
+    this.logUsersQuery(orgId, queryParams);
 
     const users = await this.findUsersByOrgIdUseCase.execute(
       this.buildFindUsersQuery(orgId, queryParams),
     );
 
     return this.userResponseDtoMapper.toPaginatedDto(users);
+  }
+
+  private logUsersQuery(
+    orgId: UUID,
+    queryParams: GetUsersQueryParamsDto,
+  ): void {
+    this.logger.info(
+      {
+        orgId,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        hasSearch: queryParams.search !== undefined,
+      },
+      'getUsersInOrganization',
+    );
   }
 
   private buildFindUsersQuery(
@@ -176,7 +191,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
     const newRole = updateUserRoleDto.role;
-    this.logger.log('updateUserRole', { userId, newRole });
+    this.logger.info({ userId, newRole }, 'updateUserRole');
 
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot update your own role');
@@ -221,9 +236,12 @@ export class UserController {
     @Body() updateUserNameDto: UpdateUserNameDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<UserResponseDto> {
-    this.logger.log('updateUserName', {
-      newName: updateUserNameDto.name,
-    });
+    this.logger.info(
+      {
+        name: updateUserNameDto.name,
+      },
+      'updateUserName',
+    );
 
     const updatedUser = await this.updateUserNameUseCase.execute(
       new UpdateUserNameCommand(currentUserId, updateUserNameDto.name),
@@ -260,9 +278,12 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
   ): Promise<void> {
-    this.logger.log('updatePassword', {
-      userId: currentUserId,
-    });
+    this.logger.info(
+      {
+        userId: currentUserId,
+      },
+      'updatePassword',
+    );
 
     await this.updatePasswordUseCase.execute(
       new UpdatePasswordCommand(
@@ -300,7 +321,7 @@ export class UserController {
     description: 'Internal server error occurred while confirming email',
   })
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto): Promise<void> {
-    this.logger.log('confirmEmail', { hasToken: !!confirmEmailDto.token });
+    this.logger.info({ hasToken: !!confirmEmailDto.token }, 'confirmEmail');
 
     await this.confirmEmailUseCase.execute(
       new ConfirmEmailCommand(confirmEmailDto.token),
@@ -338,9 +359,12 @@ export class UserController {
   async resendEmailConfirmation(
     @Body() resendEmailConfirmationDto: ResendEmailConfirmationDto,
   ): Promise<void> {
-    this.logger.log('resendEmailConfirmation', {
-      email: resendEmailConfirmationDto.email,
-    });
+    this.logger.info(
+      {
+        email: resendEmailConfirmationDto.email,
+      },
+      'resendEmailConfirmation',
+    );
 
     await this.resendEmailConfirmationUseCase.execute(
       new ResendEmailConfirmationCommand(resendEmailConfirmationDto.email),
@@ -379,7 +403,7 @@ export class UserController {
     @CurrentUser(UserProperty.ID) currentUserId: UUID,
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<void> {
-    this.logger.log('deleteUser', { userId });
+    this.logger.info({ userId }, 'deleteUser');
     if (userId === currentUserId) {
       throw new UnauthorizedException('You cannot delete yourself');
     }

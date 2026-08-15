@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TriggerPasswordResetCommand } from './trigger-password-reset.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
@@ -12,9 +13,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class TriggerPasswordResetUseCase {
-  private readonly logger = new Logger(TriggerPasswordResetUseCase.name);
-
   constructor(
+    @InjectPinoLogger(TriggerPasswordResetUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly usersRepository: UsersRepository,
@@ -22,15 +23,15 @@ export class TriggerPasswordResetUseCase {
 
   async execute(command: TriggerPasswordResetCommand): Promise<void> {
     try {
-      this.logger.log('execute', { email: command.email });
+      this.logger.info({ email: command.email }, 'execute');
 
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {
-        this.logger.debug('User not found', { email: command.email });
+        this.logger.debug({ email: command.email }, 'User not found');
         return;
       }
       if (user.passwordHash === null) {
-        this.logger.debug('User has no local password', { userId: user.id });
+        this.logger.debug({ userId: user.id }, 'User has no local password');
         return;
       }
 
@@ -42,10 +43,13 @@ export class TriggerPasswordResetUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error triggering password reset', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email: command.email,
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email: command.email,
+        },
+        'Error triggering password reset',
+      );
       throw new UnexpectedAuthenticationError(error);
     }
   }
@@ -60,9 +64,12 @@ export class TriggerPasswordResetUseCase {
       new SendPasswordResetEmailCommand(user.email, resetToken, user.name),
     );
 
-    this.logger.debug('Password reset email sent', {
-      userId: user.id,
-      email: user.email,
-    });
+    this.logger.debug(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      'Password reset email sent',
+    );
   }
 }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ValidatePasswordResetTokenQuery } from './validate-password-reset-token.query';
 import { PasswordSetTokenService } from '../../services/password-set-token.service';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
@@ -11,16 +12,16 @@ export interface TokenValidationResult {
 
 @Injectable()
 export class ValidatePasswordResetTokenUseCase {
-  private readonly logger = new Logger(ValidatePasswordResetTokenUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ValidatePasswordResetTokenUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly passwordSetTokenService: PasswordSetTokenService,
   ) {}
 
   async execute(
     query: ValidatePasswordResetTokenQuery,
   ): Promise<TokenValidationResult> {
-    this.logger.log('validatePasswordResetToken', { hasToken: !!query.token });
+    this.logger.info({ hasToken: !!query.token }, 'validatePasswordResetToken');
     try {
       // Read-only: never consumes the token, so the frontend can validate it
       // before rendering the form and still redeem it on submit.

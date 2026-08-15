@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ResetPasswordUseCase } from './reset-password.use-case';
 import { ResetPasswordCommand } from './reset-password.command';
@@ -77,15 +78,14 @@ describe('ResetPasswordUseCase', () => {
           provide: RevokeAllSessionsForUserUseCase,
           useValue: mockRevokeAllSessionsForUserUseCase,
         },
+        {
+          provide: getLoggerToken(ResetPasswordUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     useCase = module.get(ResetPasswordUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

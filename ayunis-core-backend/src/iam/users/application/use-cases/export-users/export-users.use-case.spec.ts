@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ExportUsersUseCase } from './export-users.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
@@ -30,7 +31,10 @@ describe('ExportUsersUseCase', () => {
       ]),
     };
 
-    const csv = await new ExportUsersUseCase(repository).execute();
+    const csv = await new ExportUsersUseCase(
+      createPinoLoggerMock(),
+      repository,
+    ).execute();
 
     expect(repository.findSubscribedOrgUsers).toHaveBeenCalledTimes(1);
     expect(csv).toBe(
@@ -58,7 +62,10 @@ describe('ExportUsersUseCase', () => {
       ]),
     };
 
-    const csv = await new ExportUsersUseCase(repository).execute();
+    const csv = await new ExportUsersUseCase(
+      createPinoLoggerMock(),
+      repository,
+    ).execute();
     const dataRow = csv.split('\n')[1];
 
     expect(dataRow).toBe(

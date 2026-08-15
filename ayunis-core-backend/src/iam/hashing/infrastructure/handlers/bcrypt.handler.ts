@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { HashingHandler } from '../../application/ports/hashing.handler';
@@ -10,19 +11,22 @@ import {
 
 @Injectable()
 export class BcryptHandler implements HashingHandler {
-  private readonly logger = new Logger(BcryptHandler.name);
   private readonly saltRounds: number;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(BcryptHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     this.saltRounds = this.configService.get<number>(
       'auth.local.passwordHashRounds',
       10,
     );
-    this.logger.log('constructor', { saltRounds: this.saltRounds });
+    this.logger.info({ saltRounds: this.saltRounds }, 'constructor');
   }
 
   async hash(plainText: string): Promise<string> {
-    this.logger.log('hash');
+    this.logger.info('hash');
 
     if (!plainText) {
       this.logger.warn('Attempted to hash empty string');
@@ -30,14 +34,20 @@ export class BcryptHandler implements HashingHandler {
     }
 
     try {
-      this.logger.debug('Hashing using bcrypt', {
-        saltRounds: this.saltRounds,
-      });
+      this.logger.debug(
+        {
+          saltRounds: this.saltRounds,
+        },
+        'Hashing using bcrypt',
+      );
       return await bcrypt.hash(plainText, this.saltRounds);
     } catch (error) {
-      this.logger.error('Bcrypt hashing failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Bcrypt hashing failed',
+      );
       throw new HashingFailedError(
         error instanceof Error ? error.message : 'Unknown error',
       );
@@ -45,7 +55,7 @@ export class BcryptHandler implements HashingHandler {
   }
 
   async compare(plainText: string, hash: string): Promise<boolean> {
-    this.logger.log('compare');
+    this.logger.info('compare');
 
     if (!hash) {
       this.logger.warn('Attempted to compare with empty hash');
@@ -56,9 +66,12 @@ export class BcryptHandler implements HashingHandler {
       this.logger.debug('Comparing using bcrypt');
       return await bcrypt.compare(plainText, hash);
     } catch (error) {
-      this.logger.error('Bcrypt comparison failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Bcrypt comparison failed',
+      );
       throw new ComparisonFailedError(
         error instanceof Error ? error.message : 'Unknown error',
       );

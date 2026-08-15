@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserNameUseCase } from './update-user-name.use-case';
@@ -28,6 +30,10 @@ describe('UpdateUserNameUseCase', () => {
         UpdateUserNameUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        {
+          provide: getLoggerToken(UpdateUserNameUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

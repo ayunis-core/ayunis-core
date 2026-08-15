@@ -1,11 +1,5 @@
-import {
-  Controller,
-  Get,
-  Header,
-  HttpCode,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { Controller, Get, Header, HttpCode, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiInternalServerErrorResponse,
   ApiOperation,
@@ -21,9 +15,11 @@ import { ExportUsersUseCase } from '../../application/use-cases/export-users/exp
 @Controller('super-admin/users/export')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminUserExportsController {
-  private readonly logger = new Logger(SuperAdminUserExportsController.name);
-
-  constructor(private readonly exportUsersUseCase: ExportUsersUseCase) {}
+  constructor(
+    @InjectPinoLogger(SuperAdminUserExportsController.name)
+    private readonly logger: PinoLogger,
+    private readonly exportUsersUseCase: ExportUsersUseCase,
+  ) {}
 
   @Get('users.csv')
   @HttpCode(HttpStatus.OK)
@@ -53,7 +49,7 @@ export class SuperAdminUserExportsController {
     description: 'Internal server error occurred while exporting users',
   })
   async exportUsers(): Promise<string> {
-    this.logger.log('exportUsers');
+    this.logger.info('exportUsers');
 
     return this.exportUsersUseCase.execute();
   }

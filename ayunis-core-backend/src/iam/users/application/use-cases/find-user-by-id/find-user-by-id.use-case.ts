@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from '../../ports/users.repository';
 import { FindUserByIdQuery } from './find-user-by-id.query';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -10,12 +11,14 @@ import {
 
 @Injectable()
 export class FindUserByIdUseCase {
-  private readonly logger = new Logger(FindUserByIdUseCase.name);
-
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    @InjectPinoLogger(FindUserByIdUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
   async execute(query: FindUserByIdQuery): Promise<User> {
-    this.logger.log('findOneById', { id: query.id });
+    this.logger.info({ id: query.id }, 'findOneById');
     try {
       const user = await this.usersRepository.findOneById(query.id);
       if (!user) {

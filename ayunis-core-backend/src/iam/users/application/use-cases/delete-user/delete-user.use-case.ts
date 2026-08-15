@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { UsersRepository } from '../../ports/users.repository';
@@ -18,9 +19,9 @@ import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class DeleteUserUseCase {
-  private readonly logger = new Logger(DeleteUserUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteUserUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -28,7 +29,7 @@ export class DeleteUserUseCase {
   ) {}
 
   async execute(command: DeleteUserCommand): Promise<void> {
-    this.logger.log('deleteUser', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'deleteUser');
     const requestingUserId = this.contextService.get('userId');
     if (!requestingUserId) {
       throw new UserUnauthorizedError('User not authenticated');
@@ -36,7 +37,7 @@ export class DeleteUserUseCase {
 
     const userToDelete = await this.usersRepository.findOneById(command.userId);
     if (!userToDelete) {
-      this.logger.error('User not found', { userId: command.userId });
+      this.logger.error({ userId: command.userId }, 'User not found');
       throw new UserNotFoundError(command.userId);
     }
     this.assertAllowedToDelete(command, userToDelete);
@@ -116,10 +117,13 @@ export class DeleteUserUseCase {
         new UserDeletedEvent(user.id, user.orgId, user.email),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit UserDeletedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          userId: user.id,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          },
+          'Failed to emit UserDeletedEvent',
+        );
       });
   }
 }

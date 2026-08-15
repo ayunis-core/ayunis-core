@@ -1,14 +1,20 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { BcryptHandler } from './bcrypt.handler';
 
 describe('BcryptHandler', () => {
   const build = async (configuredRounds: number | undefined) => {
+    const logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BcryptHandler,
+        {
+          provide: getLoggerToken(BcryptHandler.name),
+          useValue: logger,
+        },
         {
           provide: ConfigService,
           useValue: {
@@ -20,15 +26,19 @@ describe('BcryptHandler', () => {
       ],
     }).compile();
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    return module.get(BcryptHandler);
+    return { handler: module.get(BcryptHandler), logger };
   };
 
   afterEach(() => jest.clearAllMocks());
 
+  it('should log configured salt rounds as structured metadata', async () => {
+    const { logger } = await build(12);
+
+    expect(logger.info).toHaveBeenCalledWith({ saltRounds: 12 }, 'constructor');
+  });
+
   it('should hash using the configured salt rounds', async () => {
-    const handler = await build(12);
+    const { handler } = await build(12);
 
     const hash = await handler.hash('correct horse battery staple');
 
@@ -37,7 +47,7 @@ describe('BcryptHandler', () => {
   });
 
   it('should default to 10 rounds when config is absent', async () => {
-    const handler = await build(undefined);
+    const { handler } = await build(undefined);
 
     const hash = await handler.hash('correct horse battery staple');
 
@@ -45,7 +55,7 @@ describe('BcryptHandler', () => {
   });
 
   it('should round-trip compare a hashed value', async () => {
-    const handler = await build(10);
+    const { handler } = await build(10);
     const hash = await handler.hash('s3cret');
 
     await expect(handler.compare('s3cret', hash)).resolves.toBe(true);

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PassportStrategy } from '@nestjs/passport';
 import { ValidateUserUseCase } from 'src/iam/users/application/use-cases/validate-user/validate-user.use-case';
 import { ValidateUserQuery } from 'src/iam/users/application/use-cases/validate-user/validate-user.query';
@@ -11,9 +12,11 @@ import {
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  private readonly logger = new Logger(LocalStrategy.name);
-
-  constructor(private validateUserUseCase: ValidateUserUseCase) {
+  constructor(
+    @InjectPinoLogger(LocalStrategy.name)
+    private readonly logger: PinoLogger,
+    private validateUserUseCase: ValidateUserUseCase,
+  ) {
     super({ usernameField: 'email' });
   }
 
@@ -22,9 +25,12 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       const user = await this.validateUserUseCase.execute(
         new ValidateUserQuery(username, password),
       );
-      this.logger.debug('LocalStrategy - user', {
-        user,
-      });
+      this.logger.debug(
+        {
+          userId: user.id,
+        },
+        'LocalStrategy - user',
+      );
       return new ActiveUser({
         id: user.id,
         email: user.email,
@@ -39,10 +45,13 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         error instanceof UserNotFoundError ||
         error instanceof UserAuthenticationFailedError
       ) {
-        this.logger.warn('Invalid credentials', {
-          error,
-          username,
-        });
+        this.logger.warn(
+          {
+            err: error as Error,
+            email: username,
+          },
+          'Invalid credentials',
+        );
         return null;
       }
       throw error;

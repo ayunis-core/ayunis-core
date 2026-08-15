@@ -3,13 +3,13 @@ import {
   Get,
   Delete,
   Post,
-  Logger,
   Param,
   Body,
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -42,9 +42,9 @@ import {
 @Controller('super-admin/super-admins')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminManagementController {
-  private readonly logger = new Logger(SuperAdminManagementController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminManagementController.name)
+    private readonly logger: PinoLogger,
     private readonly findSuperAdminsUseCase: FindSuperAdminsUseCase,
     private readonly promoteToSuperAdminUseCase: PromoteToSuperAdminUseCase,
     private readonly demoteFromSuperAdminUseCase: DemoteFromSuperAdminUseCase,
@@ -67,7 +67,7 @@ export class SuperAdminManagementController {
     description: 'User not authenticated or not authorized as super admin',
   })
   async listSuperAdmins(): Promise<SuperAdminUserResponseDto[]> {
-    this.logger.log('listSuperAdmins');
+    this.logger.info('listSuperAdmins');
 
     const superAdmins = await this.findSuperAdminsUseCase.execute();
 
@@ -101,7 +101,7 @@ export class SuperAdminManagementController {
   async promoteToSuperAdmin(
     @Body() dto: PromoteToSuperAdminDto,
   ): Promise<SuperAdminUserResponseDto> {
-    this.logger.log('promoteToSuperAdmin');
+    this.logger.info('promoteToSuperAdmin');
 
     const user = await this.promoteToSuperAdminUseCase.execute(
       new PromoteToSuperAdminCommand({ email: dto.email }),
@@ -146,7 +146,7 @@ export class SuperAdminManagementController {
     @Param('userId', ParseUUIDPipe) userId: UUID,
     @CurrentUser(UserProperty.ID) requestingUserId: UUID,
   ): Promise<void> {
-    this.logger.log(
+    this.logger.info(
       `demoteFromSuperAdmin userId=${userId} requestingUserId=${requestingUserId}`,
     );
 

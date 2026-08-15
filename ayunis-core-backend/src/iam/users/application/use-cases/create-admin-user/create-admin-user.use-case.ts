@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CreateAdminUserCommand } from './create-admin-user.command';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -7,15 +8,20 @@ import { CreateUserCommand } from '../create-user/create-user.command';
 
 @Injectable()
 export class CreateAdminUserUseCase {
-  private readonly logger = new Logger(CreateAdminUserUseCase.name);
-
-  constructor(private readonly createUserUseCase: CreateUserUseCase) {}
+  constructor(
+    @InjectPinoLogger(CreateAdminUserUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly createUserUseCase: CreateUserUseCase,
+  ) {}
 
   async execute(command: CreateAdminUserCommand): Promise<User> {
-    this.logger.log('createAdmin', {
-      email: command.email,
-      orgId: command.orgId,
-    });
+    this.logger.info(
+      {
+        email: command.email,
+        orgId: command.orgId,
+      },
+      'createAdmin',
+    );
 
     const createUserCommand = new CreateUserCommand({
       email: command.email,

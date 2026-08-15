@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -18,9 +19,9 @@ import { SendConfirmationEmailCommand } from '../send-confirmation-email/send-co
 
 @Injectable()
 export class AdminUpdateUserUseCase {
-  private readonly logger = new Logger(AdminUpdateUserUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AdminUpdateUserUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
@@ -28,11 +29,14 @@ export class AdminUpdateUserUseCase {
   ) {}
 
   async execute(command: AdminUpdateUserCommand): Promise<User> {
-    this.logger.log('adminUpdateUser', {
-      userId: command.userId,
-      hasName: command.name !== undefined,
-      hasEmail: command.email !== undefined,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        hasName: command.name !== undefined,
+        hasEmail: command.email !== undefined,
+      },
+      'adminUpdateUser',
+    );
 
     this.assertHasFieldsToUpdate(command);
     const requesterOrgId = this.readRequesterOrgId();
@@ -55,10 +59,13 @@ export class AdminUpdateUserUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to update user', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: command.userId,
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: command.userId,
+        },
+        'Failed to update user',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }
@@ -129,11 +136,11 @@ export class AdminUpdateUserUseCase {
       );
     } catch (error) {
       this.logger.error(
-        'Failed to send confirmation email after admin update',
         {
           error: error instanceof Error ? error.message : 'Unknown error',
           userId: user.id,
         },
+        'Failed to send confirmation email after admin update',
       );
     }
   }
@@ -145,10 +152,13 @@ export class AdminUpdateUserUseCase {
         new UserUpdatedEvent(user.id, user.orgId, user),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit UserUpdatedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          userId: user.id,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          },
+          'Failed to emit UserUpdatedEvent',
+        );
       });
   }
 }

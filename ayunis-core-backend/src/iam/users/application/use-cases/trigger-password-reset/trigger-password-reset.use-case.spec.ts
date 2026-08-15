@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -20,6 +22,10 @@ describe('TriggerPasswordResetUseCase', () => {
         { provide: UsersRepository, useValue: usersRepository },
         { provide: PasswordSetTokenService, useValue: tokenService },
         { provide: SendPasswordResetEmailUseCase, useValue: emailUseCase },
+        {
+          provide: getLoggerToken(TriggerPasswordResetUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
     useCase = module.get(TriggerPasswordResetUseCase);

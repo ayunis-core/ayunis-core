@@ -3,13 +3,13 @@ import {
   Get,
   Delete,
   Post,
-  Logger,
   Param,
   Body,
   HttpCode,
   HttpStatus,
   Query,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -51,9 +51,9 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 @Controller('super-admin/users')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminUsersController {
-  private readonly logger = new Logger(SuperAdminUsersController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminUsersController.name)
+    private readonly logger: PinoLogger,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
@@ -87,7 +87,15 @@ export class SuperAdminUsersController {
     @Param('orgId') orgId: UUID,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
-    this.logger.log('getUsersByOrgId', { orgId, ...queryParams });
+    this.logger.info(
+      {
+        orgId,
+        limit: queryParams.limit,
+        offset: queryParams.offset,
+        hasSearch: queryParams.search !== undefined,
+      },
+      'getUsersByOrgId',
+    );
 
     const users = await this.findUsersByOrgIdUseCase.execute(
       new FindUsersByOrgIdQuery({
@@ -129,7 +137,7 @@ export class SuperAdminUsersController {
     description: 'Internal server error occurred while deleting user',
   })
   async deleteUser(@Param('userId') userId: UUID): Promise<void> {
-    this.logger.log('deleteUser', { userId });
+    this.logger.info({ userId }, 'deleteUser');
 
     // Get the user to retrieve their orgId for the delete command
     const user = await this.findUserByIdUseCase.execute(
@@ -175,7 +183,7 @@ export class SuperAdminUsersController {
   async triggerPasswordReset(
     @Param('userId') userId: UUID,
   ): Promise<TriggerPasswordResetResponseDto> {
-    this.logger.log('triggerPasswordReset', { userId });
+    this.logger.info({ userId }, 'triggerPasswordReset');
 
     const result = await this.superAdminTriggerPasswordResetUseCase.execute(
       new SuperAdminTriggerPasswordResetCommand(userId),
@@ -222,11 +230,15 @@ export class SuperAdminUsersController {
     @Param('orgId') orgId: UUID,
     @Body() createUserDto: CreateUserDto,
   ): Promise<UserResponseDto> {
-    this.logger.log('createUser', { orgId, email: createUserDto.email });
+    return this.createOrganizationUser(orgId, createUserDto);
+  }
 
-    // Generate a secure random password (32 bytes = 256 bits, base64 encoded)
+  private async createOrganizationUser(
+    orgId: UUID,
+    createUserDto: CreateUserDto,
+  ): Promise<UserResponseDto> {
+    this.logger.info({ orgId, email: createUserDto.email }, 'createUser');
     const randomPassword = randomBytes(32).toString('base64');
-
     const user = await this.createUserUseCase.execute(
       new CreateUserCommand({
         email: createUserDto.email,

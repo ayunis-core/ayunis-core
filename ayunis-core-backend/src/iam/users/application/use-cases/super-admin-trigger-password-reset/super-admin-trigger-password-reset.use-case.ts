@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { SuperAdminTriggerPasswordResetCommand } from './super-admin-trigger-password-reset.command';
@@ -17,11 +18,9 @@ import {
 
 @Injectable()
 export class SuperAdminTriggerPasswordResetUseCase {
-  private readonly logger = new Logger(
-    SuperAdminTriggerPasswordResetUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminTriggerPasswordResetUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
@@ -31,9 +30,12 @@ export class SuperAdminTriggerPasswordResetUseCase {
   async execute(
     command: SuperAdminTriggerPasswordResetCommand,
   ): Promise<SuperAdminTriggerPasswordResetResult> {
-    this.logger.log('Triggering password reset email as super admin', {
-      userId: command.userId,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+      },
+      'Triggering password reset email as super admin',
+    );
 
     try {
       const user = await this.usersRepository.findOneById(command.userId);
@@ -48,17 +50,23 @@ export class SuperAdminTriggerPasswordResetUseCase {
 
       const resetUrl = await this.sendResetEmail(user);
 
-      this.logger.log('Email triggered for user', {
-        userId: command.userId,
-        email: user.email,
-      });
+      this.logger.info(
+        {
+          userId: command.userId,
+          email: user.email,
+        },
+        'Email triggered for user',
+      );
 
       return new SuperAdminTriggerPasswordResetResult(resetUrl);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error triggering email as super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error triggering email as super admin',
+      );
       throw new UserUnexpectedError(
         error instanceof Error ? error : new Error('Unknown error'),
         'super admin trigger password reset email',

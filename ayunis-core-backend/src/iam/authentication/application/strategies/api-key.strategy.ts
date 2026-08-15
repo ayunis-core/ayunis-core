@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
 import type { UUID } from 'crypto';
@@ -18,9 +19,11 @@ export interface ApiKeyPrincipal {
 
 @Injectable()
 export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') {
-  private readonly logger = new Logger(ApiKeyStrategy.name);
-
-  constructor(private readonly validateApiKey: ValidateApiKeyUseCase) {
+  constructor(
+    @InjectPinoLogger(ApiKeyStrategy.name)
+    private readonly logger: PinoLogger,
+    private readonly validateApiKey: ValidateApiKeyUseCase,
+  ) {
     super();
   }
 
@@ -35,7 +38,7 @@ export class ApiKeyStrategy extends PassportStrategy(Strategy, 'api-key') {
         error instanceof ApiKeyNotFoundError ||
         error instanceof ApiKeyExpiredError
       ) {
-        this.logger.debug('API key validation failed', { code: error.code });
+        this.logger.debug({ code: error.code }, 'API key validation failed');
         return false;
       }
       throw error;

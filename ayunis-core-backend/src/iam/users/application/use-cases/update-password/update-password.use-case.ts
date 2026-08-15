@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
@@ -19,8 +20,9 @@ import { ContextService } from 'src/common/context/services/context.service';
 
 @Injectable()
 export class UpdatePasswordUseCase {
-  private readonly logger = new Logger(UpdatePasswordUseCase.name);
   constructor(
+    @InjectPinoLogger(UpdatePasswordUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly validateUserUseCase: ValidateUserUseCase,
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -30,7 +32,7 @@ export class UpdatePasswordUseCase {
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: UpdatePasswordCommand): Promise<void> {
-    this.logger.log('updatePassword', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'updatePassword');
 
     if (command.newPassword !== command.newPasswordConfirmation) {
       throw new UserInvalidInputError('Passwords do not match');

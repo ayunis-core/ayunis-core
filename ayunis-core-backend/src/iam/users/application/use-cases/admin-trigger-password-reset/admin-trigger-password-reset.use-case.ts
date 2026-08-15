@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UsersRepository } from '../../ports/users.repository';
@@ -12,16 +13,16 @@ import {
 
 @Injectable()
 export class AdminTriggerPasswordResetUseCase {
-  private readonly logger = new Logger(AdminTriggerPasswordResetUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AdminTriggerPasswordResetUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
   ) {}
 
   async execute(command: AdminTriggerPasswordResetCommand): Promise<void> {
-    this.logger.log('adminTriggerPasswordReset', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'adminTriggerPasswordReset');
 
     const requestUserOrgId = this.contextService.get('orgId');
     if (!requestUserOrgId) {
@@ -30,7 +31,7 @@ export class AdminTriggerPasswordResetUseCase {
 
     const targetUser = await this.usersRepository.findOneById(command.userId);
     if (!targetUser) {
-      this.logger.error('User not found', { userId: command.userId });
+      this.logger.error({ userId: command.userId }, 'User not found');
       throw new UserNotFoundError(command.userId);
     }
 
@@ -49,9 +50,12 @@ export class AdminTriggerPasswordResetUseCase {
       new TriggerPasswordResetCommand(targetUser.email),
     );
 
-    this.logger.log('Password reset triggered for user', {
-      userId: command.userId,
-      email: targetUser.email,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        email: targetUser.email,
+      },
+      'Password reset triggered for user',
+    );
   }
 }
