@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { randomUUID } from 'crypto';
 import { RemoveDirectKnowledgeBaseFromThreadsUseCase } from './remove-direct-knowledge-base-from-threads.use-case';
 import { RemoveDirectKnowledgeBaseFromThreadsCommand } from './remove-direct-knowledge-base-from-threads.command';
@@ -18,14 +20,18 @@ describe('RemoveDirectKnowledgeBaseFromThreadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveDirectKnowledgeBaseFromThreadsUseCase,
+        {
+          provide: getLoggerToken(
+            RemoveDirectKnowledgeBaseFromThreadsUseCase.name,
+          ),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
       ],
     }).compile();
 
     useCase = module.get(RemoveDirectKnowledgeBaseFromThreadsUseCase);
     threadsRepository = module.get(ThreadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {

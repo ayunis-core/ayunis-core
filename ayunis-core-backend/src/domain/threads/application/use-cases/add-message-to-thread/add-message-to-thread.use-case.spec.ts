@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { AddMessageToThreadUseCase } from './add-message-to-thread.use-case';
 import { AddMessageCommand } from './add-message.command';
@@ -26,6 +28,10 @@ describe('AddMessageToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddMessageToThreadUseCase,
+        {
+          provide: getLoggerToken(AddMessageToThreadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],

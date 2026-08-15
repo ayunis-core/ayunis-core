@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { CleanupStaleThreadSourcesUseCase } from './cleanup-stale-thread-sources.use-case';
 import type { ThreadsRepository } from '../../ports/threads.repository';
@@ -28,6 +29,7 @@ describe('CleanupStaleThreadSourcesUseCase', () => {
     deleteSourcesUseCase = { execute: jest.fn() };
 
     useCase = new CleanupStaleThreadSourcesUseCase(
+      createPinoLoggerMock(),
       threadsRepository as unknown as ThreadsRepository,
       findUnreferencedSourceIdsUseCase as unknown as FindUnreferencedSourceIdsUseCase,
       deleteSourcesUseCase as unknown as DeleteSourcesUseCase,

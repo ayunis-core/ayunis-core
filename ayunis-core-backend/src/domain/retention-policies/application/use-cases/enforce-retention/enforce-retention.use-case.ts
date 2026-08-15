@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -30,9 +31,9 @@ export const MAX_BATCHES_PER_ORG = 10_000;
  */
 @Injectable()
 export class EnforceRetentionUseCase {
-  private readonly logger = new Logger(EnforceRetentionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(EnforceRetentionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly retentionPoliciesRepository: RetentionPoliciesRepository,
     private readonly findExpiredThreadRefsByOrg: FindExpiredThreadRefsByOrgUseCase,
     private readonly deleteThreadUseCase: DeleteThreadUseCase,
@@ -45,10 +46,13 @@ export class EnforceRetentionUseCase {
     const policies = await this.retentionPoliciesRepository.findAllEnabled();
     const now = new Date();
 
-    this.logger.log('Starting retention enforcement', {
-      enabledOrgs: policies.length,
-      dryRun,
-    });
+    this.logger.info(
+      {
+        enabledOrgs: policies.length,
+        dryRun,
+      },
+      'Starting retention enforcement',
+    );
 
     const perOrg: OrgRetentionResult[] = [];
     for (const policy of policies) {
@@ -62,12 +66,15 @@ export class EnforceRetentionUseCase {
       dryRun,
       perOrg,
     };
-    this.logger.log('Retention enforcement complete', {
-      orgsProcessed: result.orgsProcessed,
-      totalDeleted: result.totalDeleted,
-      totalFailed: result.totalFailed,
-      dryRun,
-    });
+    this.logger.info(
+      {
+        orgsProcessed: result.orgsProcessed,
+        totalDeleted: result.totalDeleted,
+        totalFailed: result.totalFailed,
+        dryRun,
+      },
+      'Retention enforcement complete',
+    );
     return result;
   }
 
@@ -95,12 +102,12 @@ export class EnforceRetentionUseCase {
     result.capReached = await this.drainExpiredThreads(policy, cutoff, result);
     if (result.capReached) {
       this.logger.warn(
-        'Retention batch cap reached; expired threads may remain for org',
         { maxBatches: MAX_BATCHES_PER_ORG, ...result },
+        'Retention batch cap reached; expired threads may remain for org',
       );
     }
 
-    this.logger.log('Retention enforced for org', { cutoff, ...result });
+    this.logger.info({ cutoff, ...result }, 'Retention enforced for org');
     return result;
   }
 
@@ -179,11 +186,14 @@ export class EnforceRetentionUseCase {
       } catch (error) {
         result.failed += 1;
         advance += 1;
-        this.logger.warn('Failed to delete expired thread', {
-          orgId,
-          threadId: ref.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.warn(
+          {
+            orgId,
+            threadId: ref.id,
+            err: error as Error,
+          },
+          'Failed to delete expired thread',
+        );
       }
     }
     return advance;

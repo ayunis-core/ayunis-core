@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RetentionPoliciesRepository } from '../../ports/retention-policies.repository';
 import {
@@ -11,17 +12,22 @@ import type { UpsertOrgRetentionPolicyCommand } from './upsert-org-retention-pol
 
 @Injectable()
 export class UpsertOrgRetentionPolicyUseCase {
-  private readonly logger = new Logger(UpsertOrgRetentionPolicyUseCase.name);
-
-  constructor(private readonly repository: RetentionPoliciesRepository) {}
+  constructor(
+    @InjectPinoLogger(UpsertOrgRetentionPolicyUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly repository: RetentionPoliciesRepository,
+  ) {}
 
   async execute(
     command: UpsertOrgRetentionPolicyCommand,
   ): Promise<OrgRetentionPolicy> {
-    this.logger.log('Upserting retention policy', {
-      orgId: command.orgId,
-      retentionDays: command.retentionDays,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        retentionDays: command.retentionDays,
+      },
+      'Upserting retention policy',
+    );
 
     if (!isValidRetentionDays(command.retentionDays)) {
       throw new InvalidRetentionPeriodError(command.retentionDays, {
@@ -42,10 +48,13 @@ export class UpsertOrgRetentionPolicyUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to upsert retention policy', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to upsert retention policy',
+      );
 
       throw new UnexpectedRetentionPolicyError('upsert', {
         orgId: command.orgId,

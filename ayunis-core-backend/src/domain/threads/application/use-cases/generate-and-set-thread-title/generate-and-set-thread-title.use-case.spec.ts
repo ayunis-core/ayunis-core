@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { GenerateAndSetThreadTitleUseCase } from './generate-and-set-thread-title.use-case';
 import { UpdateThreadTitleUseCase } from '../update-thread-title/update-thread-title.use-case';
@@ -11,6 +13,10 @@ describe('GenerateAndSetThreadTitleUseCase - Markdown Stripping', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GenerateAndSetThreadTitleUseCase,
+        {
+          provide: getLoggerToken(GenerateAndSetThreadTitleUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: UpdateThreadTitleUseCase,
           useValue: {},

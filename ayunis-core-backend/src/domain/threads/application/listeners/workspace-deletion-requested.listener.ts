@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
@@ -27,11 +28,9 @@ import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/applicati
  */
 @Injectable()
 export class ThreadsWorkspaceDeletionRequestedListener {
-  private readonly logger = new Logger(
-    ThreadsWorkspaceDeletionRequestedListener.name,
-  );
-
   constructor(
+    @InjectPinoLogger(ThreadsWorkspaceDeletionRequestedListener.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
     private readonly removeFavoriteReferenceUseCase: RemoveFavoriteReferenceUseCase,
@@ -50,12 +49,12 @@ export class ThreadsWorkspaceDeletionRequestedListener {
         return;
       }
 
-      this.logger.log(
-        'Deferring thread storage cleanup for deleted workspace',
+      this.logger.info(
         {
           workspaceId: event.workspaceId,
           threadCount: threadIds.length,
         },
+        'Deferring thread storage cleanup for deleted workspace',
       );
 
       event.deferCleanup('clean up cascaded workspace threads', () =>
@@ -63,11 +62,11 @@ export class ThreadsWorkspaceDeletionRequestedListener {
       );
     } catch (error) {
       this.logger.error(
-        'Failed to resolve thread storage for deleted workspace',
         {
           workspaceId: event.workspaceId,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          err: error as Error,
         },
+        'Failed to resolve thread storage for deleted workspace',
       );
     }
   }

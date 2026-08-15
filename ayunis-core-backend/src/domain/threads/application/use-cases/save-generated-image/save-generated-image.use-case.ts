@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -20,23 +21,20 @@ import { SaveGeneratedImageCommand } from './save-generated-image.command';
 
 @Injectable()
 export class SaveGeneratedImageUseCase {
-  private readonly logger = new Logger(SaveGeneratedImageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SaveGeneratedImageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
   async execute(command: SaveGeneratedImageCommand): Promise<{ id: UUID }> {
-    this.logger.log('execute', {
+    const logContext = {
       orgId: command.orgId,
       threadId: command.threadId,
-    });
-
-    // Validate at the boundary so that unsupported content types surface as
-    // a 400-class domain error instead of being wrapped as a 500 by the
-    // catch-all below (which is reserved for true infrastructure failures).
+    };
+    this.logger.info(logContext, 'execute');
     if (!isAllowedImageContentType(command.contentType)) {
       throw new UnsupportedImageContentTypeError(command.contentType);
     }
@@ -69,21 +67,18 @@ export class SaveGeneratedImageUseCase {
         throw dbError;
       }
 
-      this.logger.log('Generated image saved', {
-        imageId,
-        storageKey,
-      });
+      const savedLogContext = { imageId, fileName: storageKey };
+      this.logger.info(savedLogContext, 'Generated image saved');
 
       return { id: imageId };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to save generated image', {
-        orgId: command.orgId,
-        threadId: command.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { ...logContext, err: error as Error },
+        'Failed to save generated image',
+      );
       throw new GeneratedImageSaveFailedError(
         error instanceof Error ? error : new Error('Unknown error'),
       );
@@ -95,17 +90,20 @@ export class SaveGeneratedImageUseCase {
       await this.deleteObjectUseCase.execute(
         new DeleteObjectCommand(storageKey),
       );
-      this.logger.log('Cleaned up orphaned blob after DB save failure', {
-        storageKey,
-      });
+      this.logger.info(
+        {
+          fileName: storageKey,
+        },
+        'Cleaned up orphaned blob after DB save failure',
+      );
     } catch (cleanupError) {
-      this.logger.error('Failed to clean up orphaned blob', {
-        storageKey,
-        error:
-          cleanupError instanceof Error
-            ? cleanupError.message
-            : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          fileName: storageKey,
+          err: cleanupError as Error,
+        },
+        'Failed to clean up orphaned blob',
+      );
     }
   }
 }

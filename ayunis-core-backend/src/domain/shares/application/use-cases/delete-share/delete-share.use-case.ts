@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SharesRepository } from '../../ports/shares-repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -18,8 +19,9 @@ import {
 
 @Injectable()
 export class DeleteShareUseCase {
-  private logger = new Logger(DeleteShareUseCase.name);
   constructor(
+    @InjectPinoLogger(DeleteShareUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: SharesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
@@ -70,13 +72,14 @@ export class DeleteShareUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error(`Failed to emit ${ShareDeletedEvent.EVENT_NAME}`, {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
+          this.logger.error(
+            { err: err as Error },
+            'Failed to emit share deletion event',
+          );
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to delete share');
       throw new Error('Unexpected error occurred');
     }
   }

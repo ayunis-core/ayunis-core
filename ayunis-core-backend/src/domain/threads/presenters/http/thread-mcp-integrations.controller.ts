@@ -4,10 +4,10 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiParam, ApiTags } from '@nestjs/swagger';
 
@@ -21,9 +21,9 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadMcpIntegrationsController {
-  private readonly logger = new Logger(ThreadMcpIntegrationsController.name);
-
   constructor(
+    @InjectPinoLogger(ThreadMcpIntegrationsController.name)
+    private readonly logger: PinoLogger,
     private readonly addMcpIntegrationToThreadUseCase: AddMcpIntegrationToThreadUseCase,
     private readonly removeMcpIntegrationFromThreadUseCase: RemoveMcpIntegrationFromThreadUseCase,
   ) {}
@@ -56,7 +56,7 @@ export class ThreadMcpIntegrationsController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('mcpIntegrationId', ParseUUIDPipe) mcpIntegrationId: UUID,
   ): Promise<void> {
-    this.logger.log('addMcpIntegration', { threadId, mcpIntegrationId });
+    this.logger.info({ threadId, mcpIntegrationId }, 'addMcpIntegration');
     await this.addMcpIntegrationToThreadUseCase.execute(
       new AddMcpIntegrationToThreadCommand(threadId, mcpIntegrationId),
     );
@@ -87,7 +87,7 @@ export class ThreadMcpIntegrationsController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('mcpIntegrationId', ParseUUIDPipe) mcpIntegrationId: UUID,
   ): Promise<void> {
-    this.logger.log('removeMcpIntegration', { threadId, mcpIntegrationId });
+    this.logger.info({ threadId, mcpIntegrationId }, 'removeMcpIntegration');
     await this.removeMcpIntegrationFromThreadUseCase.execute(
       new RemoveMcpIntegrationFromThreadCommand(threadId, mcpIntegrationId),
     );

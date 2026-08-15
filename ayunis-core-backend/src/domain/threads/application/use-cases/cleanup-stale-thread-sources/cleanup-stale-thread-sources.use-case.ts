@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import {
   ThreadsRepository,
@@ -30,9 +31,9 @@ function groupSourcesByOrg(
 
 @Injectable()
 export class CleanupStaleThreadSourcesUseCase {
-  private readonly logger = new Logger(CleanupStaleThreadSourcesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CleanupStaleThreadSourcesUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly findUnreferencedSourceIdsUseCase: FindUnreferencedSourceIdsUseCase,
     private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
@@ -40,7 +41,10 @@ export class CleanupStaleThreadSourcesUseCase {
 
   async execute(): Promise<CleanupStaleThreadSourcesResult> {
     const cutoff = new Date(Date.now() - STALE_THREAD_SOURCE_DAYS * MS_PER_DAY);
-    this.logger.log('execute', { cutoff, staleDays: STALE_THREAD_SOURCE_DAYS });
+    this.logger.info(
+      { cutoff, staleDays: STALE_THREAD_SOURCE_DAYS },
+      'execute',
+    );
     const candidates =
       await this.threadsRepository.findSourcesWithOnlyStaleDirectAssignments(
         cutoff,
@@ -85,11 +89,14 @@ export class CleanupStaleThreadSourcesUseCase {
         result.errors.push(
           ...sourceIds.map((sourceId) => ({ sourceId, error: message })),
         );
-        this.logger.error('Batch delete failed', {
-          error: error as Error,
-          count: sourceIds.length,
-          orgId,
-        });
+        this.logger.error(
+          {
+            err: error as Error,
+            count: sourceIds.length,
+            orgId,
+          },
+          'Batch delete failed',
+        );
       }
     }
   }

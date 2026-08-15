@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { AddMcpIntegrationToThreadUseCase } from './add-mcp-integration-to-thread.use-case';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
@@ -45,6 +47,10 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddMcpIntegrationToThreadUseCase,
+        {
+          provide: getLoggerToken(AddMcpIntegrationToThreadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         { provide: ContextService, useValue: mockContextService },
         {
@@ -57,9 +63,6 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     useCase = module.get(AddMcpIntegrationToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
     getMcpIntegrationsByIdsUseCase = module.get(GetMcpIntegrationsByIdsUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

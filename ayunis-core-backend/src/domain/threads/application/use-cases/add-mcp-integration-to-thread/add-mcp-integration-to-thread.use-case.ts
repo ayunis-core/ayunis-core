@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { AddMcpIntegrationToThreadCommand } from './add-mcp-integration-to-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -10,19 +11,22 @@ import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.erro
 
 @Injectable()
 export class AddMcpIntegrationToThreadUseCase {
-  private readonly logger = new Logger(AddMcpIntegrationToThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddMcpIntegrationToThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
   ) {}
 
   async execute(command: AddMcpIntegrationToThreadCommand): Promise<void> {
-    this.logger.log('execute', {
-      threadId: command.threadId,
-      mcpIntegrationId: command.mcpIntegrationId,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        mcpIntegrationId: command.mcpIntegrationId,
+      },
+      'execute',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {

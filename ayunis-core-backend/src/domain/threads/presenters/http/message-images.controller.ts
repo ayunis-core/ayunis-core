@@ -1,13 +1,13 @@
 import {
   Controller,
   Get,
-  Logger,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
   Res,
   StreamableFile,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { Response } from 'express';
@@ -22,9 +22,9 @@ import { DownloadMessageImageQuery } from '../../application/use-cases/download-
 @ApiTags('threads')
 @Controller('threads')
 export class MessageImagesController {
-  private readonly logger = new Logger(MessageImagesController.name);
-
   constructor(
+    @InjectPinoLogger(MessageImagesController.name)
+    private readonly logger: PinoLogger,
     private readonly downloadMessageImageUseCase: DownloadMessageImageUseCase,
   ) {}
 
@@ -45,7 +45,7 @@ export class MessageImagesController {
     @Param('index', ParseIntPipe) index: number,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.log('download', { threadId, messageId, index });
+    this.logger.info({ threadId, messageId, index }, 'download');
 
     const download = await this.downloadMessageImageUseCase.execute(
       new DownloadMessageImageQuery(threadId, messageId, index, userId),

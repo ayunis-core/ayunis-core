@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { ThreadsRepository } from '../../ports/threads.repository';
 import { ThreadErrorCode, ThreadNotFoundError } from '../../threads.errors';
@@ -18,6 +19,7 @@ describe('UpdateThreadTitleUseCase', () => {
       get: jest.fn().mockReturnValue(userId),
     } as unknown as ContextService;
     const useCase = new UpdateThreadTitleUseCase(
+      createPinoLoggerMock(),
       threadsRepository,
       contextService,
     );

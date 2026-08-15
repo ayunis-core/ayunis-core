@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { SharesController } from './shares.controller';
 import { CreateShareUseCase } from '../../application/use-cases/create-share/create-share.use-case';
@@ -37,6 +39,10 @@ describe('SharesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SharesController],
       providers: [
+        {
+          provide: getLoggerToken(SharesController.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: CreateShareUseCase,
           useValue: {

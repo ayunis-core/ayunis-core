@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { ShareDeletedListener } from './share-deleted.listener';
 import { RemoveSkillSourcesFromThreadsUseCase } from '../use-cases/remove-skill-sources-from-threads/remove-skill-sources-from-threads.use-case';
@@ -54,6 +56,10 @@ describe('ShareDeletedListener (threads)', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ShareDeletedListener,
+        {
+          provide: getLoggerToken(ShareDeletedListener.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: RemoveSkillSourcesFromThreadsUseCase,
           useValue: removeSkillSources,

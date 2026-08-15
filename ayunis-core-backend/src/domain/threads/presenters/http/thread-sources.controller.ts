@@ -4,7 +4,6 @@ import {
   Post,
   Get,
   Delete,
-  Logger,
   Param,
   ParseUUIDPipe,
   UploadedFile,
@@ -13,6 +12,7 @@ import {
   Res,
   StreamableFile,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Response } from 'express';
 import { UUID } from 'crypto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -57,9 +57,9 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('threads')
 export class ThreadSourcesController {
-  private readonly logger = new Logger(ThreadSourcesController.name);
-
   constructor(
+    @InjectPinoLogger(ThreadSourcesController.name)
+    private readonly logger: PinoLogger,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addFileSourceToThreadUseCase: AddFileSourceToThreadUseCase,
     private readonly removeSourceFromThreadUseCase: RemoveSourceFromThreadUseCase,
@@ -79,7 +79,7 @@ export class ThreadSourcesController {
   ): Promise<
     (FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto)[]
   > {
-    this.logger.log('getThreadSources', { threadId });
+    this.logger.info({ threadId }, 'getThreadSources');
     const sources = await this.getThreadSourcesUseCase.execute(
       new FindThreadSourcesQuery(threadId),
     );
@@ -100,7 +100,10 @@ export class ThreadSourcesController {
       throw new BadRequestException('No file was provided in the request');
     }
 
-    this.logger.log('addFileSource', { threadId, fileName: file.originalname });
+    this.logger.info(
+      { threadId, fileName: file.originalname },
+      'addFileSource',
+    );
     try {
       const sources = await this.addFileSourceToThreadUseCase.execute(
         new AddFileSourceToThreadCommand({ threadId, file }),
@@ -110,7 +113,7 @@ export class ThreadSourcesController {
         this.sourceDtoMapper.toDto(source, threadId),
       );
     } catch (error: unknown) {
-      this.logger.error('addFileSource', { error });
+      this.logger.error({ err: error as Error }, 'addFileSource');
       throw error;
     } finally {
       removeUploadedFile(file.path);
@@ -131,7 +134,7 @@ export class ThreadSourcesController {
     @Param('id', ParseUUIDPipe) threadId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.log('removeSource', { threadId, sourceId });
+    this.logger.info({ threadId, sourceId }, 'removeSource');
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),
@@ -148,7 +151,7 @@ export class ThreadSourcesController {
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.log('downloadSource', { threadId, sourceId });
+    this.logger.info({ threadId, sourceId }, 'downloadSource');
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(threadId),

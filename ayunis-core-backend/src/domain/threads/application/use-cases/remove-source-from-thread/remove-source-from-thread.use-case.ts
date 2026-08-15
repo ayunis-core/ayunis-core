@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveSourceCommand } from './remove-source.command';
 import { SourceRemovalError, SourceNotFoundError } from '../../threads.errors';
@@ -10,19 +11,22 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class RemoveSourceFromThreadUseCase {
-  private readonly logger = new Logger(RemoveSourceFromThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RemoveSourceFromThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: RemoveSourceCommand): Promise<void> {
-    this.logger.log('removeSource', {
-      threadId: command.thread.id,
-      sourceId: command.sourceId,
-    });
+    this.logger.info(
+      {
+        threadId: command.thread.id,
+        sourceId: command.sourceId,
+      },
+      'removeSource',
+    );
 
     try {
       if (!command.thread.sourceAssignments) {
@@ -47,11 +51,14 @@ export class RemoveSourceFromThreadUseCase {
         throw error;
       }
 
-      this.logger.error('Failed to remove source from thread', {
-        threadId: command.thread.id,
-        sourceId: command.sourceId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId: command.thread.id,
+          sourceId: command.sourceId,
+          err: error as Error,
+        },
+        'Failed to remove source from thread',
+      );
 
       throw error instanceof Error
         ? new SourceRemovalError(command.thread.id, error)

@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { AddKnowledgeBaseToThreadUseCase } from './add-knowledge-base-to-thread.use-case';
 import { AddKnowledgeBaseToThreadCommand } from './add-knowledge-base-to-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
@@ -48,6 +50,10 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AddKnowledgeBaseToThreadUseCase,
+        {
+          provide: getLoggerToken(AddKnowledgeBaseToThreadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
           provide: KnowledgeBaseRepository,
@@ -60,9 +66,6 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     useCase = module.get(AddKnowledgeBaseToThreadUseCase);
     threadsRepository = module.get(ThreadsRepository);
     knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

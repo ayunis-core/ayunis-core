@@ -1,4 +1,5 @@
-import { Logger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { UUID, randomUUID } from 'crypto';
@@ -12,9 +13,9 @@ import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persist
 
 @Injectable()
 export class LocalThreadAssignmentsRepository {
-  private readonly logger = new Logger(LocalThreadAssignmentsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalThreadAssignmentsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(ThreadRecord)
     private readonly threadRepository: Repository<ThreadRecord>,
     @InjectRepository(ThreadSourceAssignmentRecord)
@@ -48,11 +49,14 @@ export class LocalThreadAssignmentsRepository {
     userId: UUID;
     sourceAssignment: SourceAssignment;
   }): Promise<void> {
-    this.logger.log('addSourceAssignment', {
-      threadId: params.threadId,
-      userId: params.userId,
-      sourceId: params.sourceAssignment.source.id,
-    });
+    this.logger.info(
+      {
+        threadId: params.threadId,
+        userId: params.userId,
+        sourceId: params.sourceAssignment.source.id,
+      },
+      'addSourceAssignment',
+    );
 
     const threadExists = await this.threadRepository.exists({
       where: { id: params.threadId, userId: params.userId },
@@ -74,10 +78,13 @@ export class LocalThreadAssignmentsRepository {
     userId: UUID;
     mcpIntegrationIds: UUID[];
   }): Promise<void> {
-    this.logger.log('updateMcpIntegrations', {
-      threadId: params.threadId,
-      mcpIntegrationIds: params.mcpIntegrationIds,
-    });
+    this.logger.info(
+      {
+        threadId: params.threadId,
+        mcpIntegrationIds: params.mcpIntegrationIds,
+      },
+      'updateMcpIntegrations',
+    );
 
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
@@ -101,11 +108,14 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.log('addKnowledgeBaseAssignment', {
-      threadId: params.threadId,
-      knowledgeBaseId: params.knowledgeBaseId,
-      originSkillId: params.originSkillId,
-    });
+    this.logger.info(
+      {
+        threadId: params.threadId,
+        knowledgeBaseId: params.knowledgeBaseId,
+        originSkillId: params.originSkillId,
+      },
+      'addKnowledgeBaseAssignment',
+    );
 
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
@@ -130,11 +140,14 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
-    this.logger.log('removeKnowledgeBaseAssignment', {
-      threadId: params.threadId,
-      knowledgeBaseId: params.knowledgeBaseId,
-      originSkillId: params.originSkillId,
-    });
+    this.logger.info(
+      {
+        threadId: params.threadId,
+        knowledgeBaseId: params.knowledgeBaseId,
+        originSkillId: params.originSkillId,
+      },
+      'removeKnowledgeBaseAssignment',
+    );
 
     const threadEntity = await this.threadRepository.findOne({
       where: { id: params.threadId, userId: params.userId },
@@ -155,10 +168,13 @@ export class LocalThreadAssignmentsRepository {
     originSkillId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.log('removeSourceAssignmentsByOriginSkill', {
-      originSkillId: params.originSkillId,
-      userCount: params.userIds.length,
-    });
+    this.logger.info(
+      {
+        originSkillId: params.originSkillId,
+        userCount: params.userIds.length,
+      },
+      'removeSourceAssignmentsByOriginSkill',
+    );
 
     if (params.userIds.length === 0) {
       return;
@@ -191,11 +207,14 @@ export class LocalThreadAssignmentsRepository {
     userIds: UUID[];
     knowledgeBaseId?: UUID;
   }): Promise<void> {
-    this.logger.log('removeKnowledgeBaseAssignmentsByOriginSkill', {
-      originSkillId: params.originSkillId,
-      userCount: params.userIds.length,
-      knowledgeBaseId: params.knowledgeBaseId,
-    });
+    this.logger.info(
+      {
+        originSkillId: params.originSkillId,
+        userCount: params.userIds.length,
+        knowledgeBaseId: params.knowledgeBaseId,
+      },
+      'removeKnowledgeBaseAssignmentsByOriginSkill',
+    );
 
     if (params.userIds.length === 0) {
       return;
@@ -233,7 +252,10 @@ export class LocalThreadAssignmentsRepository {
   async findSourcesWithOnlyStaleDirectAssignments(
     olderThan: Date,
   ): Promise<{ sourceId: UUID; orgId: UUID }[]> {
-    this.logger.log('findSourcesWithOnlyStaleDirectAssignments', { olderThan });
+    this.logger.info(
+      { olderThan },
+      'findSourcesWithOnlyStaleDirectAssignments',
+    );
 
     const rows = await this.threadSourceAssignmentRepository
       .createQueryBuilder('tsa')
@@ -271,10 +293,13 @@ export class LocalThreadAssignmentsRepository {
     knowledgeBaseId: UUID;
     userIds: UUID[];
   }): Promise<void> {
-    this.logger.log('removeDirectKnowledgeBaseAssignments', {
-      knowledgeBaseId: params.knowledgeBaseId,
-      userCount: params.userIds.length,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: params.knowledgeBaseId,
+        userCount: params.userIds.length,
+      },
+      'removeDirectKnowledgeBaseAssignments',
+    );
 
     if (params.userIds.length === 0) {
       return;

@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { FindThreadQuery } from './find-thread.query';
@@ -17,16 +18,16 @@ export interface FindThreadResult {
 
 @Injectable()
 export class FindThreadUseCase {
-  private readonly logger = new Logger(FindThreadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
     private readonly countMessagesTokensUseCase: CountMessagesTokensUseCase,
   ) {}
 
   async execute(query: FindThreadQuery): Promise<FindThreadResult> {
-    this.logger.log('findOne', { threadId: query.id });
+    this.logger.info({ threadId: query.id }, 'findOne');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -47,10 +48,13 @@ export class FindThreadUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to find thread', {
-        threadId: query.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          threadId: query.id,
+          err: error as Error,
+        },
+        'Failed to find thread',
+      );
       throw error;
     }
   }

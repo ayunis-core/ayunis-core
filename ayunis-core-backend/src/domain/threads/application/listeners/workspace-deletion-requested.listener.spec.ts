@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
 import type { RemoveFavoriteReferenceUseCase } from 'src/domain/favorites/application/use-cases/remove-favorite-reference/remove-favorite-reference.use-case';
@@ -23,11 +23,6 @@ describe('ThreadsWorkspaceDeletionRequestedListener', () => {
     return new WorkspaceDeletionRequestedEvent(WORKSPACE_ID, USER_ID, ORG_ID);
   }
 
-  beforeAll(() => {
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-  });
-
   beforeEach(() => {
     threadsRepository = {
       findAllIdsByWorkspaceId: jest.fn().mockResolvedValue([THREAD_ID]),
@@ -40,6 +35,7 @@ describe('ThreadsWorkspaceDeletionRequestedListener', () => {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<RemoveFavoriteReferenceUseCase>;
     listener = new ThreadsWorkspaceDeletionRequestedListener(
+      createPinoLoggerMock(),
       threadsRepository,
       purgeStoragePrefixesUseCase,
       removeFavoriteReferenceUseCase,

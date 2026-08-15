@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { ShareScopeResolverService } from './share-scope-resolver.service';
 import { FindAllUserIdsByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-ids-by-org-id/find-all-user-ids-by-org-id.use-case';
@@ -25,6 +27,10 @@ describe('ShareScopeResolverService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ShareScopeResolverService,
+        {
+          provide: getLoggerToken(ShareScopeResolverService.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: FindAllUserIdsByOrgIdUseCase,
           useValue: findAllUserIdsByOrgId,

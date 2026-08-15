@@ -1,4 +1,6 @@
 // Mock the Transactional decorator
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
@@ -27,14 +29,20 @@ describe('DeleteShareUseCase', () => {
   let contextService: ContextService;
   let repository: SharesRepository;
   let eventEmitter: EventEmitter2;
+  let logger: jest.Mocked<PinoLogger>;
 
   const mockUserId = randomUUID();
   const mockOrgId = randomUUID();
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteShareUseCase,
+        {
+          provide: getLoggerToken(DeleteShareUseCase.name),
+          useValue: logger,
+        },
         {
           provide: ContextService,
           useValue: {
@@ -190,11 +198,15 @@ describe('DeleteShareUseCase', () => {
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 
-  it('should throw when share does not exist', async () => {
+  it('should log unexpected deletion failures with a message', async () => {
     (contextService.get as jest.Mock).mockReturnValue(mockUserId);
     (repository.findById as jest.Mock).mockResolvedValue(null);
 
     await expect(useCase.execute(randomUUID())).rejects.toThrow();
+    expect(logger.error).toHaveBeenCalledWith(
+      { err: expect.any(Error) },
+      'Failed to delete share',
+    );
     expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
   });
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ThreadsRepository } from '../../ports/threads.repository';
 import { RemoveKnowledgeBaseFromThreadCommand } from './remove-knowledge-base-from-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -7,21 +8,22 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class RemoveKnowledgeBaseFromThreadUseCase {
-  private readonly logger = new Logger(
-    RemoveKnowledgeBaseFromThreadUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(RemoveKnowledgeBaseFromThreadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly threadsRepository: ThreadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: RemoveKnowledgeBaseFromThreadCommand): Promise<void> {
-    this.logger.log('execute', {
-      threadId: command.threadId,
-      knowledgeBaseId: command.knowledgeBaseId,
-      originSkillId: command.originSkillId,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        knowledgeBaseId: command.knowledgeBaseId,
+        originSkillId: command.originSkillId,
+      },
+      'execute',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {

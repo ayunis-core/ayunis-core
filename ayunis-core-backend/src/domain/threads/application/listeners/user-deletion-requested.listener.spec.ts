@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { ThreadsUserDeletionRequestedListener } from './user-deletion-requested.listener';
 import { ThreadsRepository } from '../ports/threads.repository';
@@ -24,6 +26,10 @@ describe('ThreadsUserDeletionRequestedListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ThreadsUserDeletionRequestedListener,
+        {
+          provide: getLoggerToken(ThreadsUserDeletionRequestedListener.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ThreadsRepository, useValue: threadsRepository },
         {
           provide: PurgeStoragePrefixesUseCase,
@@ -33,8 +39,6 @@ describe('ThreadsUserDeletionRequestedListener', () => {
     }).compile();
 
     listener = module.get(ThreadsUserDeletionRequestedListener);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

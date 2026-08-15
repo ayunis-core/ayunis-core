@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-retention/enforce-retention.use-case';
 
@@ -9,10 +10,11 @@ import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-ret
  */
 @Injectable()
 export class RetentionCleanupTask {
-  private readonly logger = new Logger(RetentionCleanupTask.name);
   private isRunning = false;
 
   constructor(
+    @InjectPinoLogger(RetentionCleanupTask.name)
+    private readonly logger: PinoLogger,
     private readonly enforceRetentionUseCase: EnforceRetentionUseCase,
   ) {}
 
@@ -26,20 +28,23 @@ export class RetentionCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.log('Starting scheduled retention cleanup');
+    this.logger.info('Starting scheduled retention cleanup');
 
     try {
       const result = await this.enforceRetentionUseCase.execute();
-      this.logger.log('Scheduled retention cleanup completed', {
-        orgsProcessed: result.orgsProcessed,
-        totalDeleted: result.totalDeleted,
-        totalFailed: result.totalFailed,
-        dryRun: result.dryRun,
-      });
+      this.logger.info(
+        {
+          orgsProcessed: result.orgsProcessed,
+          totalDeleted: result.totalDeleted,
+          totalFailed: result.totalFailed,
+          dryRun: result.dryRun,
+        },
+        'Scheduled retention cleanup completed',
+      );
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled retention cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

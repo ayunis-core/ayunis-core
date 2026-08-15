@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateThreadUseCase } from './create-thread.use-case';
 import { CreateThreadCommand } from './create-thread.command';
 import { ThreadsRepository } from '../../ports/threads.repository';
@@ -23,12 +24,14 @@ describe('CreateThreadUseCase', () => {
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let getPermittedLanguageModelUseCase: jest.Mocked<GetPermittedLanguageModelUseCase>;
   let contextService: jest.Mocked<ContextService>;
+  let logger: jest.Mocked<PinoLogger>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const mockModelId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
 
   beforeEach(async () => {
+    logger = createPinoLoggerMock();
     const mockThreadsRepository = {
       create: jest.fn(),
       findById: jest.fn(),
@@ -55,6 +58,10 @@ describe('CreateThreadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateThreadUseCase,
+        {
+          provide: getLoggerToken(CreateThreadUseCase.name),
+          useValue: logger,
+        },
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
         {
           provide: GetPermittedLanguageModelUseCase,
@@ -74,10 +81,6 @@ describe('CreateThreadUseCase', () => {
       GetPermittedLanguageModelUseCase,
     );
     contextService = module.get(ContextService);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -216,7 +219,6 @@ describe('CreateThreadUseCase', () => {
       getPermittedLanguageModelUseCase.execute.mockResolvedValue(mockModel);
       threadsRepository.create.mockResolvedValue(mockCreatedThread);
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
       const getModelExecuteSpy = jest.spyOn(
         getPermittedLanguageModelUseCase,
         'execute',
@@ -226,7 +228,7 @@ describe('CreateThreadUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(logSpy).toHaveBeenCalledWith('execute');
+      expect(logger.info).toHaveBeenCalledWith('execute');
       expect(getModelExecuteSpy).toHaveBeenCalled();
     });
 
@@ -263,7 +265,6 @@ describe('CreateThreadUseCase', () => {
       const repositoryError = new Error('Database connection failed');
       threadsRepository.create.mockRejectedValue(repositoryError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
       const getModelExecuteSpy = jest.spyOn(
         getPermittedLanguageModelUseCase,
         'execute',
@@ -273,10 +274,10 @@ describe('CreateThreadUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         ThreadCreationError,
       );
-      expect(errorSpy).toHaveBeenCalledWith('Failed to create thread', {
-        userId: mockUserId,
-        error: 'Database connection failed',
-      });
+      expect(logger.error).toHaveBeenCalledWith(
+        { userId: mockUserId, err: repositoryError },
+        'Failed to create thread',
+      );
       expect(getModelExecuteSpy).toHaveBeenCalled();
     });
   });
