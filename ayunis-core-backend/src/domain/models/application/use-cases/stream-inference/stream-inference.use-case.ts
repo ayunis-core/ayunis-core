@@ -14,7 +14,10 @@ import {
   InferenceImageTooLargeError,
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import {
+  extractProviderErrorDiagnostics,
+  type ProviderErrorDiagnostics,
+} from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 
@@ -72,8 +75,27 @@ export class StreamInferenceUseCase {
       );
       return providerError;
     }
-    const status = extractUpstreamStatus(error);
+    const diagnostics = extractProviderErrorDiagnostics(error);
+    const status = diagnostics.upstreamStatus;
     const message = error instanceof Error ? error.message : String(error);
+    this.logProviderInferenceFailed(error, input, diagnostics);
+    // Anthropic/Bedrock reject oversized images with "image exceeds N MB
+    // maximum" — surface a distinct code so the UI can tell the user to shrink
+    // it instead of showing a generic failure.
+    if (/image exceeds .* maximum/i.test(message)) {
+      return new InferenceImageTooLargeError({ status });
+    }
+    return new InferenceFailedError('Provider inference failed', {
+      status,
+      ...diagnostics,
+    });
+  }
+
+  private logProviderInferenceFailed(
+    error: unknown,
+    input: StreamInferenceInput,
+    diagnostics: ProviderErrorDiagnostics,
+  ): void {
     this.logger.error(
       {
         model: input.model.name,
@@ -82,17 +104,11 @@ export class StreamInferenceUseCase {
         toolCount: input.tools.length,
         toolChoice: input.toolChoice,
         errorName: error instanceof Error ? error.name : 'Unknown',
-        status,
+        status: diagnostics.upstreamStatus,
+        ...diagnostics,
       },
       'Provider stream inference failed',
     );
-    // Anthropic/Bedrock reject oversized images with "image exceeds N MB
-    // maximum" — surface a distinct code so the UI can tell the user to shrink
-    // it instead of showing a generic failure.
-    if (/image exceeds .* maximum/i.test(message)) {
-      return new InferenceImageTooLargeError({ status });
-    }
-    return new InferenceFailedError('Provider inference failed', { status });
   }
 
   private sanitizeReplayedMessages(
