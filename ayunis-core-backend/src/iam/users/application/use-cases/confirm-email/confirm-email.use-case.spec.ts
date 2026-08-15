@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfirmEmailUseCase } from './confirm-email.use-case';
@@ -62,6 +64,10 @@ describe('ConfirmEmailUseCase', () => {
           useValue: mockJwtService,
         },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        {
+          provide: getLoggerToken(ConfirmEmailUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { CreateUserCommand } from './create-user.command';
@@ -17,9 +18,9 @@ import { UserCreatedEvent } from '../../events/user-created.event';
 
 @Injectable()
 export class CreateUserUseCase {
-  private readonly logger = new Logger(CreateUserUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateUserUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly configService: ConfigService,
@@ -27,92 +28,107 @@ export class CreateUserUseCase {
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
-    this.logger.log('createUser', {
-      email: command.email,
-      orgId: command.orgId,
-      role: command.role,
-      name: command.name,
-      hasAcceptedMarketing: command.hasAcceptedMarketing,
-    });
-
-    const emailProvider = command.email.split('@')[1];
-    const emailProviderBlacklist = this.configService.get<string[]>(
-      'auth.emailProviderBlacklist',
-    )!;
-    if (emailProviderBlacklist.includes(emailProvider)) {
-      throw new UserEmailProviderBlacklistedError(emailProvider);
-    }
-
-    try {
-      this.logger.debug('Checking if user already exists');
-      const existingUser = await this.usersRepository.findOneByEmail(
-        command.email,
-      );
-
-      if (existingUser) {
-        this.logger.warn('User already exists', { email: command.email });
-        throw new UserAlreadyExistsError('User already exists');
-      }
-
-      this.logger.debug('Hashing password');
-      let passwordHash: string;
-      try {
-        passwordHash = await this.hashTextUseCase.execute(
-          new HashTextCommand(command.password),
-        );
-      } catch (error) {
-        if (error instanceof HashingError) {
-          // Already logged in hashing use case
-          throw error;
-        }
-        this.logger.error('Password hashing failed', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          email: command.email,
-        });
-        throw new UserInvalidInputError('Password hashing failed');
-      }
-
-      this.logger.debug('Creating new user');
-      const user = new User({
+    this.logger.info(
+      {
         email: command.email,
-        emailVerified: command.emailVerified,
-        passwordHash,
         orgId: command.orgId,
         role: command.role,
         name: command.name,
         hasAcceptedMarketing: command.hasAcceptedMarketing,
-        department: command.department,
-      });
-
-      const createdUser = await this.usersRepository.create(user);
-      this.logger.debug('User created successfully', {
-        userId: createdUser.id,
-        role: command.role,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          UserCreatedEvent.EVENT_NAME,
-          new UserCreatedEvent(createdUser.id, command.orgId, createdUser),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit UserCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId: createdUser.id,
-          });
-        });
-
-      return createdUser;
+      },
+      'createUser',
+    );
+    this.assertEmailProviderAllowed(command.email);
+    try {
+      return await this.createUser(command);
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('User creation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email: command.email,
-        role: command.role,
-      });
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email: command.email,
+          role: command.role,
+        },
+        'User creation failed',
+      );
       throw new UserInvalidInputError('User creation failed');
     }
+  }
+
+  private assertEmailProviderAllowed(email: string): void {
+    const provider = email.split('@')[1];
+    const blacklist = this.configService.get<string[]>(
+      'auth.emailProviderBlacklist',
+    )!;
+    if (blacklist.includes(provider)) {
+      throw new UserEmailProviderBlacklistedError(provider);
+    }
+  }
+
+  private async createUser(command: CreateUserCommand): Promise<User> {
+    this.logger.debug('Checking if user already exists');
+    const existingUser = await this.usersRepository.findOneByEmail(
+      command.email,
+    );
+    if (existingUser) {
+      this.logger.warn({ email: command.email }, 'User already exists');
+      throw new UserAlreadyExistsError('User already exists');
+    }
+
+    const passwordHash = await this.hashPassword(command);
+    this.logger.debug('Creating new user');
+    const user = new User({
+      email: command.email,
+      emailVerified: command.emailVerified,
+      passwordHash,
+      orgId: command.orgId,
+      role: command.role,
+      name: command.name,
+      hasAcceptedMarketing: command.hasAcceptedMarketing,
+      department: command.department,
+    });
+    const createdUser = await this.usersRepository.create(user);
+    this.logger.debug(
+      { userId: createdUser.id, role: command.role },
+      'User created successfully',
+    );
+    this.emitUserCreated(createdUser, command);
+    return createdUser;
+  }
+
+  private async hashPassword(command: CreateUserCommand): Promise<string> {
+    this.logger.debug('Hashing password');
+    try {
+      return await this.hashTextUseCase.execute(
+        new HashTextCommand(command.password),
+      );
+    } catch (error) {
+      if (error instanceof HashingError) throw error;
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email: command.email,
+        },
+        'Password hashing failed',
+      );
+      throw new UserInvalidInputError('Password hashing failed');
+    }
+  }
+
+  private emitUserCreated(user: User, command: CreateUserCommand): void {
+    this.eventEmitter
+      .emitAsync(
+        UserCreatedEvent.EVENT_NAME,
+        new UserCreatedEvent(user.id, command.orgId, user),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          },
+          'Failed to emit UserCreatedEvent',
+        );
+      });
   }
 }

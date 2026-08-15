@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -66,6 +68,10 @@ describe('AdminUpdateUserUseCase', () => {
         {
           provide: SendConfirmationEmailUseCase,
           useValue: mockSendConfirmationEmailUseCase,
+        },
+        {
+          provide: getLoggerToken(AdminUpdateUserUseCase.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

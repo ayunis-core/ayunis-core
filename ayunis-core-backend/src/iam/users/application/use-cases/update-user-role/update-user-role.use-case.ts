@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UsersRepository } from '../../ports/users.repository';
 import { UpdateUserRoleCommand } from './update-user-role.command';
@@ -14,19 +15,22 @@ import { UserUpdatedEvent } from '../../events/user-updated.event';
 
 @Injectable()
 export class UpdateUserRoleUseCase {
-  private readonly logger = new Logger(UpdateUserRoleUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateUserRoleUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly usersRepository: UsersRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: UpdateUserRoleCommand): Promise<User> {
-    this.logger.log('updateUserRole', {
-      userId: command.userId,
-      newRole: command.newRole,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        newRole: command.newRole,
+      },
+      'updateUserRole',
+    );
 
     const requesterOrgId = this.contextService.get('orgId');
     if (!requesterOrgId) {
@@ -54,27 +58,37 @@ export class UpdateUserRoleUseCase {
       // Save the updated user
       const updatedUser = await this.usersRepository.update(user);
 
-      this.eventEmitter
-        .emitAsync(
-          UserUpdatedEvent.EVENT_NAME,
-          new UserUpdatedEvent(updatedUser.id, updatedUser.orgId, updatedUser),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit UserUpdatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId: updatedUser.id,
-          });
-        });
+      this.emitUserUpdated(updatedUser);
 
       return updatedUser;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error updating user role', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error updating user role',
+      );
       throw new UserUnexpectedError(error as Error);
     }
+  }
+
+  private emitUserUpdated(user: User): void {
+    this.eventEmitter
+      .emitAsync(
+        UserUpdatedEvent.EVENT_NAME,
+        new UserUpdatedEvent(user.id, user.orgId, user),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId: user.id,
+          },
+          'Failed to emit UserUpdatedEvent',
+        );
+      });
   }
 }

@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -37,6 +39,10 @@ describe('DemoteFromSuperAdminUseCase', () => {
       providers: [
         DemoteFromSuperAdminUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        {
+          provide: getLoggerToken(DemoteFromSuperAdminUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

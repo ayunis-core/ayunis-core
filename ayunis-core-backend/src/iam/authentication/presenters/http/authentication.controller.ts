@@ -3,13 +3,13 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Post,
   Get,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -60,8 +60,9 @@ import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objec
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
-  private readonly logger = new Logger(AuthenticationController.name);
   constructor(
+    @InjectPinoLogger(AuthenticationController.name)
+    private readonly logger: PinoLogger,
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
@@ -103,7 +104,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async login(@Req() req: Request, @Res() res: Response) {
-    this.logger.log('login');
+    this.logger.info('login');
     const user = req.user as ActiveUser;
 
     const mfaRequirement = await this.checkMfaLoginRequirementUseCase.execute(
@@ -222,7 +223,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async refresh(@Req() req: Request, @Res() res: Response) {
-    this.logger.log('refresh');
+    this.logger.info('refresh');
     const refreshTokenName = this.configService.get<string>(
       'auth.cookie.refreshTokenName',
     );
@@ -258,7 +259,10 @@ export class AuthenticationController {
       // Any refresh failure (expired, reuse/theft, unknown) leaves the browser
       // holding a useless refresh cookie — clear it so the client logs out
       // cleanly instead of retrying a doomed token.
-      this.logger.warn('Refresh failed; clearing cookies', error);
+      this.logger.warn(
+        { err: error as Error },
+        'Refresh failed; clearing cookies',
+      );
       clearCookies(res, this.configService);
       return res
         .status(HttpStatus.UNAUTHORIZED)
@@ -288,7 +292,7 @@ export class AuthenticationController {
     type: ErrorResponseDto,
   })
   async me(@Req() req: Request, @Res() res: Response) {
-    this.logger.log('me');
+    this.logger.info('me');
 
     const accessTokenName = this.configService.get<string>(
       'auth.cookie.accessTokenName',
@@ -335,7 +339,10 @@ export class AuthenticationController {
         new GetCurrentUserCommand(accessToken),
       );
     } catch (error) {
-      this.logger.debug('Access token verification failed', error);
+      this.logger.debug(
+        { err: error as Error },
+        'Access token verification failed',
+      );
       return null;
     }
   }
@@ -359,7 +366,10 @@ export class AuthenticationController {
       );
       return res.json(this.meResponseDtoMapper.toDto(user));
     } catch (error) {
-      this.logger.error('Token refresh failed during me request', error);
+      this.logger.error(
+        { err: error as Error },
+        'Token refresh failed during me request',
+      );
       // Clear the now-useless refresh cookie so the client logs out cleanly.
       clearCookies(res, this.configService);
       return res.status(HttpStatus.UNAUTHORIZED).json({

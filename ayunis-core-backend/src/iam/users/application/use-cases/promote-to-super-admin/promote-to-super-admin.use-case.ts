@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from '../../ports/users.repository';
 import { PromoteToSuperAdminCommand } from './promote-to-super-admin.command';
@@ -9,13 +10,15 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class PromoteToSuperAdminUseCase {
-  private readonly logger = new Logger(PromoteToSuperAdminUseCase.name);
-
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    @InjectPinoLogger(PromoteToSuperAdminUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
   @Transactional()
   async execute(command: PromoteToSuperAdminCommand): Promise<User> {
-    this.logger.log('execute');
+    this.logger.info('execute');
 
     try {
       const user = await this.usersRepository.findOneByEmail(command.email);
@@ -34,9 +37,12 @@ export class PromoteToSuperAdminUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error promoting user to super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error promoting user to super admin',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }

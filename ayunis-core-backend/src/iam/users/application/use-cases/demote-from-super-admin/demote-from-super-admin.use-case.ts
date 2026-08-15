@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from '../../ports/users.repository';
 import { DemoteFromSuperAdminCommand } from './demote-from-super-admin.command';
@@ -14,16 +15,21 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DemoteFromSuperAdminUseCase {
-  private readonly logger = new Logger(DemoteFromSuperAdminUseCase.name);
-
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    @InjectPinoLogger(DemoteFromSuperAdminUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
   @Transactional()
   async execute(command: DemoteFromSuperAdminCommand): Promise<void> {
-    this.logger.log('execute', {
-      userId: command.userId,
-      requestingUserId: command.requestingUserId,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        requestingUserId: command.requestingUserId,
+      },
+      'execute',
+    );
 
     try {
       if (command.userId === command.requestingUserId) {
@@ -52,9 +58,12 @@ export class DemoteFromSuperAdminUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error demoting user from super admin', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error demoting user from super admin',
+      );
       throw new UserUnexpectedError(error as Error);
     }
   }

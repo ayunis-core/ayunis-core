@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { JwtStrategy } from './jwt.strategy';
@@ -30,13 +31,14 @@ describe('JwtStrategy', () => {
           useValue: { get: jest.fn().mockReturnValue('access_token') },
         },
         { provide: JWT_SECRET, useValue: 'super-secret' },
+        {
+          provide: getLoggerToken(JwtStrategy.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     strategy = module.get(JwtStrategy);
-
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

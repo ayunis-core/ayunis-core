@@ -2,6 +2,7 @@ import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { getLoggerToken, PinoLogger } from 'nestjs-pino';
 
 import { JwtConfigModule } from './jwt.module';
 import { JwtStrategy } from './application/strategies/jwt.strategy';
@@ -63,7 +64,11 @@ function createAuthenticationRepositoryProvider(
 ): Provider {
   return {
     provide: AUTHENTICATION_REPOSITORY,
-    useFactory: (configService: ConfigService, jwtService: JwtService) => {
+    useFactory: (
+      logger: PinoLogger,
+      configService: ConfigService,
+      jwtService: JwtService,
+    ) => {
       const provider =
         options?.provider ??
         configService.get<AuthProvider>('auth.provider', AuthProvider.LOCAL);
@@ -73,9 +78,17 @@ function createAuthenticationRepositoryProvider(
         throw new Error('Cloud authentication repository not implemented');
       }
 
-      return new LocalAuthenticationRepository(jwtService, configService);
+      return new LocalAuthenticationRepository(
+        logger,
+        jwtService,
+        configService,
+      );
     },
-    inject: [ConfigService, JwtService],
+    inject: [
+      getLoggerToken(LocalAuthenticationRepository.name),
+      ConfigService,
+      JwtService,
+    ],
   };
 }
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes, type UUID } from 'crypto';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
@@ -15,9 +16,9 @@ import { PasswordSetTokensRepository } from '../ports/password-set-tokens.reposi
  */
 @Injectable()
 export class PasswordSetTokenService {
-  private readonly logger = new Logger(PasswordSetTokenService.name);
-
   constructor(
+    @InjectPinoLogger(PasswordSetTokenService.name)
+    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
   ) {}
@@ -26,10 +27,13 @@ export class PasswordSetTokenService {
     userId: UUID;
     purpose: PasswordSetTokenPurpose;
   }): Promise<string> {
-    this.logger.log('issue', {
-      userId: params.userId,
-      purpose: params.purpose,
-    });
+    this.logger.info(
+      {
+        userId: params.userId,
+        purpose: params.purpose,
+      },
+      'issue',
+    );
 
     const plaintext = randomBytes(32).toString('base64url');
     const token = new PasswordSetToken({

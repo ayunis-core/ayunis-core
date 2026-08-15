@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ResetPasswordCommand } from './reset-password.command';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
@@ -18,9 +19,9 @@ import { RevokeAllSessionsForUserCommand } from 'src/iam/sessions/application/us
 
 @Injectable()
 export class ResetPasswordUseCase {
-  private readonly logger = new Logger(ResetPasswordUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ResetPasswordUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
     private readonly hashTextUseCase: HashTextUseCase,
@@ -31,7 +32,7 @@ export class ResetPasswordUseCase {
 
   @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: ResetPasswordCommand): Promise<void> {
-    this.logger.log('resetPassword', { hasToken: !!command.resetToken });
+    this.logger.info({ hasToken: !!command.resetToken }, 'resetPassword');
 
     // Look up (read-only) before consuming, so a weak-password attempt does
     // not burn the link.
@@ -44,9 +45,12 @@ export class ResetPasswordUseCase {
 
     const user = await this.usersRepository.findOneById(token.userId);
     if (!user) {
-      this.logger.error('User not found during password reset', {
-        userId: token.userId,
-      });
+      this.logger.error(
+        {
+          userId: token.userId,
+        },
+        'User not found during password reset',
+      );
       throw new InvalidTokenError('Invalid token - user not found');
     }
     if (
@@ -73,7 +77,7 @@ export class ResetPasswordUseCase {
       new RevokeAllSessionsForUserCommand(user.id),
     );
 
-    this.logger.debug('Password reset successfully', { userId: user.id });
+    this.logger.debug({ userId: user.id }, 'Password reset successfully');
   }
 
   private assertPasswordsAcceptable(command: ResetPasswordCommand): void {
@@ -91,9 +95,12 @@ export class ResetPasswordUseCase {
       new IsValidPasswordQuery(password),
     );
     if (!isValid) {
-      this.logger.warn('Password does not meet security requirements', {
-        userId,
-      });
+      this.logger.warn(
+        {
+          userId,
+        },
+        'Password does not meet security requirements',
+      );
       throw new InvalidPasswordError(
         'Password does not meet security requirements',
       );
@@ -106,7 +113,7 @@ export class ResetPasswordUseCase {
       new Date(),
     );
     if (!consumed) {
-      this.logger.warn('Token already used', { userId: token.userId });
+      this.logger.warn({ userId: token.userId }, 'Token already used');
       throw new InvalidTokenError('Token already used');
     }
   }

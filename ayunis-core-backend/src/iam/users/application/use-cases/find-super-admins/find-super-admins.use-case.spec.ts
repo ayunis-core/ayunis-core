@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindSuperAdminsUseCase } from './find-super-admins.use-case';
@@ -20,6 +22,10 @@ describe('FindSuperAdminsUseCase', () => {
       providers: [
         FindSuperAdminsUseCase,
         { provide: UsersRepository, useValue: mockUsersRepository },
+        {
+          provide: getLoggerToken(FindSuperAdminsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

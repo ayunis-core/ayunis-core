@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -44,6 +46,10 @@ describe('AdminTriggerPasswordResetUseCase', () => {
         {
           provide: TriggerPasswordResetUseCase,
           useValue: triggerPasswordResetUseCase,
+        },
+        {
+          provide: getLoggerToken(AdminTriggerPasswordResetUseCase.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

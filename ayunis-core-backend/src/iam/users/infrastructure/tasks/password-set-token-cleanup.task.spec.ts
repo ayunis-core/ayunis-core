@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PasswordSetTokenCleanupTask } from './password-set-token-cleanup.task';
 import { createMockPasswordSetTokensRepository } from '../../application/testing/password-set-token.fixtures';
 
@@ -8,11 +8,7 @@ describe('PasswordSetTokenCleanupTask', () => {
 
   beforeEach(() => {
     repository = createMockPasswordSetTokensRepository();
-    task = new PasswordSetTokenCleanupTask(repository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    task = new PasswordSetTokenCleanupTask(createPinoLoggerMock(), repository);
   });
 
   afterEach(() => jest.clearAllMocks());

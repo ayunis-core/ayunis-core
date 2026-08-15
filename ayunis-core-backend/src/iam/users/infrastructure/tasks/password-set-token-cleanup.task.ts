@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PasswordSetTokensRepository } from '../../application/ports/password-set-tokens.repository';
 
@@ -9,10 +10,11 @@ import { PasswordSetTokensRepository } from '../../application/ports/password-se
  */
 @Injectable()
 export class PasswordSetTokenCleanupTask {
-  private readonly logger = new Logger(PasswordSetTokenCleanupTask.name);
   private isRunning = false;
 
   constructor(
+    @InjectPinoLogger(PasswordSetTokenCleanupTask.name)
+    private readonly logger: PinoLogger,
     private readonly passwordSetTokensRepository: PasswordSetTokensRepository,
   ) {}
 
@@ -26,18 +28,21 @@ export class PasswordSetTokenCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.log('Starting scheduled password-set-token cleanup');
+    this.logger.info('Starting scheduled password-set-token cleanup');
 
     try {
       const deleted =
         await this.passwordSetTokensRepository.deleteExpiredOrUsed(new Date());
-      this.logger.log('Scheduled password-set-token cleanup completed', {
-        deleted,
-      });
+      this.logger.info(
+        {
+          deleted,
+        },
+        'Scheduled password-set-token cleanup completed',
+      );
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled password-set-token cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

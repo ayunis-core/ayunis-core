@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -62,6 +64,10 @@ describe('DeleteUserUseCase', () => {
           useValue: mockDeleteInviteByEmailUseCase,
         },
         { provide: ContextService, useValue: mockContextService },
+        {
+          provide: getLoggerToken(DeleteUserUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

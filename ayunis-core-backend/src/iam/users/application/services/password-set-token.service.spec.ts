@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PasswordSetTokenService } from './password-set-token.service';
 import { PasswordSetTokensRepository } from '../ports/password-set-tokens.repository';
@@ -30,15 +31,15 @@ describe('PasswordSetTokenService', () => {
             get: jest.fn((_key: string, fallback: string) => fallback),
           },
         },
+        {
+          provide: getLoggerToken(PasswordSetTokenService.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     service = module.get(PasswordSetTokenService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

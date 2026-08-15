@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { HashTextUseCase } from './hash-text.use-case';
@@ -20,6 +22,10 @@ describe('HashTextUseCase', () => {
         {
           provide: HashingHandler,
           useValue: mockHashingHandler,
+        },
+        {
+          provide: getLoggerToken(HashTextUseCase.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

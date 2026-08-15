@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { GetCurrentUserCommand } from './get-current-user.command';
 import { ActiveUser } from '../../../domain/active-user.entity';
@@ -22,18 +23,20 @@ interface JwtPayload {
 
 @Injectable()
 export class GetCurrentUserUseCase {
-  private readonly logger = new Logger(GetCurrentUserUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetCurrentUserUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
   async execute(command: GetCurrentUserCommand): Promise<ActiveUser> {
-    this.logger.log('getCurrentUser');
+    this.logger.info('getCurrentUser');
 
     try {
-      const payload = this.jwtService.verify<JwtPayload>(command.accessToken);
+      const payload = this.jwtService.verify<Partial<JwtPayload>>(
+        command.accessToken,
+      );
 
       if (
         !payload.sub ||
@@ -45,12 +48,15 @@ export class GetCurrentUserUseCase {
         throw new InvalidTokenError('Invalid token payload');
       }
 
-      this.logger.debug('Token verified successfully', {
-        userId: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        name: payload.name,
-      });
+      this.logger.debug(
+        {
+          userId: payload.sub,
+          email: payload.email,
+          role: payload.role,
+          name: payload.name,
+        },
+        'Token verified successfully',
+      );
 
       const user = await this.findUserByIdUseCase.execute(
         new FindUserByIdQuery(payload.sub),
@@ -69,7 +75,7 @@ export class GetCurrentUserUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Token verification failed', { error });
+      this.logger.error({ err: error as Error }, 'Token verification failed');
       throw new InvalidTokenError('Unable to verify access token');
     }
   }

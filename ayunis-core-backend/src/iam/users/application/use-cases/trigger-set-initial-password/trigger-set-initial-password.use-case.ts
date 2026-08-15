@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TriggerSetInitialPasswordCommand } from './trigger-set-initial-password.command';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
@@ -11,9 +12,9 @@ import { UsersRepository } from '../../ports/users.repository';
 
 @Injectable()
 export class TriggerSetInitialPasswordUseCase {
-  private readonly logger = new Logger(TriggerSetInitialPasswordUseCase.name);
-
   constructor(
+    @InjectPinoLogger(TriggerSetInitialPasswordUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly usersRepository: UsersRepository,
@@ -21,11 +22,11 @@ export class TriggerSetInitialPasswordUseCase {
 
   async execute(command: TriggerSetInitialPasswordCommand): Promise<void> {
     try {
-      this.logger.log('execute', { email: command.email });
+      this.logger.info({ email: command.email }, 'execute');
 
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {
-        this.logger.debug('User not found', { email: command.email });
+        this.logger.debug({ email: command.email }, 'User not found');
         return;
       }
 
@@ -43,17 +44,23 @@ export class TriggerSetInitialPasswordUseCase {
         ),
       );
 
-      this.logger.debug('Set-initial-password email triggered', {
-        userId: user.id,
-        email: user.email,
-      });
+      this.logger.debug(
+        {
+          userId: user.id,
+          email: user.email,
+        },
+        'Set-initial-password email triggered',
+      );
     } catch (error) {
       if (error instanceof UserNotFoundError) return;
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error triggering set-initial-password', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        email: command.email,
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          email: command.email,
+        },
+        'Error triggering set-initial-password',
+      );
       throw new UnexpectedAuthenticationError(error);
     }
   }

@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -69,6 +71,10 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
           useValue: mockSendPasswordResetEmailUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: getLoggerToken(SuperAdminTriggerPasswordResetUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

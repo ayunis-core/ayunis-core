@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsersRepository } from '../../ports/users.repository';
 import { FindUsersByIdsQuery } from './find-users-by-ids.query';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -8,9 +9,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class FindUsersByIdsUseCase {
-  private readonly logger = new Logger(FindUsersByIdsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindUsersByIdsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usersRepository: UsersRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -22,7 +23,7 @@ export class FindUsersByIdsUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('execute', { idCount: query.ids.length, orgId });
+    this.logger.info({ idCount: query.ids.length, orgId }, 'execute');
 
     try {
       return await this.usersRepository.findManyByIdsAndOrgId(query.ids, orgId);

@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AuthenticationRepository } from '../../ports/authentication.repository';
 import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
 import { JwtService } from '@nestjs/jwt';
@@ -28,9 +29,9 @@ interface RefreshTokenPayload {
 
 @Injectable()
 export class RefreshTokenUseCase {
-  private readonly logger = new Logger(RefreshTokenUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RefreshTokenUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(AUTHENTICATION_REPOSITORY)
     private readonly authRepository: AuthenticationRepository,
     private readonly jwtService: JwtService,
@@ -41,7 +42,7 @@ export class RefreshTokenUseCase {
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
   async execute(command: RefreshTokenCommand): Promise<AuthTokens> {
-    this.logger.log('refreshToken');
+    this.logger.info('refreshToken');
     const rotated = this.isJwt(command.refreshToken)
       ? await this.migrateLegacyToken(command.refreshToken)
       : await this.rotate(command.refreshToken);
@@ -90,7 +91,10 @@ export class RefreshTokenUseCase {
     try {
       return this.jwtService.verify<RefreshTokenPayload>(token);
     } catch (error: unknown) {
-      this.logger.warn('Legacy refresh token verification failed', { error });
+      this.logger.warn(
+        { err: error as Error },
+        'Legacy refresh token verification failed',
+      );
       throw new InvalidTokenError('Unable to verify refresh token');
     }
   }

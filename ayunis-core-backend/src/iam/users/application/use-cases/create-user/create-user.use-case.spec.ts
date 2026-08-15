@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateUserUseCase } from './create-user.use-case';
 import { CreateUserCommand } from './create-user.command';
 import { UserCreatedEvent } from '../../events/user-created.event';
@@ -54,6 +55,7 @@ describe('CreateUserUseCase', () => {
     } as unknown as jest.Mocked<EventEmitter2>;
 
     useCase = new CreateUserUseCase(
+      createPinoLoggerMock(),
       usersRepository,
       hashTextUseCase,
       configService,

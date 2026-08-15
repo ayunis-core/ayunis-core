@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RefreshTokenUseCase } from './refresh-token.use-case';
@@ -53,6 +55,10 @@ describe('RefreshTokenUseCase', () => {
         { provide: FindUserByIdUseCase, useValue: mockFindUserByIdUseCase },
         { provide: RotateSessionUseCase, useValue: mockRotateSessionUseCase },
         { provide: CreateSessionUseCase, useValue: mockCreateSessionUseCase },
+        {
+          provide: getLoggerToken(RefreshTokenUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

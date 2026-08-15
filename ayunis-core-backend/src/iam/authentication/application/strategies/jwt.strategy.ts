@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
@@ -22,9 +23,9 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  private readonly logger = new Logger(JwtStrategy.name);
-
   constructor(
+    @InjectPinoLogger(JwtStrategy.name)
+    private readonly logger: PinoLogger,
     configService: ConfigService,
     @Inject(JWT_SECRET) secret: string,
   ) {
@@ -38,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         const token = req.cookies[cookieName] as string;
 
         if (!token) {
-          this.logger.debug(`No JWT token found in cookie: ${cookieName}`);
+          this.logger.debug({ cookieName }, 'No JWT token found in cookie');
         }
 
         return token;
