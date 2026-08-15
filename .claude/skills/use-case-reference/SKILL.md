@@ -60,6 +60,18 @@ export class DoSomethingUseCase {
 
 ## Rules
 
+### 0. Imports outside the use case's own directory MUST be absolute
+
+`src/…` for everything — ports, domain entities, other modules' use cases.
+Relative paths are only for the sibling query/command file (`./find-user.query`).
+Never `../`. Existing use cases often violate this; do not copy them.
+
+```typescript
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { UserUnexpectedError } from 'src/iam/users/application/users.errors';
+import { FindUserQuery } from './find-user.query';
+```
+
 ### 1. Every `execute()` method MUST be decorated with `@HandleUnexpectedErrors`
 
 ```typescript

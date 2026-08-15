@@ -22,6 +22,22 @@ pnpm run build                 # Must succeed
 pnpm run lint                  # Must pass
 ```
 
+## Imports
+
+Anything outside the current directory is imported as `@/…`; only same-directory
+siblings (`./thing`) stay relative. Never `../`. Plenty of existing code uses
+`../` — do not copy it; the `Import Check` CI job blocks changed files that do,
+and `eslint --fix` rewrites them automatically.
+
+```typescript
+// ✅
+import { useMyPermissions } from '@/features/permissions/api/useMyPermissions';
+import { PermissionGate } from './PermissionGate';
+
+// ❌
+import { useMyPermissions } from '../api/useMyPermissions';
+```
+
 ## Architecture (Feature-Sliced Design)
 
 ```text

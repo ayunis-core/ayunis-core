@@ -77,6 +77,19 @@ pnpm exec depcruise src        # or whatever the project's depcheck script is
 - `strict: true` with `strictPropertyInitialization: false` (for TypeORM entities)
 - `noImplicitReturns: true` — every code path must return
 - Use `Logger` (from `@nestjs/common`) instead of `console.*`
+- **Import anything outside the current directory as `src/…`, never `../`.** Only
+  same-directory siblings (`./thing`) stay relative. Much of the existing code
+  predates this and uses `../` — do not copy it; the `Import Check` CI job blocks
+  changed files that do. `eslint --fix` rewrites them automatically.
+
+```typescript
+// ✅
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { FindUserQuery } from './find-user.query';
+
+// ❌
+import { UsersRepository } from '../../ports/users.repository';
+```
 
 ## Module Structure (Hexagonal)
 
