@@ -3,7 +3,20 @@ import type { ToolExecutionContext } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
-import type { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
+import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
+import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
+import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
+import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
+import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
+import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -29,23 +42,19 @@ function toolCtx(): ToolExecutionContext {
 
 describe('BackendToolAdapter', () => {
   let execute: jest.Mock;
-  let checkExecute: jest.Mock;
   let anonymize: jest.Mock;
   let adapter: BackendToolAdapter;
 
   beforeEach(() => {
     execute = jest.fn();
-    checkExecute = jest.fn();
     anonymize = jest.fn();
     adapter = new BackendToolAdapter(
       { execute } as unknown as ExecuteToolUseCase,
-      { execute: checkExecute } as unknown as CheckToolCapabilitiesUseCase,
       { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
     );
   });
 
   it('runs an executable tool in-loop and returns its result', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('42 degrees');
 
     const [tool] = adapter.toRuntimeTools([fakeTool('get_weather')]);
@@ -56,55 +65,94 @@ describe('BackendToolAdapter', () => {
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves display-only tools without execute so the loop ends', () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: false });
+  it.each([new BarChartTool(), new LineChartTool(), new PieChartTool()])(
+    'acknowledges $name and continues without backend execution',
+    async (backendTool) => {
+      const [tool] = adapter.toRuntimeTools([backendTool]);
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('bar_chart')]);
+      expect(tool.execute).toBeDefined();
+      expect(await tool.execute!({}, toolCtx())).toEqual({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      });
+      expect(execute).not.toHaveBeenCalled();
+    },
+  );
 
-    expect(tool.execute).toBeUndefined();
+  it('validates acknowledgement-only chart input', () => {
+    const [tool] = adapter.toRuntimeTools([new BarChartTool()]);
+
+    expect(() => tool.validateInput!({ chartTitle: 'Incomplete' })).toThrow(
+      /missing required parameter 'xAxis'/,
+    );
+    expect(execute).not.toHaveBeenCalled();
   });
 
-  it('wires display-only tools to backend param validation (AYC-675)', () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: false });
-    const backendTool = fakeTool('create_calendar_event');
-    (backendTool as { validateParams?: unknown }).validateParams = jest.fn(
-      (params: Record<string, unknown>) => {
-        if (params.start === 'not-a-date') {
-          throw new Error("'start' must be a valid ISO 8601 date-time");
-        }
-        return params;
-      },
-    );
+  it.each([
+    new SendEmailTool(),
+    new CreateCalendarEventTool(),
+    new CreateSkillTool(),
+    new EditSkillTool(),
+  ])(
+    'leaves $name without execute so the current run terminates',
+    (backendTool) => {
+      const [tool] = adapter.toRuntimeTools([backendTool]);
 
-    const [tool] = adapter.toRuntimeTools([backendTool]);
+      expect(tool.execute).toBeUndefined();
+    },
+  );
+
+  it('validates terminal widget input before display (AYC-675)', () => {
+    const [tool] = adapter.toRuntimeTools([new CreateCalendarEventTool()]);
 
     expect(tool.validateInput).toBeDefined();
-    // Same error shape as the legacy collector and the executable path, so
-    // the model sees one format on both loops.
-    expect(() => tool.validateInput!({ start: 'not-a-date' })).toThrow(
+    expect(() =>
+      tool.validateInput!({
+        title: 'Budget review',
+        description: 'Review the proposed budget',
+        location: 'Berlin',
+        start: 'not-a-date',
+        end: '2026-01-31T15:30:00Z',
+      }),
+    ).toThrow(
       /The tool didn't provide any result due to the following error in tool usage: 'start' must be a valid ISO 8601 date-time/,
     );
     expect(() =>
-      tool.validateInput!({ start: '2026-01-31T14:30:00Z' }),
+      tool.validateInput!({
+        title: 'Budget review',
+        description: 'Review the proposed budget',
+        location: 'Berlin',
+        start: '2026-01-31T14:30:00Z',
+        end: '2026-01-31T15:30:00Z',
+      }),
     ).not.toThrow();
   });
 
-  it('hands hybrid tools a display acknowledgement, not the raw result', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
-    execute.mockResolvedValue('the document body');
+  it.each([
+    new CreateDocumentTool(),
+    new UpdateDocumentTool(),
+    new EditDocumentTool(),
+    new CreateDiagramTool(),
+    new UpdateDiagramTool(),
+    new CreateSpreadsheetTool(),
+    new UpdateSpreadsheetTool(),
+  ])(
+    'executes $name once and returns a display acknowledgement',
+    async (backendTool) => {
+      execute.mockResolvedValue('raw artifact result');
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('create_document')]);
-    const result = await tool.execute!({}, toolCtx());
+      const [tool] = adapter.toRuntimeTools([backendTool]);
+      const result = await tool.execute!({}, toolCtx());
 
-    expect(result).toEqual({
-      result: 'Tool has been displayed successfully',
-      isError: false,
-    });
-    expect(execute).toHaveBeenCalledTimes(1);
-  });
+      expect(result).toEqual({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      });
+      expect(execute).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('returns a hybrid tool execution error instead of a display acknowledgement', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: true, isExecutable: true });
     execute.mockRejectedValue(
       new ToolExecutionFailedError({
         toolName: 'create_document',
@@ -113,7 +161,7 @@ describe('BackendToolAdapter', () => {
       }),
     );
 
-    const [tool] = adapter.toRuntimeTools([fakeTool('create_document')]);
+    const [tool] = adapter.toRuntimeTools([new CreateDocumentTool()]);
     const result = await tool.execute!({}, toolCtx());
 
     expect(result).toEqual({
@@ -123,7 +171,6 @@ describe('BackendToolAdapter', () => {
   });
 
   it('truncates oversized executable results', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('x'.repeat(25000));
 
     const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
@@ -136,7 +183,6 @@ describe('BackendToolAdapter', () => {
   });
 
   it('redacts PII tool output and emits masks in anonymous mode', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockResolvedValue({
       anonymizedText: 'call {{pii:PERSON_1}} at {{pii:PHONE_1}}',
@@ -169,7 +215,6 @@ describe('BackendToolAdapter', () => {
   });
 
   it('stops the runtime when PII tool output cannot be anonymized', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockRejectedValue(new Error('anonymizer unavailable'));
     const piiTool = {
@@ -193,7 +238,6 @@ describe('BackendToolAdapter', () => {
   // only, so a classified provider failure must ride in `details` to survive
   // to mapRunError and keep the PROVIDER_UNAVAILABLE_* grouping (AYC-654).
   it('serializes a classified anonymize outage into the runtime error details', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockResolvedValue('call Jane at 555-1234');
     anonymize.mockRejectedValue(
       new ProviderTimeoutError({ provider: 'anonymize' }),
@@ -222,7 +266,6 @@ describe('BackendToolAdapter', () => {
   });
 
   it('surfaces an exposeToLLM tool error message to the model', async () => {
-    checkExecute.mockReturnValue({ isDisplayable: false, isExecutable: true });
     execute.mockRejectedValue(
       new ToolExecutionFailedError({
         toolName: 'search',

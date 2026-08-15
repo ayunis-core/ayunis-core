@@ -4,7 +4,10 @@ import type { ProviderRequest, Usage } from '../contracts/provider';
 import { ProviderError, RepeatedToolFailureError } from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
-import { getToolUseContents, hasDisplayOnlyToolCall } from './exit-conditions';
+import {
+  getToolUseContents,
+  hasExternallyHandledToolCall,
+} from './exit-conditions';
 import { streamModelCall } from './model-call';
 import type { RunState } from './run-state';
 import { isAborted, isHookAborted, isSignalAborted } from './run-state';
@@ -17,7 +20,7 @@ export interface LoopCompletion {
 
 /**
  * The agent loop: call the model, execute requested tools, append results,
- * repeat — until the model stops requesting tools, a display-only tool is
+ * repeat — until the model stops requesting tools, an externally handled tool is
  * called, the iteration cap is hit, or the run is aborted.
  */
 export async function* executeLoop(
@@ -74,7 +77,7 @@ async function* runIteration(
     return { status: 'aborted' };
   }
   if (toolCalls.length === 0) return { status: 'completed' };
-  const exitAfterToolPhase = hasDisplayOnlyToolCall(
+  const exitAfterToolPhase = hasExternallyHandledToolCall(
     result.message,
     state.tools,
   );

@@ -173,18 +173,25 @@ describe('the agent loop', () => {
     });
   });
 
-  it('acknowledges a display-only tool before exiting', async () => {
-    const displayOnly = echoTool({ name: 'show_chart', execute: undefined });
+  it('records an externally handled tool before exiting', async () => {
+    const externallyHandled = echoTool({
+      name: 'request_approval',
+      execute: undefined,
+    });
     const model = new MockProvider([
-      toolCallTurn({ id: 'call-1', name: 'show_chart', input: { value: 'x' } }),
+      toolCallTurn({
+        id: 'call-1',
+        name: 'request_approval',
+        input: { value: 'x' },
+      }),
     ]);
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     expect(events.find((event) => event.type === 'tool_result')).toMatchObject({
       toolCallId: 'call-1',
-      result: 'Tool has been displayed successfully',
+      result: 'Tool execution is handled externally',
       isError: false,
     });
     expect(events.at(-1)).toMatchObject({
@@ -194,9 +201,9 @@ describe('the agent loop', () => {
     expect(model.requests).toHaveLength(1);
   });
 
-  it('returns the validation error and keeps looping when a display-only call has invalid input (AYC-675)', async () => {
-    const displayOnly = echoTool({
-      name: 'show_event',
+  it('returns the validation error and keeps looping when an externally handled call has invalid input', async () => {
+    const externallyHandled = echoTool({
+      name: 'schedule_approval',
       execute: undefined,
       validateInput: (input) => {
         if (input.start === 'not-a-date') {
@@ -209,18 +216,18 @@ describe('the agent loop', () => {
     const model = new MockProvider([
       toolCallTurn({
         id: 'call-1',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: 'not-a-date' },
       }),
       toolCallTurn({
         id: 'call-2',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: '2026-01-31T14:30:00Z' },
       }),
     ]);
 
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     const toolResults = events.filter((event) => event.type === 'tool_result');
@@ -232,7 +239,7 @@ describe('the agent loop', () => {
     });
     expect(toolResults[1]).toMatchObject({
       toolCallId: 'call-2',
-      result: 'Tool has been displayed successfully',
+      result: 'Tool execution is handled externally',
       isError: false,
     });
     // The invalid call must not end the run — the model sees the error,
@@ -269,9 +276,9 @@ describe('the agent loop', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('keeps looping when a valid display-only sibling accompanies an invalid one (AYC-675)', async () => {
-    const displayOnly = echoTool({
-      name: 'show_event',
+  it('keeps looping when a valid external sibling accompanies an invalid one', async () => {
+    const externallyHandled = echoTool({
+      name: 'schedule_approval',
       execute: undefined,
       validateInput: (input) => {
         if (input.start === 'not-a-date') {
@@ -286,13 +293,13 @@ describe('the agent loop', () => {
             {
               index: 0,
               id: 'call-1',
-              name: 'show_event',
+              name: 'schedule_approval',
               argumentsDelta: '{"start":"2026-01-31T14:30:00Z"}',
             },
             {
               index: 1,
               id: 'call-2',
-              name: 'show_event',
+              name: 'schedule_approval',
               argumentsDelta: '{"start":"not-a-date"}',
             },
           ],
@@ -301,13 +308,13 @@ describe('the agent loop', () => {
       ],
       toolCallTurn({
         id: 'call-3',
-        name: 'show_event',
+        name: 'schedule_approval',
         input: { start: '2026-02-01T09:00:00Z' },
       }),
     ]);
 
     const events = await collectEvents(
-      baseInput(model, { tools: [displayOnly] }),
+      baseInput(model, { tools: [externallyHandled] }),
     );
 
     // The valid sibling must not end the turn while the invalid call still
@@ -319,7 +326,52 @@ describe('the agent loop', () => {
     });
   });
 
-  it('settles executable siblings in the originating display-only turn', async () => {
+  it('keeps looping when an external sibling accompanies an invalid executable call', async () => {
+    const executeChart = vi.fn(() => 'acknowledged');
+    const guardedChart = echoTool({
+      name: 'chart_data',
+      execute: executeChart,
+      validateInput: () => {
+        throw new Error('invalid chart data');
+      },
+    });
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'approval-1',
+              name: 'request_approval',
+              argumentsDelta: '{}',
+            },
+            {
+              index: 1,
+              id: 'chart-1',
+              name: 'chart_data',
+              argumentsDelta: '{}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+      textTurn('Please provide corrected chart data.'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({ name: 'request_approval', execute: undefined }),
+          guardedChart,
+        ],
+      }),
+    );
+
+    expect(model.requests).toHaveLength(2);
+    expect(executeChart).not.toHaveBeenCalled();
+  });
+
+  it('settles executable siblings in the externally handled turn', async () => {
     const executeLookup = vi.fn(() => 'Berlin budget results');
     const model = new MockProvider([
       [
@@ -328,7 +380,7 @@ describe('the agent loop', () => {
             {
               index: 0,
               id: 'chart-1',
-              name: 'show_chart',
+              name: 'request_approval',
               argumentsDelta: '{"value":"budget"}',
             },
             {
@@ -346,7 +398,7 @@ describe('the agent loop', () => {
     const events = await collectEvents(
       baseInput(model, {
         tools: [
-          echoTool({ name: 'show_chart', execute: undefined }),
+          echoTool({ name: 'request_approval', execute: undefined }),
           echoTool({ name: 'budget_lookup', execute: executeLookup }),
         ],
       }),
@@ -356,7 +408,7 @@ describe('the agent loop', () => {
       expect.arrayContaining([
         expect.objectContaining({
           toolCallId: 'chart-1',
-          result: 'Tool has been displayed successfully',
+          result: 'Tool execution is handled externally',
           isError: false,
         }),
         expect.objectContaining({

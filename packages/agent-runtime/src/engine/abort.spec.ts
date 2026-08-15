@@ -202,17 +202,21 @@ describe('abort handling', () => {
     expect(model.requests).toHaveLength(1);
   });
 
-  it('preserves a tool-hook abort during a display-only turn', async () => {
+  it('preserves a tool-hook abort during an externally handled turn', async () => {
     const gate: Hook = {
       name: 'gate',
       beforeToolCall: (ctx) => ctx.abort('blocked'),
     };
     const model = new MockProvider([
-      toolCallTurn({ id: 'c1', name: 'show_chart', input: { value: 'x' } }),
+      toolCallTurn({
+        id: 'c1',
+        name: 'request_approval',
+        input: { value: 'x' },
+      }),
     ]);
     const events = await collectEvents(
       baseInput(model, {
-        tools: [echoTool({ name: 'show_chart', execute: undefined })],
+        tools: [echoTool({ name: 'request_approval', execute: undefined })],
         hooks: [gate],
       }),
     );

@@ -14,7 +14,6 @@ import { RetrieverModule } from '../retrievers/retriever.module';
 import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/tool-config.mapper';
 import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
-import { CheckToolCapabilitiesUseCase } from './application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
 import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
 import { ThreadsModule } from '../threads/threads.module';
 import { McpModule } from '../mcp/mcp.module';
@@ -59,7 +58,6 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     // Use cases
     AssembleToolUseCase,
     ExecuteToolUseCase,
-    CheckToolCapabilitiesUseCase,
     // Core services and registries
     ToolHandlerRegistry,
     HttpToolHandler,
@@ -99,7 +97,6 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     // Export use cases
     AssembleToolUseCase,
     ExecuteToolUseCase,
-    CheckToolCapabilitiesUseCase,
     // Export core services
     ToolHandlerRegistry,
     ToolFactory,

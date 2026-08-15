@@ -138,9 +138,6 @@ export class ExecuteRunUseCase {
     );
     const model = this.pickModel(thread);
 
-    // Enforce fair-use + credit budget AFTER pickModel so the tiered quota
-    // bucket matches the resolved model. Untiered models default to MEDIUM;
-    // ZERO-tier models return null and bypass the check entirely.
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
 
     const isAnonymous = thread.isAnonymous || model.anonymousOnly;
@@ -204,7 +201,6 @@ export class ExecuteRunUseCase {
     let preserveTranscript = false;
     try {
       for (let i = 0; i < iterations; i++) {
-        this.logger.debug({ value: i }, 'iteration');
         const assistantMessage = yield* this.runIteration(
           params,
           breaker,
@@ -215,12 +211,13 @@ export class ExecuteRunUseCase {
           return 'aborted';
         }
 
-        if (
-          this.toolResultCollectorService.exitLoopAfterAgentResponse(
+        if (this.shouldExitAfterResponse(assistantMessage, params)) {
+          yield* this.processToolResults(
+            params,
+            null,
+            breaker,
             assistantMessage,
-            params.tools,
-          )
-        ) {
+          );
           break;
         }
         if (i === iterations - 1) {
@@ -230,8 +227,7 @@ export class ExecuteRunUseCase {
       succeeded = true;
       return 'completed';
     } catch (error) {
-      // The breaker's tool-result transcript is complete and already
-      // streamed — rolling it back would re-arm the pending tool calls.
+      // Preserve completed breaker transcripts so pending calls stay disarmed.
       preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
       if (error instanceof ApplicationError) throw error;
       this.logger.error({ err: error as Error }, 'Run execution failed');
@@ -240,12 +236,7 @@ export class ExecuteRunUseCase {
         { originalError: error as Error },
       );
     } finally {
-      // Clean up orphaned messages only on failure/interruption.
-      // On the success path the orchestration loop already leaves the
-      // thread in a valid state — running cleanup there risks deleting
-      // intentional terminal messages (e.g., display-only tool_use).
-      // Using finally (not catch) so cleanup also runs when the generator
-      // is early-returned via .return() on client disconnect.
+      // `finally` also covers generators closed after a client disconnect.
       if (!succeeded && !preserveTranscript) {
         await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
           params.thread.id,
@@ -254,13 +245,25 @@ export class ExecuteRunUseCase {
     }
   }
 
+  private shouldExitAfterResponse(
+    message: AssistantMessage,
+    params: RunParams,
+  ): boolean {
+    return this.toolResultCollectorService.exitLoopAfterAgentResponse(
+      message,
+      params.tools,
+    );
+  }
+
   private async *runIteration(
     params: RunParams,
     breaker: ToolFailureBreaker,
     firstIteration: boolean,
   ): AsyncGenerator<RunStreamItem, AssistantMessage | null, void> {
     const { userInput, toolResultInput } = this.parseInput(params.input);
-    yield* this.processToolResults(params, toolResultInput, breaker);
+    if (!firstIteration || toolResultInput) {
+      yield* this.processToolResults(params, toolResultInput, breaker);
+    }
     if (firstIteration) {
       yield* this.handleFirstIteration(params, userInput);
     }
@@ -303,6 +306,7 @@ export class ExecuteRunUseCase {
     params: RunParams,
     toolResultInput: RunToolResultInput | null,
     breaker: ToolFailureBreaker,
+    message?: AssistantMessage,
   ): AsyncGenerator<RunStreamItem, void, void> {
     const {
       contents: toolResultMessageContent,
@@ -314,6 +318,7 @@ export class ExecuteRunUseCase {
       input: toolResultInput,
       orgId: params.orgId,
       isAnonymous: params.isAnonymous,
+      message,
     });
 
     if (toolResultMessageContent.length === 0) return;

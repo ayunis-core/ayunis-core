@@ -11,11 +11,6 @@ describe('CreateDocumentTool', () => {
   it('should have the correct tool type and name', () => {
     expect(tool.type).toBe(ToolType.CREATE_DOCUMENT);
     expect(tool.name).toBe('create_document');
-    expect(tool.isDisplayable).toBe(true);
-  });
-
-  it('should be executable (hybrid displayable + executable)', () => {
-    expect(tool.isExecutable).toBe(true);
   });
 
   describe('validateParams', () => {

@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 
 const createDocumentToolParameters = {
   type: 'object' as const,
@@ -29,9 +29,7 @@ type CreateDocumentToolParameters = FromSchema<
   typeof createDocumentToolParameters
 >;
 
-export class CreateDocumentTool extends DisplayableTool {
-  override isExecutable: boolean = true;
-
+export class CreateDocumentTool extends Tool {
   constructor() {
     super({
       name: ToolType.CREATE_DOCUMENT,

@@ -34,8 +34,8 @@ export type ToolExecutionOutput = string | ToolExecutionResult;
  * A concrete, executable tool. Tools are pure signals: they never inject
  * instructions or tools — only hooks do.
  *
- * A tool without `execute` is display-only: it receives a synthetic display
- * acknowledgement and ends the loop after the current tool phase.
+ * A tool without `execute` is handled externally and ends the loop after the
+ * current tool phase has been settled.
  */
 export interface Tool extends ToolSchema {
   execute?(
@@ -44,12 +44,10 @@ export interface Tool extends ToolSchema {
   ): ToolExecutionOutput | Promise<ToolExecutionOutput>;
   /**
    * Optional input validation, always consulted when present: it runs before
-   * `execute`, or before the display acknowledgement for display-only tools.
-   * When it throws, the call yields an error result carrying the thrown
-   * message instead of executing or acking, and the loop keeps running so
-   * the model can retry with corrected input. Mostly useful for display-only
-   * tools, which otherwise render whatever the model produced without any
-   * check; tools with `execute` typically validate in their own handler.
+   * `execute` or before external handoff. When it throws, the call yields an
+   * error result carrying the thrown message, and the loop keeps running so
+   * the model can retry with corrected input. Tools with `execute` typically
+   * validate in their own handler.
    */
   validateInput?(input: Record<string, unknown>): void;
 }

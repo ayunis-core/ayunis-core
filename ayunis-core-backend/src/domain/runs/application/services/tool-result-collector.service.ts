@@ -10,8 +10,11 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.command';
-import { CheckToolCapabilitiesUseCase } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
-import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
+import {
+  isAcknowledgementOnlyTool,
+  isExternallyHandledTool,
+  isHybridArtifactTool,
+} from '../agent-runtime/runtime-tool-policy';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
@@ -27,6 +30,8 @@ import {
 import { RunToolResultInput } from '../../domain/run-input.entity';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
+const DISPLAY_ACK = 'Tool has been displayed successfully';
+const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 export interface ToolResultOutcome {
   toolName: string;
@@ -52,7 +57,6 @@ export interface CollectedToolResults {
 export class ToolResultCollectorService {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
-    private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
@@ -66,11 +70,12 @@ export class ToolResultCollectorService {
     input: RunToolResultInput | null;
     orgId: UUID;
     isAnonymous: boolean;
+    message?: AssistantMessage;
   }): Promise<CollectedToolResults> {
     this.logger.debug('collectToolResults');
     const { thread, tools, input, orgId, isAnonymous } = params;
 
-    const lastMessage = thread.getLastMessage();
+    const lastMessage = params.message ?? thread.getLastMessage();
     const toolUseMessageContent = lastMessage
       ? lastMessage.content.filter(
           (content) => content instanceof ToolUseMessageContent,
@@ -127,7 +132,7 @@ export class ToolResultCollectorService {
     this.emitToolUsedEvent(orgId, content);
 
     try {
-      return await this.executeByCapability(
+      return await this.executeByRuntimePolicy(
         tool,
         content,
         input,
@@ -176,7 +181,7 @@ export class ToolResultCollectorService {
       });
   }
 
-  private async executeByCapability(
+  private async executeByRuntimePolicy(
     tool: Tool,
     content: ToolUseMessageContent,
     input: RunToolResultInput | null,
@@ -184,11 +189,7 @@ export class ToolResultCollectorService {
     threadId: UUID,
     isAnonymous: boolean,
   ): Promise<ProcessedToolResult> {
-    const capabilities = this.checkToolCapabilitiesUseCase.execute(
-      new CheckToolCapabilitiesQuery(tool),
-    );
-
-    if (capabilities.isDisplayable && capabilities.isExecutable) {
+    if (isHybridArtifactTool(tool)) {
       return this.processHybridTool(
         tool,
         content,
@@ -198,33 +199,24 @@ export class ToolResultCollectorService {
         isAnonymous,
       );
     }
-
-    if (capabilities.isDisplayable) {
+    if (isAcknowledgementOnlyTool(tool)) {
       return {
-        ...this.processDisplayOnlyTool(tool, content, input),
+        ...this.processClientRenderedTool(tool, content, input, DISPLAY_ACK),
         piiMasks: null,
       };
     }
-
-    if (capabilities.isExecutable) {
-      return this.executeBackendTool(
-        tool,
-        content,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+    if (isExternallyHandledTool(tool)) {
+      return {
+        ...this.processClientRenderedTool(
+          tool,
+          content,
+          input,
+          EXTERNAL_TOOL_RESULT,
+        ),
+        piiMasks: null,
+      };
     }
-
-    return {
-      content: new ToolResultMessageContent(
-        content.id,
-        content.name,
-        `Tool ${content.name} has no executable or displayable capability.`,
-      ),
-      succeeded: false,
-      piiMasks: null,
-    };
+    return this.executeBackendTool(tool, content, orgId, threadId, isAnonymous);
   }
 
   private async processHybridTool(
@@ -247,7 +239,7 @@ export class ToolResultCollectorService {
       // null-stripped input, and rechecking the raw params could reject a
       // call whose side effect just succeeded.
       return {
-        ...this.handleDisplayableTool(content, input),
+        ...this.handleClientRenderedTool(content, input, DISPLAY_ACK),
         piiMasks: executionResult.piiMasks,
       };
     }
@@ -268,26 +260,19 @@ export class ToolResultCollectorService {
     if (responseDoesNotContainToolCalls) return true;
 
     try {
-      const displayOnlyCalls = agentResponseMessage.content
+      const calls = agentResponseMessage.content
         .filter((content) => content instanceof ToolUseMessageContent)
         .map((content) => ({
           content,
-          tool: this.findDisplayOnlyTool(content, tools),
-        }))
-        .filter(
-          (call): call is { content: ToolUseMessageContent; tool: Tool } =>
-            call.tool !== undefined,
-        );
-      // Only exit the loop when every display-only call's params validate —
-      // one invalid call must keep the loop running so the model receives
-      // its validation error and retries, instead of the turn ending with a
-      // bad call left unretried (AYC-675). Hybrid tools never exit here;
-      // they also need execution.
-      const allValid = displayOnlyCalls.every(
-        ({ content, tool }) =>
-          this.validateDisplayableParams(tool, content) === null,
+          tool: this.findTool(content, tools),
+        }));
+      const hasExternalCall = calls.some(
+        ({ tool }) => tool !== undefined && isExternallyHandledTool(tool),
       );
-      if (displayOnlyCalls.length > 0 && allValid) return true;
+      const allCallsValid = calls.every(({ content, tool }) =>
+        this.isValidForTerminalPhase(content, tool),
+      );
+      if (hasExternalCall && allCallsValid) return true;
     } catch (error) {
       this.logger.error(
         { err: error instanceof Error ? error : new Error(String(error)) },
@@ -298,7 +283,7 @@ export class ToolResultCollectorService {
     return false;
   }
 
-  private findDisplayOnlyTool(
+  private findTool(
     content: ToolUseMessageContent,
     tools: Tool[],
   ): Tool | undefined {
@@ -310,24 +295,31 @@ export class ToolResultCollectorService {
       );
       return undefined;
     }
-    const capabilities = this.checkToolCapabilitiesUseCase.execute(
-      new CheckToolCapabilitiesQuery(tool),
-    );
-    return capabilities.isDisplayable && !capabilities.isExecutable
-      ? tool
-      : undefined;
+    return tool;
   }
 
-  private processDisplayOnlyTool(
+  private isValidForTerminalPhase(
+    content: ToolUseMessageContent,
+    tool: Tool | undefined,
+  ): boolean {
+    if (!tool) return false;
+    if (!isAcknowledgementOnlyTool(tool) && !isExternallyHandledTool(tool)) {
+      return true;
+    }
+    return this.validateClientRenderedParams(tool, content) === null;
+  }
+
+  private processClientRenderedTool(
     tool: Tool,
     content: ToolUseMessageContent,
     input: RunToolResultInput | null,
+    defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
     // An explicit frontend-supplied result means the user already interacted
     // with the rendered widget — never block it on (possibly historical)
     // invalid params.
     if (input?.toolId !== content.id) {
-      const validationError = this.validateDisplayableParams(tool, content);
+      const validationError = this.validateClientRenderedParams(tool, content);
       if (validationError !== null) {
         return {
           content: new ToolResultMessageContent(
@@ -339,12 +331,13 @@ export class ToolResultCollectorService {
         };
       }
     }
-    return this.handleDisplayableTool(content, input);
+    return this.handleClientRenderedTool(content, input, defaultResult);
   }
 
-  private handleDisplayableTool(
+  private handleClientRenderedTool(
     content: ToolUseMessageContent,
     input: RunToolResultInput | null,
+    defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
     if (input?.toolId === content.id) {
       return {
@@ -360,21 +353,21 @@ export class ToolResultCollectorService {
       content: new ToolResultMessageContent(
         content.id,
         content.name,
-        'Tool has been displayed successfully',
+        defaultResult,
       ),
       succeeded: true,
     };
   }
 
   /**
-   * Display-only tools bypass backend execution, so this is the only place
+   * Client-rendered tools bypass backend execution, so this is the only place
    * their schema runs; the returned message is model-actionable (AYC-646
    * formatting) and null means the params are valid. Nulls are stripped the
    * same way `ExecuteToolUseCase` does for executable tools, so a
    * strict-mode model's explicit null for an optional param never fails a
-   * display-only call.
+   * client-rendered call.
    */
-  private validateDisplayableParams(
+  private validateClientRenderedParams(
     tool: Tool,
     content: ToolUseMessageContent,
   ): string | null {
