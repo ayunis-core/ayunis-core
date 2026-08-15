@@ -24,6 +24,11 @@ import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ToolUsedEvent } from '../events/tool-used.event';
 import {
+  RunToolCompletedEvent,
+  type RunToolOutcome,
+} from '../events/run-tool-completed.event';
+import type { RunExecutionPath } from '../run-execution-path';
+import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
 } from '../runs.errors';
@@ -70,6 +75,7 @@ export class ToolResultCollectorService {
     input: RunToolResultInput | null;
     orgId: UUID;
     isAnonymous: boolean;
+    executionPath: RunExecutionPath;
     message?: AssistantMessage;
   }): Promise<CollectedToolResults> {
     this.logger.debug('collectToolResults');
@@ -87,14 +93,22 @@ export class ToolResultCollectorService {
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
-      const result = await this.processToolUse(
-        content,
-        tools,
-        input,
-        orgId,
-        thread.id,
-        isAnonymous,
-      );
+      let result: ProcessedToolResult;
+      try {
+        result = await this.processToolUse(
+          content,
+          tools,
+          input,
+          orgId,
+          thread.id,
+          isAnonymous,
+        );
+      } catch (error) {
+        this.emitToolCompleted(params.executionPath, 'error', content.name);
+        throw error;
+      }
+      const outcome = result.succeeded ? 'success' : 'error';
+      this.emitToolCompleted(params.executionPath, outcome, content.name);
       contents.push(result.content);
       outcomes.push({
         toolName: result.content.toolName,
@@ -106,6 +120,30 @@ export class ToolResultCollectorService {
     }
 
     return { contents, outcomes, piiMasks };
+  }
+
+  private emitToolCompleted(
+    executionPath: RunExecutionPath,
+    outcome: RunToolOutcome,
+    toolName: string,
+  ): void {
+    if (outcome === 'error') {
+      this.logger.warn(
+        { execution_path: executionPath, tool_name: toolName },
+        'Run tool call failed',
+      );
+    }
+    this.eventEmitter
+      .emitAsync(
+        RunToolCompletedEvent.EVENT_NAME,
+        new RunToolCompletedEvent(executionPath, outcome),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+          'Failed to emit RunToolCompletedEvent',
+        );
+      });
   }
 
   private async processToolUse(

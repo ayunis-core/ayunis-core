@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { RunExecutionPath } from '../run-execution-path';
 
 export interface InferenceErrorInfo {
   message: string;
@@ -15,6 +16,7 @@ export class InferenceCompletedEvent {
     public readonly provider: string,
     public readonly streaming: boolean,
     public readonly durationMs: number,
+    public readonly executionPath: RunExecutionPath,
     public readonly error?: InferenceErrorInfo,
   ) {}
 }

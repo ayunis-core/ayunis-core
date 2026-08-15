@@ -56,6 +56,7 @@ describe('NonStreamingInferenceService', () => {
         model: 'gpt-4o',
         provider: 'openai',
         streaming: false,
+        executionPath: 'legacy',
         error: undefined,
       }),
     );

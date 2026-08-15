@@ -197,9 +197,11 @@ function mapFinalizationError(
   logger: PinoLogger,
 ): ApplicationError | null {
   const context = {
+    execution_path: 'agent_runtime',
     hookName: event.hookName,
     phase: 'runEnd',
     originalOutcome: event.outcome,
+    critical: event.critical,
     message: event.message,
   };
   if (!event.critical) {

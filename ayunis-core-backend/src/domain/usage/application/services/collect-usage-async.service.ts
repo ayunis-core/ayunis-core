@@ -8,6 +8,11 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { CollectUsageCommand } from '../use-cases/collect-usage/collect-usage.command';
 import { CollectUsageUseCase } from '../use-cases/collect-usage/collect-usage.use-case';
 import { TokensConsumedEvent } from '../events/tokens-consumed.event';
+import {
+  RunUsageCollectionEvent,
+  type RunUsageCollectionOutcome,
+  type RunUsageExecutionPath,
+} from '../events/run-usage-collection.event';
 
 /**
  * Collects usage data asynchronously (fire-and-forget).
@@ -28,6 +33,7 @@ export class CollectUsageAsyncService {
     inputTokens: number,
     outputTokens: number,
     messageId?: UUID,
+    executionPath?: RunUsageExecutionPath,
   ): void {
     this.logger.debug(
       {
@@ -54,25 +60,49 @@ export class CollectUsageAsyncService {
       outputTokens,
     );
 
-    // Emitted only after the usage row is persisted, so listeners can read
-    // their own writes (BudgetAlertsListener re-queries consumption); a
-    // failed persist emits nothing — there is no recorded usage to react to.
+    const command = new CollectUsageCommand({
+      model,
+      inputTokens,
+      outputTokens,
+      requestId: messageId,
+    });
+    this.persist(command, event, executionPath);
+  }
+
+  private persist(
+    command: CollectUsageCommand,
+    event: TokensConsumedEvent,
+    executionPath?: RunUsageExecutionPath,
+  ): void {
     this.collectUsageUseCase
-      .execute(
-        new CollectUsageCommand({
-          model,
-          inputTokens,
-          outputTokens,
-          requestId: messageId,
-        }),
-      )
-      .then(() => this.emitTokensConsumed(event))
+      .execute(command)
+      .then(async () => {
+        await this.emitTokensConsumed(event);
+        this.emitRunUsageCollection(executionPath, 'success');
+      })
       .catch((error) => {
-        this.logger.debug(
-          {
-            err: error as Error,
-          },
+        this.logger.warn(
+          { err: error as Error, execution_path: executionPath },
           'Usage collection failed',
+        );
+        this.emitRunUsageCollection(executionPath, 'error');
+      });
+  }
+
+  private emitRunUsageCollection(
+    executionPath: RunUsageExecutionPath | undefined,
+    outcome: RunUsageCollectionOutcome,
+  ): void {
+    if (!executionPath) return;
+    this.eventEmitter
+      .emitAsync(
+        RunUsageCollectionEvent.EVENT_NAME,
+        new RunUsageCollectionEvent(executionPath, outcome),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+          'Failed to emit RunUsageCollectionEvent',
         );
       });
   }

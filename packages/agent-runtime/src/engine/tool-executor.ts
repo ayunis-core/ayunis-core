@@ -1,4 +1,5 @@
 import type { RunEventPayload, ToolCallSummary } from '../contracts/event';
+import type { ToolCallOutcome } from '../contracts/hook';
 import { AgentRuntimeError } from '../contracts/errors';
 import type { ToolResultContent, ToolUseContent } from '../contracts/message';
 import type {
@@ -47,35 +48,89 @@ export async function* executeToolCalls(
       name: call.name,
       input: call.input,
     };
-    let toolCall = requested;
-    let outcome: ToolOutcome;
-    if (fatalError || isAborted(state)) {
-      outcome = abortedOutcome();
-    } else {
-      toolCall = await state.hookRunner.beforeToolCall({
-        iteration,
-        toolCall: requested,
-        findTool: (name) => findTool(state, name),
-      });
-      yield* drainEmits(state);
-      outcome = isAborted(state)
-        ? abortedOutcome()
-        : await runTool(state, findTool(state, toolCall.name), toolCall);
-    }
+    const { toolCall, outcome, hookOutcome } = yield* resolveToolCall(
+      state,
+      iteration,
+      requested,
+      fatalError !== undefined,
+    );
     fatalError ??= outcome.fatalError;
-    await state.hookRunner.afterToolCall({
+    const result = await finalizeToolCall({
+      state,
       iteration,
       toolCall,
-      result: outcome.result,
-      isError: outcome.isError,
+      outcome,
+      hookOutcome,
       isLastToolCall: callIndex === calls.length - 1,
     });
     yield* drainEmits(state);
-    const result = buildToolResult(toolCall, outcome);
     results.push(result);
     yield result;
   }
   return { results, ...(fatalError ? { fatalError } : {}) };
+}
+
+interface ResolvedToolCall {
+  toolCall: ToolCallSummary;
+  outcome: ToolOutcome;
+  hookOutcome: ToolCallOutcome;
+}
+
+async function* resolveToolCall(
+  state: RunState,
+  iteration: number,
+  requested: ToolCallSummary,
+  skip: boolean,
+): AsyncGenerator<RunEventPayload, ResolvedToolCall> {
+  if (skip || isAborted(state)) {
+    return {
+      toolCall: requested,
+      outcome: abortedOutcome(),
+      hookOutcome: 'aborted',
+    };
+  }
+  const toolCall = await state.hookRunner.beforeToolCall({
+    iteration,
+    toolCall: requested,
+    findTool: (name) => findTool(state, name),
+  });
+  yield* drainEmits(state);
+  if (isAborted(state)) {
+    return { toolCall, outcome: abortedOutcome(), hookOutcome: 'aborted' };
+  }
+  const outcome = await runTool(
+    state,
+    findTool(state, toolCall.name),
+    toolCall,
+  );
+  return {
+    toolCall,
+    outcome,
+    hookOutcome: outcome.isError ? 'error' : 'success',
+  };
+}
+
+interface FinalizeToolCallParams {
+  state: RunState;
+  iteration: number;
+  toolCall: ToolCallSummary;
+  outcome: ToolOutcome;
+  hookOutcome: ToolCallOutcome;
+  isLastToolCall: boolean;
+}
+
+async function finalizeToolCall(
+  params: FinalizeToolCallParams,
+): Promise<Extract<RunEventPayload, { type: 'tool_result' }>> {
+  await params.state.hookRunner.afterToolCall({
+    iteration: params.iteration,
+    toolCall: params.toolCall,
+    result: params.outcome.result,
+    isError: params.outcome.isError,
+    outcome: params.hookOutcome,
+    isLastToolCall: params.isLastToolCall,
+  });
+  return buildToolResult(params.toolCall, params.outcome);
 }
 
 const buildToolResult = (

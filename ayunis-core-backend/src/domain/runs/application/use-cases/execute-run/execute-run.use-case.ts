@@ -1,6 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
@@ -47,11 +46,11 @@ import { ToolResultCollectorService } from '../../services/tool-result-collector
 import { MessageCleanupService } from '../../services/message-cleanup.service';
 import { InferenceOrchestratorService } from '../../services/inference-orchestrator.service';
 import type { RunParams } from './run-params.interface';
-import { RunExecutedEvent } from '../../events/run-executed.event';
 import { ConfigService } from '@nestjs/config';
 import { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from '../../run-execution-outcome';
+import { RunTelemetryService } from '../../services/run-telemetry.service';
 
 @Injectable()
 export class ExecuteRunUseCase {
@@ -68,9 +67,9 @@ export class ExecuteRunUseCase {
     private readonly messageCleanupService: MessageCleanupService,
     private readonly inferenceOrchestratorService: InferenceOrchestratorService,
     private readonly skillActivationService: SkillActivationService,
-    private readonly eventEmitter: EventEmitter2,
     private readonly configService: ConfigService,
     private readonly executeRunViaRuntimeUseCase: ExecuteRunViaRuntimeUseCase,
+    private readonly runTelemetryService: RunTelemetryService,
     @InjectPinoLogger(ExecuteRunUseCase.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -86,9 +85,20 @@ export class ExecuteRunUseCase {
       },
       'executeRun',
     );
-    if (this.configService.get<boolean>('features.agentRuntimeEnabled')) {
-      return this.executeRunViaRuntimeUseCase.execute(command);
-    }
+    const useAgentRuntime = this.configService.get<boolean>(
+      'features.agentRuntimeEnabled',
+    );
+    const executionPath = useAgentRuntime ? 'agent_runtime' : 'legacy';
+    return this.runTelemetryService.track(executionPath, () =>
+      useAgentRuntime
+        ? this.executeRunViaRuntimeUseCase.execute(command)
+        : this.executeLegacy(command),
+    );
+  }
+
+  private async executeLegacy(
+    command: ExecuteRunCommand,
+  ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
     try {
       const prepared = await this.prepareRun(command);
       return this.orchestrateRun({
@@ -107,9 +117,7 @@ export class ExecuteRunUseCase {
             : undefined,
       });
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
+      if (error instanceof ApplicationError) throw error;
       throw new RunExecutionFailedError('Unknown error in execute run', {
         error: error as Error,
       });
@@ -131,7 +139,7 @@ export class ExecuteRunUseCase {
     if (!userId || !orgId) {
       throw new UnauthorizedException('User not authenticated');
     }
-    this.emitRunExecuted(userId, orgId);
+    this.runTelemetryService.recordAttempt(userId, orgId);
 
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
@@ -160,25 +168,6 @@ export class ExecuteRunUseCase {
       instructions,
       activeSkills,
     };
-  }
-
-  // Counts "attempted runs" — fires before run validity is established.
-  // This is intentional: it serves as the DAU (daily active users) metric.
-  private emitRunExecuted(userId: UUID, orgId: UUID): void {
-    this.eventEmitter
-      .emitAsync(
-        RunExecutedEvent.EVENT_NAME,
-        new RunExecutedEvent(userId, orgId),
-      )
-      .catch((err: unknown) => {
-        this.logger.error(
-          {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId,
-          },
-          'Failed to emit RunExecutedEvent',
-        );
-      });
   }
 
   private pickModel(thread: Thread): PermittedLanguageModel {
@@ -318,6 +307,7 @@ export class ExecuteRunUseCase {
       input: toolResultInput,
       orgId: params.orgId,
       isAnonymous: params.isAnonymous,
+      executionPath: 'legacy',
       message,
     });
 

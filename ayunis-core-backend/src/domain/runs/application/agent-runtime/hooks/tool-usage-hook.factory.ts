@@ -4,6 +4,10 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ToolUsedEvent } from '../../events/tool-used.event';
+import {
+  RunToolCompletedEvent,
+  type RunToolOutcome,
+} from '../../events/run-tool-completed.event';
 import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
 
 interface ToolUsageHookParams {
@@ -28,7 +32,34 @@ export class ToolUsageHookFactory {
           this.emitToolUsed(params, ctx.toolCall.name);
         }
       },
+      afterToolCall: (ctx) => {
+        const outcome = ctx.outcome;
+        if (outcome === 'error') {
+          this.logger.warn(
+            {
+              execution_path: 'agent_runtime',
+              tool_name: ctx.toolCall.name,
+            },
+            'Run tool call failed',
+          );
+        }
+        this.emitToolCompleted(outcome);
+      },
     };
+  }
+
+  private emitToolCompleted(outcome: RunToolOutcome): void {
+    this.eventEmitter
+      .emitAsync(
+        RunToolCompletedEvent.EVENT_NAME,
+        new RunToolCompletedEvent('agent_runtime', outcome),
+      )
+      .catch((error: unknown) => {
+        this.logger.error(
+          { error: error instanceof Error ? error.message : 'Unknown error' },
+          'Failed to emit RunToolCompletedEvent',
+        );
+      });
   }
 
   private emitToolUsed(params: ToolUsageHookParams, toolName: string): void {

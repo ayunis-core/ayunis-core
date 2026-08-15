@@ -32,6 +32,7 @@ import { CreditBudgetGuardService } from './application/services/credit-budget-g
 import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
+import { RunTelemetryService } from './application/services/run-telemetry.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -101,6 +102,7 @@ import { TokenCounterModule } from 'src/common/token-counter/token-counter.modul
     CreditLimitGuardService,
     InferenceOrchestratorService,
     InferenceUsageGuard,
+    RunTelemetryService,
   ],
   exports: [
     ExecuteRunUseCase,

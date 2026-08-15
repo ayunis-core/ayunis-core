@@ -1,8 +1,6 @@
 import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -44,10 +42,10 @@ import {
   RunToolRepeatedlyFailingError,
   UnexpectedRunError,
 } from '../../runs.errors';
-import { RunExecutedEvent } from '../../events/run-executed.event';
 import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import { ToolAssemblyService } from '../../services/tool-assembly.service';
 import { MessageCleanupService } from '../../services/message-cleanup.service';
+import { RunTelemetryService } from '../../services/run-telemetry.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
@@ -107,7 +105,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly persistenceHookFactory: PersistenceHookFactory,
     private readonly usageHookFactory: UsageHookFactory,
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly runTelemetryService: RunTelemetryService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
@@ -134,7 +132,7 @@ export class ExecuteRunViaRuntimeUseCase {
     if (!userId || !orgId) {
       throw new UnauthorizedAccessError();
     }
-    this.emitRunExecuted(userId, orgId);
+    this.runTelemetryService.recordAttempt(userId, orgId);
 
     const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
@@ -421,6 +419,7 @@ export class ExecuteRunViaRuntimeUseCase {
         input: safeInput.input,
         orgId: prepared.orgId,
         isAnonymous: prepared.isAnonymous,
+        executionPath: 'agent_runtime',
       });
     if (contents.length === 0) {
       throw new RunInvalidInputError(
@@ -467,21 +466,5 @@ export class ExecuteRunViaRuntimeUseCase {
       ),
       masks: anonymized.masks,
     };
-  }
-
-  private emitRunExecuted(userId: UUID, orgId: UUID): void {
-    this.eventEmitter
-      .emitAsync(
-        RunExecutedEvent.EVENT_NAME,
-        new RunExecutedEvent(userId, orgId),
-      )
-      .catch((err: unknown) => {
-        this.logger.error(
-          {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          },
-          'Failed to emit RunExecutedEvent',
-        );
-      });
   }
 }

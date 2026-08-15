@@ -35,7 +35,7 @@ import type { AssistantMessage } from 'src/domain/messages/domain/messages/assis
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { ConfigService } from '@nestjs/config';
 import type { ExecuteRunViaRuntimeUseCase } from '../execute-run-via-runtime/execute-run-via-runtime.use-case';
-import type { EventEmitter2 } from '@nestjs/event-emitter';
+import type { RunTelemetryService } from '../../services/run-telemetry.service';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
 
@@ -48,6 +48,9 @@ describe('ExecuteRunUseCase', () => {
   let messageCleanupService: jest.Mocked<MessageCleanupService>;
   let checkQuotaUseCase: jest.Mocked<CheckQuotaUseCase>;
   let creditBudgetGuardService: jest.Mocked<CreditBudgetGuardService>;
+  let configService: jest.Mocked<ConfigService>;
+  let executeRunViaRuntimeUseCase: jest.Mocked<ExecuteRunViaRuntimeUseCase>;
+  let runTelemetryService: jest.Mocked<RunTelemetryService>;
 
   const userId = randomUUID();
   const orgId = randomUUID();
@@ -129,6 +132,16 @@ describe('ExecuteRunUseCase', () => {
       creditLimitGuardService,
       collectUsageAsyncService,
     );
+    configService = {
+      get: jest.fn().mockReturnValue(false),
+    } as unknown as jest.Mocked<ConfigService>;
+    executeRunViaRuntimeUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ExecuteRunViaRuntimeUseCase>;
+    runTelemetryService = {
+      recordAttempt: jest.fn(),
+      track: jest.fn((_, createStream) => createStream()),
+    } as unknown as jest.Mocked<RunTelemetryService>;
 
     useCase = new ExecuteRunUseCase(
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
@@ -152,16 +165,53 @@ describe('ExecuteRunUseCase', () => {
       {
         activateOnThread: jest.fn(),
       } as unknown as jest.Mocked<SkillActivationService>,
-      {
-        emitAsync: jest.fn().mockResolvedValue([]),
-      } as unknown as EventEmitter2,
-      {
-        get: jest.fn().mockReturnValue(false),
-      } as unknown as ConfigService,
-      {
-        execute: jest.fn(),
-      } as unknown as ExecuteRunViaRuntimeUseCase,
+      configService,
+      executeRunViaRuntimeUseCase,
+      runTelemetryService,
       createPinoLoggerMock(),
+    );
+  });
+
+  it('supplies the legacy path to run telemetry when the flag is disabled', async () => {
+    findThreadUseCase.execute.mockResolvedValue({
+      thread: createMockThread(),
+      isLongChat: false,
+    });
+
+    await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Fasse die Sitzung zusammen', []),
+        streaming: true,
+      }),
+    );
+
+    expect(runTelemetryService.track).toHaveBeenCalledWith(
+      'legacy',
+      expect.any(Function),
+    );
+  });
+
+  it('supplies the agent-runtime path to run telemetry when the flag is enabled', async () => {
+    configService.get.mockReturnValue(true);
+    executeRunViaRuntimeUseCase.execute.mockResolvedValue(
+      (async function* () {
+        yield* [] as never[];
+        return 'completed' as const;
+      })(),
+    );
+
+    await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Fasse die Sitzung zusammen', []),
+        streaming: true,
+      }),
+    );
+
+    expect(runTelemetryService.track).toHaveBeenCalledWith(
+      'agent_runtime',
+      expect.any(Function),
     );
   });
 

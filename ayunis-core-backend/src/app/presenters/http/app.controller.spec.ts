@@ -5,21 +5,24 @@ import type { GetFrontendRuntimeConfigUseCase } from 'src/app/application/use-ca
 import type { FeaturesConfig } from 'src/config/features.config';
 
 describe('AppController', () => {
-  it('exposes every configured feature toggle', () => {
-    const features: FeaturesConfig = {
-      knowledgeBasesEnabled: true,
-      letterheadsEnabled: false,
-      skillsEnabled: true,
-      workspacesEnabled: true,
-      agentRuntimeEnabled: true,
-    };
-    const controller = new AppController(
-      { execute: jest.fn() } as unknown as IsCloudUseCase,
-      { execute: jest.fn() } as unknown as IsRegistrationDisabledUseCase,
-      features,
-      { execute: jest.fn() } as unknown as GetFrontendRuntimeConfigUseCase,
-    );
+  it.each([true, false])(
+    'exposes the agent-runtime feature toggle when configured as %s',
+    (agentRuntimeEnabled) => {
+      const features: FeaturesConfig = {
+        knowledgeBasesEnabled: true,
+        letterheadsEnabled: false,
+        skillsEnabled: true,
+        workspacesEnabled: true,
+        agentRuntimeEnabled,
+      };
+      const controller = new AppController(
+        { execute: jest.fn() } as unknown as IsCloudUseCase,
+        { execute: jest.fn() } as unknown as IsRegistrationDisabledUseCase,
+        features,
+        { execute: jest.fn() } as unknown as GetFrontendRuntimeConfigUseCase,
+      );
 
-    expect(controller.featureToggles()).toEqual(features);
-  });
+      expect(controller.featureToggles()).toEqual(features);
+    },
+  );
 });

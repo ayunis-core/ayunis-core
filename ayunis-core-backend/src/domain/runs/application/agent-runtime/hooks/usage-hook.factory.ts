@@ -39,6 +39,7 @@ export class UsageHookFactory {
             outputTokens: usage.outputTokens ?? 0,
           },
           assistantMessageId(ctx.context.runId, ctx.iteration),
+          'agent_runtime',
         );
       },
     };

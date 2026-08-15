@@ -161,6 +161,7 @@ export class RuntimeModelProviderDecorator {
           context.model.provider,
           true,
           Date.now() - startedAt,
+          'agent_runtime',
           error ? extractInferenceErrorInfo(error) : undefined,
         ),
       )

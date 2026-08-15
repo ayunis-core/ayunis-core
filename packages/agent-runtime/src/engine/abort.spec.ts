@@ -177,9 +177,13 @@ describe('abort handling', () => {
         return 'ran';
       },
     });
+    let toolOutcome: string | undefined;
     const gate: Hook = {
       name: 'gate',
       beforeToolCall: (ctx) => ctx.abort('blocked'),
+      afterToolCall: (ctx) => {
+        toolOutcome = ctx.outcome;
+      },
     };
     const model = new MockProvider([
       toolCallTurn({ id: 'c1', name: 'echo', input: { value: 'x' } }),
@@ -190,6 +194,7 @@ describe('abort handling', () => {
     );
 
     expect(executed).toBe(false);
+    expect(toolOutcome).toBe('aborted');
     const toolResult = events.find((e) => e.type === 'tool_result');
     expect(toolResult).toMatchObject({
       isError: true,
