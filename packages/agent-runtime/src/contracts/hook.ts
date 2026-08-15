@@ -73,11 +73,14 @@ export interface BeforeToolCallContext extends HookApi {
   }): void;
 }
 
+export type ToolCallOutcome = 'success' | 'error' | 'aborted';
+
 export interface AfterToolCallContext extends HookApi {
   readonly iteration: number;
   readonly toolCall: ToolCallSummary;
   readonly result: string;
   readonly isError: boolean;
+  readonly outcome: ToolCallOutcome;
   readonly isLastToolCall: boolean;
 }
 

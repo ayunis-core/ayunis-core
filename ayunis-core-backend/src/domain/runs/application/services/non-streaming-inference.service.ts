@@ -61,6 +61,7 @@ export class NonStreamingInferenceService {
             params.model.provider,
             false,
             Date.now() - startTime,
+            'legacy',
             inferenceError
               ? extractInferenceErrorInfo(inferenceError)
               : undefined,

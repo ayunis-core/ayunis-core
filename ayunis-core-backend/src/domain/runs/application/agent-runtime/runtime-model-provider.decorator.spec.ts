@@ -109,6 +109,7 @@ describe('RuntimeModelProviderDecorator', () => {
         model: model.name,
         provider: model.provider,
         streaming: true,
+        executionPath: 'agent_runtime',
         durationMs: expect.any(Number),
         error: undefined,
       }),

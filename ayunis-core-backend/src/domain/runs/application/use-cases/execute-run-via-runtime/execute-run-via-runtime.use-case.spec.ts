@@ -37,6 +37,7 @@ import { AnonymizationInputTooLongError } from 'src/common/anonymization/applica
 import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
+import type { RunTelemetryService } from '../../services/run-telemetry.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
 import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
@@ -129,6 +130,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     emitAsync: jest.fn().mockResolvedValue([]),
   } as unknown as EventEmitter2;
   const emitAsync = eventEmitter.emitAsync as jest.Mock;
+  const runTelemetryService = {
+    recordAttempt: jest.fn(),
+  } as unknown as RunTelemetryService;
 
   const findThread = jest.fn().mockResolvedValue({ thread });
   const findThreadUseCase = {
@@ -296,7 +300,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     persistenceHookFactory,
     usageHookFactory,
     skillActivationHookFactory,
-    eventEmitter,
+    runTelemetryService,
     toolResultCollector as ToolResultCollectorService,
     toolUsageHookFactory,
     contextBudgetHookFactory,
@@ -378,6 +382,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       expect.anything(),
       expect.objectContaining({ inputTokens: expect.any(Number) }),
       savedMessage.id,
+      'agent_runtime',
     );
     expect(collectUsage).toHaveBeenCalledTimes(1);
   });
@@ -440,6 +445,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       expect.anything(),
       { inputTokens: 17, outputTokens: 0 },
       expect.any(String),
+      'agent_runtime',
     );
     expect(cleanup).toHaveBeenCalledWith(threadId);
   });
@@ -461,6 +467,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       expect.anything(),
       { inputTokens: 23, outputTokens: 5 },
       expect.any(String),
+      'agent_runtime',
     );
   });
 

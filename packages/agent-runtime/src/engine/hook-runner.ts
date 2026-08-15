@@ -8,6 +8,7 @@ import type {
   HookApi,
   ModelCallInterruptedContext,
   ModelCallInterruptionReason,
+  ToolCallOutcome,
 } from '../contracts/hook';
 import type { AssistantMessage, Message } from '../contracts/message';
 import type { FinishReason, Usage } from '../contracts/provider';
@@ -154,6 +155,7 @@ export class HookRunner {
     toolCall: ToolCallSummary;
     result: string;
     isError: boolean;
+    outcome: ToolCallOutcome;
     isLastToolCall: boolean;
   }): Promise<void> {
     const ctx: AfterToolCallContext = { ...this.api(), ...info };

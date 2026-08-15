@@ -201,7 +201,7 @@ describe('InferenceUsageGuard', () => {
   });
 
   describe('collectUsage', () => {
-    it('forwards (model, inputTokens, outputTokens, requestId) to CollectUsageAsyncService', () => {
+    it('forwards run execution path to CollectUsageAsyncService', () => {
       const model = makeModel(ModelTier.LOW);
       const requestId = randomUUID();
 
@@ -209,6 +209,7 @@ describe('InferenceUsageGuard', () => {
         model,
         { inputTokens: 42, outputTokens: 8 },
         requestId,
+        'agent_runtime',
       );
 
       expect(collectUsageAsyncService.collect).toHaveBeenCalledTimes(1);
@@ -217,6 +218,7 @@ describe('InferenceUsageGuard', () => {
         42,
         8,
         requestId,
+        'agent_runtime',
       );
     });
   });

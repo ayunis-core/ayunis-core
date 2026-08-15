@@ -321,7 +321,8 @@ describe('adaptRunEventsToStream', () => {
     expect(seen).toEqual(['after-error', 'after-run-end']);
   });
 
-  it('surfaces a critical finalization failure over the preserved max outcome', async () => {
+  it('surfaces a critical finalization failure with its execution path', async () => {
+    const logger = createPinoLoggerMock();
     const result = collect(
       eventsFrom([
         {
@@ -339,6 +340,7 @@ describe('adaptRunEventsToStream', () => {
         },
         { type: 'run_end', status: 'max_iterations', usage: {} },
       ]),
+      logger,
     );
 
     await expect(result).rejects.toMatchObject<
@@ -351,6 +353,10 @@ describe('adaptRunEventsToStream', () => {
         originalOutcome: 'max_iterations',
       },
     });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ execution_path: 'agent_runtime' }),
+      'Critical agent runtime finalization hook failed',
+    );
   });
 
   it('preserves the max outcome for a best-effort finalization failure', async () => {

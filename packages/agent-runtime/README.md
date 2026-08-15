@@ -74,8 +74,10 @@ Core consumes this package as one host among others.
 | `afterToolCall`        | injecting tools/instructions, persisting tool results          |
 | `runEnd`               | finalization, flushing                                         |
 
-`afterToolCall` receives `isLastToolCall`, allowing persistence hooks to flush
-the complete grouped result before the runtime exposes its message event.
+`afterToolCall` receives `isLastToolCall` and a typed `outcome`
+(`success`, `error`, or `aborted`), allowing persistence hooks to distinguish
+an unexecuted call after cancellation while flushing the complete grouped
+result before the runtime exposes its message event.
 Executable tools may return either a string for success or
 `{ result, isError }` when the host needs to report an explicit failure status.
 The runtime accumulates providers' incremental tool-call fields and exposes

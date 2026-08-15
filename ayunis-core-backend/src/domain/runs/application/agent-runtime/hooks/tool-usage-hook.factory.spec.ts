@@ -2,10 +2,65 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ToolUsedEvent } from '../../events/tool-used.event';
+import { RunToolCompletedEvent } from '../../events/run-tool-completed.event';
 import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
 import { ToolUsageHookFactory } from './tool-usage-hook.factory';
 
 describe('ToolUsageHookFactory', () => {
+  it('records agent-runtime tool failures after settlement', async () => {
+    const eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<EventEmitter2>;
+    const hook = new ToolUsageHookFactory(
+      eventEmitter,
+      createPinoLoggerMock(),
+    ).create({
+      userId: randomUUID(),
+      orgId: randomUUID(),
+      integrations: {
+        get: jest.fn(),
+      } as unknown as RuntimeToolIntegrationRegistry,
+    });
+
+    await hook.afterToolCall?.({
+      isError: true,
+      outcome: 'error',
+      toolCall: { name: 'municipal_search' },
+    } as never);
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('agent_runtime', 'error'),
+    );
+  });
+
+  it('does not classify a tool skipped after run abort as a failure', async () => {
+    const eventEmitter = {
+      emitAsync: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<EventEmitter2>;
+    const hook = new ToolUsageHookFactory(
+      eventEmitter,
+      createPinoLoggerMock(),
+    ).create({
+      userId: randomUUID(),
+      orgId: randomUUID(),
+      integrations: {
+        get: jest.fn(),
+      } as unknown as RuntimeToolIntegrationRegistry,
+    });
+
+    await hook.afterToolCall?.({
+      isError: true,
+      outcome: 'aborted',
+      toolCall: { name: 'municipal_search' },
+    } as never);
+
+    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('agent_runtime', 'aborted'),
+    );
+  });
+
   it('should include MCP integration identity in runtime tool usage events', () => {
     const userId = randomUUID();
     const orgId = randomUUID();

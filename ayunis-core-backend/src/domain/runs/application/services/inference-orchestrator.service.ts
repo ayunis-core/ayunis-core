@@ -132,6 +132,7 @@ export class InferenceOrchestratorService {
           outputTokens: inferenceResponse.meta.outputTokens,
         },
         assistantMessage.id,
+        'legacy',
       );
     }
 

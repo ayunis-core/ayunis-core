@@ -226,7 +226,7 @@ export class StreamingInferenceService {
   ): void {
     const usage = extractUsageFromChunks(chunks, this.streamUsageLogger);
     if (usage) {
-      this.inferenceUsageGuard.collectUsage(model, usage, messageId);
+      this.inferenceUsageGuard.collectUsage(model, usage, messageId, 'legacy');
     }
   }
 
@@ -248,6 +248,7 @@ export class StreamingInferenceService {
           model.provider,
           true,
           Date.now() - startTime,
+          'legacy',
           inferenceError
             ? extractInferenceErrorInfo(inferenceError)
             : undefined,

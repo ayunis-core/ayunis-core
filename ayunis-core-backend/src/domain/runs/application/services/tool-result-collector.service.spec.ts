@@ -15,6 +15,8 @@ import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-documen
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { RunToolResultInput } from '../../domain/run-input.entity';
 import { ToolUsedEvent } from '../events/tool-used.event';
+import { RunToolCompletedEvent } from '../events/run-tool-completed.event';
+import type { RunExecutionPath } from '../run-execution-path';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 
 const orgId = randomUUID();
@@ -241,6 +243,31 @@ describe('ToolResultCollectorService', () => {
     expect(result.piiMasks).toHaveLength(1);
   });
 
+  it('records a successful legacy tool outcome', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+
+    await collect(service, thread, [backendTool]);
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('legacy', 'success'),
+    );
+  });
+
+  it('records a failed agent-runtime tool outcome', async () => {
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+    executeTool.mockRejectedValue(new Error('Municipal search unavailable'));
+
+    await collect(service, thread, [backendTool], null, false, 'agent_runtime');
+
+    expect(emitAsync).toHaveBeenCalledWith(
+      RunToolCompletedEvent.EVENT_NAME,
+      new RunToolCompletedEvent('agent_runtime', 'error'),
+    );
+  });
+
   it('emits usage for each known tool call', async () => {
     const backendTool = new BackendTestTool('municipal_search');
     const thread = threadWith(toolUse('search-1', backendTool.name));
@@ -264,6 +291,7 @@ async function collect(
   tools: Tool[],
   input: RunToolResultInput | null = null,
   isAnonymous = false,
+  executionPath: RunExecutionPath = 'legacy',
 ) {
   return service.collectToolResults({
     thread,
@@ -271,5 +299,6 @@ async function collect(
     input,
     orgId,
     isAnonymous,
+    executionPath,
   });
 }

@@ -37,6 +37,7 @@ export type {
   ModelCallInterruptionReason,
   RunEndContext,
   RunStartContext,
+  ToolCallOutcome,
 } from './contracts/hook';
 export type {
   CustomEventInput,

@@ -7,6 +7,7 @@ import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type
 import { CreditBudgetGuardService } from './credit-budget-guard.service';
 import { CreditLimitGuardService } from './credit-limit-guard.service';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
+import type { RunExecutionPath } from '../run-execution-path';
 
 /**
  * Flat principal shape passed to the guard. Either `userId` or `apiKeyId`
@@ -73,12 +74,14 @@ export class InferenceUsageGuard {
     model: LanguageModel,
     usage: { inputTokens: number; outputTokens: number },
     requestId?: UUID,
+    executionPath?: RunExecutionPath,
   ): void {
     this.collectUsageAsyncService.collect(
       model,
       usage.inputTokens,
       usage.outputTokens,
       requestId,
+      executionPath,
     );
   }
 }
