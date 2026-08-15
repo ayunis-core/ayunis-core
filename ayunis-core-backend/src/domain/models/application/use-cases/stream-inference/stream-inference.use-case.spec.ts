@@ -31,11 +31,14 @@ function makeInput(): StreamInferenceInput {
   });
 }
 
-function useCaseWithFailingHandler(error: unknown): StreamInferenceUseCase {
+function useCaseWithFailingHandler(
+  error: unknown,
+  logger = createPinoLoggerMock(),
+): StreamInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => throwError(() => error) }),
   };
-  return new StreamInferenceUseCase(createPinoLoggerMock(), registry as never);
+  return new StreamInferenceUseCase(logger, registry as never);
 }
 
 describe('StreamInferenceUseCase error mapping', () => {
@@ -111,6 +114,46 @@ describe('StreamInferenceUseCase error mapping', () => {
     await expect(
       firstValueFrom(useCaseWithFailingHandler(upstream).execute(makeInput())),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('records safe provider diagnostics without the raw provider message', async () => {
+    const upstream = Object.assign(
+      new Error("Invalid schema containing resident prompt 'classified text'"),
+      {
+        status: 400,
+        code: 'invalid_function_parameters',
+        type: 'invalid_request_error',
+        param: 'tools[62].function.parameters',
+        request_id: 'req_azure_123',
+      },
+    );
+    const logger = createPinoLoggerMock();
+
+    const result = firstValueFrom(
+      useCaseWithFailingHandler(upstream, logger).execute(makeInput()),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      metadata: {
+        upstreamStatus: 400,
+        upstreamCode: 'invalid_function_parameters',
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'tools[62].function.parameters',
+        upstreamRequestId: 'req_azure_123',
+        upstreamReason: 'invalid_tool_schema',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        upstreamCode: 'invalid_function_parameters',
+        upstreamParam: 'tools[62].function.parameters',
+        upstreamReason: 'invalid_tool_schema',
+      }),
+      'Provider stream inference failed',
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      'classified text',
+    );
   });
 
   it('maps aborts to InferenceAbortedError even when a transport code is attached', async () => {

@@ -12,7 +12,7 @@ import {
 } from '../../models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
-import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import { stripReplayedToolNulls } from '../../helpers/strip-replayed-tool-nulls.helper';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -107,7 +107,8 @@ export class GetInferenceUseCase {
       );
       throw providerError;
     }
-    const status = extractUpstreamStatus(error);
+    const diagnostics = extractProviderErrorDiagnostics(error);
+    const status = diagnostics.upstreamStatus;
     this.logger.error(
       {
         model: command.model.name,
@@ -117,9 +118,13 @@ export class GetInferenceUseCase {
         toolChoice: command.toolChoice,
         errorName: error instanceof Error ? error.name : 'Unknown',
         status,
+        ...diagnostics,
       },
       'Provider inference failed',
     );
-    throw new InferenceFailedError('Provider inference failed', { status });
+    throw new InferenceFailedError('Provider inference failed', {
+      status,
+      ...diagnostics,
+    });
   }
 }

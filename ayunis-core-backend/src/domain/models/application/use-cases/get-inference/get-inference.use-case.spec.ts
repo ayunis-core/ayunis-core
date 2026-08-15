@@ -39,7 +39,10 @@ function makeCommand(acceptTokenLimitCompletion = false): GetInferenceCommand {
   });
 }
 
-function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
+function useCaseWithFailingHandler(
+  error: Error,
+  logger = createPinoLoggerMock(),
+): GetInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => Promise.reject(error) }),
   };
@@ -47,7 +50,7 @@ function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
   return new GetInferenceUseCase(
-    createPinoLoggerMock(),
+    logger,
     registry as never,
     contextService as never,
   );
@@ -121,6 +124,46 @@ describe('GetInferenceUseCase error mapping', () => {
     await expect(
       useCaseWithFailingHandler(upstream).execute(makeCommand()),
     ).rejects.toBeInstanceOf(InferenceFailedError);
+  });
+
+  it('records safe provider diagnostics without the raw provider message', async () => {
+    const upstream = Object.assign(
+      new Error("Maximum context length exceeded by 'classified text'"),
+      {
+        status: 400,
+        code: 'context_length_exceeded',
+        type: 'invalid_request_error',
+        param: 'messages',
+        requestID: 'req_mistral_123',
+      },
+    );
+    const logger = createPinoLoggerMock();
+
+    const result = useCaseWithFailingHandler(upstream, logger).execute(
+      makeCommand(),
+    );
+
+    await expect(result).rejects.toMatchObject({
+      metadata: {
+        upstreamStatus: 400,
+        upstreamCode: 'context_length_exceeded',
+        upstreamType: 'invalid_request_error',
+        upstreamParam: 'messages',
+        upstreamRequestId: 'req_mistral_123',
+        upstreamReason: 'context_length_exceeded',
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        upstreamCode: 'context_length_exceeded',
+        upstreamParam: 'messages',
+        upstreamReason: 'context_length_exceeded',
+      }),
+      'Provider inference failed',
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      'classified text',
+    );
   });
 
   it('maps unrecognized errors to InferenceFailedError', async () => {
