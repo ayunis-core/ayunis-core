@@ -1,5 +1,6 @@
-import { Logger } from '@nestjs/common';
 import { Appsignal, sendError } from '@appsignal/nodejs';
+import { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerConfig } from '../logger/pino-logger.config';
 
 const APPSIGNAL_STOP_TIMEOUT_MS = 2_000;
 const FAILURE_EXIT_CODE = 1;
@@ -26,9 +27,9 @@ function stringifyRejectionReason(reason: unknown): string {
 }
 
 export class ProcessCrashHandlers {
-  private readonly logger = new Logger(ProcessCrashHandlers.name);
-
   private fatalShutdownStarted = false;
+
+  constructor(private readonly logger: PinoLogger = createCrashLogger()) {}
 
   register(): void {
     process.on('unhandledRejection', this.handleUnhandledRejection);
@@ -62,7 +63,7 @@ export class ProcessCrashHandlers {
 
   private reportError(message: string, error: Error): void {
     try {
-      this.logger.error(`${message}: ${error.message}`, error.stack);
+      this.logger.error({ err: error }, message);
     } catch {
       // There is no safer logging channel left.
     }
@@ -90,8 +91,8 @@ export class ProcessCrashHandlers {
       const error = normalizeError(reason);
 
       this.logger.error(
-        `Failed to stop AppSignal before shutdown: ${error.message}`,
-        error.stack,
+        { err: error },
+        'Failed to stop AppSignal before shutdown',
       );
     } finally {
       this.exitProcess();
@@ -113,4 +114,10 @@ export class ProcessCrashHandlers {
  */
 if (process.env.NODE_ENV !== 'test') {
   new ProcessCrashHandlers().register();
+}
+
+function createCrashLogger(): PinoLogger {
+  const logger = new PinoLogger(createPinoLoggerConfig());
+  logger.setContext(ProcessCrashHandlers.name);
+  return logger;
 }

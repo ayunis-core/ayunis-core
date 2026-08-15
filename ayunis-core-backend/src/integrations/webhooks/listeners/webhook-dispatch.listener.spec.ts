@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { WebhookDispatchListener } from './webhook-dispatch.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserUpdatedEvent } from 'src/iam/users/application/events/user-updated.event';
@@ -79,6 +80,7 @@ function makeSeatBasedPayload(): SeatBasedSubscriptionEventData {
 }
 
 describe('WebhookDispatchListener', () => {
+  const logger = createPinoLoggerMock();
   let listener: WebhookDispatchListener;
   let sendWebhookUseCase: jest.Mocked<SendWebhookUseCase>;
   let findUserByIdUseCase: jest.Mocked<FindUserByIdUseCase>;
@@ -100,6 +102,7 @@ describe('WebhookDispatchListener', () => {
     } as unknown as jest.Mocked<ConfigService>;
 
     listener = new WebhookDispatchListener(
+      logger,
       sendWebhookUseCase,
       findUserByIdUseCase,
       findOrgByIdUseCase,

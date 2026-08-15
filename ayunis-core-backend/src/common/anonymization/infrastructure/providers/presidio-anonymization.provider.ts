@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AnonymizationPort } from '../../application/ports/anonymization.port';
 import {
   AnonymizationFailedError,
@@ -26,7 +27,12 @@ function countCodePoints(text: string): number {
 
 @Injectable()
 export class PresidioAnonymizationProvider extends AnonymizationPort {
-  private readonly logger = new Logger(PresidioAnonymizationProvider.name);
+  constructor(
+    @InjectPinoLogger(PresidioAnonymizationProvider.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   async detect(text: string, entities?: string[]): Promise<PiiDetection[]> {
     const textLength = countCodePoints(text);
@@ -37,10 +43,7 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
       );
     }
 
-    this.logger.debug('Detecting PII', {
-      textLength,
-      entities,
-    });
+    this.logger.debug({ textLength, entities }, 'Detecting PII');
     const startedAt = performance.now();
 
     try {
@@ -58,19 +61,11 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         this.toDetection(text, result),
       );
 
-      this.logger.log('PII detection complete', {
-        textLength,
-        detectionCount: detections.length,
-        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
-      });
+      this.logDetectionComplete(textLength, detections.length, startedAt);
 
       return detections;
     } catch (error: unknown) {
-      this.logger.error('PII detection failed', {
-        textLength,
-        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
-        error: error as Error,
-      });
+      this.logDetectionFailure(textLength, startedAt, error);
       // Every caller treats a service-call pipeline failure as fatal and
       // fail-closed (the user's message is blocked rather than sent unmasked),
       // so this catch is their single classification point. Transport failures
@@ -88,6 +83,36 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         { error: error as Error },
       );
     }
+  }
+
+  private logDetectionComplete(
+    textLength: number,
+    detectionCount: number,
+    startedAt: number,
+  ): void {
+    this.logger.info(
+      {
+        textLength,
+        detectionCount,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+      },
+      'PII detection complete',
+    );
+  }
+
+  private logDetectionFailure(
+    textLength: number,
+    startedAt: number,
+    error: unknown,
+  ): void {
+    this.logger.error(
+      {
+        textLength,
+        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+        err: error,
+      },
+      'PII detection failed',
+    );
   }
 
   private toDetection(text: string, result: RecognizerResult): PiiDetection {

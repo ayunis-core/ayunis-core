@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import {
   CreateBookingParams,
@@ -25,8 +26,9 @@ import { GetCustomerGroupsResponseMapper } from './mappers/getCustomerGroupsResp
 
 @Injectable()
 export class Locaboo3Repository extends LocabooDataRepository {
-  private readonly logger = new Logger(Locaboo3Repository.name);
   constructor(
+    @InjectPinoLogger(Locaboo3Repository.name)
+    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly getBookingsResponseMapper: GetBookingsResponseMapper,
     private readonly getResourcesResponseMapper: GetResourcesResponseMapper,
@@ -41,20 +43,17 @@ export class Locaboo3Repository extends LocabooDataRepository {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    this.logger.log('fetch', {
-      endpoint,
-    });
+    this.logger.info({ endpointPath: endpoint.split('?')[0] }, 'fetch');
     const url = `${this.configService.get<string>('locaboo3.baseUrl')}${endpoint}`;
     const response = await fetch(url, options);
     if (!response.ok) {
       const responseText = await response.text();
       this.logger.error(
-        'Failed to fetch data from Locaboo API',
         {
           errorCode: response.status,
-          ...JSON.parse(responseText),
+          response: JSON.parse(responseText) as unknown,
         },
-        responseText,
+        'Failed to fetch data from Locaboo API',
       );
 
       throw new Error(responseText);
@@ -128,43 +127,39 @@ export class Locaboo3Repository extends LocabooDataRepository {
     );
     return this.getInvoiceRowsResponseMapper
       .toInvoiceRows(response)
-      .filter((row) => {
-        let matches = true;
-        if (params.bookingIds && params.bookingIds.length > 0) {
-          if (row.bookingId) {
-            matches = params.bookingIds.includes(row.bookingId);
-          } else {
-            matches = false;
-          }
-        }
-        if (
-          params.inventoryOrServiceIds &&
-          params.inventoryOrServiceIds.length > 0
-        ) {
-          if (row.inventoryId) {
-            matches = params.inventoryOrServiceIds.includes(row.inventoryId);
-          } else if (row.serviceId) {
-            matches = params.inventoryOrServiceIds.includes(row.serviceId);
-          } else {
-            matches = false;
-          }
-        }
-        if (params.resourceIds && params.resourceIds.length > 0) {
-          if (row.resourceId) {
-            matches = params.resourceIds.includes(row.resourceId);
-          } else {
-            matches = false;
-          }
-        }
-        if (params.resourceNames && params.resourceNames.length > 0) {
-          if (row.resourceName) {
-            matches = params.resourceNames.includes(row.resourceName);
-          } else {
-            matches = false;
-          }
-        }
-        return matches;
-      });
+      .filter((row) => this.matchesInvoiceRow(row, params));
+  }
+
+  private matchesInvoiceRow(
+    row: InvoiceRow,
+    params: GetInvoiceRowsParams,
+  ): boolean {
+    if (params.resourceNames.length > 0) {
+      return this.matchesAny(params.resourceNames, row.resourceName);
+    }
+    if (params.resourceIds.length > 0) {
+      return this.matchesAny(params.resourceIds, row.resourceId);
+    }
+    if (params.inventoryOrServiceIds.length > 0) {
+      return this.matchesAny(
+        params.inventoryOrServiceIds,
+        row.inventoryId,
+        row.serviceId,
+      );
+    }
+    if (params.bookingIds.length > 0) {
+      return this.matchesAny(params.bookingIds, row.bookingId);
+    }
+    return true;
+  }
+
+  private matchesAny(
+    permittedValues: string[],
+    ...actualValues: (string | undefined)[]
+  ): boolean {
+    return actualValues.some(
+      (value) => value !== undefined && permittedValues.includes(value),
+    );
   }
 
   async getCustomerGroups(apiKey: string): Promise<CustomerGroup[]> {

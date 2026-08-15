@@ -1,4 +1,5 @@
-import { HttpException, Logger } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from '../errors/base.error';
 import { HandleUnexpectedErrors } from './handle-unexpected-errors.decorator';
 
@@ -68,20 +69,22 @@ describe('HandleUnexpectedErrors', () => {
   });
 
   it('logs under the class name and maps unknown errors', async () => {
-    const errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    const errorSpy = jest
+      .spyOn(PinoLogger.prototype, 'error')
+      .mockImplementation();
 
     await expect(
       new ExampleUseCase().execute('unexpected-error'),
     ).rejects.toBeInstanceOf(ExampleUnexpectedError);
 
     expect(errorSpy).toHaveBeenCalledWith(
+      { err: expect.any(Error) },
       'Unexpected use-case error',
-      expect.any(String),
     );
   });
 
   it('maps non-Error rejections to the unexpected error', async () => {
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.spyOn(PinoLogger.prototype, 'error').mockImplementation();
     // Third-party libraries sometimes reject with plain strings
     const useCase = new ExampleUseCaseWithDependency({
       load: jest.fn().mockRejectedValue('Rejected as string'),

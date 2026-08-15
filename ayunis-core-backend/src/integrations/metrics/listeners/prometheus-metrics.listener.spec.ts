@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PrometheusMetricsListener } from './prometheus-metrics.listener';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { UserMessageCreatedEvent } from 'src/domain/messages/application/events/user-message-created.event';
@@ -42,6 +43,7 @@ function mockHistogram() {
 }
 
 describe('PrometheusMetricsListener', () => {
+  const logger = createPinoLoggerMock();
   let listener: PrometheusMetricsListener;
   let userCreationsCounter: ReturnType<typeof mockCounter>;
   let messagesCounter: ReturnType<typeof mockCounter>;
@@ -65,6 +67,7 @@ describe('PrometheusMetricsListener', () => {
     marketplaceInstallsCounter = mockCounter();
 
     listener = new PrometheusMetricsListener(
+      logger,
       userCreationsCounter as never,
       messagesCounter as never,
       userActivityCounter as never,

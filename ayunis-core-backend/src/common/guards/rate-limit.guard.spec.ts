@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
+import { createPinoLoggerMock } from '../testing/pino-logger.mock';
 import type { Reflector } from '@nestjs/core';
 import type { ConfigService } from '@nestjs/config';
 import { RateLimitGuard } from './rate-limit.guard';
@@ -10,6 +10,7 @@ describe('RateLimitGuard', () => {
   let guard: RateLimitGuard;
   let reflector: jest.Mocked<Reflector>;
   let configService: jest.Mocked<ConfigService>;
+  const logger = createPinoLoggerMock();
 
   const clientIp = '203.0.113.7';
 
@@ -30,10 +31,7 @@ describe('RateLimitGuard', () => {
       get: jest.fn(),
     } as unknown as jest.Mocked<ConfigService>;
 
-    guard = new RateLimitGuard(reflector, configService);
-
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    guard = new RateLimitGuard(logger, reflector, configService);
   });
 
   afterEach(() => {

@@ -1,5 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { Appsignal, sendError } from '@appsignal/nodejs';
+import { createPinoLoggerMock } from '../testing/pino-logger.mock';
 import { ProcessCrashHandlers } from './process-crash-handlers';
 
 jest.mock('@appsignal/nodejs', () => ({
@@ -13,20 +13,19 @@ const stopMock = Appsignal.client.stop as jest.Mock;
 
 describe('ProcessCrashHandlers', () => {
   let handlers: ProcessCrashHandlers;
-  let loggerErrorSpy: jest.SpyInstance;
+  const logger = createPinoLoggerMock();
   let exitSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    handlers = new ProcessCrashHandlers();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    handlers = new ProcessCrashHandlers(logger);
+    logger.error.mockReset();
     exitSpy = jest
       .spyOn(process, 'exit')
       .mockImplementation(() => undefined as never);
   });
 
   afterEach(() => {
-    loggerErrorSpy.mockRestore();
     exitSpy.mockRestore();
   });
 
@@ -36,9 +35,9 @@ describe('ProcessCrashHandlers', () => {
 
       handlers.handleUnhandledRejection(error);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Unhandled promise rejection: db write failed',
-        error.stack,
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: error },
+        'Unhandled promise rejection',
       );
       expect(sendError).toHaveBeenCalledWith(error);
       expect(exitSpy).not.toHaveBeenCalled();
@@ -62,7 +61,7 @@ describe('ProcessCrashHandlers', () => {
     });
 
     it('still reports to AppSignal when logging fails', () => {
-      loggerErrorSpy.mockImplementationOnce(() => {
+      logger.error.mockImplementationOnce(() => {
         throw new Error('logger transport broken');
       });
       const error = new Error('boom');
@@ -92,9 +91,9 @@ describe('ProcessCrashHandlers', () => {
       handlers.handleUncaughtException(error);
       await new Promise(process.nextTick);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Uncaught exception: socket write after close',
-        error.stack,
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: error },
+        'Uncaught exception',
       );
       expect(sendError).toHaveBeenCalledWith(error);
       expect(stopMock).toHaveBeenCalled();
@@ -107,9 +106,9 @@ describe('ProcessCrashHandlers', () => {
       handlers.handleUncaughtException(new Error('boom'));
       await new Promise(process.nextTick);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Failed to stop AppSignal before shutdown: stop timeout',
-        expect.any(String),
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Failed to stop AppSignal before shutdown',
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
@@ -129,9 +128,9 @@ describe('ProcessCrashHandlers', () => {
       handlers.handleUncaughtException(null);
       await new Promise(process.nextTick);
 
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        'Uncaught exception: null',
-        expect.any(String),
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Uncaught exception',
       );
       expect(sendError).toHaveBeenCalledWith(
         expect.objectContaining({ message: 'null' }),

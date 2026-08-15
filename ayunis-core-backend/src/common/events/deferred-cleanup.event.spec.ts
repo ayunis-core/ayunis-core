@@ -1,4 +1,5 @@
-import { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from '../testing/pino-logger.mock';
 import { DeferredCleanupEvent } from './deferred-cleanup.event';
 import { runDeferredCleanup } from './run-deferred-cleanup';
 
@@ -25,11 +26,10 @@ describe('DeferredCleanupEvent', () => {
 });
 
 describe('runDeferredCleanup', () => {
-  let logger: Logger;
+  let logger: jest.Mocked<PinoLogger>;
 
   beforeEach(() => {
-    logger = new Logger('test');
-    jest.spyOn(logger, 'error').mockImplementation();
+    logger = createPinoLoggerMock();
   });
 
   it('runs all tasks in order', async () => {
@@ -66,9 +66,9 @@ describe('runDeferredCleanup', () => {
     ).resolves.toBeUndefined();
 
     expect(second).toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalledWith('Deferred cleanup task failed', {
-      label: 'failing',
-      error: 'boom',
-    });
+    expect(logger.error).toHaveBeenCalledWith(
+      { label: 'failing', error: 'boom' },
+      'Deferred cleanup task failed',
+    );
   });
 });

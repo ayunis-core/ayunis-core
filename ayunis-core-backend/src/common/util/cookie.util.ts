@@ -2,9 +2,11 @@ import type { Response } from 'express';
 import type { ConfigService } from '@nestjs/config';
 import { getMillisecondsFromJwtExpiry } from './jwt.util';
 import type { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { Logger } from '@nestjs/common';
+import { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerConfig } from '../logger/pino-logger.config';
 
-const logger = new Logger('CookieUtil');
+const logger = new PinoLogger(createPinoLoggerConfig());
+logger.setContext('CookieUtil');
 
 interface CookieOptions {
   httpOnly: boolean;
@@ -58,14 +60,17 @@ export function setCookies(
   const baseOptions = buildCookieOptions(configService);
   const { accessTokenName, refreshTokenName } = getCookieNames(configService);
 
-  logger.debug('Setting cookies with options:', {
-    accessTokenName,
-    domain: baseOptions.domain ?? 'undefined (browser default)',
-    secure: baseOptions.secure,
-    sameSite: baseOptions.sameSite,
-    httpOnly: baseOptions.httpOnly,
-    includeRefreshToken,
-  });
+  logger.debug(
+    {
+      accessTokenName,
+      domain: baseOptions.domain ?? 'undefined (browser default)',
+      secure: baseOptions.secure,
+      sameSite: baseOptions.sameSite,
+      httpOnly: baseOptions.httpOnly,
+      includeRefreshToken,
+    },
+    'Setting cookies with options',
+  );
 
   response.cookie(accessTokenName, tokens.access_token, {
     ...baseOptions,

@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Tiktoken, get_encoding } from 'tiktoken';
 import {
   TokenCounterHandler,
@@ -10,9 +11,15 @@ export class TiktokenHandler
   extends TokenCounterHandler
   implements OnModuleDestroy
 {
-  private readonly logger = new Logger(TiktokenHandler.name);
   readonly type = TokenCounterType.TIKTOKEN;
   private encoder: Tiktoken | null = null;
+
+  constructor(
+    @InjectPinoLogger(TiktokenHandler.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   isAvailable(): boolean {
     return true;

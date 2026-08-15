@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   AnonymizationPort,
   AnonymizationResult,
@@ -12,16 +13,21 @@ import { PiiMask } from 'src/common/anonymization/domain/pii-mask';
 
 @Injectable()
 export class AnonymizeTextUseCase {
-  private readonly logger = new Logger(AnonymizeTextUseCase.name);
-
-  constructor(private readonly anonymizationPort: AnonymizationPort) {}
+  constructor(
+    @InjectPinoLogger(AnonymizeTextUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly anonymizationPort: AnonymizationPort,
+  ) {}
 
   async execute(command: AnonymizeTextCommand): Promise<AnonymizationResult> {
-    this.logger.log('Executing anonymize text', {
-      textLength: command.text.length,
-      entities: command.entities,
-      whitelistSize: command.whitelist?.length ?? 0,
-    });
+    this.logger.info(
+      {
+        textLength: command.text.length,
+        entities: command.entities,
+        whitelistSize: command.whitelist?.length ?? 0,
+      },
+      'Executing anonymize text',
+    );
 
     const detections = await this.anonymizationPort.detect(
       command.text,

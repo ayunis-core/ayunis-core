@@ -1,11 +1,11 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { safeMetric } from './metrics.utils';
 
 describe('safeMetric', () => {
-  const logger = new Logger('TestLogger');
+  const logger = createPinoLoggerMock();
 
   beforeEach(() => {
-    jest.spyOn(logger, 'warn').mockImplementation();
+    logger.warn.mockReset();
   });
 
   it('should execute the metric function', () => {
@@ -19,8 +19,9 @@ describe('safeMetric', () => {
       throw new Error('metric boom');
     });
     expect(() => safeMetric(logger, fn)).not.toThrow();
-    expect(logger.warn).toHaveBeenCalledWith('Metric recording failed', {
-      error: expect.any(Error),
-    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      { err: expect.any(Error) },
+      'Metric recording failed',
+    );
   });
 });

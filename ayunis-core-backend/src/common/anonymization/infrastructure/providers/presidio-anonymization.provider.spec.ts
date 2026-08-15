@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PresidioAnonymizationProvider } from './presidio-anonymization.provider';
 import { PiiCategory } from '../../domain/pii-category.enum';
 import { AnonymizationFailedError } from '../../application/anonymization.errors';
@@ -16,12 +16,11 @@ jest.mock(
 
 describe('PresidioAnonymizationProvider', () => {
   let provider: PresidioAnonymizationProvider;
+  const logger = createPinoLoggerMock();
 
   beforeEach(() => {
-    provider = new PresidioAnonymizationProvider();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    jest.clearAllMocks();
+    provider = new PresidioAnonymizationProvider(logger);
     mockAnalyzeTextAnalyzePost.mockReset();
   });
 
@@ -110,7 +109,6 @@ describe('PresidioAnonymizationProvider', () => {
   });
 
   it('logs payload size and total client duration after detection', async () => {
-    const log = jest.spyOn(Logger.prototype, 'log');
     jest
       .spyOn(performance, 'now')
       .mockReturnValueOnce(100)
@@ -119,11 +117,10 @@ describe('PresidioAnonymizationProvider', () => {
 
     await provider.detect('Der Wetterbericht sagt Regen voraus');
 
-    expect(log).toHaveBeenCalledWith('PII detection complete', {
-      textLength: 35,
-      detectionCount: 0,
-      durationMs: 356.78,
-    });
+    expect(logger.info).toHaveBeenCalledWith(
+      { textLength: 35, detectionCount: 0, durationMs: 356.78 },
+      'PII detection complete',
+    );
   });
 
   it('returns no detections when the service finds no entities', async () => {
