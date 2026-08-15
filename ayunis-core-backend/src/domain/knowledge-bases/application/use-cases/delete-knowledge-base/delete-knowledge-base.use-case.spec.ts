@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -60,6 +62,10 @@ describe('DeleteKnowledgeBaseUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteKnowledgeBaseUseCase,
+        {
+          provide: getLoggerToken(DeleteKnowledgeBaseUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: KnowledgeBaseRepository, useValue: mockKbRepository },
         {
           provide: GetSourcesByKnowledgeBaseIdUseCase,

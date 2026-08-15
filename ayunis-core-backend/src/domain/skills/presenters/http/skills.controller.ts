@@ -9,10 +9,10 @@ import {
   Param,
   Body,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import {
   ApiTags,
@@ -66,9 +66,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillsController {
-  private readonly logger = new Logger(SkillsController.name);
-
   constructor(
+    @InjectPinoLogger(SkillsController.name)
+    private readonly logger: PinoLogger,
     private readonly installSkillFromMarketplaceUseCase: InstallSkillFromMarketplaceUseCase,
     private readonly createSkillUseCase: CreateSkillUseCase,
     private readonly updateSkillUseCase: UpdateSkillUseCase,
@@ -100,10 +100,13 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: InstallSkillFromMarketplaceDto,
   ): Promise<SkillResponseDto> {
-    this.logger.log('installFromMarketplace', {
-      userId,
-      identifier: dto.identifier,
-    });
+    this.logger.info(
+      {
+        userId,
+        identifier: dto.identifier,
+      },
+      'installFromMarketplace',
+    );
 
     const skill = await this.installSkillFromMarketplaceUseCase.execute(
       new InstallSkillFromMarketplaceCommand(dto.identifier),
@@ -136,7 +139,7 @@ export class SkillsController {
   ): Promise<SkillResponseDto> {
     const isActive = dto.isActive ?? true;
 
-    this.logger.log('create', { userId, name: dto.name });
+    this.logger.info({ userId, name: dto.name }, 'create');
 
     try {
       const skill = await this.createSkillUseCase.execute(
@@ -171,7 +174,7 @@ export class SkillsController {
   async findAll(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<SkillResponseDto[]> {
-    this.logger.log('findAll', { userId });
+    this.logger.info({ userId }, 'findAll');
 
     const {
       skills: results,
@@ -216,7 +219,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('findOne', { id, userId });
+    this.logger.info({ id, userId }, 'findOne');
 
     const { skill, isActive, isShared, isPinned } =
       await this.findOneSkillUseCase.execute(new FindOneSkillQuery(id));
@@ -258,7 +261,7 @@ export class SkillsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateSkillDto,
   ): Promise<SkillResponseDto> {
-    this.logger.log('update', { id, userId, name: dto.name });
+    this.logger.info({ id, userId, name: dto.name }, 'update');
 
     try {
       const skill = await this.updateSkillUseCase.execute(
@@ -301,7 +304,7 @@ export class SkillsController {
   @ApiResponse({ status: 404, description: 'Skill not found' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     await this.deleteSkillUseCase.execute(
       new DeleteSkillCommand({ skillId: id }),
@@ -326,7 +329,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('toggleActive', { id, userId });
+    this.logger.info({ id, userId }, 'toggleActive');
 
     const { skill, isActive, isShared, isPinned } =
       await this.toggleSkillActiveUseCase.execute(
@@ -363,7 +366,7 @@ export class SkillsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('togglePinned', { id, userId });
+    this.logger.info({ id, userId }, 'togglePinned');
 
     const { skill, isPinned, isShared } =
       await this.toggleSkillPinnedUseCase.execute(

@@ -6,12 +6,12 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -46,9 +46,9 @@ import { SkillTemplateResponseMapper } from './mappers/skill-template-response.m
 @Controller('super-admin/skill-templates')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminSkillTemplatesController {
-  private readonly logger = new Logger(SuperAdminSkillTemplatesController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminSkillTemplatesController.name)
+    private readonly logger: PinoLogger,
     private readonly createSkillTemplateUseCase: CreateSkillTemplateUseCase,
     private readonly updateSkillTemplateUseCase: UpdateSkillTemplateUseCase,
     private readonly deleteSkillTemplateUseCase: DeleteSkillTemplateUseCase,
@@ -82,7 +82,7 @@ export class SuperAdminSkillTemplatesController {
   async create(
     @Body() dto: CreateSkillTemplateDto,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.log(`Creating skill template: ${dto.name}`);
+    this.logger.info({ name: dto.name }, 'Creating skill template');
 
     try {
       const command = new CreateSkillTemplateCommand({
@@ -97,7 +97,10 @@ export class SuperAdminSkillTemplatesController {
 
       const template = await this.createSkillTemplateUseCase.execute(command);
 
-      this.logger.log(`Successfully created skill template ${template.id}`);
+      this.logger.info(
+        { skillTemplateId: template.id },
+        'Successfully created skill template',
+      );
       return this.responseMapper.toDto(template);
     } catch (error) {
       if (error instanceof InvalidSkillTemplateNameError) {
@@ -125,14 +128,15 @@ export class SuperAdminSkillTemplatesController {
     description: 'Internal server error',
   })
   async findAll(): Promise<SkillTemplateResponseDto[]> {
-    this.logger.log('Finding all skill templates');
+    this.logger.info('Finding all skill templates');
 
     const templates = await this.findAllSkillTemplatesUseCase.execute(
       new FindAllSkillTemplatesQuery(),
     );
 
-    this.logger.log(
-      `Successfully retrieved ${templates.length} skill templates`,
+    this.logger.info(
+      { count: templates.length },
+      'Successfully retrieved skill templates',
     );
     return this.responseMapper.toDtoArray(templates);
   }
@@ -166,13 +170,16 @@ export class SuperAdminSkillTemplatesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.log(`Finding skill template ${id}`);
+    this.logger.info({ skillTemplateId: id }, 'Finding skill template');
 
     const template = await this.findOneSkillTemplateUseCase.execute(
       new FindOneSkillTemplateQuery(id),
     );
 
-    this.logger.log(`Successfully retrieved skill template ${id}`);
+    this.logger.info(
+      { skillTemplateId: id },
+      'Successfully retrieved skill template',
+    );
     return this.responseMapper.toDto(template);
   }
 
@@ -204,30 +211,20 @@ export class SuperAdminSkillTemplatesController {
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error',
-  })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async update(
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateSkillTemplateDto,
   ): Promise<SkillTemplateResponseDto> {
-    this.logger.log(`Updating skill template ${id}`);
-
+    this.logger.info({ skillTemplateId: id }, 'Updating skill template');
     try {
-      const command = new UpdateSkillTemplateCommand({
-        skillTemplateId: id,
-        name: dto.name,
-        shortDescription: dto.shortDescription,
-        instructions: dto.instructions,
-        distributionMode: dto.distributionMode,
-        isActive: dto.isActive,
-        defaultActive: dto.defaultActive,
-        defaultPinned: dto.defaultPinned,
-      });
-
+      const command = this.createUpdateCommand(id, dto);
       const template = await this.updateSkillTemplateUseCase.execute(command);
 
-      this.logger.log(`Successfully updated skill template ${id}`);
+      this.logger.info(
+        { skillTemplateId: id },
+        'Successfully updated skill template',
+      );
       return this.responseMapper.toDto(template);
     } catch (error) {
       if (error instanceof InvalidSkillTemplateNameError) {
@@ -263,12 +260,31 @@ export class SuperAdminSkillTemplatesController {
     description: 'Internal server error',
   })
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log(`Deleting skill template ${id}`);
+    this.logger.info({ skillTemplateId: id }, 'Deleting skill template');
 
     await this.deleteSkillTemplateUseCase.execute(
       new DeleteSkillTemplateCommand({ skillTemplateId: id }),
     );
 
-    this.logger.log(`Successfully deleted skill template ${id}`);
+    this.logger.info(
+      { skillTemplateId: id },
+      'Successfully deleted skill template',
+    );
+  }
+
+  private createUpdateCommand(
+    id: UUID,
+    dto: UpdateSkillTemplateDto,
+  ): UpdateSkillTemplateCommand {
+    return new UpdateSkillTemplateCommand({
+      skillTemplateId: id,
+      name: dto.name,
+      shortDescription: dto.shortDescription,
+      instructions: dto.instructions,
+      distributionMode: dto.distributionMode,
+      isActive: dto.isActive,
+      defaultActive: dto.defaultActive,
+      defaultPinned: dto.defaultPinned,
+    });
   }
 }

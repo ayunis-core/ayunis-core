@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -14,11 +15,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class UnassignKnowledgeBaseFromSkillUseCase {
-  private readonly logger = new Logger(
-    UnassignKnowledgeBaseFromSkillUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(UnassignKnowledgeBaseFromSkillUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
@@ -28,10 +27,13 @@ export class UnassignKnowledgeBaseFromSkillUseCase {
   async execute(
     command: UnassignKnowledgeBaseFromSkillCommand,
   ): Promise<Skill> {
-    this.logger.log('Unassigning knowledge base from skill', {
-      skillId: command.skillId,
-      knowledgeBaseId: command.knowledgeBaseId,
-    });
+    this.logger.info(
+      {
+        skillId: command.skillId,
+        knowledgeBaseId: command.knowledgeBaseId,
+      },
+      'Unassigning knowledge base from skill',
+    );
 
     try {
       const userId = this.contextService.get('userId');
@@ -60,9 +62,12 @@ export class UnassignKnowledgeBaseFromSkillUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error unassigning knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error unassigning knowledge base',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

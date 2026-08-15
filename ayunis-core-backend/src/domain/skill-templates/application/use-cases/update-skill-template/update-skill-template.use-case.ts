@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { UpdateSkillTemplateCommand } from './update-skill-template.command';
 import { SkillTemplate } from '../../../domain/skill-template.entity';
@@ -15,73 +16,104 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UpdateSkillTemplateUseCase {
-  private readonly logger = new Logger(UpdateSkillTemplateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateSkillTemplateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: UpdateSkillTemplateCommand): Promise<SkillTemplate> {
-    this.logger.log('Updating skill template', {
-      skillTemplateId: command.skillTemplateId,
-    });
+    this.logger.info(
+      { skillTemplateId: command.skillTemplateId },
+      'Updating skill template',
+    );
     try {
-      const existing = await this.skillTemplateRepository.findOne(
-        command.skillTemplateId,
-      );
-      if (!existing) {
-        throw new SkillTemplateNotFoundError(command.skillTemplateId);
-      }
-
-      const name = command.name ?? existing.name;
-
-      if (name !== existing.name) {
-        const duplicate = await this.skillTemplateRepository.findByName(name);
-        if (duplicate) {
-          throw new DuplicateSkillTemplateNameError(name);
-        }
-      }
-
-      const distributionMode =
-        command.distributionMode ?? existing.distributionMode;
-      const baseParams = {
-        id: existing.id,
-        name,
-        shortDescription: command.shortDescription ?? existing.shortDescription,
-        instructions: command.instructions ?? existing.instructions,
-        isActive: command.isActive ?? existing.isActive,
-        createdAt: existing.createdAt,
-        updatedAt: new Date(),
-      };
-
-      const updated: SkillTemplate =
-        distributionMode === DistributionMode.ALWAYS_ON
-          ? new AlwaysOnSkillTemplate(baseParams)
-          : new PreCreatedCopySkillTemplate({
-              ...baseParams,
-              defaultActive:
-                command.defaultActive ??
-                (existing instanceof PreCreatedCopySkillTemplate
-                  ? existing.defaultActive
-                  : false),
-              defaultPinned:
-                command.defaultPinned ??
-                (existing instanceof PreCreatedCopySkillTemplate
-                  ? existing.defaultPinned
-                  : false),
-            });
-
+      const existing = await this.findExisting(command);
+      const name = await this.resolveName(command, existing);
+      const updated = this.buildUpdatedTemplate(command, existing, name);
       return await this.skillTemplateRepository.update(updated);
     } catch (error) {
       if (
         error instanceof ApplicationError ||
         error instanceof InvalidSkillTemplateNameError
-      )
+      ) {
         throw error;
-      this.logger.error('Error updating skill template', {
-        error: error as Error,
-      });
+      }
+      this.logger.error(
+        { err: error as Error },
+        'Error updating skill template',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
+  }
+
+  private async findExisting(
+    command: UpdateSkillTemplateCommand,
+  ): Promise<SkillTemplate> {
+    const existing = await this.skillTemplateRepository.findOne(
+      command.skillTemplateId,
+    );
+    if (!existing) {
+      throw new SkillTemplateNotFoundError(command.skillTemplateId);
+    }
+    return existing;
+  }
+
+  private async resolveName(
+    command: UpdateSkillTemplateCommand,
+    existing: SkillTemplate,
+  ): Promise<string> {
+    const name = command.name ?? existing.name;
+    if (name === existing.name) {
+      return name;
+    }
+    const duplicate = await this.skillTemplateRepository.findByName(name);
+    if (duplicate) {
+      throw new DuplicateSkillTemplateNameError(name);
+    }
+    return name;
+  }
+
+  private buildUpdatedTemplate(
+    command: UpdateSkillTemplateCommand,
+    existing: SkillTemplate,
+    name: string,
+  ): SkillTemplate {
+    const baseParams = this.buildBaseParams(command, existing, name);
+    const mode = command.distributionMode ?? existing.distributionMode;
+    if (mode === DistributionMode.ALWAYS_ON) {
+      return new AlwaysOnSkillTemplate(baseParams);
+    }
+    return this.buildPreCreatedTemplate(command, existing, baseParams);
+  }
+
+  private buildBaseParams(
+    command: UpdateSkillTemplateCommand,
+    existing: SkillTemplate,
+    name: string,
+  ) {
+    return {
+      id: existing.id,
+      name,
+      shortDescription: command.shortDescription ?? existing.shortDescription,
+      instructions: command.instructions ?? existing.instructions,
+      isActive: command.isActive ?? existing.isActive,
+      createdAt: existing.createdAt,
+      updatedAt: new Date(),
+    };
+  }
+
+  private buildPreCreatedTemplate(
+    command: UpdateSkillTemplateCommand,
+    existing: SkillTemplate,
+    baseParams: ConstructorParameters<typeof AlwaysOnSkillTemplate>[0],
+  ): PreCreatedCopySkillTemplate {
+    const previous =
+      existing instanceof PreCreatedCopySkillTemplate ? existing : undefined;
+    return new PreCreatedCopySkillTemplate({
+      ...baseParams,
+      defaultActive: command.defaultActive ?? previous?.defaultActive ?? false,
+      defaultPinned: command.defaultPinned ?? previous?.defaultPinned ?? false,
+    });
   }
 }

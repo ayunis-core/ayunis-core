@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { FindOneSkillTemplateQuery } from './find-one-skill-template.query';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
@@ -10,14 +11,14 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class FindOneSkillTemplateUseCase {
-  private readonly logger = new Logger(FindOneSkillTemplateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindOneSkillTemplateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(query: FindOneSkillTemplateQuery): Promise<SkillTemplate> {
-    this.logger.log('Finding skill template', { id: query.id });
+    this.logger.info({ id: query.id }, 'Finding skill template');
     try {
       const skillTemplate = await this.skillTemplateRepository.findOne(
         query.id,
@@ -28,9 +29,12 @@ export class FindOneSkillTemplateUseCase {
       return skillTemplate;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding skill template', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error finding skill template',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
   }

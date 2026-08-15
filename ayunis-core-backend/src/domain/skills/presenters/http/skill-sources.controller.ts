@@ -5,11 +5,11 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
   UploadedFile,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
@@ -50,9 +50,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillSourcesController {
-  private readonly logger = new Logger(SkillSourcesController.name);
-
   constructor(
+    @InjectPinoLogger(SkillSourcesController.name)
+    private readonly logger: PinoLogger,
     private readonly removeSourceFromSkillUseCase: RemoveSourceFromSkillUseCase,
     private readonly listSkillSourcesUseCase: ListSkillSourcesUseCase,
     private readonly skillDtoMapper: SkillDtoMapper,
@@ -79,7 +79,7 @@ export class SkillSourcesController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Param('id', ParseUUIDPipe) skillId: UUID,
   ): Promise<SkillSourceResponseDto[]> {
-    this.logger.log('getSkillSources', { skillId, userId });
+    this.logger.info({ skillId, userId }, 'getSkillSources');
 
     const sources = await this.listSkillSourcesUseCase.execute(
       new ListSkillSourcesQuery(skillId),
@@ -100,11 +100,14 @@ export class SkillSourcesController {
       throw new MissingFileError();
     }
 
-    this.logger.log('addFileSource', {
-      skillId,
-      userId,
-      fileName: file.originalname,
-    });
+    this.logger.info(
+      {
+        skillId,
+        userId,
+        fileName: file.originalname,
+      },
+      'addFileSource',
+    );
     try {
       const updatedSkill = await this.addFileSourceToSkillUseCase.execute(
         new AddFileSourceToSkillCommand({ skillId, file }),
@@ -112,7 +115,7 @@ export class SkillSourcesController {
 
       return await this.toSkillDtoWithCreator(updatedSkill, skillId);
     } catch (error: unknown) {
-      this.logger.error('addFileSource', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'addFileSource');
       throw error;
     } finally {
       removeUploadedFile(file.path);
@@ -159,7 +162,7 @@ export class SkillSourcesController {
     @Param('id', ParseUUIDPipe) skillId: UUID,
     @Param('sourceId', ParseUUIDPipe) sourceId: UUID,
   ): Promise<void> {
-    this.logger.log('removeSource', { skillId, sourceId, userId });
+    this.logger.info({ skillId, sourceId, userId }, 'removeSource');
 
     await this.removeSourceFromSkillUseCase.execute(
       new RemoveSourceFromSkillCommand({ skillId, sourceId }),

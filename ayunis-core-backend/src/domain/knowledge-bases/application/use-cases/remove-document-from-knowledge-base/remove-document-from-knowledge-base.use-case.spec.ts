@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
     () =>
@@ -50,6 +52,10 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveDocumentFromKnowledgeBaseUseCase,
+        {
+          provide: getLoggerToken(RemoveDocumentFromKnowledgeBaseUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: KnowledgeBaseRepository, useValue: mockRepository },
         {
           provide: DeleteSourceUseCase,

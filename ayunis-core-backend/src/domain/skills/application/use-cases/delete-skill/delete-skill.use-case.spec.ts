@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 
@@ -8,7 +10,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
-import { Logger } from '@nestjs/common';
 import { DeleteSkillUseCase } from './delete-skill.use-case';
 import { DeleteSkillCommand } from './delete-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -40,6 +41,10 @@ describe('DeleteSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSkillUseCase,
+        {
+          provide: getLoggerToken(DeleteSkillUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -47,9 +52,6 @@ describe('DeleteSkillUseCase', () => {
 
     useCase = module.get<DeleteSkillUseCase>(DeleteSkillUseCase);
     skillRepository = module.get(SkillRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

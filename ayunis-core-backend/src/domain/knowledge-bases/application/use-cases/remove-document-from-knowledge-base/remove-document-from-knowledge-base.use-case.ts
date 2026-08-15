@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
@@ -13,11 +14,9 @@ import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-k
 
 @Injectable()
 export class RemoveDocumentFromKnowledgeBaseUseCase {
-  private readonly logger = new Logger(
-    RemoveDocumentFromKnowledgeBaseUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(RemoveDocumentFromKnowledgeBaseUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
   ) {}
@@ -26,10 +25,13 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
   async execute(
     command: RemoveDocumentFromKnowledgeBaseCommand,
   ): Promise<void> {
-    this.logger.log('Removing document from knowledge base', {
-      knowledgeBaseId: command.knowledgeBaseId,
-      documentId: command.documentId,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: command.knowledgeBaseId,
+        documentId: command.documentId,
+      },
+      'Removing document from knowledge base',
+    );
 
     try {
       const knowledgeBase = await this.knowledgeBaseRepository.findById(
@@ -58,12 +60,15 @@ export class RemoveDocumentFromKnowledgeBaseUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error removing document from knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error removing document from knowledge base',
+      );
       throw new UnexpectedKnowledgeBaseError(
         'Error removing document from knowledge base',
-        { error: error as Error },
+        { err: error as Error },
       );
     }
   }

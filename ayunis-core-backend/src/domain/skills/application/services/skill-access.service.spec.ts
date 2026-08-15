@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { SkillAccessService } from './skill-access.service';
 import { SkillRepository } from '../ports/skill.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
@@ -64,9 +64,6 @@ describe('SkillAccessService', () => {
     skillRepository = module.get(SkillRepository);
     findShareByEntityUseCase = module.get(FindShareByEntityUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

@@ -1,4 +1,5 @@
-import { Controller, Get, Inject, Logger, Param } from '@nestjs/common';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ConfigType } from '@nestjs/config';
 import { marketplaceConfig } from 'src/config/marketplace.config';
@@ -13,9 +14,9 @@ import { MarketplaceConfigResponseDto } from './dto/marketplace-config-response.
 @ApiTags('marketplace')
 @Controller('marketplace')
 export class MarketplaceController {
-  private readonly logger = new Logger(MarketplaceController.name);
-
   constructor(
+    @InjectPinoLogger(MarketplaceController.name)
+    private readonly logger: PinoLogger,
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     @Inject(marketplaceConfig.KEY)
@@ -52,7 +53,7 @@ export class MarketplaceController {
   async getSkill(
     @Param('identifier') identifier: string,
   ): Promise<MarketplaceSkillResponseDto> {
-    this.logger.log('getSkill', { identifier });
+    this.logger.info({ identifier }, 'getSkill');
 
     return this.getMarketplaceSkillUseCase.execute(
       new GetMarketplaceSkillQuery(identifier),
@@ -80,7 +81,7 @@ export class MarketplaceController {
   async getIntegration(
     @Param('identifier') identifier: string,
   ): Promise<MarketplaceIntegrationResponseDto> {
-    this.logger.log('getIntegration', { identifier });
+    this.logger.info({ identifier }, 'getIntegration');
 
     const integration = await this.getMarketplaceIntegrationUseCase.execute(
       new GetMarketplaceIntegrationQuery(identifier),

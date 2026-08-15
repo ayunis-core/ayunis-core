@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import type { UUID } from 'crypto';
 import { DeleteSkillTemplateUseCase } from './delete-skill-template.use-case';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
@@ -23,6 +25,10 @@ describe('DeleteSkillTemplateUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteSkillTemplateUseCase,
+        {
+          provide: getLoggerToken(DeleteSkillTemplateUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillTemplateRepository, useValue: mockRepository },
       ],
     }).compile();
@@ -31,9 +37,6 @@ describe('DeleteSkillTemplateUseCase', () => {
       DeleteSkillTemplateUseCase,
     );
     repository = module.get(SkillTemplateRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

@@ -1,39 +1,49 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserCreatedEvent } from 'src/iam/users/application/events/user-created.event';
 import { MarketplaceSkillInstallationService } from '../services/marketplace-skill-installation.service';
 
 @Injectable()
 export class UserCreatedListener {
-  private readonly logger = new Logger(UserCreatedListener.name);
-
   constructor(
+    @InjectPinoLogger(UserCreatedListener.name)
+    private readonly logger: PinoLogger,
     private readonly skillInstallationService: MarketplaceSkillInstallationService,
   ) {}
 
   @OnEvent(UserCreatedEvent.EVENT_NAME)
   async handleUserCreated(event: UserCreatedEvent): Promise<void> {
     try {
-      this.logger.log('Installing pre-installed skills for new user', {
-        userId: event.userId,
-        orgId: event.orgId,
-      });
+      this.logger.info(
+        {
+          userId: event.userId,
+          orgId: event.orgId,
+        },
+        'Installing pre-installed skills for new user',
+      );
 
       const successCount =
         await this.skillInstallationService.installAllPreInstalled(
           event.userId,
         );
 
-      this.logger.log('Pre-installed skills installation complete', {
-        userId: event.userId,
-        count: successCount,
-      });
+      this.logger.info(
+        {
+          userId: event.userId,
+          count: successCount,
+        },
+        'Pre-installed skills installation complete',
+      );
     } catch (error) {
-      this.logger.error('Failed to install pre-installed skills', {
-        userId: event.userId,
-        orgId: event.orgId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          userId: event.userId,
+          orgId: event.orgId,
+          err: error as Error,
+        },
+        'Failed to install pre-installed skills',
+      );
     }
   }
 }

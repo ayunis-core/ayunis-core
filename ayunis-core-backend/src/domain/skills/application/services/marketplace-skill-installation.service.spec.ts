@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { MarketplaceSkillInstallationService } from './marketplace-skill-installation.service';
 import type { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import type { MarketplaceClient } from 'src/domain/marketplace/application/ports/marketplace-client.port';
@@ -47,6 +48,7 @@ describe('MarketplaceSkillInstallationService', () => {
     };
 
     service = new MarketplaceSkillInstallationService(
+      createPinoLoggerMock(),
       getMarketplaceSkillUseCase,
       createSkillWithUniqueNameUseCase,
       marketplaceClient,

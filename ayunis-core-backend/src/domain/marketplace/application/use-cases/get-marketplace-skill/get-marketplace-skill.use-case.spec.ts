@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetMarketplaceSkillUseCase } from './get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from './get-marketplace-skill.query';
 import type { MarketplaceClient } from '../../ports/marketplace-client.port';
@@ -36,7 +37,10 @@ describe('GetMarketplaceSkillUseCase', () => {
       getIntegrationByIdentifier: jest.fn(),
     };
 
-    useCase = new GetMarketplaceSkillUseCase(marketplaceClient);
+    useCase = new GetMarketplaceSkillUseCase(
+      createPinoLoggerMock(),
+      marketplaceClient,
+    );
   });
 
   it('should return skill details when skill is found', async () => {

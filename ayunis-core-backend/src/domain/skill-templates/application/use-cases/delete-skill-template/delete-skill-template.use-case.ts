@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { DeleteSkillTemplateCommand } from './delete-skill-template.command';
 import {
@@ -9,16 +10,19 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class DeleteSkillTemplateUseCase {
-  private readonly logger = new Logger(DeleteSkillTemplateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteSkillTemplateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: DeleteSkillTemplateCommand): Promise<void> {
-    this.logger.log('Deleting skill template', {
-      skillTemplateId: command.skillTemplateId,
-    });
+    this.logger.info(
+      {
+        skillTemplateId: command.skillTemplateId,
+      },
+      'Deleting skill template',
+    );
     try {
       const existing = await this.skillTemplateRepository.findOne(
         command.skillTemplateId,
@@ -30,9 +34,12 @@ export class DeleteSkillTemplateUseCase {
       await this.skillTemplateRepository.delete(command.skillTemplateId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deleting skill template', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error deleting skill template',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
   }

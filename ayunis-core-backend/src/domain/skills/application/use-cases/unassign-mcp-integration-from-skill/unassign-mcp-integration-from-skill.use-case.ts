@@ -1,9 +1,5 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { SkillRepository } from '../../ports/skill.repository';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -18,11 +14,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class UnassignMcpIntegrationFromSkillUseCase {
-  private readonly logger = new Logger(
-    UnassignMcpIntegrationFromSkillUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(UnassignMcpIntegrationFromSkillUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly contextService: ContextService,
@@ -32,10 +26,13 @@ export class UnassignMcpIntegrationFromSkillUseCase {
   async execute(
     command: UnassignMcpIntegrationFromSkillCommand,
   ): Promise<Skill> {
-    this.logger.log('Unassigning MCP integration from skill', {
-      skillId: command.skillId,
-      integrationId: command.integrationId,
-    });
+    this.logger.info(
+      {
+        skillId: command.skillId,
+        integrationId: command.integrationId,
+      },
+      'Unassigning MCP integration from skill',
+    );
 
     try {
       const userId = this.contextService.get('userId');
@@ -67,9 +64,12 @@ export class UnassignMcpIntegrationFromSkillUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error unassigning MCP integration', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error unassigning MCP integration',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

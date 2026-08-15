@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetKnowledgeBaseDocumentTextUseCase } from './get-knowledge-base-document-text.use-case';
@@ -40,6 +42,10 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetKnowledgeBaseDocumentTextUseCase,
+        {
+          provide: getLoggerToken(GetKnowledgeBaseDocumentTextUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: KnowledgeBaseRepository,
           useValue: mockRepository,

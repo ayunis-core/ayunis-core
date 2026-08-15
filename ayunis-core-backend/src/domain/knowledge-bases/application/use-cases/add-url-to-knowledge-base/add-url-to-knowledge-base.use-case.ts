@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -16,43 +17,28 @@ import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.comman
 
 @Injectable()
 export class AddUrlToKnowledgeBaseUseCase {
-  private readonly logger = new Logger(AddUrlToKnowledgeBaseUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddUrlToKnowledgeBaseUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly startUrlCrawlUseCase: StartUrlCrawlUseCase,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
   async execute(command: AddUrlToKnowledgeBaseCommand): Promise<TextSource> {
-    this.logger.log('Adding URL to knowledge base (async)', {
-      knowledgeBaseId: command.knowledgeBaseId,
-      url: command.url,
-      maxDepth: command.maxDepth,
-    });
+    this.logger.info(
+      {
+        knowledgeBaseId: command.knowledgeBaseId,
+        url: command.url,
+        maxDepth: command.maxDepth,
+      },
+      'Adding URL to knowledge base (async)',
+    );
 
     try {
-      // 1. Validate KB exists and belongs to user, enforce source limit
-      await this.txHost.withTransaction(async () => {
-        const knowledgeBase = await this.knowledgeBaseRepository.findById(
-          command.knowledgeBaseId,
-        );
-        if (knowledgeBase?.userId !== command.userId) {
-          throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
-        }
+      await this.assertSourceCapacity(command);
 
-        const sourceCount =
-          await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
-            command.knowledgeBaseId,
-          );
-        if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
-          throw new KnowledgeBaseSourceLimitExceededError(
-            KnowledgeBasesConstants.MAX_SOURCES,
-          );
-        }
-      });
-
-      // 2. Start async crawl (creates PROCESSING source, enqueues job)
+      // Start async crawl (creates PROCESSING source, enqueues job)
       const source = await this.startUrlCrawlUseCase.execute(
         new StartUrlCrawlCommand({
           url: command.url,
@@ -60,7 +46,6 @@ export class AddUrlToKnowledgeBaseUseCase {
         }),
       );
 
-      // 3. Assign source to KB
       await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
         source.id,
         command.knowledgeBaseId,
@@ -71,13 +56,39 @@ export class AddUrlToKnowledgeBaseUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error adding URL to knowledge base', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error adding URL to knowledge base',
+      );
       throw new UnexpectedKnowledgeBaseError(
         'Error adding URL to knowledge base',
-        { error: error as Error },
+        { err: error as Error },
       );
     }
+  }
+
+  private async assertSourceCapacity(
+    command: AddUrlToKnowledgeBaseCommand,
+  ): Promise<void> {
+    await this.txHost.withTransaction(async () => {
+      const knowledgeBase = await this.knowledgeBaseRepository.findById(
+        command.knowledgeBaseId,
+      );
+      if (knowledgeBase?.userId !== command.userId) {
+        throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
+      }
+
+      const sourceCount =
+        await this.knowledgeBaseRepository.countSourcesByKnowledgeBaseId(
+          command.knowledgeBaseId,
+        );
+      if (sourceCount >= KnowledgeBasesConstants.MAX_SOURCES) {
+        throw new KnowledgeBaseSourceLimitExceededError(
+          KnowledgeBasesConstants.MAX_SOURCES,
+        );
+      }
+    });
   }
 }

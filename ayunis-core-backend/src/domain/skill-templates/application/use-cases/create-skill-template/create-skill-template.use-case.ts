@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillTemplateRepository } from '../../ports/skill-template.repository';
 import { CreateSkillTemplateCommand } from './create-skill-template.command';
 import { SkillTemplate } from 'src/domain/skill-templates/domain/skill-template.entity';
@@ -14,14 +15,14 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateSkillTemplateUseCase {
-  private readonly logger = new Logger(CreateSkillTemplateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateSkillTemplateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillTemplateRepository: SkillTemplateRepository,
   ) {}
 
   async execute(command: CreateSkillTemplateCommand): Promise<SkillTemplate> {
-    this.logger.log('Creating skill template', { name: command.name });
+    this.logger.info({ name: command.name }, 'Creating skill template');
     try {
       const existing = await this.skillTemplateRepository.findByName(
         command.name,
@@ -53,9 +54,12 @@ export class CreateSkillTemplateUseCase {
         error instanceof InvalidSkillTemplateNameError
       )
         throw error;
-      this.logger.error('Error creating skill template', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating skill template',
+      );
       throw new UnexpectedSkillTemplateError(error);
     }
   }

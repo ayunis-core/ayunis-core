@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillRepository } from '../../ports/skill.repository';
 import { FindActiveSkillsQuery } from './find-active-skills.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
@@ -14,16 +15,16 @@ import { UUID } from 'crypto';
 
 @Injectable()
 export class FindActiveSkillsUseCase {
-  private readonly logger = new Logger(FindActiveSkillsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindActiveSkillsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindActiveSkillsQuery): Promise<Skill[]> {
-    this.logger.log('Finding active skills', query);
+    this.logger.info(query, 'Finding active skills');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -75,9 +76,12 @@ export class FindActiveSkillsUseCase {
       return [...ownedActiveSkills, ...sharedActiveSkills];
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding active skills', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error finding active skills',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

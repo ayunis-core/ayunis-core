@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { GetKnowledgeBasesByIdsUseCase } from './get-knowledge-bases-by-ids.use-case';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
@@ -25,6 +27,10 @@ describe('GetKnowledgeBasesByIdsUseCase', () => {
       providers: [
         GetKnowledgeBasesByIdsUseCase,
         {
+          provide: getLoggerToken(GetKnowledgeBasesByIdsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: KnowledgeBaseRepository,
           useValue: {
             findByIds: jest.fn(),
@@ -46,9 +52,6 @@ describe('GetKnowledgeBasesByIdsUseCase', () => {
     useCase = module.get(GetKnowledgeBasesByIdsUseCase);
     knowledgeBaseRepository = module.get(KnowledgeBaseRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

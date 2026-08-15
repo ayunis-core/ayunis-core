@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -32,6 +34,10 @@ describe('CreateSkillUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateSkillUseCase,
+        {
+          provide: getLoggerToken(CreateSkillUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SkillRepository, useValue: mockSkillRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -39,9 +45,6 @@ describe('CreateSkillUseCase', () => {
 
     useCase = module.get<CreateSkillUseCase>(CreateSkillUseCase);
     skillRepository = module.get(SkillRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

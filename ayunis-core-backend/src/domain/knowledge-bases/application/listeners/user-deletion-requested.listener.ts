@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { UserDeletionRequestedEvent } from 'src/iam/users/application/events/user-deletion-requested.event';
@@ -23,11 +24,9 @@ import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
  */
 @Injectable()
 export class KnowledgeBasesUserDeletionRequestedListener {
-  private readonly logger = new Logger(
-    KnowledgeBasesUserDeletionRequestedListener.name,
-  );
-
   constructor(
+    @InjectPinoLogger(KnowledgeBasesUserDeletionRequestedListener.name)
+    private readonly logger: PinoLogger,
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
   ) {}
@@ -53,11 +52,14 @@ export class KnowledgeBasesUserDeletionRequestedListener {
         return;
       }
 
-      this.logger.log('Deferring source processing cleanup for deleted user', {
-        userId: event.userId,
-        knowledgeBaseCount: knowledgeBases.length,
-        sourceCount: sourceIds.length,
-      });
+      this.logger.info(
+        {
+          userId: event.userId,
+          knowledgeBaseCount: knowledgeBases.length,
+          sourceCount: sourceIds.length,
+        },
+        'Deferring source processing cleanup for deleted user',
+      );
 
       event.deferCleanup('cleanup knowledge base source processing', () =>
         this.cleanupSourceProcessingUseCase.execute(
@@ -66,11 +68,11 @@ export class KnowledgeBasesUserDeletionRequestedListener {
       );
     } catch (error) {
       this.logger.error(
-        'Failed to resolve knowledge base sources for deleted user',
         {
           userId: event.userId,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          err: error as Error,
         },
+        'Failed to resolve knowledge base sources for deleted user',
       );
     }
   }

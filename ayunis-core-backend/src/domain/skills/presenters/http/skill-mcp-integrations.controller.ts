@@ -5,10 +5,10 @@ import {
   Delete,
   Param,
   ParseUUIDPipe,
-  Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import {
@@ -40,9 +40,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 @RequireFeature(FeatureFlag.Skills)
 @Controller('skills')
 export class SkillMcpIntegrationsController {
-  private readonly logger = new Logger(SkillMcpIntegrationsController.name);
-
   constructor(
+    @InjectPinoLogger(SkillMcpIntegrationsController.name)
+    private readonly logger: PinoLogger,
     private readonly assignMcpIntegrationToSkillUseCase: AssignMcpIntegrationToSkillUseCase,
     private readonly unassignMcpIntegrationFromSkillUseCase: UnassignMcpIntegrationFromSkillUseCase,
     private readonly listSkillMcpIntegrationsUseCase: ListSkillMcpIntegrationsUseCase,
@@ -80,7 +80,7 @@ export class SkillMcpIntegrationsController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('assignMcpIntegration', { skillId, integrationId });
+    this.logger.info({ skillId, integrationId }, 'assignMcpIntegration');
 
     const skill = await this.assignMcpIntegrationToSkillUseCase.execute(
       new AssignMcpIntegrationToSkillCommand(skillId, integrationId),
@@ -123,7 +123,7 @@ export class SkillMcpIntegrationsController {
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
     @Param('integrationId', ParseUUIDPipe) integrationId: UUID,
   ): Promise<SkillResponseDto> {
-    this.logger.log('unassignMcpIntegration', { skillId, integrationId });
+    this.logger.info({ skillId, integrationId }, 'unassignMcpIntegration');
 
     const skill = await this.unassignMcpIntegrationFromSkillUseCase.execute(
       new UnassignMcpIntegrationFromSkillCommand(skillId, integrationId),
@@ -154,7 +154,7 @@ export class SkillMcpIntegrationsController {
   async listSkillMcpIntegrations(
     @Param('skillId', ParseUUIDPipe) skillId: UUID,
   ): Promise<McpIntegrationResponseDto[]> {
-    this.logger.log('listSkillMcpIntegrations', { skillId });
+    this.logger.info({ skillId }, 'listSkillMcpIntegrations');
 
     const integrations = await this.listSkillMcpIntegrationsUseCase.execute(
       new ListSkillMcpIntegrationsQuery(skillId),

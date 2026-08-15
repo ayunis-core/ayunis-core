@@ -1,6 +1,8 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
 import { KnowledgeBaseAccessService } from './knowledge-base-access.service';
 import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
@@ -39,6 +41,10 @@ describe('KnowledgeBaseAccessService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         KnowledgeBaseAccessService,
+        {
+          provide: getLoggerToken(KnowledgeBaseAccessService.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: KnowledgeBaseRepository,
           useValue: {
@@ -84,10 +90,6 @@ describe('KnowledgeBaseAccessService', () => {
       CheckKnowledgeBaseSkillShareAccessUseCase,
     );
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

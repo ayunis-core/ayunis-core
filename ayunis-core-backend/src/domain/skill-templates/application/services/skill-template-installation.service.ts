@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { CreateSkillWithUniqueNameUseCase } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.use-case';
 import { CreateSkillWithUniqueNameCommand } from 'src/domain/skills/application/use-cases/create-skill-with-unique-name/create-skill-with-unique-name.command';
@@ -7,9 +8,9 @@ import { FindActivePreCreatedTemplatesQuery } from '../use-cases/find-active-pre
 
 @Injectable()
 export class SkillTemplateInstallationService {
-  private readonly logger = new Logger(SkillTemplateInstallationService.name);
-
   constructor(
+    @InjectPinoLogger(SkillTemplateInstallationService.name)
+    private readonly logger: PinoLogger,
     private readonly findActivePreCreatedTemplatesUseCase: FindActivePreCreatedTemplatesUseCase,
     private readonly createSkillWithUniqueNameUseCase: CreateSkillWithUniqueNameUseCase,
   ) {}
@@ -38,23 +39,26 @@ export class SkillTemplateInstallationService {
           }),
         );
 
-        this.logger.debug('Pre-created skill template installed', {
-          templateId: template.id,
-          skillId: created.id,
-          userId,
-          isActive: template.defaultActive,
-          isPinned: template.defaultPinned,
-        });
+        this.logger.debug(
+          {
+            templateId: template.id,
+            skillId: created.id,
+            userId,
+            isActive: template.defaultActive,
+            isPinned: template.defaultPinned,
+          },
+          'Pre-created skill template installed',
+        );
         successCount++;
       } catch (error) {
         this.logger.error(
-          'Failed to install individual pre-created skill template',
           {
             templateId: template.id,
-            templateName: template.name,
+            name: template.name,
             userId,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            err: error as Error,
           },
+          'Failed to install individual pre-created skill template',
         );
       }
     }

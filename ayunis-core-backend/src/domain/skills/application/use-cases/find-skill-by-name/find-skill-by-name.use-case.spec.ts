@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { FindSkillByNameUseCase } from './find-skill-by-name.use-case';
 import { FindSkillByNameQuery } from './find-skill-by-name.query';
 import type { SkillRepository } from '../../ports/skill.repository';
@@ -52,6 +53,7 @@ describe('FindSkillByNameUseCase', () => {
     } as unknown as jest.Mocked<ContextService>;
 
     useCase = new FindSkillByNameUseCase(
+      createPinoLoggerMock(),
       skillRepository,
       findSharesByScopeUseCase,
       contextService,

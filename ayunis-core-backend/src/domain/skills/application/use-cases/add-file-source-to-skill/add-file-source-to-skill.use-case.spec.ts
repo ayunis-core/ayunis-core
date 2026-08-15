@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
@@ -68,6 +69,7 @@ describe('AddFileSourceToSkillUseCase', () => {
     } as unknown as ContextService;
 
     useCase = new AddFileSourceToSkillUseCase(
+      createPinoLoggerMock(),
       skillRepository,
       addSourceToSkill,
       startDocumentProcessing,

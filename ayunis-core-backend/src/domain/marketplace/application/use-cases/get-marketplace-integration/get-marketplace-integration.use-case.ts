@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { MarketplaceClient } from '../../ports/marketplace-client.port';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
 import { IntegrationResponseDto } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
@@ -10,14 +11,16 @@ import {
 
 @Injectable()
 export class GetMarketplaceIntegrationUseCase {
-  private readonly logger = new Logger(GetMarketplaceIntegrationUseCase.name);
-
-  constructor(private readonly marketplaceClient: MarketplaceClient) {}
+  constructor(
+    @InjectPinoLogger(GetMarketplaceIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly marketplaceClient: MarketplaceClient,
+  ) {}
 
   async execute(
     query: GetMarketplaceIntegrationQuery,
   ): Promise<IntegrationResponseDto> {
-    this.logger.log('execute', { identifier: query.identifier });
+    this.logger.info({ identifier: query.identifier }, 'execute');
 
     try {
       const integration =
@@ -34,10 +37,13 @@ export class GetMarketplaceIntegrationUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to fetch marketplace integration', {
-        identifier: query.identifier,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          identifier: query.identifier,
+          err: error as Error,
+        },
+        'Failed to fetch marketplace integration',
+      );
       throw new MarketplaceUnavailableError();
     }
   }

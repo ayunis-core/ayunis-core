@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { GetMarketplaceSkillUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.use-case';
 import { GetMarketplaceSkillQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-skill/get-marketplace-skill.query';
@@ -9,11 +10,9 @@ import { Skill } from '../../domain/skill.entity';
 
 @Injectable()
 export class MarketplaceSkillInstallationService {
-  private readonly logger = new Logger(
-    MarketplaceSkillInstallationService.name,
-  );
-
   constructor(
+    @InjectPinoLogger(MarketplaceSkillInstallationService.name)
+    private readonly logger: PinoLogger,
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly createSkillWithUniqueNameUseCase: CreateSkillWithUniqueNameUseCase,
     private readonly marketplaceClient: MarketplaceClient,
@@ -31,17 +30,23 @@ export class MarketplaceSkillInstallationService {
     for (const skillSummary of preInstalledSkills) {
       try {
         await this.installFromMarketplace(skillSummary.identifier, userId);
-        this.logger.debug('Pre-installed skill created and activated', {
-          identifier: skillSummary.identifier,
-          userId,
-        });
+        this.logger.debug(
+          {
+            identifier: skillSummary.identifier,
+            userId,
+          },
+          'Pre-installed skill created and activated',
+        );
         successCount++;
       } catch (error) {
-        this.logger.error('Failed to install individual pre-installed skill', {
-          identifier: skillSummary.identifier,
-          userId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            identifier: skillSummary.identifier,
+            userId,
+            err: error as Error,
+          },
+          'Failed to install individual pre-installed skill',
+        );
       }
     }
 
@@ -55,8 +60,8 @@ export class MarketplaceSkillInstallationService {
       return await this.marketplaceClient.getPreInstalledSkills();
     } catch (error) {
       this.logger.warn(
+        { err: error as Error },
         'Marketplace unavailable, skipping pre-installed skills',
-        { error: error instanceof Error ? error.message : 'Unknown error' },
       );
       return [];
     }
@@ -66,7 +71,7 @@ export class MarketplaceSkillInstallationService {
     identifier: string,
     userId: UUID,
   ): Promise<Skill> {
-    this.logger.log('installFromMarketplace', { identifier, userId });
+    this.logger.info({ identifier, userId }, 'installFromMarketplace');
 
     const marketplaceSkill = await this.getMarketplaceSkillUseCase.execute(
       new GetMarketplaceSkillQuery(identifier),

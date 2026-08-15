@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetMarketplaceIntegrationUseCase } from './get-marketplace-integration.use-case';
 import { GetMarketplaceIntegrationQuery } from './get-marketplace-integration.query';
 import type { MarketplaceClient } from '../../ports/marketplace-client.port';
@@ -54,7 +55,10 @@ describe('GetMarketplaceIntegrationUseCase', () => {
       getIntegrationByIdentifier: jest.fn(),
     };
 
-    useCase = new GetMarketplaceIntegrationUseCase(marketplaceClient);
+    useCase = new GetMarketplaceIntegrationUseCase(
+      createPinoLoggerMock(),
+      marketplaceClient,
+    );
   });
 
   it('should return integration details when integration is found', async () => {

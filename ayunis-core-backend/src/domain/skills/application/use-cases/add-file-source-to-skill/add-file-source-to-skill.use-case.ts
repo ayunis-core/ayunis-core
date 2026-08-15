@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -38,9 +39,9 @@ import { AddFileSourceToSkillCommand } from './add-file-source-to-skill.command'
 
 @Injectable()
 export class AddFileSourceToSkillUseCase {
-  private readonly logger = new Logger(AddFileSourceToSkillUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AddFileSourceToSkillUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly addSourceToSkillUseCase: AddSourceToSkillUseCase,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
@@ -51,10 +52,13 @@ export class AddFileSourceToSkillUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
   async execute(command: AddFileSourceToSkillCommand): Promise<Skill> {
-    this.logger.log('addFileSourceToSkill', {
-      skillId: command.skillId,
-      fileName: command.file.originalname,
-    });
+    this.logger.info(
+      {
+        skillId: command.skillId,
+        fileName: command.file.originalname,
+      },
+      'addFileSourceToSkill',
+    );
 
     const detectedType = detectFileType(
       command.file.mimetype,
@@ -145,22 +149,29 @@ export class AddFileSourceToSkillUseCase {
       return await this.attachSources(skillId, sources);
     } catch (error) {
       try {
-        const orgId = this.contextService.get('orgId');
-        if (!orgId) throw new UnauthorizedAccessError();
-        await this.deleteSourcesUseCase.execute(
-          new DeleteSourcesCommand(
-            sources.map((source) => source.id),
-            orgId,
-          ),
-        );
+        await this.deleteCreatedSources(sources);
       } catch (cleanupError) {
-        this.logger.error('Failed to delete sources after attach failure', {
-          sourceIds: sources.map((source) => source.id),
-          error: cleanupError as Error,
-        });
+        this.logger.error(
+          {
+            sourceIds: sources.map((source) => source.id),
+            err: cleanupError as Error,
+          },
+          'Failed to delete sources after attach failure',
+        );
       }
       throw error;
     }
+  }
+
+  private async deleteCreatedSources(sources: Source[]): Promise<void> {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) throw new UnauthorizedAccessError();
+    await this.deleteSourcesUseCase.execute(
+      new DeleteSourcesCommand(
+        sources.map((source) => source.id),
+        orgId,
+      ),
+    );
   }
 
   @Transactional()

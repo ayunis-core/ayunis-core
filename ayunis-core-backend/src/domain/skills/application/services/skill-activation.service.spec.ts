@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SkillActivationService } from './skill-activation.service';
 import { SkillAccessService } from 'src/domain/skills/application/services/skill-access.service';
 import { AddSourceToThreadUseCase } from 'src/domain/threads/application/use-cases/add-source-to-thread/add-source-to-thread.use-case';
@@ -29,6 +31,7 @@ describe('SkillActivationService', () => {
   let addKnowledgeBaseToThreadUseCase: jest.Mocked<AddKnowledgeBaseToThreadUseCase>;
   let getSourcesByIdsUseCase: jest.Mocked<GetSourcesByIdsUseCase>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
+  let logger: jest.Mocked<PinoLogger>;
 
   const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
@@ -71,9 +74,14 @@ describe('SkillActivationService', () => {
     });
 
   beforeEach(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SkillActivationService,
+        {
+          provide: getLoggerToken(SkillActivationService.name),
+          useValue: logger,
+        },
         {
           provide: SkillAccessService,
           useValue: { findAccessibleSkill: jest.fn() },
@@ -116,9 +124,6 @@ describe('SkillActivationService', () => {
     );
     getSourcesByIdsUseCase = module.get(GetSourcesByIdsUseCase);
     eventEmitter = module.get(EventEmitter2);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -320,9 +325,9 @@ describe('SkillActivationService', () => {
       const result = await service.activateOnThread(skillId, thread);
 
       expect(addKnowledgeBaseToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'Knowledge base not found, skipping (stale reference)',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ knowledgeBaseId: knowledgeBaseId1 }),
+        'Knowledge base not found, skipping (stale reference)',
       );
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
@@ -348,9 +353,9 @@ describe('SkillActivationService', () => {
       const result = await service.activateOnThread(skillId, thread);
 
       expect(addMcpIntegrationToThreadUseCase.execute).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'MCP integration not found, skipping (stale reference)',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ mcpIntegrationId: mcpIntegrationId1 }),
+        'MCP integration not found, skipping (stale reference)',
       );
       expect(result.instructions).toBe(
         'Analyze the legal question thoroughly.',
@@ -466,12 +471,12 @@ describe('SkillActivationService', () => {
 
       await service.activateOnThread(skillId, thread);
 
-      expect(Logger.prototype.warn).toHaveBeenCalledWith(
-        'Skipping non-ready source',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           sourceId: sourceId1,
           status: SourceStatus.FAILED,
         }),
+        'Skipping non-ready source',
       );
     });
   });

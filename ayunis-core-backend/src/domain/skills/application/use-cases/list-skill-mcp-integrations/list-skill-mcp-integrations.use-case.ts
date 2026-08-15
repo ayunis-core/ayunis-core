@@ -1,9 +1,5 @@
-import {
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ListSkillMcpIntegrationsQuery } from './list-skill-mcp-integrations.query';
 import { SkillRepository } from '../../ports/skill.repository';
@@ -20,9 +16,9 @@ import { Skill } from '../../../domain/skill.entity';
 
 @Injectable()
 export class ListSkillMcpIntegrationsUseCase {
-  private readonly logger = new Logger(ListSkillMcpIntegrationsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListSkillMcpIntegrationsUseCase.name)
+    private readonly logger: PinoLogger,
     @Inject(SkillRepository)
     private readonly skillRepository: SkillRepository,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
@@ -33,9 +29,12 @@ export class ListSkillMcpIntegrationsUseCase {
   async execute(
     query: ListSkillMcpIntegrationsQuery,
   ): Promise<McpIntegration[]> {
-    this.logger.log('Listing MCP integrations for skill', {
-      skillId: query.skillId,
-    });
+    this.logger.info(
+      {
+        skillId: query.skillId,
+      },
+      'Listing MCP integrations for skill',
+    );
 
     try {
       const userId = this.contextService.get('userId');
@@ -62,9 +61,12 @@ export class ListSkillMcpIntegrationsUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error listing skill MCP integrations', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing skill MCP integrations',
+      );
       throw new UnexpectedSkillError(error);
     }
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -12,9 +13,9 @@ import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/loca
 
 @Injectable()
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
-  private readonly logger = new Logger(LocalKnowledgeBaseRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalKnowledgeBaseRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(KnowledgeBaseRecord)
     private readonly repository: Repository<KnowledgeBaseRecord>,
     @InjectRepository(SourceRecord)
@@ -26,7 +27,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   }
 
   async findById(id: UUID): Promise<KnowledgeBase | null> {
-    this.logger.debug(`findById: ${id}`);
+    this.logger.debug({ id }, 'findById');
     const record = await this.repository.findOne({ where: { id } });
     if (!record) {
       return null;
@@ -35,7 +36,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<KnowledgeBase[]> {
-    this.logger.debug(`findByIds: ${ids.length} ids`);
+    this.logger.debug({ count: ids.length }, 'findByIds');
     if (ids.length === 0) {
       return [];
     }
@@ -46,7 +47,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   }
 
   async findAllByUserId(userId: UUID): Promise<KnowledgeBase[]> {
-    this.logger.debug(`findAllByUserId: ${userId}`);
+    this.logger.debug({ userId }, 'findAllByUserId');
     const records = await this.repository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -55,14 +56,14 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   }
 
   async save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase> {
-    this.logger.debug(`save: ${knowledgeBase.id}`);
+    this.logger.debug({ id: knowledgeBase.id }, 'save');
     const record = this.mapper.toRecord(knowledgeBase);
     const saved = await this.repository.save(record);
     return this.mapper.toDomain(saved);
   }
 
   async delete(knowledgeBase: KnowledgeBase): Promise<void> {
-    this.logger.debug(`delete: ${knowledgeBase.id}`);
+    this.logger.debug({ id: knowledgeBase.id }, 'delete');
     const record = this.mapper.toRecord(knowledgeBase);
     await this.repository.remove(record);
   }
@@ -72,13 +73,14 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     knowledgeBaseId: UUID,
   ): Promise<void> {
     this.logger.debug(
-      `assignSourceToKnowledgeBase: ${sourceId} → ${knowledgeBaseId}`,
+      { sourceId, knowledgeBaseId },
+      'assignSourceToKnowledgeBase',
     );
     await this.sourceRepository.update(sourceId, { knowledgeBaseId });
   }
 
   async findSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
-    this.logger.debug(`findSourcesByKnowledgeBaseId: ${knowledgeBaseId}`);
+    this.logger.debug({ knowledgeBaseId }, 'findSourcesByKnowledgeBaseId');
     const records = await this.sourceRepository.find({
       where: { knowledgeBaseId },
       order: { createdAt: 'DESC' },
@@ -87,7 +89,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   }
 
   async countSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<number> {
-    this.logger.debug(`countSourcesByKnowledgeBaseId: ${knowledgeBaseId}`);
+    this.logger.debug({ knowledgeBaseId }, 'countSourcesByKnowledgeBaseId');
     return this.sourceRepository.count({ where: { knowledgeBaseId } });
   }
 
@@ -96,7 +98,8 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     knowledgeBaseId: UUID,
   ): Promise<Source | null> {
     this.logger.debug(
-      `findSourceByIdAndKnowledgeBaseId: ${sourceId} in ${knowledgeBaseId}`,
+      { sourceId, knowledgeBaseId },
+      'findSourceByIdAndKnowledgeBaseId',
     );
     const record = await this.sourceRepository.findOne({
       where: { id: sourceId, knowledgeBaseId },

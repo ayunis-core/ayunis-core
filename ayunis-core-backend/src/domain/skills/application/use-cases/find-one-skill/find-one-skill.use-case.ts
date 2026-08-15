@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SkillRepository } from '../../ports/skill.repository';
 import { FindOneSkillQuery } from './find-one-skill.query';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
@@ -19,16 +20,16 @@ export interface SkillWithUserContext {
 
 @Injectable()
 export class FindOneSkillUseCase {
-  private readonly logger = new Logger(FindOneSkillUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindOneSkillUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly skillRepository: SkillRepository,
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindOneSkillQuery): Promise<SkillWithUserContext> {
-    this.logger.log('Finding skill', { id: query.id });
+    this.logger.info({ id: query.id }, 'Finding skill');
     try {
       const userId = this.contextService.get('userId');
       if (!userId) {
@@ -69,7 +70,7 @@ export class FindOneSkillUseCase {
       throw new SkillNotFoundError(query.id);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error finding skill', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error finding skill');
       throw new UnexpectedSkillError(error);
     }
   }

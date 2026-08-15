@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { QueryKnowledgeBaseUseCase } from './query-knowledge-base.use-case';
@@ -68,6 +70,10 @@ describe('QueryKnowledgeBaseUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         QueryKnowledgeBaseUseCase,
+        {
+          provide: getLoggerToken(QueryKnowledgeBaseUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: KnowledgeBaseRepository, useValue: mockKbRepo },
         { provide: FindContentChunksByIdsUseCase, useValue: mockFindChunks },
         { provide: SearchContentUseCase, useValue: mockSearchContent },
