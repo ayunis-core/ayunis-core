@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AddTeamMemberUseCase } from '../add-team-member/add-team-member.use-case';
 import { AddTeamMemberCommand } from '../add-team-member/add-team-member.command';
 import { BulkAddTeamMembersCommand } from './bulk-add-team-members.command';
@@ -12,60 +13,71 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class BulkAddTeamMembersUseCase {
-  private readonly logger = new Logger(BulkAddTeamMembersUseCase.name);
-
-  constructor(private readonly addTeamMemberUseCase: AddTeamMemberUseCase) {}
+  constructor(
+    @InjectPinoLogger(BulkAddTeamMembersUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly addTeamMemberUseCase: AddTeamMemberUseCase,
+  ) {}
 
   async execute(command: BulkAddTeamMembersCommand): Promise<TeamMember[]> {
     const uniqueUserIds = [...new Set(command.userIds)];
-
-    this.logger.log('execute', {
-      teamId: command.teamId,
-      count: uniqueUserIds.length,
-    });
+    this.logger.info(
+      { teamId: command.teamId, count: uniqueUserIds.length },
+      'execute',
+    );
 
     try {
-      const added: TeamMember[] = [];
-      for (const userId of uniqueUserIds) {
-        try {
-          added.push(
-            await this.addTeamMemberUseCase.execute(
-              new AddTeamMemberCommand({ teamId: command.teamId, userId }),
-            ),
-          );
-        } catch (error) {
-          if (
-            error instanceof UserAlreadyTeamMemberError ||
-            error instanceof UserNotInSameOrgError ||
-            error instanceof UserNotFoundError
-          ) {
-            this.logger.warn('Skipped user during bulk add', {
-              teamId: command.teamId,
-              userId,
-              reason: error.code,
-            });
-            continue;
-          }
-          throw error;
-        }
-      }
-
-      this.logger.debug('Bulk add finished', {
-        teamId: command.teamId,
-        requested: uniqueUserIds.length,
-        added: added.length,
-      });
-
+      const added = await this.addMembers(command, uniqueUserIds);
+      this.logger.debug(
+        {
+          teamId: command.teamId,
+          requested: uniqueUserIds.length,
+          added: added.length,
+        },
+        'Bulk add finished',
+      );
       return added;
     } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error('Error bulk adding team members', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        teamId: command.teamId,
-      });
+      if (error instanceof ApplicationError) throw error;
+      this.logger.error(
+        { err: error as Error, teamId: command.teamId },
+        'Error bulk adding team members',
+      );
       throw error;
     }
+  }
+
+  private async addMembers(
+    command: BulkAddTeamMembersCommand,
+    userIds: BulkAddTeamMembersCommand['userIds'],
+  ): Promise<TeamMember[]> {
+    const added: TeamMember[] = [];
+    for (const userId of userIds) {
+      try {
+        added.push(
+          await this.addTeamMemberUseCase.execute(
+            new AddTeamMemberCommand({ teamId: command.teamId, userId }),
+          ),
+        );
+      } catch (error) {
+        if (!this.isSkippable(error)) throw error;
+        this.logger.warn(
+          { teamId: command.teamId, userId, reason: error.code },
+          'Skipped user during bulk add',
+        );
+      }
+    }
+    return added;
+  }
+
+  private isSkippable(
+    error: unknown,
+  ): error is
+    UserAlreadyTeamMemberError | UserNotInSameOrgError | UserNotFoundError {
+    return (
+      error instanceof UserAlreadyTeamMemberError ||
+      error instanceof UserNotInSameOrgError ||
+      error instanceof UserNotFoundError
+    );
   }
 }

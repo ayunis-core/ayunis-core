@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { UpdateOrgUseCase } from './update-org.use-case';
 import { UpdateOrgCommand } from './update-org.command';
@@ -19,6 +21,10 @@ describe('UpdateOrgUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateOrgUseCase,
+        {
+          provide: getLoggerToken(UpdateOrgUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: OrgsRepository, useValue: mockOrgsRepository },
       ],
     }).compile();

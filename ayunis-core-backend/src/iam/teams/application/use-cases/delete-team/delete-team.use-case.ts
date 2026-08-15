@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { DeleteTeamCommand } from './delete-team.command';
 import { TeamNotFoundError } from '../../teams.errors';
@@ -8,9 +9,9 @@ import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class DeleteTeamUseCase {
-  private readonly logger = new Logger(DeleteTeamUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteTeamUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -23,20 +24,23 @@ export class DeleteTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('execute', { teamId: command.teamId, orgId });
+    this.logger.info({ teamId: command.teamId, orgId }, 'execute');
 
     const team = await this.teamsRepository.findById(command.teamId);
     if (!team) {
-      this.logger.error('Team not found', { teamId: command.teamId });
+      this.logger.error({ teamId: command.teamId }, 'Team not found');
       throw new TeamNotFoundError(command.teamId);
     }
 
     if (team.orgId !== orgId) {
-      this.logger.error('Team does not belong to organization', {
-        teamId: command.teamId,
-        teamOrgId: team.orgId,
-        requestOrgId: orgId,
-      });
+      this.logger.error(
+        {
+          teamId: command.teamId,
+          teamOrgId: team.orgId,
+          requestOrgId: orgId,
+        },
+        'Team does not belong to organization',
+      );
       throw new TeamNotFoundError(command.teamId);
     }
 
@@ -46,6 +50,6 @@ export class DeleteTeamUseCase {
 
     await this.teamsRepository.delete(command.teamId);
 
-    this.logger.debug('Team deleted successfully', { teamId: command.teamId });
+    this.logger.debug({ teamId: command.teamId }, 'Team deleted successfully');
   }
 }

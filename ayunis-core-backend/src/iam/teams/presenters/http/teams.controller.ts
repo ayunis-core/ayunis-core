@@ -10,8 +10,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -65,9 +65,9 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
   ListTeamMembersQueryDto,
 )
 export class TeamsController {
-  private readonly logger = new Logger(TeamsController.name);
-
   constructor(
+    @InjectPinoLogger(TeamsController.name)
+    private readonly logger: PinoLogger,
     private readonly createTeamUseCase: CreateTeamUseCase,
     private readonly updateTeamUseCase: UpdateTeamUseCase,
     private readonly deleteTeamUseCase: DeleteTeamUseCase,
@@ -107,11 +107,14 @@ export class TeamsController {
     description: 'Internal server error',
   })
   async listTeams(): Promise<TeamResponseDto[]> {
-    this.logger.log('Listing teams for organization');
+    this.logger.info('Listing teams for organization');
 
     const teams = await this.listTeamsUseCase.execute();
 
-    this.logger.log(`Successfully retrieved ${teams.length} teams`);
+    this.logger.info(
+      { teamCount: teams.length },
+      'Successfully retrieved teams',
+    );
     return this.teamDtoMapper.toDtoListWithMemberCount(teams);
   }
 
@@ -133,11 +136,14 @@ export class TeamsController {
     description: 'Internal server error',
   })
   async listMyTeams(): Promise<TeamResponseDto[]> {
-    this.logger.log('Listing teams for current user');
+    this.logger.info('Listing teams for current user');
 
     const teams = await this.listMyTeamsUseCase.execute();
 
-    this.logger.log(`Successfully retrieved ${teams.length} teams for user`);
+    this.logger.info(
+      { teamCount: teams.length },
+      'Successfully retrieved teams for user',
+    );
     return this.teamDtoMapper.toDtoList(teams);
   }
 
@@ -172,12 +178,12 @@ export class TeamsController {
   async getTeam(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<TeamResponseDto> {
-    this.logger.log(`Getting team with id: ${id}`);
+    this.logger.info({ teamId: id }, 'Getting team');
 
     const query = new GetTeamQuery(id);
     const response = await this.getTeamUseCase.execute(query);
 
-    this.logger.log(`Successfully retrieved team with id: ${id}`);
+    this.logger.info({ teamId: id }, 'Successfully retrieved team');
     return this.teamDtoMapper.toDto(response);
   }
 
@@ -216,12 +222,12 @@ export class TeamsController {
   async createTeam(
     @Body() createTeamDto: CreateTeamDto,
   ): Promise<TeamResponseDto> {
-    this.logger.log(`Creating team with name: ${createTeamDto.name}`);
+    this.logger.info({ name: createTeamDto.name }, 'Creating team');
 
     const command = new CreateTeamCommand(createTeamDto.name);
     const team = await this.createTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully created team with id: ${team.id}`);
+    this.logger.info({ teamId: team.id }, 'Successfully created team');
     return this.teamDtoMapper.toDto(team);
   }
 
@@ -261,9 +267,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() updateTeamDto: UpdateTeamDto,
   ): Promise<TeamResponseDto> {
-    this.logger.log(
-      `Updating team ${id} with name: ${updateTeamDto.name}, modelOverrideEnabled: ${updateTeamDto.modelOverrideEnabled}`,
-    );
+    this.logger.info({ teamId: id, ...updateTeamDto }, 'Updating team');
 
     const command = new UpdateTeamCommand(
       id,
@@ -272,7 +276,7 @@ export class TeamsController {
     );
     const team = await this.updateTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully updated team with id: ${team.id}`);
+    this.logger.info({ teamId: team.id }, 'Successfully updated team');
     return this.teamDtoMapper.toDto(team);
   }
 
@@ -303,12 +307,12 @@ export class TeamsController {
     description: 'Internal server error',
   })
   async deleteTeam(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log(`Deleting team with id: ${id}`);
+    this.logger.info({ teamId: id }, 'Deleting team');
 
     const command = new DeleteTeamCommand(id);
     await this.deleteTeamUseCase.execute(command);
 
-    this.logger.log(`Successfully deleted team with id: ${id}`);
+    this.logger.info({ teamId: id }, 'Successfully deleted team');
   }
 
   @RequirePermission(Permission.MANAGE_TEAMS, Permission.ASSIGN_USERS_TO_TEAMS)
@@ -339,7 +343,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Query() queryDto: ListTeamMembersQueryDto,
   ): Promise<PaginatedTeamMembersResponseDto> {
-    this.logger.log(`Listing members for team: ${id}`);
+    this.logger.info({ teamId: id }, 'Listing members for team');
 
     const query = new ListTeamMembersQuery({
       teamId: id,
@@ -348,8 +352,9 @@ export class TeamsController {
     });
     const result = await this.listTeamMembersUseCase.execute(query);
 
-    this.logger.log(
-      `Successfully retrieved ${result.data.length} members for team: ${id}`,
+    this.logger.info(
+      { teamId: id, memberCount: result.data.length },
+      'Successfully retrieved members for team',
     );
     return {
       data: this.teamMemberDtoMapper.toDtoList(result.data),
@@ -397,17 +402,13 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() addTeamMemberDto: AddTeamMemberDto,
   ): Promise<TeamMemberResponseDto> {
-    this.logger.log(`Adding user ${addTeamMemberDto.userId} to team: ${id}`);
+    const { userId } = addTeamMemberDto;
+    this.logger.info({ teamId: id, userId }, 'Adding user to team');
 
-    const command = new AddTeamMemberCommand({
-      teamId: id,
-      userId: addTeamMemberDto.userId,
-    });
+    const command = new AddTeamMemberCommand({ teamId: id, userId });
     const teamMember = await this.addTeamMemberUseCase.execute(command);
 
-    this.logger.log(
-      `Successfully added user ${addTeamMemberDto.userId} to team: ${id}`,
-    );
+    this.logger.info({ teamId: id, userId }, 'Successfully added user to team');
     return this.teamMemberDtoMapper.toDto(teamMember);
   }
 
@@ -431,8 +432,9 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() bulkAddTeamMembersDto: BulkAddTeamMembersDto,
   ): Promise<TeamMemberResponseDto[]> {
-    this.logger.log(
-      `Adding ${bulkAddTeamMembersDto.userIds.length} users to team: ${id}`,
+    this.logger.info(
+      { teamId: id, userCount: bulkAddTeamMembersDto.userIds.length },
+      'Adding users to team',
     );
 
     const command = new BulkAddTeamMembersCommand({
@@ -441,8 +443,9 @@ export class TeamsController {
     });
     const teamMembers = await this.bulkAddTeamMembersUseCase.execute(command);
 
-    this.logger.log(
-      `Successfully added ${teamMembers.length} users to team: ${id}`,
+    this.logger.info(
+      { teamId: id, userCount: teamMembers.length },
+      'Successfully added users to team',
     );
     return this.teamMemberDtoMapper.toDtoList(teamMembers);
   }
@@ -477,7 +480,7 @@ export class TeamsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Param('userId', ParseUUIDPipe) userId: UUID,
   ): Promise<void> {
-    this.logger.log(`Removing user ${userId} from team: ${id}`);
+    this.logger.info({ teamId: id, userId }, 'Removing user from team');
 
     const command = new RemoveTeamMemberCommand({
       teamId: id,
@@ -485,6 +488,9 @@ export class TeamsController {
     });
     await this.removeTeamMemberUseCase.execute(command);
 
-    this.logger.log(`Successfully removed user ${userId} from team: ${id}`);
+    this.logger.info(
+      { teamId: id, userId },
+      'Successfully removed user from team',
+    );
   }
 }

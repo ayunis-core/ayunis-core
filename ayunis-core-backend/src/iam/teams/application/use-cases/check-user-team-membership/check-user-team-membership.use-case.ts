@@ -1,12 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { CheckUserTeamMembershipQuery } from './check-user-team-membership.query';
 
 @Injectable()
 export class CheckUserTeamMembershipUseCase {
-  private readonly logger = new Logger(CheckUserTeamMembershipUseCase.name);
-
-  constructor(private readonly teamMembersRepository: TeamMembersRepository) {}
+  constructor(
+    @InjectPinoLogger(CheckUserTeamMembershipUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly teamMembersRepository: TeamMembersRepository,
+  ) {}
 
   /**
    * Check if a user is a member of a specific team
@@ -14,10 +17,13 @@ export class CheckUserTeamMembershipUseCase {
    * @returns true if the user is a member of the team, false otherwise
    */
   async execute(query: CheckUserTeamMembershipQuery): Promise<boolean> {
-    this.logger.log('checkUserTeamMembership', {
-      userId: query.userId,
-      teamId: query.teamId,
-    });
+    this.logger.info(
+      {
+        userId: query.userId,
+        teamId: query.teamId,
+      },
+      'checkUserTeamMembership',
+    );
 
     const membership = await this.teamMembersRepository.findByTeamIdAndUserId(
       query.teamId,

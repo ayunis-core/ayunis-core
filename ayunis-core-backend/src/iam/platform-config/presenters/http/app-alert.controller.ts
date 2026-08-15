@@ -1,4 +1,5 @@
-import { Controller, Get, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -18,9 +19,11 @@ import { AppAlertResponseDto } from './dto/app-alert-response.dto';
 @ApiTags('App Alert')
 @Controller('app-alert')
 export class AppAlertController {
-  private readonly logger = new Logger(AppAlertController.name);
-
-  constructor(private readonly getAppAlertUseCase: GetAppAlertUseCase) {}
+  constructor(
+    @InjectPinoLogger(AppAlertController.name)
+    private readonly logger: PinoLogger,
+    private readonly getAppAlertUseCase: GetAppAlertUseCase,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -37,7 +40,7 @@ export class AppAlertController {
   @ApiUnauthorizedResponse({ description: 'User not authenticated' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   async getAppAlert(): Promise<AppAlertResponseDto> {
-    this.logger.log('Getting app alert configuration');
+    this.logger.info('Getting app alert configuration');
     return this.getAppAlertUseCase.execute();
   }
 }

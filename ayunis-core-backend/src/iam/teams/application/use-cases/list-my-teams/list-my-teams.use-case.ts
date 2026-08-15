@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { Team } from 'src/iam/teams/domain/team.entity';
 import { UnexpectedTeamError } from '../../teams.errors';
@@ -8,9 +9,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class ListMyTeamsUseCase {
-  private readonly logger = new Logger(ListMyTeamsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListMyTeamsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -22,24 +23,30 @@ export class ListMyTeamsUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('listMyTeams', { userId });
+    this.logger.info({ userId }, 'listMyTeams');
 
     try {
       const teams = await this.teamsRepository.findByUserId(userId);
-      this.logger.debug('User teams retrieved successfully', {
-        userId,
-        count: teams.length,
-      });
+      this.logger.debug(
+        {
+          userId,
+          count: teams.length,
+        },
+        'User teams retrieved successfully',
+      );
 
       return teams;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to retrieve user teams', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          userId,
+        },
+        'Failed to retrieve user teams',
+      );
       throw new UnexpectedTeamError(error);
     }
   }

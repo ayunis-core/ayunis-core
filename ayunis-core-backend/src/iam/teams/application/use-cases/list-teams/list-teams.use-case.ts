@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { TeamMembersRepository } from '../../ports/team-members.repository';
 import { UnexpectedTeamError } from '../../teams.errors';
@@ -9,9 +10,9 @@ import { TeamWithMemberCount } from './team-with-member-count.view';
 
 @Injectable()
 export class ListTeamsUseCase {
-  private readonly logger = new Logger(ListTeamsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListTeamsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly teamMembersRepository: TeamMembersRepository,
     private readonly contextService: ContextService,
@@ -24,7 +25,7 @@ export class ListTeamsUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('listTeams', { orgId });
+    this.logger.info({ orgId }, 'listTeams');
 
     try {
       const teams = await this.teamsRepository.findByOrgId(orgId);
@@ -32,10 +33,13 @@ export class ListTeamsUseCase {
         teams.map((team) => team.id),
       );
 
-      this.logger.debug('Teams retrieved successfully', {
-        orgId,
-        count: teams.length,
-      });
+      this.logger.debug(
+        {
+          orgId,
+          count: teams.length,
+        },
+        'Teams retrieved successfully',
+      );
 
       return teams.map((team) => ({
         team,
@@ -45,10 +49,13 @@ export class ListTeamsUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to retrieve teams', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId,
+        },
+        'Failed to retrieve teams',
+      );
       throw new UnexpectedTeamError(error);
     }
   }

@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { GetFairUseLimitsUseCase } from './get-fair-use-limits.use-case';
 import type { PlatformConfigRepositoryPort } from '../../ports/platform-config.repository';
 import { PlatformConfig } from 'src/iam/platform-config/domain/platform-config.entity';
@@ -7,7 +7,7 @@ import { PlatformConfigKey } from 'src/iam/platform-config/domain/platform-confi
 describe('GetFairUseLimitsUseCase', () => {
   let useCase: GetFairUseLimitsUseCase;
   let repository: jest.Mocked<PlatformConfigRepositoryPort>;
-  let warnSpy: jest.SpyInstance;
+  const logger = createPinoLoggerMock();
 
   const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
   const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -19,12 +19,8 @@ describe('GetFairUseLimitsUseCase', () => {
       setMany: jest.fn(),
     };
 
-    useCase = new GetFairUseLimitsUseCase(repository);
-    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    warnSpy.mockRestore();
+    useCase = new GetFairUseLimitsUseCase(logger, repository);
+    logger.warn.mockClear();
   });
 
   const stubConfig = (values: Partial<Record<PlatformConfigKey, string>>) => {
@@ -57,7 +53,7 @@ describe('GetFairUseLimitsUseCase', () => {
       high: { limit: 75, windowMs: 10800000 },
       images: { limit: 25, windowMs: 86400000 },
     });
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('should fall back to baked-in defaults and warn once per key when every key is missing', async () => {
@@ -72,13 +68,13 @@ describe('GetFairUseLimitsUseCase', () => {
       high: { limit: 50, windowMs: THREE_HOURS_MS },
       images: { limit: 10, windowMs: TWENTY_FOUR_HOURS_MS },
     });
-    expect(warnSpy).toHaveBeenCalledTimes(10);
+    expect(logger.warn).toHaveBeenCalledTimes(10);
 
     // Calling again with the same (still-missing) state must not re-warn —
     // otherwise the quota resolver would flood logs on every chat message.
-    warnSpy.mockClear();
+    logger.warn.mockClear();
     await useCase.execute();
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('should substitute defaults for individual missing keys while keeping configured ones', async () => {
@@ -93,7 +89,7 @@ describe('GetFairUseLimitsUseCase', () => {
     expect(result.low).toEqual({ limit: 1000, windowMs: THREE_HOURS_MS });
     expect(result.medium).toEqual({ limit: 250, windowMs: THREE_HOURS_MS });
     expect(result.high).toEqual({ limit: 50, windowMs: 21600000 });
-    expect(warnSpy).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalled();
   });
 
   it('should fall back to default and warn when a stored value is not numeric', async () => {
@@ -111,12 +107,12 @@ describe('GetFairUseLimitsUseCase', () => {
     const result = await useCase.execute();
 
     expect(result.low.limit).toBe(1000);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(PlatformConfigKey.FAIR_USE_LOW_LIMIT),
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         key: PlatformConfigKey.FAIR_USE_LOW_LIMIT,
         storedValue: 'not-a-number',
       }),
+      'Platform config key has an invalid value; falling back to default',
     );
   });
 
@@ -124,13 +120,13 @@ describe('GetFairUseLimitsUseCase', () => {
     // First run: every key is missing, so each produces one warn.
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(10);
+    expect(logger.warn).toHaveBeenCalledTimes(10);
 
     // Second run: every key is now valid. No new warns, AND crucially the
     // success branch must `warnedKeys.delete(key)` so a future regression
     // can warn again. This assertion alone still passes if `delete` is
     // dropped — the *third* run is what locks the contract in.
-    warnSpy.mockClear();
+    logger.warn.mockClear();
     stubConfig({
       [PlatformConfigKey.FAIR_USE_ZERO_LIMIT]: '999999',
       [PlatformConfigKey.FAIR_USE_ZERO_WINDOW_MS]: '3600000',
@@ -144,16 +140,16 @@ describe('GetFairUseLimitsUseCase', () => {
       [PlatformConfigKey.FAIR_USE_IMAGES_WINDOW_MS]: '86400000',
     });
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(0);
+    expect(logger.warn).toHaveBeenCalledTimes(0);
 
     // Third run: config has been wiped again. Because the previous run
     // cleared `warnedKeys`, each key must re-warn so operators aren't left
     // guessing when config silently regresses. If the `delete` line is
     // dropped from the use case, this assertion fails (0 vs 10).
-    warnSpy.mockClear();
+    logger.warn.mockClear();
     repository.get.mockResolvedValue(null);
     await useCase.execute();
-    expect(warnSpy).toHaveBeenCalledTimes(10);
+    expect(logger.warn).toHaveBeenCalledTimes(10);
   });
 
   it('should expose the configured images limit when set and fall back independently of message tiers', async () => {
@@ -176,11 +172,11 @@ describe('GetFairUseLimitsUseCase', () => {
       windowMs: TWENTY_FOUR_HOURS_MS,
     });
     expect(result.low).toEqual({ limit: 1500, windowMs: 3600000 });
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(PlatformConfigKey.FAIR_USE_IMAGES_LIMIT),
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         key: PlatformConfigKey.FAIR_USE_IMAGES_LIMIT,
       }),
+      'Platform config key is not set; falling back to default',
     );
   });
 
@@ -200,6 +196,6 @@ describe('GetFairUseLimitsUseCase', () => {
 
     expect(result.medium.limit).toBe(200);
     expect(result.high.windowMs).toBe(THREE_HOURS_MS);
-    expect(warnSpy).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalled();
   });
 });

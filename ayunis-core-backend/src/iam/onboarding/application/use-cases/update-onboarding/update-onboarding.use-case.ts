@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnboardingRepository } from '../../ports/onboarding.repository';
 import { UpdateOnboardingCommand } from './update-onboarding.command';
 import { Onboarding } from 'src/iam/onboarding/domain/onboarding.entity';
@@ -7,17 +8,22 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 
 @Injectable()
 export class UpdateOnboardingUseCase {
-  private readonly logger = new Logger(UpdateOnboardingUseCase.name);
-
-  constructor(private readonly onboardingRepository: OnboardingRepository) {}
+  constructor(
+    @InjectPinoLogger(UpdateOnboardingUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly onboardingRepository: OnboardingRepository,
+  ) {}
 
   @HandleUnexpectedErrors(OnboardingUnexpectedError)
   async execute(command: UpdateOnboardingCommand): Promise<Onboarding> {
-    this.logger.log('updateOnboarding', {
-      userId: command.userId,
-      completedStepIdsCount: command.completedStepIds.length,
-      hidden: command.hidden,
-    });
+    this.logger.info(
+      {
+        userId: command.userId,
+        completedStepIdsCount: command.completedStepIds.length,
+        hidden: command.hidden,
+      },
+      'updateOnboarding',
+    );
 
     const onboarding = new Onboarding({
       userId: command.userId,

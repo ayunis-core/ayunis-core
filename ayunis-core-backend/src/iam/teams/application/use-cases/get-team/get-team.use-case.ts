@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TeamsRepository } from '../../ports/teams.repository';
 import { GetTeamQuery } from './get-team.query';
 import { Team } from '../../../domain/team.entity';
@@ -9,9 +10,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class GetTeamUseCase {
-  private readonly logger = new Logger(GetTeamUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetTeamUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly teamsRepository: TeamsRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -23,38 +24,47 @@ export class GetTeamUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('execute', { teamId: query.teamId, orgId });
+    this.logger.info({ teamId: query.teamId, orgId }, 'execute');
 
     try {
       const team = await this.teamsRepository.findById(query.teamId);
 
       if (!team) {
-        this.logger.error('Team not found', { teamId: query.teamId });
+        this.logger.error({ teamId: query.teamId }, 'Team not found');
         throw new TeamNotFoundError(query.teamId);
       }
 
       if (team.orgId !== orgId) {
-        this.logger.error('Team does not belong to organization', {
-          teamId: query.teamId,
-          teamOrgId: team.orgId,
-          requestOrgId: orgId,
-        });
+        this.logger.error(
+          {
+            teamId: query.teamId,
+            teamOrgId: team.orgId,
+            requestOrgId: orgId,
+          },
+          'Team does not belong to organization',
+        );
         throw new TeamNotFoundError(query.teamId);
       }
 
-      this.logger.debug('Team retrieved successfully', {
-        teamId: query.teamId,
-      });
+      this.logger.debug(
+        {
+          teamId: query.teamId,
+        },
+        'Team retrieved successfully',
+      );
 
       return team;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to retrieve team', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        teamId: query.teamId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          teamId: query.teamId,
+        },
+        'Failed to retrieve team',
+      );
       throw new UnexpectedTeamError(error);
     }
   }

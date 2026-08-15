@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   OrgsRepository,
   OrgsPagination,
@@ -21,29 +22,29 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
-  private readonly logger = new Logger(LocalOrgsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalOrgsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(OrgRecord)
     private readonly orgRepository: Repository<OrgRecord>,
   ) {
     super();
-    this.logger.log('constructor');
+    this.logger.info('constructor');
   }
 
   async findById(id: UUID): Promise<Org> {
-    this.logger.log('findById', { id });
+    this.logger.info({ id }, 'findById');
 
     try {
       const orgEntity = await this.orgRepository.findOne({
         where: { id },
       });
       if (!orgEntity) {
-        this.logger.warn('Organization not found', { id });
+        this.logger.warn({ id }, 'Organization not found');
         throw new OrgNotFoundError(id);
       }
 
-      this.logger.debug('Organization found', { id, name: orgEntity.name });
+      this.logger.debug({ id, name: orgEntity.name }, 'Organization found');
       return OrgMapper.toDomain(orgEntity);
     } catch (error) {
       if (error instanceof OrgNotFoundError) {
@@ -52,20 +53,20 @@ export class LocalOrgsRepository extends OrgsRepository {
       }
 
       const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error finding organization', { error: err, id });
+      this.logger.error({ err, id }, 'Error finding organization');
       throw new OrgNotFoundError(id);
     }
   }
 
   async findByUserId(userId: UUID): Promise<Org> {
-    this.logger.log('findByUserId', { userId });
+    this.logger.info({ userId }, 'findByUserId');
 
     const orgEntity = await this.orgRepository.findOne({
       where: { users: { id: userId } },
     });
 
     if (!orgEntity) {
-      this.logger.warn('Organization not found', { userId });
+      this.logger.warn({ userId }, 'Organization not found');
       throw new OrgNotFoundError(userId);
     }
 
@@ -83,11 +84,14 @@ export class LocalOrgsRepository extends OrgsRepository {
     pagination: OrgsPagination,
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>> {
-    this.logger.log('findAllForSuperAdmin', {
-      limit: pagination.limit,
-      offset: pagination.offset,
-      search: filters?.search,
-    });
+    this.logger.info(
+      {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        text: filters?.search,
+      },
+      'findAllForSuperAdmin',
+    );
 
     try {
       const queryBuilder = this.orgRepository
@@ -119,33 +123,42 @@ export class LocalOrgsRepository extends OrgsRepository {
       });
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Failed to retrieve organizations for super admin', {
-        error: err,
-      });
+      this.logger.error(
+        {
+          err,
+        },
+        'Failed to retrieve organizations for super admin',
+      );
       throw new OrgRetrievalFailedError(err.message);
     }
   }
 
   async create(org: Org): Promise<Org> {
-    this.logger.log('create', { id: org.id, name: org.name });
+    this.logger.info({ id: org.id, name: org.name }, 'create');
 
     try {
       const orgEntity = OrgMapper.toEntity(org);
       const savedOrgEntity = await this.orgRepository.save(orgEntity);
 
-      this.logger.debug('Organization created successfully', {
-        id: savedOrgEntity.id,
-        name: savedOrgEntity.name,
-      });
+      this.logger.debug(
+        {
+          id: savedOrgEntity.id,
+          name: savedOrgEntity.name,
+        },
+        'Organization created successfully',
+      );
 
       return OrgMapper.toDomain(savedOrgEntity);
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error creating organization', {
-        error: err,
-        id: org.id,
-        name: org.name,
-      });
+      this.logger.error(
+        {
+          err,
+          id: org.id,
+          name: org.name,
+        },
+        'Error creating organization',
+      );
 
       throw new OrgCreationFailedError(
         `Failed to create organization: ${err.message}`,
@@ -154,7 +167,7 @@ export class LocalOrgsRepository extends OrgsRepository {
   }
 
   async update(org: Org): Promise<Org> {
-    this.logger.log('update', { id: org.id, name: org.name });
+    this.logger.info({ id: org.id, name: org.name }, 'update');
 
     try {
       // Verify org exists
@@ -163,19 +176,25 @@ export class LocalOrgsRepository extends OrgsRepository {
       });
 
       if (!existingOrg) {
-        this.logger.warn('Attempted to update non-existent organization', {
-          id: org.id,
-        });
+        this.logger.warn(
+          {
+            id: org.id,
+          },
+          'Attempted to update non-existent organization',
+        );
         throw new OrgNotFoundError(org.id);
       }
 
       const orgEntity = OrgMapper.toEntity(org);
       const savedOrgEntity = await this.orgRepository.save(orgEntity);
 
-      this.logger.debug('Organization updated successfully', {
-        id: savedOrgEntity.id,
-        name: savedOrgEntity.name,
-      });
+      this.logger.debug(
+        {
+          id: savedOrgEntity.id,
+          name: savedOrgEntity.name,
+        },
+        'Organization updated successfully',
+      );
 
       return OrgMapper.toDomain(savedOrgEntity);
     } catch (error) {
@@ -185,18 +204,21 @@ export class LocalOrgsRepository extends OrgsRepository {
       }
 
       const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error updating organization', {
-        error: err,
-        id: org.id,
-        name: org.name,
-      });
+      this.logger.error(
+        {
+          err,
+          id: org.id,
+          name: org.name,
+        },
+        'Error updating organization',
+      );
 
       throw new OrgUpdateFailedError(org.id, err.message);
     }
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     try {
       // Verify org exists
@@ -205,14 +227,17 @@ export class LocalOrgsRepository extends OrgsRepository {
       });
 
       if (!existingOrg) {
-        this.logger.warn('Attempted to delete non-existent organization', {
-          id,
-        });
+        this.logger.warn(
+          {
+            id,
+          },
+          'Attempted to delete non-existent organization',
+        );
         throw new OrgNotFoundError(id);
       }
 
       await this.orgRepository.delete(id);
-      this.logger.debug('Organization deleted successfully', { id });
+      this.logger.debug({ id }, 'Organization deleted successfully');
     } catch (error) {
       if (error instanceof OrgNotFoundError) {
         // Already logged and correctly typed, just rethrow
@@ -220,7 +245,7 @@ export class LocalOrgsRepository extends OrgsRepository {
       }
 
       const err = error instanceof Error ? error : new Error('Unknown error');
-      this.logger.error('Error deleting organization', { error: err, id });
+      this.logger.error({ err, id }, 'Error deleting organization');
       throw new OrgDeletionFailedError(id, err.message);
     }
   }

@@ -1,4 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { SuperAdminGetAllOrgsUseCase } from './super-admin-get-all-orgs.use-case';
 import { OrgsRepository } from '../../ports/orgs.repository';
@@ -19,6 +21,10 @@ describe('SuperAdminGetAllOrgsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SuperAdminGetAllOrgsUseCase,
+        {
+          provide: getLoggerToken(SuperAdminGetAllOrgsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: OrgsRepository,
           useValue: {

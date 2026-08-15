@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { getLoggerToken, PinoLogger } from 'nestjs-pino';
 
 import { TeamsRepository } from './application/ports/teams.repository';
 import { TeamMembersRepository } from './application/ports/team-members.repository';
@@ -38,10 +39,16 @@ import { UsersModule } from '../users/users.module';
   providers: [
     {
       provide: TeamsRepository,
-      useFactory: (teamRepository: Repository<TeamRecord>) => {
-        return new LocalTeamsRepository(teamRepository);
+      useFactory: (
+        logger: PinoLogger,
+        teamRepository: Repository<TeamRecord>,
+      ) => {
+        return new LocalTeamsRepository(logger, teamRepository);
       },
-      inject: [getRepositoryToken(TeamRecord)],
+      inject: [
+        getLoggerToken(LocalTeamsRepository.name),
+        getRepositoryToken(TeamRecord),
+      ],
     },
     {
       provide: TeamMembersRepository,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import {
@@ -11,18 +12,23 @@ import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cas
 
 @Injectable()
 export class SetOrgSsoJitProvisioningUseCase {
-  private readonly logger = new Logger(SetOrgSsoJitProvisioningUseCase.name);
-
-  constructor(private readonly repository: OrgSsoConnectionsRepository) {}
+  constructor(
+    @InjectPinoLogger(SetOrgSsoJitProvisioningUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly repository: OrgSsoConnectionsRepository,
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
   async execute(
     command: SetOrgSsoJitProvisioningCommand,
   ): Promise<OrgSsoConnection> {
-    this.logger.log('Setting organization SSO JIT provisioning', {
-      orgId: command.orgId,
-      enabled: command.enabled,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        enabled: command.enabled,
+      },
+      'Setting organization SSO JIT provisioning',
+    );
     const existing = await this.repository.findByOrgId(command.orgId);
     if (!existing) {
       throw new SsoConnectionNotFoundError(command.orgId);

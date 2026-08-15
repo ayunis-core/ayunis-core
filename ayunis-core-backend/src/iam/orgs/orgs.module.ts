@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgRecord } from './infrastructure/repositories/local/schema/org.record';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { getLoggerToken, PinoLogger } from 'nestjs-pino';
 
 // Import use cases
 import { FindOrgByIdUseCase } from './application/use-cases/find-org-by-id/find-org-by-id.use-case';
@@ -23,10 +24,16 @@ import { PermissionsModule } from 'src/iam/permissions/permissions.module';
   providers: [
     {
       provide: OrgsRepository,
-      useFactory: (orgRepository: Repository<OrgRecord>) => {
-        return new LocalOrgsRepository(orgRepository);
+      useFactory: (
+        logger: PinoLogger,
+        orgRepository: Repository<OrgRecord>,
+      ) => {
+        return new LocalOrgsRepository(logger, orgRepository);
       },
-      inject: [getRepositoryToken(OrgRecord)],
+      inject: [
+        getLoggerToken(LocalOrgsRepository.name),
+        getRepositoryToken(OrgRecord),
+      ],
     },
     // Use cases
     FindOrgByIdUseCase,
