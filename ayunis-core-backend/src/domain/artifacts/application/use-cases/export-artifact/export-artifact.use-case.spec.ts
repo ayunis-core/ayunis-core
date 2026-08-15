@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Readable } from 'stream';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -97,6 +98,10 @@ describe('ExportArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
+        {
+          provide: getLoggerToken(ExportArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: DocumentExportPort, useValue: mockExportPort },
         { provide: SpreadsheetExportPort, useValue: mockSpreadsheetExportPort },
@@ -114,9 +119,6 @@ describe('ExportArtifactUseCase', () => {
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
     downloadObjectUseCase = module.get(DownloadObjectUseCase);
     getThreadPiiMasksUseCase = module.get(GetThreadPiiMasksUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -425,6 +427,10 @@ describe('ExportArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
+        {
+          provide: getLoggerToken(ExportArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: DocumentExportPort, useValue: documentExportPort },
         { provide: SpreadsheetExportPort, useValue: spreadsheetExportPort },

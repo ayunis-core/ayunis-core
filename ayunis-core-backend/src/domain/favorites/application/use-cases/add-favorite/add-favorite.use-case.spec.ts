@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { FavoritesRepository } from '../../ports/favorites-repository.port';
 import { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
@@ -10,7 +11,7 @@ const WORKSPACE_ID = '22222222-2222-4222-8222-222222222222' as UUID;
 describe('AddFavoriteUseCase', () => {
   it('appends the reference for the user', async () => {
     const repository = createRepository();
-    const useCase = new AddFavoriteUseCase(repository);
+    const useCase = new AddFavoriteUseCase(createPinoLoggerMock(), repository);
 
     await useCase.execute(
       new AddFavoriteCommand(

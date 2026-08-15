@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import * as ExcelJS from 'exceljs';
 import {
   SpreadsheetExportPort,
@@ -123,7 +124,12 @@ function toCsvField(cell: EvaluatedCell): string {
 
 @Injectable()
 export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
-  private readonly logger = new Logger(XlsxSpreadsheetExportService.name);
+  constructor(
+    @InjectPinoLogger(XlsxSpreadsheetExportService.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   async exportToXlsx(data: SpreadsheetExportInput): Promise<Buffer> {
     const workbook = new ExcelJS.Workbook();
@@ -170,9 +176,10 @@ export class XlsxSpreadsheetExportService extends SpreadsheetExportPort {
         data.formulaCells,
       ).evaluateForExport();
     } catch (error) {
-      this.logger.warn('Spreadsheet evaluation failed, exporting raw values', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error },
+        'Spreadsheet evaluation failed, exporting raw values',
+      );
       return {
         values: data.grid.rows,
         liveFormulaCells: data.grid.rows.map((row) => row.map(() => false)),

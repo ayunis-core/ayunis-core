@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -11,9 +12,9 @@ import { ToggleFavoriteCommand } from './toggle-favorite.command';
 
 @Injectable()
 export class ToggleFavoriteUseCase {
-  private readonly logger = new Logger(ToggleFavoriteUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ToggleFavoriteUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly favoritesRepository: FavoritesRepository,
     private readonly favoriteReferenceResolver: FavoriteReferenceResolver,
     private readonly contextService: ContextService,
@@ -21,10 +22,13 @@ export class ToggleFavoriteUseCase {
 
   @HandleUnexpectedErrors(UnexpectedFavoriteError)
   async execute(command: ToggleFavoriteCommand): Promise<void> {
-    this.logger.log('Toggling favorite', {
-      referenceType: command.referenceType,
-      referenceId: command.referenceId,
-    });
+    this.logger.info(
+      {
+        referenceType: command.referenceType,
+        referenceId: command.referenceId,
+      },
+      'Toggling favorite',
+    );
     const userId = this.requireUserId();
     const current = await this.favoritesRepository.findAllByUserId(userId);
     const existing = current.find(

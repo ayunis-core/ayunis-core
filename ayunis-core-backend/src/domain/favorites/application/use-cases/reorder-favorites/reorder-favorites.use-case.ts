@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -10,18 +11,21 @@ import { ReorderFavoritesCommand } from './reorder-favorites.command';
 
 @Injectable()
 export class ReorderFavoritesUseCase {
-  private readonly logger = new Logger(ReorderFavoritesUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ReorderFavoritesUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly favoritesRepository: FavoritesRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedFavoriteError)
   async execute(command: ReorderFavoritesCommand): Promise<Favorite[]> {
-    this.logger.log('Reordering favorites', {
-      count: command.favoriteIds.length,
-    });
+    this.logger.info(
+      {
+        count: command.favoriteIds.length,
+      },
+      'Reordering favorites',
+    );
     const userId = this.requireUserId();
     const current = await this.favoritesRepository.findAllByUserId(userId);
     const currentById = new Map(

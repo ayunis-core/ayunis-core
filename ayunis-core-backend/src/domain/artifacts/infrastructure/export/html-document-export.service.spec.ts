@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { HtmlDocumentExportService } from './html-document-export.service';
 import type { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import type { LetterheadConfig } from '../../application/ports/document-export.port';
@@ -67,7 +68,7 @@ describe('HtmlDocumentExportService', () => {
     compositor = {
       composite: jest.fn().mockResolvedValue(Buffer.from('%PDF-composited')),
     } as unknown as jest.Mocked<PdfLetterheadCompositor>;
-    service = new HtmlDocumentExportService(compositor);
+    service = new HtmlDocumentExportService(createPinoLoggerMock(), compositor);
   });
 
   afterAll(async () => {

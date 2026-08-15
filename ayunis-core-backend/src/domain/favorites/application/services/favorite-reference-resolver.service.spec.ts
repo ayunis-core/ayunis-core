@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
@@ -80,6 +81,7 @@ function createResolver(params: {
   threads?: unknown[];
 }): FavoriteReferenceResolver {
   return new FavoriteReferenceResolver(
+    createPinoLoggerMock(),
     {
       execute: jest.fn().mockResolvedValue(params.workspaces ?? []),
     } as unknown as FindWorkspacesByIdsUseCase,

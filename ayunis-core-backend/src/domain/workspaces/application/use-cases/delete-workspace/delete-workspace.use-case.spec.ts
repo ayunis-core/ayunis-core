@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
@@ -21,17 +22,16 @@ describe('DeleteWorkspaceUseCase', () => {
   let repository: jest.Mocked<WorkspacesRepository>;
   let eventEmitter: { emitAsync: jest.Mock };
 
-  beforeAll(() => {
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-  });
-
   beforeEach(async () => {
     repository = createMockWorkspacesRepository();
     eventEmitter = { emitAsync: jest.fn().mockResolvedValue([]) };
     const module = await Test.createTestingModule({
       providers: [
         DeleteWorkspaceUseCase,
+        {
+          provide: getLoggerToken(DeleteWorkspaceUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: WorkspacesRepository, useValue: repository },
         { provide: ContextService, useValue: createMockContextService() },
         { provide: EventEmitter2, useValue: eventEmitter },

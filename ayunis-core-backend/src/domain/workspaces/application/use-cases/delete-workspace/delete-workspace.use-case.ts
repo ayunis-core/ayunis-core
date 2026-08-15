@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -15,9 +16,9 @@ import { DeleteWorkspaceCommand } from './delete-workspace.command';
 
 @Injectable()
 export class DeleteWorkspaceUseCase {
-  private readonly logger = new Logger(DeleteWorkspaceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteWorkspaceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
@@ -25,7 +26,7 @@ export class DeleteWorkspaceUseCase {
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: DeleteWorkspaceCommand): Promise<void> {
-    this.logger.log('Deleting workspace', { workspaceId: command.id });
+    this.logger.info({ workspaceId: command.id }, 'Deleting workspace');
 
     const userId = this.resolveUserId();
     const workspace = await this.workspacesRepository.findById(

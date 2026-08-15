@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { UpdateArtifactUseCase } from './update-artifact.use-case';
@@ -62,6 +63,10 @@ describe('UpdateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
+        {
+          provide: getLoggerToken(UpdateArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         {
@@ -74,9 +79,6 @@ describe('UpdateArtifactUseCase', () => {
     useCase = module.get<UpdateArtifactUseCase>(UpdateArtifactUseCase);
     artifactsRepository = module.get(ArtifactsRepository);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -430,6 +432,10 @@ describe('UpdateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
+        {
+          provide: getLoggerToken(UpdateArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
         {

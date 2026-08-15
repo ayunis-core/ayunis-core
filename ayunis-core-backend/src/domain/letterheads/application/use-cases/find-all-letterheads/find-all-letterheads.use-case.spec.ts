@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { FindAllLetterheadsUseCase } from './find-all-letterheads.use-case';
 import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
@@ -32,6 +33,10 @@ describe('FindAllLetterheadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllLetterheadsUseCase,
+        {
+          provide: getLoggerToken(FindAllLetterheadsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -39,8 +44,6 @@ describe('FindAllLetterheadsUseCase', () => {
 
     useCase = module.get(FindAllLetterheadsUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {
@@ -92,6 +95,10 @@ describe('FindAllLetterheadsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllLetterheadsUseCase,
+        {
+          provide: getLoggerToken(FindAllLetterheadsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
       ],

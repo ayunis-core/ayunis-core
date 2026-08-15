@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { CreateArtifactCommand } from './create-artifact.command';
@@ -28,9 +29,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class CreateArtifactUseCase {
-  private readonly logger = new Logger(CreateArtifactUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateArtifactUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
@@ -40,10 +41,7 @@ export class CreateArtifactUseCase {
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
-    this.logger.log('Creating artifact', {
-      title: command.title,
-      type: command.type,
-    });
+    this.logger.info({ type: command.type }, 'Creating artifact');
 
     const userId = this.resolveUserId();
     const content = prepareContentForWrite(command.type, command.content);

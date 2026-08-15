@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { DeleteLetterheadUseCase } from './delete-letterhead.use-case';
 import { DeleteLetterheadCommand } from './delete-letterhead.command';
@@ -41,6 +42,10 @@ describe('DeleteLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteLetterheadUseCase,
+        {
+          provide: getLoggerToken(DeleteLetterheadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: DeleteObjectUseCase, useValue: mockDeleteObjectUseCase },
@@ -50,8 +55,6 @@ describe('DeleteLetterheadUseCase', () => {
     useCase = module.get(DeleteLetterheadUseCase);
     letterheadsRepository = module.get(LetterheadsRepository);
     deleteObjectUseCase = module.get(DeleteObjectUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {
@@ -126,6 +129,10 @@ describe('DeleteLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteLetterheadUseCase,
+        {
+          provide: getLoggerToken(DeleteLetterheadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: DeleteObjectUseCase, useValue: deleteObjectUseCase },

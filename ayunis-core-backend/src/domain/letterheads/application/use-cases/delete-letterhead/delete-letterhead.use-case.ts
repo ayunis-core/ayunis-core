@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -13,18 +14,21 @@ import { DeleteLetterheadCommand } from './delete-letterhead.command';
 
 @Injectable()
 export class DeleteLetterheadUseCase {
-  private readonly logger = new Logger(DeleteLetterheadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteLetterheadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
   ) {}
 
   async execute(command: DeleteLetterheadCommand): Promise<void> {
-    this.logger.log('Deleting letterhead', {
-      letterheadId: command.letterheadId,
-    });
+    this.logger.info(
+      {
+        letterheadId: command.letterheadId,
+      },
+      'Deleting letterhead',
+    );
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -57,9 +61,7 @@ export class DeleteLetterheadUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting letterhead', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error deleting letterhead');
       throw new UnexpectedLetterheadError('Error deleting letterhead', {
         error: error as Error,
       });

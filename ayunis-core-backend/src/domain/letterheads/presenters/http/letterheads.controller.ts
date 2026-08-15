@@ -8,7 +8,6 @@ import {
   Body,
   Res,
   ParseUUIDPipe,
-  Logger,
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
@@ -17,6 +16,7 @@ import {
   HttpStatus,
   StreamableFile,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -101,9 +101,9 @@ function parseMargins(value: unknown, label: string): PageMargins {
 @ApiTags('letterheads')
 @Controller('letterheads')
 export class LetterheadsController {
-  private readonly logger = new Logger(LetterheadsController.name);
-
   constructor(
+    @InjectPinoLogger(LetterheadsController.name)
+    private readonly logger: PinoLogger,
     private readonly createLetterheadUseCase: CreateLetterheadUseCase,
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
@@ -136,7 +136,7 @@ export class LetterheadsController {
     @Body() dto: CreateLetterheadDto,
     @UploadedFiles() files: UploadedFileFields,
   ): Promise<LetterheadResponseDto> {
-    this.logger.log('create', { name: dto.name });
+    this.logger.info('create');
 
     const firstPageFile = files.firstPagePdf?.[0];
     if (!firstPageFile) {
@@ -174,7 +174,7 @@ export class LetterheadsController {
     type: [LetterheadResponseDto],
   })
   async findAll(): Promise<LetterheadResponseDto[]> {
-    this.logger.log('findAll');
+    this.logger.info('findAll');
     const letterheads = await this.findAllLetterheadsUseCase.execute();
     return letterheads.map((l) => this.letterheadDtoMapper.toDto(l));
   }
@@ -196,7 +196,7 @@ export class LetterheadsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<LetterheadResponseDto> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const letterhead = await this.findLetterheadUseCase.execute(
       new FindLetterheadQuery({ letterheadId: id }),
     );
@@ -301,30 +301,35 @@ export class LetterheadsController {
     @Body() dto: UpdateLetterheadDto,
     @UploadedFiles() files: UploadedFileFields,
   ): Promise<LetterheadResponseDto> {
-    this.logger.log('update', { id });
+    this.logger.info({ id }, 'update');
 
+    const letterhead = await this.updateLetterheadUseCase.execute(
+      this.toUpdateCommand(id, dto, files),
+    );
+    return this.letterheadDtoMapper.toDto(letterhead);
+  }
+
+  private toUpdateCommand(
+    id: UUID,
+    dto: UpdateLetterheadDto,
+    files: UploadedFileFields,
+  ): UpdateLetterheadCommand {
     const firstPageMargins = dto.firstPageMargins
       ? parseMargins(dto.firstPageMargins, 'firstPageMargins')
       : undefined;
     const continuationPageMargins = dto.continuationPageMargins
       ? parseMargins(dto.continuationPageMargins, 'continuationPageMargins')
       : undefined;
-
-    const removeContinuationPage = dto.removeContinuationPage === 'true';
-
-    const letterhead = await this.updateLetterheadUseCase.execute(
-      new UpdateLetterheadCommand({
-        letterheadId: id,
-        name: dto.name,
-        description: dto.description,
-        firstPagePdfBuffer: files.firstPagePdf?.[0]?.buffer,
-        continuationPagePdfBuffer: files.continuationPagePdf?.[0]?.buffer,
-        removeContinuationPage,
-        firstPageMargins,
-        continuationPageMargins,
-      }),
-    );
-    return this.letterheadDtoMapper.toDto(letterhead);
+    return new UpdateLetterheadCommand({
+      letterheadId: id,
+      name: dto.name,
+      description: dto.description,
+      firstPagePdfBuffer: files.firstPagePdf?.[0]?.buffer,
+      continuationPagePdfBuffer: files.continuationPagePdf?.[0]?.buffer,
+      removeContinuationPage: dto.removeContinuationPage === 'true',
+      firstPageMargins,
+      continuationPageMargins,
+    });
   }
 
   @Delete(':id')
@@ -340,7 +345,7 @@ export class LetterheadsController {
   @ApiResponse({ status: 204, description: 'Letterhead deleted' })
   @ApiResponse({ status: 404, description: 'Letterhead not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
     await this.deleteLetterheadUseCase.execute(
       new DeleteLetterheadCommand({ letterheadId: id }),
     );

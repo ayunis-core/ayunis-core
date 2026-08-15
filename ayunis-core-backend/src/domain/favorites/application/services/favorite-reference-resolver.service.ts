@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { FindThreadsByIdsQuery } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.query';
@@ -14,9 +15,9 @@ import type { FavoriteResult } from '../use-cases/find-favorites/favorite.result
 
 @Injectable()
 export class FavoriteReferenceResolver {
-  private readonly logger = new Logger(FavoriteReferenceResolver.name);
-
   constructor(
+    @InjectPinoLogger(FavoriteReferenceResolver.name)
+    private readonly logger: PinoLogger,
     private readonly findWorkspacesByIdsUseCase: FindWorkspacesByIdsUseCase,
     private readonly findThreadsByIdsUseCase: FindThreadsByIdsUseCase,
   ) {}
@@ -47,11 +48,14 @@ export class FavoriteReferenceResolver {
     return favorites.flatMap((favorite) => {
       const result = this.resolve(favorite, workspacesById, threadsById);
       if (!result) {
-        this.logger.warn('Ignoring stale favorite reference', {
-          favoriteId: favorite.id,
-          referenceType: favorite.referenceType,
-          referenceId: favorite.referenceId,
-        });
+        this.logger.warn(
+          {
+            favoriteId: favorite.id,
+            referenceType: favorite.referenceType,
+            referenceId: favorite.referenceId,
+          },
+          'Ignoring stale favorite reference',
+        );
       }
       return result ? [result] : [];
     });

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -12,17 +13,20 @@ import { FindLetterheadQuery } from './find-letterhead.query';
 
 @Injectable()
 export class FindLetterheadUseCase {
-  private readonly logger = new Logger(FindLetterheadUseCase.name);
-
   constructor(
+    @InjectPinoLogger(FindLetterheadUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly letterheadsRepository: LetterheadsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: FindLetterheadQuery): Promise<Letterhead> {
-    this.logger.log('Finding letterhead', {
-      letterheadId: query.letterheadId,
-    });
+    this.logger.info(
+      {
+        letterheadId: query.letterheadId,
+      },
+      'Finding letterhead',
+    );
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -44,9 +48,7 @@ export class FindLetterheadUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error finding letterhead', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error finding letterhead');
       throw new UnexpectedLetterheadError('Error finding letterhead', {
         error: error as Error,
       });

@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import type { SpreadsheetExportInput } from '../../application/ports/spreadsheet-export.port';
@@ -11,7 +12,7 @@ describe('XlsxSpreadsheetExportService', () => {
   let service: XlsxSpreadsheetExportService;
 
   beforeEach(() => {
-    service = new XlsxSpreadsheetExportService();
+    service = new XlsxSpreadsheetExportService(createPinoLoggerMock());
   });
 
   function createExportInput(
