@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OrgAcademyAccessSettingsRepository } from '../../ports/org-academy-access-settings.repository';
 import { OrgAcademyAccessSettings } from '../../../domain/org-academy-access-settings.entity';
@@ -11,9 +12,9 @@ import { GetOrgAcademyAccessSettingsQuery } from './get-org-academy-access-setti
  */
 @Injectable()
 export class GetOrgAcademyAccessSettingsUseCase {
-  private readonly logger = new Logger(GetOrgAcademyAccessSettingsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetOrgAcademyAccessSettingsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: OrgAcademyAccessSettingsRepository,
   ) {}
 
@@ -21,9 +22,12 @@ export class GetOrgAcademyAccessSettingsUseCase {
   async execute(
     query: GetOrgAcademyAccessSettingsQuery,
   ): Promise<OrgAcademyAccessSettings> {
-    this.logger.debug('Getting org academy access settings', {
-      orgId: query.orgId,
-    });
+    this.logger.debug(
+      {
+        orgId: query.orgId,
+      },
+      'Getting org academy access settings',
+    );
 
     const settings = await this.repository.findByOrgId(query.orgId);
     return settings ?? new OrgAcademyAccessSettings({ orgId: query.orgId });

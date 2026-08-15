@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { FindAllUserSummariesByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-all-user-summaries-by-org-id/find-all-user-summaries-by-org-id.use-case';
@@ -36,6 +37,10 @@ describe('ListOrgCertificateStatusesUseCase', () => {
       providers: [
         ListOrgCertificateStatusesUseCase,
         {
+          provide: getLoggerToken(ListOrgCertificateStatusesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: GetOrgAcademyAccessSettingsUseCase,
           useValue: { execute: jest.fn() },
         },
@@ -60,8 +65,6 @@ describe('ListOrgCertificateStatusesUseCase', () => {
     withMode(AcademyAccessMode.REQUIRED_ANNUALLY);
     withUsers([anna, bruno, carla]);
     withCompletions(new Map());
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

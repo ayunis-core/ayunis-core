@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { UpdateRolePermissionsUseCase } from './update-role-permissions.use-case';
 import { UpdateRolePermissionsCommand } from './update-role-permissions.command';
 import type { RolePermissionsRepository } from '../../ports/role-permissions.repository';
@@ -14,6 +15,7 @@ describe('UpdateRolePermissionsUseCase', () => {
   beforeEach(() => {
     repository = { setForRole: jest.fn() };
     useCase = new UpdateRolePermissionsUseCase(
+      createPinoLoggerMock(),
       repository as unknown as RolePermissionsRepository,
     );
   });

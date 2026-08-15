@@ -1,5 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
@@ -58,8 +58,10 @@ describe('SubscriptionGuard', () => {
 
   let hasActiveSubscriptionUseCase: jest.Mocked<HasActiveSubscriptionUseCase>;
   let getTrialUseCase: jest.Mocked<GetTrialUseCase>;
+  let logger: ReturnType<typeof createPinoLoggerMock>;
 
   beforeEach(() => {
+    logger = createPinoLoggerMock();
     hasActiveSubscriptionUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<HasActiveSubscriptionUseCase>;
@@ -70,6 +72,7 @@ describe('SubscriptionGuard', () => {
 
   const makeGuard = (reflector: Reflector): SubscriptionGuard =>
     new SubscriptionGuard(
+      logger,
       reflector,
       hasActiveSubscriptionUseCase,
       getTrialUseCase,
@@ -209,11 +212,6 @@ describe('SubscriptionGuard', () => {
     });
 
     it('denies at warn (not error) with SubscriptionRequiredError when the org has no trial', async () => {
-      const errorSpy = jest
-        .spyOn(Logger.prototype, 'error')
-        .mockImplementation();
-      const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -229,21 +227,14 @@ describe('SubscriptionGuard', () => {
         makeGuard(reflector).canActivate(context),
       ).rejects.toBeInstanceOf(SubscriptionRequiredError);
       // A "no trial" denial is a normal authz decision: warn, never error.
-      expect(warnSpy).toHaveBeenCalledWith(
-        'Access denied: no trial found',
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ orgId }),
+        'Access denied: no trial found',
       );
-      expect(errorSpy).not.toHaveBeenCalled();
-
-      errorSpy.mockRestore();
-      warnSpy.mockRestore();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('logs at error and denies when the trial lookup fails unexpectedly', async () => {
-      const errorSpy = jest
-        .spyOn(Logger.prototype, 'error')
-        .mockImplementation();
-
       hasActiveSubscriptionUseCase.execute.mockResolvedValue({
         hasActiveSubscription: false,
         subscriptionType: null,
@@ -259,9 +250,7 @@ describe('SubscriptionGuard', () => {
 
       // Only TrialNotFoundError is graceful; a real fault still surfaces at error.
       expect(result).toBe(false);
-      expect(errorSpy).toHaveBeenCalled();
-
-      errorSpy.mockRestore();
+      expect(logger.error).toHaveBeenCalled();
     });
 
     it('grants access on the unfiltered form when any active subscription exists', async () => {

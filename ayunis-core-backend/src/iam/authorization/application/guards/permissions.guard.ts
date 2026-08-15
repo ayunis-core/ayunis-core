@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
@@ -15,9 +11,9 @@ import { REQUIRE_PERMISSION_KEY } from '../decorators/permissions.decorator';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  private readonly logger = new Logger(PermissionsGuard.name);
-
   constructor(
+    @InjectPinoLogger(PermissionsGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly hasPermissionUseCase: HasPermissionUseCase,
   ) {}
@@ -35,10 +31,13 @@ export class PermissionsGuard implements CanActivate {
     const user = request.user as ActiveUser | undefined;
 
     if (!user) {
-      this.logger.warn('Access denied: no principal for permission check', {
-        ...buildAccessDeniedAuditContext(request, user),
-        requiredPermissions,
-      });
+      this.logger.warn(
+        {
+          ...buildAccessDeniedAuditContext(request, user),
+          requiredPermissions,
+        },
+        'Access denied: no principal for permission check',
+      );
       return false;
     }
 
@@ -52,11 +51,14 @@ export class PermissionsGuard implements CanActivate {
     const allowed = grants.includes(true);
 
     if (!allowed) {
-      this.logger.warn('Access denied: missing permission', {
-        ...buildAccessDeniedAuditContext(request, user),
-        userRole: user.role,
-        requiredPermissions,
-      });
+      this.logger.warn(
+        {
+          ...buildAccessDeniedAuditContext(request, user),
+          userRole: user.role,
+          requiredPermissions,
+        },
+        'Access denied: missing permission',
+      );
     }
 
     return allowed;

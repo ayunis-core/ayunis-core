@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
@@ -13,15 +14,15 @@ import {
 
 @Injectable()
 export class ValidateApiKeyUseCase {
-  private readonly logger = new Logger(ValidateApiKeyUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ValidateApiKeyUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly compareHashUseCase: CompareHashUseCase,
   ) {}
 
   async execute(command: ValidateApiKeyCommand): Promise<ApiKey> {
-    this.logger.log('execute');
+    this.logger.info('execute');
 
     try {
       const apiKey = await this.lookupAndAuthenticate(command.token);
@@ -31,9 +32,12 @@ export class ValidateApiKeyUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to validate API key', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Failed to validate API key',
+      );
       throw new UnexpectedApiKeyError();
     }
   }
@@ -67,7 +71,7 @@ export class ValidateApiKeyUseCase {
     }
     // Log apiKeyId server-side for forensics — never include in the public
     // payload (AYC-77 finding S4).
-    this.logger.warn('Rejected expired API key', { apiKeyId: apiKey.id });
+    this.logger.warn({ apiKeyId: apiKey.id }, 'Rejected expired API key');
     throw new ApiKeyExpiredError();
   }
 }

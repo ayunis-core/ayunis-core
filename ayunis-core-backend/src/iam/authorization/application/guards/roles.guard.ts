@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -13,9 +9,11 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  private readonly logger = new Logger(RolesGuard.name);
-
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    @InjectPinoLogger(RolesGuard.name)
+    private readonly logger: PinoLogger,
+    private readonly reflector: Reflector,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     const contextRoles = this.reflector.getAllAndOverride<
@@ -31,11 +29,14 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    this.logger.warn('Access denied: insufficient role', {
-      ...buildAccessDeniedAuditContext(request, user),
-      userRole: user?.role,
-      requiredRoles: contextRoles,
-    });
+    this.logger.warn(
+      {
+        ...buildAccessDeniedAuditContext(request, user),
+        userRole: user?.role,
+        requiredRoles: contextRoles,
+      },
+      'Access denied: insufficient role',
+    );
     return false;
   }
 }

@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -31,9 +27,9 @@ const UNGATED_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'DELETE']);
 
 @Injectable()
 export class AcademyCertificateGuard implements CanActivate {
-  private readonly logger = new Logger(AcademyCertificateGuard.name);
-
   constructor(
+    @InjectPinoLogger(AcademyCertificateGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly evaluateAcademyAccessUseCase: EvaluateAcademyAccessUseCase,
   ) {}
@@ -55,8 +51,8 @@ export class AcademyCertificateGuard implements CanActivate {
     const principal = this.resolvePrincipal(request);
     if (!principal) {
       this.logger.warn(
-        'No principal found on request when checking academy certificate',
         buildAccessDeniedAuditContext(request),
+        'No principal found on request when checking academy certificate',
       );
       return false;
     }
@@ -64,10 +60,10 @@ export class AcademyCertificateGuard implements CanActivate {
     // The certificate belongs to a person; an API key has no holder to certify.
     if (!principal.userId) {
       this.logger.warn(
-        'Academy certificate gate skipped for api-key principal',
         {
           orgId: principal.orgId,
         },
+        'Academy certificate gate skipped for api-key principal',
       );
       return true;
     }
@@ -79,13 +75,16 @@ export class AcademyCertificateGuard implements CanActivate {
       return true;
     }
 
-    this.logger.warn('Access denied: academy certificate required', {
-      ...buildAccessDeniedAuditContext(request, {
-        id: principal.userId,
-        orgId: principal.orgId,
-      }),
-      mode: evaluation.mode,
-    });
+    this.logger.warn(
+      {
+        ...buildAccessDeniedAuditContext(request, {
+          id: principal.userId,
+          orgId: principal.orgId,
+        }),
+        mode: evaluation.mode,
+      },
+      'Access denied: academy certificate required',
+    );
     throw new AcademyCertificateRequiredError({
       mode: evaluation.mode,
       expiresAt: evaluation.expiresAt,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
 import { RevokeApiKeyCommand } from './revoke-api-key.command';
 import {
@@ -11,9 +12,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class RevokeApiKeyUseCase {
-  private readonly logger = new Logger(RevokeApiKeyUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RevokeApiKeyUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly apiKeysRepository: ApiKeysRepository,
     private readonly contextService: ContextService,
   ) {}
@@ -25,7 +26,7 @@ export class RevokeApiKeyUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('execute', { apiKeyId: command.apiKeyId, orgId });
+    this.logger.info({ apiKeyId: command.apiKeyId, orgId }, 'execute');
 
     try {
       const apiKey = await this.apiKeysRepository.findById(command.apiKeyId);
@@ -38,22 +39,25 @@ export class RevokeApiKeyUseCase {
       }
 
       if (apiKey.orgId !== orgId) {
-        this.logger.warn('Cross-org API key revoke attempt', {
-          apiKeyId: command.apiKeyId,
-          keyOrgId: apiKey.orgId,
-          callerOrgId: orgId,
-        });
+        this.logger.warn(
+          {
+            apiKeyId: command.apiKeyId,
+            keyOrgId: apiKey.orgId,
+            callerOrgId: orgId,
+          },
+          'Cross-org API key revoke attempt',
+        );
         throw new ApiKeyNotFoundError(command.apiKeyId);
       }
 
       await this.apiKeysRepository.revoke(command.apiKeyId);
 
-      this.logger.debug('API key revoked', { apiKeyId: command.apiKeyId });
+      this.logger.debug({ apiKeyId: command.apiKeyId }, 'API key revoked');
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to revoke API key', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Failed to revoke API key');
       throw new UnexpectedApiKeyError();
     }
   }

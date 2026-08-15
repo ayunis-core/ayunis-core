@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -27,9 +23,9 @@ interface RequestWithPrincipal extends Request {
 
 @Injectable()
 export class UsageBasedSubscriptionGuard implements CanActivate {
-  private readonly logger = new Logger(UsageBasedSubscriptionGuard.name);
-
   constructor(
+    @InjectPinoLogger(UsageBasedSubscriptionGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
   ) {}
@@ -91,7 +87,8 @@ export class UsageBasedSubscriptionGuard implements CanActivate {
 
       if (!isUsageBased) {
         this.logger.warn(
-          `Access denied: org ${orgId} has no active usage-based subscription`,
+          { orgId },
+          'Access denied: org has no active usage-based subscription',
         );
         throw new SubscriptionRequiredError(SubscriptionType.USAGE_BASED);
       }
@@ -103,8 +100,8 @@ export class UsageBasedSubscriptionGuard implements CanActivate {
       }
 
       this.logger.error(
-        `Failed to check usage-based subscription for org ${orgId}`,
-        error instanceof Error ? error.stack : undefined,
+        { err: error as Error, orgId },
+        'Failed to check usage-based subscription',
       );
 
       return false;

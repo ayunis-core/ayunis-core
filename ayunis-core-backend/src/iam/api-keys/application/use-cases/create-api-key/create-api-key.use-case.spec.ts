@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { QueryFailedError } from 'typeorm';
 import type { UUID } from 'crypto';
 import { CreateApiKeyUseCase } from './create-api-key.use-case';
@@ -48,6 +49,10 @@ describe('CreateApiKeyUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateApiKeyUseCase,
+        {
+          provide: getLoggerToken(CreateApiKeyUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: HashTextUseCase, useValue: mockHashTextUseCase },
@@ -58,11 +63,6 @@ describe('CreateApiKeyUseCase', () => {
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
     hashTextUseCase = module.get(HashTextUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns the created api key and the plaintext secret', async () => {

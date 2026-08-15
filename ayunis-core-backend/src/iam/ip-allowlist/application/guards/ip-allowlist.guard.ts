@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -29,10 +25,11 @@ export class IpAllowlistGuard
   extends IpAllowlistCachePort
   implements CanActivate
 {
-  private readonly logger = new Logger(IpAllowlistGuard.name);
   private readonly cache = new Map<UUID, CacheEntry>();
 
   constructor(
+    @InjectPinoLogger(IpAllowlistGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly repository: IpAllowlistRepository,
   ) {
@@ -67,8 +64,8 @@ export class IpAllowlistGuard
 
     if (!clientIp) {
       this.logger.warn(
-        'Access denied: client IP could not be determined',
         buildAccessDeniedAuditContext(request, user),
+        'Access denied: client IP could not be determined',
       );
       throw new IpNotAllowedError();
     }
@@ -78,8 +75,8 @@ export class IpAllowlistGuard
     }
 
     this.logger.warn(
-      'Access denied: client IP not in allowlist',
       buildAccessDeniedAuditContext(request, user),
+      'Access denied: client IP not in allowlist',
     );
     throw new IpNotAllowedError();
   }
@@ -105,9 +102,8 @@ export class IpAllowlistGuard
       return cidrs;
     } catch (error: unknown) {
       this.logger.warn(
-        `Failed to fetch IP allowlist for org ${orgId}, failing open: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        { err: error as Error, orgId },
+        'Failed to fetch IP allowlist, failing open',
       );
       return null;
     }

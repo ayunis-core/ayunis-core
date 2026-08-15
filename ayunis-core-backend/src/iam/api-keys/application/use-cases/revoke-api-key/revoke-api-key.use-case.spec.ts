@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { RevokeApiKeyUseCase } from './revoke-api-key.use-case';
 import { RevokeApiKeyCommand } from './revoke-api-key.command';
@@ -14,7 +15,7 @@ describe('RevokeApiKeyUseCase', () => {
   let useCase: RevokeApiKeyUseCase;
   let apiKeysRepository: jest.Mocked<ApiKeysRepository>;
   let contextService: jest.Mocked<Pick<ContextService, 'get'>>;
-  let warnSpy: jest.SpyInstance;
+  let logger: ReturnType<typeof createPinoLoggerMock>;
 
   const orgId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
   const otherOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
@@ -37,9 +38,14 @@ describe('RevokeApiKeyUseCase', () => {
       ),
     };
 
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RevokeApiKeyUseCase,
+        {
+          provide: getLoggerToken(RevokeApiKeyUseCase.name),
+          useValue: logger,
+        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -48,11 +54,6 @@ describe('RevokeApiKeyUseCase', () => {
     useCase = module.get(RevokeApiKeyUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   function buildKey(overrides: Partial<{ orgId: UUID }> = {}): ApiKey {
@@ -92,13 +93,13 @@ describe('RevokeApiKeyUseCase', () => {
       useCase.execute(new RevokeApiKeyCommand(apiKeyId)),
     ).rejects.toThrow(ApiKeyNotFoundError);
     expect(apiKeysRepository.revoke).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Cross-org API key revoke attempt',
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
         apiKeyId,
         keyOrgId: otherOrgId,
         callerOrgId: orgId,
       }),
+      'Cross-org API key revoke attempt',
     );
   });
 

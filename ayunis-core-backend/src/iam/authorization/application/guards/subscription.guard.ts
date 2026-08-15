@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import type { UUID } from 'crypto';
@@ -42,9 +38,9 @@ type Trial = Awaited<ReturnType<GetTrialUseCase['execute']>>;
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
-  private readonly logger = new Logger(SubscriptionGuard.name);
-
   constructor(
+    @InjectPinoLogger(SubscriptionGuard.name)
+    private readonly logger: PinoLogger,
     private readonly reflector: Reflector,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getTrialUseCase: GetTrialUseCase,
@@ -83,12 +79,15 @@ export class SubscriptionGuard implements CanActivate {
       return false;
     }
 
-    this.logger.debug('Checking subscription for organization', {
-      orgId: principal.orgId,
-      userId: principal.userId,
-      apiKeyId: principal.apiKeyId,
-      requiredType: options.type,
-    });
+    this.logger.debug(
+      {
+        orgId: principal.orgId,
+        userId: principal.userId,
+        apiKeyId: principal.apiKeyId,
+        requiredType: options.type,
+      },
+      'Checking subscription for organization',
+    );
 
     return this.evaluateSubscriptionAccess(principal, options, request);
   }
@@ -105,10 +104,13 @@ export class SubscriptionGuard implements CanActivate {
         );
 
       if (hasActiveSubscription) {
-        this.logger.debug('Access granted: active subscription found', {
-          orgId: principal.orgId,
-          requiredType: options.type,
-        });
+        this.logger.debug(
+          {
+            orgId: principal.orgId,
+            requiredType: options.type,
+          },
+          'Access granted: active subscription found',
+        );
 
         request.subscriptionContext = {
           hasActiveSubscription: true,
@@ -132,10 +134,13 @@ export class SubscriptionGuard implements CanActivate {
         throw error;
       }
 
-      this.logger.error('Error checking subscription/trial', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: principal.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: principal.orgId,
+        },
+        'Error checking subscription/trial',
+      );
 
       return false;
     }
@@ -145,27 +150,36 @@ export class SubscriptionGuard implements CanActivate {
     principal: GuardPrincipal,
     request: RequestWithSubscriptionContext,
   ): Promise<boolean> {
-    this.logger.debug('No matching subscription, checking trial capacity', {
-      orgId: principal.orgId,
-    });
+    this.logger.debug(
+      {
+        orgId: principal.orgId,
+      },
+      'No matching subscription, checking trial capacity',
+    );
 
     const trial = await this.getTrialOrNull(principal.orgId);
 
     if (!trial) {
-      this.logger.warn('Access denied: no trial found', {
-        orgId: principal.orgId,
-      });
+      this.logger.warn(
+        {
+          orgId: principal.orgId,
+        },
+        'Access denied: no trial found',
+      );
 
       return false;
     }
 
     if (trial.messagesSent < trial.maxMessages) {
-      this.logger.debug('Access granted: trial has remaining messages', {
-        orgId: principal.orgId,
-        messagesSent: trial.messagesSent,
-        maxMessages: trial.maxMessages,
-        remainingMessages: trial.maxMessages - trial.messagesSent,
-      });
+      this.logger.debug(
+        {
+          orgId: principal.orgId,
+          messagesSent: trial.messagesSent,
+          maxMessages: trial.maxMessages,
+          remainingMessages: trial.maxMessages - trial.messagesSent,
+        },
+        'Access granted: trial has remaining messages',
+      );
 
       request.subscriptionContext = {
         hasActiveSubscription: false,
@@ -175,11 +189,14 @@ export class SubscriptionGuard implements CanActivate {
       return true;
     }
 
-    this.logger.warn('Access denied: trial exhausted', {
-      orgId: principal.orgId,
-      messagesSent: trial.messagesSent,
-      maxMessages: trial.maxMessages,
-    });
+    this.logger.warn(
+      {
+        orgId: principal.orgId,
+        messagesSent: trial.messagesSent,
+        maxMessages: trial.maxMessages,
+      },
+      'Access denied: trial exhausted',
+    );
 
     return false;
   }

@@ -1,9 +1,5 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { EmailNotVerifiedError } from '../authorization.errors';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
@@ -11,9 +7,11 @@ import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class EmailConfirmGuard implements CanActivate {
-  private readonly logger = new Logger(EmailConfirmGuard.name);
-
-  constructor(private reflector: Reflector) {}
+  constructor(
+    @InjectPinoLogger(EmailConfirmGuard.name)
+    private readonly logger: PinoLogger,
+    private reflector: Reflector,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
     // Check if route is public
@@ -25,8 +23,9 @@ export class EmailConfirmGuard implements CanActivate {
       return true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const user: ActiveUser = context.switchToHttp().getRequest().user;
+    const user = context
+      .switchToHttp()
+      .getRequest<{ user?: ActiveUser }>().user;
     if (!user) {
       this.logger.warn('User not found in request context');
       return false;

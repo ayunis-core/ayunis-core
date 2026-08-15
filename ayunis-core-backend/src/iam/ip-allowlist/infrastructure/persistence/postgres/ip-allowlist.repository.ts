@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -9,9 +10,9 @@ import { IpAllowlistMapper } from './mappers/ip-allowlist.mapper';
 
 @Injectable()
 export class PostgresIpAllowlistRepository extends IpAllowlistRepository {
-  private readonly logger = new Logger(PostgresIpAllowlistRepository.name);
-
   constructor(
+    @InjectPinoLogger(PostgresIpAllowlistRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(IpAllowlistRecord)
     private readonly repository: Repository<IpAllowlistRecord>,
   ) {
@@ -19,7 +20,7 @@ export class PostgresIpAllowlistRepository extends IpAllowlistRepository {
   }
 
   async findByOrgId(orgId: UUID): Promise<IpAllowlist | null> {
-    this.logger.debug('findByOrgId', { orgId });
+    this.logger.debug({ orgId }, 'findByOrgId');
 
     const record = await this.repository.findOne({ where: { orgId } });
     if (!record) {
@@ -30,7 +31,7 @@ export class PostgresIpAllowlistRepository extends IpAllowlistRepository {
   }
 
   async upsert(entity: IpAllowlist): Promise<IpAllowlist> {
-    this.logger.debug('upsert', { orgId: entity.orgId });
+    this.logger.debug({ orgId: entity.orgId }, 'upsert');
 
     const record = IpAllowlistMapper.toRecord(entity);
 
@@ -47,7 +48,7 @@ export class PostgresIpAllowlistRepository extends IpAllowlistRepository {
   }
 
   async deleteByOrgId(orgId: UUID): Promise<void> {
-    this.logger.debug('deleteByOrgId', { orgId });
+    this.logger.debug({ orgId }, 'deleteByOrgId');
 
     await this.repository.delete({ orgId });
   }

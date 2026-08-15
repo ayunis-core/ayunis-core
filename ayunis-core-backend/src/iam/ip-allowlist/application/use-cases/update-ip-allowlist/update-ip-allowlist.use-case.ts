@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { IpAllowlistRepository } from '../../ports/ip-allowlist.repository';
 import { IpAllowlistCachePort } from '../../ports/ip-allowlist-cache.port';
@@ -17,18 +18,21 @@ import { isIpInCidrs } from '../../../domain/cidr.util';
 
 @Injectable()
 export class UpdateIpAllowlistUseCase {
-  private readonly logger = new Logger(UpdateIpAllowlistUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateIpAllowlistUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: IpAllowlistRepository,
     private readonly ipAllowlistCache: IpAllowlistCachePort,
   ) {}
 
   async execute(command: UpdateIpAllowlistCommand): Promise<IpAllowlist> {
-    this.logger.debug('Updating IP allowlist', {
-      orgId: command.orgId,
-      cidrCount: command.cidrs.length,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+        cidrCount: command.cidrs.length,
+      },
+      'Updating IP allowlist',
+    );
 
     try {
       // Validate CIDRs before lockout check so malformed input
@@ -63,10 +67,13 @@ export class UpdateIpAllowlistUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Failed to update IP allowlist', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+        },
+        'Failed to update IP allowlist',
+      );
 
       throw new UnexpectedIpAllowlistError('update', {
         orgId: command.orgId,

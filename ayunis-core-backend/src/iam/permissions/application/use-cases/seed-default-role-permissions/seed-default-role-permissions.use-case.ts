@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   CONFIGURABLE_ROLES,
@@ -17,17 +18,20 @@ import { SeedDefaultRolePermissionsCommand } from './seed-default-role-permissio
  */
 @Injectable()
 export class SeedDefaultRolePermissionsUseCase {
-  private readonly logger = new Logger(SeedDefaultRolePermissionsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SeedDefaultRolePermissionsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly rolePermissionsRepository: RolePermissionsRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedPermissionError)
   async execute(command: SeedDefaultRolePermissionsCommand): Promise<void> {
-    this.logger.log('Seeding default role permissions', {
-      orgId: command.orgId,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+      },
+      'Seeding default role permissions',
+    );
 
     await this.rolePermissionsRepository.setForRoles(
       command.orgId,

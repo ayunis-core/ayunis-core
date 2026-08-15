@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ListApiKeysByOrgUseCase } from './list-api-keys-by-org.use-case';
 import { ApiKeysRepository } from '../../ports/api-keys.repository';
@@ -36,6 +37,10 @@ describe('ListApiKeysByOrgUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ListApiKeysByOrgUseCase,
+        {
+          provide: getLoggerToken(ListApiKeysByOrgUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ApiKeysRepository, useValue: mockApiKeysRepository },
         { provide: ContextService, useValue: mockContextService },
       ],
@@ -44,9 +49,6 @@ describe('ListApiKeysByOrgUseCase', () => {
     useCase = module.get(ListApiKeysByOrgUseCase);
     apiKeysRepository = module.get(ApiKeysRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   it('returns api keys for the caller org, including revoked ones', async () => {
