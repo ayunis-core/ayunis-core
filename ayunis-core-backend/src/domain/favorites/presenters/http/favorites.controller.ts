@@ -4,9 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Patch,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -37,9 +37,9 @@ import { ToggleFavoriteDto } from './dtos/toggle-favorite.dto';
 @RequireFeature(FeatureFlag.Workspaces)
 @Controller('favorites')
 export class FavoritesController {
-  private readonly logger = new Logger(FavoritesController.name);
-
   constructor(
+    @InjectPinoLogger(FavoritesController.name)
+    private readonly logger: PinoLogger,
     private readonly findFavoritesUseCase: FindFavoritesUseCase,
     private readonly toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private readonly reorderFavoritesUseCase: ReorderFavoritesUseCase,
@@ -61,7 +61,7 @@ export class FavoritesController {
     },
   })
   async findAll(): Promise<FavoriteResponseDto[]> {
-    this.logger.log('findAll');
+    this.logger.info('findAll');
     return this.findFavoritesUseCase.execute();
   }
 
@@ -70,7 +70,7 @@ export class FavoritesController {
   @ApiOperation({ summary: 'Favorite or unfavorite an authorized reference' })
   @ApiResponse({ status: 204, description: 'The favorite was toggled' })
   async toggle(@Body() dto: ToggleFavoriteDto): Promise<void> {
-    this.logger.log('toggle', dto);
+    this.logger.info(dto, 'toggle');
     await this.toggleFavoriteUseCase.execute(
       new ToggleFavoriteCommand(dto.referenceType, dto.referenceId),
     );
@@ -81,7 +81,7 @@ export class FavoritesController {
   @ApiOperation({ summary: 'Reorder the current user favorites' })
   @ApiResponse({ status: 204, description: 'The favorites were reordered' })
   async reorder(@Body() dto: ReorderFavoritesDto): Promise<void> {
-    this.logger.log('reorder', { count: dto.favoriteIds.length });
+    this.logger.info({ count: dto.favoriteIds.length }, 'reorder');
     await this.reorderFavoritesUseCase.execute(
       new ReorderFavoritesCommand(dto.favoriteIds),
     );

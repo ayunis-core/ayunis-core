@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FavoriteReferenceResolver } from '../../services/favorite-reference-resolver.service';
@@ -27,7 +28,12 @@ describe('FindFavoritesUseCase', () => {
     const context = {
       get: jest.fn().mockReturnValue(USER_ID),
     } as unknown as ContextService;
-    const useCase = new FindFavoritesUseCase(repository, resolver, context);
+    const useCase = new FindFavoritesUseCase(
+      createPinoLoggerMock(),
+      repository,
+      resolver,
+      context,
+    );
 
     await expect(useCase.execute()).resolves.toBe(resolved);
     expect(resolver.resolveAll).toHaveBeenCalledWith([favorite], USER_ID);

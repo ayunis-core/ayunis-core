@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { AddFavoriteUseCase } from 'src/domain/favorites/application/use-cases/add-favorite/add-favorite.use-case';
@@ -34,6 +35,10 @@ describe('CreateWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         CreateWorkspaceUseCase,
+        {
+          provide: getLoggerToken(CreateWorkspaceUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: WorkspacesRepository, useValue: repository },
         { provide: AddFavoriteUseCase, useValue: addFavoriteUseCase },
         { provide: ContextService, useValue: contextService },
@@ -41,10 +46,6 @@ describe('CreateWorkspaceUseCase', () => {
     }).compile();
     useCase = module.get(CreateWorkspaceUseCase);
   }
-
-  beforeAll(() => {
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-  });
 
   beforeEach(async () => {
     await setup();

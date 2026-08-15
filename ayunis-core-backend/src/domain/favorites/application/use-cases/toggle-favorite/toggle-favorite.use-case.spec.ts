@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { FavoriteReferenceResolver } from '../../services/favorite-reference-resolver.service';
@@ -75,7 +76,12 @@ function setup(current: Favorite[] = []) {
   return {
     repository,
     resolver,
-    useCase: new ToggleFavoriteUseCase(repository, resolver, context),
+    useCase: new ToggleFavoriteUseCase(
+      createPinoLoggerMock(),
+      repository,
+      resolver,
+      context,
+    ),
   };
 }
 

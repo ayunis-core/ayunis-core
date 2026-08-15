@@ -5,12 +5,12 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { RequireFeature } from 'src/common/guards/feature.guard';
@@ -33,9 +33,9 @@ import { WorkspaceDtoMapper } from './mappers/workspace-dto.mapper';
 @Controller('workspaces')
 @RequireFeature(FeatureFlag.Workspaces)
 export class WorkspacesController {
-  private readonly logger = new Logger(WorkspacesController.name);
-
   constructor(
+    @InjectPinoLogger(WorkspacesController.name)
+    private readonly logger: PinoLogger,
     private readonly createWorkspaceUseCase: CreateWorkspaceUseCase,
     private readonly findAllWorkspacesUseCase: FindAllWorkspacesUseCase,
     private readonly findWorkspaceUseCase: FindWorkspaceUseCase,
@@ -52,7 +52,7 @@ export class WorkspacesController {
     type: WorkspaceResponseDto,
   })
   async create(@Body() dto: CreateWorkspaceDto): Promise<WorkspaceResponseDto> {
-    this.logger.log('create');
+    this.logger.info('create');
     const workspace = await this.createWorkspaceUseCase.execute(
       new CreateWorkspaceCommand({
         name: dto.name,
@@ -72,7 +72,7 @@ export class WorkspacesController {
     type: [WorkspaceResponseDto],
   })
   async findAll(): Promise<WorkspaceResponseDto[]> {
-    this.logger.log('findAll');
+    this.logger.info('findAll');
     const items = await this.findAllWorkspacesUseCase.execute();
     return items.map((item) => this.workspaceDtoMapper.toListItemDto(item));
   }
@@ -94,7 +94,7 @@ export class WorkspacesController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<WorkspaceResponseDto> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const workspace = await this.findWorkspaceUseCase.execute(
       new FindWorkspaceQuery(id),
     );
@@ -119,7 +119,7 @@ export class WorkspacesController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateWorkspaceDto,
   ): Promise<WorkspaceResponseDto> {
-    this.logger.log('update', { id });
+    this.logger.info({ id }, 'update');
     const workspace = await this.updateWorkspaceUseCase.execute(
       new UpdateWorkspaceCommand({
         id,
@@ -146,7 +146,7 @@ export class WorkspacesController {
   @ApiResponse({ status: 204, description: 'The workspace was deleted' })
   @ApiResponse({ status: 404, description: 'Workspace not found' })
   async remove(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('remove', { id });
+    this.logger.info({ id }, 'remove');
     await this.deleteWorkspaceUseCase.execute(new DeleteWorkspaceCommand(id));
   }
 }

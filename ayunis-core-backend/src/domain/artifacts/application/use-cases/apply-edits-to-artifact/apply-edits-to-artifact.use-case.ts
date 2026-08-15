@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
 import {
@@ -20,9 +21,9 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class ApplyEditsToArtifactUseCase {
-  private readonly logger = new Logger(ApplyEditsToArtifactUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ApplyEditsToArtifactUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
@@ -32,10 +33,13 @@ export class ApplyEditsToArtifactUseCase {
   async execute(
     command: ApplyEditsToArtifactCommand,
   ): Promise<ArtifactVersion> {
-    this.logger.log('Applying edits to artifact', {
-      artifactId: command.artifactId,
-      editCount: command.edits.length,
-    });
+    this.logger.info(
+      {
+        artifactId: command.artifactId,
+        editCount: command.edits.length,
+      },
+      'Applying edits to artifact',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {

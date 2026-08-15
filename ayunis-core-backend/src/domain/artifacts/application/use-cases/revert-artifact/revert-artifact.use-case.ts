@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { RevertArtifactCommand } from './revert-artifact.command';
 import {
@@ -17,19 +18,22 @@ import { addVersionWithRetry } from '../../helpers/add-version-with-retry';
 
 @Injectable()
 export class RevertArtifactUseCase {
-  private readonly logger = new Logger(RevertArtifactUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RevertArtifactUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: RevertArtifactCommand): Promise<ArtifactVersion> {
-    this.logger.log('Reverting artifact', {
-      artifactId: command.artifactId,
-      targetVersion: command.versionNumber,
-    });
+    this.logger.info(
+      {
+        artifactId: command.artifactId,
+        targetVersion: command.versionNumber,
+      },
+      'Reverting artifact',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {

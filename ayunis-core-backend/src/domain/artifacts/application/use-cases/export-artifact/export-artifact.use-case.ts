@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import {
   DocumentExportPort,
@@ -51,9 +52,9 @@ export interface ExportResult {
 
 @Injectable()
 export class ExportArtifactUseCase {
-  private readonly logger = new Logger(ExportArtifactUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ExportArtifactUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly documentExportPort: DocumentExportPort,
     private readonly spreadsheetExportPort: SpreadsheetExportPort,
@@ -65,10 +66,13 @@ export class ExportArtifactUseCase {
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
   async execute(command: ExportArtifactCommand): Promise<ExportResult> {
-    this.logger.log('Exporting artifact', {
-      artifactId: command.artifactId,
-      format: command.format,
-    });
+    this.logger.info(
+      {
+        artifactId: command.artifactId,
+        format: command.format,
+      },
+      'Exporting artifact',
+    );
 
     const userId = this.contextService.get('userId');
     if (!userId) {
@@ -254,9 +258,9 @@ export class ExportArtifactUseCase {
       if (error instanceof ArtifactExportTimeoutError || !letterheadConfig) {
         throw error;
       }
-      const reason = error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(
-        `Letterhead compositing failed, exporting without letterhead: ${reason}`,
+        { err: error as Error },
+        'Letterhead compositing failed, exporting without letterhead',
       );
       buffer = await this.documentExportPort.exportToPdf(content);
     }
@@ -280,9 +284,9 @@ export class ExportArtifactUseCase {
       );
       return await this.downloadLetterheadPdfs(letterhead);
     } catch (error) {
-      const reason = error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(
-        `Failed to resolve letterhead ${artifact.letterheadId}, exporting without background: ${reason}`,
+        { err: error as Error, letterheadId: artifact.letterheadId },
+        'Failed to resolve letterhead, exporting without background',
       );
       return undefined;
     }

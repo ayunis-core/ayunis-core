@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -11,9 +12,9 @@ import { LetterheadMapper } from './mappers/letterhead.mapper';
 
 @Injectable()
 export class LocalLetterheadsRepository extends LetterheadsRepository {
-  private readonly logger = new Logger(LocalLetterheadsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalLetterheadsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(LetterheadRecord)
     private readonly repo: Repository<LetterheadRecord>,
     private readonly mapper: LetterheadMapper,
@@ -35,7 +36,7 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
   }
 
   async save(letterhead: Letterhead): Promise<Letterhead> {
-    this.logger.log(`Saving letterhead ${letterhead.id}`);
+    this.logger.info({ letterheadId: letterhead.id }, 'Saving letterhead');
     const record = this.mapper.toRecord(letterhead);
     const saved = await this.repo.save(record);
     return this.mapper.toDomain(saved);

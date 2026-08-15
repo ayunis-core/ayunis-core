@@ -4,9 +4,10 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
 import { CreateArtifactUseCase } from './create-artifact.use-case';
@@ -36,6 +37,7 @@ describe('CreateArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
+  let logger: jest.Mocked<PinoLogger>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -69,6 +71,10 @@ describe('CreateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateArtifactUseCase,
+        {
+          provide: getLoggerToken(CreateArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindThreadUseCase, useValue: mockFindThreadUseCase },
@@ -83,8 +89,7 @@ describe('CreateArtifactUseCase', () => {
     artifactsRepository = module.get(ArtifactsRepository);
     findThreadUseCase = module.get(FindThreadUseCase);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    logger = module.get(getLoggerToken(CreateArtifactUseCase.name));
   });
 
   afterEach(() => {
@@ -118,6 +123,10 @@ describe('CreateArtifactUseCase', () => {
       '<h1>Budget Report</h1><p>Q1 2026 expenses...</p>',
     );
     expect(result.versions[0].authorType).toBe(AuthorType.ASSISTANT);
+    expect(logger.info).toHaveBeenCalledWith(
+      { type: ArtifactType.DOCUMENT },
+      'Creating artifact',
+    );
   });
 
   it('should create an artifact with letterheadId when provided', async () => {
@@ -186,6 +195,10 @@ describe('CreateArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateArtifactUseCase,
+        {
+          provide: getLoggerToken(CreateArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: artifactsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindThreadUseCase, useValue: findThreadUseCase },

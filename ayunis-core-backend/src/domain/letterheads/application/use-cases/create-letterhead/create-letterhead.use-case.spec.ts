@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { PDFDocument } from 'pdf-lib';
 import { CreateLetterheadUseCase } from './create-letterhead.use-case';
@@ -61,6 +62,10 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
+        {
+          provide: getLoggerToken(CreateLetterheadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
@@ -73,8 +78,6 @@ describe('CreateLetterheadUseCase', () => {
     uploadObjectUseCase = module.get(UploadObjectUseCase);
 
     letterheadsRepository.save.mockImplementation(async (l) => l);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
 
   afterEach(() => {
@@ -178,6 +181,10 @@ describe('CreateLetterheadUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateLetterheadUseCase,
+        {
+          provide: getLoggerToken(CreateLetterheadUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         LetterheadPdfService,
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },

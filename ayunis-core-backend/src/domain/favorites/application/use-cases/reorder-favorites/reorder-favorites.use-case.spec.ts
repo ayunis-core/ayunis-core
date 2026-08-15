@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
@@ -17,6 +18,7 @@ describe('ReorderFavoritesUseCase', () => {
     const second = createFavorite(SECOND_FAVORITE_ID, 1);
     const repository = createRepository([first, second]);
     const useCase = new ReorderFavoritesUseCase(
+      createPinoLoggerMock(),
       repository,
       createContextService(),
     );

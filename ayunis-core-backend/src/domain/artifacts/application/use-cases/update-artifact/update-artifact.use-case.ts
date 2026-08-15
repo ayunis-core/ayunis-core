@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ArtifactsRepository } from '../../ports/artifacts-repository.port';
 import { UpdateArtifactCommand } from './update-artifact.command';
 import {
@@ -26,9 +27,9 @@ import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-case
 
 @Injectable()
 export class UpdateArtifactUseCase {
-  private readonly logger = new Logger(UpdateArtifactUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateArtifactUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
@@ -38,7 +39,7 @@ export class UpdateArtifactUseCase {
   async execute(
     command: UpdateArtifactCommand,
   ): Promise<ArtifactVersion | void> {
-    this.logger.log('Updating artifact', { artifactId: command.artifactId });
+    this.logger.info({ artifactId: command.artifactId }, 'Updating artifact');
 
     const userId = this.resolveUserId();
 

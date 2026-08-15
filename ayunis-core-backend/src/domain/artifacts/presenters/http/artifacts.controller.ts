@@ -7,11 +7,11 @@ import {
   Body,
   Query,
   ParseUUIDPipe,
-  Logger,
   Res,
   StreamableFile,
   HttpStatus,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -49,9 +49,9 @@ import { ArtifactDtoMapper } from './mappers/artifact-dto.mapper';
 @ApiTags('artifacts')
 @Controller('artifacts')
 export class ArtifactsController {
-  private readonly logger = new Logger(ArtifactsController.name);
-
   constructor(
+    @InjectPinoLogger(ArtifactsController.name)
+    private readonly logger: PinoLogger,
     private readonly createArtifactUseCase: CreateArtifactUseCase,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
@@ -70,7 +70,7 @@ export class ArtifactsController {
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   async create(@Body() dto: CreateArtifactDto): Promise<ArtifactResponseDto> {
-    this.logger.log('create', { title: dto.title, threadId: dto.threadId });
+    this.logger.info({ threadId: dto.threadId }, 'create');
     const artifact = await this.createArtifactUseCase.execute(
       new CreateArtifactCommand({
         threadId: dto.threadId,
@@ -106,7 +106,7 @@ export class ArtifactsController {
     @Body() dto: UpdateArtifactDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ArtifactVersionResponseDto | void> {
-    this.logger.log('update', { artifactId: id });
+    this.logger.info({ artifactId: id }, 'update');
     const result = await this.updateArtifactUseCase.execute(
       new UpdateArtifactCommand({
         artifactId: id,
@@ -138,7 +138,7 @@ export class ArtifactsController {
   async findOne(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<ArtifactResponseDto> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const artifact = await this.findArtifactWithVersionsUseCase.execute(
       new FindArtifactWithVersionsQuery({ artifactId: id }),
     );
@@ -161,7 +161,7 @@ export class ArtifactsController {
   async findByThread(
     @Param('threadId', ParseUUIDPipe) threadId: UUID,
   ): Promise<ArtifactResponseDto[]> {
-    this.logger.log('findByThread', { threadId });
+    this.logger.info({ threadId }, 'findByThread');
     const artifacts = await this.findArtifactsByThreadUseCase.execute(
       new FindArtifactsByThreadQuery({ threadId }),
     );
@@ -186,10 +186,13 @@ export class ArtifactsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: RevertArtifactDto,
   ): Promise<ArtifactVersionResponseDto> {
-    this.logger.log('revert', {
-      artifactId: id,
-      versionNumber: dto.versionNumber,
-    });
+    this.logger.info(
+      {
+        artifactId: id,
+        versionNumber: dto.versionNumber,
+      },
+      'revert',
+    );
     const version = await this.revertArtifactUseCase.execute(
       new RevertArtifactCommand({
         artifactId: id,
@@ -230,7 +233,7 @@ export class ArtifactsController {
     @Query() query: ExportArtifactQueryDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.log('export', { artifactId: id, format: query.format });
+    this.logger.info({ artifactId: id, format: query.format }, 'export');
     const result = await this.exportArtifactUseCase.execute(
       new ExportArtifactCommand({
         artifactId: id,

@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   DocumentExportPort,
   LetterheadConfig,
@@ -51,10 +52,11 @@ const PDF_CSS = `
 export class HtmlDocumentExportService
   implements DocumentExportPort, OnModuleDestroy
 {
-  private readonly logger = new Logger(HtmlDocumentExportService.name);
   private readonly chromium = new LazyChromiumBrowser();
 
   constructor(
+    @InjectPinoLogger(HtmlDocumentExportService.name)
+    private readonly logger: PinoLogger,
     private readonly pdfLetterheadCompositor: PdfLetterheadCompositor,
   ) {}
 
@@ -63,7 +65,7 @@ export class HtmlDocumentExportService
   }
 
   async exportToDocx(html: string): Promise<Buffer> {
-    this.logger.log('Exporting HTML to DOCX');
+    this.logger.info('Exporting HTML to DOCX');
 
     const sanitized = sanitizeHtmlContent(html);
     return convertHtmlToDocx(sanitized);
@@ -73,7 +75,7 @@ export class HtmlDocumentExportService
     html: string,
     letterhead?: LetterheadConfig,
   ): Promise<Buffer> {
-    this.logger.log('Exporting HTML to PDF');
+    this.logger.info('Exporting HTML to PDF');
 
     const wrappedHtml = this.wrapHtmlForPdf(html, letterhead);
     const browser = await this.chromium.get();

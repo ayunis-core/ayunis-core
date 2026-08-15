@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Transactional } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,9 +18,9 @@ import { isUniqueConstraintViolation } from './unique-constraint.util';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
-  private readonly logger = new Logger(LocalArtifactsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalArtifactsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(ArtifactRecord)
     private readonly artifactRepo: Repository<ArtifactRecord>,
     @InjectRepository(DocumentArtifactRecord)
@@ -33,11 +34,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async create(artifact: Artifact): Promise<Artifact> {
-    this.logger.log('create', {
-      id: artifact.id,
-      title: artifact.title,
-      type: artifact.type,
-    });
+    this.logger.info(
+      {
+        id: artifact.id,
+        type: artifact.type,
+      },
+      'create',
+    );
     const record = this.artifactMapper.toRecord(artifact);
     const saved = await this.artifactRepo.save(record);
     return this.artifactMapper.toDomain(saved);
@@ -68,10 +71,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async addVersion(version: ArtifactVersion): Promise<ArtifactVersion> {
-    this.logger.log('addVersion', {
-      artifactId: version.artifactId,
-      versionNumber: version.versionNumber,
-    });
+    this.logger.info(
+      {
+        artifactId: version.artifactId,
+        versionNumber: version.versionNumber,
+      },
+      'addVersion',
+    );
     const record = this.versionMapper.toRecord(version);
     const saved = await this.versionRepo.save(record);
     return this.versionMapper.toDomain(saved);
@@ -105,12 +111,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }): Promise<ArtifactVersion> {
     const { version, expectedCurrentVersionNumber, letterheadId } = params;
 
-    this.logger.log('addVersionAndUpdateArtifact', {
-      artifactId: version.artifactId,
-      versionNumber: version.versionNumber,
-      expectedCurrentVersionNumber,
-      shouldUpdateLetterhead: letterheadId !== undefined,
-    });
+    this.logVersionUpdate(params);
 
     try {
       const record = this.versionMapper.toRecord(version);
@@ -152,6 +153,22 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       }
       throw error;
     }
+  }
+
+  private logVersionUpdate(params: {
+    version: ArtifactVersion;
+    expectedCurrentVersionNumber: number;
+    letterheadId?: UUID | null;
+  }): void {
+    this.logger.info(
+      {
+        artifactId: params.version.artifactId,
+        versionNumber: params.version.versionNumber,
+        expectedCurrentVersionNumber: params.expectedCurrentVersionNumber,
+        shouldUpdateLetterhead: params.letterheadId !== undefined,
+      },
+      'addVersionAndUpdateArtifact',
+    );
   }
 
   async delete(id: UUID): Promise<void> {

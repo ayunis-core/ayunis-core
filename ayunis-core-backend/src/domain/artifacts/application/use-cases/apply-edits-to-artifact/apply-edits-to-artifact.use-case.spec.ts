@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ApplyEditsToArtifactUseCase } from './apply-edits-to-artifact.use-case';
 import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
@@ -54,13 +55,15 @@ describe('ApplyEditsToArtifactUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplyEditsToArtifactUseCase,
+        {
+          provide: getLoggerToken(ApplyEditsToArtifactUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UpdateArtifactUseCase, useValue: mockUpdateUseCase },
       ],
-    })
-      .setLogger(new Logger())
-      .compile();
+    }).compile();
 
     useCase = module.get<ApplyEditsToArtifactUseCase>(
       ApplyEditsToArtifactUseCase,
