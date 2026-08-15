@@ -636,6 +636,10 @@ importers:
         version: 4.2.4
 
   packages/agent-extensions:
+    dependencies:
+      '@modelcontextprotocol/client':
+        specifier: ^2.0.0
+        version: 2.0.0
     devDependencies:
       '@ayunis/agent-runtime':
         specifier: workspace:*

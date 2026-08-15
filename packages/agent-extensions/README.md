@@ -48,6 +48,54 @@ reverse order. Applying a manifest rejects collisions with host-provided tools.
 Disposal is idempotent, reverse-ordered, attempts every disposer, and throws an
 `AggregateError` containing all disposal failures.
 
+## MCP extension
+
+MCP support is an optional subpath so core consumers do not load the MCP SDK:
+
+```ts
+import {
+  createStdioTransport,
+  createStreamableHttpTransport,
+  mcpExtension,
+} from '@ayunis/agent-extensions/mcp';
+
+const mcp = configureRuntimeExtension(mcpExtension, {
+  servers: [
+    {
+      name: 'catalog',
+      transport: createStreamableHttpTransport(
+        new URL('https://mcp.example.test'),
+        { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
+      ),
+      requestOptions: { timeout: 30_000 },
+    },
+    {
+      name: 'local-tools',
+      transport: createStdioTransport({
+        command: 'local-mcp-server',
+        args: ['--stdio'],
+      }),
+    },
+  ],
+});
+```
+
+Initialization owns one SDK client per configured server. It connects each
+client and calls the SDK's auto-paginating `listTools()` once, exposing the
+complete static tool manifest before a run starts. Duplicate server or tool
+names fail initialization. Connection or discovery failures close every client
+already created and never return a partial manifest.
+
+Runtime tool calls preserve the MCP `content`, `structuredContent`, and
+`isError` fields in a JSON result string, while also mapping `isError` to the
+runtime's error flag. Per-server request options are forwarded and the current
+run's abort signal is added to each tool call.
+
+The extension owns and closes all clients during disposal, attempts every close,
+and aggregates close failures. Authentication, credentials, tenancy, connection
+pooling, and provider-specific error policy remain host concerns; transport
+factories accept caller-owned SDK options without adding such policy.
+
 ## Layering and terminology
 
 - `@ayunis/agent-runtime` is the bare agent loop and hook contracts.
