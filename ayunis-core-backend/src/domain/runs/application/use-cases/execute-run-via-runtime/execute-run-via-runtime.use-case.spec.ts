@@ -20,6 +20,10 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
@@ -34,7 +38,7 @@ import type { InferenceUsageGuard } from '../../services/inference-usage-guard.s
 import type { ToolAssemblyService } from '../../services/tool-assembly.service';
 import type { MessageCleanupService } from '../../services/message-cleanup.service';
 import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import type { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
@@ -89,6 +93,7 @@ interface HarnessOptions {
   rebuiltBackendTools?: BackendTool[];
   lastMessage?: Message;
   toolResultCollector?: ToolResultCollectorService;
+  backendToolAdapter?: BackendToolAdapter;
   providerRejects?: boolean;
   providerStream?: (request: ProviderRequest) => AsyncIterable<ProviderChunk>;
   tokensPerMessage?: number;
@@ -158,9 +163,9 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
       .mockReturnValueOnce(overrides.runtimeTools ?? [])
       .mockReturnValueOnce(overrides.rebuiltRuntimeTools);
   }
-  const backendToolAdapter = {
-    toRuntimeTools,
-  } as unknown as BackendToolAdapter;
+  const backendToolAdapter =
+    overrides.backendToolAdapter ??
+    ({ toRuntimeTools } as unknown as BackendToolAdapter);
   const activateOnThread = jest.fn().mockResolvedValue({
     instructions: 'Be a helpful clerk',
     skillName: 'Clerk',
@@ -315,6 +320,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     providerSignal: () => providerSignal,
     countTokens,
   };
+}
+
+function realBackendToolAdapter(executeTool: jest.Mock): BackendToolAdapter {
+  return new BackendToolAdapter(
+    { execute: executeTool } as never,
+    { execute: jest.fn() } as never,
+  );
 }
 
 async function drain(
@@ -842,9 +854,9 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     ]).toEqual([integration, integration]);
   });
 
-  it('executes an executable sibling when continuing a display-only tool call', async () => {
-    const displayTool = { name: 'bar_chart' } as unknown as BackendTool;
-    const searchTool = { name: 'internet_search' } as unknown as BackendTool;
+  it('executes a backend sibling when accepting a historical chart result', async () => {
+    const displayTool = new BarChartTool();
+    const searchTool = new InternetSearchTool();
     const lastMessage = {
       content: [
         new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
@@ -854,13 +866,8 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
       ],
     } as unknown as Message;
     const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
-    const checkCapabilities = jest.fn(({ tool }: { tool: BackendTool }) => ({
-      isDisplayable: tool.name === 'bar_chart',
-      isExecutable: tool.name === 'internet_search',
-    }));
     const collector = new ToolResultCollectorService(
       { execute: executeTool } as never,
-      { execute: checkCapabilities } as never,
       { execute: jest.fn() } as never,
       { get: jest.fn().mockReturnValue(userId) } as never,
       { emitAsync: jest.fn().mockResolvedValue([]) } as never,
@@ -892,8 +899,8 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
   });
 
   it('does not execute stale pending tools when accepting a new user message', async () => {
-    const displayTool = { name: 'bar_chart' } as unknown as BackendTool;
-    const searchTool = { name: 'internet_search' } as unknown as BackendTool;
+    const displayTool = new BarChartTool();
+    const searchTool = new InternetSearchTool();
     const lastMessage = {
       content: [
         new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
@@ -905,12 +912,6 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     const executeTool = jest.fn().mockResolvedValue('Berlin budget results');
     const collector = new ToolResultCollectorService(
       { execute: executeTool } as never,
-      {
-        execute: jest.fn(({ tool }: { tool: BackendTool }) => ({
-          isDisplayable: tool.name === 'bar_chart',
-          isExecutable: tool.name === 'internet_search',
-        })),
-      } as never,
       { execute: jest.fn() } as never,
       { get: jest.fn().mockReturnValue(userId) } as never,
       { emitAsync: jest.fn().mockResolvedValue([]) } as never,
@@ -930,11 +931,85 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(items[0]).toBeInstanceOf(UserMessage);
   });
 
-  it('persists a display acknowledgement in the originating run', async () => {
+  it('executes a host-assembled hybrid once and continues with its acknowledgement', async () => {
+    const executeTool = jest.fn().mockResolvedValue('raw document result');
+    const document = new CreateDocumentTool();
+    const { useCase, provider } = buildHarness({
+      backendTools: [document],
+      backendToolAdapter: realBackendToolAdapter(executeTool),
+      turns: [
+        toolCallTurn({
+          id: 'document-1',
+          name: document.name,
+          input: {
+            title: 'Budget report',
+            content: '<p>Budget details</p>',
+          },
+        }),
+        textTurn('The document is ready.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(executeTool).toHaveBeenCalledTimes(1);
+    expect(provider.requests[1].messages.at(-1)).toMatchObject({
+      role: 'tool_result',
+      content: [
+        expect.objectContaining({
+          result: 'Tool has been displayed successfully',
+        }),
+      ],
+    });
+  });
+
+  it('retries an invalid chart when mixed with a terminal host widget', async () => {
+    const executeTool = jest.fn();
+    const email = new SendEmailTool();
+    const chart = new BarChartTool();
+    const { useCase, provider } = buildHarness({
+      backendTools: [email, chart],
+      backendToolAdapter: realBackendToolAdapter(executeTool),
+      turns: [
+        [
+          {
+            toolCallDeltas: [
+              {
+                index: 0,
+                id: 'email-1',
+                name: email.name,
+                argumentsDelta:
+                  '{"subject":"Budget","body":"Review it","to":"budget@example.org"}',
+              },
+              {
+                index: 1,
+                id: 'chart-1',
+                name: chart.name,
+                argumentsDelta: '{"chartTitle":"Incomplete"}',
+              },
+            ],
+          },
+          { finishReason: 'tool_calls' },
+        ],
+        textTurn('Please provide the missing chart data.'),
+      ],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(2);
+    expect(executeTool).not.toHaveBeenCalled();
+  });
+
+  it('continues after persisting a chart acknowledgement', async () => {
     const displayTool = {
       name: 'bar_chart',
       description: 'Display a bar chart',
       parameters: { type: 'object' },
+      execute: jest.fn().mockReturnValue({
+        result: 'Tool has been displayed successfully',
+        isError: false,
+      }),
     };
     const { useCase, provider } = buildHarness({
       backendTools: [displayTool as unknown as BackendTool],
@@ -945,6 +1020,7 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
           name: 'bar_chart',
           input: { title: 'Budget' },
         }),
+        textTurn('The chart summarizes the budget increase.'),
       ],
     });
 
@@ -960,6 +1036,29 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
         result: 'Tool has been displayed successfully',
       }),
     ]);
+    expect(displayTool.execute).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(2);
+  });
+
+  it.each([
+    'send_email',
+    'create_calendar_event',
+    'create_skill',
+    'edit_skill',
+  ])('terminates after the %s widget tool phase', async (name) => {
+    const terminalTool = {
+      name,
+      description: 'Request external user interaction',
+      parameters: { type: 'object' },
+    };
+    const { useCase, provider } = buildHarness({
+      backendTools: [terminalTool as unknown as BackendTool],
+      runtimeTools: [terminalTool],
+      turns: [toolCallTurn({ id: 'external-1', name, input: {} })],
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
     expect(provider.requests).toHaveLength(1);
   });
 

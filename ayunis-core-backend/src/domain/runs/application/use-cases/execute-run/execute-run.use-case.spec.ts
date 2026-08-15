@@ -208,6 +208,86 @@ describe('ExecuteRunUseCase', () => {
     ).not.toHaveBeenCalled();
   });
 
+  it('settles a terminal tool phase before completing the legacy run', async () => {
+    const thread = createMockThread();
+    findThreadUseCase.execute.mockResolvedValue({ thread, isLongChat: false });
+    const assistantMessage = {
+      id: randomUUID(),
+      content: [{ type: 'tool_use', name: ToolType.SEND_EMAIL }],
+    } as unknown as AssistantMessage;
+    const inferenceOrchestratorService = (
+      useCase as unknown as {
+        inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+      }
+    ).inferenceOrchestratorService;
+    inferenceOrchestratorService.runInference.mockReturnValue(
+      (async function* () {
+        yield assistantMessage;
+        return assistantMessage;
+      })(),
+    );
+    const collector = (
+      useCase as unknown as {
+        toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
+      }
+    ).toolResultCollectorService;
+
+    const generator = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Draft an email', []),
+      }),
+    );
+    let next = await generator.next();
+    while (!next.done) next = await generator.next();
+
+    expect(collector.collectToolResults).toHaveBeenCalledTimes(1);
+    expect(
+      inferenceOrchestratorService.runInference.mock.invocationCallOrder[0],
+    ).toBeLessThan(collector.collectToolResults.mock.invocationCallOrder[0]);
+  });
+
+  it('does not collect stale tool calls before a new user message is inferred', async () => {
+    const thread = createMockThread();
+    findThreadUseCase.execute.mockResolvedValue({ thread, isLongChat: false });
+    const finalMessage = {
+      id: randomUUID(),
+      content: [{ type: 'text', text: 'Fresh response' }],
+    } as unknown as AssistantMessage;
+    const inferenceOrchestratorService = (
+      useCase as unknown as {
+        inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+      }
+    ).inferenceOrchestratorService;
+    inferenceOrchestratorService.runInference.mockReturnValue(
+      (async function* () {
+        yield finalMessage;
+        return finalMessage;
+      })(),
+    );
+    const collector = (
+      useCase as unknown as {
+        toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
+      }
+    ).toolResultCollectorService;
+
+    const generator = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('What comes next?', []),
+      }),
+    );
+    let next = await generator.next();
+    while (!next.done) next = await generator.next();
+
+    expect(collector.collectToolResults).toHaveBeenCalledWith(
+      expect.objectContaining({ message: finalMessage }),
+    );
+    expect(
+      inferenceOrchestratorService.runInference.mock.invocationCallOrder[0],
+    ).toBeLessThan(collector.collectToolResults.mock.invocationCallOrder[0]);
+  });
+
   describe('skill activation via quick action', () => {
     it('should append already-activated note to instructions when skillId is provided', async () => {
       const skillId = randomUUID();
@@ -341,34 +421,23 @@ describe('ExecuteRunUseCase', () => {
         }
       ).toolResultCollectorService;
 
-      let collectCallCount = 0;
-      toolResultCollectorService.collectToolResults.mockImplementation(
-        async () => {
-          collectCallCount++;
-          if (collectCallCount === 1) {
-            // First call: no pending results (initial processToolResults)
-            return { contents: [], outcomes: [], piiMasks: null };
-          }
-          // Second call: activate_skill tool result
-          return {
-            contents: [
-              new ToolResultMessageContent(
-                'tool-1',
-                ToolType.ACTIVATE_SKILL,
-                'Skill activated successfully',
-              ),
-            ],
-            outcomes: [
-              {
-                toolName: ToolType.ACTIVATE_SKILL,
-                result: 'Skill activated successfully',
-                succeeded: true,
-              },
-            ],
-            piiMasks: null,
-          };
-        },
-      );
+      toolResultCollectorService.collectToolResults.mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'tool-1',
+            ToolType.ACTIVATE_SKILL,
+            'Skill activated successfully',
+          ),
+        ],
+        outcomes: [
+          {
+            toolName: ToolType.ACTIVATE_SKILL,
+            result: 'Skill activated successfully',
+            succeeded: true,
+          },
+        ],
+        piiMasks: null,
+      });
 
       // First call: don't exit (tool call); second call: exit
       let exitCallCount = 0;
@@ -696,15 +765,8 @@ describe('ExecuteRunUseCase', () => {
           toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
         }
       ).toolResultCollectorService;
-      let collectCallCount = 0;
       toolResultCollectorService.collectToolResults.mockImplementation(
-        async () => {
-          collectCallCount++;
-          if (collectCallCount === 1) {
-            return { contents: [], outcomes: [], piiMasks: null };
-          }
-          return failingCollectResult();
-        },
+        async () => failingCollectResult(),
       );
       toolResultCollectorService.exitLoopAfterAgentResponse.mockReturnValue(
         false,

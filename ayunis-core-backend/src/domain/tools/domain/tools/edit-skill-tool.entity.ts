@@ -1,6 +1,6 @@
 import type { JSONSchema } from 'json-schema-to-ts';
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 import { ToolType } from '../value-objects/tool-type.enum';
 
 function buildParameters(slugs: string[]): JSONSchema {
@@ -57,7 +57,7 @@ interface EditSkillToolParameters {
   change_summary: string;
 }
 
-export class EditSkillTool extends DisplayableTool {
+export class EditSkillTool extends Tool {
   constructor(slugs: string[] = []) {
     super({
       name: ToolType.EDIT_SKILL,

@@ -11,7 +11,7 @@ import type { RunState } from './run-state';
 import { isAborted } from './run-state';
 
 export const MAX_TOOL_RESULT_LENGTH = 20_000;
-const DISPLAY_ACK = 'Tool has been displayed successfully';
+const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 interface ToolOutcome {
   result: string;
@@ -115,7 +115,7 @@ const runTool = async (
   }
   if (!tool.execute) {
     return {
-      result: DISPLAY_ACK,
+      result: EXTERNAL_TOOL_RESULT,
       isError: false,
     };
   }
@@ -130,9 +130,8 @@ const runTool = async (
   }
 };
 
-// For display-only tools this is the only check before the input reaches the
-// client render (AYC-675); for executable tools it is a guard that skips
-// execute entirely.
+// For externally handled tools this is the final host-side validation seam;
+// for executable tools it is a guard that skips execute entirely.
 const validateToolInput = (
   tool: Tool,
   input: Record<string, unknown>,

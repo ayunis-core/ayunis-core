@@ -84,7 +84,7 @@ interface PreparedToolResultInput {
  * Runs a thread through the extracted `@ayunis/agent-runtime` loop instead of
  * the legacy in-module loop. Gated behind the `agentRuntimeEnabled` toggle in
  * `ExecuteRunUseCase`. Covers plain chat, tool loops (executable, hybrid and
- * display-only tools), anonymized threads (user input + PII tool output) and
+ * externally handled tools), anonymized threads (user input + PII tool output) and
  * skill activation (quick-action skillId + mid-loop `activate_skill`).
  */
 @Injectable()

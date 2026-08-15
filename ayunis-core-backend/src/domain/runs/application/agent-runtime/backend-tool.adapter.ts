@@ -10,11 +10,6 @@ import type { UUID } from 'crypto';
 import { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { ExecuteToolCommand } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.command';
-import {
-  CheckToolCapabilitiesUseCase,
-  type ToolCapabilities,
-} from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.use-case';
-import { CheckToolCapabilitiesQuery } from 'src/domain/tools/application/use-cases/check-tool-capabilities/check-tool-capabilities.query';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
@@ -23,6 +18,11 @@ import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 import { serializeRuntimeModelError } from './runtime-model-error';
+import {
+  isAcknowledgementOnlyTool,
+  isExternallyHandledTool,
+  isHybridArtifactTool,
+} from './runtime-tool-policy';
 
 const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
@@ -33,15 +33,10 @@ interface ToolExecutionOutcome {
 }
 
 /**
- * Adapts backend catalog tools to the runtime's `Tool` contract, mirroring the
- * legacy `ToolResultCollectorService` execution semantics:
- *
- * - executable tools run in-loop via `ExecuteToolUseCase`;
- * - hybrid (displayable + executable) tools run for their side effect but hand
- *   the model a display acknowledgement, not the raw result;
- * - display-only tools get no `execute`, so the runtime ends the loop and
- *   surfaces the call — the client renders it and continues with a tool-result
- *   input (handled by the orchestrator).
+ * Adapts backend catalog tools to the runtime's optional-execute contract.
+ * Backend and hybrid tools delegate through `ExecuteToolUseCase`, charts
+ * acknowledge without side effects, and externally handled widgets omit
+ * `execute` so the current run terminates after their tool phase.
  *
  * In anonymous threads, PII-returning tool output is redacted at production and
  * the mask dictionary streamed via the run's `emit`, matching the legacy loop.
@@ -50,7 +45,6 @@ interface ToolExecutionOutcome {
 export class BackendToolAdapter {
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
-    private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
   ) {}
 
@@ -59,39 +53,41 @@ export class BackendToolAdapter {
   }
 
   private toRuntimeTool(tool: BackendTool): RuntimeTool {
-    const capabilities = this.checkToolCapabilitiesUseCase.execute(
-      new CheckToolCapabilitiesQuery(tool),
-    );
     const schema = {
       name: tool.name,
       description: tool.description,
       parameters: tool.parameters as unknown as JsonSchema,
     };
-    if (!capabilities.isExecutable) {
-      // Display-only tools never reach a backend handler, so the runtime's
-      // validateInput seam is the only pre-display check of their params; an
-      // invalid call feeds the model an actionable error instead of ending
-      // the turn with garbage params the client would render (AYC-675). The
-      // message carries the same prefix the legacy collector and the
-      // executable path use, so the model sees one error shape on both loops.
+    if (isAcknowledgementOnlyTool(tool)) {
       return {
         ...schema,
-        validateInput: (input: Record<string, unknown>): void => {
-          try {
-            tool.validateParams(stripDisallowedNulls(input, tool.parameters));
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : 'Invalid parameters';
-            throw new Error(
-              `The tool didn't provide any result due to the following error in tool usage: ${message}`,
-            );
-          }
-        },
+        validateInput: this.buildInputValidator(tool),
+        execute: () => ({ result: DISPLAY_ACK, isError: false }),
       };
+    }
+    if (isExternallyHandledTool(tool)) {
+      return { ...schema, validateInput: this.buildInputValidator(tool) };
     }
     return {
       ...schema,
-      execute: (input, ctx) => this.execute(tool, input, ctx, capabilities),
+      execute: (input, ctx) =>
+        this.execute(tool, input, ctx, isHybridArtifactTool(tool)),
+    };
+  }
+
+  private buildInputValidator(
+    tool: BackendTool,
+  ): (input: Record<string, unknown>) => void {
+    return (input): void => {
+      try {
+        tool.validateParams(stripDisallowedNulls(input, tool.parameters));
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Invalid parameters';
+        throw new Error(
+          `The tool didn't provide any result due to the following error in tool usage: ${message}`,
+        );
+      }
     };
   }
 
@@ -99,7 +95,7 @@ export class BackendToolAdapter {
     tool: BackendTool,
     input: Record<string, unknown>,
     ctx: RuntimeToolContext,
-    capabilities: ToolCapabilities,
+    returnDisplayAcknowledgement: boolean,
   ): Promise<RuntimeToolResult> {
     const context = {
       orgId: ctx.context.get<UUID>('orgId')!,
@@ -116,7 +112,9 @@ export class BackendToolAdapter {
     }
     return {
       result:
-        capabilities.isDisplayable && outcome.succeeded ? DISPLAY_ACK : result,
+        returnDisplayAcknowledgement && outcome.succeeded
+          ? DISPLAY_ACK
+          : result,
       isError: !outcome.succeeded,
     };
   }

@@ -1,7 +1,7 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
 import { ToolType } from '../value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { DisplayableTool } from '../displayable-tool.entity';
+import { Tool } from '../tool.entity';
 
 // maxItems values must match MAX_SPREADSHEET_COLUMNS / MAX_SPREADSHEET_ROWS
 // enforced by the artifacts module on every write.
@@ -49,9 +49,7 @@ type UpdateSpreadsheetToolParameters = FromSchema<
   typeof updateSpreadsheetToolParameters
 >;
 
-export class UpdateSpreadsheetTool extends DisplayableTool {
-  override isExecutable: boolean = true;
-
+export class UpdateSpreadsheetTool extends Tool {
   constructor() {
     super({
       name: ToolType.UPDATE_SPREADSHEET,

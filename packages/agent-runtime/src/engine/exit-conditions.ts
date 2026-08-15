@@ -9,28 +9,25 @@ export const getToolUseContents = (
   );
 };
 
-export const hasDisplayOnlyToolCall = (
+export const hasExternallyHandledToolCall = (
   message: AssistantMessage,
   tools: readonly Tool[],
 ): boolean => {
-  const displayOnlyCalls = getToolUseContents(message)
-    .map((call) => ({
-      call,
-      tool: tools.find((candidate) => candidate.name === call.name),
-    }))
-    .filter(({ tool }) => tool !== undefined && tool.execute === undefined);
-  // Every display-only call must validate for the turn to end — one invalid
-  // sibling keeps the loop running so its error result reaches the model in
-  // this run instead of staying unretried in the terminal turn.
-  return (
-    displayOnlyCalls.length > 0 &&
-    displayOnlyCalls.every(({ call, tool }) =>
-      passesInputValidation(tool!, call.input),
-    )
+  const calls = getToolUseContents(message).map((call) => ({
+    call,
+    tool: tools.find((candidate) => candidate.name === call.name),
+  }));
+  const hasExternalCall = calls.some(
+    ({ tool }) => tool !== undefined && tool.execute === undefined,
   );
+  const allCallsValid = calls.every(
+    ({ call, tool }) =>
+      tool !== undefined && passesInputValidation(tool, call.input),
+  );
+  return hasExternalCall && allCallsValid;
 };
 
-// An invalid display-only call must not end the loop: its error result has to
+// An invalid externally handled call must not end the loop: its error result has to
 // reach the model in this run so it can retry with corrected input (AYC-675).
 export const passesInputValidation = (
   tool: Tool,
