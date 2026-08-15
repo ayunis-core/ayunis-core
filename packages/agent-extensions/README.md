@@ -96,6 +96,82 @@ and aggregates close failures. Authentication, credentials, tenancy, connection
 pooling, and provider-specific error policy remain host concerns; transport
 factories accept caller-owned SDK options without adding such policy.
 
+## Skills extension
+
+Skills use a source port and an optional subpath, independent of storage:
+
+```ts
+import {
+  skillsExtension,
+  type SkillSource,
+} from '@ayunis/agent-extensions/skills';
+
+const source: SkillSource = {
+  async list() {
+    return [{ name: 'access_review', description: 'Review user access' }];
+  },
+  async load(name) {
+    return {
+      name,
+      description: 'Review user access',
+      instructions: 'Follow the access review checklist.',
+      tools: [listAccessTool],
+    };
+  },
+};
+
+const skills = configureRuntimeExtension(skillsExtension, { source });
+```
+
+The source is listed once during initialization, making available-skill
+instructions and the `activate_skill` schema static and introspectable. Calling
+the activation tool loads the selected definition. Only a successful tool call
+causes its instructions and tools to be injected by `afterToolCall` for the next
+model iteration. Per-run pending and activated state lives in `RunContext`, and
+tool-name collisions return model-actionable activation errors.
+
+### Filesystem skill source
+
+The optional filesystem source reads immediate child directories using the
+Agent Skills `SKILL.md` convention:
+
+```text
+skills/
+└── access-review/
+    └── SKILL.md
+```
+
+```md
+---
+name: access-review
+description: Review user access
+allowed-tools: list_access notify_owner
+---
+
+Follow the access review checklist.
+```
+
+```ts
+import { FilesystemSkillSource } from '@ayunis/agent-extensions/skills/filesystem';
+
+const source = new FilesystemSkillSource({
+  root: './skills',
+  toolCatalog: {
+    list_access: listAccessTool,
+    notify_owner: notifyOwnerTool,
+  },
+});
+```
+
+Discovery metadata is cached, while the selected `SKILL.md` is safely re-read
+on activation. Allowed tools resolve only through the host catalog. Canonical
+path containment prevents model input or symlinks from escaping the configured
+root. There is no watcher or hot reload.
+
+This source implements the directory-based Agent Skills convention only. It is
+not an Agent Plugins loader and does not claim conformance with the broader
+Agent Plugins package standard (`plugin.json`, `mcp.json`, and packaging rules).
+
 ## Layering and terminology
 
 - `@ayunis/agent-runtime` is the bare agent loop and hook contracts.

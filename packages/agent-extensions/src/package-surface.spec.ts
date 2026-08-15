@@ -11,12 +11,17 @@ interface PackageManifest {
 }
 
 describe('package surface', () => {
-  it('publishes separate core and optional MCP entry points', async () => {
+  it('publishes separate core, MCP, skills, and filesystem entry points', async () => {
     const manifest = JSON.parse(
       await readFile(new URL('../package.json', import.meta.url), 'utf8'),
     ) as PackageManifest;
 
-    expect(Object.keys(manifest.exports)).toEqual(['.', './mcp']);
+    expect(Object.keys(manifest.exports)).toEqual([
+      '.',
+      './mcp',
+      './skills',
+      './skills/filesystem',
+    ]);
     expect(manifest.exports['.']).toEqual({
       types: './dist/index.d.ts',
       import: './dist/index.js',
@@ -26,6 +31,16 @@ describe('package surface', () => {
       types: './dist/mcp/index.d.ts',
       import: './dist/mcp/index.js',
       require: './dist/mcp/index.cjs',
+    });
+    expect(manifest.exports['./skills']).toEqual({
+      types: './dist/skills/index.d.ts',
+      import: './dist/skills/index.js',
+      require: './dist/skills/index.cjs',
+    });
+    expect(manifest.exports['./skills/filesystem']).toEqual({
+      types: './dist/skills/filesystem/index.d.ts',
+      import: './dist/skills/filesystem/index.js',
+      require: './dist/skills/filesystem/index.cjs',
     });
     expect(manifest.files).toEqual(['dist']);
   });

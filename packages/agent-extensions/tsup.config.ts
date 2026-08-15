@@ -1,7 +1,12 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/mcp/index.ts'],
+  entry: [
+    'src/index.ts',
+    'src/mcp/index.ts',
+    'src/skills/index.ts',
+    'src/skills/filesystem/index.ts',
+  ],
   format: ['esm', 'cjs'],
   dts: {
     compilerOptions: { ignoreDeprecations: '6.0' },
