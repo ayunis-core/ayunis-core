@@ -17,6 +17,7 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
         'script-src': ["'self'", "'unsafe-inline'"],
         'style-src': ["'self'", "'unsafe-inline'"],
+        'connect-src': ["'self'", 'https://appsignal-endpoint.net'],
       },
     },
   });
