@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { ModelsRepository } from '../../ports/models.repository';
@@ -10,13 +11,15 @@ import {
 
 @Injectable()
 export class GetModelUseCase {
-  private readonly logger = new Logger(GetModelUseCase.name);
-
-  constructor(private readonly modelsRepository: ModelsRepository) {}
+  constructor(
+    @InjectPinoLogger(GetModelUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly modelsRepository: ModelsRepository,
+  ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(query: GetModelQuery): Promise<Model> {
-    this.logger.log('execute', query);
+    this.logger.info(query, 'execute');
 
     const model = await this.modelsRepository.findOne(query);
     if (!model) {

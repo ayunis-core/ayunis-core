@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -8,7 +10,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { DeletePermittedModelUseCase } from './delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
@@ -35,6 +36,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
 describe('DeletePermittedModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: DeletePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getPermittedModelsUseCase: jest.Mocked<GetPermittedModelsUseCase>;
@@ -74,6 +76,10 @@ describe('DeletePermittedModelUseCase', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(DeletePermittedModelUseCase.name),
+          useValue: logger,
+        },
         DeletePermittedModelUseCase,
         {
           provide: PermittedModelsRepository,
@@ -127,9 +133,9 @@ describe('DeletePermittedModelUseCase', () => {
     deleteSourcesUseCase = module.get(DeleteSourcesUseCase);
     contextService = module.get(ContextService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.debug.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

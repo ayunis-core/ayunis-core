@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -18,6 +19,7 @@ import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.
 import { GetConfiguredModelsByTypeUseCase } from './get-configured-models-by-type.use-case';
 
 describe('GetConfiguredModelsByTypeUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: GetConfiguredModelsByTypeUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let configService: jest.Mocked<ConfigService>;
@@ -68,6 +70,10 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetConfiguredModelsByTypeUseCase.name),
+          useValue: logger,
+        },
         GetConfiguredModelsByTypeUseCase,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ConfigService, useValue: mockConfigService },
@@ -93,9 +99,9 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
       return null;
     });
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+    logger.info.mockImplementation();
+    logger.debug.mockImplementation();
+    logger.warn.mockImplementation();
   });
 
   afterEach(() => {

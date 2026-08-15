@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
 import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
 import {
@@ -33,9 +34,10 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 
 @Injectable()
 export class DeletePermittedModelUseCase {
-  private readonly logger = new Logger(DeletePermittedModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeletePermittedModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
@@ -47,10 +49,13 @@ export class DeletePermittedModelUseCase {
 
   @Transactional()
   async execute(command: DeletePermittedModelCommand): Promise<void> {
-    this.logger.log('execute', {
-      modelId: command.permittedModelId,
-      orgId: command.orgId,
-    });
+    this.logger.info(
+      {
+        modelId: command.permittedModelId,
+        orgId: command.orgId,
+      },
+      'execute',
+    );
     try {
       const orgId = this.contextService.get('orgId');
       const orgRole = this.contextService.get('role');
@@ -64,10 +69,13 @@ export class DeletePermittedModelUseCase {
         id: command.permittedModelId,
       });
       if (!model) {
-        this.logger.error('Model not found', {
-          modelId: command.permittedModelId,
-          orgId: command.orgId,
-        });
+        this.logger.error(
+          {
+            modelId: command.permittedModelId,
+            orgId: command.orgId,
+          },
+          'Model not found',
+        );
         throw new PermittedModelDeletionFailedError('Model not found', {
           modelId: command.permittedModelId,
         });
@@ -83,7 +91,7 @@ export class DeletePermittedModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error deleting permitted model', error);
+      this.logger.error({ err: error }, 'Error deleting permitted model');
       throw new UnexpectedModelError(
         error instanceof Error ? error : new Error('Unknown error'),
       );
@@ -102,11 +110,11 @@ export class DeletePermittedModelUseCase {
       return this.deletePermittedImageGenerationModel(command.orgId, model);
     }
     this.logger.error(
-      'Model is not a language, embedding, or image-generation model',
       {
         modelId: command.permittedModelId,
         orgId: command.orgId,
       },
+      'Model is not a language, embedding, or image-generation model',
     );
     throw new PermittedModelDeletionFailedError(
       'Model is not a language, embedding, or image-generation model',
@@ -140,21 +148,17 @@ export class DeletePermittedModelUseCase {
     if (modelToDelete.isDefault) {
       throw new CannotDeleteDefaultModelError(model.id);
     }
-    this.logger.debug(
-      'Deleting user default models that reference this model',
-      {
-        modelId: model.id,
-      },
-    );
+    this.logLanguageModelCleanup(model.id);
 
     // Delete all user default models that reference this model
     await this.deleteUserDefaultModelByModelIdUseCase.execute(
       new DeleteUserDefaultModelsByModelIdCommand(model.id),
     );
 
-    this.logger.debug('Replacing model in all threads that use it', {
-      modelId: model.id,
-    });
+    this.logger.debug(
+      { modelId: model.id },
+      'Replacing model in all threads that use it',
+    );
 
     // Replace the model in all threads that use it
     // Because the user default model is deleted, this will fall back
@@ -177,6 +181,13 @@ export class DeletePermittedModelUseCase {
       id: model.id,
       orgId: orgId,
     });
+  }
+
+  private logLanguageModelCleanup(modelId: UUID): void {
+    this.logger.debug(
+      { modelId },
+      'Deleting user default models that reference this model',
+    );
   }
 
   private async deletePermittedEmbeddingModel(

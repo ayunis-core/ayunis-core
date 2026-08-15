@@ -4,9 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiExtraModels,
   ApiInternalServerErrorResponse,
@@ -45,9 +45,10 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   ImageGenerationModelResponseDto,
 )
 export class SuperAdminCatalogModelsController {
-  private readonly logger = new Logger(SuperAdminCatalogModelsController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminCatalogModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly getAllModelsUseCase: GetAllModelsUseCase,
     private readonly getModelByIdUseCase: GetModelByIdUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -83,10 +84,13 @@ export class SuperAdminCatalogModelsController {
   async getAllCatalogModels(
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto[]> {
-    this.logger.log(`Getting all catalog models by super admin ${userId}`);
+    this.logger.info({ userId }, 'Getting all catalog models by super admin');
     const models = await this.getAllModelsUseCase.execute();
     const responseDtos = this.catalogModelResponseDtoMapper.toDtoArray(models);
-    this.logger.log(`Successfully retrieved ${models.length} catalog models`);
+    this.logger.info(
+      { modelCount: models.length },
+      'Successfully retrieved catalog models',
+    );
     return responseDtos;
   }
 
@@ -127,11 +131,14 @@ export class SuperAdminCatalogModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<ModelResponseDto> {
-    this.logger.log(`Getting catalog model ${id} by super admin ${userId}`);
+    this.logger.info(
+      { modelId: id, userId },
+      'Getting catalog model by super admin',
+    );
     const query = new GetModelByIdQuery(id);
     const model = await this.getModelByIdUseCase.execute(query);
     const responseDto = this.catalogModelResponseDtoMapper.toDto(model);
-    this.logger.log(`Successfully retrieved catalog model ${id}`);
+    this.logger.info({ modelId: id }, 'Successfully retrieved catalog model');
     return responseDto;
   }
 
@@ -166,9 +173,12 @@ export class SuperAdminCatalogModelsController {
     @Param('id') id: UUID,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log(`Deleting catalog model ${id} by super admin ${userId}`);
+    this.logger.info(
+      { modelId: id, userId },
+      'Deleting catalog model by super admin',
+    );
     const command = new DeleteModelCommand(id);
     await this.deleteModelUseCase.execute(command);
-    this.logger.log(`Successfully deleted catalog model ${id}`);
+    this.logger.info({ modelId: id }, 'Successfully deleted catalog model');
   }
 }

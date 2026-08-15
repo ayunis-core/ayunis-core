@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { APIError, AzureOpenAI, toFile } from 'openai';
 import type { ImageEditParams, ImagesResponse } from 'openai/resources/images';
@@ -48,7 +49,6 @@ function isValidQuality(value: string): value is ImageQuality {
 
 @Injectable()
 export class AzureImageGenerationHandler extends ImageGenerationHandler {
-  private readonly logger = new Logger(AzureImageGenerationHandler.name);
   // Keyed by deployment: the SDK only prefixes /deployments/{name} when the
   // client is constructed with `deployment` — for images.edit the body is
   // multipart FormData by the time buildRequest looks for a model name, so a
@@ -56,7 +56,11 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   // is a singleton serving every org's model, hence one client per name.
   private readonly clients = new Map<string, AzureOpenAI>();
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(AzureImageGenerationHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
   }
 
@@ -98,12 +102,15 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
   }
 
   async generate(input: ImageGenerationInput): Promise<ImageGenerationResult> {
-    this.logger.log('Generating image', {
-      model: input.model.name,
-      size: input.size,
-      quality: input.quality,
-      referenceImageCount: input.referenceImages?.length ?? 0,
-    });
+    this.logger.info(
+      {
+        model: input.model.name,
+        size: input.size,
+        quality: input.quality,
+        referenceImageCount: input.referenceImages?.length ?? 0,
+      },
+      'Generating image',
+    );
 
     const { size, quality } = this.validateParams(input);
     const client = this.getClient(input.model.name);
@@ -180,13 +187,16 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
         }
       : undefined;
 
-    this.logger.log('Image generated successfully', {
-      model: modelName,
-      sizeBytes: imageBuffer.length,
-      inputTokens: usage?.inputTokens,
-      outputTokens: usage?.outputTokens,
-      totalTokens: usage?.totalTokens,
-    });
+    this.logger.info(
+      {
+        model: modelName,
+        sizeBytes: imageBuffer.length,
+        inputTokens: usage?.inputTokens,
+        outputTokens: usage?.outputTokens,
+        totalTokens: usage?.totalTokens,
+      },
+      'Image generated successfully',
+    );
 
     return new ImageGenerationResult(
       imageBuffer,
@@ -203,12 +213,15 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
 
     if (error instanceof APIError) {
       const errorCode = String(error.code ?? '');
-      this.logger.error('Azure OpenAI API error during image generation', {
-        status: String(error.status ?? ''),
-        code: errorCode,
-        message: error.message,
-        model: modelName,
-      });
+      this.logger.error(
+        {
+          status: String(error.status ?? ''),
+          code: errorCode,
+          message: error.message,
+          model: modelName,
+        },
+        'Azure OpenAI API error during image generation',
+      );
 
       if (errorCode === 'content_policy_violation') {
         throw new ImageGenerationFailedError(
@@ -221,10 +234,13 @@ export class AzureImageGenerationHandler extends ImageGenerationHandler {
       );
     }
 
-    this.logger.error('Unexpected error during image generation', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      model: modelName,
-    });
+    this.logger.error(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        model: modelName,
+      },
+      'Unexpected error during image generation',
+    );
 
     throw new ImageGenerationFailedError(
       'An unexpected error occurred while generating the image. Please try again later.',

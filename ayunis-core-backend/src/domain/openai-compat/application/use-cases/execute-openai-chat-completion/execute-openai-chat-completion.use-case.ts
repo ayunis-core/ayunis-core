@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { Observable, finalize, map } from 'rxjs';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
@@ -36,9 +37,10 @@ import type { ChatCompletionChunk } from '../../types/openai-chunk.types';
  */
 @Injectable()
 export class ExecuteOpenAIChatCompletionUseCase {
-  private readonly logger = new Logger(ExecuteOpenAIChatCompletionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ExecuteOpenAIChatCompletionUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly getPermittedLanguageModelsUseCase: GetPermittedLanguageModelsUseCase,
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
@@ -188,10 +190,13 @@ export class ExecuteOpenAIChatCompletionUseCase {
     );
     const match = permitted.find((pm) => pm.model.name === modelName);
     if (!match) {
-      this.logger.debug('OpenAI-compat model not found', {
-        orgId,
-        requestedModel: modelName,
-      });
+      this.logger.debug(
+        {
+          orgId,
+          requestedModel: modelName,
+        },
+        'OpenAI-compat model not found',
+      );
       throw new OpenAIModelNotFoundError(modelName);
     }
     return match.model;

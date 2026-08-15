@@ -1,4 +1,5 @@
 import type { ModelProvider } from '@ayunis/inference';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import type { StreamInferenceInput } from '../../application/ports/stream-inference.handler';
 import { InferenceStreamStalledError } from '../../application/models.errors';
@@ -44,7 +45,7 @@ function stallingProvider(): {
 
 class TestHandler extends RuntimeStreamInferenceHandler {
   constructor(private readonly provider: ModelProvider) {
-    super({} as ImageContentService);
+    super(createPinoLoggerMock(), {} as ImageContentService);
   }
   protected createProvider(): ModelProvider {
     return this.provider;

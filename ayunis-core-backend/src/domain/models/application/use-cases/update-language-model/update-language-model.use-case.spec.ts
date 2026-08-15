@@ -1,6 +1,7 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { UpdateLanguageModelUseCase } from './update-language-model.use-case';
 import { UpdateLanguageModelCommand } from './update-language-model.command';
 import { ModelsRepository } from '../../ports/models.repository';
@@ -15,6 +16,7 @@ import {
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
+  const logger = createPinoLoggerMock();
   let useCase: UpdateLanguageModelUseCase;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let clearDefaultsUseCase: jest.Mocked<ClearDefaultsByCatalogModelIdUseCase>;
@@ -37,6 +39,10 @@ describe('UpdateLanguageModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(UpdateLanguageModelUseCase.name),
+          useValue: logger,
+        },
         UpdateLanguageModelUseCase,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         {
@@ -53,8 +59,8 @@ describe('UpdateLanguageModelUseCase', () => {
     clearDefaultsUseCase = module.get(ClearDefaultsByCatalogModelIdUseCase);
 
     // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
+    logger.info.mockImplementation();
+    logger.debug.mockImplementation();
   });
 
   afterEach(() => {
@@ -274,15 +280,15 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.save.mockResolvedValue();
       clearDefaultsUseCase.execute.mockResolvedValue();
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const logSpy = logger.info;
 
       // Act
       await useCase.execute(command);
 
       // Assert
       expect(logSpy).toHaveBeenCalledWith(
-        'Model is being archived, clearing defaults',
         { modelId: mockModelId },
+        'Model is being archived, clearing defaults',
       );
     });
 
@@ -338,15 +344,15 @@ describe('UpdateLanguageModelUseCase', () => {
       modelsRepository.findOne.mockResolvedValue(existingModel);
       modelsRepository.save.mockResolvedValue();
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
+      const logSpy = logger.info;
 
       // Act
       await useCase.execute(command);
 
       // Assert
       expect(logSpy).not.toHaveBeenCalledWith(
-        'Model is being archived, clearing defaults',
         expect.anything(),
+        'Model is being archived, clearing defaults',
       );
     });
   });

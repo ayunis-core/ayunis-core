@@ -4,11 +4,11 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Patch,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBody,
   ApiCreatedResponse,
@@ -45,11 +45,10 @@ import { CatalogModelResponseDtoMapper } from './mappers/catalog-model-response-
   EmbeddingModelResponseDto,
 )
 export class SuperAdminEmbeddingCatalogModelsController {
-  private readonly logger = new Logger(
-    SuperAdminEmbeddingCatalogModelsController.name,
-  );
-
   constructor(
+    @InjectPinoLogger(SuperAdminEmbeddingCatalogModelsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly createEmbeddingModelUseCase: CreateEmbeddingModelUseCase,
     private readonly updateEmbeddingModelUseCase: UpdateEmbeddingModelUseCase,
     private readonly catalogModelResponseDtoMapper: CatalogModelResponseDtoMapper,
@@ -85,22 +84,19 @@ export class SuperAdminEmbeddingCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: CreateEmbeddingModelRequestDto,
   ): Promise<EmbeddingModelResponseDto> {
-    this.logger.log(
-      `Creating embedding model ${dto.name} by super admin ${userId}`,
+    this.logger.info(
+      { modelName: dto.name, userId },
+      'Creating embedding model by super admin',
     );
-    const command = new CreateEmbeddingModelCommand({
-      name: dto.name,
-      provider: dto.provider,
-      displayName: dto.displayName,
-      dimensions: dto.dimensions,
-      isArchived: dto.isArchived,
-      inputTokenCost: dto.inputTokenCost,
-      outputTokenCost: dto.outputTokenCost,
-    });
-    const model = await this.createEmbeddingModelUseCase.execute(command);
+    const model = await this.createEmbeddingModelUseCase.execute(
+      this.toCreateCommand(dto),
+    );
     const responseDto =
       this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-    this.logger.log(`Successfully created embedding model ${model.id}`);
+    this.logger.info(
+      { modelId: model.id },
+      'Successfully created embedding model',
+    );
     return responseDto;
   }
 
@@ -141,8 +137,38 @@ export class SuperAdminEmbeddingCatalogModelsController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Body() dto: UpdateEmbeddingModelRequestDto,
   ): Promise<EmbeddingModelResponseDto> {
-    this.logger.log(`Updating embedding model ${id} by super admin ${userId}`);
-    const command = new UpdateEmbeddingModelCommand({
+    this.logger.info(
+      { modelId: id, userId },
+      'Updating embedding model by super admin',
+    );
+    const model = await this.updateEmbeddingModelUseCase.execute(
+      this.toUpdateCommand(id, dto),
+    );
+    const responseDto =
+      this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
+    this.logger.info({ modelId: id }, 'Successfully updated embedding model');
+    return responseDto;
+  }
+
+  private toCreateCommand(
+    dto: CreateEmbeddingModelRequestDto,
+  ): CreateEmbeddingModelCommand {
+    return new CreateEmbeddingModelCommand({
+      name: dto.name,
+      provider: dto.provider,
+      displayName: dto.displayName,
+      dimensions: dto.dimensions,
+      isArchived: dto.isArchived,
+      inputTokenCost: dto.inputTokenCost,
+      outputTokenCost: dto.outputTokenCost,
+    });
+  }
+
+  private toUpdateCommand(
+    id: UUID,
+    dto: UpdateEmbeddingModelRequestDto,
+  ): UpdateEmbeddingModelCommand {
+    return new UpdateEmbeddingModelCommand({
       id,
       name: dto.name,
       provider: dto.provider,
@@ -152,10 +178,5 @@ export class SuperAdminEmbeddingCatalogModelsController {
       inputTokenCost: dto.inputTokenCost,
       outputTokenCost: dto.outputTokenCost,
     });
-    const model = await this.updateEmbeddingModelUseCase.execute(command);
-    const responseDto =
-      this.catalogModelResponseDtoMapper.toEmbeddingModelDto(model);
-    this.logger.log(`Successfully updated embedding model ${id}`);
-    return responseDto;
   }
 }

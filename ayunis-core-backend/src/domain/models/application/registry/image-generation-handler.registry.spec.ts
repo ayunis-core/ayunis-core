@@ -1,11 +1,12 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
-import { Logger } from '@nestjs/common';
 import { ImageGenerationHandlerRegistry } from './image-generation-handler.registry';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { ModelProviderNotSupportedError } from '../models.errors';
 import type { ImageGenerationHandler } from '../ports/image-generation.handler';
 
 describe('ImageGenerationHandlerRegistry', () => {
+  const logger = createPinoLoggerMock();
   let registry: ImageGenerationHandlerRegistry;
   let configService: jest.Mocked<ConfigService>;
 
@@ -22,10 +23,10 @@ describe('ImageGenerationHandlerRegistry', () => {
       get: jest.fn(),
     } as unknown as jest.Mocked<ConfigService>;
 
-    registry = new ImageGenerationHandlerRegistry(configService);
+    registry = new ImageGenerationHandlerRegistry(logger, configService);
 
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger.info.mockImplementation();
+    logger.error.mockImplementation();
   });
 
   afterEach(() => {

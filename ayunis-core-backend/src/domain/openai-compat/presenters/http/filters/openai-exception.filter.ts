@@ -1,4 +1,5 @@
-import { ArgumentsHost, Catch, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { OpenAIErrorMapper } from 'src/domain/openai-compat/application/mappers/openai-error.mapper';
@@ -29,9 +30,10 @@ import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error
  */
 @Catch()
 export class OpenAIExceptionFilter extends BaseExceptionFilter {
-  private readonly openaiCompatLogger = new Logger(OpenAIExceptionFilter.name);
-
   constructor(
+    @InjectPinoLogger(OpenAIExceptionFilter.name)
+    private readonly openaiCompatLogger: PinoLogger,
+
     private readonly errorMapper: OpenAIErrorMapper,
     private readonly applicationErrorFilter: ApplicationErrorFilter,
   ) {
@@ -64,11 +66,14 @@ export class OpenAIExceptionFilter extends BaseExceptionFilter {
         response.write('data: [DONE]\n\n');
         response.end();
       } catch (writeError) {
-        this.openaiCompatLogger.warn('Failed to emit final SSE error frame', {
-          status: mapped.status,
-          writeError:
-            writeError instanceof Error ? writeError.message : 'Unknown',
-        });
+        this.openaiCompatLogger.warn(
+          {
+            status: mapped.status,
+            writeError:
+              writeError instanceof Error ? writeError.message : 'Unknown',
+          },
+          'Failed to emit final SSE error frame',
+        );
       }
       return;
     }

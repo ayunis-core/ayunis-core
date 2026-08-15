@@ -1,4 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ModelProvider } from '@ayunis/inference';
 import { AnthropicStreamInferenceHandler } from './anthropic.stream-inference';
 import { CLAUDE_MAX_OUTPUT_TOKENS } from '../runtime/inference-config';
@@ -27,6 +28,7 @@ describe('AnthropicStreamInferenceHandler', () => {
       get: jest.fn().mockReturnValue('sk-ant-test'),
     } as unknown as ConfigService;
     const handler = new AnthropicStreamInferenceHandler(
+      createPinoLoggerMock(),
       configService,
       {} as ImageContentService,
     );

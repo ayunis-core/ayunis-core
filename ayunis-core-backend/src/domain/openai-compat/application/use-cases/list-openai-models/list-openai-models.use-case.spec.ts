@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ListOpenAIModelsUseCase } from './list-openai-models.use-case';
 import { ListOpenAIModelsQuery } from './list-openai-models.query';
 import type { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
@@ -12,6 +13,7 @@ import { OpenAIModelMapper } from '../../mappers/openai-model.mapper';
 describe('ListOpenAIModelsUseCase', () => {
   let useCase: ListOpenAIModelsUseCase;
   let getPermittedLanguageModelsUseCase: jest.Mocked<GetPermittedLanguageModelsUseCase>;
+  const logger = createPinoLoggerMock();
 
   const orgId = randomUUID();
 
@@ -34,11 +36,13 @@ describe('ListOpenAIModelsUseCase', () => {
     new PermittedLanguageModel({ model, orgId });
 
   beforeEach(() => {
+    logger.info.mockReset();
     getPermittedLanguageModelsUseCase = {
       execute: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<GetPermittedLanguageModelsUseCase>;
 
     useCase = new ListOpenAIModelsUseCase(
+      logger,
       getPermittedLanguageModelsUseCase,
       new OpenAIModelMapper(),
     );
@@ -58,6 +62,10 @@ describe('ListOpenAIModelsUseCase', () => {
 
     const result = await useCase.execute(new ListOpenAIModelsQuery(orgId));
 
+    expect(logger.info).toHaveBeenCalledWith(
+      { orgId },
+      'Listing OpenAI-compatible models',
+    );
     expect(result.object).toBe('list');
     expect(result.data).toHaveLength(2);
     expect(result.data[0]).toEqual({

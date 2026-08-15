@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
 import type { FindManyOptions, Repository } from 'typeorm';
@@ -19,27 +20,28 @@ import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 
 @Injectable()
 export class PermittedModelFinder {
-  private readonly logger = new Logger(PermittedModelFinder.name);
-
   constructor(
+    @InjectPinoLogger(PermittedModelFinder.name)
+    private readonly logger: PinoLogger,
+
     @InjectRepository(PermittedModelRecord)
     private readonly permittedModelRepository: Repository<PermittedModelRecord>,
     private readonly permittedModelMapper: PermittedModelMapper,
   ) {}
 
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
-    this.logger.debug('findOneEmbedding', { orgId });
+    this.logger.debug({ orgId }, 'findOneEmbedding');
     const permittedEmbeddingModels = await this.findManyEmbedding(orgId);
     if (permittedEmbeddingModels.length === 0) {
       return null;
     }
     if (permittedEmbeddingModels.length > 1) {
       this.logger.warn(
-        'Multiple permitted embedding models found for org; returning the first. Write path enforces single-per-org.',
         {
           orgId,
           permittedEmbeddingModelIds: permittedEmbeddingModels.map((m) => m.id),
         },
+        'Multiple permitted embedding models found for org; returning the first. Write path enforces single-per-org.',
       );
     }
     return permittedEmbeddingModels[0];
@@ -48,7 +50,7 @@ export class PermittedModelFinder {
   async findOneImageGeneration(
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel | null> {
-    this.logger.debug('findOneImageGeneration', { orgId });
+    this.logger.debug({ orgId }, 'findOneImageGeneration');
     const permittedImageGenerationModels =
       await this.findManyImageGeneration(orgId);
     if (permittedImageGenerationModels.length === 0) {
@@ -56,13 +58,13 @@ export class PermittedModelFinder {
     }
     if (permittedImageGenerationModels.length > 1) {
       this.logger.warn(
-        'Multiple permitted image-generation models found for org; returning the first. Write path enforces single-per-org.',
         {
           orgId,
           permittedImageGenerationModelIds: permittedImageGenerationModels.map(
             (m) => m.id,
           ),
         },
+        'Multiple permitted image-generation models found for org; returning the first. Write path enforces single-per-org.',
       );
     }
     return permittedImageGenerationModels[0];

@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateImageGenerationModelUseCase } from './update-image-generation-model.use-case';
@@ -32,6 +34,14 @@ describe('UpdateImageGenerationModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(UpdateImageGenerationModelUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
+          provide: getLoggerToken(ModelPolicyService.name),
+          useValue: createPinoLoggerMock(),
+        },
         UpdateImageGenerationModelUseCase,
         ModelPolicyService,
         { provide: ModelsRepository, useValue: mockModelsRepository },

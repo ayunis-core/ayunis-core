@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EMPTY, firstValueFrom, throwError } from 'rxjs';
 import { randomUUID } from 'crypto';
 import { StreamInferenceUseCase } from './stream-inference.use-case';
@@ -34,7 +35,7 @@ function useCaseWithFailingHandler(error: unknown): StreamInferenceUseCase {
   const registry = {
     getHandler: () => ({ answer: () => throwError(() => error) }),
   };
-  return new StreamInferenceUseCase(registry as never);
+  return new StreamInferenceUseCase(createPinoLoggerMock(), registry as never);
 }
 
 describe('StreamInferenceUseCase error mapping', () => {
@@ -160,7 +161,10 @@ describe('StreamInferenceUseCase replayed message sanitation', () => {
         },
       }),
     };
-    const useCase = new StreamInferenceUseCase(registry as never);
+    const useCase = new StreamInferenceUseCase(
+      createPinoLoggerMock(),
+      registry as never,
+    );
 
     useCase.execute(
       new StreamInferenceInput({

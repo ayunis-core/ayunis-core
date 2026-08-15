@@ -16,14 +16,12 @@ import {
   StreamIdleWatchdog,
   STREAM_IDLE_TIMEOUT_MS,
 } from 'src/common/streaming/stream-idle-watchdog';
-import { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import {
   isRetryableSetupFailure,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
 import { InferenceStreamStalledError } from '../../application/models.errors';
-
-const logger = new Logger('RuntimeStreamInferenceHandler');
 
 /**
  * One retry, and only when the failed attempt emitted nothing: once a chunk
@@ -51,6 +49,7 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
   private readonly providerCache = new Map<string, ModelProvider>();
 
   protected constructor(
+    protected readonly logger: PinoLogger,
     protected readonly imageContentService: ImageContentService,
   ) {
     super();
@@ -140,12 +139,15 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
         if (controller.signal.aborted) {
           throw setupFailure;
         }
-        logger.warn('Provider stream failed before the first chunk', {
-          model: input.model.name,
-          provider: input.model.provider,
-          attempt,
-          error: setupFailure.message,
-        });
+        this.logger.warn(
+          {
+            model: input.model.name,
+            provider: input.model.provider,
+            attempt,
+            err: setupFailure,
+          },
+          'Provider stream failed before the first chunk',
+        );
       }
     } catch (error) {
       // A stalled stream surfaces from the SDK as a generic AbortError, which

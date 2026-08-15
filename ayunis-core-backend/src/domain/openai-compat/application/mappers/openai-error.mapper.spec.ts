@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { OpenAIErrorMapper } from './openai-error.mapper';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
@@ -21,7 +22,7 @@ class UnexpectedOpenAIError extends ApplicationError {
 }
 
 describe('OpenAIErrorMapper', () => {
-  const mapper = new OpenAIErrorMapper();
+  const mapper = new OpenAIErrorMapper(createPinoLoggerMock());
 
   describe('429 → rate_limit_error (regression for AYC-92 / AYC-78 finding I5)', () => {
     it('maps QuotaExceededError (HTTP 429) to rate_limit_error', () => {

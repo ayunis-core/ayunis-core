@@ -1,4 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ModelProvider } from '@ayunis/inference';
 import { BedrockStreamInferenceHandler } from './bedrock.stream-inference';
 import { CLAUDE_MAX_OUTPUT_TOKENS } from '../runtime/inference-config';
@@ -24,6 +25,7 @@ describe('BedrockStreamInferenceHandler', () => {
       get: jest.fn().mockReturnValue(undefined),
     } as unknown as ConfigService;
     const handler = new BedrockStreamInferenceHandler(
+      createPinoLoggerMock(),
       configService,
       {} as ImageContentService,
     );

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { anthropic } from '@ayunis/provider-anthropic';
 import type { ModelProvider } from '@ayunis/inference';
@@ -13,10 +14,13 @@ import {
 @Injectable()
 export class AnthropicStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
+    @InjectPinoLogger('RuntimeStreamInferenceHandler')
+    logger: PinoLogger,
+
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super(imageContentService);
+    super(logger, imageContentService);
   }
 
   protected createProvider(model: Model): ModelProvider {

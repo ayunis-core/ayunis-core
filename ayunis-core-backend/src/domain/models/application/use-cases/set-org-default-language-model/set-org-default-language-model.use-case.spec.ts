@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SetOrgDefaultLanguageModelUseCase } from './set-org-default-language-model.use-case';
@@ -34,6 +36,10 @@ describe('SetOrgDefaultLanguageModelUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(SetOrgDefaultLanguageModelUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         SetOrgDefaultLanguageModelUseCase,
         {
           provide: PermittedModelsRepository,

@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetInferenceUseCase } from './get-inference.use-case';
 import { GetInferenceCommand } from './get-inference.command';
@@ -45,7 +46,11 @@ function useCaseWithFailingHandler(error: Error): GetInferenceUseCase {
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(registry as never, contextService as never);
+  return new GetInferenceUseCase(
+    createPinoLoggerMock(),
+    registry as never,
+    contextService as never,
+  );
 }
 
 function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
@@ -55,7 +60,11 @@ function useCaseWithResponse(response: InferenceResponse): GetInferenceUseCase {
   const contextService = {
     get: () => '123e4567-e89b-12d3-a456-426614174000',
   };
-  return new GetInferenceUseCase(registry as never, contextService as never);
+  return new GetInferenceUseCase(
+    createPinoLoggerMock(),
+    registry as never,
+    contextService as never,
+  );
 }
 
 describe('GetInferenceUseCase error mapping', () => {
@@ -199,6 +208,7 @@ describe('GetInferenceUseCase replayed message sanitation', () => {
     };
     const contextService = { get: () => randomUUID() };
     const useCase = new GetInferenceUseCase(
+      createPinoLoggerMock(),
       registry as never,
       contextService as never,
     );

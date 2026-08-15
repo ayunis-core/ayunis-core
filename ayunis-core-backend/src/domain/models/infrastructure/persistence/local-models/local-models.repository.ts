@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -63,9 +64,10 @@ function isUsageModelForeignKeyViolation(error: unknown): boolean {
 
 @Injectable()
 export class LocalModelsRepository extends ModelsRepository {
-  private readonly logger = new Logger(LocalModelsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalModelsRepository.name)
+    private readonly logger: PinoLogger,
+
     @InjectRepository(ModelRecord)
     private readonly localModelRepository: Repository<ModelRecord>,
     private readonly localModelMapper: ModelMapper,
@@ -75,7 +77,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async findAll(): Promise<Model[]> {
-    this.logger.log('findAll');
+    this.logger.info('findAll');
 
     const modelRecords = await this.localModelRepository.find();
 
@@ -85,7 +87,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async findOne(params: FindOneModelParams): Promise<Model | undefined> {
-    this.logger.log('findOne', params);
+    this.logger.info(params, 'findOne');
 
     const where =
       'id' in params
@@ -101,7 +103,7 @@ export class LocalModelsRepository extends ModelsRepository {
     id: UUID,
     operation: (model: Model | undefined) => Promise<Result>,
   ): Promise<Result> {
-    this.logger.log('withCatalogModelLocked', { id });
+    this.logger.info({ id }, 'withCatalogModelLocked');
 
     return await this.txHost.withTransaction(async () => {
       const record = await this.txHost.tx.findOne(ModelRecord, {
@@ -146,11 +148,14 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async save(model: Model): Promise<void> {
-    this.logger.log('save', {
-      modelName: model.name,
-      modelProvider: model.provider,
-      displayName: model.displayName,
-    });
+    this.logger.info(
+      {
+        modelName: model.name,
+        modelProvider: model.provider,
+        displayName: model.displayName,
+      },
+      'save',
+    );
 
     const modelEntity = this.localModelMapper.toRecord(model);
     try {
@@ -164,12 +169,15 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async update<T extends Model>(id: UUID, model: T): Promise<T> {
-    this.logger.log('update', {
-      id,
-      modelName: model.name,
-      modelProvider: model.provider,
-      displayName: model.displayName,
-    });
+    this.logger.info(
+      {
+        id,
+        modelName: model.name,
+        modelProvider: model.provider,
+        displayName: model.displayName,
+      },
+      'update',
+    );
 
     const modelEntity = this.localModelMapper.toRecord(model);
     modelEntity.id = id;
@@ -181,7 +189,7 @@ export class LocalModelsRepository extends ModelsRepository {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     try {
       const result = await this.txHost.tx.delete(ModelRecord, { id });

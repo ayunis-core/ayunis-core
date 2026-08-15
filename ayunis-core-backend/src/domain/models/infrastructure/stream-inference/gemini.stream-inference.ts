@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { gemini } from '@ayunis/provider-gemini';
 import type { ModelProvider } from '@ayunis/inference';
@@ -10,10 +11,13 @@ import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
 @Injectable()
 export class GeminiStreamInferenceHandler extends RuntimeStreamInferenceHandler {
   constructor(
+    @InjectPinoLogger('RuntimeStreamInferenceHandler')
+    logger: PinoLogger,
+
     private readonly configService: ConfigService,
     imageContentService: ImageContentService,
   ) {
-    super(imageContentService);
+    super(logger, imageContentService);
   }
 
   protected createProvider(model: Model): ModelProvider {

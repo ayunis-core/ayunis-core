@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ModelProvider } from '../../domain/value-objects/model-provider.enum';
 import { InferenceHandler } from '../ports/inference.handler';
 import { ModelProviderNotSupportedError } from '../models.errors';
@@ -6,12 +7,15 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class InferenceHandlerRegistry {
-  private readonly logger = new Logger(InferenceHandlerRegistry.name);
   private readonly handlers = new Map<ModelProvider, InferenceHandler>();
   private mockHandler: InferenceHandler;
 
-  constructor(private readonly configService: ConfigService) {
-    this.logger.log(InferenceHandlerRegistry.name);
+  constructor(
+    @InjectPinoLogger(InferenceHandlerRegistry.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
+    this.logger.info(InferenceHandlerRegistry.name);
     // prebuilt handlers are registered in models.module.ts
   }
 
@@ -36,14 +40,17 @@ export class InferenceHandlerRegistry {
   getHandler(provider: ModelProvider): InferenceHandler {
     const isTest = this.configService.get<boolean>('app.isTest');
     if (isTest) {
-      this.logger.log('Using mock handler for non-streaming');
+      this.logger.info('Using mock handler for non-streaming');
       return this.mockHandler;
     }
     const handler = this.handlers.get(provider);
     if (!handler) {
-      this.logger.error('Handler not found', {
-        provider,
-      });
+      this.logger.error(
+        {
+          provider,
+        },
+        'Handler not found',
+      );
       throw new ModelProviderNotSupportedError(provider);
     }
     return handler;

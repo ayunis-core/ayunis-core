@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { ModelProvider as InferenceModelProvider } from '@ayunis/inference';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -36,6 +38,10 @@ describe('ResolveModelProviderUseCase', () => {
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(ResolveModelProviderUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         ResolveModelProviderUseCase,
         { provide: StreamInferenceHandlerRegistry, useValue: registry },
       ],

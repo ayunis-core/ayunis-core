@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateEmbeddingModelUseCase } from './create-embedding-model.use-case';
 import { CreateEmbeddingModelCommand } from './create-embedding-model.command';
 import type { ModelsRepository } from '../../ports/models.repository';
@@ -24,7 +25,10 @@ describe('CreateEmbeddingModelUseCase', () => {
       save: jest.fn(),
       delete: jest.fn(),
     };
-    useCase = new CreateEmbeddingModelUseCase(modelsRepository);
+    useCase = new CreateEmbeddingModelUseCase(
+      createPinoLoggerMock(),
+      modelsRepository,
+    );
   });
 
   const createCommand = (): CreateEmbeddingModelCommand =>

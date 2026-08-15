@@ -1,13 +1,13 @@
 import {
   Body,
   Controller,
-  Logger,
   Post,
   Req,
   Res,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 import type { Subscription } from 'rxjs';
@@ -56,9 +56,10 @@ import { OpenAIExceptionFilter } from './filters/openai-exception.filter';
 @UseFilters(OpenAIExceptionFilter)
 @RateLimit({ limit: 60, windowMs: 60_000 })
 export class ChatCompletionsController {
-  private readonly logger = new Logger(ChatCompletionsController.name);
-
   constructor(
+    @InjectPinoLogger(ChatCompletionsController.name)
+    private readonly logger: PinoLogger,
+
     private readonly useCase: ExecuteOpenAIChatCompletionUseCase,
     private readonly contextService: ContextService,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
@@ -112,10 +113,13 @@ export class ChatCompletionsController {
     void this.incrementTrialMessagesUseCase
       .execute(new IncrementTrialMessagesCommand(orgId))
       .catch((error: unknown) => {
-        this.logger.warn('Failed to increment trial messages', {
-          orgId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.warn(
+          {
+            orgId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to increment trial messages',
+        );
       });
   }
 

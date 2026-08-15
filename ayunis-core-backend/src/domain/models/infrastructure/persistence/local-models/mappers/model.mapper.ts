@@ -1,4 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerConfig } from 'src/common/logger/pino-logger.config';
 import { Model } from 'src/domain/models/domain/model.entity';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
@@ -13,7 +15,10 @@ import {
 
 @Injectable()
 export class ModelMapper {
-  private readonly logger = new Logger(ModelMapper.name);
+  constructor(
+    @InjectPinoLogger(ModelMapper.name)
+    private readonly logger: PinoLogger = createModelMapperLogger(),
+  ) {}
 
   private parseTier(
     value: string | null | undefined,
@@ -27,11 +32,14 @@ export class ModelMapper {
     if (allowed.includes(value)) {
       return value as ModelTier;
     }
-    this.logger.warn('Encountered unknown model tier value, ignoring', {
-      value,
-      modelId: rowId,
-      modelName: rowName,
-    });
+    this.logger.warn(
+      {
+        value,
+        modelId: rowId,
+        modelName: rowName,
+      },
+      'Encountered unknown model tier value, ignoring',
+    );
     return undefined;
   }
 
@@ -141,4 +149,10 @@ export class ModelMapper {
 
     throw new Error(`Unknown model domain type: ${domain.constructor.name}`);
   }
+}
+
+function createModelMapperLogger(): PinoLogger {
+  const logger = new PinoLogger(createPinoLoggerConfig());
+  logger.setContext(ModelMapper.name);
+  return logger;
 }

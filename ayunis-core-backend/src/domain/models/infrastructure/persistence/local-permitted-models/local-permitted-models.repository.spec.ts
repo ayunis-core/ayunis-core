@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { LocalPermittedModelsRepository } from './local-permitted-models.repository';
 import type { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { PermittedModelRecord } from './schema/permitted-model.record';
@@ -40,11 +41,13 @@ describe('LocalPermittedModelsRepository', () => {
     } as unknown as jest.Mocked<PermittedModelMapper>;
 
     finder = new PermittedModelFinder(
+      createPinoLoggerMock(),
       permittedModelRepository,
       permittedModelMapper,
     );
 
     repository = new LocalPermittedModelsRepository(
+      createPinoLoggerMock(),
       permittedModelRepository,
       permittedModelMapper,
       finder,

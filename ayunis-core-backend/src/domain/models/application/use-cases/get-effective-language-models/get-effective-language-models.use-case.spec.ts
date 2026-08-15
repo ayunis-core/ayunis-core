@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetEffectiveLanguageModelsUseCase } from './get-effective-language-models.use-case';
@@ -68,6 +70,10 @@ describe('GetEffectiveLanguageModelsUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: getLoggerToken(GetEffectiveLanguageModelsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         GetEffectiveLanguageModelsUseCase,
         {
           provide: PermittedModelsRepository,

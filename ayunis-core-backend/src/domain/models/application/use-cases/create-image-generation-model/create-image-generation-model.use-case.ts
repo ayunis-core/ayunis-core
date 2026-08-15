@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { ModelsRepository } from '../../ports/models.repository';
@@ -11,9 +12,10 @@ import { CreateImageGenerationModelCommand } from './create-image-generation-mod
 
 @Injectable()
 export class CreateImageGenerationModelUseCase {
-  private readonly logger = new Logger(CreateImageGenerationModelUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateImageGenerationModelUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly modelsRepository: ModelsRepository,
     private readonly modelPolicy: ModelPolicyService,
   ) {}
@@ -47,9 +49,12 @@ export class CreateImageGenerationModelUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Unexpected error creating image-generation model', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error creating image-generation model',
+      );
       throw new UnexpectedModelError(error as Error);
     }
   }

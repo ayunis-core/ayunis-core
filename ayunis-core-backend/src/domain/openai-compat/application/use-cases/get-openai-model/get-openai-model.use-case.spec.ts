@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetOpenAIModelUseCase } from './get-openai-model.use-case';
 import { GetOpenAIModelQuery } from './get-openai-model.query';
@@ -25,7 +26,10 @@ describe('GetOpenAIModelUseCase', () => {
         .mockResolvedValue({ object: 'list', data: [modelObject] }),
     } as unknown as jest.Mocked<ListOpenAIModelsUseCase>;
 
-    useCase = new GetOpenAIModelUseCase(listOpenAIModelsUseCase);
+    useCase = new GetOpenAIModelUseCase(
+      createPinoLoggerMock(),
+      listOpenAIModelsUseCase,
+    );
   });
 
   it('returns the model object matching the requested name', async () => {

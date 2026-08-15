@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -14,9 +15,10 @@ import type { EffectiveLanguageModelsResult } from './effective-language-models-
 
 @Injectable()
 export class GetEffectiveLanguageModelsUseCase {
-  private readonly logger = new Logger(GetEffectiveLanguageModelsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetEffectiveLanguageModelsUseCase.name)
+    private readonly logger: PinoLogger,
+
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
     private readonly contextService: ContextService,
@@ -25,10 +27,13 @@ export class GetEffectiveLanguageModelsUseCase {
   async execute(
     query: GetEffectiveLanguageModelsQuery,
   ): Promise<EffectiveLanguageModelsResult> {
-    this.logger.log('Resolving effective language models', {
-      userId: query.userId,
-      orgId: query.orgId,
-    });
+    this.logger.info(
+      {
+        userId: query.userId,
+        orgId: query.orgId,
+      },
+      'Resolving effective language models',
+    );
 
     try {
       this.validateOrgAccess(query.orgId);
@@ -42,11 +47,14 @@ export class GetEffectiveLanguageModelsUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error resolving effective language models', {
-        userId: query.userId,
-        orgId: query.orgId,
-        error: error instanceof Error ? error : new Error('Unknown error'),
-      });
+      this.logger.error(
+        {
+          userId: query.userId,
+          orgId: query.orgId,
+          err: error instanceof Error ? error : new Error('Unknown error'),
+        },
+        'Error resolving effective language models',
+      );
       throw new UnexpectedModelError(error as Error);
     }
   }
@@ -73,10 +81,13 @@ export class GetEffectiveLanguageModelsUseCase {
     const overrideTeamIds = overrideTeams.map((t) => t.id);
 
     if (overrideTeams.length === 0) {
-      this.logger.debug('No override teams found, returning org-level models', {
-        userId,
-        orgId,
-      });
+      this.logger.debug(
+        {
+          userId,
+          orgId,
+        },
+        'No override teams found, returning org-level models',
+      );
       return this.buildOrgFallback(orgId);
     }
 
@@ -84,8 +95,8 @@ export class GetEffectiveLanguageModelsUseCase {
 
     if (merged.length === 0) {
       this.logger.debug(
-        'Override teams have no configured models, falling back to org-level models',
         { userId, orgId },
+        'Override teams have no configured models, falling back to org-level models',
       );
       return this.buildOrgFallback(orgId);
     }
@@ -119,10 +130,13 @@ export class GetEffectiveLanguageModelsUseCase {
       }
     }
 
-    this.logger.debug('Merged team models', {
-      teamIds,
-      modelCount: modelsByModelId.size,
-    });
+    this.logger.debug(
+      {
+        teamIds,
+        modelCount: modelsByModelId.size,
+      },
+      'Merged team models',
+    );
 
     return Array.from(modelsByModelId.values());
   }
