@@ -22,7 +22,7 @@ Org-level data retention. Lets an org admin opt in to automatic deletion of conv
 - **`PostgresRetentionPoliciesRepository`** — TypeORM implementation backed by the `org_retention_policies` table.
 - **`OrgRetentionPolicyRecord`** — TypeORM entity (unique per org).
 - **`OrgRetentionPolicyMapper`** — Domain ↔ Record conversion.
-- **`RetentionCleanupTask`** — Nightly Nest-schedule job at 4 AM (staggered after the threads module's 2 AM / 3 AM cleanups) that runs `EnforceRetentionUseCase`. An in-memory lock skips overlapping executions; success/failure counts are logged.
+- **`RetentionCleanupTask`** — Nightly Nest-schedule job at 4 AM (staggered after the threads module's 2 AM / 3 AM cleanups) that runs `EnforceRetentionUseCase` under the AppSignal `retention_cleanup` process monitor. An in-memory lock skips overlapping executions without reporting a monitor occurrence; successful runs send the finish event, while failures are logged outside the monitored callback so AppSignal observes the missing finish.
 
 ## HTTP API
 

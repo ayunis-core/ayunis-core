@@ -21,6 +21,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app/app.module';
 import { METRICS_PATH } from './integrations/metrics/metrics.constants';
 import { parsePositiveIntWithDefault } from './common/util/number.util';
+import { startBackendProcessHeartbeat } from './common/process/backend-process-heartbeat';
 
 class Bootstrap {
   private static readonly PORT = process.env.PORT ?? 3000;
@@ -35,6 +36,7 @@ class Bootstrap {
     this.configureApp(app);
     this.configureHttpTimeouts(app);
     await app.listen(this.PORT);
+    startBackendProcessHeartbeat();
 
     Logger.log(`🚀 Application is running on http://localhost:${this.PORT}`);
   }

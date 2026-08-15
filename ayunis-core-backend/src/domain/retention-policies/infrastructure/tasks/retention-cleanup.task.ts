@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { checkIn } from '@appsignal/nodejs';
 import { EnforceRetentionUseCase } from '../../application/use-cases/enforce-retention/enforce-retention.use-case';
 
 /**
@@ -31,16 +32,18 @@ export class RetentionCleanupTask {
     this.logger.info('Starting scheduled retention cleanup');
 
     try {
-      const result = await this.enforceRetentionUseCase.execute();
-      this.logger.info(
-        {
-          orgsProcessed: result.orgsProcessed,
-          totalDeleted: result.totalDeleted,
-          totalFailed: result.totalFailed,
-          dryRun: result.dryRun,
-        },
-        'Scheduled retention cleanup completed',
-      );
+      await checkIn.cron('retention_cleanup', async () => {
+        const result = await this.enforceRetentionUseCase.execute();
+        this.logger.info(
+          {
+            orgsProcessed: result.orgsProcessed,
+            totalDeleted: result.totalDeleted,
+            totalFailed: result.totalFailed,
+            dryRun: result.dryRun,
+          },
+          'Scheduled retention cleanup completed',
+        );
+      });
     } catch (error) {
       this.logger.error(
         { err: error as Error },
