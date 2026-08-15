@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.27.0](https://github.com/ayunis-core/ayunis-core/compare/v2.26.0...v2.27.0) (2026-08-15)
+
+
+### Features
+
+* **observability:** add agent runtime rollout telemetry (AYC-770) ([#1436](https://github.com/ayunis-core/ayunis-core/issues/1436)) ([a410088](https://github.com/ayunis-core/ayunis-core/commit/a4100882e55cf520e6031a178c79ceb03c0a1d2d))
+* **observability:** add appsignal process monitors (AYC-000) ([#1441](https://github.com/ayunis-core/ayunis-core/issues/1441)) ([2ce40b3](https://github.com/ayunis-core/ayunis-core/commit/2ce40b3a95b13a93eb2888a5c155bdbc8f588303))
+* **tools:** unify runtime tool execution callbacks (AYC-704) ([#1433](https://github.com/ayunis-core/ayunis-core/issues/1433)) ([27d64e4](https://github.com/ayunis-core/ayunis-core/commit/27d64e44108487c8e55b4d8359f5a96af875f7dc))
+
+
+### Bug Fixes
+
+* **models:** add safe provider rejection telemetry (AYC-000) ([#1434](https://github.com/ayunis-core/ayunis-core/issues/1434)) ([b30dfef](https://github.com/ayunis-core/ayunis-core/commit/b30dfefa16a5d2ee287ff687a09089ef5a1b4ee6))
+* **observability:** allow frontend appsignal telemetry (AYC-000) ([#1440](https://github.com/ayunis-core/ayunis-core/issues/1440)) ([99aac0d](https://github.com/ayunis-core/ayunis-core/commit/99aac0d3b223c9b7a903cc6ff27b644fc15acc78))
+
 ## [2.26.0](https://github.com/ayunis-core/ayunis-core/compare/v2.25.0...v2.26.0) (2026-08-15)
 
 
