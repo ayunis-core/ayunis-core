@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -158,6 +160,11 @@ describe('CreateMcpIntegrationUseCase', () => {
         {
           provide: McpOAuthClientConfigurationService,
           useValue: oauthClientConfiguration,
+        },
+
+        {
+          provide: getLoggerToken(CreateMcpIntegrationUseCase.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

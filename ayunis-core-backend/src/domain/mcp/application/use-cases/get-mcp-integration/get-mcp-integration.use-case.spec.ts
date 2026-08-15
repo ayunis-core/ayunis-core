@@ -1,6 +1,9 @@
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { GetMcpIntegrationUseCase } from './get-mcp-integration.use-case';
 import { GetMcpIntegrationQuery } from './get-mcp-integration.query';
@@ -16,16 +19,16 @@ import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-object
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('GetMcpIntegrationUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: GetMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let contextService: ContextService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = 'org-123' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetMcpIntegrationUseCase,
@@ -41,6 +44,11 @@ describe('GetMcpIntegrationUseCase', () => {
             get: jest.fn(),
           },
         },
+
+        {
+          provide: getLoggerToken(GetMcpIntegrationUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -51,8 +59,6 @@ describe('GetMcpIntegrationUseCase', () => {
     contextService = module.get<ContextService>(ContextService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -86,9 +92,12 @@ describe('GetMcpIntegrationUseCase', () => {
       expect(result).toEqual(mockIntegration);
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
-      expect(loggerLogSpy).toHaveBeenCalledWith('getMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'getMcpIntegration',
+      );
     });
 
     it('should throw McpIntegrationNotFoundError when integration does not exist', async () => {
@@ -185,9 +194,9 @@ describe('GetMcpIntegrationUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(UnexpectedMcpError);
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error getting integration',
-        { error: unexpectedError },
       );
     });
 
@@ -203,7 +212,7 @@ describe('GetMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should re-throw McpIntegrationAccessDeniedError without wrapping', async () => {
@@ -230,7 +239,7 @@ describe('GetMcpIntegrationUseCase', () => {
         McpIntegrationAccessDeniedError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -256,9 +265,12 @@ describe('GetMcpIntegrationUseCase', () => {
       await useCase.execute(query);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('getMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'getMcpIntegration',
+      );
     });
   });
 });

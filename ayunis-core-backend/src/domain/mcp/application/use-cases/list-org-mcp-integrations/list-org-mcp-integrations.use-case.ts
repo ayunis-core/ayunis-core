@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { ContextService } from 'src/common/context/services/context.service';
 import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
@@ -11,9 +12,9 @@ import { UnexpectedMcpError } from '../../mcp.errors';
  */
 @Injectable()
 export class ListOrgMcpIntegrationsUseCase {
-  private readonly logger = new Logger(ListOrgMcpIntegrationsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ListOrgMcpIntegrationsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
@@ -25,7 +26,7 @@ export class ListOrgMcpIntegrationsUseCase {
    * @throws UnexpectedMcpError if an unexpected error occurs
    */
   async execute(): Promise<McpIntegration[]> {
-    this.logger.log('listOrgMcpIntegrations');
+    this.logger.info('listOrgMcpIntegrations');
 
     try {
       const orgId = this.contextService.get('orgId');
@@ -41,9 +42,12 @@ export class ListOrgMcpIntegrationsUseCase {
       ) {
         throw error;
       }
-      this.logger.error('Unexpected error listing integrations', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Unexpected error listing integrations',
+      );
       throw new UnexpectedMcpError('Unexpected error occurred');
     }
   }

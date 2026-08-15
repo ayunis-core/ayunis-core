@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -12,9 +13,11 @@ import type { UUID } from 'crypto';
 
 @Injectable()
 export class CreateDocumentToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(CreateDocumentToolHandler.name);
-
-  constructor(private readonly createArtifactUseCase: CreateArtifactUseCase) {
+  constructor(
+    @InjectPinoLogger(CreateDocumentToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly createArtifactUseCase: CreateArtifactUseCase,
+  ) {
     super();
   }
 
@@ -24,7 +27,7 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log('Executing create_document tool');
+    this.logger.info('Executing create_document tool');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -48,7 +51,10 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('Failed to execute create_document tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute create_document tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

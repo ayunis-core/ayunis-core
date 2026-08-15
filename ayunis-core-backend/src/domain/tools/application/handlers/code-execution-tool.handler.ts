@@ -10,7 +10,8 @@ import type {
   ExecutionRequest,
   ExecutionResponse,
 } from 'src/common/clients/code-execution/generated/ayunisCodeExecutionService.schemas';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetSourceByIdUseCase } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { GetSourceByIdQuery } from 'src/domain/sources/application/use-cases/get-source-by-id/get-source-by-id.query';
 import { CSVDataSource } from 'src/domain/sources/domain/sources/data-source.entity';
@@ -26,8 +27,9 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
 
 @Injectable()
 export class CodeExecutionToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(CodeExecutionToolHandler.name);
   constructor(
+    @InjectPinoLogger(CodeExecutionToolHandler.name)
+    private readonly logger: PinoLogger,
     private readonly getSourceByIdUseCase: GetSourceByIdUseCase,
     private readonly createDataSourceUseCase: CreateDataSourceUseCase,
     private readonly addSourceToThreadUseCase: AddSourceToThreadUseCase,
@@ -130,7 +132,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         new GetSourceByIdQuery(sourceId),
       );
     } catch (error) {
-      this.logger.error('Error getting CSV data source', error);
+      this.logger.error({ err: error }, 'Error getting CSV data source');
       throw new ToolExecutionFailedError({
         toolName,
         message: `Error getting CSV data source: ${error instanceof Error ? error.message : 'Unknown error. Source ID: ' + sourceId}`,
@@ -148,11 +150,15 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
       const csvContent = convertCSVToString(csvSource.data);
       return Buffer.from(csvContent).toString('base64');
     } catch (error) {
-      this.logger.error('Error converting CSV data source to string', error, {
-        sourceId,
-        rowCount: csvSource.data.rows.length,
-        headerCount: csvSource.data.headers.length,
-      });
+      this.logger.error(
+        {
+          err: error,
+          sourceId,
+          rowCount: csvSource.data.rows.length,
+          headerCount: csvSource.data.headers.length,
+        },
+        'Error converting CSV data source to string',
+      );
       throw new ToolExecutionFailedError({
         toolName,
         message: `Error converting CSV data source to string: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -187,7 +193,7 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         }
       }
     } catch (error) {
-      this.logger.error('Failed to handle output files', error);
+      this.logger.error({ err: error }, 'Failed to handle output files');
     }
 
     return createdSources;
@@ -216,14 +222,17 @@ export class CodeExecutionToolHandler extends ToolExecutionHandler {
         new AddSourceCommand(thread, source),
       );
 
-      this.logger.log(`Created and attached CSV source: ${sourceName}`, {
-        sourceId: source.id,
-        threadId,
-      });
+      this.logger.info(
+        { sourceId: source.id, threadId, name: sourceName },
+        'Created and attached CSV source',
+      );
 
       return `${sourceName} (ID: ${source.id})`;
     } catch (error) {
-      this.logger.error(`Failed to process output file ${filename}`, error);
+      this.logger.error(
+        { err: error, fileName: filename },
+        'Failed to process output file',
+      );
       return null;
     }
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import {
@@ -11,9 +12,11 @@ import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/app
 
 @Injectable()
 export class WebsiteContentToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(WebsiteContentToolHandler.name);
-
-  constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {
+  constructor(
+    @InjectPinoLogger(WebsiteContentToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
+  ) {
     super();
   }
 
@@ -23,7 +26,7 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log('execute', tool, input);
+    this.logger.info({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(
@@ -39,7 +42,7 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
       if (error instanceof CrawlDomainAccessDeniedError) {
         throw error;
       }
-      this.logger.error('execute', error);
+      this.logger.error({ err: error }, 'execute');
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

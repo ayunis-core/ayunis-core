@@ -1,6 +1,7 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateDocumentToolHandler } from './create-document-tool.handler';
 import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
@@ -29,13 +30,15 @@ describe('CreateDocumentToolHandler', () => {
           provide: CreateArtifactUseCase,
           useValue: mockCreateArtifactUseCase,
         },
+
+        {
+          provide: getLoggerToken(CreateDocumentToolHandler.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     handler = module.get<CreateDocumentToolHandler>(CreateDocumentToolHandler);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

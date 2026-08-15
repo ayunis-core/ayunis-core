@@ -1,6 +1,9 @@
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { DisableMcpIntegrationUseCase } from './disable-mcp-integration.use-case';
 import { DisableMcpIntegrationCommand } from './disable-mcp-integration.command';
@@ -16,16 +19,16 @@ import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-object
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 
 describe('DisableMcpIntegrationUseCase', () => {
+  let logger: jest.Mocked<PinoLogger>;
   let useCase: DisableMcpIntegrationUseCase;
   let repository: McpIntegrationsRepositoryPort;
   let contextService: ContextService;
-  let loggerLogSpy: jest.SpyInstance;
-  let loggerErrorSpy: jest.SpyInstance;
 
   const mockOrgId = 'org-123' as UUID;
   const mockIntegrationId = 'integration-456' as UUID;
 
   beforeAll(async () => {
+    logger = createPinoLoggerMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DisableMcpIntegrationUseCase,
@@ -42,6 +45,11 @@ describe('DisableMcpIntegrationUseCase', () => {
             get: jest.fn(),
           },
         },
+
+        {
+          provide: getLoggerToken(DisableMcpIntegrationUseCase.name),
+          useValue: logger,
+        },
       ],
     }).compile();
 
@@ -54,8 +62,6 @@ describe('DisableMcpIntegrationUseCase', () => {
     contextService = module.get<ContextService>(ContextService);
 
     // Spy on logger methods
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {
@@ -103,9 +109,12 @@ describe('DisableMcpIntegrationUseCase', () => {
       expect(contextService.get).toHaveBeenCalledWith('orgId');
       expect(repository.findById).toHaveBeenCalledWith(mockIntegrationId);
       expect(repository.save).toHaveBeenCalledWith(mockIntegration);
-      expect(loggerLogSpy).toHaveBeenCalledWith('disableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'disableMcpIntegration',
+      );
     });
 
     it('should be idempotent - disabling already-disabled integration succeeds', async () => {
@@ -236,9 +245,9 @@ describe('DisableMcpIntegrationUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         UnexpectedMcpError,
       );
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: unexpectedError },
         'Unexpected error disabling integration',
-        { error: unexpectedError },
       );
     });
 
@@ -254,7 +263,7 @@ describe('DisableMcpIntegrationUseCase', () => {
         McpIntegrationNotFoundError,
       );
       // Should not log as unexpected error
-      expect(loggerErrorSpy).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('should log operation start with integration id', async () => {
@@ -281,9 +290,12 @@ describe('DisableMcpIntegrationUseCase', () => {
       await useCase.execute(command);
 
       // Assert
-      expect(loggerLogSpy).toHaveBeenCalledWith('disableMcpIntegration', {
-        id: mockIntegrationId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        {
+          id: mockIntegrationId,
+        },
+        'disableMcpIntegration',
+      );
     });
   });
 });

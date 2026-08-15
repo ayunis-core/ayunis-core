@@ -9,9 +9,9 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
-  Logger,
   ForbiddenException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -75,9 +75,9 @@ import {
 @ApiTags('mcp-integrations')
 @Controller('mcp-integrations')
 export class McpIntegrationsController {
-  private readonly logger = new Logger(McpIntegrationsController.name);
-
   constructor(
+    @InjectPinoLogger(McpIntegrationsController.name)
+    private readonly logger: PinoLogger,
     private readonly createMcpIntegrationUseCase: CreateMcpIntegrationUseCase,
     private readonly getMcpIntegrationUseCase: GetMcpIntegrationUseCase,
     private readonly listOrgMcpIntegrationsUseCase: ListOrgMcpIntegrationsUseCase,
@@ -142,7 +142,7 @@ export class McpIntegrationsController {
   async createPredefined(
     @Body() dto: CreatePredefinedIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('createPredefined', { slug: dto.slug });
+    this.logger.info({ slug: dto.slug }, 'createPredefined');
 
     // Map DTO config values to domain credential fields
     const credentialFields: CredentialFieldValue[] = dto.configValues.map(
@@ -175,10 +175,7 @@ export class McpIntegrationsController {
   async createCustom(
     @Body() dto: CreateCustomIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('createCustom', {
-      name: dto.name,
-      serverUrl: dto.serverUrl,
-    });
+    this.logger.info({ name: dto.name, url: dto.serverUrl }, 'createCustom');
 
     const isCloud =
       this.configService.get<boolean>('app.isCloudHosted') ?? false;
@@ -216,7 +213,7 @@ export class McpIntegrationsController {
     type: [McpIntegrationResponseDto],
   })
   async list(): Promise<McpIntegrationResponseDto[]> {
-    this.logger.log('listOrgMcpIntegrations');
+    this.logger.info('listOrgMcpIntegrations');
 
     const integrations = await this.listOrgMcpIntegrationsUseCase.execute();
 
@@ -234,7 +231,7 @@ export class McpIntegrationsController {
     type: [PredefinedConfigResponseDto],
   })
   listPredefinedConfigs(): PredefinedConfigResponseDto[] {
-    this.logger.log('listPredefinedConfigs');
+    this.logger.info('listPredefinedConfigs');
 
     const configs = this.listPredefinedConfigsUseCase.execute();
 
@@ -251,7 +248,7 @@ export class McpIntegrationsController {
     type: [McpIntegrationResponseDto],
   })
   async listAvailable(): Promise<McpIntegrationResponseDto[]> {
-    this.logger.log('listAvailableMcpIntegrations');
+    this.logger.info('listAvailableMcpIntegrations');
 
     const available = await this.listAvailableMcpIntegrationsUseCase.execute();
 
@@ -275,7 +272,7 @@ export class McpIntegrationsController {
   async getById(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('getById', { id });
+    this.logger.info({ id }, 'getById');
 
     const integration = await this.getMcpIntegrationUseCase.execute(
       new GetMcpIntegrationQuery(id),
@@ -300,7 +297,7 @@ export class McpIntegrationsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: UpdateMcpIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('update', { id });
+    this.logger.info({ id }, 'update');
 
     const command = new UpdateMcpIntegrationCommand({
       integrationId: id,
@@ -324,7 +321,7 @@ export class McpIntegrationsController {
   @ApiResponse({ status: 204, description: 'Integration deleted successfully' })
   @ApiResponse({ status: 404, description: 'Integration not found' })
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     await this.deleteMcpIntegrationUseCase.execute(
       new DeleteMcpIntegrationCommand(id),
@@ -344,7 +341,7 @@ export class McpIntegrationsController {
   async enable(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('enable', { id });
+    this.logger.info({ id }, 'enable');
 
     const integration = await this.enableMcpIntegrationUseCase.execute(
       new EnableMcpIntegrationCommand(id),
@@ -366,7 +363,7 @@ export class McpIntegrationsController {
   async disable(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('disable', { id });
+    this.logger.info({ id }, 'disable');
 
     const integration = await this.disableMcpIntegrationUseCase.execute(
       new DisableMcpIntegrationCommand(id),
@@ -397,9 +394,12 @@ export class McpIntegrationsController {
   async installFromMarketplace(
     @Body() dto: InstallMarketplaceIntegrationDto,
   ): Promise<McpIntegrationResponseDto> {
-    this.logger.log('installFromMarketplace', {
-      identifier: dto.identifier,
-    });
+    this.logger.info(
+      {
+        identifier: dto.identifier,
+      },
+      'installFromMarketplace',
+    );
 
     const command = new InstallMarketplaceIntegrationCommand(
       dto.identifier,
@@ -427,7 +427,7 @@ export class McpIntegrationsController {
   async getUserConfig(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<UserConfigResponseDto> {
-    this.logger.log('getUserConfig', { id });
+    this.logger.info({ id }, 'getUserConfig');
 
     const result = await this.getUserMcpConfigUseCase.execute(
       new GetUserMcpConfigQuery(id),
@@ -457,7 +457,7 @@ export class McpIntegrationsController {
     @Param('id', ParseUUIDPipe) id: UUID,
     @Body() dto: SetUserConfigDto,
   ): Promise<UserConfigResponseDto> {
-    this.logger.log('setUserConfig', { id });
+    this.logger.info({ id }, 'setUserConfig');
 
     const command = new SetUserMcpConfigCommand(id, dto.configValues);
 
@@ -477,7 +477,7 @@ export class McpIntegrationsController {
   async validate(
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<ValidationResponseDto> {
-    this.logger.log('validate', { id });
+    this.logger.info({ id }, 'validate');
 
     const result = await this.validateMcpIntegrationUseCase.execute(
       new ValidateMcpIntegrationCommand(id),

@@ -1,4 +1,5 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -77,10 +78,11 @@ function isTimeoutOrAbortError(error: unknown, depth = 0): boolean {
  */
 @Injectable()
 export class McpSdkClientAdapter extends McpClientPort {
-  private readonly logger = new Logger(McpSdkClientAdapter.name);
   private readonly requestOptions = { timeout: 30000 };
 
   constructor(
+    @InjectPinoLogger(McpSdkClientAdapter.name)
+    private readonly logger: PinoLogger,
     private readonly clientPool: McpClientPoolService,
     @Optional() private readonly oauthProviderFactory?: McpOAuthProviderFactory,
     @Optional() private readonly integrations?: McpIntegrationsRepositoryPort,
@@ -280,10 +282,13 @@ export class McpSdkClientAdapter extends McpClientPort {
       });
       return { valid: true };
     } catch (error) {
-      this.logger.warn('Connection validation failed', {
-        serverUrl: config.serverUrl,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      this.logger.warn(
+        {
+          url: config.serverUrl,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Connection validation failed',
+      );
       return {
         valid: false,
         error: error instanceof Error ? error.message : String(error),

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -17,9 +18,9 @@ import { McpIntegrationMapper } from './mappers/mcp-integration.mapper';
  */
 @Injectable()
 export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
-  private readonly logger = new Logger(McpIntegrationsRepository.name);
-
   constructor(
+    @InjectPinoLogger(McpIntegrationsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(McpIntegrationRecord)
     private readonly repository: Repository<McpIntegrationRecord>,
     @InjectRepository(McpIntegrationAuthRecord)
@@ -34,7 +35,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async save<T extends McpIntegration>(integration: T): Promise<T> {
-    this.logger.log('save', { integrationId: integration.id });
+    this.logger.info({ integrationId: integration.id }, 'save');
 
     const recordResult = this.mcpIntegrationMapper.toRecord(integration);
     if (recordResult instanceof Error) {
@@ -42,10 +43,6 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     }
     const record: McpIntegrationRecord = recordResult;
     const authRecord = record.auth;
-
-    if (!authRecord) {
-      throw new Error('Expected MCP integration auth record to be present');
-    }
 
     await this.repository.manager.transaction(async (manager) => {
       const integrationRepo = manager.getRepository(McpIntegrationRecord);
@@ -82,7 +79,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async findById(id: UUID): Promise<McpIntegration | null> {
-    this.logger.log('findById', { id });
+    this.logger.info({ id }, 'findById');
 
     const record = await this.repository.findOne({
       where: { id },
@@ -96,7 +93,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async findByIds(ids: UUID[]): Promise<McpIntegration[]> {
-    this.logger.log('findByIds', { count: ids.length });
+    this.logger.info({ count: ids.length }, 'findByIds');
 
     if (ids.length === 0) {
       return [];
@@ -113,7 +110,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     orgId: UUID,
     filter?: { enabled?: boolean },
   ): Promise<McpIntegration[]> {
-    this.logger.log('findAll', { orgId, filter });
+    this.logger.info({ orgId, filter }, 'findAll');
 
     const where: { orgId: UUID; enabled?: boolean } = { orgId };
     if (filter?.enabled !== undefined) {
@@ -132,7 +129,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     organizationId: UUID,
     slug: PredefinedMcpIntegrationSlug,
   ): Promise<McpIntegration | null> {
-    this.logger.log('findByOrgIdAndSlug', { organizationId, slug });
+    this.logger.info({ organizationId, slug }, 'findByOrgIdAndSlug');
 
     const record = await this.predefinedRepository.findOne({
       where: {
@@ -155,10 +152,13 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
     orgId: UUID,
     marketplaceIdentifier: string,
   ): Promise<McpIntegration | null> {
-    this.logger.log('findByOrgIdAndMarketplaceIdentifier', {
-      orgId,
-      marketplaceIdentifier,
-    });
+    this.logger.info(
+      {
+        orgId,
+        marketplaceIdentifier,
+      },
+      'findByOrgIdAndMarketplaceIdentifier',
+    );
 
     const record = await this.marketplaceRepository.findOne({
       where: {
@@ -178,7 +178,7 @@ export class McpIntegrationsRepository extends McpIntegrationsRepositoryPort {
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
 
     await this.repository.delete({ id });
   }

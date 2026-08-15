@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Tool } from '../domain/tool.entity';
 import { ToolExecutionHandler } from './ports/execution.handler';
 import { ToolHandlerNotFoundError } from './tools.errors';
@@ -48,10 +49,11 @@ type ToolConstructor = abstract new (...args: any[]) => Tool;
 
 @Injectable()
 export class ToolHandlerRegistry {
-  private readonly logger = new Logger(ToolHandlerRegistry.name);
   private readonly handlers: [ToolConstructor, ToolExecutionHandler][];
 
   constructor(
+    @InjectPinoLogger(ToolHandlerRegistry.name)
+    private readonly logger: PinoLogger,
     httpToolHandler: HttpToolHandler,
     sourceQueryToolHandler: SourceQueryToolHandler,
     sourceGetTextToolHandler: SourceGetTextToolHandler,
@@ -98,7 +100,7 @@ export class ToolHandlerRegistry {
   }
 
   getHandler(tool: Tool): ToolExecutionHandler {
-    this.logger.log(`Getting handler for tool: ${tool.name}`);
+    this.logger.info({ name: tool.name }, 'Getting handler for tool');
 
     const entry = this.handlers.find(([ctor]) => tool instanceof ctor);
     if (entry) {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -13,9 +14,11 @@ import { serializeSpreadsheetContent } from 'src/domain/artifacts/application/he
 
 @Injectable()
 export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(CreateSpreadsheetToolHandler.name);
-
-  constructor(private readonly createArtifactUseCase: CreateArtifactUseCase) {
+  constructor(
+    @InjectPinoLogger(CreateSpreadsheetToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly createArtifactUseCase: CreateArtifactUseCase,
+  ) {
     super();
   }
 
@@ -25,7 +28,7 @@ export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log('Executing create_spreadsheet tool');
+    this.logger.info('Executing create_spreadsheet tool');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -48,7 +51,10 @@ export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('Failed to execute create_spreadsheet tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute create_spreadsheet tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

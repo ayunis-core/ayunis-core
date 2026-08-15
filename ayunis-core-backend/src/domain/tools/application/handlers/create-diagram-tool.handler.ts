@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -12,9 +13,11 @@ import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact
 
 @Injectable()
 export class CreateDiagramToolHandler extends ToolExecutionHandler {
-  private readonly logger = new Logger(CreateDiagramToolHandler.name);
-
-  constructor(private readonly createArtifactUseCase: CreateArtifactUseCase) {
+  constructor(
+    @InjectPinoLogger(CreateDiagramToolHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly createArtifactUseCase: CreateArtifactUseCase,
+  ) {
     super();
   }
 
@@ -24,7 +27,7 @@ export class CreateDiagramToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log('Executing create_diagram tool');
+    this.logger.info('Executing create_diagram tool');
 
     try {
       const validatedInput = tool.validateParams(input);
@@ -44,7 +47,10 @@ export class CreateDiagramToolHandler extends ToolExecutionHandler {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
       }
-      this.logger.error('Failed to execute create_diagram tool', error);
+      this.logger.error(
+        { err: error },
+        'Failed to execute create_diagram tool',
+      );
       throw new ToolExecutionFailedError({
         toolName: tool.name,
         message: error instanceof Error ? error.message : 'Unknown error',

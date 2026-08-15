@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CheckToolCapabilitiesUseCase } from './check-tool-capabilities.use-case';
@@ -73,7 +75,13 @@ describe('CheckToolCapabilitiesUseCase', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CheckToolCapabilitiesUseCase],
+      providers: [
+        CheckToolCapabilitiesUseCase,
+        {
+          provide: getLoggerToken(CheckToolCapabilitiesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+      ],
     }).compile();
 
     useCase = module.get<CheckToolCapabilitiesUseCase>(

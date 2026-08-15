@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetUserMcpConfigQuery } from './get-user-mcp-config.query';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
@@ -19,16 +20,16 @@ export interface UserMcpConfigResult {
 
 @Injectable()
 export class GetUserMcpConfigUseCase {
-  private readonly logger = new Logger(GetUserMcpConfigUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetUserMcpConfigUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly integrationRepository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(query: GetUserMcpConfigQuery): Promise<UserMcpConfigResult> {
-    this.logger.log('execute', { integrationId: query.integrationId });
+    this.logger.info({ integrationId: query.integrationId }, 'execute');
 
     const userId = this.contextService.get('userId');
     if (!userId) {

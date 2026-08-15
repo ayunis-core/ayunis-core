@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   Client,
   StreamableHTTPClientTransport,
@@ -65,10 +65,8 @@ describe('McpSdkClientAdapter', () => {
     };
     (Client as unknown as jest.Mock).mockImplementation(() => clientMock);
 
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-
-    clientPool = new McpClientPoolService();
-    adapter = new McpSdkClientAdapter(clientPool);
+    clientPool = new McpClientPoolService(createPinoLoggerMock());
+    adapter = new McpSdkClientAdapter(createPinoLoggerMock(), clientPool);
   });
 
   afterEach(async () => {
@@ -123,6 +121,7 @@ describe('McpSdkClientAdapter', () => {
       };
       const oauthFetch = { fetch: jest.fn() };
       adapter = new McpSdkClientAdapter(
+        createPinoLoggerMock(),
         clientPool,
         providerFactory as never,
         integrations as never,

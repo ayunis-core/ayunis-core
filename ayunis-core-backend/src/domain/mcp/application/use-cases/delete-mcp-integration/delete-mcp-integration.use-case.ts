@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DeleteMcpIntegrationCommand } from './delete-mcp-integration.command';
 import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
 import { McpIntegrationUserConfigRepositoryPort } from '../../ports/mcp-integration-user-config.repository.port';
@@ -17,9 +18,9 @@ import { McpClientService } from '../../services/mcp-client.service';
  */
 @Injectable()
 export class DeleteMcpIntegrationUseCase {
-  private readonly logger = new Logger(DeleteMcpIntegrationUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteMcpIntegrationUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly repository: McpIntegrationsRepositoryPort,
     private readonly userConfigRepository: McpIntegrationUserConfigRepositoryPort,
     private readonly contextService: ContextService,
@@ -36,7 +37,7 @@ export class DeleteMcpIntegrationUseCase {
    */
   @HandleUnexpectedErrors(UnexpectedMcpError)
   async execute(command: DeleteMcpIntegrationCommand): Promise<void> {
-    this.logger.log('deleteMcpIntegration', { id: command.integrationId });
+    this.logger.info({ id: command.integrationId }, 'deleteMcpIntegration');
 
     // Get organization ID from context
     const orgId = this.contextService.get('orgId');

@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { ValidateMcpIntegrationUseCase } from './validate-mcp-integration.use-case';
 import { ValidateMcpIntegrationCommand } from './validate-mcp-integration.command';
@@ -74,6 +75,7 @@ describe('ValidateMcpIntegrationUseCase', () => {
     repository.findById.mockResolvedValue(buildIntegration());
 
     useCase = new ValidateMcpIntegrationUseCase(
+      createPinoLoggerMock(),
       repository,
       mcpClientService,
       contextService,

@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { McpIntegrationTool } from '../../../domain/tools/mcp-integration-tool.entity';
@@ -54,11 +55,14 @@ describe('Startdeliver MCP payload regression (AYC-413)', () => {
         return Promise.resolve({ isError: false, content: [] });
       },
     } as unknown as ExecuteMcpToolUseCase;
-    const handler = new McpIntegrationToolHandler(executeMcpTool);
+    const handler = new McpIntegrationToolHandler(
+      createPinoLoggerMock(),
+      executeMcpTool,
+    );
     const registry = {
       getHandler: () => handler,
     } as unknown as ToolHandlerRegistry;
-    const useCase = new ExecuteToolUseCase(registry);
+    const useCase = new ExecuteToolUseCase(createPinoLoggerMock(), registry);
 
     // What a strict-mode model (or an imitating Claude/Opus turn) emits for
     // the search "Stadt Ladenburg": nulls for every optional date filter.

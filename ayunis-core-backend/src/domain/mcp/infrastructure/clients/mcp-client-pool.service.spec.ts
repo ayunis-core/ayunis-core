@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Client } from '@modelcontextprotocol/client';
 import { randomUUID } from 'crypto';
 import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
@@ -24,8 +24,7 @@ describe('McpClientPoolService', () => {
     close = jest.fn().mockResolvedValue(undefined);
     client = { close } as unknown as Client;
     createClient = jest.fn().mockResolvedValue(client);
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    pool = new McpClientPoolService();
+    pool = new McpClientPoolService(createPinoLoggerMock());
   });
 
   afterEach(async () => {
