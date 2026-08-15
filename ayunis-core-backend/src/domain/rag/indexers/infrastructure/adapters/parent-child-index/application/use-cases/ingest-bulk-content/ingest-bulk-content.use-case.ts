@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ParentChildIndexerRepositoryPort } from '../../ports/parent-child-indexer-repository.port';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
 import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
@@ -29,8 +30,9 @@ const EMBEDDING_BATCH_SIZE = 64;
 
 @Injectable()
 export class IngestBulkContentUseCase {
-  private readonly logger = new Logger(IngestBulkContentUseCase.name);
   constructor(
+    @InjectPinoLogger(IngestBulkContentUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
     private readonly splitTextUseCase: SplitTextUseCase,
     private readonly embedTextUseCase: EmbedTextUseCase,
@@ -41,7 +43,8 @@ export class IngestBulkContentUseCase {
     if (command.entries.length === 0) return;
 
     this.logger.debug(
-      `Bulk ingesting ${command.entries.length} entries for org ${command.orgId}`,
+      { entryCount: command.entries.length, orgId: command.orgId },
+      'Bulk ingesting entries',
     );
 
     // 1. Resolve embedding model ONCE for the entire batch
@@ -56,8 +59,12 @@ export class IngestBulkContentUseCase {
     const allChildTexts = parentPlans.flatMap((plan) => plan.childTexts);
 
     this.logger.debug(
-      `Split ${command.entries.length} entries into ` +
-        `${parentPlans.length} parent chunks with ${allChildTexts.length} child texts total`,
+      {
+        entryCount: command.entries.length,
+        parentChunkCount: parentPlans.length,
+        childTextCount: allChildTexts.length,
+      },
+      'Split entries into chunks',
     );
 
     // 4. Embed all child texts in batches
@@ -74,8 +81,11 @@ export class IngestBulkContentUseCase {
     await this.parentChildIndexerRepository.saveMany(parentChunks);
 
     this.logger.debug(
-      `Bulk ingested ${parentChunks.length} parent chunks ` +
-        `with ${allChildTexts.length} child embeddings`,
+      {
+        parentChunkCount: parentChunks.length,
+        childEmbeddingCount: allChildTexts.length,
+      },
+      'Bulk ingested chunks',
     );
   }
 

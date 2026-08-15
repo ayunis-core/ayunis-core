@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
@@ -57,6 +59,10 @@ describe('RetrieveFileContentUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetrieveFileContentUseCase,
+        {
+          provide: getLoggerToken(RetrieveFileContentUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: FileRetrieverRegistry, useValue: mockRegistry },
         { provide: ContextService, useValue: mockContextService },
         { provide: DocumentConverterPort, useValue: mockDocumentConverter },

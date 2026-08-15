@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ConfigService } from '@nestjs/config';
 import {
   EmbeddingsThrottleService,
@@ -39,7 +40,7 @@ describe('EmbeddingsThrottleService', () => {
   } as unknown as ConfigService;
 
   beforeEach(() => {
-    service = new TestableThrottle(configService);
+    service = new TestableThrottle(createPinoLoggerMock(), configService);
   });
 
   it('runs the task and returns its result', async () => {

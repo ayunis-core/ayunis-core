@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SplitTextUseCase } from './split-text.use-case';
@@ -26,6 +28,10 @@ describe('ProcessTextUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SplitTextUseCase,
+        {
+          provide: getLoggerToken(SplitTextUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SplitterHandlerRegistry,
           useValue: mockProviderRegistry,

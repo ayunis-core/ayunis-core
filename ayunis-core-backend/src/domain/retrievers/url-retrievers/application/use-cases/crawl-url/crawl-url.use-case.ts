@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import pLimit from 'p-limit';
 import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
@@ -19,13 +20,15 @@ import { ApplicationError } from 'src/common/errors/base.error';
  */
 @Injectable()
 export class CrawlUrlUseCase {
-  private readonly logger = new Logger(CrawlUrlUseCase.name);
-
-  constructor(private readonly retrieveUrlUseCase: RetrieveUrlUseCase) {}
+  constructor(
+    @InjectPinoLogger(CrawlUrlUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly retrieveUrlUseCase: RetrieveUrlUseCase,
+  ) {}
 
   async execute(command: CrawlUrlCommand): Promise<UrlCrawlResult> {
     const maxDepth = this.clampDepth(command.maxDepth);
-    this.logger.debug(`Crawling ${command.url} to depth ${maxDepth}`);
+    this.logger.debug({ url: command.url, maxDepth }, 'Crawling URL');
 
     // Root failure aborts the whole crawl (error propagates to caller).
     const rootResult = await this.retrieveUrlUseCase.execute(
@@ -56,7 +59,8 @@ export class CrawlUrlUseCase {
     }
 
     this.logger.debug(
-      `Crawl of ${command.url} produced ${pages.length} page(s)`,
+      { url: command.url, pageCount: pages.length },
+      'URL crawl completed',
     );
     return new UrlCrawlResult(pages);
   }
@@ -125,7 +129,8 @@ export class CrawlUrlUseCase {
       // tokens; log a redacted URL and a stable error code only, never the raw
       // URL query or error text, so secrets never reach centralized logs/AppSignal.
       this.logger.warn(
-        `Skipping page during crawl: ${this.redactUrl(url)} (${this.describeError(error)})`,
+        { url: this.redactUrl(url), errorType: this.describeError(error) },
+        'Skipping page during crawl',
       );
       return null;
     }

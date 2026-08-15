@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IndexRegistry } from '../../indexer.registry';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
@@ -7,8 +8,11 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class IngestBulkContentUseCase {
-  private readonly logger = new Logger(IngestBulkContentUseCase.name);
-  constructor(private readonly indexRegistry: IndexRegistry) {}
+  constructor(
+    @InjectPinoLogger(IngestBulkContentUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly indexRegistry: IndexRegistry,
+  ) {}
 
   async execute(command: IngestBulkContentCommand): Promise<void> {
     try {
@@ -27,7 +31,7 @@ export class IngestBulkContentUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to ingest content');
       throw new UnexpectedIndexError(error as Error);
     }
   }

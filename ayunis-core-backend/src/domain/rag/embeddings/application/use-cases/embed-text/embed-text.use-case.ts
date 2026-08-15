@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EmbedTextCommand } from './embed-text.command';
 import { EmbeddingsHandlerRegistry } from '../../embeddings-handler.registry';
 import { EmbeddingsThrottleService } from '../../services/embeddings-throttle.service';
@@ -9,17 +10,15 @@ import { toWellFormedText } from 'src/common/util/unicode-sanitizer';
 
 @Injectable()
 export class EmbedTextUseCase {
-  private readonly logger = new Logger(EmbedTextUseCase.name);
-
   constructor(
+    @InjectPinoLogger(EmbedTextUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly providerRegistry: EmbeddingsHandlerRegistry,
     private readonly throttle: EmbeddingsThrottleService,
   ) {}
 
   async execute(command: EmbedTextCommand): Promise<Embedding[]> {
-    this.logger.log('execute', {
-      model: command.model,
-    });
+    this.logger.info({ model: command.model }, 'execute');
     try {
       const handler = this.providerRegistry.getHandler(command.model.provider);
 
@@ -45,15 +44,13 @@ export class EmbedTextUseCase {
         modelId: command.model.name,
       });
       if (providerError) {
-        this.logger.error('Embeddings provider unavailable', {
-          code: providerError.code,
-          ...providerError.context,
-        });
+        this.logger.error(
+          { code: providerError.code, ...providerError.context },
+          'Embeddings provider unavailable',
+        );
         throw providerError;
       }
-      this.logger.error('Error embedding text', {
-        error: error as Error,
-      });
+      this.logger.error({ err: error as Error }, 'Error embedding text');
       throw error;
     }
   }

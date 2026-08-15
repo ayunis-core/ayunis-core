@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type {
   SearchInput,
   SearchMultiInput,
@@ -15,8 +16,9 @@ import type { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapter
 
 @Injectable()
 export class SearchContentUseCase {
-  private readonly logger = new Logger(SearchContentUseCase.name);
   constructor(
+    @InjectPinoLogger(SearchContentUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
     private readonly embedTextUseCase: EmbedTextUseCase,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
@@ -47,7 +49,7 @@ export class SearchContentUseCase {
   }
 
   private async embedQuery(orgId: UUID, query: string): Promise<number[]> {
-    this.logger.debug('Embedding query for search', { orgId });
+    this.logger.debug({ orgId }, 'Embedding query for search');
     const model = await this.getPermittedEmbeddingModelUseCase.execute(
       new GetPermittedEmbeddingModelQuery({ orgId }),
     );
@@ -60,9 +62,10 @@ export class SearchContentUseCase {
         priority: EmbeddingPriority.RETRIEVAL,
       }),
     );
-    this.logger.debug('Embedded query', {
-      vectorLength: embeddedQuery[0].vector.length,
-    });
+    this.logger.debug(
+      { vectorLength: embeddedQuery[0].vector.length },
+      'Embedded query',
+    );
     return embeddedQuery[0].vector;
   }
 

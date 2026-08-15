@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SplitterHandler } from './ports/splitter.handler';
 import { SplitterType } from '../domain/splitter-type.enum';
 import {
@@ -8,7 +9,11 @@ import {
 
 @Injectable()
 export class SplitterHandlerRegistry {
-  private readonly logger = new Logger(SplitterHandlerRegistry.name);
+  constructor(
+    @InjectPinoLogger(SplitterHandlerRegistry.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private readonly handlers = new Map<SplitterType, SplitterHandler>();
 
   registerHandler(type: SplitterType, handler: SplitterHandler): void {
@@ -16,7 +21,7 @@ export class SplitterHandlerRegistry {
   }
 
   getHandler(type: SplitterType): SplitterHandler {
-    this.logger.debug('getHandler', { type });
+    this.logger.debug({ type }, 'getHandler');
     const handler = this.handlers.get(type);
 
     if (!handler) {

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
 import { ConfigModule } from '@nestjs/config';
 import { OpenAIEmbeddingsHandler } from './infrastructure/handler/openai-embeddings.handler';
 import { EmbeddingsHandlerRegistry } from './application/embeddings-handler.registry';
@@ -18,8 +19,9 @@ import { EmbeddingsThrottleService } from './application/services/embeddings-thr
         openaiHandler: OpenAIEmbeddingsHandler,
         mistralHandler: MistralEmbeddingsHandler,
         ayunisHandler: AyunisOllamaEmbeddingsHandler,
+        logger: PinoLogger,
       ) => {
-        const registry = new EmbeddingsHandlerRegistry();
+        const registry = new EmbeddingsHandlerRegistry(logger);
         registry.registerHandler(EmbeddingsProvider.OPENAI, openaiHandler);
         registry.registerHandler(EmbeddingsProvider.MISTRAL, mistralHandler);
         registry.registerHandler(EmbeddingsProvider.AYUNIS, ayunisHandler);
@@ -29,6 +31,7 @@ import { EmbeddingsThrottleService } from './application/services/embeddings-thr
         OpenAIEmbeddingsHandler,
         MistralEmbeddingsHandler,
         AyunisOllamaEmbeddingsHandler,
+        getLoggerToken(EmbeddingsHandlerRegistry.name),
       ],
     },
     MistralEmbeddingsHandler,

@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import type { TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -47,6 +49,10 @@ describe('MistralEmbeddingsHandler', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MistralEmbeddingsHandler,
+        {
+          provide: getLoggerToken(MistralEmbeddingsHandler.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('mistral-api-key') },

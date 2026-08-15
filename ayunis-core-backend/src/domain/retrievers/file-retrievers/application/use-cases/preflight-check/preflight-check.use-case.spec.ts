@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PreflightCheckUseCase } from './preflight-check.use-case';
@@ -26,6 +28,10 @@ describe('PreflightCheckUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PreflightCheckUseCase,
+        {
+          provide: getLoggerToken(PreflightCheckUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: retrievalConfig.KEY,
           useValue: defaultConfig,

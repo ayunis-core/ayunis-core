@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { getLoggerToken, type PinoLogger } from 'nestjs-pino';
 import { RecursiveSplitterHandler } from './infrastructure/handlers/recursive.splitter';
 import { SplitterType } from './domain/splitter-type.enum';
 import { SplitterHandlerRegistry } from './application/splitter-handler.registry';
@@ -8,15 +9,21 @@ import { SplitTextUseCase } from './application/use-cases/split-text/split-text.
   providers: [
     {
       provide: SplitterHandlerRegistry,
-      useFactory: (recursiveSplitterHandler: RecursiveSplitterHandler) => {
-        const registry = new SplitterHandlerRegistry();
+      useFactory: (
+        recursiveSplitterHandler: RecursiveSplitterHandler,
+        logger: PinoLogger,
+      ) => {
+        const registry = new SplitterHandlerRegistry(logger);
         registry.registerHandler(
           SplitterType.RECURSIVE,
           recursiveSplitterHandler,
         );
         return registry;
       },
-      inject: [RecursiveSplitterHandler],
+      inject: [
+        RecursiveSplitterHandler,
+        getLoggerToken(SplitterHandlerRegistry.name),
+      ],
     },
     SplitTextUseCase,
     RecursiveSplitterHandler,

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IndexRegistry } from '../../indexer.registry';
 import {
   SearchContentQuery,
@@ -10,8 +11,11 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class SearchContentUseCase {
-  private readonly logger = new Logger(SearchContentUseCase.name);
-  constructor(private readonly indexRegistry: IndexRegistry) {}
+  constructor(
+    @InjectPinoLogger(SearchContentUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly indexRegistry: IndexRegistry,
+  ) {}
 
   async execute(query: SearchContentQuery): Promise<IndexEntry[]> {
     try {
@@ -26,7 +30,7 @@ export class SearchContentUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to search content');
       throw new UnexpectedIndexError(error as Error);
     }
   }
@@ -44,7 +48,7 @@ export class SearchContentUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error(error);
+      this.logger.error({ err: error as Error }, 'Failed to search content');
       throw new UnexpectedIndexError(error as Error);
     }
   }

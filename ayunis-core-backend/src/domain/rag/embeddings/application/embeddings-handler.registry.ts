@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EmbeddingsHandler } from './ports/embeddings.handler';
 import { EmbeddingsProvider } from '../domain/embeddings-provider.enum';
 import {
@@ -8,7 +9,11 @@ import {
 
 @Injectable()
 export class EmbeddingsHandlerRegistry {
-  private readonly logger = new Logger(EmbeddingsHandlerRegistry.name);
+  constructor(
+    @InjectPinoLogger(EmbeddingsHandlerRegistry.name)
+    private readonly logger: PinoLogger,
+  ) {}
+
   private readonly handlers = new Map<EmbeddingsProvider, EmbeddingsHandler>();
 
   registerHandler(
@@ -19,7 +24,7 @@ export class EmbeddingsHandlerRegistry {
   }
 
   getHandler(provider: EmbeddingsProvider): EmbeddingsHandler {
-    this.logger.debug('getHandler', { provider });
+    this.logger.debug({ provider }, 'getHandler');
     const handler = this.handlers.get(provider);
 
     if (!handler) {

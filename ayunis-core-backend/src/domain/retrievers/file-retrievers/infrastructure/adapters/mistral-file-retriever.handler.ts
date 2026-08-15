@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FileRetrieverHandler } from '../../application/ports/file-retriever.handler';
 import {
   FileRetrieverResult,
@@ -37,7 +38,6 @@ function isFileNotFound(error: unknown): boolean {
 
 @Injectable()
 export class MistralFileRetrieverHandler extends FileRetrieverHandler {
-  private readonly logger = new Logger(MistralFileRetrieverHandler.name);
   private readonly client: Mistral;
   private readonly MODEL_NAME = 'mistral-ocr-latest';
   // Per-attempt timeout for the Mistral file APIs (upload, signed URL, OCR,
@@ -47,7 +47,11 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   // 5-minute slice per attempt (AYC-422).
   private readonly TIMEOUT_MS = 120 * 1000;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(MistralFileRetrieverHandler.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('retrieval.mistral.apiKey'),
@@ -58,7 +62,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
   async processFile(file: File): Promise<FileRetrieverResult> {
     try {
       this.logger.debug(
-        `Processing file with Mistral OCR: ${file.filename} (${file.fileType})`,
+        { fileName: file.filename, fileType: file.fileType },
+        'Processing file with Mistral OCR',
       );
 
       // Convert Buffer to Blob for Mistral API with the correct MIME type
@@ -70,8 +75,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       return this.parseResponse(ocrResponse);
     } catch (error) {
       this.logger.error(
-        `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : 'Unknown error',
+        { err: error as Error },
+        'Mistral OCR processing failed',
       );
 
       throw this.mapProcessingError(error);
@@ -151,9 +156,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       delay: 1000,
       retryIfError: isTransientMistralError,
     }).catch((error) => {
-      this.logger.debug('File upload to Mistral failed', {
-        error: error as Error,
-      });
+      this.logger.debug(
+        { err: error as Error },
+        'File upload to Mistral failed',
+      );
       this.logger.error('File upload to Mistral failed');
       throw error;
     });
@@ -188,8 +194,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
         throw error;
       }
       this.logger.warn(
-        'Uploaded file was removed before OCR ran; re-uploading once',
         { fileId },
+        'Uploaded file was removed before OCR ran; re-uploading once',
       );
     }
 
@@ -240,8 +246,8 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       retryIfError: isTransientOcrError,
     }).catch((error) => {
       this.logger.error(
-        `Mistral OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : 'Unknown error',
+        { err: error as Error },
+        'Mistral OCR processing failed',
       );
       throw error;
     });
@@ -257,10 +263,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       delay: 1000,
       retryIfError: isTransientMistralError,
     }).catch((error) => {
-      this.logger.warn('Failed to delete file from Mistral (best-effort)', {
-        fileId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { fileId, err: error as Error },
+        'Failed to delete file from Mistral (best-effort)',
+      );
     });
   }
 

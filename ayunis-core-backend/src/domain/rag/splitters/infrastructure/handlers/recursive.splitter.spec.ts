@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RecursiveSplitterHandler } from './recursive.splitter';
 import type { SplitterInput } from '../../application/ports/splitter.handler';
 import type { TextChunk } from '../../domain/split-result.entity';
@@ -6,7 +7,7 @@ describe('RecursiveSplitterHandler', () => {
   let handler: RecursiveSplitterHandler;
 
   beforeEach(() => {
-    handler = new RecursiveSplitterHandler();
+    handler = new RecursiveSplitterHandler(createPinoLoggerMock());
   });
 
   it('should be defined', () => {

@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import {
   FileRetrieverPage,
@@ -29,9 +30,9 @@ import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cas
 
 @Injectable()
 export class RetrieveFileContentUseCase {
-  private readonly logger = new Logger(RetrieveFileContentUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RetrieveFileContentUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly fileRetrieverRegistry: FileRetrieverRegistry,
     private readonly contextService: ContextService,
     private readonly documentConverter: DocumentConverterPort,
@@ -44,7 +45,10 @@ export class RetrieveFileContentUseCase {
   async execute(
     command: RetrieveFileContentCommand,
   ): Promise<FileRetrieverResult> {
-    this.logger.debug(`Retrieving file content: ${command.fileName}`);
+    this.logger.debug(
+      { fileName: command.fileName },
+      'Retrieving file content',
+    );
     const orgId = this.contextService.get('orgId');
     if (!orgId) {
       throw new FileRetrieverUnauthorizedError();
@@ -116,9 +120,10 @@ export class RetrieveFileContentUseCase {
     file: File,
     emptyOcrError: EmptyOcrResultError,
   ): Promise<FileRetrieverResult> {
-    this.logger.warn('Mistral returned no pages; trying local PDF parsing', {
-      fileName: file.filename,
-    });
+    this.logger.warn(
+      { fileName: file.filename },
+      'Mistral returned no pages; trying local PDF parsing',
+    );
     try {
       const result = await this.fileRetrieverRegistry
         .getHandler(FileRetrieverType.NPM_PDF_PARSE)
@@ -127,10 +132,10 @@ export class RetrieveFileContentUseCase {
         return result;
       }
     } catch (error) {
-      this.logger.warn('Local PDF fallback failed', {
-        fileName: file.filename,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { fileName: file.filename, err: error as Error },
+        'Local PDF fallback failed',
+      );
     }
     throw emptyOcrError;
   }

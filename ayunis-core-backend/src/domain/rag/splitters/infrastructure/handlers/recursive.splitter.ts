@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   SplitterHandler,
   SplitterInput,
@@ -39,7 +40,12 @@ interface RecursiveSplitContext {
 
 @Injectable()
 export class RecursiveSplitterHandler extends SplitterHandler {
-  private readonly logger = new Logger(RecursiveSplitterHandler.name);
+  constructor(
+    @InjectPinoLogger(RecursiveSplitterHandler.name)
+    private readonly logger: PinoLogger,
+  ) {
+    super();
+  }
 
   isAvailable(): boolean {
     return true;
@@ -47,12 +53,13 @@ export class RecursiveSplitterHandler extends SplitterHandler {
 
   processText(input: SplitterInput): SplitResult {
     try {
-      this.logger.debug(`Processing text with Recursive Text Splitter`);
+      this.logger.debug('Processing text with Recursive Text Splitter');
 
       const config = this.resolveAndValidateConfig(input);
 
       this.logger.debug(
-        `Chunk size: ${config.chunkSize}, Chunk overlap: ${config.chunkOverlap}`,
+        { chunkSize: config.chunkSize, chunkOverlap: config.chunkOverlap },
+        'Resolved recursive text splitter configuration',
       );
 
       const rawChunks = this.ensureChunkSizeLimit(
@@ -73,8 +80,8 @@ export class RecursiveSplitterHandler extends SplitterHandler {
       });
     } catch (error) {
       this.logger.error(
-        `Recursive Text Splitter processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
+        { err: error as Error },
+        'Recursive Text Splitter processing failed',
       );
       throw new SplitterProcessingError(
         `Failed to process text with Recursive Text Splitter`,
