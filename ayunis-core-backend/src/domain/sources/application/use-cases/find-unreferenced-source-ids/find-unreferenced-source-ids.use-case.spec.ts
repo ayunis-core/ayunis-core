@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { FindUnreferencedSourceIdsUseCase } from './find-unreferenced-source-ids.use-case';
 import { FindUnreferencedSourceIdsQuery } from './find-unreferenced-source-ids.query';
@@ -13,7 +14,10 @@ describe('FindUnreferencedSourceIdsUseCase', () => {
   beforeEach(() => {
     sourceRepository = createMockSourceRepository();
 
-    useCase = new FindUnreferencedSourceIdsUseCase(sourceRepository);
+    useCase = new FindUnreferencedSourceIdsUseCase(
+      createPinoLoggerMock(),
+      sourceRepository,
+    );
   });
 
   it('returns the subset reported by the repository', async () => {

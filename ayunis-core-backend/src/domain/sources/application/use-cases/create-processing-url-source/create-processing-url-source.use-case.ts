@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -10,12 +11,14 @@ import { CreateProcessingUrlSourceCommand } from './create-processing-url-source
 
 @Injectable()
 export class CreateProcessingUrlSourceUseCase {
-  private readonly logger = new Logger(CreateProcessingUrlSourceUseCase.name);
-
-  constructor(private readonly sourceRepository: SourceRepository) {}
+  constructor(
+    @InjectPinoLogger(CreateProcessingUrlSourceUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly sourceRepository: SourceRepository,
+  ) {}
 
   async execute(command: CreateProcessingUrlSourceCommand): Promise<UrlSource> {
-    this.logger.debug('Creating processing URL source', { url: command.url });
+    this.logger.debug({ url: command.url }, 'Creating processing URL source');
 
     try {
       const source = new UrlSource({
@@ -35,9 +38,12 @@ export class CreateProcessingUrlSourceUseCase {
       return (await this.sourceRepository.save(source)) as UrlSource;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error creating processing URL source', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating processing URL source',
+      );
       throw new UnexpectedSourceError('Error creating processing URL source', {
         error: error as Error,
       });

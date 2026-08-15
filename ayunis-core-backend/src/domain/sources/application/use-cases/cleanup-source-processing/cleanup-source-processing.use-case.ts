@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { DocumentProcessingPort } from '../../ports/document-processing.port';
 import { UrlCrawlProcessingPort } from '../../ports/url-crawl-processing.port';
@@ -17,9 +18,9 @@ import { CleanupSourceProcessingCommand } from './cleanup-source-processing.comm
  */
 @Injectable()
 export class CleanupSourceProcessingUseCase {
-  private readonly logger = new Logger(CleanupSourceProcessingUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CleanupSourceProcessingUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly documentProcessingPort: DocumentProcessingPort,
     private readonly urlCrawlProcessingPort: UrlCrawlProcessingPort,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
@@ -29,10 +30,13 @@ export class CleanupSourceProcessingUseCase {
     if (command.sourceIds.length === 0) {
       return;
     }
-    this.logger.log('Cleaning up source processing', {
-      orgId: command.orgId,
-      sourceCount: command.sourceIds.length,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        sourceCount: command.sourceIds.length,
+      },
+      'Cleaning up source processing',
+    );
 
     for (const sourceId of command.sourceIds) {
       await this.cancelJobs(sourceId);
@@ -47,10 +51,10 @@ export class CleanupSourceProcessingUseCase {
         ),
       );
     } catch (error) {
-      this.logger.warn('Failed to purge source processing storage', {
-        orgId: command.orgId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        { err: error as Error, orgId: command.orgId },
+        'Failed to purge source processing storage',
+      );
     }
   }
 
@@ -60,18 +64,24 @@ export class CleanupSourceProcessingUseCase {
     try {
       await this.documentProcessingPort.cancelJob(sourceId);
     } catch (err) {
-      this.logger.warn('Failed to cancel document processing job', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to cancel document processing job',
+      );
     }
     try {
       await this.urlCrawlProcessingPort.cancelJob(sourceId);
     } catch (err) {
-      this.logger.warn('Failed to cancel URL crawl job', {
-        sourceId,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          err: err as Error,
+        },
+        'Failed to cancel URL crawl job',
+      );
     }
   }
 }

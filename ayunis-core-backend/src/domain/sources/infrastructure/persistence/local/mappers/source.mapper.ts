@@ -7,7 +7,7 @@ import {
   TextSourceDetailsRecord,
 } from '../schema/text-source-details.record';
 import { UrlSourceDetailsRecord } from '../schema/text-source-details.record';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SourceContentChunkMapper } from './source-content-chunk.mapper';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import {
@@ -30,7 +30,6 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 
 @Injectable()
 export class SourceMapper {
-  private readonly logger = new Logger(SourceMapper.name);
   constructor(
     private readonly sourceContentChunkMapper: SourceContentChunkMapper,
   ) {}

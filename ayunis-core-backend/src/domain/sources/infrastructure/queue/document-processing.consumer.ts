@@ -1,4 +1,5 @@
-import { Logger } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import type { UUID } from 'crypto';
@@ -25,9 +26,9 @@ import {
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
-  private readonly logger = new Logger(DocumentProcessingConsumer.name);
-
   constructor(
+    @InjectPinoLogger(DocumentProcessingConsumer.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
     private readonly splitTextUseCase: SplitTextUseCase,
@@ -42,11 +43,14 @@ export class DocumentProcessingConsumer extends WorkerHost {
   async process(job: Job<DocumentProcessingJobData>): Promise<void> {
     const { sourceId, orgId, userId, minioPath, fileName } = job.data;
 
-    this.logger.log('Processing document', {
-      sourceId,
-      fileName,
-      jobId: job.id,
-    });
+    this.logger.info(
+      {
+        sourceId,
+        fileName,
+        jobId: job.id,
+      },
+      'Processing document',
+    );
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
@@ -66,15 +70,21 @@ export class DocumentProcessingConsumer extends WorkerHost {
         await this.helper.index(sourceId, orgId, chunks);
         await this.markSourceReady(sourceId, minioPath);
 
-        this.logger.log('Document processing complete', {
-          sourceId,
-          chunks: chunks.length,
-        });
+        this.logger.info(
+          {
+            sourceId,
+            chunks: chunks.length,
+          },
+          'Document processing complete',
+        );
       } catch (error) {
-        this.logger.error('Document processing failed', {
-          sourceId,
-          error: error as Error,
-        });
+        this.logger.error(
+          {
+            sourceId,
+            err: error as Error,
+          },
+          'Document processing failed',
+        );
 
         const { final, rethrow } = classifyJobFailure(job, error);
         if (final) {
@@ -110,7 +120,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
   ): Promise<TextSource | null> {
     const source = await this.sourceRepository.findById(sourceId);
     if (!source) {
-      this.logger.warn('Source not found, skipping', { sourceId });
+      this.logger.warn({ sourceId }, 'Source not found, skipping');
       await this.cleanupMinioFile(minioPath);
       return null;
     }
@@ -165,10 +175,13 @@ export class DocumentProcessingConsumer extends WorkerHost {
   ): Promise<boolean> {
     const source = await this.sourceRepository.findById(sourceId);
     if (source?.status !== SourceStatus.PROCESSING) {
-      this.logger.warn('Source deleted or status changed mid-processing', {
-        sourceId,
-        found: !!source,
-      });
+      this.logger.warn(
+        {
+          sourceId,
+          found: !!source,
+        },
+        'Source deleted or status changed mid-processing',
+      );
       await this.cleanupMinioFile(minioPath);
       return false;
     }
@@ -195,8 +208,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
     if (!updated) {
       this.logger.warn(
-        'Conditional update to READY failed — source was deleted or status changed',
         { sourceId },
+        'Conditional update to READY failed — source was deleted or status changed',
       );
       await this.helper.cleanupIndex(sourceId);
     }

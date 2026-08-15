@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindContentChunksByIdsUseCase } from './find-content-chunks-by-ids.use-case';
@@ -20,6 +22,10 @@ describe('FindContentChunksByIdsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindContentChunksByIdsUseCase,
+        {
+          provide: getLoggerToken(FindContentChunksByIdsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SourceRepository,
           useValue: mockSourceRepository,

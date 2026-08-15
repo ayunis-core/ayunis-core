@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -110,6 +111,7 @@ describe('DocumentProcessingConsumer', () => {
     jest.clearAllMocks();
 
     consumer = new DocumentProcessingConsumer(
+      createPinoLoggerMock(),
       contextService as never,
       retrieveFileContentUseCase as never,
       splitTextUseCase as never,

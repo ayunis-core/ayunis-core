@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TranscriptionPort } from '../../ports/transcription.port';
 import { TranscribeCommand } from './transcribe.command';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -11,22 +12,32 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 // 25 MB - matches Mistral's API limit for audio transcription
 const MAX_AUDIO_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const SUPPORTED_MIME_TYPES = [
+  'audio/webm',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/x-m4a',
+];
 
 @Injectable()
 export class TranscribeUseCase {
-  private readonly logger = new Logger(TranscribeUseCase.name);
-
   constructor(
+    @InjectPinoLogger(TranscribeUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly transcriptionPort: TranscriptionPort,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: TranscribeCommand): Promise<string> {
-    this.logger.log('execute', {
-      fileName: command.fileName,
-      mimeType: command.mimeType,
-      language: command.language,
-    });
+    this.logger.info(
+      {
+        fileName: command.fileName,
+        mimeType: command.mimeType,
+        language: command.language,
+      },
+      'execute',
+    );
 
     try {
       const userId = this.contextService.get('userId');
@@ -34,34 +45,8 @@ export class TranscribeUseCase {
         throw new UnauthorizedAccessError();
       }
 
-      // Validate audio file
-      if (!command.file || command.file.length === 0) {
-        throw new InvalidAudioFileError('Empty audio file');
-      }
+      this.validateAudio(command);
 
-      // Validate file size
-      if (command.file.length > MAX_AUDIO_FILE_SIZE_BYTES) {
-        const maxSizeMB = MAX_AUDIO_FILE_SIZE_BYTES / (1024 * 1024);
-        throw new InvalidAudioFileError(
-          `Audio file size exceeds maximum allowed size of ${maxSizeMB} MB`,
-        );
-      }
-
-      // Basic MIME type validation
-      const supportedMimeTypes = [
-        'audio/webm',
-        'audio/mp4',
-        'audio/mpeg',
-        'audio/wav',
-        'audio/x-m4a',
-      ];
-      if (!supportedMimeTypes.includes(command.mimeType)) {
-        throw new InvalidAudioFileError(
-          `Unsupported audio format: ${command.mimeType}`,
-        );
-      }
-
-      // Call the transcription service
       const transcriptedText = await this.transcriptionPort.transcribe(
         command.file,
         command.fileName,
@@ -69,22 +54,44 @@ export class TranscribeUseCase {
         command.language,
       );
 
-      this.logger.log('Transcription completed', {
-        fileName: command.fileName,
-        textLength: transcriptedText.length,
-      });
+      this.logger.info(
+        {
+          fileName: command.fileName,
+          textLength: transcriptedText.length,
+        },
+        'Transcription completed',
+      );
 
       return transcriptedText;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Failed to transcribe audio', {
-        fileName: command.fileName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new TranscriptionFailedError(
-        (error as Error).message ?? 'Unknown error during transcription',
+      this.logger.error(
+        { err: error as Error, fileName: command.fileName },
+        'Failed to transcribe audio',
+      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error during transcription';
+      throw new TranscriptionFailedError(message);
+    }
+  }
+
+  private validateAudio(command: TranscribeCommand): void {
+    if (command.file.length === 0) {
+      throw new InvalidAudioFileError('Empty audio file');
+    }
+    if (command.file.length > MAX_AUDIO_FILE_SIZE_BYTES) {
+      const maxSizeMB = MAX_AUDIO_FILE_SIZE_BYTES / (1024 * 1024);
+      throw new InvalidAudioFileError(
+        `Audio file size exceeds maximum allowed size of ${maxSizeMB} MB`,
+      );
+    }
+    if (!SUPPORTED_MIME_TYPES.includes(command.mimeType)) {
+      throw new InvalidAudioFileError(
+        `Unsupported audio format: ${command.mimeType}`,
       );
     }
   }

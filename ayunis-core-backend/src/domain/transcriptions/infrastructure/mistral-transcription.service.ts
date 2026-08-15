@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import { Mistral } from '@mistralai/mistralai';
 import { TranscriptionPort } from '../application/ports/transcription.port';
@@ -9,11 +10,14 @@ import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.hel
 
 @Injectable()
 export class MistralTranscriptionService extends TranscriptionPort {
-  private readonly logger = new Logger(MistralTranscriptionService.name);
   private readonly client: Mistral;
   private readonly model: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    @InjectPinoLogger(MistralTranscriptionService.name)
+    private readonly logger: PinoLogger,
+    private readonly configService: ConfigService,
+  ) {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('models.mistral.apiKey'),
@@ -31,12 +35,15 @@ export class MistralTranscriptionService extends TranscriptionPort {
     mimeType: string,
     language?: string,
   ): Promise<string> {
-    this.logger.log('Starting transcription', {
-      fileName,
-      fileSize: file.length,
-      mimeType,
-      language,
-    });
+    this.logger.info(
+      {
+        fileName,
+        fileSize: file.length,
+        mimeType,
+        language,
+      },
+      'Starting transcription',
+    );
 
     try {
       // Create a File object from the buffer for the Mistral API
@@ -48,17 +55,20 @@ export class MistralTranscriptionService extends TranscriptionPort {
 
       const transcriptedText = response.text.trim() || '';
 
-      this.logger.log('Transcription completed successfully', {
-        fileName,
-        textLength: transcriptedText.length,
-      });
+      this.logger.info(
+        {
+          fileName,
+          textLength: transcriptedText.length,
+        },
+        'Transcription completed successfully',
+      );
 
       return transcriptedText;
     } catch (error) {
-      this.logger.error('Transcription failed', {
-        fileName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        { err: error as Error, fileName },
+        'Transcription failed',
+      );
 
       // Availability failures (transport errors, SDK 5xx, timeouts) all
       // classify here; what falls through is a request-shaped failure.
@@ -85,10 +95,13 @@ export class MistralTranscriptionService extends TranscriptionPort {
       ...(language && { language }),
     };
 
-    this.logger.log('Sending transcription request to Mistral', {
-      model: this.model,
-      language,
-    });
+    this.logger.info(
+      {
+        model: this.model,
+        language,
+      },
+      'Sending transcription request to Mistral',
+    );
 
     return retryWithBackoff({
       fn: () => this.client.audio.transcriptions.complete(transcriptionRequest),
@@ -101,9 +114,10 @@ export class MistralTranscriptionService extends TranscriptionPort {
   private shouldRetry(error: Error): boolean {
     const isTransient = isTransientMistralError(error);
     if (isTransient) {
-      this.logger.warn('Retrying Mistral transcription after transient error', {
-        message: error.message,
-      });
+      this.logger.warn(
+        { err: error },
+        'Retrying Mistral transcription after transient error',
+      );
     }
     return isTransient;
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { PurgeOrgStorageCommand } from './purge-org-storage.command';
 import { PurgeStoragePrefixesUseCase } from '../purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { PurgeStoragePrefixesCommand } from '../purge-storage-prefixes/purge-storage-prefixes.command';
@@ -20,16 +21,16 @@ export type PurgeOrgStorageResult = PurgeStoragePrefixesResult;
  */
 @Injectable()
 export class PurgeOrgStorageUseCase {
-  private readonly logger = new Logger(PurgeOrgStorageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(PurgeOrgStorageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly purgeStoragePrefixesUseCase: PurgeStoragePrefixesUseCase,
   ) {}
 
   async execute(
     command: PurgeOrgStorageCommand,
   ): Promise<PurgeOrgStorageResult> {
-    this.logger.log('Purging org storage', { orgId: command.orgId });
+    this.logger.info({ orgId: command.orgId }, 'Purging org storage');
     return this.purgeStoragePrefixesUseCase.execute(
       new PurgeStoragePrefixesCommand(orgStoragePrefixes(command.orgId)),
     );

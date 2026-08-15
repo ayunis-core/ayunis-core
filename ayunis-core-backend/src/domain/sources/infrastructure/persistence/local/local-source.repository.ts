@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -24,9 +25,9 @@ import { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper'
 
 @Injectable()
 export class LocalSourceRepository extends SourceRepository {
-  private readonly logger = new Logger(LocalSourceRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalSourceRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(SourceRecord)
     private readonly sourceRepository: Repository<SourceRecord>,
     @InjectRepository(TextSourceDetailsRecord)
@@ -42,7 +43,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findById(id: UUID): Promise<TextSource | DataSource | null> {
-    this.logger.log('findById', { id });
+    this.logger.info({ id }, 'findById');
     const record = await this.sourceRepository.findOne({
       where: { id },
     });
@@ -79,7 +80,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByIds(ids: UUID[]): Promise<Source[]> {
-    this.logger.log('findByIds', { count: ids.length });
+    this.logger.info({ count: ids.length }, 'findByIds');
     if (ids.length === 0) {
       return [];
     }
@@ -97,7 +98,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {
-    this.logger.log('findByKnowledgeBaseId', { knowledgeBaseId });
+    this.logger.info({ knowledgeBaseId }, 'findByKnowledgeBaseId');
     const records = await this.sourceRepository
       .createQueryBuilder('source')
       .leftJoinAndSelect(
@@ -115,18 +116,21 @@ export class LocalSourceRepository extends SourceRepository {
     source: TextSource,
     content: { text: string; chunks: TextSourceContentChunk[] },
   ): Promise<TextSource> {
-    this.logger.log('saveTextSource', { sourceId: source.id });
+    this.logger.info({ sourceId: source.id }, 'saveTextSource');
     const {
       source: sourceRecord,
       details,
       contentChunks,
     } = this.mapper.toTextSourceRecord(source, content);
-    this.logger.debug('Saving text source record', {
-      sourceId: sourceRecord.id,
-      chunksCount: contentChunks.length,
-    });
+    this.logger.debug(
+      {
+        sourceId: sourceRecord.id,
+        chunksCount: contentChunks.length,
+      },
+      'Saving text source record',
+    );
     const savedSource = await this.sourceRepository.save(sourceRecord);
-    this.logger.debug('Saved source record with id', { id: savedSource.id });
+    this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
     const savedDetails = await this.textSourceDetailsRepository.save(details);
     const savedContentChunks =
       await this.sourceContentChunkRepository.save(contentChunks);
@@ -139,7 +143,7 @@ export class LocalSourceRepository extends SourceRepository {
     staleBefore: Date,
     limit: number,
   ): Promise<UUID[]> {
-    this.logger.log('findStaleProcessingSourceIds', { staleBefore, limit });
+    this.logger.info({ staleBefore, limit }, 'findStaleProcessingSourceIds');
     const records = await this.sourceRepository.find({
       select: { id: true },
       where: {
@@ -156,18 +160,18 @@ export class LocalSourceRepository extends SourceRepository {
   async save(source: DataSource): Promise<DataSource>;
   async save(source: Source): Promise<Source>;
   async save(source: Source): Promise<Source> {
-    this.logger.log('save', { sourceId: source.id });
+    this.logger.info({ sourceId: source.id }, 'save');
     if (source instanceof TextSource) {
       const { source: sourceRecord } = this.mapper.toRecord(source);
       const savedSource = await this.sourceRepository.save(sourceRecord);
-      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
       return this.mapper.toDomain(savedSource as TextSourceRecord);
     }
     if (source instanceof DataSource) {
       const { source: sourceRecord, details } = this.mapper.toRecord(source);
       sourceRecord.dataSourceDetails = details;
       const savedSource = await this.sourceRepository.save(sourceRecord);
-      this.logger.debug('Saved source record with id', { id: savedSource.id });
+      this.logger.debug({ id: savedSource.id }, 'Saved source record with id');
       const savedDetails = await this.dataSourceDetailsRepository.save(details);
       savedSource.dataSourceDetails = savedDetails;
       return this.mapper.toDomain(savedSource);
@@ -181,11 +185,14 @@ export class LocalSourceRepository extends SourceRepository {
     toStatus: SourceStatus,
     updates?: Partial<{ processingError: string | null }>,
   ): Promise<boolean> {
-    this.logger.log('updateStatusConditionally', {
-      sourceId,
-      fromStatus,
-      toStatus,
-    });
+    this.logger.info(
+      {
+        sourceId,
+        fromStatus,
+        toStatus,
+      },
+      'updateStatusConditionally',
+    );
     const qb = this.sourceRepository
       .createQueryBuilder()
       .update()
@@ -234,7 +241,7 @@ export class LocalSourceRepository extends SourceRepository {
     startLine: number,
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null> {
-    this.logger.log('extractTextLines', { sourceId, startLine, endLine });
+    this.logger.info({ sourceId, startLine, endLine }, 'extractTextLines');
     const result: { totalLines: string; text: string }[] =
       await this.textSourceDetailsRepository.query(
         `SELECT
@@ -261,7 +268,7 @@ export class LocalSourceRepository extends SourceRepository {
   ): Promise<
     { chunk: TextSourceContentChunk; sourceId: UUID; sourceName: string }[]
   > {
-    this.logger.log('findContentChunksByIds', { count: chunkIds.length });
+    this.logger.info({ count: chunkIds.length }, 'findContentChunksByIds');
     if (chunkIds.length === 0) {
       return [];
     }
@@ -281,7 +288,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async delete(sourceId: UUID): Promise<void> {
-    this.logger.log('delete', { sourceId });
+    this.logger.info({ sourceId }, 'delete');
     await this.sourceRepository
       .createQueryBuilder()
       .delete()
@@ -290,7 +297,7 @@ export class LocalSourceRepository extends SourceRepository {
   }
 
   async deleteMany(sourceIds: UUID[]): Promise<void> {
-    this.logger.log('deleteMany', { count: sourceIds.length });
+    this.logger.info({ count: sourceIds.length }, 'deleteMany');
     if (sourceIds.length === 0) {
       return;
     }
@@ -305,10 +312,13 @@ export class LocalSourceRepository extends SourceRepository {
     candidateIds: UUID[],
     olderThan: Date,
   ): Promise<UUID[]> {
-    this.logger.log('findUnreferencedIds', {
-      candidateCount: candidateIds.length,
-      olderThan,
-    });
+    this.logger.info(
+      {
+        candidateCount: candidateIds.length,
+        olderThan,
+      },
+      'findUnreferencedIds',
+    );
 
     if (candidateIds.length === 0) {
       return [];

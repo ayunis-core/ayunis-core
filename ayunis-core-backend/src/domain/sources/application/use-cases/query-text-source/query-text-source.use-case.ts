@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SourceRepository } from '../../ports/source.repository';
 import { QueryTextSourceCommand } from './query-text-source.command';
 import { SearchContentUseCase } from 'src/domain/rag/indexers/application/use-cases/search-content/search-content.use-case';
@@ -8,9 +9,9 @@ import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-co
 
 @Injectable()
 export class QueryTextSourceUseCase {
-  private readonly logger = new Logger(QueryTextSourceUseCase.name);
-
   constructor(
+    @InjectPinoLogger(QueryTextSourceUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly searchContentUseCase: SearchContentUseCase,
   ) {}
@@ -18,7 +19,11 @@ export class QueryTextSourceUseCase {
   async execute(
     command: QueryTextSourceCommand,
   ): Promise<TextSourceContentChunk[]> {
-    this.logger.log('execute', command);
+    const logContext = {
+      sourceId: command.filter.sourceId,
+      text: command.query,
+    };
+    this.logger.info({ orgId: command.orgId, ...logContext }, 'execute');
     // Validate input
     if (!command.query || command.query.trim().length === 0) {
       this.logger.warn('Empty query provided for vector search');
@@ -26,9 +31,7 @@ export class QueryTextSourceUseCase {
     }
 
     try {
-      this.logger.debug(
-        `Performing vector search for query: "${command.query}" in source: ${command.filter.sourceId}`,
-      );
+      this.logger.debug(logContext, 'Performing vector search');
 
       // Use the searchContentUseCase to search for relevant content
       const searchQuery = new SearchContentQuery({
@@ -42,7 +45,8 @@ export class QueryTextSourceUseCase {
       const indexEntries = await this.searchContentUseCase.execute(searchQuery);
 
       this.logger.debug(
-        `Found ${indexEntries.length} index entries for query: "${command.query}" in source: ${command.filter.sourceId}`,
+        { ...logContext, entryCount: indexEntries.length },
+        'Found index entries for vector search',
       );
 
       if (indexEntries.length === 0) {
@@ -55,14 +59,15 @@ export class QueryTextSourceUseCase {
         await this.sourceRepository.findContentChunksByIds(chunkIds);
 
       this.logger.debug(
-        `Successfully matched ${chunkResults.length} source content items for query: "${command.query}" in source: ${command.filter.sourceId}`,
+        { ...logContext, chunkCount: chunkResults.length },
+        'Matched source content for vector search',
       );
 
       return chunkResults.map((r) => r.chunk);
     } catch (error) {
       this.logger.error(
-        `Error during vector search for query "${command.query}":`,
-        error instanceof Error ? error.message : 'Unknown error',
+        { ...logContext, err: error as Error },
+        'Error during vector search',
       );
       throw new Error(`Vector search failed`);
     }

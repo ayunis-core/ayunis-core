@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ExtractTextLinesUseCase } from './extract-text-lines.use-case';
@@ -18,6 +20,10 @@ describe('ExtractTextLinesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExtractTextLinesUseCase,
+        {
+          provide: getLoggerToken(ExtractTextLinesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SourceRepository,
           useValue: mockSourceRepository,

@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { DeleteObjectCommand } from './delete-object.command';
@@ -8,18 +9,22 @@ import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
 export class DeleteObjectUseCase {
-  private readonly logger = new Logger(DeleteObjectUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeleteObjectUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
   async execute(command: DeleteObjectCommand): Promise<void> {
-    this.logger.debug(`Deleting object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Deleting object',
+    );
 
     try {
       const bucketName = command.bucket || this.getDefaultBucket();
@@ -36,15 +41,18 @@ export class DeleteObjectUseCase {
       await this.objectStorage.delete(
         new StorageUrl(command.objectName, bucketName),
       );
-      this.logger.debug(`Successfully deleted object: ${command.objectName}`);
+      this.logger.debug(
+        { fileName: command.objectName },
+        'Successfully deleted object',
+      );
     } catch (error) {
       if (error instanceof ObjectNotFoundError) {
         throw error;
       }
 
       this.logger.error(
-        `Failed to delete object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to delete object',
       );
       throw new DeleteFailedError();
     }

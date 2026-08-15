@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
@@ -9,18 +10,22 @@ import { StorageUrl } from 'src/domain/storage/domain/storage-url.entity';
 
 @Injectable()
 export class GetObjectInfoUseCase {
-  private readonly logger = new Logger(GetObjectInfoUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetObjectInfoUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
   ) {}
 
   async execute(command: GetObjectInfoCommand): Promise<StorageObject> {
-    this.logger.debug(`Getting info for object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Getting object info',
+    );
 
     try {
       const bucketName = command.bucket || this.getDefaultBucket();
@@ -30,12 +35,13 @@ export class GetObjectInfoUseCase {
       );
 
       this.logger.debug(
-        `Successfully retrieved info for object: ${command.objectName}`,
         {
           bucket: bucketName,
+          fileName: command.objectName,
           size: info.size,
           etag: info.etag,
         },
+        'Successfully retrieved object info',
       );
 
       return new StorageObject(
@@ -55,8 +61,8 @@ export class GetObjectInfoUseCase {
       }
 
       this.logger.error(
-        `Failed to get object info: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to get object info',
       );
       throw new DownloadFailedError();
     }

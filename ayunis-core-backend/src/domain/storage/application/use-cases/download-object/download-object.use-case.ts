@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigType } from '@nestjs/config';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
 import { DownloadObjectCommand } from './download-object.command';
@@ -33,9 +34,9 @@ function isTransientNetworkError(error: Error): boolean {
 
 @Injectable()
 export class DownloadObjectUseCase {
-  private readonly logger = new Logger(DownloadObjectUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DownloadObjectUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     @Inject(storageConfig.KEY)
     private readonly config: ConfigType<typeof storageConfig>,
@@ -44,9 +45,13 @@ export class DownloadObjectUseCase {
   async execute(
     command: DownloadObjectCommand,
   ): Promise<NodeJS.ReadableStream> {
-    this.logger.debug(`Downloading object: ${command.objectName}`, {
-      bucket: command.bucket,
-    });
+    this.logger.debug(
+      {
+        bucket: command.bucket,
+        fileName: command.objectName,
+      },
+      'Downloading object',
+    );
 
     try {
       const bucketName = command.bucket || this.getDefaultBucket();
@@ -65,7 +70,8 @@ export class DownloadObjectUseCase {
       });
 
       this.logger.debug(
-        `Successfully started download for object: ${command.objectName}`,
+        { fileName: command.objectName },
+        'Successfully started object download',
       );
 
       return stream;
@@ -75,8 +81,8 @@ export class DownloadObjectUseCase {
       }
 
       this.logger.error(
-        `Failed to download object: ${command.objectName}`,
-        error,
+        { err: error as Error, fileName: command.objectName },
+        'Failed to download object',
       );
       throw new DownloadFailedError();
     }

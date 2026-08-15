@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import {
@@ -10,9 +11,9 @@ import { STANDARD_JOB_OPTIONS } from './bullmq-job.helpers';
 
 @Injectable()
 export class DataSourceProcessingProducer extends DataSourceProcessingPort {
-  private readonly logger = new Logger(DataSourceProcessingProducer.name);
-
   constructor(
+    @InjectPinoLogger(DataSourceProcessingProducer.name)
+    private readonly logger: PinoLogger,
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly queue: Queue<DataSourceProcessingJobData>,
   ) {
@@ -20,10 +21,13 @@ export class DataSourceProcessingProducer extends DataSourceProcessingPort {
   }
 
   async enqueue(data: DataSourceProcessingJobData): Promise<void> {
-    this.logger.log('Enqueuing data source processing job', {
-      fileName: data.fileName,
-      targetCount: data.targets.length,
-    });
+    this.logger.info(
+      {
+        fileName: data.fileName,
+        targetCount: data.targets.length,
+      },
+      'Enqueuing data source processing job',
+    );
 
     await this.queue.add('process-data-source', data, {
       jobId: data.uploadId,

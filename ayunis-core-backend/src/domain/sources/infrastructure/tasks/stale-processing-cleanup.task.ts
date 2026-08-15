@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import type { UUID } from 'crypto';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
@@ -12,10 +13,11 @@ const MAX_SOURCES_PER_RUN = 100;
 
 @Injectable()
 export class StaleProcessingCleanupTask {
-  private readonly logger = new Logger(StaleProcessingCleanupTask.name);
   private isRunning = false;
 
   constructor(
+    @InjectPinoLogger(StaleProcessingCleanupTask.name)
+    private readonly logger: PinoLogger,
     private readonly sourceRepository: SourceRepository,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
   ) {}
@@ -31,9 +33,12 @@ export class StaleProcessingCleanupTask {
     try {
       await this.failStaleSources();
     } catch (error) {
-      this.logger.error('Stale processing cleanup failed', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Stale processing cleanup failed',
+      );
     } finally {
       this.isRunning = false;
     }
@@ -53,8 +58,8 @@ export class StaleProcessingCleanupTask {
     }
 
     this.logger.warn(
-      `Found ${staleSourceIds.length} stale processing sources`,
-      { sourceIds: staleSourceIds },
+      { sourceIds: staleSourceIds, sourceCount: staleSourceIds.length },
+      'Found stale processing sources',
     );
 
     for (const sourceId of staleSourceIds) {
@@ -70,12 +75,15 @@ export class StaleProcessingCleanupTask {
           errorMessage: 'Processing timed out',
         }),
       );
-      this.logger.warn('Marked stale source as failed', { sourceId });
+      this.logger.warn({ sourceId }, 'Marked stale source as failed');
     } catch (error) {
-      this.logger.error('Failed to mark stale source as failed', {
-        sourceId,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceId,
+          err: error as Error,
+        },
+        'Failed to mark stale source as failed',
+      );
     }
   }
 }

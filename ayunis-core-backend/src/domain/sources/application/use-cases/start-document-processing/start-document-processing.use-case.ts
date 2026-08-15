@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { buildMinioProcessingPath } from '../../util/minio-processing-file.helpers';
@@ -23,9 +24,9 @@ import { StartDocumentProcessingCommand } from './start-document-processing.comm
 
 @Injectable()
 export class StartDocumentProcessingUseCase {
-  private readonly logger = new Logger(StartDocumentProcessingUseCase.name);
-
   constructor(
+    @InjectPinoLogger(StartDocumentProcessingUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly createProcessingSourceUseCase: CreateProcessingSourceUseCase,
     private readonly markSourceFailedUseCase: MarkSourceFailedUseCase,
     private readonly uploadObjectUseCase: UploadObjectUseCase,
@@ -37,19 +38,14 @@ export class StartDocumentProcessingUseCase {
   ) {}
 
   async execute(command: StartDocumentProcessingCommand): Promise<FileSource> {
-    this.logger.log('Starting async document processing', {
-      fileName: command.fileName,
-    });
+    const { fileName } = command;
+    this.logger.info({ fileName }, 'Starting async document processing');
 
     try {
       const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new Error('orgId is required');
-      }
+      if (!orgId) throw new Error('orgId is required');
       const userId = this.contextService.get('userId');
-      if (!userId) {
-        throw new Error('userId is required');
-      }
+      if (!userId) throw new Error('userId is required');
 
       // Indexing resolves the org's embedding model only inside the worker,
       // after the (expensive) OCR step — reject here so an unprovisioned org
@@ -89,9 +85,12 @@ export class StartDocumentProcessingUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error starting document processing', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error starting document processing',
+      );
       throw new UnexpectedSourceError('Error starting document processing', {
         error: error as Error,
       });
@@ -135,10 +134,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
     } catch (error) {
-      this.logger.error('Failed to enqueue document processing job', {
-        sourceId: source.id,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          sourceId: source.id,
+          err: error as Error,
+        },
+        'Failed to enqueue document processing job',
+      );
       await this.tryMarkSourceFailed(
         source,
         'Failed to enqueue processing job',
@@ -154,10 +156,13 @@ export class StartDocumentProcessingUseCase {
         new DeleteObjectCommand(minioPath),
       );
     } catch (err) {
-      this.logger.warn('Failed to clean up MinIO processing file', {
-        minioPath,
-        error: err as Error,
-      });
+      this.logger.warn(
+        {
+          fileName: minioPath,
+          err: err as Error,
+        },
+        'Failed to clean up MinIO processing file',
+      );
     }
   }
 
@@ -173,10 +178,13 @@ export class StartDocumentProcessingUseCase {
         }),
       );
     } catch (err) {
-      this.logger.error('Failed to mark source as FAILED', {
-        sourceId: source.id,
-        error: err as Error,
-      });
+      this.logger.error(
+        {
+          sourceId: source.id,
+          err: err as Error,
+        },
+        'Failed to mark source as FAILED',
+      );
     }
   }
 }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { FindAllOrgIdsUseCase } from 'src/iam/orgs/application/use-cases/find-all-org-ids/find-all-org-ids.use-case';
 import { ObjectStoragePort } from '../../ports/object-storage.port';
@@ -37,16 +38,16 @@ export interface SweepOrphanStorageResult {
  */
 @Injectable()
 export class SweepOrphanStorageUseCase {
-  private readonly logger = new Logger(SweepOrphanStorageUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SweepOrphanStorageUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly objectStorage: ObjectStoragePort,
     private readonly findAllOrgIdsUseCase: FindAllOrgIdsUseCase,
     private readonly purgeOrgStorageUseCase: PurgeOrgStorageUseCase,
   ) {}
 
   async execute(): Promise<SweepOrphanStorageResult> {
-    this.logger.log('Starting orphan storage sweep');
+    this.logger.info('Starting orphan storage sweep');
 
     const existingOrgIds = new Set<string>(
       await this.findAllOrgIdsUseCase.execute(),
@@ -76,7 +77,7 @@ export class SweepOrphanStorageUseCase {
       await this.purgeOrphan(orgId as UUID, result);
     }
 
-    this.logger.log('Finished orphan storage sweep', { ...result });
+    this.logger.info({ ...result }, 'Finished orphan storage sweep');
     return result;
   }
 
@@ -84,7 +85,7 @@ export class SweepOrphanStorageUseCase {
     orgId: UUID,
     result: SweepOrphanStorageResult,
   ): Promise<void> {
-    this.logger.warn('Purging storage of nonexistent org', { orgId });
+    this.logger.warn({ orgId }, 'Purging storage of nonexistent org');
     const purge = await this.purgeOrgStorageUseCase.execute(
       new PurgeOrgStorageCommand(orgId),
     );
