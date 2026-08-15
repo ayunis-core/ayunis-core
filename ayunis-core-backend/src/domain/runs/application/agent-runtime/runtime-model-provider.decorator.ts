@@ -12,7 +12,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { extractUpstreamStatus } from 'src/common/errors/extract-upstream-status.helper';
+import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
 import {
@@ -129,6 +129,7 @@ export class RuntimeModelProviderDecorator {
       }
     } catch (error) {
       mappedError = mapProviderError(error, request, state.controller, context);
+      this.logProviderInferenceFailed(error, request, context, mappedError);
       if (
         mappedError instanceof InferenceAbortedError &&
         request.signal?.aborted
@@ -144,6 +145,34 @@ export class RuntimeModelProviderDecorator {
       }
       this.emitCompletion(context, startedAt, mappedError);
     }
+  }
+
+  private logProviderInferenceFailed(
+    error: unknown,
+    request: ProviderRequest,
+    context: RuntimeModelCallContext,
+    mappedError: ApplicationError,
+  ): void {
+    if (
+      error instanceof ApplicationError ||
+      !(mappedError instanceof InferenceFailedError)
+    ) {
+      return;
+    }
+    const diagnostics = extractProviderErrorDiagnostics(error);
+    this.logger.error(
+      {
+        model: context.model.name,
+        provider: context.model.provider,
+        messageCount: request.messages.length,
+        toolCount: request.tools.length,
+        toolChoice: request.toolChoice,
+        errorName: error instanceof Error ? error.name : 'Unknown',
+        status: diagnostics.upstreamStatus,
+        ...diagnostics,
+      },
+      'Provider stream inference failed',
+    );
   }
 
   private emitCompletion(
@@ -260,7 +289,8 @@ function mapUnclassifiedProviderError(
   error: unknown,
   request: ProviderRequest,
 ): ApplicationError {
-  const status = extractUpstreamStatus(error);
+  const diagnostics = extractProviderErrorDiagnostics(error);
+  const status = diagnostics.upstreamStatus;
   const message = error instanceof Error ? error.message : String(error);
   if (/image exceeds .* maximum/i.test(message)) {
     return new InferenceImageTooLargeError({ status });
@@ -268,7 +298,10 @@ function mapUnclassifiedProviderError(
   if (request.signal?.aborted || isAbortError(error)) {
     return new InferenceAbortedError();
   }
-  return new InferenceFailedError('Provider inference failed', { status });
+  return new InferenceFailedError('Provider inference failed', {
+    status,
+    ...diagnostics,
+  });
 }
 
 function toRuntimeError(

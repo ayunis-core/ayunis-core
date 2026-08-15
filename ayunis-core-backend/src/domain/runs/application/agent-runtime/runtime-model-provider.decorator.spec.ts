@@ -29,20 +29,23 @@ const request: ProviderRequest = {
 interface Harness {
   decorate: (provider: ModelProvider) => ModelProvider;
   emitAsync: jest.Mock;
+  logger: ReturnType<typeof createPinoLoggerMock>;
 }
 
 function buildHarness(): Harness {
   const emitAsync = jest.fn().mockResolvedValue([]);
+  const logger = createPinoLoggerMock();
   const decorator = new RuntimeModelProviderDecorator(
     {
       emitAsync,
     } as unknown as EventEmitter2,
-    createPinoLoggerMock(),
+    logger,
   );
   return {
     decorate: (provider) =>
       decorator.decorate(provider, { userId, orgId, model }),
     emitAsync,
+    logger,
   };
 }
 
@@ -245,6 +248,48 @@ describe('RuntimeModelProviderDecorator', () => {
       jest.useRealTimers();
     },
   );
+
+  it('records safe provider diagnostics without the raw provider message', async () => {
+    const upstream = Object.assign(
+      new Error("Invalid schema containing resident prompt 'classified text'"),
+      {
+        status: 400,
+        code: 'invalid_function_parameters',
+        type: 'invalid_request_error',
+        param: 'tools[62].function.parameters',
+        request_id: 'req_azure_123',
+      },
+    );
+    const { decorate, logger } = buildHarness();
+
+    const result = collect(decorate(throwingProvider(upstream)));
+
+    await expect(result).rejects.toMatchObject({
+      details: {
+        hostError: {
+          context: {
+            upstreamStatus: 400,
+            upstreamCode: 'invalid_function_parameters',
+            upstreamType: 'invalid_request_error',
+            upstreamParam: 'tools[62].function.parameters',
+            upstreamRequestId: 'req_azure_123',
+            upstreamReason: 'invalid_tool_schema',
+          },
+        },
+      },
+    });
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        upstreamCode: 'invalid_function_parameters',
+        upstreamParam: 'tools[62].function.parameters',
+        upstreamReason: 'invalid_tool_schema',
+      }),
+      'Provider stream inference failed',
+    );
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain(
+      'classified text',
+    );
+  });
 
   it('preserves a classified provider failure when cancellation races with it', async () => {
     const controller = new AbortController();
