@@ -30,6 +30,9 @@ jobs:
           - name: Agent Runtime
             working-directory: packages/agent-runtime
             precheck: ''
+          - name: Agent Extensions
+            working-directory: packages/agent-extensions
+            precheck: ''
           - name: Inference
             working-directory: packages/inference
             precheck: ''
