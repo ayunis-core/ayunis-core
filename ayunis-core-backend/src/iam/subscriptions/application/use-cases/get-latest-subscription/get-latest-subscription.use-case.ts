@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetLatestSubscriptionQuery } from './get-latest-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -16,9 +17,9 @@ import { getNextRenewalDate } from '../../util/get-next-renewal-date';
 
 @Injectable()
 export class GetLatestSubscriptionUseCase {
-  private readonly logger = new Logger(GetLatestSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetLatestSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
@@ -30,10 +31,13 @@ export class GetLatestSubscriptionUseCase {
     availableSeats: number | null;
     nextRenewalDate: Date;
   }> {
-    this.logger.log('Getting latest subscription', {
-      orgId: query.orgId,
-      requestingUserId: query.requestingUserId,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+        requestingUserId: query.requestingUserId,
+      },
+      'Getting latest subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -62,9 +66,10 @@ export class GetLatestSubscriptionUseCase {
       return { subscription, availableSeats, nextRenewalDate };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting latest subscription', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Error getting latest subscription',
+      );
       throw new UnexpectedSubscriptionError(
         'Failed to get latest subscription',
       );

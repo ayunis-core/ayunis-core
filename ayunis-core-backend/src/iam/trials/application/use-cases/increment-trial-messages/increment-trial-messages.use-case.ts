@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { IncrementTrialMessagesCommand } from './increment-trial-messages.command';
@@ -12,80 +13,33 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class IncrementTrialMessagesUseCase {
-  private readonly logger = new Logger(IncrementTrialMessagesUseCase.name);
-
-  constructor(private readonly trialRepository: TrialRepository) {}
+  constructor(
+    @InjectPinoLogger(IncrementTrialMessagesUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly trialRepository: TrialRepository,
+  ) {}
 
   async execute(command: IncrementTrialMessagesCommand): Promise<Trial> {
-    this.logger.debug('Incrementing trial messages', {
-      orgId: command.orgId,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+      },
+      'Incrementing trial messages',
+    );
 
     try {
-      this.logger.debug('Finding trial for organization');
-      const currentTrial = await this.trialRepository.findByOrgId(
-        command.orgId,
-      );
-
-      if (!currentTrial) {
-        this.logger.warn('Trial not found for organization', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialNotFoundError(command.orgId);
-      }
-
-      this.logger.debug('Checking trial capacity');
-      if (currentTrial.messagesSent >= currentTrial.maxMessages) {
-        this.logger.warn('Trial capacity exceeded, cannot increment', {
-          orgId: command.orgId,
-          messagesSent: currentTrial.messagesSent,
-          maxMessages: currentTrial.maxMessages,
-          remainingMessages:
-            currentTrial.maxMessages - currentTrial.messagesSent,
-        });
-
-        throw new TrialCapacityExceededError(
-          command.orgId,
-          currentTrial.messagesSent,
-          currentTrial.maxMessages,
-        );
-      }
-
-      this.logger.debug('Incrementing trial message count');
-      const updatedTrial = await this.trialRepository.incrementMessagesSent(
-        command.orgId,
-      );
-
-      if (!updatedTrial) {
-        this.logger.error('Failed to increment trial messages in repository', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialUpdateFailedError(
-          command.orgId,
-          'Repository operation failed',
-          { operation: 'incrementMessagesSent' },
-        );
-      }
-
-      this.logger.log('Trial messages incremented successfully', {
-        orgId: command.orgId,
-        messagesSent: updatedTrial.messagesSent,
-        maxMessages: updatedTrial.maxMessages,
-        remainingMessages: updatedTrial.maxMessages - updatedTrial.messagesSent,
-      });
-
-      return updatedTrial;
+      const trial = await this.findTrial(command.orgId);
+      this.ensureCapacity(command.orgId, trial);
+      return await this.incrementMessages(command.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
 
-      this.logger.error('Failed to increment trial messages', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: command.orgId },
+        'Failed to increment trial messages',
+      );
 
       throw new UnexpectedTrialError(
         command.orgId,
@@ -93,5 +47,62 @@ export class IncrementTrialMessagesUseCase {
         { ...(error instanceof Error && { originalError: error.message }) },
       );
     }
+  }
+
+  private async findTrial(
+    orgId: IncrementTrialMessagesCommand['orgId'],
+  ): Promise<Trial> {
+    const trial = await this.trialRepository.findByOrgId(orgId);
+    if (!trial) {
+      this.logger.warn({ orgId }, 'Trial not found for organization');
+      throw new TrialNotFoundError(orgId);
+    }
+    return trial;
+  }
+
+  private ensureCapacity(
+    orgId: IncrementTrialMessagesCommand['orgId'],
+    trial: Trial,
+  ): void {
+    if (trial.messagesSent < trial.maxMessages) return;
+    this.logger.warn(
+      {
+        orgId,
+        messagesSent: trial.messagesSent,
+        maxMessages: trial.maxMessages,
+        remainingMessages: trial.maxMessages - trial.messagesSent,
+      },
+      'Trial capacity exceeded, cannot increment',
+    );
+    throw new TrialCapacityExceededError(
+      orgId,
+      trial.messagesSent,
+      trial.maxMessages,
+    );
+  }
+
+  private async incrementMessages(
+    orgId: IncrementTrialMessagesCommand['orgId'],
+  ): Promise<Trial> {
+    const trial = await this.trialRepository.incrementMessagesSent(orgId);
+    if (!trial) {
+      this.logger.error(
+        { orgId },
+        'Failed to increment trial messages in repository',
+      );
+      throw new TrialUpdateFailedError(orgId, 'Repository operation failed', {
+        operation: 'incrementMessagesSent',
+      });
+    }
+    this.logger.info(
+      {
+        orgId,
+        messagesSent: trial.messagesSent,
+        maxMessages: trial.maxMessages,
+        remainingMessages: trial.maxMessages - trial.messagesSent,
+      },
+      'Trial messages incremented successfully',
+    );
+    return trial;
   }
 }

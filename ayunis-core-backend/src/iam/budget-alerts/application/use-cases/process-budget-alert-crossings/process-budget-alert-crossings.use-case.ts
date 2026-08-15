@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
 import { GetOrgAdminsUseCase } from 'src/iam/users/application/use-cases/get-org-admins/get-org-admins.use-case';
@@ -31,9 +32,9 @@ const SCOPE_TO_WARNING: Record<BudgetAlertScope, BudgetWarningScope> = {
 
 @Injectable()
 export class ProcessBudgetAlertCrossingsUseCase {
-  private readonly logger = new Logger(ProcessBudgetAlertCrossingsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ProcessBudgetAlertCrossingsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly notificationRepository: BudgetAlertNotificationRepository,
     private readonly getOrgAdminsUseCase: GetOrgAdminsUseCase,
     private readonly sendBudgetWarningEmailUseCase: SendBudgetWarningEmailUseCase,
@@ -41,7 +42,7 @@ export class ProcessBudgetAlertCrossingsUseCase {
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
   async execute(query: ProcessBudgetAlertCrossingsQuery): Promise<void> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.info({ orgId: query.orgId }, 'execute');
 
     const sentKeys = await this.loadSentKeys(query.orgId, query.periodStart);
     const crossings = collectCrossings(query.targets, sentKeys);
@@ -53,10 +54,13 @@ export class ProcessBudgetAlertCrossingsUseCase {
       new GetOrgAdminsQuery(query.orgId),
     );
     if (admins.length === 0) {
-      this.logger.warn('Budget crossing with no admins to notify', {
-        orgId: query.orgId,
-        crossings: crossings.length,
-      });
+      this.logger.warn(
+        {
+          orgId: query.orgId,
+          crossings: crossings.length,
+        },
+        'Budget crossing with no admins to notify',
+      );
       return;
     }
 
@@ -99,12 +103,15 @@ export class ProcessBudgetAlertCrossingsUseCase {
         );
         delivered += 1;
       } catch (error) {
-        this.logger.error('Failed to send budget warning to admin', {
-          scope: crossing.target.scope,
-          targetId: crossing.target.targetId,
-          recipientId: admin.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            scope: crossing.target.scope,
+            targetId: crossing.target.targetId,
+            recipientId: admin.id,
+            err: error as Error,
+          },
+          'Failed to send budget warning to admin',
+        );
       }
     }
     return delivered;
@@ -124,12 +131,15 @@ export class ProcessBudgetAlertCrossingsUseCase {
     } catch (error) {
       // A failed insert must not block the org's remaining crossings; the
       // already-delivered email may repeat next run (at-least-once delivery).
-      this.logger.error('Failed to record budget alert crossing', {
-        orgId,
-        scope: crossing.target.scope,
-        targetId: crossing.target.targetId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          orgId,
+          scope: crossing.target.scope,
+          targetId: crossing.target.targetId,
+          err: error as Error,
+        },
+        'Failed to record budget alert crossing',
+      );
     }
   }
 

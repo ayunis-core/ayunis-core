@@ -4,11 +4,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -48,9 +48,9 @@ import { TrialNotFoundError } from '../../application/trial.errors';
   UpdateTrialRequestDto,
 )
 export class SuperAdminTrialsController {
-  private readonly logger = new Logger(SuperAdminTrialsController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminTrialsController.name)
+    private readonly logger: PinoLogger,
     private readonly createTrialUseCase: CreateTrialUseCase,
     private readonly getTrialUseCase: GetTrialUseCase,
     private readonly updateTrialUseCase: UpdateTrialUseCase,
@@ -81,10 +81,13 @@ export class SuperAdminTrialsController {
   async createTrial(
     @Body() createTrialDto: CreateTrialRequestDto,
   ): Promise<SuperAdminTrialResponseDto> {
-    this.logger.log('Creating trial', {
-      orgId: createTrialDto.orgId,
-      maxMessages: createTrialDto.maxMessages,
-    });
+    this.logger.info(
+      {
+        orgId: createTrialDto.orgId,
+        maxMessages: createTrialDto.maxMessages,
+      },
+      'Creating trial',
+    );
 
     const command = new CreateTrialCommand(
       createTrialDto.orgId,
@@ -165,11 +168,14 @@ export class SuperAdminTrialsController {
     @Param('orgId') orgId: UUID,
     @Body() updateTrialDto: UpdateTrialRequestDto,
   ): Promise<SuperAdminTrialResponseDto> {
-    this.logger.log('Updating trial', {
-      orgId,
-      maxMessages: updateTrialDto.maxMessages,
-      messagesSent: updateTrialDto.messagesSent,
-    });
+    this.logger.info(
+      {
+        orgId,
+        maxMessages: updateTrialDto.maxMessages,
+        messagesSent: updateTrialDto.messagesSent,
+      },
+      'Updating trial',
+    );
 
     const command = new UpdateTrialCommand(
       orgId,

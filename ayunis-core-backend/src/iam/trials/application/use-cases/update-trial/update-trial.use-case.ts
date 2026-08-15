@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { UpdateTrialCommand } from './update-trial.command';
@@ -14,88 +15,28 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 
 @Injectable()
 export class UpdateTrialUseCase {
-  private readonly logger = new Logger(UpdateTrialUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateTrialUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly trialRepository: TrialRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UpdateTrialCommand): Promise<Trial> {
     try {
-      this.logger.debug('Finding existing trial');
-      const systemRole = this.contextService.get<SystemRole>('systemRole');
-      if (systemRole !== SystemRole.SUPER_ADMIN) {
-        throw new UnauthorizedAccessError({
-          orgId: command.orgId,
-          systemRole: systemRole,
-        });
-      }
-      this.logger.log('Updating trial for organization', {
-        orgId: command.orgId,
-        maxMessages: command.maxMessages,
-        messagesSent: command.messagesSent,
-      });
-      const existingTrial = await this.trialRepository.findByOrgId(
-        command.orgId,
-      );
-
-      if (!existingTrial) {
-        this.logger.warn('Trial not found for organization', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialNotFoundError(command.orgId);
-      }
-
-      this.logger.debug('Updating trial entity');
-      const updatedTrial = new Trial({
-        id: existingTrial.id,
-        createdAt: existingTrial.createdAt,
-        updatedAt: new Date(),
-        orgId: existingTrial.orgId,
-        messagesSent:
-          command.messagesSent !== undefined
-            ? command.messagesSent
-            : existingTrial.messagesSent,
-        maxMessages:
-          command.maxMessages !== undefined
-            ? command.maxMessages
-            : existingTrial.maxMessages,
-      });
-
-      this.logger.debug('Saving updated trial to repository');
-      const savedTrial = await this.trialRepository.update(updatedTrial);
-
-      if (!savedTrial) {
-        this.logger.error('Failed to update trial in repository', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialUpdateFailedError(
-          command.orgId,
-          'Repository operation failed',
-        );
-      }
-
-      this.logger.log('Trial updated successfully', {
-        trialId: savedTrial.id,
-        orgId: savedTrial.orgId,
-        maxMessages: savedTrial.maxMessages,
-        messagesSent: savedTrial.messagesSent,
-      });
-
-      return savedTrial;
+      this.ensureSuperAdmin(command.orgId);
+      const existingTrial = await this.findTrial(command.orgId);
+      return await this.updateTrial(command, existingTrial);
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
 
-      this.logger.error('Trial update failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: command.orgId },
+        'Trial update failed',
+      );
 
       throw new UnexpectedTrialError(
         command.orgId,
@@ -103,5 +44,66 @@ export class UpdateTrialUseCase {
         { ...(error instanceof Error && { originalError: error.message }) },
       );
     }
+  }
+
+  private ensureSuperAdmin(orgId: UpdateTrialCommand['orgId']): void {
+    const systemRole = this.contextService.get<SystemRole>('systemRole');
+    if (systemRole !== SystemRole.SUPER_ADMIN) {
+      throw new UnauthorizedAccessError({ orgId, systemRole });
+    }
+  }
+
+  private async findTrial(orgId: UpdateTrialCommand['orgId']): Promise<Trial> {
+    const trial = await this.trialRepository.findByOrgId(orgId);
+    if (!trial) {
+      this.logger.warn({ orgId }, 'Trial not found for organization');
+      throw new TrialNotFoundError(orgId);
+    }
+    return trial;
+  }
+
+  private async updateTrial(
+    command: UpdateTrialCommand,
+    existingTrial: Trial,
+  ): Promise<Trial> {
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        maxMessages: command.maxMessages,
+        messagesSent: command.messagesSent,
+      },
+      'Updating trial for organization',
+    );
+    const updatedTrial = new Trial({
+      id: existingTrial.id,
+      createdAt: existingTrial.createdAt,
+      updatedAt: new Date(),
+      orgId: existingTrial.orgId,
+      messagesSent: command.messagesSent ?? existingTrial.messagesSent,
+      maxMessages: command.maxMessages ?? existingTrial.maxMessages,
+    });
+    const savedTrial = await this.trialRepository.update(updatedTrial);
+    // Persistence implementations are guarded even when their port types are non-null.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!savedTrial) {
+      this.logger.error(
+        { orgId: command.orgId },
+        'Failed to update trial in repository',
+      );
+      throw new TrialUpdateFailedError(
+        command.orgId,
+        'Repository operation failed',
+      );
+    }
+    this.logger.info(
+      {
+        trialId: savedTrial.id,
+        orgId: savedTrial.orgId,
+        maxMessages: savedTrial.maxMessages,
+        messagesSent: savedTrial.messagesSent,
+      },
+      'Trial updated successfully',
+    );
+    return savedTrial;
   }
 }

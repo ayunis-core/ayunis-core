@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CleanupBudgetAlertNotificationsUseCase } from '../use-cases/cleanup-budget-alert-notifications/cleanup-budget-alert-notifications.use-case';
@@ -13,6 +15,10 @@ describe('BudgetAlertCleanupTask', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BudgetAlertCleanupTask,
+        {
+          provide: getLoggerToken(BudgetAlertCleanupTask.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: CleanupBudgetAlertNotificationsUseCase,
           useValue: cleanup,

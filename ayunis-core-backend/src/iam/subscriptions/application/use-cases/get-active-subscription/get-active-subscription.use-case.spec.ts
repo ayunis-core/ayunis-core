@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import { GetActiveSubscriptionUseCase } from './get-active-subscription.use-case';
@@ -79,6 +80,10 @@ describe('GetActiveSubscriptionUseCase', () => {
       providers: [
         GetActiveSubscriptionUseCase,
         {
+          provide: getLoggerToken(GetActiveSubscriptionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SubscriptionRepository,
           useValue: { findByOrgId: jest.fn() },
         },
@@ -102,11 +107,6 @@ describe('GetActiveSubscriptionUseCase', () => {
     getInvitesByOrgUseCase = module.get(GetInvitesByOrgUseCase);
     findUsersByOrgIdUseCase = module.get(FindUsersByOrgIdUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   afterEach(() => {

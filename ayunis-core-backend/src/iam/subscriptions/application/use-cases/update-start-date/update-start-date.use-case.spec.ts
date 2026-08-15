@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UpdateStartDateUseCase } from './update-start-date.use-case';
 import { UpdateStartDateCommand } from './update-start-date.command';
@@ -74,6 +75,10 @@ describe('UpdateStartDateUseCase', () => {
       providers: [
         UpdateStartDateUseCase,
         {
+          provide: getLoggerToken(UpdateStartDateUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SubscriptionRepository,
           useValue: {
             findLatestByOrgId: jest.fn(),
@@ -90,11 +95,6 @@ describe('UpdateStartDateUseCase', () => {
     useCase = module.get(UpdateStartDateUseCase);
     subscriptionRepository = module.get(SubscriptionRepository);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   beforeEach(() => {

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
@@ -21,9 +22,9 @@ import { SubscriptionBillingInfoMapper } from './mappers/subscription-billing-in
 
 @Injectable()
 export class LocalSubscriptionsRepository extends SubscriptionRepository {
-  private readonly logger = new Logger(LocalSubscriptionsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalSubscriptionsRepository.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionMapper: SubscriptionMapper,
     private readonly subscriptionBillingInfoMapper: SubscriptionBillingInfoMapper,
     private readonly dataSource: DataSource,
@@ -73,7 +74,10 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
 
       return records.map((record) => this.subscriptionMapper.toDomain(record));
     } catch (error) {
-      this.logger.error(`Failed to find subscription by orgId ${orgId}`, error);
+      this.logger.error(
+        { err: error as Error, orgId },
+        'Failed to find subscription by organization ID',
+      );
       throw error;
     }
   }
@@ -89,8 +93,8 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       return record ? this.subscriptionMapper.toDomain(record) : null;
     } catch (error) {
       this.logger.error(
-        `Failed to find latest subscription by orgId ${orgId}`,
-        error,
+        { err: error as Error, orgId },
+        'Failed to find latest subscription by organization ID',
       );
       throw error;
     }
@@ -101,7 +105,10 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       const records = await this.subscriptions.find();
       return records.map((record) => this.subscriptionMapper.toDomain(record));
     } catch (error) {
-      this.logger.error(`Failed to find all subscriptions`, error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to find all subscriptions',
+      );
       throw error;
     }
   }
@@ -121,8 +128,8 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       return rows.map((row) => row.orgId);
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Failed to find orgs with active usage-based subscriptions',
-        error,
       );
       throw error;
     }
@@ -138,12 +145,15 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         this.insertSubscriptionWithBilling(manager, record),
       );
 
-      this.logger.log(`Created subscription with id ${subscription.id}`);
+      this.logger.info(
+        { subscriptionId: subscription.id },
+        'Created subscription',
+      );
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
-        `Failed to create subscription with id ${subscription.id}`,
-        error,
+        { err: error as Error, subscriptionId: subscription.id },
+        'Failed to create subscription',
       );
       throw error;
     }
@@ -172,14 +182,19 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         await this.insertSubscriptionWithBilling(manager, record);
       });
 
-      this.logger.log(
-        `Replaced subscription ${oldSubscriptionId} (${disposition}) with ${newSubscription.id}`,
+      this.logger.info(
+        {
+          oldSubscriptionId,
+          disposition,
+          newSubscriptionId: newSubscription.id,
+        },
+        'Replaced subscription',
       );
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
-        `Failed to replace subscription ${oldSubscriptionId}`,
-        error,
+        { err: error as Error, oldSubscriptionId },
+        'Failed to replace subscription',
       );
       throw error;
     }
@@ -202,12 +217,15 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     try {
       const record = this.subscriptionMapper.toRecord(subscription);
       await this.subscriptions.save(record);
-      this.logger.log(`Updated subscription with id ${subscription.id}`);
+      this.logger.info(
+        { subscriptionId: subscription.id },
+        'Updated subscription',
+      );
       return this.subscriptionMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
-        `Failed to update subscription with id ${subscription.id}`,
-        error,
+        { err: error as Error, subscriptionId: subscription.id },
+        'Failed to update subscription',
       );
       throw error;
     }
@@ -239,14 +257,15 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
       }
 
       const updatedRecord = await this.subscriptions.save(record);
-      this.logger.log(
-        `Updated start date for subscription with id ${params.subscriptionId}`,
+      this.logger.info(
+        { subscriptionId: params.subscriptionId },
+        'Updated subscription start date',
       );
       return this.subscriptionMapper.toDomain(updatedRecord);
     } catch (error) {
       this.logger.error(
-        `Failed to update start date for subscription with id ${params.subscriptionId}`,
-        error,
+        { err: error as Error, subscriptionId: params.subscriptionId },
+        'Failed to update subscription start date',
       );
       throw error;
     }
@@ -262,14 +281,12 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
         subscriptionId,
       );
       await this.billingInfo.save(record);
-      this.logger.log(
-        `Updated billing info for subscription with id ${subscriptionId}`,
-      );
+      this.logger.info({ subscriptionId }, 'Updated subscription billing info');
       return this.subscriptionBillingInfoMapper.toDomain(record);
     } catch (error) {
       this.logger.error(
-        `Failed to update billing info for subscription with id ${subscriptionId}`,
-        error,
+        { err: error as Error, subscriptionId },
+        'Failed to update subscription billing info',
       );
       throw error;
     }
@@ -279,12 +296,18 @@ export class LocalSubscriptionsRepository extends SubscriptionRepository {
     try {
       const result = await this.subscriptions.delete(id);
       if (result.affected === 0) {
-        this.logger.warn(`No subscription found with id ${id} to delete`);
+        this.logger.warn(
+          { subscriptionId: id },
+          'No subscription found to delete',
+        );
       } else {
-        this.logger.log(`Deleted subscription with id ${id}`);
+        this.logger.info({ subscriptionId: id }, 'Deleted subscription');
       }
     } catch (error) {
-      this.logger.error(`Failed to delete subscription with id ${id}`, error);
+      this.logger.error(
+        { err: error as Error, subscriptionId: id },
+        'Failed to delete subscription',
+      );
       throw error;
     }
   }

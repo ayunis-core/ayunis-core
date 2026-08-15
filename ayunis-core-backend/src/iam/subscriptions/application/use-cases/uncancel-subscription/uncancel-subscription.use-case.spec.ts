@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { UncancelSubscriptionUseCase } from './uncancel-subscription.use-case';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
@@ -77,6 +78,10 @@ describe('UncancelSubscriptionUseCase', () => {
       providers: [
         UncancelSubscriptionUseCase,
         {
+          provide: getLoggerToken(UncancelSubscriptionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SubscriptionRepository,
           useValue: {
             findLatestByOrgId: jest.fn(),
@@ -98,11 +103,6 @@ describe('UncancelSubscriptionUseCase', () => {
     subscriptionRepository = module.get(SubscriptionRepository);
     contextService = module.get(ContextService);
     eventEmitter = module.get(EventEmitter2);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   beforeEach(() => {

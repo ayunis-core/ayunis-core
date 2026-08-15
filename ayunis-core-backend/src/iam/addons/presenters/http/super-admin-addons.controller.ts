@@ -4,11 +4,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Logger,
   Param,
   ParseEnumPipe,
   Post,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -36,9 +36,9 @@ import { AddonStatusResponseDto } from './dto/addon-status-response.dto';
 @Controller('super-admin/addons')
 @SystemRoles(SystemRole.SUPER_ADMIN)
 export class SuperAdminAddonsController {
-  private readonly logger = new Logger(SuperAdminAddonsController.name);
-
   constructor(
+    @InjectPinoLogger(SuperAdminAddonsController.name)
+    private readonly logger: PinoLogger,
     private readonly listOrgAddonsUseCase: ListOrgAddonsUseCase,
     private readonly activateAddonUseCase: ActivateAddonUseCase,
     private readonly deactivateAddonUseCase: DeactivateAddonUseCase,
@@ -52,7 +52,7 @@ export class SuperAdminAddonsController {
   @ApiResponse({ status: HttpStatus.OK, type: [AddonStatusResponseDto] })
   @ApiUnauthorizedResponse({ description: 'Not authorized as super admin' })
   async list(@Param('orgId') orgId: UUID): Promise<AddonStatusResponseDto[]> {
-    this.logger.log('list', { orgId });
+    this.logger.info({ orgId }, 'list');
 
     const statuses = await this.listOrgAddonsUseCase.execute(
       new ListOrgAddonsQuery(orgId),
@@ -72,7 +72,7 @@ export class SuperAdminAddonsController {
     @Param('type', new ParseEnumPipe(AddonType)) type: AddonType,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log('activate', { orgId, type });
+    this.logger.info({ orgId, type }, 'activate');
 
     await this.activateAddonUseCase.execute(
       new ActivateAddonCommand(orgId, type, userId),
@@ -94,7 +94,7 @@ export class SuperAdminAddonsController {
     @Param('type', new ParseEnumPipe(AddonType)) type: AddonType,
     @CurrentUser(UserProperty.ID) userId: UUID,
   ): Promise<void> {
-    this.logger.log('deactivate', { orgId, type });
+    this.logger.info({ orgId, type }, 'deactivate');
 
     await this.deactivateAddonUseCase.execute(
       new DeactivateAddonCommand(orgId, type, userId),

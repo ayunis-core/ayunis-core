@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -16,9 +17,9 @@ import { SetUserCreditLimitCommand } from './set-user-credit-limit.command';
 
 @Injectable()
 export class SetUserCreditLimitUseCase {
-  private readonly logger = new Logger(SetUserCreditLimitUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SetUserCreditLimitUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
@@ -36,11 +37,14 @@ export class SetUserCreditLimitUseCase {
       );
     }
 
-    this.logger.log('Setting user credit limit', {
-      orgId,
-      userId: command.userId,
-      monthlyCredits: command.monthlyCredits,
-    });
+    this.logger.info(
+      {
+        orgId,
+        userId: command.userId,
+        monthlyCredits: command.monthlyCredits,
+      },
+      'Setting user credit limit',
+    );
 
     try {
       const members = await this.findUsersByIdsUseCase.execute(
@@ -68,9 +72,10 @@ export class SetUserCreditLimitUseCase {
       return await this.creditLimitRepository.save(limit);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to set user credit limit', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Failed to set user credit limit',
+      );
       throw new UnexpectedCreditLimitError(error);
     }
   }

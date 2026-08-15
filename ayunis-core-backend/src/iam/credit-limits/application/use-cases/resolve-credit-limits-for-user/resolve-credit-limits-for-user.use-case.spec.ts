@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -35,6 +37,10 @@ describe('ResolveCreditLimitsForUserUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ResolveCreditLimitsForUserUseCase,
+        {
+          provide: getLoggerToken(ResolveCreditLimitsForUserUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: CreditLimitRepository, useValue: repository },
         { provide: FindTeamsByUserIdUseCase, useValue: findTeams },
       ],

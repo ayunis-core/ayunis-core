@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 
 import { OrgContextRunner } from 'src/common/context/services/org-context-runner.service';
@@ -15,10 +16,11 @@ import { EvaluateBudgetAlertsForOrgUseCase } from '../use-cases/evaluate-budget-
  */
 @Injectable()
 export class BudgetAlertEvaluator {
-  private readonly logger = new Logger(BudgetAlertEvaluator.name);
   private readonly inFlight = new Map<UUID, Promise<void>>();
 
   constructor(
+    @InjectPinoLogger(BudgetAlertEvaluator.name)
+    private readonly logger: PinoLogger,
     private readonly orgContextRunner: OrgContextRunner,
     private readonly evaluateBudgetAlertsForOrgUseCase: EvaluateBudgetAlertsForOrgUseCase,
   ) {}
@@ -38,7 +40,7 @@ export class BudgetAlertEvaluator {
 
   private async evaluateOrg(orgId: UUID): Promise<void> {
     try {
-      this.logger.debug('Evaluating budget alerts', { orgId });
+      this.logger.debug({ orgId }, 'Evaluating budget alerts');
 
       await this.orgContextRunner.runForOrg(orgId, () =>
         this.evaluateBudgetAlertsForOrgUseCase.execute(
@@ -46,10 +48,10 @@ export class BudgetAlertEvaluator {
         ),
       );
     } catch (error) {
-      this.logger.error('Failed to evaluate budget alerts', {
-        orgId,
-        stack: error instanceof Error ? error.stack : String(error),
-      });
+      this.logger.error(
+        { err: error as Error, orgId },
+        'Failed to evaluate budget alerts',
+      );
     }
   }
 }

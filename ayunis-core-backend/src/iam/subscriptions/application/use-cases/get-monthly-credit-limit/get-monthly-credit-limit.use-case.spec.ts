@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetMonthlyCreditLimitUseCase } from './get-monthly-credit-limit.use-case';
@@ -34,6 +36,10 @@ describe('GetMonthlyCreditLimitUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetMonthlyCreditLimitUseCase,
+        {
+          provide: getLoggerToken(GetMonthlyCreditLimitUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SubscriptionRepository,
           useValue: mockSubscriptionRepository,

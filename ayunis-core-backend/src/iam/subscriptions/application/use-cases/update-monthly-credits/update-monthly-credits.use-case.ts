@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateMonthlyCreditsCommand } from './update-monthly-credits.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -15,12 +16,13 @@ import { SubscriptionMonthlyCreditsUpdatedEvent } from '../../events/subscriptio
 import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import type { UsageBasedSubscription } from '../../../domain/usage-based-subscription.entity';
 
 @Injectable()
 export class UpdateMonthlyCreditsUseCase {
-  private readonly logger = new Logger(UpdateMonthlyCreditsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateMonthlyCreditsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
     private readonly eventEmitter: EventEmitter2,
@@ -28,11 +30,14 @@ export class UpdateMonthlyCreditsUseCase {
   ) {}
 
   async execute(command: UpdateMonthlyCreditsCommand): Promise<void> {
-    this.logger.log('Updating monthly credits of subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-      monthlyCredits: command.monthlyCredits,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        monthlyCredits: command.monthlyCredits,
+      },
+      'Updating monthly credits of subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -41,72 +46,84 @@ export class UpdateMonthlyCreditsUseCase {
         command.orgId,
       );
 
-      this.logger.debug('Validating monthly credits');
-      if (command.monthlyCredits < 0) {
-        this.logger.warn('Invalid monthly credits provided', {
-          monthlyCredits: command.monthlyCredits,
-        });
-        throw new InvalidSubscriptionDataError(
-          'Monthly credits must be 0 or greater',
-        );
-      }
-
-      this.logger.debug('Finding subscription');
-      const { subscription } = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        }),
-      );
-
-      if (!isUsageBased(subscription)) {
-        throw new InvalidSubscriptionTypeError(
-          'Credit updates are only allowed for usage-based subscriptions',
-        );
-      }
-
+      this.validateMonthlyCredits(command.monthlyCredits);
+      const subscription = await this.findSubscription(command);
       const previousCredits = subscription.monthlyCredits;
       subscription.monthlyCredits = command.monthlyCredits;
       await this.subscriptionRepository.update(subscription);
-
-      this.logger.debug('Monthly credits updated successfully', {
-        subscriptionId: subscription.id,
-        orgId: command.orgId,
-        previousCredits,
-        newCredits: subscription.monthlyCredits,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME,
-          new SubscriptionMonthlyCreditsUpdatedEvent(
-            command.orgId,
-            toSubscriptionEventData(subscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error(
-            'Failed to emit SubscriptionMonthlyCreditsUpdatedEvent',
-            {
-              error: err instanceof Error ? err.message : 'Unknown error',
-              orgId: command.orgId,
-            },
-          );
-        });
+      this.logger.debug(
+        {
+          subscriptionId: subscription.id,
+          orgId: command.orgId,
+          previousCredits,
+          newCredits: subscription.monthlyCredits,
+        },
+        'Monthly credits updated successfully',
+      );
+      this.emitUpdatedEvent(command.orgId, subscription);
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
-      this.logger.error('Updating monthly credits failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-        monthlyCredits: command.monthlyCredits,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+          monthlyCredits: command.monthlyCredits,
+        },
+        'Updating monthly credits failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during monthly credits update',
       );
     }
+  }
+
+  private validateMonthlyCredits(monthlyCredits: number): void {
+    if (monthlyCredits < 0) {
+      this.logger.warn({ monthlyCredits }, 'Invalid monthly credits provided');
+      throw new InvalidSubscriptionDataError(
+        'Monthly credits must be 0 or greater',
+      );
+    }
+  }
+
+  private async findSubscription(
+    command: UpdateMonthlyCreditsCommand,
+  ): Promise<UsageBasedSubscription> {
+    const { subscription } = await this.getActiveSubscriptionUseCase.execute(
+      new GetActiveSubscriptionQuery({
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+      }),
+    );
+    if (!isUsageBased(subscription)) {
+      throw new InvalidSubscriptionTypeError(
+        'Credit updates are only allowed for usage-based subscriptions',
+      );
+    }
+    return subscription;
+  }
+
+  private emitUpdatedEvent(
+    orgId: UpdateMonthlyCreditsCommand['orgId'],
+    subscription: UsageBasedSubscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionMonthlyCreditsUpdatedEvent.EVENT_NAME,
+        new SubscriptionMonthlyCreditsUpdatedEvent(
+          orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId },
+          'Failed to emit SubscriptionMonthlyCreditsUpdatedEvent',
+        );
+      });
   }
 }

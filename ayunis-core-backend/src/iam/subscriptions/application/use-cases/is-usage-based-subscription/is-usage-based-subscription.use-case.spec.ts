@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { IsUsageBasedSubscriptionUseCase } from './is-usage-based-subscription.use-case';
@@ -34,6 +36,10 @@ describe('IsUsageBasedSubscriptionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IsUsageBasedSubscriptionUseCase,
+        {
+          provide: getLoggerToken(IsUsageBasedSubscriptionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         {
           provide: SubscriptionRepository,
           useValue: mockSubscriptionRepository,

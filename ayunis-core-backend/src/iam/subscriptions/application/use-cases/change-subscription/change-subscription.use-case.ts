@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChangeSubscriptionCommand } from './change-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -18,9 +19,9 @@ import { SubscriptionFactory } from '../../services/subscription-factory.service
 
 @Injectable()
 export class ChangeSubscriptionUseCase {
-  private readonly logger = new Logger(ChangeSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ChangeSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
@@ -28,11 +29,14 @@ export class ChangeSubscriptionUseCase {
   ) {}
 
   async execute(command: ChangeSubscriptionCommand): Promise<Subscription> {
-    this.logger.log('Changing subscription', {
-      orgId: command.orgId,
-      type: command.type,
-      disposition: command.disposition,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        type: command.type,
+        disposition: command.disposition,
+      },
+      'Changing subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -71,11 +75,14 @@ export class ChangeSubscriptionUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Subscription change failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        },
+        'Subscription change failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during subscription change',
         { error: error as Error },
@@ -92,7 +99,7 @@ export class ChangeSubscriptionUseCase {
     const subscription =
       await this.subscriptionRepository.findLatestByOrgId(orgId);
     if (!subscription) {
-      this.logger.warn('No subscription to change', { orgId });
+      this.logger.warn({ orgId }, 'No subscription to change');
       throw new SubscriptionNotFoundError(orgId);
     }
     return subscription;
@@ -123,9 +130,10 @@ export class ChangeSubscriptionUseCase {
 
   private safeEmit(eventName: string, event: object): void {
     this.eventEmitter.emitAsync(eventName, event).catch((err: unknown) => {
-      this.logger.error(`Failed to emit ${eventName}`, {
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
+      this.logger.error(
+        { err: err as Error, eventName },
+        'Failed to emit subscription event',
+      );
     });
   }
 }

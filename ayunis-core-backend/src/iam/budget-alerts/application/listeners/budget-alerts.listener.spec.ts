@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -41,9 +43,17 @@ describe('BudgetAlertsListener', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BudgetAlertsListener,
+        {
+          provide: getLoggerToken(BudgetAlertsListener.name),
+          useValue: createPinoLoggerMock(),
+        },
         // Real evaluator on purpose: the listener's debounce guarantees only
         // hold together with the evaluator's per-org serialization.
         BudgetAlertEvaluator,
+        {
+          provide: getLoggerToken(BudgetAlertEvaluator.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: OrgContextRunner, useValue: orgContextRunner },
         { provide: EvaluateBudgetAlertsForOrgUseCase, useValue: evaluateOrg },
       ],

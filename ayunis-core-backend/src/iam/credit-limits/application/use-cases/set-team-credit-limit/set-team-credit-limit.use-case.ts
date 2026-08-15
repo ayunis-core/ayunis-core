@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +16,9 @@ import { SetTeamCreditLimitCommand } from './set-team-credit-limit.command';
 
 @Injectable()
 export class SetTeamCreditLimitUseCase {
-  private readonly logger = new Logger(SetTeamCreditLimitUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SetTeamCreditLimitUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly getTeamUseCase: GetTeamUseCase,
@@ -35,11 +36,14 @@ export class SetTeamCreditLimitUseCase {
       );
     }
 
-    this.logger.log('Setting team credit limit', {
-      orgId,
-      teamId: command.teamId,
-      monthlyCredits: command.monthlyCredits,
-    });
+    this.logger.info(
+      {
+        orgId,
+        teamId: command.teamId,
+        monthlyCredits: command.monthlyCredits,
+      },
+      'Setting team credit limit',
+    );
 
     try {
       await this.getTeamUseCase.execute(new GetTeamQuery(command.teamId));
@@ -60,9 +64,10 @@ export class SetTeamCreditLimitUseCase {
       return await this.creditLimitRepository.save(limit);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to set team credit limit', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Failed to set team credit limit',
+      );
       throw new UnexpectedCreditLimitError(error);
     }
   }

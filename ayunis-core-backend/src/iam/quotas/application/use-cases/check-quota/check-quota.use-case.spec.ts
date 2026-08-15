@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -37,6 +39,10 @@ describe('CheckQuotaUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CheckQuotaUseCase,
+        {
+          provide: getLoggerToken(CheckQuotaUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: UsageQuotaRepositoryPort, useValue: usageQuotaRepository },
         { provide: QuotaLimitResolverService, useValue: limitResolver },
         {

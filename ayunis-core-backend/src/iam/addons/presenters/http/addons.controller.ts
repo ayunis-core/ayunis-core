@@ -1,4 +1,5 @@
-import { Controller, Get, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, HttpStatus } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -18,9 +19,11 @@ import { AddonStatusResponseDto } from './dto/addon-status-response.dto';
 @ApiTags('Addons')
 @Controller('addons')
 export class AddonsController {
-  private readonly logger = new Logger(AddonsController.name);
-
-  constructor(private readonly listOrgAddonsUseCase: ListOrgAddonsUseCase) {}
+  constructor(
+    @InjectPinoLogger(AddonsController.name)
+    private readonly logger: PinoLogger,
+    private readonly listOrgAddonsUseCase: ListOrgAddonsUseCase,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -32,7 +35,7 @@ export class AddonsController {
   async list(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<AddonStatusResponseDto[]> {
-    this.logger.log('list', { orgId });
+    this.logger.info({ orgId }, 'list');
 
     const statuses = await this.listOrgAddonsUseCase.execute(
       new ListOrgAddonsQuery(orgId),
