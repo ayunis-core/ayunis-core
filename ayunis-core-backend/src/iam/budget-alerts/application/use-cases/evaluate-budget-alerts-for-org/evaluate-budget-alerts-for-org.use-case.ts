@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnexpectedBudgetAlertError } from '../../budget-alerts.errors';
 import { GetBudgetAlertTargetsForOrgUseCase } from '../get-budget-alert-targets-for-org/get-budget-alert-targets-for-org.use-case';
@@ -15,16 +16,16 @@ import { EvaluateBudgetAlertsForOrgQuery } from './evaluate-budget-alerts-for-or
  */
 @Injectable()
 export class EvaluateBudgetAlertsForOrgUseCase {
-  private readonly logger = new Logger(EvaluateBudgetAlertsForOrgUseCase.name);
-
   constructor(
+    @InjectPinoLogger(EvaluateBudgetAlertsForOrgUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly getBudgetAlertTargetsForOrgUseCase: GetBudgetAlertTargetsForOrgUseCase,
     private readonly processBudgetAlertCrossingsUseCase: ProcessBudgetAlertCrossingsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedBudgetAlertError)
   async execute(query: EvaluateBudgetAlertsForOrgQuery): Promise<void> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.info({ orgId: query.orgId }, 'execute');
 
     const result = await this.getBudgetAlertTargetsForOrgUseCase.execute(
       new GetBudgetAlertTargetsForOrgQuery(query.orgId),
@@ -32,9 +33,12 @@ export class EvaluateBudgetAlertsForOrgUseCase {
     // Null means the org has no usage-based subscription — no budgets exist
     // that could cross a threshold, so there is nothing to evaluate.
     if (!result) {
-      this.logger.debug('Org has no usage-based subscription, skipping', {
-        orgId: query.orgId,
-      });
+      this.logger.debug(
+        {
+          orgId: query.orgId,
+        },
+        'Org has no usage-based subscription, skipping',
+      );
       return;
     }
 

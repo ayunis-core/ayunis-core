@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import type { TeamCreditLimitOverviewItem } from './team-credit-limit.view';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -15,9 +16,9 @@ import { GetTeamCreditLimitsOverviewQuery } from './get-team-credit-limits-overv
 
 @Injectable()
 export class GetTeamCreditLimitsOverviewUseCase {
-  private readonly logger = new Logger(GetTeamCreditLimitsOverviewUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetTeamCreditLimitsOverviewUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly listTeamsUseCase: ListTeamsUseCase,
@@ -33,7 +34,7 @@ export class GetTeamCreditLimitsOverviewUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('Listing team credit limits', { orgId });
+    this.logger.info({ orgId }, 'Listing team credit limits');
 
     const limits = await this.creditLimitRepository.findTeamLimits(orgId);
     return this.enrich(orgId, limits, query.since);

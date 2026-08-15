@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { isSeatBased } from 'src/iam/subscriptions/domain/subscription-type-guards';
@@ -14,19 +15,22 @@ import { UpdateStartDateCommand } from './update-start-date.command';
 
 @Injectable()
 export class UpdateStartDateUseCase {
-  private readonly logger = new Logger(UpdateStartDateUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateStartDateUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UpdateStartDateCommand): Promise<Subscription> {
-    this.logger.log('Updating subscription start date', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-      startsAt: command.startsAt.toISOString(),
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        startsAt: command.startsAt.toISOString(),
+      },
+      'Updating subscription start date',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -58,10 +62,10 @@ export class UpdateStartDateUseCase {
         throw error;
       }
 
-      this.logger.error('Error updating subscription start date', {
-        error: error as Error,
-        orgId: command.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: command.orgId },
+        'Error updating subscription start date',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during subscription start date update',
         { error },

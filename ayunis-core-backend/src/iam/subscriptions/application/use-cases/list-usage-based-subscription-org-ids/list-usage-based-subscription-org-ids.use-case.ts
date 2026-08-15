@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -10,16 +11,14 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class ListUsageBasedSubscriptionOrgIdsUseCase {
-  private readonly logger = new Logger(
-    ListUsageBasedSubscriptionOrgIdsUseCase.name,
-  );
-
   constructor(
+    @InjectPinoLogger(ListUsageBasedSubscriptionOrgIdsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
   async execute(): Promise<UUID[]> {
-    this.logger.log('execute');
+    this.logger.info('execute');
     try {
       return await this.subscriptionRepository.findActiveUsageBasedOrgIds(
         new Date(),
@@ -27,8 +26,8 @@ export class ListUsageBasedSubscriptionOrgIdsUseCase {
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(
+        { err: error as Error },
         'Failed to list orgs with usage-based subscriptions',
-        error,
       );
       throw new UnexpectedSubscriptionError((error as Error).message);
     }

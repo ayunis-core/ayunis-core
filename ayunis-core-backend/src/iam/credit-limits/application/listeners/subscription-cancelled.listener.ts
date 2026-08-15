@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import { SubscriptionCancelledEvent } from 'src/iam/subscriptions/application/events/subscription-cancelled.event';
 import { SubscriptionType } from 'src/iam/subscriptions/domain/value-objects/subscription-type.enum';
@@ -13,9 +14,9 @@ import { RemoveOrgCreditLimitsCommand } from '../use-cases/remove-org-credit-lim
  */
 @Injectable()
 export class SubscriptionCancelledListener {
-  private readonly logger = new Logger(SubscriptionCancelledListener.name);
-
   constructor(
+    @InjectPinoLogger(SubscriptionCancelledListener.name)
+    private readonly logger: PinoLogger,
     private readonly removeOrgCreditLimitsUseCase: RemoveOrgCreditLimitsUseCase,
   ) {}
 
@@ -27,9 +28,12 @@ export class SubscriptionCancelledListener {
       return;
     }
 
-    this.logger.log('Clearing credit limits after usage-based cancellation', {
-      orgId: event.orgId,
-    });
+    this.logger.info(
+      {
+        orgId: event.orgId,
+      },
+      'Clearing credit limits after usage-based cancellation',
+    );
 
     await this.removeOrgCreditLimitsUseCase.execute(
       new RemoveOrgCreditLimitsCommand(event.orgId),

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { OrgAddon } from 'src/iam/addons/domain/org-addon.entity';
@@ -9,18 +10,21 @@ import { ActivateAddonCommand } from './activate-addon.command';
 
 @Injectable()
 export class ActivateAddonUseCase {
-  private readonly logger = new Logger(ActivateAddonUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ActivateAddonUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly orgAddonRepository: OrgAddonRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: ActivateAddonCommand): Promise<void> {
-    this.logger.log('Activating addon', {
-      orgId: command.orgId,
-      type: command.type,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        type: command.type,
+      },
+      'Activating addon',
+    );
 
     try {
       const existing = await this.orgAddonRepository.findByOrgAndType(
@@ -48,15 +52,14 @@ export class ActivateAddonUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit AddonActivatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-            type: command.type,
-          });
+          this.logger.error(
+            { err: err as Error, orgId: command.orgId, type: command.type },
+            'Failed to emit AddonActivatedEvent',
+          );
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error activating addon', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error activating addon');
       throw new UnexpectedAddonError('activate', { error: error as Error });
     }
   }

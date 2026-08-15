@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CreditLimitRepository } from '../../ports/credit-limit.repository';
 import { UnexpectedCreditLimitError } from '../../credit-limits.errors';
@@ -11,22 +12,28 @@ import { RemoveOrgCreditLimitsCommand } from './remove-org-credit-limits.command
  */
 @Injectable()
 export class RemoveOrgCreditLimitsUseCase {
-  private readonly logger = new Logger(RemoveOrgCreditLimitsUseCase.name);
-
-  constructor(private readonly creditLimitRepository: CreditLimitRepository) {}
+  constructor(
+    @InjectPinoLogger(RemoveOrgCreditLimitsUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly creditLimitRepository: CreditLimitRepository,
+  ) {}
 
   async execute(command: RemoveOrgCreditLimitsCommand): Promise<void> {
-    this.logger.log('Removing all credit limits for org', {
-      orgId: command.orgId,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+      },
+      'Removing all credit limits for org',
+    );
 
     try {
       await this.creditLimitRepository.deleteByOrg(command.orgId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to remove org credit limits', {
-        error: error as Error,
-      });
+      this.logger.error(
+        { err: error as Error },
+        'Failed to remove org credit limits',
+      );
       throw new UnexpectedCreditLimitError(error);
     }
   }

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Trial } from 'src/iam/trials/domain/trial.entity';
 import { TrialRepository } from '../../ports/trial.repository';
 import { CreateTrialCommand } from './create-trial.command';
@@ -11,70 +12,35 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class CreateTrialUseCase {
-  private readonly logger = new Logger(CreateTrialUseCase.name);
-
-  constructor(private readonly trialRepository: TrialRepository) {}
+  constructor(
+    @InjectPinoLogger(CreateTrialUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly trialRepository: TrialRepository,
+  ) {}
 
   async execute(command: CreateTrialCommand): Promise<Trial> {
-    this.logger.log('Creating trial for organization', {
-      orgId: command.orgId,
-      maxMessages: command.maxMessages,
-    });
-
-    try {
-      this.logger.debug('Checking if trial already exists');
-      const existingTrial = await this.trialRepository.findByOrgId(
-        command.orgId,
-      );
-
-      if (existingTrial) {
-        this.logger.warn('Trial already exists for organization', {
-          orgId: command.orgId,
-          existingTrialId: existingTrial.id,
-        });
-
-        throw new TrialAlreadyExistsError(command.orgId, {
-          existingTrialId: existingTrial.id,
-        });
-      }
-
-      this.logger.debug('Creating trial entity');
-      const trial = new Trial({
+    this.logger.info(
+      {
         orgId: command.orgId,
         maxMessages: command.maxMessages,
-        messagesSent: 0,
-      });
+      },
+      'Creating trial for organization',
+    );
 
-      this.logger.debug('Saving trial to repository');
-      const createdTrial = await this.trialRepository.create(trial);
-
-      if (!createdTrial) {
-        this.logger.error('Failed to create trial in repository', {
-          orgId: command.orgId,
-        });
-
-        throw new TrialCreationFailedError(
-          command.orgId,
-          'Repository operation failed',
-        );
-      }
-
-      this.logger.log('Trial created successfully', {
-        trialId: createdTrial.id,
-        orgId: createdTrial.orgId,
-        maxMessages: createdTrial.maxMessages,
-        messagesSent: createdTrial.messagesSent,
-      });
-
-      return createdTrial;
+    try {
+      await this.ensureTrialDoesNotExist(command.orgId);
+      return await this.createTrial(command);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
 
-      this.logger.error('Trial creation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        maxMessages: command.maxMessages,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          maxMessages: command.maxMessages,
+        },
+        'Trial creation failed',
+      );
 
       throw new UnexpectedTrialError(
         command.orgId,
@@ -82,5 +48,51 @@ export class CreateTrialUseCase {
         { ...(error instanceof Error && { originalError: error.message }) },
       );
     }
+  }
+
+  private async ensureTrialDoesNotExist(
+    orgId: CreateTrialCommand['orgId'],
+  ): Promise<void> {
+    const existingTrial = await this.trialRepository.findByOrgId(orgId);
+    if (existingTrial) {
+      this.logger.warn(
+        { orgId, existingTrialId: existingTrial.id },
+        'Trial already exists for organization',
+      );
+      throw new TrialAlreadyExistsError(orgId, {
+        existingTrialId: existingTrial.id,
+      });
+    }
+  }
+
+  private async createTrial(command: CreateTrialCommand): Promise<Trial> {
+    const trial = new Trial({
+      orgId: command.orgId,
+      maxMessages: command.maxMessages,
+      messagesSent: 0,
+    });
+    const createdTrial = await this.trialRepository.create(trial);
+    // Persistence implementations are guarded even when their port types are non-null.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!createdTrial) {
+      this.logger.error(
+        { orgId: command.orgId },
+        'Failed to create trial in repository',
+      );
+      throw new TrialCreationFailedError(
+        command.orgId,
+        'Repository operation failed',
+      );
+    }
+    this.logger.info(
+      {
+        trialId: createdTrial.id,
+        orgId: createdTrial.orgId,
+        maxMessages: createdTrial.maxMessages,
+        messagesSent: createdTrial.messagesSent,
+      },
+      'Trial created successfully',
+    );
+    return createdTrial;
   }
 }

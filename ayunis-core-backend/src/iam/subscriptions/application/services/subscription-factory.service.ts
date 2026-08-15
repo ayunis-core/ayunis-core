@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
 import { Subscription } from 'src/iam/subscriptions/domain/subscription.entity';
@@ -50,9 +51,9 @@ export interface BuildSubscriptionParams {
  */
 @Injectable()
 export class SubscriptionFactory {
-  private readonly logger = new Logger(SubscriptionFactory.name);
-
   constructor(
+    @InjectPinoLogger(SubscriptionFactory.name)
+    private readonly logger: PinoLogger,
     private readonly configService: ConfigService,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
@@ -73,10 +74,13 @@ export class SubscriptionFactory {
       );
     }
 
-    this.logger.log('Building usage-based subscription', {
-      orgId: params.orgId,
-      monthlyCredits: params.monthlyCredits,
-    });
+    this.logger.info(
+      {
+        orgId: params.orgId,
+        monthlyCredits: params.monthlyCredits,
+      },
+      'Building usage-based subscription',
+    );
 
     return new UsageBasedSubscription({
       orgId: params.orgId,
@@ -91,10 +95,13 @@ export class SubscriptionFactory {
   ): Promise<SeatBasedSubscription> {
     const noOfSeats = params.noOfSeats ?? 1;
 
-    this.logger.log('Building seat-based subscription', {
-      orgId: params.orgId,
-      noOfSeats,
-    });
+    this.logger.info(
+      {
+        orgId: params.orgId,
+        noOfSeats,
+      },
+      'Building seat-based subscription',
+    );
 
     if (noOfSeats <= 0) {
       throw new InvalidSubscriptionDataError(
@@ -152,10 +159,13 @@ export class SubscriptionFactory {
       openInvitesCount + (usersResult.total ?? usersResult.data.length) >
       noOfSeats
     ) {
-      this.logger.warn('Too many used seats', {
-        orgId,
-        openInvites: openInvitesCount,
-      });
+      this.logger.warn(
+        {
+          orgId,
+          openInvites: openInvitesCount,
+        },
+        'Too many used seats',
+      );
       throw new TooManyUsedSeatsError({
         orgId,
         openInvites: openInvitesCount,

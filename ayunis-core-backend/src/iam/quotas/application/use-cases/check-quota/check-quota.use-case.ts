@@ -1,49 +1,46 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UsageQuotaRepositoryPort } from '../../ports/usage-quota.repository.port';
 import { QuotaLimitResolverService } from '../../services/quota-limit-resolver.service';
 import { CheckQuotaQuery } from './check-quota.query';
 import { QuotaExceededError } from '../../quotas.errors';
 import { IsUsageBasedSubscriptionUseCase } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.use-case';
 import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application/use-cases/is-usage-based-subscription/is-usage-based-subscription.query';
+import type { UsageQuota } from '../../../domain/usage-quota.entity';
 
 @Injectable()
 export class CheckQuotaUseCase {
-  private readonly logger = new Logger(CheckQuotaUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CheckQuotaUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly usageQuotaRepository: UsageQuotaRepositoryPort,
     private readonly limitResolver: QuotaLimitResolverService,
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
   ) {}
 
   async execute(query: CheckQuotaQuery): Promise<void> {
-    // Fair-use is the protection of last resort for flat-fee plans.
-    // Usage-based orgs already self-limit via their purchased credit budget
-    // (enforced by CreditBudgetGuardService), so applying fair-use on top
-    // would double-cap them.
     const isUsageBased = await this.isUsageBasedSubscriptionUseCase.execute(
       new IsUsageBasedSubscriptionQuery(query.orgId),
     );
     if (isUsageBased) {
-      this.logger.debug('Skipping fair-use quota for usage-based org', {
-        orgId: query.orgId,
-        quotaType: query.quotaType,
-      });
+      this.logger.debug(
+        { orgId: query.orgId, quotaType: query.quotaType },
+        'Skipping fair-use quota for usage-based org',
+      );
       return;
     }
 
+    await this.checkAndIncrement(query);
+  }
+
+  private async checkAndIncrement(query: CheckQuotaQuery): Promise<void> {
     const { limit, windowMs } = await this.limitResolver.resolve(
       query.quotaType,
     );
-
-    this.logger.debug('Checking quota', {
-      userId: query.userId,
-      quotaType: query.quotaType,
-      limit,
-    });
-
-    // Use checkAndIncrement which atomically checks limit BEFORE incrementing
-    // This prevents counter inflation on rejected requests
+    this.logger.debug(
+      { userId: query.userId, quotaType: query.quotaType, limit },
+      'Checking quota',
+    );
     const { quota, exceeded } =
       await this.usageQuotaRepository.checkAndIncrement(
         query.userId,
@@ -53,31 +50,43 @@ export class CheckQuotaUseCase {
       );
 
     if (exceeded) {
-      const retryAfterSeconds = Math.ceil(quota.getRemainingTime() / 1000);
+      this.throwQuotaExceeded(query, quota, limit, windowMs);
+    }
+    this.logger.debug(
+      {
+        userId: query.userId,
+        quotaType: query.quotaType,
+        count: quota.count,
+        limit,
+        remaining: limit - quota.count,
+      },
+      'Quota check passed',
+    );
+  }
 
-      this.logger.warn('Quota exceeded', {
+  private throwQuotaExceeded(
+    query: CheckQuotaQuery,
+    quota: UsageQuota,
+    limit: number,
+    windowMs: number,
+  ): never {
+    const retryAfterSeconds = Math.ceil(quota.getRemainingTime() / 1000);
+    this.logger.warn(
+      {
         userId: query.userId,
         quotaType: query.quotaType,
         count: quota.count,
         limit,
         retryAfterSeconds,
-      });
-
-      throw new QuotaExceededError(
-        query.quotaType,
-        limit,
-        windowMs,
-        retryAfterSeconds,
-        { currentCount: quota.count },
-      );
-    }
-
-    this.logger.debug('Quota check passed', {
-      userId: query.userId,
-      quotaType: query.quotaType,
-      count: quota.count,
+      },
+      'Quota exceeded',
+    );
+    throw new QuotaExceededError(
+      query.quotaType,
       limit,
-      remaining: limit - quota.count,
-    });
+      windowMs,
+      retryAfterSeconds,
+      { currentCount: quota.count },
+    );
   }
 }

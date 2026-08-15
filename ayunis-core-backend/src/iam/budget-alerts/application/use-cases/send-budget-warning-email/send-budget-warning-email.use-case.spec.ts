@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -37,6 +39,10 @@ describe('SendBudgetWarningEmailUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SendBudgetWarningEmailUseCase,
+        {
+          provide: getLoggerToken(SendBudgetWarningEmailUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: SendEmailUseCase, useValue: sendEmail },
         { provide: RenderTemplateUseCase, useValue: renderTemplate },
         { provide: ConfigService, useValue: config },

@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateSeatsCommand } from './update-seats.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import {
-  SubscriptionNotFoundError,
   InvalidSubscriptionDataError,
   TooManyUsedSeatsError,
   UnexpectedSubscriptionError,
@@ -21,12 +21,13 @@ import { SubscriptionSeatsUpdatedEvent } from '../../events/subscription-seats-u
 import { toSubscriptionEventData } from '../../mappers/to-subscription-event-data.mapper';
 import { ContextService } from 'src/common/context/services/context.service';
 import { validateSubscriptionAccess } from '../../util/validate-subscription-access';
+import type { SeatBasedSubscription } from '../../../domain/seat-based-subscription.entity';
 
 @Injectable()
 export class UpdateSeatsUseCase {
-  private readonly logger = new Logger(UpdateSeatsUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UpdateSeatsUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly findUsersByOrgIdUseCase: FindUsersByOrgIdUseCase,
     private readonly getInvitesByOrgUseCase: GetInvitesByOrgUseCase,
@@ -36,11 +37,14 @@ export class UpdateSeatsUseCase {
   ) {}
 
   async execute(command: UpdateSeatsCommand): Promise<void> {
-    this.logger.log('Adding seats to subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-      noOfSeats: command.noOfSeats,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        noOfSeats: command.noOfSeats,
+      },
+      'Adding seats to subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -48,110 +52,117 @@ export class UpdateSeatsUseCase {
         command.requestingUserId,
         command.orgId,
       );
-      this.logger.debug('Validating seat count');
-      if (command.noOfSeats <= 0) {
-        this.logger.warn('Invalid number of seats provided', {
-          noOfSeats: command.noOfSeats,
-        });
-        throw new InvalidSubscriptionDataError(
-          'Number of seats must be greater than 0',
-        );
-      }
-
-      this.logger.debug('Finding subscription');
-      const result = await this.getActiveSubscriptionUseCase.execute(
-        new GetActiveSubscriptionQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-        }),
-      );
-      if (!result) {
-        this.logger.warn('Subscription not found', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionNotFoundError(command.orgId);
-      }
-      const subscription = result.subscription;
-
-      if (!isSeatBased(subscription)) {
-        throw new InvalidSubscriptionTypeError(
-          'Seat updates are only allowed for seat-based subscriptions',
-        );
-      }
-
-      const usersResult = await this.findUsersByOrgIdUseCase.execute(
-        new FindUsersByOrgIdQuery({
-          orgId: command.orgId,
-          pagination: { limit: 1000, offset: 0 },
-        }),
-      );
-      const openInvitesResult = await this.getInvitesByOrgUseCase.execute(
-        new GetInvitesByOrgQuery({
-          orgId: command.orgId,
-          requestingUserId: command.requestingUserId,
-          onlyOpen: true,
-        }),
-      );
-      const openInvitesCount =
-        openInvitesResult.total ?? openInvitesResult.data.length;
-      if (
-        command.noOfSeats <
-        (usersResult.total ?? usersResult.data.length) + openInvitesCount
-      ) {
-        this.logger.warn('Too many used seats', {
-          orgId: command.orgId,
-          openInvites: openInvitesCount,
-        });
-        throw new TooManyUsedSeatsError({
-          orgId: command.orgId,
-          openInvites: openInvitesCount,
-        });
-      }
-
-      this.logger.debug('Updating seats of subscription', {
-        currentSeats: subscription.noOfSeats,
-        newSeats: command.noOfSeats,
-      });
-
-      const previousSeats = subscription.noOfSeats;
-      subscription.noOfSeats = command.noOfSeats;
-      await this.subscriptionRepository.update(subscription);
-
-      this.logger.debug('Seats updated successfully', {
-        subscriptionId: subscription.id,
-        orgId: command.orgId,
-        previousSeats,
-        newSeats: subscription.noOfSeats,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionSeatsUpdatedEvent.EVENT_NAME,
-          new SubscriptionSeatsUpdatedEvent(
-            command.orgId,
-            toSubscriptionEventData(subscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionSeatsUpdatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
+      this.validateSeatCount(command.noOfSeats);
+      const subscription = await this.findSubscription(command);
+      await this.ensureEnoughSeats(command);
+      await this.updateSubscription(command, subscription);
     } catch (error) {
       if (error instanceof ApplicationError) {
         // Already logged and properly typed error, just rethrow
         throw error;
       }
-      this.logger.error('Adding seats failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-        noOfSeats: command.noOfSeats,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+          noOfSeats: command.noOfSeats,
+        },
+        'Adding seats failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during seat addition',
       );
     }
+  }
+
+  private validateSeatCount(noOfSeats: number): void {
+    if (noOfSeats <= 0) {
+      this.logger.warn({ noOfSeats }, 'Invalid number of seats provided');
+      throw new InvalidSubscriptionDataError(
+        'Number of seats must be greater than 0',
+      );
+    }
+  }
+
+  private async findSubscription(
+    command: UpdateSeatsCommand,
+  ): Promise<SeatBasedSubscription> {
+    const { subscription } = await this.getActiveSubscriptionUseCase.execute(
+      new GetActiveSubscriptionQuery({
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+      }),
+    );
+    if (!isSeatBased(subscription)) {
+      throw new InvalidSubscriptionTypeError(
+        'Seat updates are only allowed for seat-based subscriptions',
+      );
+    }
+    return subscription;
+  }
+
+  private async ensureEnoughSeats(command: UpdateSeatsCommand): Promise<void> {
+    const users = await this.findUsersByOrgIdUseCase.execute(
+      new FindUsersByOrgIdQuery({
+        orgId: command.orgId,
+        pagination: { limit: 1000, offset: 0 },
+      }),
+    );
+    const invites = await this.getInvitesByOrgUseCase.execute(
+      new GetInvitesByOrgQuery({
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+        onlyOpen: true,
+      }),
+    );
+    const openInvites = invites.total ?? invites.data.length;
+    const occupiedSeats = (users.total ?? users.data.length) + openInvites;
+    if (command.noOfSeats < occupiedSeats) {
+      this.logger.warn(
+        { orgId: command.orgId, openInvites },
+        'Too many used seats',
+      );
+      throw new TooManyUsedSeatsError({ orgId: command.orgId, openInvites });
+    }
+  }
+
+  private async updateSubscription(
+    command: UpdateSeatsCommand,
+    subscription: SeatBasedSubscription,
+  ): Promise<void> {
+    const previousSeats = subscription.noOfSeats;
+    subscription.noOfSeats = command.noOfSeats;
+    await this.subscriptionRepository.update(subscription);
+    this.logger.debug(
+      {
+        subscriptionId: subscription.id,
+        orgId: command.orgId,
+        previousSeats,
+        newSeats: subscription.noOfSeats,
+      },
+      'Seats updated successfully',
+    );
+    this.emitUpdatedEvent(command.orgId, subscription);
+  }
+
+  private emitUpdatedEvent(
+    orgId: UpdateSeatsCommand['orgId'],
+    subscription: SeatBasedSubscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionSeatsUpdatedEvent.EVENT_NAME,
+        new SubscriptionSeatsUpdatedEvent(
+          orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId },
+          'Failed to emit SubscriptionSeatsUpdatedEvent',
+        );
+      });
   }
 }

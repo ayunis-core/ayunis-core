@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { UpdateMonthlyCreditsUseCase } from './update-monthly-credits.use-case';
@@ -76,6 +77,10 @@ describe('UpdateMonthlyCreditsUseCase', () => {
       providers: [
         UpdateMonthlyCreditsUseCase,
         {
+          provide: getLoggerToken(UpdateMonthlyCreditsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SubscriptionRepository,
           useValue: { update: jest.fn() },
         },
@@ -98,11 +103,6 @@ describe('UpdateMonthlyCreditsUseCase', () => {
     subscriptionRepository = module.get(SubscriptionRepository);
     getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
     contextService = module.get(ContextService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
   });
 
   beforeEach(() => {

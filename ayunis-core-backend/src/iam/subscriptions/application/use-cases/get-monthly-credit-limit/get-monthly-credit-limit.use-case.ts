@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetMonthlyCreditLimitQuery } from './get-monthly-credit-limit.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { isActive } from '../../util/is-active';
@@ -12,9 +13,9 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class GetMonthlyCreditLimitUseCase {
-  private readonly logger = new Logger(GetMonthlyCreditLimitUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetMonthlyCreditLimitUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
@@ -30,9 +31,12 @@ export class GetMonthlyCreditLimitUseCase {
         .find(isUsageBased);
 
       if (!usageSubscription) {
-        this.logger.debug('No active usage-based subscription found', {
-          orgId: query.orgId,
-        });
+        this.logger.debug(
+          {
+            orgId: query.orgId,
+          },
+          'No active usage-based subscription found',
+        );
         return { monthlyCredits: null, startsAt: null };
       }
 
@@ -42,7 +46,10 @@ export class GetMonthlyCreditLimitUseCase {
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get monthly credit limit', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to get monthly credit limit',
+      );
       throw new UnexpectedSubscriptionError((error as Error).message, {
         orgId: query.orgId,
       });

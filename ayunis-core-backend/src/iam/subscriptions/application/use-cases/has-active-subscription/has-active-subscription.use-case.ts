@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
 import { HasActiveSubscriptionResult } from './has-active-subscription.result';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -8,9 +9,9 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class HasActiveSubscriptionUseCase {
-  private readonly logger = new Logger(HasActiveSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(HasActiveSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly configService: ConfigService,
   ) {}
@@ -26,9 +27,12 @@ export class HasActiveSubscriptionUseCase {
       return { hasActiveSubscription: true, subscriptionType: null };
     }
 
-    this.logger.log('Checking active subscription', {
-      orgId: query.orgId,
-    });
+    this.logger.info(
+      {
+        orgId: query.orgId,
+      },
+      'Checking active subscription',
+    );
 
     try {
       this.logger.debug('Finding subscription');
@@ -36,9 +40,12 @@ export class HasActiveSubscriptionUseCase {
         query.orgId,
       );
       if (subscriptions.length === 0) {
-        this.logger.debug('No subscription found for organization', {
-          orgId: query.orgId,
-        });
+        this.logger.debug(
+          {
+            orgId: query.orgId,
+          },
+          'No subscription found for organization',
+        );
         return { hasActiveSubscription: false, subscriptionType: null };
       }
 
@@ -56,10 +63,10 @@ export class HasActiveSubscriptionUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Checking active subscription failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: query.orgId,
-      });
+      this.logger.error(
+        { err: error as Error, orgId: query.orgId },
+        'Checking active subscription failed',
+      );
       throw error;
     }
   }

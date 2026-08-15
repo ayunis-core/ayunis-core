@@ -1,6 +1,8 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import type { PinoLogger } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { HasActiveSubscriptionUseCase } from './has-active-subscription.use-case';
 import { HasActiveSubscriptionQuery } from './has-active-subscription.query';
@@ -17,6 +19,7 @@ describe('HasActiveSubscriptionUseCase', () => {
   let subscriptionRepository: jest.Mocked<SubscriptionRepository>;
   let configService: jest.Mocked<ConfigService>;
   let mockIsActive: jest.MockedFunction<typeof isActive>;
+  let logger: jest.Mocked<PinoLogger>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as any;
 
@@ -36,6 +39,10 @@ describe('HasActiveSubscriptionUseCase', () => {
       providers: [
         HasActiveSubscriptionUseCase,
         {
+          provide: getLoggerToken(HasActiveSubscriptionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: SubscriptionRepository,
           useValue: mockSubscriptionRepository,
         },
@@ -49,11 +56,7 @@ describe('HasActiveSubscriptionUseCase', () => {
     subscriptionRepository = module.get(SubscriptionRepository);
     configService = module.get(ConfigService);
     mockIsActive = isActive as jest.MockedFunction<typeof isActive>;
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger = module.get(getLoggerToken(HasActiveSubscriptionUseCase.name));
   });
 
   afterEach(() => {
@@ -161,15 +164,14 @@ describe('HasActiveSubscriptionUseCase', () => {
       configService.get.mockReturnValue(false);
       subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
-      const logSpy = jest.spyOn(Logger.prototype, 'log');
-
       // Act
       await useCase.execute(query);
 
       // Assert
-      expect(logSpy).toHaveBeenCalledWith('Checking active subscription', {
-        orgId: query.orgId,
-      });
+      expect(logger.info).toHaveBeenCalledWith(
+        { orgId: query.orgId },
+        'Checking active subscription',
+      );
     });
 
     it('should log debug information when no subscriptions found', async () => {
@@ -178,18 +180,14 @@ describe('HasActiveSubscriptionUseCase', () => {
       configService.get.mockReturnValue(false);
       subscriptionRepository.findByOrgId.mockResolvedValue([]);
 
-      const debugSpy = jest.spyOn(Logger.prototype, 'debug');
-
       // Act
       await useCase.execute(query);
 
       // Assert
-      expect(debugSpy).toHaveBeenCalledWith('Finding subscription');
-      expect(debugSpy).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith('Finding subscription');
+      expect(logger.debug).toHaveBeenCalledWith(
+        { orgId: mockOrgId },
         'No subscription found for organization',
-        {
-          orgId: mockOrgId,
-        },
       );
     });
 
@@ -219,19 +217,17 @@ describe('HasActiveSubscriptionUseCase', () => {
       const genericError = new Error('Database connection failed');
       subscriptionRepository.findByOrgId.mockRejectedValue(genericError);
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toThrow(
         'Database connection failed',
       );
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Checking active subscription failed',
+      expect(logger.error).toHaveBeenCalledWith(
         {
-          error: 'Database connection failed',
+          err: genericError,
           orgId: mockOrgId,
         },
+        'Checking active subscription failed',
       );
     });
 
@@ -295,17 +291,15 @@ describe('HasActiveSubscriptionUseCase', () => {
 
       subscriptionRepository.findByOrgId.mockRejectedValue('string error');
 
-      const errorSpy = jest.spyOn(Logger.prototype, 'error');
-
       // Act & Assert
       await expect(useCase.execute(query)).rejects.toBeDefined();
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Checking active subscription failed',
+      expect(logger.error).toHaveBeenCalledWith(
         {
-          error: 'Unknown error',
+          err: 'string error',
           orgId: mockOrgId,
         },
+        'Checking active subscription failed',
       );
     });
   });

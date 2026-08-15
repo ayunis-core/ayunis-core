@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { OnModuleDestroy } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { OnEvent } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 
@@ -38,10 +39,13 @@ interface CooldownState {
  */
 @Injectable()
 export class BudgetAlertsListener implements OnModuleDestroy {
-  private readonly logger = new Logger(BudgetAlertsListener.name);
   private readonly cooldowns = new Map<UUID, CooldownState>();
 
-  constructor(private readonly budgetAlertEvaluator: BudgetAlertEvaluator) {}
+  constructor(
+    @InjectPinoLogger(BudgetAlertsListener.name)
+    private readonly logger: PinoLogger,
+    private readonly budgetAlertEvaluator: BudgetAlertEvaluator,
+  ) {}
 
   onModuleDestroy(): void {
     for (const state of this.cooldowns.values()) {
@@ -65,9 +69,12 @@ export class BudgetAlertsListener implements OnModuleDestroy {
     }
 
     this.startCooldown(orgId);
-    this.logger.debug('Evaluating budget alerts after token consumption', {
-      orgId,
-    });
+    this.logger.debug(
+      {
+        orgId,
+      },
+      'Evaluating budget alerts after token consumption',
+    );
     await this.budgetAlertEvaluator.evaluate(orgId);
   }
 

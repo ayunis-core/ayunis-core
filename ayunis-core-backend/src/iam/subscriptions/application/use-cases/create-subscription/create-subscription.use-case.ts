@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateSubscriptionCommand } from './create-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -17,9 +18,9 @@ import { SubscriptionFactory } from '../../services/subscription-factory.service
 
 @Injectable()
 export class CreateSubscriptionUseCase {
-  private readonly logger = new Logger(CreateSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly subscriptionFactory: SubscriptionFactory,
     private readonly eventEmitter: EventEmitter2,
@@ -41,42 +42,54 @@ export class CreateSubscriptionUseCase {
       const createdSubscription =
         await this.subscriptionRepository.create(subscription);
 
-      this.logger.debug('Subscription created successfully', {
-        subscriptionId: createdSubscription.id,
-        orgId: command.orgId,
-        type: command.type,
-      });
+      this.logger.debug(
+        {
+          subscriptionId: createdSubscription.id,
+          orgId: command.orgId,
+          type: command.type,
+        },
+        'Subscription created successfully',
+      );
 
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionCreatedEvent.EVENT_NAME,
-          new SubscriptionCreatedEvent(
-            command.orgId,
-            toSubscriptionEventData(createdSubscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionCreatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
-
+      this.emitCreatedEvent(command, createdSubscription);
       return createdSubscription;
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Subscription creation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        },
+        'Subscription creation failed',
+      );
       throw new UnexpectedSubscriptionError(
         'Unexpected error during subscription creation',
         { error: error as Error },
       );
     }
+  }
+
+  private emitCreatedEvent(
+    command: CreateSubscriptionCommand,
+    subscription: Subscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionCreatedEvent.EVENT_NAME,
+        new SubscriptionCreatedEvent(
+          command.orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId: command.orgId },
+          'Failed to emit SubscriptionCreatedEvent',
+        );
+      });
   }
 
   private async ensureNoExistingSubscription(
@@ -85,9 +98,12 @@ export class CreateSubscriptionUseCase {
     const subscriptions = await this.subscriptionRepository.findByOrgId(orgId);
     const hasNonCancelled = subscriptions.some((s) => !s.cancelledAt);
     if (hasNonCancelled) {
-      this.logger.warn('Subscription already exists for organization', {
-        orgId,
-      });
+      this.logger.warn(
+        {
+          orgId,
+        },
+        'Subscription already exists for organization',
+      );
       throw new SubscriptionAlreadyExistsError(orgId);
     }
   }

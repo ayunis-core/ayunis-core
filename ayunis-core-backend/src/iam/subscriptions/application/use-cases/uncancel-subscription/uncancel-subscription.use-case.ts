@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UncancelSubscriptionCommand } from './uncancel-subscription.command';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
@@ -19,19 +20,22 @@ import type { Subscription } from 'src/iam/subscriptions/domain/subscription.ent
 
 @Injectable()
 export class UncancelSubscriptionUseCase {
-  private readonly logger = new Logger(UncancelSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(UncancelSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly contextService: ContextService,
   ) {}
 
   async execute(command: UncancelSubscriptionCommand): Promise<void> {
-    this.logger.log('Uncancelling subscription', {
-      orgId: command.orgId,
-      requestingUserId: command.requestingUserId,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        requestingUserId: command.requestingUserId,
+      },
+      'Uncancelling subscription',
+    );
 
     try {
       validateSubscriptionAccess(
@@ -40,68 +44,79 @@ export class UncancelSubscriptionUseCase {
         command.orgId,
       );
 
-      this.logger.debug('Finding subscription');
-      const subscription = await this.subscriptionRepository.findLatestByOrgId(
-        command.orgId,
-      );
-      if (!subscription) {
-        this.logger.warn('Subscription not found', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionNotFoundError(command.orgId);
-      }
-
-      this.logger.debug('Checking if subscription is cancelled');
-      if (!subscription.cancelledAt) {
-        this.logger.warn('Subscription is not cancelled', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionNotCancelledError(command.orgId);
-      }
-
-      this.logger.debug('Checking if subscription can still be uncancelled');
-      if (!this.canUncancel(subscription)) {
-        this.logger.warn('Subscription has expired and cannot be uncancelled', {
-          orgId: command.orgId,
-        });
-        throw new SubscriptionExpiredError(command.orgId);
-      }
-
+      const subscription = await this.findSubscription(command.orgId);
+      this.ensureCanUncancel(command.orgId, subscription);
       subscription.cancelledAt = null;
-
-      this.logger.debug('Updating subscription to uncancelled');
       await this.subscriptionRepository.update(subscription);
-
-      this.logger.debug('Subscription uncancelled successfully', {
-        subscriptionId: subscription.id,
-        orgId: command.orgId,
-      });
-
-      this.eventEmitter
-        .emitAsync(
-          SubscriptionUncancelledEvent.EVENT_NAME,
-          new SubscriptionUncancelledEvent(
-            command.orgId,
-            toSubscriptionEventData(subscription),
-          ),
-        )
-        .catch((err: unknown) => {
-          this.logger.error('Failed to emit SubscriptionUncancelledEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-          });
-        });
+      this.logger.debug(
+        { subscriptionId: subscription.id, orgId: command.orgId },
+        'Subscription uncancelled successfully',
+      );
+      this.emitUncancelledEvent(command.orgId, subscription);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Subscription uncancellation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        orgId: command.orgId,
-        requestingUserId: command.requestingUserId,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          orgId: command.orgId,
+          requestingUserId: command.requestingUserId,
+        },
+        'Subscription uncancellation failed',
+      );
       throw new UnexpectedSubscriptionError('Unexpected error');
     }
+  }
+
+  private async findSubscription(
+    orgId: UncancelSubscriptionCommand['orgId'],
+  ): Promise<Subscription> {
+    this.logger.debug('Finding subscription');
+    const subscription =
+      await this.subscriptionRepository.findLatestByOrgId(orgId);
+    if (!subscription) {
+      this.logger.warn({ orgId }, 'Subscription not found');
+      throw new SubscriptionNotFoundError(orgId);
+    }
+    return subscription;
+  }
+
+  private ensureCanUncancel(
+    orgId: UncancelSubscriptionCommand['orgId'],
+    subscription: Subscription,
+  ): void {
+    if (!subscription.cancelledAt) {
+      this.logger.warn({ orgId }, 'Subscription is not cancelled');
+      throw new SubscriptionNotCancelledError(orgId);
+    }
+    if (!this.canUncancel(subscription)) {
+      this.logger.warn(
+        { orgId },
+        'Subscription has expired and cannot be uncancelled',
+      );
+      throw new SubscriptionExpiredError(orgId);
+    }
+  }
+
+  private emitUncancelledEvent(
+    orgId: UncancelSubscriptionCommand['orgId'],
+    subscription: Subscription,
+  ): void {
+    this.eventEmitter
+      .emitAsync(
+        SubscriptionUncancelledEvent.EVENT_NAME,
+        new SubscriptionUncancelledEvent(
+          orgId,
+          toSubscriptionEventData(subscription),
+        ),
+      )
+      .catch((err: unknown) => {
+        this.logger.error(
+          { err: err as Error, orgId },
+          'Failed to emit SubscriptionUncancelledEvent',
+        );
+      });
   }
 
   /**

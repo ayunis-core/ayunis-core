@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { IsUsageBasedSubscriptionQuery } from './is-usage-based-subscription.query';
 import { SubscriptionRepository } from '../../ports/subscription.repository';
 import { isActive } from '../../util/is-active';
@@ -13,9 +14,9 @@ import { UnexpectedSubscriptionError } from '../../subscription.errors';
  */
 @Injectable()
 export class IsUsageBasedSubscriptionUseCase {
-  private readonly logger = new Logger(IsUsageBasedSubscriptionUseCase.name);
-
   constructor(
+    @InjectPinoLogger(IsUsageBasedSubscriptionUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly subscriptionRepository: SubscriptionRepository,
   ) {}
 
@@ -27,7 +28,10 @@ export class IsUsageBasedSubscriptionUseCase {
       return subscriptions.filter(isActive).some(isUsageBased);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to determine subscription type', error);
+      this.logger.error(
+        { err: error as Error },
+        'Failed to determine subscription type',
+      );
       throw new UnexpectedSubscriptionError((error as Error).message, {
         orgId: query.orgId,
       });

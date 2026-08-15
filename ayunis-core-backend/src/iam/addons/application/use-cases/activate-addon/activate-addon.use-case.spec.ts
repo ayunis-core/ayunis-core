@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ActivateAddonUseCase } from './activate-addon.use-case';
@@ -28,7 +29,11 @@ describe('ActivateAddonUseCase', () => {
   it('creates the addon row and emits addon.activated when the addon is inactive', async () => {
     const repo = makeRepo(null);
     const eventEmitter = makeEventEmitter();
-    const useCase = new ActivateAddonUseCase(repo, eventEmitter);
+    const useCase = new ActivateAddonUseCase(
+      createPinoLoggerMock(),
+      repo,
+      eventEmitter,
+    );
 
     await useCase.execute(
       new ActivateAddonCommand(
@@ -59,7 +64,11 @@ describe('ActivateAddonUseCase', () => {
     });
     const repo = makeRepo(existing);
     const eventEmitter = makeEventEmitter();
-    const useCase = new ActivateAddonUseCase(repo, eventEmitter);
+    const useCase = new ActivateAddonUseCase(
+      createPinoLoggerMock(),
+      repo,
+      eventEmitter,
+    );
 
     await useCase.execute(
       new ActivateAddonCommand(
@@ -78,7 +87,11 @@ describe('ActivateAddonUseCase', () => {
     (repo.create as jest.Mock).mockRejectedValue(
       new Error('unique constraint violation'),
     );
-    const useCase = new ActivateAddonUseCase(repo, makeEventEmitter());
+    const useCase = new ActivateAddonUseCase(
+      createPinoLoggerMock(),
+      repo,
+      makeEventEmitter(),
+    );
 
     await expect(
       useCase.execute(

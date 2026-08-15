@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
@@ -29,9 +30,9 @@ export interface BudgetAlertTargets {
 
 @Injectable()
 export class GetBudgetAlertTargetsForOrgUseCase {
-  private readonly logger = new Logger(GetBudgetAlertTargetsForOrgUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetBudgetAlertTargetsForOrgUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
     private readonly getUserCreditLimitsOverviewUseCase: GetUserCreditLimitsOverviewUseCase,
@@ -42,7 +43,7 @@ export class GetBudgetAlertTargetsForOrgUseCase {
   async execute(
     query: GetBudgetAlertTargetsForOrgQuery,
   ): Promise<BudgetAlertTargets | null> {
-    this.logger.log('execute', { orgId: query.orgId });
+    this.logger.info({ orgId: query.orgId }, 'execute');
 
     const { monthlyCredits, startsAt } =
       await this.getMonthlyCreditLimitUseCase.execute(

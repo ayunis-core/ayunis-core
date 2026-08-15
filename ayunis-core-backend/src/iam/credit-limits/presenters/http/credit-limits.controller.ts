@@ -8,8 +8,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
@@ -40,9 +40,9 @@ import { CreditLimitDtoMapper } from './mappers/credit-limit-dto.mapper';
 @Controller('credit-limits')
 @RequireUsageBasedSubscription()
 export class CreditLimitsController {
-  private readonly logger = new Logger(CreditLimitsController.name);
-
   constructor(
+    @InjectPinoLogger(CreditLimitsController.name)
+    private readonly logger: PinoLogger,
     private readonly getUserCreditLimitsOverviewUseCase: GetUserCreditLimitsOverviewUseCase,
     private readonly getTeamCreditLimitsOverviewUseCase: GetTeamCreditLimitsOverviewUseCase,
     private readonly setUserCreditLimitUseCase: SetUserCreditLimitUseCase,
@@ -59,7 +59,7 @@ export class CreditLimitsController {
   })
   @ApiResponse({ status: 200, type: [UserCreditLimitItemDto] })
   async getUserLimits(): Promise<UserCreditLimitItemDto[]> {
-    this.logger.log('Getting user credit limits');
+    this.logger.info('Getting user credit limits');
     const items = await this.getUserCreditLimitsOverviewUseCase.execute();
     return this.mapper.toUserItems(items);
   }
@@ -71,7 +71,7 @@ export class CreditLimitsController {
   })
   @ApiResponse({ status: 200, type: [TeamCreditLimitItemDto] })
   async getTeamLimits(): Promise<TeamCreditLimitItemDto[]> {
-    this.logger.log('Getting team credit limits');
+    this.logger.info('Getting team credit limits');
     const items = await this.getTeamCreditLimitsOverviewUseCase.execute();
     return this.mapper.toTeamItems(items);
   }
@@ -84,7 +84,7 @@ export class CreditLimitsController {
     @Param('userId', ParseUUIDPipe) userId: UUID,
     @Body() dto: SetCreditLimitDto,
   ): Promise<UserCreditLimitResponseDto> {
-    this.logger.log(`Setting credit limit for user ${userId}`);
+    this.logger.info({ userId }, 'Setting credit limit for user');
     const limit = await this.setUserCreditLimitUseCase.execute(
       new SetUserCreditLimitCommand(userId, dto.monthlyCredits),
     );
@@ -99,7 +99,7 @@ export class CreditLimitsController {
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
     @Body() dto: SetCreditLimitDto,
   ): Promise<TeamCreditLimitResponseDto> {
-    this.logger.log(`Setting credit limit for team ${teamId}`);
+    this.logger.info({ teamId }, 'Setting credit limit for team');
     const limit = await this.setTeamCreditLimitUseCase.execute(
       new SetTeamCreditLimitCommand(teamId, dto.monthlyCredits),
     );
@@ -114,7 +114,7 @@ export class CreditLimitsController {
   async removeUserLimit(
     @Param('userId', ParseUUIDPipe) userId: UUID,
   ): Promise<void> {
-    this.logger.log(`Removing credit limit for user ${userId}`);
+    this.logger.info({ userId }, 'Removing credit limit for user');
     await this.removeUserCreditLimitUseCase.execute(
       new RemoveUserCreditLimitCommand(userId),
     );
@@ -128,7 +128,7 @@ export class CreditLimitsController {
   async removeTeamLimit(
     @Param('teamId', ParseUUIDPipe) teamId: UUID,
   ): Promise<void> {
-    this.logger.log(`Removing credit limit for team ${teamId}`);
+    this.logger.info({ teamId }, 'Removing credit limit for team');
     await this.removeTeamCreditLimitUseCase.execute(
       new RemoveTeamCreditLimitCommand(teamId),
     );

@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import { ListOrgAddonsUseCase } from './list-org-addons.use-case';
 import { ListOrgAddonsQuery } from './list-org-addons.query';
@@ -19,7 +20,10 @@ function makeRepo(active: OrgAddon[]): OrgAddonRepository {
 
 describe('ListOrgAddonsUseCase', () => {
   it('returns the full addon catalog with active=false when the org has no addons', async () => {
-    const useCase = new ListOrgAddonsUseCase(makeRepo([]));
+    const useCase = new ListOrgAddonsUseCase(
+      createPinoLoggerMock(),
+      makeRepo([]),
+    );
 
     const result = await useCase.execute(new ListOrgAddonsQuery(ORG_ID));
 
@@ -33,7 +37,10 @@ describe('ListOrgAddonsUseCase', () => {
       orgId: ORG_ID,
       type: AddonType.AYUNIS_CORE_ACADEMY,
     });
-    const useCase = new ListOrgAddonsUseCase(makeRepo([academy]));
+    const useCase = new ListOrgAddonsUseCase(
+      createPinoLoggerMock(),
+      makeRepo([academy]),
+    );
 
     const result = await useCase.execute(new ListOrgAddonsQuery(ORG_ID));
 
@@ -48,7 +55,7 @@ describe('ListOrgAddonsUseCase', () => {
     (repo.findAllByOrgId as jest.Mock).mockRejectedValue(
       new Error('connection refused'),
     );
-    const useCase = new ListOrgAddonsUseCase(repo);
+    const useCase = new ListOrgAddonsUseCase(createPinoLoggerMock(), repo);
 
     await expect(
       useCase.execute(new ListOrgAddonsQuery(ORG_ID)),

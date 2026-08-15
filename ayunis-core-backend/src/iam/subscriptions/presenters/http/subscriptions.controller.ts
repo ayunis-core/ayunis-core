@@ -1,4 +1,5 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import {
   ApiTags,
   ApiOperation,
@@ -21,9 +22,9 @@ import { UUID } from 'crypto';
 @Controller('subscriptions')
 @ApiExtraModels(ActiveSubscriptionResponseDto, PriceResponseDto)
 export class SubscriptionsController {
-  private readonly logger = new Logger(SubscriptionsController.name);
-
   constructor(
+    @InjectPinoLogger(SubscriptionsController.name)
+    private readonly logger: PinoLogger,
     private readonly hasActiveSubscriptionUseCase: HasActiveSubscriptionUseCase,
     private readonly getCurrentPriceUseCase: GetCurrentPriceUseCase,
   ) {}
@@ -46,13 +47,14 @@ export class SubscriptionsController {
   async hasActiveSubscription(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
   ): Promise<ActiveSubscriptionResponseDto> {
-    this.logger.log(`Checking active subscription for org ${orgId}`);
+    this.logger.info({ orgId }, 'Checking active subscription');
 
     const query = new HasActiveSubscriptionQuery(orgId);
     const result = await this.hasActiveSubscriptionUseCase.execute(query);
 
-    this.logger.log(
-      `Active subscription check result for org ${orgId}: ${result.hasActiveSubscription}`,
+    this.logger.info(
+      { orgId, hasActiveSubscription: result.hasActiveSubscription },
+      'Active subscription check completed',
     );
 
     return {
@@ -81,12 +83,13 @@ export class SubscriptionsController {
     description: 'Internal server error',
   })
   getCurrentPrice(): PriceResponseDto {
-    this.logger.log('Getting current price per seat monthly');
+    this.logger.info('Getting current price per seat monthly');
 
     const pricePerSeatMonthly = this.getCurrentPriceUseCase.execute();
 
-    this.logger.log(
-      `Successfully retrieved current price: ${pricePerSeatMonthly}`,
+    this.logger.info(
+      { pricePerSeatMonthly },
+      'Successfully retrieved current price',
     );
 
     return { pricePerSeatMonthly };

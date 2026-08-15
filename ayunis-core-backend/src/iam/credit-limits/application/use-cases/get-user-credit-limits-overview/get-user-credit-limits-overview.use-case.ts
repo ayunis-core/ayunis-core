@@ -1,7 +1,8 @@
 import type { UUID } from 'crypto';
 import type { User } from 'src/iam/users/domain/user.entity';
 import type { UserCreditLimitOverviewItem } from './user-credit-limit.view';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -17,9 +18,9 @@ import { GetUserCreditLimitsOverviewQuery } from './get-user-credit-limits-overv
 
 @Injectable()
 export class GetUserCreditLimitsOverviewUseCase {
-  private readonly logger = new Logger(GetUserCreditLimitsOverviewUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetUserCreditLimitsOverviewUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly creditLimitRepository: CreditLimitRepository,
     private readonly contextService: ContextService,
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
@@ -35,7 +36,7 @@ export class GetUserCreditLimitsOverviewUseCase {
       throw new UnauthorizedAccessError();
     }
 
-    this.logger.log('Listing user credit limits', { orgId });
+    this.logger.info({ orgId }, 'Listing user credit limits');
 
     const limits = await this.creditLimitRepository.findUserLimits(orgId);
     return this.enrich(orgId, limits, query.since);

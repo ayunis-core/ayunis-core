@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { OrgAddonRepository } from '../../ports/org-addon.repository';
@@ -8,18 +9,21 @@ import { DeactivateAddonCommand } from './deactivate-addon.command';
 
 @Injectable()
 export class DeactivateAddonUseCase {
-  private readonly logger = new Logger(DeactivateAddonUseCase.name);
-
   constructor(
+    @InjectPinoLogger(DeactivateAddonUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly orgAddonRepository: OrgAddonRepository,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeactivateAddonCommand): Promise<void> {
-    this.logger.log('Deactivating addon', {
-      orgId: command.orgId,
-      type: command.type,
-    });
+    this.logger.info(
+      {
+        orgId: command.orgId,
+        type: command.type,
+      },
+      'Deactivating addon',
+    );
 
     try {
       const existing = await this.orgAddonRepository.findByOrgAndType(
@@ -43,15 +47,14 @@ export class DeactivateAddonUseCase {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit AddonDeactivatedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            orgId: command.orgId,
-            type: command.type,
-          });
+          this.logger.error(
+            { err: err as Error, orgId: command.orgId, type: command.type },
+            'Failed to emit AddonDeactivatedEvent',
+          );
         });
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error deactivating addon', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error deactivating addon');
       throw new UnexpectedAddonError('deactivate', { error: error as Error });
     }
   }

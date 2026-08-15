@@ -1,3 +1,5 @@
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
@@ -48,6 +50,10 @@ describe('ProcessBudgetAlertCrossingsUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProcessBudgetAlertCrossingsUseCase,
+        {
+          provide: getLoggerToken(ProcessBudgetAlertCrossingsUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: GetOrgAdminsUseCase, useValue: admins },
         { provide: SendBudgetWarningEmailUseCase, useValue: sendEmail },
         { provide: BudgetAlertNotificationRepository, useValue: repository },
