@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.repository';
 
@@ -11,10 +12,11 @@ import { RefreshTokensRepository } from '../../application/ports/refresh-tokens.
  */
 @Injectable()
 export class SessionsCleanupTask {
-  private readonly logger = new Logger(SessionsCleanupTask.name);
   private isRunning = false;
 
   constructor(
+    @InjectPinoLogger(SessionsCleanupTask.name)
+    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 
@@ -28,17 +30,17 @@ export class SessionsCleanupTask {
     }
 
     this.isRunning = true;
-    this.logger.log('Starting scheduled sessions cleanup');
+    this.logger.info('Starting scheduled sessions cleanup');
 
     try {
       const deleted = await this.refreshTokensRepository.deleteExpired(
         new Date(),
       );
-      this.logger.log('Scheduled sessions cleanup completed', { deleted });
+      this.logger.info({ deleted }, 'Scheduled sessions cleanup completed');
     } catch (error) {
       this.logger.error(
+        { err: error as Error },
         'Scheduled sessions cleanup failed',
-        error instanceof Error ? error.stack : undefined,
       );
     } finally {
       this.isRunning = false;

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { ResendExpiredInviteCommand } from './resend-expired-invite.command';
@@ -20,18 +21,19 @@ interface ResendExpiredInviteResult {
 
 @Injectable()
 export class ResendExpiredInviteUseCase {
-  private readonly logger = new Logger(ResendExpiredInviteUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ResendExpiredInviteUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly configService: ConfigService,
   ) {}
 
+  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   async execute(
     command: ResendExpiredInviteCommand,
   ): Promise<ResendExpiredInviteResult> {
-    this.logger.log('execute', { inviteId: command.inviteId });
+    this.logger.info({ inviteId: command.inviteId }, 'execute');
 
     try {
       // 1. Find the existing invite
@@ -77,11 +79,14 @@ export class ResendExpiredInviteUseCase {
         inviteId: newInvite.id,
       });
 
-      this.logger.debug('Expired invite resent successfully', {
-        oldInviteId: command.inviteId,
-        newInviteId: newInvite.id,
-        email: newInvite.email,
-      });
+      this.logger.debug(
+        {
+          oldInviteId: command.inviteId,
+          newInviteId: newInvite.id,
+          email: newInvite.email,
+        },
+        'Expired invite resent successfully',
+      );
 
       return {
         token: inviteToken,
@@ -91,9 +96,12 @@ export class ResendExpiredInviteUseCase {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error resending expired invite', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error resending expired invite',
+      );
       throw new UnexpectedInviteError(error as Error);
     }
   }

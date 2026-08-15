@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { EntityManager, Repository, ILike, IsNull } from 'typeorm';
@@ -15,9 +16,9 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalInvitesRepository implements InvitesRepository {
-  private readonly logger = new Logger(LocalInvitesRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalInvitesRepository.name)
+    private readonly logger: PinoLogger,
     private readonly inviteMapper: InviteMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
@@ -33,20 +34,23 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async create(invite: Invite): Promise<void> {
-    this.logger.log('create', {
-      inviteId: invite.id,
-      email: invite.email,
-      orgId: invite.orgId,
-      role: invite.role,
-      inviterId: invite.inviterId,
-    });
+    this.logger.info(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+        orgId: invite.orgId,
+        role: invite.role,
+        inviterId: invite.inviterId,
+      },
+      'create',
+    );
     const entity = this.inviteMapper.toEntity(invite);
     await this.invites.save(entity);
-    this.logger.debug('Invite created successfully', { inviteId: invite.id });
+    this.logger.debug({ inviteId: invite.id }, 'Invite created successfully');
   }
 
   async createMany(invites: Invite[]): Promise<void> {
-    this.logger.log('createMany', { inviteCount: invites.length });
+    this.logger.info({ inviteCount: invites.length }, 'createMany');
 
     if (invites.length === 0) {
       return;
@@ -57,17 +61,20 @@ export class LocalInvitesRepository implements InvitesRepository {
     );
     await this.invites.save(entities);
 
-    this.logger.debug('Invites created successfully', {
-      inviteCount: invites.length,
-    });
+    this.logger.debug(
+      {
+        inviteCount: invites.length,
+      },
+      'Invites created successfully',
+    );
   }
 
   async findOne(id: UUID): Promise<Invite | null> {
-    this.logger.log('findOne', { id });
+    this.logger.info({ id }, 'findOne');
     const entity = await this.invites.findOne({ where: { id } });
 
     if (!entity) {
-      this.logger.debug('Invite not found', { id });
+      this.logger.debug({ id }, 'Invite not found');
       return null;
     }
 
@@ -79,12 +86,15 @@ export class LocalInvitesRepository implements InvitesRepository {
     pagination: InvitesPagination,
     filters?: InvitesFilters,
   ): Promise<Paginated<Invite>> {
-    this.logger.log('findByOrgIdPaginated', {
-      orgId,
-      limit: pagination.limit,
-      offset: pagination.offset,
-      search: filters?.search,
-    });
+    this.logger.info(
+      {
+        orgId,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        input: filters?.search,
+      },
+      'findByOrgIdPaginated',
+    );
 
     const queryBuilder = this.invites
       .createQueryBuilder('invite')
@@ -119,7 +129,7 @@ export class LocalInvitesRepository implements InvitesRepository {
   }
 
   async findOneByEmail(email: string): Promise<Invite | null> {
-    this.logger.log('findOneByEmail', { email });
+    this.logger.info({ email }, 'findOneByEmail');
     // Match the single invite row for this email regardless of acceptance
     // state. invites.email is globally unique, so there is at most one row.
     // Deletion paths (delete-user, delete-invite-by-email) rely on this to
@@ -129,7 +139,7 @@ export class LocalInvitesRepository implements InvitesRepository {
       where: { email: ILike(email) },
     });
     if (!entity) {
-      this.logger.debug('Invite not found by email', { email });
+      this.logger.debug({ email }, 'Invite not found by email');
       return null;
     }
     return this.inviteMapper.toDomain(entity);
@@ -139,19 +149,22 @@ export class LocalInvitesRepository implements InvitesRepository {
     email: string,
     orgId: UUID,
   ): Promise<Invite | null> {
-    this.logger.log('findOneByEmailAndOrg', { email, orgId });
+    this.logger.info({ email, orgId }, 'findOneByEmailAndOrg');
     const entity = await this.invites.findOne({
       where: { email: ILike(email), orgId, acceptedAt: IsNull() },
     });
     if (!entity) {
-      this.logger.debug('Invite not found by email and org', { email, orgId });
+      this.logger.debug({ email, orgId }, 'Invite not found by email and org');
       return null;
     }
     return this.inviteMapper.toDomain(entity);
   }
 
   async findByEmailsAndOrg(emails: string[], orgId: string): Promise<Invite[]> {
-    this.logger.log('findByEmailsAndOrg', { emailCount: emails.length, orgId });
+    this.logger.info(
+      { emailCount: emails.length, orgId },
+      'findByEmailsAndOrg',
+    );
 
     if (emails.length === 0) {
       return [];
@@ -167,33 +180,36 @@ export class LocalInvitesRepository implements InvitesRepository {
       .andWhere('invite.acceptedAt IS NULL') // Only pending invites
       .getMany();
 
-    this.logger.debug('Found invites by emails and org', {
-      orgId,
-      requestedCount: emails.length,
-      foundCount: entities.length,
-    });
+    this.logger.debug(
+      {
+        orgId,
+        requestedCount: emails.length,
+        foundCount: entities.length,
+      },
+      'Found invites by emails and org',
+    );
 
     return entities.map((entity) => this.inviteMapper.toDomain(entity));
   }
 
   async accept(id: UUID): Promise<void> {
-    this.logger.log('accept', { id });
+    this.logger.info({ id }, 'accept');
 
     await this.invites.update(id, {
       acceptedAt: new Date(),
     });
 
-    this.logger.debug('Invite accepted successfully', { id });
+    this.logger.debug({ id }, 'Invite accepted successfully');
   }
 
   async delete(id: UUID): Promise<void> {
-    this.logger.log('delete', { id });
+    this.logger.info({ id }, 'delete');
     await this.invites.delete(id);
-    this.logger.debug('Invite deleted successfully', { id });
+    this.logger.debug({ id }, 'Invite deleted successfully');
   }
 
   async deleteAllPendingByOrg(orgId: UUID): Promise<number> {
-    this.logger.log('deleteAllPendingByOrg', { orgId });
+    this.logger.info({ orgId }, 'deleteAllPendingByOrg');
 
     const result = await this.invites.delete({
       orgId,
@@ -201,10 +217,13 @@ export class LocalInvitesRepository implements InvitesRepository {
     });
 
     const deletedCount = result.affected ?? 0;
-    this.logger.debug('Pending invites deleted', {
-      orgId,
-      count: deletedCount,
-    });
+    this.logger.debug(
+      {
+        orgId,
+        count: deletedCount,
+      },
+      'Pending invites deleted',
+    );
     return deletedCount;
   }
 }

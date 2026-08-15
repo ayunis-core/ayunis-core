@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
@@ -21,15 +22,15 @@ export interface MfaPendingJwtPayload {
 
 @Injectable()
 export class MfaPendingJwtService {
-  private readonly logger = new Logger(MfaPendingJwtService.name);
-
   constructor(
+    @InjectPinoLogger(MfaPendingJwtService.name)
+    private readonly logger: PinoLogger,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   generate(params: { userId: UUID; enrollmentRequired: boolean }): string {
-    this.logger.log('generateMfaPendingToken', { userId: params.userId });
+    this.logger.info({ userId: params.userId }, 'generateMfaPendingToken');
 
     const expiresIn = this.configService.get<StringValue>(
       'auth.jwt.mfaPendingExpiresIn',
@@ -62,7 +63,10 @@ export class MfaPendingJwtService {
       if (error instanceof InvalidMfaPendingTokenError) {
         throw error;
       }
-      this.logger.warn('MFA pending token verification failed', { error });
+      this.logger.warn(
+        { err: error as Error },
+        'MFA pending token verification failed',
+      );
       throw new InvalidMfaPendingTokenError();
     }
   }

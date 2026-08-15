@@ -1,27 +1,33 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { DeleteAllPendingInvitesCommand } from './delete-all-pending-invites.command';
 
 @Injectable()
 export class DeleteAllPendingInvitesUseCase {
-  private readonly logger = new Logger(DeleteAllPendingInvitesUseCase.name);
-
-  constructor(private readonly invitesRepository: InvitesRepository) {}
+  constructor(
+    @InjectPinoLogger(DeleteAllPendingInvitesUseCase.name)
+    private readonly logger: PinoLogger,
+    private readonly invitesRepository: InvitesRepository,
+  ) {}
 
   async execute(
     command: DeleteAllPendingInvitesCommand,
   ): Promise<{ deletedCount: number }> {
-    this.logger.log('execute', { orgId: command.orgId });
+    this.logger.info({ orgId: command.orgId }, 'execute');
 
     const deletedCount = await this.invitesRepository.deleteAllPendingByOrg(
       command.orgId as UUID,
     );
 
-    this.logger.debug('All pending invites deleted', {
-      orgId: command.orgId,
-      deletedCount,
-    });
+    this.logger.debug(
+      {
+        orgId: command.orgId,
+        deletedCount,
+      },
+      'All pending invites deleted',
+    );
 
     return { deletedCount };
   }

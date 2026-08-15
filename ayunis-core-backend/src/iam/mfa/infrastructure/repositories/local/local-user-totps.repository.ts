@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
@@ -9,9 +10,9 @@ import { UserTotpMapper } from './mappers/user-totp.mapper';
 
 @Injectable()
 export class LocalUserTotpsRepository extends UserTotpsRepository {
-  private readonly logger = new Logger(LocalUserTotpsRepository.name);
-
   constructor(
+    @InjectPinoLogger(LocalUserTotpsRepository.name)
+    private readonly logger: PinoLogger,
     @InjectRepository(UserTotpRecord)
     private readonly repository: Repository<UserTotpRecord>,
   ) {
@@ -55,7 +56,7 @@ export class LocalUserTotpsRepository extends UserTotpsRepository {
 
     const rows = result.raw as { failedAttempts: number }[];
     if (rows.length === 0) {
-      this.logger.warn('registerFailedAttempt: no TOTP row', { userId });
+      this.logger.warn({ userId }, 'registerFailedAttempt: no TOTP row');
       return 0;
     }
     return Number(rows[0].failedAttempts);

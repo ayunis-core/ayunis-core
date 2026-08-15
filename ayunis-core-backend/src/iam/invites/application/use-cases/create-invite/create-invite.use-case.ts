@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InvitesRepository } from '../../ports/invites.repository';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
 import { CreateInviteCommand } from './create-invite.command';
@@ -31,9 +32,9 @@ interface CreateInviteResult {
 
 @Injectable()
 export class CreateInviteUseCase {
-  private readonly logger = new Logger(CreateInviteUseCase.name);
-
   constructor(
+    @InjectPinoLogger(CreateInviteUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly getActiveSubscriptionUseCase: GetActiveSubscriptionUseCase,
@@ -44,11 +45,14 @@ export class CreateInviteUseCase {
   ) {}
 
   async execute(command: CreateInviteCommand): Promise<CreateInviteResult> {
-    this.logger.log('execute', {
-      email: command.email,
-      orgId: command.orgId,
-      userId: command.userId,
-    });
+    this.logger.info(
+      {
+        email: command.email,
+        orgId: command.orgId,
+        userId: command.userId,
+      },
+      'execute',
+    );
     try {
       this.validateEmailProvider(command.email);
       await this.ensureEmailAvailable(command.email, command.orgId);
@@ -66,7 +70,7 @@ export class CreateInviteUseCase {
         inviterId: command.userId,
         expiresAt: getInviteExpiresAt(validDuration),
       });
-      this.logger.debug('Invite to be created', { invite });
+      this.logger.debug({ invite }, 'Invite to be created');
 
       await this.invitesRepository.create(invite);
 
@@ -74,19 +78,25 @@ export class CreateInviteUseCase {
         inviteId: invite.id,
       });
 
-      this.logger.debug('Invite created successfully', {
-        inviteId: invite.id,
-        email: invite.email,
-      });
+      this.logger.debug(
+        {
+          inviteId: invite.id,
+          email: invite.email,
+        },
+        'Invite created successfully',
+      );
 
       return { token: inviteToken, invite };
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error creating invite', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Error creating invite',
+      );
       throw new UnexpectedInviteError(error as Error);
     }
   }
@@ -182,9 +192,12 @@ export class CreateInviteUseCase {
       );
     } catch (error) {
       if (error instanceof SubscriptionNotFoundError) {
-        this.logger.debug('No active subscription found, proceeding', {
-          orgId,
-        });
+        this.logger.debug(
+          {
+            orgId,
+          },
+          'No active subscription found, proceeding',
+        );
         return null;
       }
       throw error;

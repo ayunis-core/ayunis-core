@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { RotateSessionUseCase } from './rotate-session.use-case';
 import { RotateSessionCommand } from './rotate-session.command';
@@ -35,6 +36,10 @@ describe('RotateSessionUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RotateSessionUseCase,
+        {
+          provide: getLoggerToken(RotateSessionUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: RefreshTokensRepository, useValue: repository },
         { provide: RefreshTokenFactory, useValue: factory },
         {
@@ -45,7 +50,6 @@ describe('RotateSessionUseCase', () => {
     }).compile();
 
     useCase = module.get(RotateSessionUseCase);
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

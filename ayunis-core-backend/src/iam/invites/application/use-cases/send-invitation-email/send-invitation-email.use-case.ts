@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { SendInvitationEmailCommand } from './send-invitation-email.command';
 import { SendEmailCommand } from 'src/common/emails/application/use-cases/send-email/send-email.command';
 import { SendEmailUseCase } from 'src/common/emails/application/use-cases/send-email/send-email.use-case';
@@ -15,9 +16,9 @@ import { InviteEmailSendingFailedError } from '../../invites.errors';
 
 @Injectable()
 export class SendInvitationEmailUseCase {
-  private readonly logger = new Logger(SendInvitationEmailUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SendInvitationEmailUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly sendEmailUseCase: SendEmailUseCase,
     private readonly configService: ConfigService,
     private readonly renderTemplateUseCase: RenderTemplateUseCase,
@@ -25,26 +26,36 @@ export class SendInvitationEmailUseCase {
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
   ) {}
 
+  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   async execute(command: SendInvitationEmailCommand): Promise<void> {
     try {
-      this.logger.log('execute', {
-        inviteId: command.invite.id,
-        email: command.invite.email,
-        orgId: command.invite.orgId,
-      });
+      this.logger.info(
+        {
+          inviteId: command.invite.id,
+          email: command.invite.email,
+          orgId: command.invite.orgId,
+        },
+        'execute',
+      );
 
       // Get organization information
-      this.logger.debug('Fetching organization information', {
-        orgId: command.invite.orgId,
-      });
+      this.logger.debug(
+        {
+          orgId: command.invite.orgId,
+        },
+        'Fetching organization information',
+      );
       const org = await this.findOrgByIdUseCase.execute(
         new FindOrgByIdQuery(command.invite.orgId),
       );
 
       // Get inviting user information
-      this.logger.debug('Fetching inviting user information', {
-        inviterId: command.invite.inviterId,
-      });
+      this.logger.debug(
+        {
+          inviterId: command.invite.inviterId,
+        },
+        'Fetching inviting user information',
+      );
       let invitingUserName: string | null = null;
       if (command.invite.inviterId) {
         const invitingUser = await this.findUserByIdUseCase.execute(
@@ -63,10 +74,13 @@ export class SendInvitationEmailUseCase {
       const assetBase = `${frontendBaseUrl}${emailAssetsPath}`;
 
       // Create invitation email template
-      this.logger.debug('Creating invitation email template', {
-        inviteId: command.invite.id,
-        orgName: org.name,
-      });
+      this.logger.debug(
+        {
+          inviteId: command.invite.id,
+          name: org.name,
+        },
+        'Creating invitation email template',
+      );
       const template = new InvitationTemplate({
         invitationUrl: command.url,
         userEmail: command.invite.email,
@@ -85,10 +99,13 @@ export class SendInvitationEmailUseCase {
       );
 
       // Send the invitation email
-      this.logger.debug('Sending invitation email', {
-        inviteId: command.invite.id,
-        email: command.invite.email,
-      });
+      this.logger.debug(
+        {
+          inviteId: command.invite.id,
+          email: command.invite.email,
+        },
+        'Sending invitation email',
+      );
       await this.sendEmailUseCase.execute(
         new SendEmailCommand({
           to: command.invite.email,
@@ -98,19 +115,25 @@ export class SendInvitationEmailUseCase {
         }),
       );
 
-      this.logger.debug('Invitation email sent successfully', {
-        inviteId: command.invite.id,
-        email: command.invite.email,
-      });
+      this.logger.debug(
+        {
+          inviteId: command.invite.id,
+          email: command.invite.email,
+        },
+        'Invitation email sent successfully',
+      );
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error('Error sending invitation email', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        inviteId: command.invite.id,
-        email: command.invite.email,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+          inviteId: command.invite.id,
+          email: command.invite.email,
+        },
+        'Error sending invitation email',
+      );
       throw new InviteEmailSendingFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         {

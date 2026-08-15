@@ -1,17 +1,16 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { SessionsCleanupTask } from './sessions-cleanup.task';
 import { createMockRefreshTokensRepository } from '../../application/testing/refresh-token.fixtures';
 
 describe('SessionsCleanupTask', () => {
   let task: SessionsCleanupTask;
   let repository: ReturnType<typeof createMockRefreshTokensRepository>;
+  let logger: ReturnType<typeof createPinoLoggerMock>;
 
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
-    task = new SessionsCleanupTask(repository);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    logger = createPinoLoggerMock();
+    task = new SessionsCleanupTask(logger, repository);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -22,6 +21,17 @@ describe('SessionsCleanupTask', () => {
     await task.handleCleanup();
 
     expect(repository.deleteExpired).toHaveBeenCalledTimes(1);
+  });
+
+  it('should log cleanup results with object-first metadata', async () => {
+    repository.deleteExpired.mockResolvedValue(5);
+
+    await task.handleCleanup();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      { deleted: 5 },
+      'Scheduled sessions cleanup completed',
+    );
   });
 
   it('should swallow repository errors', async () => {

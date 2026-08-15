@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { TotpSecretEncryptionPort } from '../../ports/totp-secret-encryption.port';
@@ -15,16 +16,16 @@ export interface SetupTotpResult {
 
 @Injectable()
 export class SetupTotpUseCase {
-  private readonly logger = new Logger(SetupTotpUseCase.name);
-
   constructor(
+    @InjectPinoLogger(SetupTotpUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
     private readonly totp: TotpPort,
   ) {}
 
   async execute(command: SetupTotpCommand): Promise<SetupTotpResult> {
-    this.logger.log('setupTotp', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'setupTotp');
 
     try {
       const existing = await this.userTotpsRepository.findByUserId(
@@ -56,7 +57,7 @@ export class SetupTotpUseCase {
       return { secret, otpauthUri, qrCodeDataUri };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error setting up TOTP', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error setting up TOTP');
       throw new UnexpectedMfaError(error);
     }
   }

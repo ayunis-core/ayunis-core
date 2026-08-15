@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { sha256Hex } from 'src/common/util/sha256.util';
 import { RevokeSessionFamilyCommand } from './revoke-session-family.command';
@@ -12,9 +13,9 @@ import { UnexpectedSessionsError } from '../../sessions.errors';
  */
 @Injectable()
 export class RevokeSessionFamilyUseCase {
-  private readonly logger = new Logger(RevokeSessionFamilyUseCase.name);
-
   constructor(
+    @InjectPinoLogger(RevokeSessionFamilyUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly refreshTokensRepository: RefreshTokensRepository,
   ) {}
 

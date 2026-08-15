@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
@@ -19,6 +20,10 @@ describe('InviteJwtService', () => {
       providers: [
         InviteJwtService,
         {
+          provide: getLoggerToken(InviteJwtService.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
           provide: JwtService,
           useValue: { sign: jest.fn(), verify: jest.fn() },
         },
@@ -29,11 +34,6 @@ describe('InviteJwtService', () => {
     service = module.get(InviteJwtService);
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => jest.clearAllMocks());

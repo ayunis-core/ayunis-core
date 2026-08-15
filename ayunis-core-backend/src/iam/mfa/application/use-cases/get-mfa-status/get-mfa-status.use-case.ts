@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { UserTotpsRepository } from '../../ports/user-totps.repository';
 import { MfaRecoveryCodesRepository } from '../../ports/mfa-recovery-codes.repository';
@@ -13,15 +14,15 @@ export interface MfaStatus {
 
 @Injectable()
 export class GetMfaStatusUseCase {
-  private readonly logger = new Logger(GetMfaStatusUseCase.name);
-
   constructor(
+    @InjectPinoLogger(GetMfaStatusUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
   ) {}
 
   async execute(query: GetMfaStatusQuery): Promise<MfaStatus> {
-    this.logger.log('getMfaStatus', { userId: query.userId });
+    this.logger.info({ userId: query.userId }, 'getMfaStatus');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(query.userId);
@@ -39,7 +40,7 @@ export class GetMfaStatusUseCase {
       };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error getting MFA status', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error getting MFA status');
       throw new UnexpectedMfaError(error);
     }
   }

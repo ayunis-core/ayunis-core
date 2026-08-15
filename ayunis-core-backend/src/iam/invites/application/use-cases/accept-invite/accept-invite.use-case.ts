@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InvitesRepository } from '../../ports/invites.repository';
 import {
   InviteJwtPayload,
@@ -25,9 +26,9 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 
 @Injectable()
 export class AcceptInviteUseCase {
-  private readonly logger = new Logger(AcceptInviteUseCase.name);
-
   constructor(
+    @InjectPinoLogger(AcceptInviteUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly invitesRepository: InvitesRepository,
     private readonly inviteJwtService: InviteJwtService,
     private readonly createUserUseCase: CreateUserUseCase,
@@ -39,7 +40,7 @@ export class AcceptInviteUseCase {
   async execute(
     command: AcceptInviteCommand,
   ): Promise<{ inviteId: string; email: string; orgId: string }> {
-    this.logger.log('execute', { hasToken: !!command.inviteToken });
+    this.logger.info({ hasToken: !!command.inviteToken }, 'execute');
 
     const invite = await this.resolveValidatedInvite(command);
 
@@ -58,10 +59,13 @@ export class AcceptInviteUseCase {
 
     await this.invitesRepository.accept(invite.id);
 
-    this.logger.debug('Invite accepted successfully', {
-      inviteId: invite.id,
-      email: invite.email,
-    });
+    this.logger.debug(
+      {
+        inviteId: invite.id,
+        email: invite.email,
+      },
+      'Invite accepted successfully',
+    );
 
     return {
       inviteId: invite.id,
@@ -70,6 +74,7 @@ export class AcceptInviteUseCase {
     };
   }
 
+  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
   private async resolveValidatedInvite(
     command: AcceptInviteCommand,
   ): Promise<Invite> {
@@ -77,15 +82,18 @@ export class AcceptInviteUseCase {
     try {
       payload = this.inviteJwtService.verifyInviteToken(command.inviteToken);
     } catch (error) {
-      this.logger.error('Invalid invite token', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Invalid invite token',
+      );
       throw new InvalidInviteTokenError('Token verification failed');
     }
 
     const invite = await this.invitesRepository.findOne(payload.inviteId);
     if (!invite) {
-      this.logger.error('Invite not found', { inviteId: payload.inviteId });
+      this.logger.error({ inviteId: payload.inviteId }, 'Invite not found');
       throw new InviteNotFoundError(payload.inviteId);
     }
 
@@ -97,15 +105,18 @@ export class AcceptInviteUseCase {
     }
 
     if (invite.acceptedAt) {
-      this.logger.error('Invite already accepted', { inviteId: invite.id });
+      this.logger.error({ inviteId: invite.id }, 'Invite already accepted');
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
 
     if (invite.expiresAt < new Date()) {
-      this.logger.error('Invite expired', {
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
+      this.logger.error(
+        {
+          inviteId: invite.id,
+          expiresAt: invite.expiresAt,
+        },
+        'Invite expired',
+      );
       throw new InviteExpiredError({
         inviteId: invite.id,
         expiresAt: invite.expiresAt,

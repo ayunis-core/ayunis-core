@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RevokeOtherSessionsForUserUseCase } from './revoke-other-sessions-for-user.use-case';
 import { RevokeOtherSessionsForUserCommand } from './revoke-other-sessions-for-user.command';
 import {
@@ -14,8 +14,10 @@ describe('RevokeOtherSessionsForUserUseCase', () => {
 
   beforeEach(() => {
     repository = createMockRefreshTokensRepository();
-    useCase = new RevokeOtherSessionsForUserUseCase(repository);
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
+    useCase = new RevokeOtherSessionsForUserUseCase(
+      createPinoLoggerMock(),
+      repository,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
@@ -30,9 +31,9 @@ const TOTP_CODE_PATTERN = /^\d{6}$/;
  */
 @Injectable()
 export class VerifyMfaCodeUseCase {
-  private readonly logger = new Logger(VerifyMfaCodeUseCase.name);
-
   constructor(
+    @InjectPinoLogger(VerifyMfaCodeUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
@@ -41,7 +42,7 @@ export class VerifyMfaCodeUseCase {
   ) {}
 
   async execute(command: VerifyMfaCodeCommand): Promise<void> {
-    this.logger.log('verifyMfaCode', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'verifyMfaCode');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(command.userId);
@@ -63,7 +64,7 @@ export class VerifyMfaCodeUseCase {
       }
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error verifying MFA code', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error verifying MFA code');
       throw new UnexpectedMfaError(error);
     }
   }
@@ -123,7 +124,7 @@ export class VerifyMfaCodeUseCase {
     );
 
     if (failures >= MAX_FAILED_ATTEMPTS) {
-      this.logger.warn('MFA locked after repeated failures', { userId });
+      this.logger.warn({ userId }, 'MFA locked after repeated failures');
       throw new MfaLockedError(lockedUntil);
     }
     throw new InvalidMfaCodeError();

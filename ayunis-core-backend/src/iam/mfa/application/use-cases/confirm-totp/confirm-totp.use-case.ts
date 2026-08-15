@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
@@ -19,9 +20,9 @@ import { ConfirmTotpCommand } from './confirm-totp.command';
 
 @Injectable()
 export class ConfirmTotpUseCase {
-  private readonly logger = new Logger(ConfirmTotpUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ConfirmTotpUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly userTotpsRepository: UserTotpsRepository,
     private readonly recoveryCodesRepository: MfaRecoveryCodesRepository,
     private readonly totpSecretEncryption: TotpSecretEncryptionPort,
@@ -31,7 +32,7 @@ export class ConfirmTotpUseCase {
 
   /** Confirms a pending enrollment and returns the plaintext recovery codes. */
   async execute(command: ConfirmTotpCommand): Promise<string[]> {
-    this.logger.log('confirmTotp', { userId: command.userId });
+    this.logger.info({ userId: command.userId }, 'confirmTotp');
 
     try {
       const totp = await this.userTotpsRepository.findByUserId(command.userId);
@@ -65,7 +66,7 @@ export class ConfirmTotpUseCase {
       return codes;
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error confirming TOTP', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error confirming TOTP');
       throw new UnexpectedMfaError(error);
     }
   }

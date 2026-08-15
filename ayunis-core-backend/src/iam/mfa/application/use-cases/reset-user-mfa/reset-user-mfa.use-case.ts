@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
@@ -21,9 +22,9 @@ import { ResetUserMfaCommand } from './reset-user-mfa.command';
  */
 @Injectable()
 export class ResetUserMfaUseCase {
-  private readonly logger = new Logger(ResetUserMfaUseCase.name);
-
   constructor(
+    @InjectPinoLogger(ResetUserMfaUseCase.name)
+    private readonly logger: PinoLogger,
     private readonly contextService: ContextService,
     private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly userTotpsRepository: UserTotpsRepository,
@@ -31,7 +32,7 @@ export class ResetUserMfaUseCase {
   ) {}
 
   async execute(command: ResetUserMfaCommand): Promise<void> {
-    this.logger.log('resetUserMfa', { targetUserId: command.targetUserId });
+    this.logger.info({ targetUserId: command.targetUserId }, 'resetUserMfa');
 
     const requesterId = this.contextService.get('userId');
     const requesterOrgId = this.contextService.get('orgId');
@@ -57,7 +58,7 @@ export class ResetUserMfaUseCase {
       await this.userTotpsRepository.deleteByUserId(command.targetUserId);
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Error resetting user MFA', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Error resetting user MFA');
       throw new UnexpectedMfaError(error);
     }
   }

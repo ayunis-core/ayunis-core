@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
+import { getLoggerToken } from 'nestjs-pino';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { CreateBulkInvitesUseCase } from './create-bulk-invites.use-case';
 import { CreateBulkInvitesCommand } from './create-bulk-invites.command';
@@ -74,6 +75,10 @@ describe('CreateBulkInvitesUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateBulkInvitesUseCase,
+        {
+          provide: getLoggerToken(CreateBulkInvitesUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: InvitesRepository, useValue: mockInvitesRepository },
         { provide: UsersRepository, useValue: mockUsersRepository },
         { provide: ConfigService, useValue: mockConfigService },
@@ -98,12 +103,6 @@ describe('CreateBulkInvitesUseCase', () => {
     getActiveSubscriptionUseCase = module.get(GetActiveSubscriptionUseCase);
     updateSeatsUseCase = module.get(UpdateSeatsUseCase);
     sendInvitationEmailUseCase = module.get(SendInvitationEmailUseCase);
-
-    // Mock logger
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'debug').mockImplementation();
-    jest.spyOn(Logger.prototype, 'error').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {
@@ -128,6 +127,7 @@ describe('CreateBulkInvitesUseCase', () => {
       ...overrides,
     };
 
+    // eslint-disable-next-line sonarjs/function-return-type -- the config mock intentionally returns each key's configured type
     configService.get.mockImplementation((key: string) => {
       switch (key) {
         case 'auth.emailProviderBlacklist':
