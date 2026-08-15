@@ -1,4 +1,4 @@
-import type { Logger } from '@nestjs/common';
+import type { PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -12,7 +12,7 @@ export async function assembleImageGenerationTools(args: {
   orgId: UUID | undefined;
   getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase;
   assembleToolsUseCase: AssembleToolUseCase;
-  logger: Logger;
+  logger: PinoLogger;
 }): Promise<Tool[]> {
   const {
     orgId,
@@ -28,15 +28,18 @@ export async function assembleImageGenerationTools(args: {
   } catch (error) {
     if (error instanceof PermittedImageGenerationModelNotFoundForOrgError) {
       logger.debug(
-        'No permitted image-generation model; dropping generate_image tool',
         { orgId },
+        'No permitted image-generation model; dropping generate_image tool',
       );
       return [];
     }
-    logger.error('Failed to check image generation model availability', {
-      orgId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error(
+      {
+        orgId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      'Failed to check image generation model availability',
+    );
     throw error;
   }
   return [

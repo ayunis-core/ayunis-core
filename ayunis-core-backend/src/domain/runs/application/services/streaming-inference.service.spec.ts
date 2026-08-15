@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { from, Observable, throwError } from 'rxjs';
 import type { UUID } from 'crypto';
 import { StreamingInferenceService } from './streaming-inference.service';
@@ -39,32 +40,41 @@ describe('extractUsageFromChunks', () => {
 
   it('returns undefined when no chunk carries usage', () => {
     expect(
-      extractUsageFromChunks([
-        StreamInferenceResponseChunk.text('a'),
-        StreamInferenceResponseChunk.text('b'),
-      ]),
+      extractUsageFromChunks(
+        [
+          StreamInferenceResponseChunk.text('a'),
+          StreamInferenceResponseChunk.text('b'),
+        ],
+        createPinoLoggerMock(),
+      ),
     ).toBeUndefined();
   });
 
   it('takes last-wins instead of summing cumulative per-chunk usage', () => {
     // Providers (e.g. Gemini, Mistral) report cumulative usage on every chunk.
     // Summing would over-count; the final values are the truth.
-    const usage = extractUsageFromChunks([
-      chunkWithUsage({ inputTokens: 100, outputTokens: 10 }),
-      chunkWithUsage({ inputTokens: 100, outputTokens: 25 }),
-      chunkWithUsage({ inputTokens: 100, outputTokens: 42 }),
-    ]);
+    const usage = extractUsageFromChunks(
+      [
+        chunkWithUsage({ inputTokens: 100, outputTokens: 10 }),
+        chunkWithUsage({ inputTokens: 100, outputTokens: 25 }),
+        chunkWithUsage({ inputTokens: 100, outputTokens: 42 }),
+      ],
+      createPinoLoggerMock(),
+    );
     expect(usage).toEqual({ inputTokens: 100, outputTokens: 42 });
   });
 
   it('carries forward the last defined value of each field independently', () => {
     // Gemini repeats promptTokenCount on every chunk but only emits
     // candidatesTokenCount on the final chunk.
-    const usage = extractUsageFromChunks([
-      chunkWithUsage({ inputTokens: 100 }),
-      chunkWithUsage({ inputTokens: 100 }),
-      chunkWithUsage({ inputTokens: 100, outputTokens: 30 }),
-    ]);
+    const usage = extractUsageFromChunks(
+      [
+        chunkWithUsage({ inputTokens: 100 }),
+        chunkWithUsage({ inputTokens: 100 }),
+        chunkWithUsage({ inputTokens: 100, outputTokens: 30 }),
+      ],
+      createPinoLoggerMock(),
+    );
     expect(usage).toEqual({ inputTokens: 100, outputTokens: 30 });
   });
 
@@ -72,26 +82,32 @@ describe('extractUsageFromChunks', () => {
     // Anthropic's input_tokens excludes tokens served by or written to the
     // prompt cache. Option A billing: customers pay for the full prompt as
     // if uncached, so cache read/write tokens count as input.
-    const usage = extractUsageFromChunks([
-      chunkWithUsage({
-        inputTokens: 3,
-        cacheWriteInputTokens: 9677,
-        cacheReadInputTokens: 0,
-      }),
-      chunkWithUsage({ outputTokens: 42 }),
-    ]);
+    const usage = extractUsageFromChunks(
+      [
+        chunkWithUsage({
+          inputTokens: 3,
+          cacheWriteInputTokens: 9677,
+          cacheReadInputTokens: 0,
+        }),
+        chunkWithUsage({ outputTokens: 42 }),
+      ],
+      createPinoLoggerMock(),
+    );
     expect(usage).toEqual({ inputTokens: 9680, outputTokens: 42 });
   });
 
   it('bills cache reads and writes together with uncached input', () => {
-    const usage = extractUsageFromChunks([
-      chunkWithUsage({
-        inputTokens: 10,
-        cacheWriteInputTokens: 200,
-        cacheReadInputTokens: 3000,
-        outputTokens: 5,
-      }),
-    ]);
+    const usage = extractUsageFromChunks(
+      [
+        chunkWithUsage({
+          inputTokens: 10,
+          cacheWriteInputTokens: 200,
+          cacheReadInputTokens: 3000,
+          outputTokens: 5,
+        }),
+      ],
+      createPinoLoggerMock(),
+    );
     expect(usage).toEqual({ inputTokens: 3210, outputTokens: 5 });
   });
 });
@@ -168,14 +184,25 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     const eventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
     } as unknown as EventEmitter2;
+    const logger = createPinoLoggerMock();
+    const toolCallArgumentsLogger = createPinoLoggerMock();
     const service = new StreamingInferenceService(
       streamInferenceUseCase,
       saveAssistantMessageUseCase,
       inferenceUsageGuard,
       contextService,
       eventEmitter,
+      logger,
+      createPinoLoggerMock(),
+      toolCallArgumentsLogger,
     );
-    return { service, savedMessages, saveAssistantMessage };
+    return {
+      service,
+      savedMessages,
+      saveAssistantMessage,
+      logger,
+      toolCallArgumentsLogger,
+    };
   };
 
   const consume = async (service: StreamingInferenceService) => {
@@ -243,7 +270,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
   });
 
   it('throws InferenceFailedError instead of executing a tool call whose final arguments are unparseable', async () => {
-    const { service, savedMessages } = buildService([
+    const { service, savedMessages, toolCallArgumentsLogger } = buildService([
       toolCallChunk({
         id: 'call_1',
         name: 'create_document',
@@ -261,6 +288,12 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       (block) => block instanceof ToolUseMessageContent,
     );
     expect(toolUses).toHaveLength(0);
+    expect(toolCallArgumentsLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        toolCalls: [expect.objectContaining({ toolName: 'create_document' })],
+      }),
+      'Model emitted unparseable tool call arguments',
+    );
   });
 
   it('throws InferenceTokenLimitError when the stream hits the token limit while emitting tool calls', async () => {

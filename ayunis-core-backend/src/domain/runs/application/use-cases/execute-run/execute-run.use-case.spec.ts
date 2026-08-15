@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   AnonymizationFailedError,
   AnonymizationInputTooLongError,
@@ -160,6 +161,7 @@ describe('ExecuteRunUseCase', () => {
       {
         execute: jest.fn(),
       } as unknown as ExecuteRunViaRuntimeUseCase,
+      createPinoLoggerMock(),
     );
   });
 

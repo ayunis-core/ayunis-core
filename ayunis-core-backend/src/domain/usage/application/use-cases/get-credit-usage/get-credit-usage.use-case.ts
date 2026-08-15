@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { GetCreditUsageQuery } from './get-credit-usage.query';
 import { GetMonthlyCreditUsageUseCase } from '../get-monthly-credit-usage/get-monthly-credit-usage.use-case';
 import { GetMonthlyCreditUsageQuery } from '../get-monthly-credit-usage/get-monthly-credit-usage.query';
@@ -10,15 +11,15 @@ import { ApplicationError } from 'src/common/errors/base.error';
 
 @Injectable()
 export class GetCreditUsageUseCase {
-  private readonly logger = new Logger(GetCreditUsageUseCase.name);
-
   constructor(
     private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
+    @InjectPinoLogger(GetCreditUsageUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(query: GetCreditUsageQuery): Promise<CreditUsage> {
-    this.logger.log('Getting credit usage', { orgId: query.orgId });
+    this.logger.info({ orgId: query.orgId }, 'Getting credit usage');
 
     try {
       const { monthlyCredits, startsAt } =
@@ -38,7 +39,10 @@ export class GetCreditUsageUseCase {
       return { monthlyCredits, creditsUsed, creditsRemaining };
     } catch (error) {
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Failed to get credit usage', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Failed to get credit usage',
+      );
       throw new UnexpectedUsageError(error as Error, {
         orgId: query.orgId,
       });

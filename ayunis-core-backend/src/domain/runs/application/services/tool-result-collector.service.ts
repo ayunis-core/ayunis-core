@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
@@ -49,14 +50,14 @@ export interface CollectedToolResults {
 
 @Injectable()
 export class ToolResultCollectorService {
-  private readonly logger = new Logger(ToolResultCollectorService.name);
-
   constructor(
     private readonly executeToolUseCase: ExecuteToolUseCase,
     private readonly checkToolCapabilitiesUseCase: CheckToolCapabilitiesUseCase,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(ToolResultCollectorService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async collectToolResults(params: {
@@ -138,7 +139,13 @@ export class ToolResultCollectorService {
       if (error instanceof ApplicationError) {
         throw error;
       }
-      this.logger.error(`Error processing tool ${content.name}`, error);
+      this.logger.error(
+        {
+          toolName: content.name,
+          err: error instanceof Error ? error : new Error(String(error)),
+        },
+        'Error processing tool',
+      );
       throw new RunToolExecutionFailedError(content.name, {
         error: error as Error,
       });
@@ -159,10 +166,13 @@ export class ToolResultCollectorService {
         ),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit ToolUsedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          toolName: content.name,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            toolName: content.name,
+          },
+          'Failed to emit ToolUsedEvent',
+        );
       });
   }
 
@@ -279,7 +289,10 @@ export class ToolResultCollectorService {
       );
       if (displayOnlyCalls.length > 0 && allValid) return true;
     } catch (error) {
-      this.logger.error('Error checking for display tools', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Error checking for display tools',
+      );
     }
 
     return false;
@@ -292,7 +305,8 @@ export class ToolResultCollectorService {
     const tool = tools.find((candidate) => candidate.name === content.name);
     if (!tool) {
       this.logger.warn(
-        `Tool ${content.name} mentioned in response but not found`,
+        { toolName: content.name },
+        'Tool mentioned in response but not found',
       );
       return undefined;
     }

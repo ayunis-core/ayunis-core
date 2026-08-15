@@ -1,4 +1,5 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -54,8 +55,6 @@ import type { RunExecutionOutcome } from '../../run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunUseCase {
-  private readonly logger = new Logger(ExecuteRunUseCase.name);
-
   constructor(
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
@@ -72,16 +71,21 @@ export class ExecuteRunUseCase {
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: ConfigService,
     private readonly executeRunViaRuntimeUseCase: ExecuteRunViaRuntimeUseCase,
+    @InjectPinoLogger(ExecuteRunUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
-    this.logger.log('executeRun', {
-      threadId: command.threadId,
-      streaming: command.streaming,
-      inputType: command.input.constructor.name,
-    });
+    this.logger.info(
+      {
+        threadId: command.threadId,
+        streaming: command.streaming,
+        inputType: command.input.constructor.name,
+      },
+      'executeRun',
+    );
     if (this.configService.get<boolean>('features.agentRuntimeEnabled')) {
       return this.executeRunViaRuntimeUseCase.execute(command);
     }
@@ -170,10 +174,13 @@ export class ExecuteRunUseCase {
         new RunExecutedEvent(userId, orgId),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit RunExecutedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          userId,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            userId,
+          },
+          'Failed to emit RunExecutedEvent',
+        );
       });
   }
 
@@ -190,14 +197,14 @@ export class ExecuteRunUseCase {
   private async *orchestrateRun(
     params: RunParams,
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
-    this.logger.log('orchestrateRun', { threadId: params.thread.id });
+    this.logger.info({ threadId: params.thread.id }, 'orchestrateRun');
     const iterations = 50;
     const breaker = new ToolFailureBreaker();
     let succeeded = false;
     let preserveTranscript = false;
     try {
       for (let i = 0; i < iterations; i++) {
-        this.logger.debug('iteration', i);
+        this.logger.debug({ value: i }, 'iteration');
         const assistantMessage = yield* this.runIteration(
           params,
           breaker,
@@ -227,7 +234,7 @@ export class ExecuteRunUseCase {
       // streamed — rolling it back would re-arm the pending tool calls.
       preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
       if (error instanceof ApplicationError) throw error;
-      this.logger.error('Run execution failed', { error: error as Error });
+      this.logger.error({ err: error as Error }, 'Run execution failed');
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
@@ -453,20 +460,26 @@ export class ExecuteRunUseCase {
         new AnonymizeTextForThreadCommand(text, orgId, threadId),
       );
       if (result.replacements.length > 0) {
-        this.logger.log('Anonymized text', {
-          originalLength: text.length,
-          anonymizedLength: result.anonymizedText.length,
-          replacementsCount: result.replacements.length,
-        });
+        this.logger.info(
+          {
+            originalLength: text.length,
+            anonymizedLength: result.anonymizedText.length,
+            replacementsCount: result.replacements.length,
+          },
+          'Anonymized text',
+        );
       }
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
       if (error instanceof AnonymizationInputTooLongError) {
         throw error;
       }
-      this.logger.error('Anonymization service unavailable', {
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          err: error as Error,
+        },
+        'Anonymization service unavailable',
+      );
       throw new RunAnonymizationUnavailableError(
         {
           originalError:

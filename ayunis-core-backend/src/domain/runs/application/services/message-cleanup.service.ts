@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -18,11 +19,11 @@ import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-t
  */
 @Injectable()
 export class MessageCleanupService {
-  private readonly logger = new Logger(MessageCleanupService.name);
-
   constructor(
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly deleteMessageUseCase: DeleteMessageUseCase,
+    @InjectPinoLogger(MessageCleanupService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async cleanupTrailingNonAssistantMessages(threadId: UUID): Promise<void> {
@@ -33,16 +34,19 @@ export class MessageCleanupService {
 
       const threadMessages = updatedThread.messages;
       if (threadMessages.length === 0) {
-        this.logger.warn('Thread has no messages after save', { threadId });
+        this.logger.warn({ threadId }, 'Thread has no messages after save');
         return;
       }
 
       await this.deleteMessagesUntilAssistant(threadId, threadMessages);
     } catch (error) {
-      this.logger.error('Error during message cleanup', {
-        threadId,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          threadId,
+          err: error as Error,
+        },
+        'Error during message cleanup',
+      );
       // Don't throw - we want to gracefully handle cleanup failures
     }
   }
@@ -63,35 +67,47 @@ export class MessageCleanupService {
   ): Promise<void> {
     if (messages.length === 0) return;
 
-    this.logger.log('Deleting trailing messages', {
-      threadId,
-      count: messages.length,
-      messageIds: messages.map((m) => m.id),
-    });
+    this.logger.info(
+      {
+        threadId,
+        count: messages.length,
+        messageIds: messages.map((m) => m.id),
+      },
+      'Deleting trailing messages',
+    );
 
     for (const message of messages) {
       try {
         await this.deleteMessageUseCase.execute(
           new DeleteMessageCommand(message.id),
         );
-        this.logger.debug('Deleted trailing message', {
-          messageId: message.id,
-          role: message.role,
-        });
+        this.logger.debug(
+          {
+            messageId: message.id,
+            role: message.role,
+          },
+          'Deleted trailing message',
+        );
       } catch (error) {
-        this.logger.error('Failed to delete trailing message', {
-          messageId: message.id,
-          role: message.role,
-          error: error as Error,
-        });
+        this.logger.error(
+          {
+            messageId: message.id,
+            role: message.role,
+            err: error as Error,
+          },
+          'Failed to delete trailing message',
+        );
         // Continue with cleanup even if one deletion fails
       }
     }
 
-    this.logger.log('Successfully cleaned up trailing messages', {
-      threadId,
-      deletedCount: messages.length,
-    });
+    this.logger.info(
+      {
+        threadId,
+        deletedCount: messages.length,
+      },
+      'Successfully cleaned up trailing messages',
+    );
   }
 }
 

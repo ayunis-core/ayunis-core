@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SaveAssistantMessageUseCase } from './save-assistant-message.use-case';
@@ -39,6 +41,10 @@ describe('SaveAssistantMessageUseCase', () => {
         { provide: MESSAGES_REPOSITORY, useValue: mockMessagesRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        {
+          provide: getLoggerToken(SaveAssistantMessageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ContextService } from 'src/common/context/services/context.service';
 import { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
 import { IncrementTrialMessagesCommand } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.command';
@@ -9,12 +10,12 @@ import { SendMessageCommand } from './send-message.command';
 
 @Injectable()
 export class SendMessageUseCase {
-  private readonly logger = new Logger(SendMessageUseCase.name);
-
   constructor(
     private readonly executeRunAndSetTitleUseCase: ExecuteRunAndSetTitleUseCase,
     private readonly incrementTrialMessagesUseCase: IncrementTrialMessagesUseCase,
     private readonly contextService: ContextService,
+    @InjectPinoLogger(SendMessageUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async *execute(command: SendMessageCommand): AsyncGenerator<RunEvent> {
@@ -41,19 +42,25 @@ export class SendMessageUseCase {
       return;
     }
 
-    this.logger.debug('Incrementing trial messages for non-subscription org', {
-      orgId,
-    });
+    this.logger.debug(
+      {
+        orgId,
+      },
+      'Incrementing trial messages for non-subscription org',
+    );
 
     // Fire-and-forget by design: trial accounting must not delay or fail the
     // run. The .catch keeps a failure out of the unhandledRejection path.
     this.incrementTrialMessagesUseCase
       .execute(new IncrementTrialMessagesCommand(orgId))
       .catch((error: unknown) => {
-        this.logger.error('Failed to increment trial messages', {
-          orgId,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        this.logger.error(
+          {
+            orgId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          'Failed to increment trial messages',
+        );
       });
   }
 }

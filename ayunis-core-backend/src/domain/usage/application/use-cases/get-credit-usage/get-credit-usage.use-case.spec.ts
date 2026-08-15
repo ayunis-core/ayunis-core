@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetCreditUsageUseCase } from './get-credit-usage.use-case';
@@ -33,6 +35,10 @@ describe('GetCreditUsageUseCase', () => {
         {
           provide: GetMonthlyCreditUsageUseCase,
           useValue: mockMonthlyCreditUsage,
+        },
+        {
+          provide: getLoggerToken(GetCreditUsageUseCase.name),
+          useValue: createPinoLoggerMock(),
         },
       ],
     }).compile();

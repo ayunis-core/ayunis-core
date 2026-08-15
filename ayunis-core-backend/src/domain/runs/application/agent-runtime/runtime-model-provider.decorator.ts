@@ -7,7 +7,8 @@ import type {
   ProviderRequest,
   ToolSchema,
 } from '@ayunis/inference';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
@@ -52,9 +53,11 @@ function backoff(ms: number): Promise<void> {
 
 @Injectable()
 export class RuntimeModelProviderDecorator {
-  private readonly logger = new Logger(RuntimeModelProviderDecorator.name);
-
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(RuntimeModelProviderDecorator.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   decorate(
     provider: ModelProvider,
@@ -100,8 +103,8 @@ export class RuntimeModelProviderDecorator {
         }
       }
       this.logger.warn(
-        'Provider stream failed before producing output; retrying once',
         { model: context.model.name, reason },
+        'Provider stream failed before producing output; retrying once',
       );
     }
     yield* this.stream(provider, request, context);
@@ -162,10 +165,13 @@ export class RuntimeModelProviderDecorator {
         ),
       )
       .catch((emitError: unknown) => {
-        this.logger.error('Failed to emit InferenceCompletedEvent', {
-          error:
-            emitError instanceof Error ? emitError.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            error:
+              emitError instanceof Error ? emitError.message : 'Unknown error',
+          },
+          'Failed to emit InferenceCompletedEvent',
+        );
       });
   }
 }

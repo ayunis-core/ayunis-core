@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { EventEmitter } from 'events';
 import type { Response } from 'express';
 import type { UUID } from 'crypto';
@@ -58,6 +59,7 @@ describe('RunSsePresenter', () => {
     jest.clearAllMocks();
     presenter = new RunSsePresenter(
       eventMapper as unknown as RunEventResponseMapper,
+      createPinoLoggerMock(),
     );
     response = new FakeSseResponse();
   });

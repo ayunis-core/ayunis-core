@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ResolveCreditLimitsForUserUseCase } from 'src/iam/credit-limits/application/use-cases/resolve-credit-limits-for-user/resolve-credit-limits-for-user.use-case';
 import { ResolveCreditLimitsForUserQuery } from 'src/iam/credit-limits/application/use-cases/resolve-credit-limits-for-user/resolve-credit-limits-for-user.query';
@@ -19,13 +20,13 @@ import { IsUsageBasedSubscriptionQuery } from 'src/iam/subscriptions/application
  */
 @Injectable()
 export class CreditLimitGuardService {
-  private readonly logger = new Logger(CreditLimitGuardService.name);
-
   constructor(
     private readonly resolveCreditLimitsForUserUseCase: ResolveCreditLimitsForUserUseCase,
     private readonly getMonthlyCreditUsageForUserUseCase: GetMonthlyCreditUsageForUserUseCase,
     private readonly getMonthlyCreditUsageForTeamUseCase: GetMonthlyCreditUsageForTeamUseCase,
     private readonly isUsageBasedSubscriptionUseCase: IsUsageBasedSubscriptionUseCase,
+    @InjectPinoLogger(CreditLimitGuardService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async ensureWithinLimits(orgId: UUID, userId: UUID): Promise<void> {
@@ -80,11 +81,14 @@ export class CreditLimitGuardService {
       return;
     }
 
-    this.logger.warn('User credit limit exceeded', {
-      userId,
-      creditsUsed,
-      monthlyCreditLimit,
-    });
+    this.logger.warn(
+      {
+        userId,
+        creditsUsed,
+        monthlyCreditLimit,
+      },
+      'User credit limit exceeded',
+    );
     throw new UserCreditLimitExceededError({
       userId,
       creditsUsed,
@@ -106,11 +110,14 @@ export class CreditLimitGuardService {
       return;
     }
 
-    this.logger.warn('Team credit limit exceeded', {
-      teamId,
-      creditsUsed,
-      monthlyCreditLimit,
-    });
+    this.logger.warn(
+      {
+        teamId,
+        creditsUsed,
+        monthlyCreditLimit,
+      },
+      'Team credit limit exceeded',
+    );
     throw new TeamCreditLimitExceededError({
       teamId,
       creditsUsed,

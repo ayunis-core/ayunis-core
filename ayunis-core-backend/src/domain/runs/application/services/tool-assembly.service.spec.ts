@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
@@ -89,6 +90,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     const mcpToolAssembler = new (McpToolAssemblerService as any)(
       discoverMcpCapabilitiesUseCase,
       getMcpIntegrationsByIdsUseCase,
+      createPinoLoggerMock(),
     );
 
     const service = new (ToolAssemblyService as any)(
@@ -105,6 +107,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
+      createPinoLoggerMock(),
     );
 
     return {
@@ -243,11 +246,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     ).rejects.toThrow(unexpectedError);
 
     expect(loggerSpy).toHaveBeenCalledWith(
-      'Failed to check image generation model availability',
       expect.objectContaining({
         orgId: mockOrgId,
         error: 'Database connection failed',
       }),
+      'Failed to check image generation model availability',
     );
   });
 

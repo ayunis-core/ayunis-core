@@ -1,5 +1,6 @@
 import type { Hook } from '@ayunis/agent-runtime';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ToolUsedEvent } from '../../events/tool-used.event';
@@ -13,9 +14,11 @@ interface ToolUsageHookParams {
 
 @Injectable()
 export class ToolUsageHookFactory {
-  private readonly logger = new Logger(ToolUsageHookFactory.name);
-
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(ToolUsageHookFactory.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   create(params: ToolUsageHookParams): Hook {
     return {
@@ -42,10 +45,13 @@ export class ToolUsageHookFactory {
         ),
       )
       .catch((error: unknown) => {
-        this.logger.error('Failed to emit ToolUsedEvent', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          toolName,
-        });
+        this.logger.error(
+          {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            toolName,
+          },
+          'Failed to emit ToolUsedEvent',
+        );
       });
   }
 }

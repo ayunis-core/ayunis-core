@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { RunAbortedError, type AgentRuntimeError } from '@ayunis/agent-runtime';
 import type {
   ModelProvider,
@@ -32,9 +33,12 @@ interface Harness {
 
 function buildHarness(): Harness {
   const emitAsync = jest.fn().mockResolvedValue([]);
-  const decorator = new RuntimeModelProviderDecorator({
-    emitAsync,
-  } as unknown as EventEmitter2);
+  const decorator = new RuntimeModelProviderDecorator(
+    {
+      emitAsync,
+    } as unknown as EventEmitter2,
+    createPinoLoggerMock(),
+  );
   return {
     decorate: (provider) =>
       decorator.decorate(provider, { userId, orgId, model }),

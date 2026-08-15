@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
@@ -36,8 +37,6 @@ import { UsageQueryMapper } from './mappers/usage-query.mapper';
 
 @Injectable()
 export class LocalUsageRepository extends UsageRepository {
-  private readonly logger = new Logger(LocalUsageRepository.name);
-
   constructor(
     @InjectRepository(UsageRecord)
     private readonly usageRepository: Repository<UsageRecord>,
@@ -45,6 +44,8 @@ export class LocalUsageRepository extends UsageRepository {
     private readonly userRepository: Repository<UserRecord>,
     private readonly usageMapper: UsageMapper,
     private readonly usageQueryMapper: UsageQueryMapper,
+    @InjectPinoLogger(LocalUsageRepository.name)
+    private readonly logger: PinoLogger,
   ) {
     super();
   }

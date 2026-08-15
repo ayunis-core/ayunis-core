@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { UUID } from 'crypto';
 import { ObjectStoragePort } from 'src/domain/storage/application/ports/object-storage.port';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
@@ -16,17 +17,17 @@ import {
  */
 @Injectable()
 export class CleanupOrphanedImagesUseCase {
-  private readonly logger = new Logger(CleanupOrphanedImagesUseCase.name);
-
   constructor(
     private readonly objectStoragePort: ObjectStoragePort,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
+    @InjectPinoLogger(CleanupOrphanedImagesUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(): Promise<CleanupResult> {
-    this.logger.log('Starting orphaned images cleanup');
+    this.logger.info('Starting orphaned images cleanup');
 
     const result: CleanupResult = {
       scannedCount: 0,
@@ -41,80 +42,95 @@ export class CleanupOrphanedImagesUseCase {
       const allObjects = await this.objectStoragePort.listObjects();
       result.scannedCount = allObjects.length;
 
-      this.logger.log(`Scanning ${allObjects.length} objects for orphans`);
-
-      // Group objects by messageId to batch check existence
-      const messageIdToObjects = this.groupObjectsByMessageId(allObjects);
-      const uniqueMessageIds = Array.from(messageIdToObjects.keys());
-
-      this.logger.debug(
-        `Found ${uniqueMessageIds.length} unique message IDs to check`,
+      this.logger.info(
+        { objectCount: allObjects.length },
+        'Scanning objects for orphans',
       );
 
-      // Check each message existence and collect orphaned paths
-      const orphanedPaths: string[] = [];
-
-      for (const messageId of uniqueMessageIds) {
-        try {
-          const message = await this.messagesRepository.findById(
-            messageId as UUID,
-          );
-
-          if (!message) {
-            // Message doesn't exist, all its images are orphaned
-            const paths = messageIdToObjects.get(messageId) || [];
-            orphanedPaths.push(...paths);
-            this.logger.debug(
-              `Message ${messageId} not found, marking ${paths.length} images as orphaned`,
-            );
-          }
-        } catch (error) {
-          this.logger.warn(`Failed to check message ${messageId}`, {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      }
-
-      this.logger.log(
-        `Found ${orphanedPaths.length} orphaned images to delete`,
+      const orphanedPaths = await this.findOrphanedPaths(allObjects);
+      this.logger.info(
+        { imageCount: orphanedPaths.length },
+        'Found orphaned images to delete',
       );
+      await this.deleteOrphanedPaths(orphanedPaths, result);
 
-      // Delete orphaned images
-      for (const path of orphanedPaths) {
-        try {
-          await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
-          result.deletedCount++;
-          result.deletedPaths.push(path);
-          this.logger.debug(`Deleted orphaned image: ${path}`);
-        } catch (error) {
-          // If object doesn't exist, it's already cleaned up - don't count as failure
-          if (error instanceof ObjectNotFoundError) {
-            this.logger.debug(`Orphaned image already deleted: ${path}`);
-            continue;
-          }
-
-          result.failedCount++;
-          const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
-          result.errors.push({ path, error: errorMessage });
-          this.logger.warn(`Failed to delete orphaned image: ${path}`, {
-            error: errorMessage,
-          });
-        }
-      }
-
-      this.logger.log('Orphaned images cleanup completed', {
-        scanned: result.scannedCount,
-        deleted: result.deletedCount,
-        failed: result.failedCount,
-      });
+      this.logger.info(
+        {
+          scanned: result.scannedCount,
+          deleted: result.deletedCount,
+          failed: result.failedCount,
+        },
+        'Orphaned images cleanup completed',
+      );
 
       return result;
     } catch (error) {
-      this.logger.error('Orphaned images cleanup failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.error(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Orphaned images cleanup failed',
+      );
       throw error;
+    }
+  }
+
+  private async findOrphanedPaths(allObjects: string[]): Promise<string[]> {
+    const objectsByMessageId = this.groupObjectsByMessageId(allObjects);
+    this.logger.debug(
+      { messageCount: objectsByMessageId.size },
+      'Found unique message IDs to check',
+    );
+    const orphanedPaths: string[] = [];
+    for (const [messageId, paths] of objectsByMessageId) {
+      try {
+        const message = await this.messagesRepository.findById(
+          messageId as UUID,
+        );
+        if (!message) {
+          orphanedPaths.push(...paths);
+          this.logger.debug(
+            { messageId, imageCount: paths.length },
+            'Message not found, marking images as orphaned',
+          );
+        }
+      } catch (error) {
+        this.logger.warn(
+          {
+            messageId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to check message',
+        );
+      }
+    }
+    return orphanedPaths;
+  }
+
+  private async deleteOrphanedPaths(
+    paths: string[],
+    result: CleanupResult,
+  ): Promise<void> {
+    for (const path of paths) {
+      try {
+        await this.deleteObjectUseCase.execute(new DeleteObjectCommand(path));
+        result.deletedCount++;
+        result.deletedPaths.push(path);
+        this.logger.debug({ path }, 'Deleted orphaned image');
+      } catch (error) {
+        if (error instanceof ObjectNotFoundError) {
+          this.logger.debug({ path }, 'Orphaned image already deleted');
+          continue;
+        }
+        result.failedCount++;
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        result.errors.push({ path, error: errorMessage });
+        this.logger.warn(
+          { path, error: errorMessage },
+          'Failed to delete orphaned image',
+        );
+      }
     }
   }
 
@@ -130,7 +146,7 @@ export class CleanupOrphanedImagesUseCase {
     for (const path of objectPaths) {
       const messageId = this.extractMessageIdFromPath(path);
       if (messageId) {
-        const existing = map.get(messageId) || [];
+        const existing = map.get(messageId) ?? [];
         existing.push(path);
         map.set(messageId, existing);
       }
@@ -150,7 +166,10 @@ export class CleanupOrphanedImagesUseCase {
     const parts = path.split('/');
     // Expected: [orgId, threadId, messageId, filename]
     if (parts.length !== 4) {
-      this.logger.debug(`Skipping path with unexpected segment count: ${path}`);
+      this.logger.debug(
+        { path },
+        'Skipping path with unexpected segment count',
+      );
       return null; // Not a valid image path format
     }
 
@@ -164,14 +183,14 @@ export class CleanupOrphanedImagesUseCase {
       !uuidRegex.test(threadId) ||
       !uuidRegex.test(messageId)
     ) {
-      this.logger.debug(`Skipping path with invalid UUID format: ${path}`);
+      this.logger.debug({ path }, 'Skipping path with invalid UUID format');
       return null; // Not a valid image path - skip
     }
 
     // Validate filename matches image pattern: <index>.<ext>
     const imageFilePattern = /^\d+\.(jpg|jpeg|png|gif|webp)$/i;
     if (!imageFilePattern.test(filename)) {
-      this.logger.debug(`Skipping path with non-image filename: ${path}`);
+      this.logger.debug({ path }, 'Skipping path with non-image filename');
       return null; // Not a valid image filename - skip
     }
 

@@ -1,6 +1,7 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { UUID } from 'crypto';
 import { ArtifactToolAssemblerService } from './artifact-tool-assembler.service';
@@ -94,15 +95,16 @@ describe('ArtifactToolAssemblerService', () => {
           provide: FindAllLetterheadsUseCase,
           useValue: mockFindAllLetterheadsUseCase,
         },
+        {
+          provide: getLoggerToken(ArtifactToolAssemblerService.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 
     service = module.get<ArtifactToolAssemblerService>(
       ArtifactToolAssemblerService,
     );
-
-    jest.spyOn(Logger.prototype, 'log').mockImplementation();
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
   });
 
   afterEach(() => {

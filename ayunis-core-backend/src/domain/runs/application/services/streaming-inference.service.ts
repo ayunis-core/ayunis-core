@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -75,14 +76,18 @@ const freshTracker = (): OutputTracker => ({
  */
 @Injectable()
 export class StreamingInferenceService {
-  private readonly logger = new Logger(StreamingInferenceService.name);
-
   constructor(
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly saveAssistantMessageUseCase: SaveAssistantMessageUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(StreamingInferenceService.name)
+    private readonly logger: PinoLogger,
+    @InjectPinoLogger('StreamUsage')
+    private readonly streamUsageLogger: PinoLogger,
+    @InjectPinoLogger('ToolCallArguments')
+    private readonly toolCallArgumentsLogger: PinoLogger,
   ) {}
 
   async *executeStreamingInference(
@@ -110,8 +115,8 @@ export class StreamingInferenceService {
       // as the stall retry; a second empty attempt falls through to the
       // orchestrator's RUN_EXECUTION_FAILED (incident #548).
       this.logger.warn(
-        'Provider stream completed without any output; retrying once',
         { threadId: params.threadId },
+        'Provider stream completed without any output; retrying once',
       );
     } catch (error) {
       // A stall or a token-limit-truncated tool call is safe to retry as
@@ -123,11 +128,11 @@ export class StreamingInferenceService {
         throw error;
       }
       this.logger.warn(
-        'Recoverable inference failure before durable output; retrying once',
         {
           threadId: params.threadId,
           reason: error.constructor.name,
         },
+        'Recoverable inference failure before durable output; retrying once',
       );
     }
     return yield* this.streamAttempt(params, freshTracker(), assistantMessage);
@@ -219,7 +224,7 @@ export class StreamingInferenceService {
     chunks: StreamInferenceResponseChunk[],
     messageId: UUID,
   ): void {
-    const usage = extractUsageFromChunks(chunks);
+    const usage = extractUsageFromChunks(chunks, this.streamUsageLogger);
     if (usage) {
       this.inferenceUsageGuard.collectUsage(model, usage, messageId);
     }
@@ -249,9 +254,12 @@ export class StreamingInferenceService {
         ),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit InferenceCompletedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+          },
+          'Failed to emit InferenceCompletedEvent',
+        );
       });
   }
 
@@ -285,6 +293,7 @@ export class StreamingInferenceService {
       assertToolCallArgumentsIntact(
         state.toolCalls.values(),
         state.finishReason,
+        this.toolCallArgumentsLogger,
       );
     } catch (error) {
       state.toolCallsCorrupted = true;
@@ -353,14 +362,14 @@ export class StreamingInferenceService {
     streamCompletedSuccessfully: boolean,
     tools: Tool[],
   ): Promise<boolean> {
-    this.logger.log(
-      'Finalizing streaming inference, saving accumulated message',
+    this.logger.info(
       {
         threadId,
         hasText: state.text.length > 0,
         hasThinking: state.thinking.length > 0,
         toolCallsCount: state.toolCalls.size,
       },
+      'Finalizing streaming inference, saving accumulated message',
     );
 
     const finalContent = this.buildFinalContent(
@@ -375,14 +384,20 @@ export class StreamingInferenceService {
         new SaveAssistantMessageCommand(assistantMessage),
       );
       if (!saved) return false;
-      this.logger.log('Successfully saved message to database', {
-        threadId,
-        messageId: assistantMessage.id,
-      });
+      this.logger.info(
+        {
+          threadId,
+          messageId: assistantMessage.id,
+        },
+        'Successfully saved message to database',
+      );
     } else {
-      this.logger.warn('No content to save for assistant message', {
-        threadId,
-      });
+      this.logger.warn(
+        {
+          threadId,
+        },
+        'No content to save for assistant message',
+      );
     }
     return true;
   }
@@ -397,9 +412,9 @@ export class StreamingInferenceService {
     if (includeToolCalls) {
       this.addFinalToolCalls(content, state.toolCalls, tools);
     } else {
-      this.logger.log(
-        'Streaming was interrupted, excluding tool calls from saved message',
+      this.logger.info(
         { toolCallCount: state.toolCalls.size },
+        'Streaming was interrupted, excluding tool calls from saved message',
       );
     }
 
@@ -416,8 +431,11 @@ export class StreamingInferenceService {
       const parsedArgs = parseFinalToolArguments(toolCall.arguments);
       if (parsedArgs === null) {
         this.logger.warn(
-          `Discarding tool call with unparseable arguments: ${toolCall.name}`,
-          { argumentsLength: toolCall.arguments.length },
+          {
+            toolName: toolCall.name,
+            argumentsLength: toolCall.arguments.length,
+          },
+          'Discarding tool call with unparseable arguments',
         );
         return;
       }

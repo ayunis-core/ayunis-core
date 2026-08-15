@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { createServer, type Server } from 'http';
 import { connect, type Socket, type AddressInfo } from 'net';
 import type { Response } from 'express';
@@ -95,6 +96,7 @@ describe('RunSsePresenter over real sockets', () => {
 
   const presenter = new RunSsePresenter(
     eventMapper as unknown as RunEventResponseMapper,
+    createPinoLoggerMock(),
   );
 
   let server: Server;

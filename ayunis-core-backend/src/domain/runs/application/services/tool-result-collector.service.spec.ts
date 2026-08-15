@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { RunAnonymizationUnavailableError } from '../runs.errors';
@@ -96,6 +97,7 @@ describe('ToolResultCollectorService', () => {
       anonymizeTextForThreadUseCase,
       contextService,
       eventEmitter as never,
+      createPinoLoggerMock(),
     );
   });
 

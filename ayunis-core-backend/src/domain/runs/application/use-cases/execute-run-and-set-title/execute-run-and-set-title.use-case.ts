@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
 import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
@@ -39,14 +40,14 @@ import type { RunExecutionOutcome } from '../../run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
-  private readonly logger = new Logger(ExecuteRunAndSetTitleUseCase.name);
-
   constructor(
     private readonly executeRunUseCase: ExecuteRunUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly generateAndSetThreadTitleUseCase: GenerateAndSetThreadTitleUseCase,
     private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
     private readonly contextService: ContextService,
+    @InjectPinoLogger(ExecuteRunAndSetTitleUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async *execute(
@@ -56,7 +57,10 @@ export class ExecuteRunAndSetTitleUseCase {
       yield this.sessionEvent(command.threadId, true);
       yield* this.executeRun(command);
     } catch (error) {
-      this.logger.error('Error in executeRunAndSetTitle', error);
+      this.logger.error(
+        { err: error instanceof Error ? error : new Error(String(error)) },
+        'Error in executeRunAndSetTitle',
+      );
       // The SSE response was committed as 200 before the run started, so the
       // global exception filter never sees this failure — report it here or
       // provider outages produce no AppSignal incident at all (AYC-653).
@@ -171,10 +175,10 @@ export class ExecuteRunAndSetTitleUseCase {
         ? await this.anonymizeText(firstUserMessage)
         : firstUserMessage;
 
-      this.logger.log('Generating thread title', {
-        threadId: command.threadId,
-        isAnonymous: thread.isAnonymous,
-      });
+      this.logger.info(
+        { threadId: command.threadId, isAnonymous: thread.isAnonymous },
+        'Generating thread title',
+      );
 
       const model = thread.model;
       if (!model) {
@@ -191,24 +195,27 @@ export class ExecuteRunAndSetTitleUseCase {
         }),
       );
 
-      if (title) {
-        return {
-          type: 'thread',
-          threadId: thread.id,
-          updateType: 'title_updated',
-          title: title,
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      return null;
+      return title ? this.titleUpdatedEvent(thread.id, title) : null;
     } catch (error) {
-      this.logger.warn('Error in generateTitle', {
-        threadId: command.threadId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        {
+          threadId: command.threadId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Error in generateTitle',
+      );
       return null;
     }
+  }
+
+  private titleUpdatedEvent(threadId: UUID, title: string): RunThreadEvent {
+    return {
+      type: 'thread',
+      threadId,
+      updateType: 'title_updated',
+      title,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   private extractUserMessage(input: RunInput): string | undefined {
@@ -232,11 +239,14 @@ export class ExecuteRunAndSetTitleUseCase {
       new AnonymizeTextForOrgCommand(text, orgId),
     );
     if (result.replacements.length > 0) {
-      this.logger.log('Anonymized text for title generation', {
-        originalLength: text.length,
-        anonymizedLength: result.anonymizedText.length,
-        replacementsCount: result.replacements.length,
-      });
+      this.logger.info(
+        {
+          originalLength: text.length,
+          anonymizedLength: result.anonymizedText.length,
+          replacementsCount: result.replacements.length,
+        },
+        'Anonymized text for title generation',
+      );
     }
     return result.anonymizedText;
   }

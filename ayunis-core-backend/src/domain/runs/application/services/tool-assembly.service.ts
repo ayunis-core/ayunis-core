@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
@@ -35,8 +36,6 @@ import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 
 @Injectable()
 export class ToolAssemblyService {
-  private readonly logger = new Logger(ToolAssemblyService.name);
-
   constructor(
     private readonly configService: ConfigService,
     private readonly assembleToolsUseCase: AssembleToolUseCase,
@@ -52,6 +51,8 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    @InjectPinoLogger(ToolAssemblyService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async findActiveSkills(): Promise<Skill[]> {
@@ -110,8 +111,8 @@ export class ToolAssemblyService {
       );
     } catch (error) {
       this.logger.error(
-        'Failed to fetch always-on templates, continuing without them',
         { error: error instanceof Error ? error.message : 'Unknown error' },
+        'Failed to fetch always-on templates, continuing without them',
       );
       return [];
     }
@@ -177,10 +178,10 @@ export class ToolAssemblyService {
       } catch (error) {
         const message =
           error instanceof SlugCollisionError
-            ? `Slug collision, skipping skill "${input.name}"`
-            : `Failed to build slug for skill "${input.name}", skipping`;
+            ? 'Slug collision, skipping skill'
+            : 'Failed to build slug for skill, skipping';
         const detail = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.warn(message, { error: detail });
+        this.logger.warn({ skillName: input.name, error: detail }, message);
       }
     }
 

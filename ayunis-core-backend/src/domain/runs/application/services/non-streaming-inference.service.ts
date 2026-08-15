@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
@@ -17,12 +18,12 @@ import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-in
  */
 @Injectable()
 export class NonStreamingInferenceService {
-  private readonly logger = new Logger(NonStreamingInferenceService.name);
-
   constructor(
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(NonStreamingInferenceService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(params: {
@@ -66,9 +67,12 @@ export class NonStreamingInferenceService {
           ),
         )
         .catch((err: unknown) => {
-          this.logger.error('Failed to emit InferenceCompletedEvent', {
-            error: err instanceof Error ? err.message : 'Unknown error',
-          });
+          this.logger.error(
+            {
+              error: err instanceof Error ? err.message : 'Unknown error',
+            },
+            'Failed to emit InferenceCompletedEvent',
+          );
         });
     }
   }

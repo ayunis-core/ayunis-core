@@ -1,6 +1,6 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { setError } from '@appsignal/nodejs';
-import { Logger } from '@nestjs/common';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 import {
   McpConnectionFailedError,
@@ -17,10 +17,6 @@ jest.mock('@appsignal/nodejs', () => ({
 describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () => {
   const integrationId = randomUUID();
 
-  beforeAll(() => {
-    jest.spyOn(Logger.prototype, 'warn').mockImplementation();
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -34,7 +30,9 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
         .fn()
         .mockResolvedValue([{ id: integrationId, name: 'Test Integration' }]),
     } as unknown as GetMcpIntegrationsByIdsUseCase;
-    return new McpToolAssemblerService(discover, getByIds);
+    const logger = createPinoLoggerMock();
+    const service = new McpToolAssemblerService(discover, getByIds, logger);
+    return { service, logger };
   };
 
   const thread = { mcpIntegrationIds: [integrationId] } as unknown as Thread;
@@ -44,7 +42,7 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
       'https://example.com/mcp',
       new Error('getaddrinfo EAI_AGAIN example.com'),
     );
-    const service = buildService(outage);
+    const { service } = buildService(outage);
 
     const tools = await service.assemble(thread, new Set());
 
@@ -57,7 +55,7 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
       'https://example.com/mcp',
       30_000,
     );
-    const service = buildService(timeout);
+    const { service } = buildService(timeout);
 
     const tools = await service.assemble(thread, new Set());
 
@@ -66,11 +64,15 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
   });
 
   it('does not report discovery failures that are not connectivity outages', async () => {
-    const service = buildService(new Error('Method not found'));
+    const { service, logger } = buildService(new Error('Method not found'));
 
     const tools = await service.assemble(thread, new Set());
 
     expect(tools).toEqual([]);
     expect(setError).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ integrationName: 'Test Integration' }),
+      'MCP integration unavailable, skipping',
+    );
   });
 });

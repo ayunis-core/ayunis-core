@@ -1,4 +1,5 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SaveAssistantMessageCommand } from './save-assistant-message.command';
 import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -17,22 +18,25 @@ import type { UUID } from 'crypto';
 
 @Injectable()
 export class SaveAssistantMessageUseCase {
-  private readonly logger = new Logger(SaveAssistantMessageUseCase.name);
-
   constructor(
     @Inject(MESSAGES_REPOSITORY)
     private readonly messagesRepository: MessagesRepository,
     private readonly contextService: ContextService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectPinoLogger(SaveAssistantMessageUseCase.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async execute(
     command: SaveAssistantMessageCommand,
   ): Promise<AssistantMessage | null> {
-    this.logger.log('Saving assistant message', {
-      messageId: command.message.id,
-      threadId: command.message.threadId,
-    });
+    this.logger.info(
+      {
+        messageId: command.message.id,
+        threadId: command.message.threadId,
+      },
+      'Saving assistant message',
+    );
 
     try {
       const saved = (await this.messagesRepository.create(
@@ -44,19 +48,22 @@ export class SaveAssistantMessageUseCase {
     } catch (error) {
       if (error instanceof MessageThreadMissingError) {
         this.logger.warn(
-          'Skipped saving assistant message because thread no longer exists',
           {
             messageId: command.message.id,
             threadId: command.message.threadId,
           },
+          'Skipped saving assistant message because thread no longer exists',
         );
         return null;
       }
-      this.logger.error('Failed to save assistant message', {
-        messageId: command.message.id,
-        threadId: command.message.threadId,
-        error: error as Error,
-      });
+      this.logger.error(
+        {
+          messageId: command.message.id,
+          threadId: command.message.threadId,
+          err: error as Error,
+        },
+        'Failed to save assistant message',
+      );
       throw error instanceof Error
         ? new MessageCreationError(MessageRole.ASSISTANT.toLowerCase(), error)
         : new MessageCreationError(
@@ -83,10 +90,13 @@ export class SaveAssistantMessageUseCase {
         ),
       )
       .catch((err: unknown) => {
-        this.logger.error('Failed to emit AssistantMessageCreatedEvent', {
-          error: err instanceof Error ? err.message : 'Unknown error',
-          messageId: saved.id,
-        });
+        this.logger.error(
+          {
+            error: err instanceof Error ? err.message : 'Unknown error',
+            messageId: saved.id,
+          },
+          'Failed to emit AssistantMessageCreatedEvent',
+        );
       });
   }
 }

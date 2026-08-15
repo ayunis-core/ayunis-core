@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import type { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
@@ -17,6 +18,7 @@ describe('LocalUsageRepository', () => {
       {} as Repository<UserRecord>,
       {} as UsageMapper,
       {} as UsageQueryMapper,
+      createPinoLoggerMock(),
     );
 
     const result = await repository.existsByModelId(modelId);

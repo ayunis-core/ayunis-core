@@ -1,3 +1,5 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserUsageUseCase } from './get-user-usage.use-case';
@@ -35,6 +37,10 @@ describe('GetUserUsageUseCase', () => {
       providers: [
         GetUserUsageUseCase,
         { provide: UsageRepository, useValue: mockUsageRepository },
+        {
+          provide: getLoggerToken(GetUserUsageUseCase.name),
+          useValue: createPinoLoggerMock(),
+        },
       ],
     }).compile();
 

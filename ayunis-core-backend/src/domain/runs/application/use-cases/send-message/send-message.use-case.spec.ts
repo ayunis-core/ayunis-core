@@ -1,3 +1,4 @@
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { IncrementTrialMessagesUseCase } from 'src/iam/trials/application/use-cases/increment-trial-messages/increment-trial-messages.use-case';
@@ -67,6 +68,7 @@ describe('SendMessageUseCase', () => {
       executeRunAndSetTitleUseCase as unknown as ExecuteRunAndSetTitleUseCase,
       incrementTrialMessagesUseCase as unknown as IncrementTrialMessagesUseCase,
       contextService as unknown as ContextService,
+      createPinoLoggerMock(),
     );
   });
 

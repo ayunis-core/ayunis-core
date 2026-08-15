@@ -1,13 +1,13 @@
 import {
   Body,
   Controller,
-  Logger,
   Post,
   Req,
   Res,
   UseInterceptors,
   UploadedFiles,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiOperation,
@@ -88,12 +88,12 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
 @RequireAcademyCertificate()
 @Controller('runs')
 export class RunsController {
-  private readonly logger = new Logger(RunsController.name);
-
   constructor(
     private readonly sendMessageUseCase: SendMessageUseCase,
     private readonly requestValidator: SendMessageRequestValidator,
     private readonly ssePresenter: RunSsePresenter,
+    @InjectPinoLogger(RunsController.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   @Post('send-message')
@@ -115,21 +115,19 @@ export class RunsController {
   ): Promise<void> {
     const uploadedFiles = files ?? [];
 
-    this.logger.log('sendMessage', {
-      userId,
-      threadId: sendMessageDto.threadId,
-      streaming: sendMessageDto.streaming,
-      fileCount: uploadedFiles.length,
-      hasText: !!sendMessageDto.text?.trim(),
-      hasToolResult: !!sendMessageDto.toolResult,
-    });
+    this.logger.info(
+      {
+        userId,
+        threadId: sendMessageDto.threadId,
+        streaming: sendMessageDto.streaming,
+        fileCount: uploadedFiles.length,
+        hasText: !!sendMessageDto.text?.trim(),
+        hasToolResult: !!sendMessageDto.toolResult,
+      },
+      'sendMessage',
+    );
 
     this.requestValidator.validate(sendMessageDto, uploadedFiles);
-    const input = RunInputMapper.toCommand(
-      sendMessageDto,
-      uploadedFiles,
-      sendMessageDto.skillId,
-    );
     const consumeTrialMessage = Boolean(
       request.subscriptionContext?.hasRemainingTrialMessages,
     );
@@ -139,14 +137,28 @@ export class RunsController {
       sendMessageDto.threadId,
       (signal) =>
         this.sendMessageUseCase.execute(
-          new SendMessageCommand({
-            threadId: sendMessageDto.threadId,
-            input,
-            streaming: sendMessageDto.streaming ?? true,
+          this.createCommand(
+            sendMessageDto,
+            uploadedFiles,
             consumeTrialMessage,
             signal,
-          }),
+          ),
         ),
     );
+  }
+
+  private createCommand(
+    dto: SendMessageDto,
+    files: Express.Multer.File[],
+    consumeTrialMessage: boolean,
+    signal: AbortSignal,
+  ): SendMessageCommand {
+    return new SendMessageCommand({
+      threadId: dto.threadId,
+      input: RunInputMapper.toCommand(dto, files, dto.skillId),
+      streaming: dto.streaming ?? true,
+      consumeTrialMessage,
+      signal,
+    });
   }
 }

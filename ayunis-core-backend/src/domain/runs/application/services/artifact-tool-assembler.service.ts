@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
@@ -27,13 +28,13 @@ import { buildLetterheadSuffix } from './letterhead-suffix.helper';
  */
 @Injectable()
 export class ArtifactToolAssemblerService {
-  private readonly logger = new Logger(ArtifactToolAssemblerService.name);
-
   constructor(
     private readonly assembleToolsUseCase: AssembleToolUseCase,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
+    @InjectPinoLogger(ArtifactToolAssemblerService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async assembleArtifactTools(thread: Thread): Promise<Tool[]> {
@@ -168,9 +169,12 @@ export class ArtifactToolAssemblerService {
     try {
       return await this.findAllLetterheadsUseCase.execute();
     } catch (error) {
-      this.logger.warn('Failed to fetch letterheads, continuing without them', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      this.logger.warn(
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to fetch letterheads, continuing without them',
+      );
       return [];
     }
   }

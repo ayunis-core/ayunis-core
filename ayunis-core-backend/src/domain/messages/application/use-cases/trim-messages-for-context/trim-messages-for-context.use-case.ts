@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CountTokensUseCase } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.use-case';
 import { CountTokensCommand } from 'src/common/token-counter/application/use-cases/count-tokens/count-tokens.command';
 import { TokenCounterType } from 'src/common/token-counter/application/ports/token-counter.handler.port';
@@ -9,15 +10,20 @@ import { extractTextFromMessage } from '../../utils/message-text-extractor.util'
 
 @Injectable()
 export class TrimMessagesForContextUseCase {
-  private readonly logger = new Logger(TrimMessagesForContextUseCase.name);
-
-  constructor(private readonly countTokensUseCase: CountTokensUseCase) {}
+  constructor(
+    private readonly countTokensUseCase: CountTokensUseCase,
+    @InjectPinoLogger(TrimMessagesForContextUseCase.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   execute(command: TrimMessagesForContextCommand): Message[] {
-    this.logger.log('execute', {
-      messageCount: command.messages.length,
-      maxTokens: command.maxTokens,
-    });
+    this.logger.info(
+      {
+        messageCount: command.messages.length,
+        maxTokens: command.maxTokens,
+      },
+      'execute',
+    );
 
     if (command.messages.length === 0) {
       return [];
@@ -53,11 +59,14 @@ export class TrimMessagesForContextUseCase {
     // Ensure the first message is a user message
     const trimmedMessages = this.ensureFirstMessageIsUser(selectedMessages);
 
-    this.logger.log('execute completed', {
-      originalCount: command.messages.length,
-      selectedCount: trimmedMessages.length,
-      totalTokens,
-    });
+    this.logger.info(
+      {
+        originalCount: command.messages.length,
+        selectedCount: trimmedMessages.length,
+        totalTokens,
+      },
+      'execute completed',
+    );
 
     return trimmedMessages;
   }

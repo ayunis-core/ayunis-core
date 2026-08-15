@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { GetMonthlyCreditLimitUseCase } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.use-case';
 import { GetMonthlyCreditLimitQuery } from 'src/iam/subscriptions/application/use-cases/get-monthly-credit-limit/get-monthly-credit-limit.query';
@@ -17,11 +18,11 @@ import { CreditBudgetExceededError } from 'src/iam/subscriptions/application/sub
  */
 @Injectable()
 export class CreditBudgetGuardService {
-  private readonly logger = new Logger(CreditBudgetGuardService.name);
-
   constructor(
     private readonly getMonthlyCreditLimitUseCase: GetMonthlyCreditLimitUseCase,
     private readonly getMonthlyCreditUsageUseCase: GetMonthlyCreditUsageUseCase,
+    @InjectPinoLogger(CreditBudgetGuardService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async ensureBudgetAvailable(orgId: UUID): Promise<void> {
@@ -39,11 +40,14 @@ export class CreditBudgetGuardService {
     );
 
     if (creditsUsed >= monthlyCredits) {
-      this.logger.warn('Credit budget exceeded', {
-        orgId,
-        creditsUsed,
-        monthlyCredits,
-      });
+      this.logger.warn(
+        {
+          orgId,
+          creditsUsed,
+          monthlyCredits,
+        },
+        'Credit budget exceeded',
+      );
       throw new CreditBudgetExceededError({
         orgId,
         creditsUsed,
