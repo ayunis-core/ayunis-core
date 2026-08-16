@@ -33,6 +33,9 @@ jobs:
           - name: Agent Extensions
             working-directory: packages/agent-extensions
             precheck: ''
+          - name: Agent Harness
+            working-directory: packages/agent-harness
+            precheck: ''
           - name: Inference
             working-directory: packages/inference
             precheck: ''

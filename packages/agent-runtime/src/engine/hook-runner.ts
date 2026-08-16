@@ -23,6 +23,7 @@ interface HookRunnerDeps {
   mutations: PendingMutations;
   emits: EmitBuffer;
   abortState: AbortState;
+  getTools: () => Tool[];
 }
 
 export interface RunEndFailure {
@@ -42,15 +43,18 @@ export class HookRunner {
   }
 
   private api(): HookApi {
-    const { context, mutations, emits, abortState } = this.deps;
+    const { context, mutations, emits, abortState, getTools } = this.deps;
     return {
       context,
       transformMessages: (fn) => mutations.transformMessages(fn),
       addTools: (...tools) => mutations.addTools(...tools),
       removeTools: (...names) => mutations.removeTools(...names),
       setTools: (tools) => mutations.setTools(tools),
+      transformTools: (fn) => mutations.transformTools(fn),
+      getProspectiveTools: () => mutations.getProspectiveTools(getTools()),
       addInstructions: (text) => mutations.addInstructions(text),
       setInstructions: (text) => mutations.setInstructions(text),
+      transformInstructions: (fn) => mutations.transformInstructions(fn),
       abort: (reason) => abortState.abort(reason),
       emit: (event) => emits.push(event),
     };
