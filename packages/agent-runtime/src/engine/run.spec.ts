@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { RunContext } from '../context/run-context';
 import { InvalidRunInputError } from '../contracts/errors';
 import type { RunEvent } from '../contracts/event';
 import type { Hook } from '../contracts/hook';
@@ -134,7 +135,6 @@ describe('re-entrancy and child runs', () => {
         seen.push(ctx.context.get('orgId'));
       },
     };
-    const { RunContext } = await import('../context/run-context');
     const childModel = new MockProvider([textTurn('child')]);
     const spawningTool = echoTool({
       name: 'spawn',
@@ -166,4 +166,112 @@ describe('re-entrancy and child runs', () => {
     expect(seen).toEqual(['org-1', 'org-1']);
     expect(childStatuses).toEqual(['completed']);
   });
+
+  it('delegates child runs with a derived context and no implicit hooks', async () => {
+    const parentPhases: number[] = [];
+    const delegatedContexts: RunContext[] = [];
+    const observer: Hook = {
+      name: 'observer',
+      runStart: (ctx) => {
+        parentPhases.push(ctx.context.depth);
+      },
+    };
+    const childModel = new MockProvider([textTurn('child')]);
+    const childRunHandler = (input: Parameters<typeof run>[0]) => {
+      if (input.context) {
+        delegatedContexts.push(input.context);
+      }
+      return run(input);
+    };
+    const spawningTool = echoTool({
+      name: 'spawn',
+      execute: async (_input, ctx) => {
+        await collectAsync(
+          ctx.runChild({
+            instructions: 'Child.',
+            model: childModel,
+            messages: [userMessage('Go')],
+          }),
+        );
+        return 'done';
+      },
+    });
+    const parentModel = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'spawn', input: {} }),
+      textTurn('parent done'),
+    ]);
+
+    await collectEvents(
+      baseInput(parentModel, {
+        tools: [spawningTool],
+        hooks: [observer],
+        childRunHandler,
+      }),
+    );
+
+    expect(parentPhases).toEqual([0]);
+    expect(delegatedContexts[0]).toMatchObject({ depth: 1 });
+  });
+
+  it('preserves path metadata for nested delegated child events', async () => {
+    const delegatedEvents: RunEvent[] = [];
+    const grandchildModel = new MockProvider([textTurn('grandchild')]);
+    const childModel = new MockProvider([
+      toolCallTurn({ id: 'nested', name: 'nest', input: {} }),
+      textTurn('child'),
+    ]);
+    const nestingTool = echoTool({
+      name: 'nest',
+      execute: async (_input, ctx) => {
+        delegatedEvents.push(
+          ...(await collectAsync(
+            ctx.runChild({
+              instructions: 'Grandchild.',
+              model: grandchildModel,
+              messages: [userMessage('Go deeper')],
+            }),
+          )),
+        );
+        return 'nested';
+      },
+    });
+    const childRunHandler = (input: Parameters<typeof run>[0]) => run(input);
+    const spawningTool = echoTool({
+      name: 'spawn',
+      execute: async (_input, ctx) => {
+        delegatedEvents.push(
+          ...(await collectAsync(
+            ctx.runChild({
+              instructions: 'Child.',
+              model: childModel,
+              tools: [nestingTool],
+              messages: [userMessage('Go')],
+            }),
+          )),
+        );
+        return 'done';
+      },
+    });
+    const parentModel = new MockProvider([
+      toolCallTurn({ id: 'c1', name: 'spawn', input: {} }),
+      textTurn('parent'),
+    ]);
+
+    const parentEvents = await collectEvents(
+      baseInput(parentModel, { tools: [spawningTool], childRunHandler }),
+    );
+
+    const grandchildStart = delegatedEvents.find((event) => event.depth === 2);
+    expect(grandchildStart).toMatchObject({ depth: 2 });
+    expect(grandchildStart?.path).toHaveLength(3);
+    expect(grandchildStart?.path[0]).toBe(parentEvents[0].runId);
+  });
 });
+
+const collectAsync = async <T>(iterable: AsyncIterable<T>): Promise<T[]> => {
+  const values: T[] = [];
+  for await (const value of iterable) {
+    values.push(value);
+  }
+  return values;
+};

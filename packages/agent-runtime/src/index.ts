@@ -48,7 +48,11 @@ export type {
   ToolCallSnapshot,
   ToolCallSummary,
 } from './contracts/event';
-export type { ChildRunInput, RunInput } from './contracts/run-input';
+export type {
+  ChildRunHandler,
+  ChildRunInput,
+  RunInput,
+} from './contracts/run-input';
 export { DEFAULT_MAX_ITERATIONS } from './contracts/run-input';
 export {
   AgentRuntimeError,
