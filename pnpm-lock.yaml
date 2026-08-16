@@ -640,6 +640,12 @@ importers:
       '@ayunis/agent-runtime':
         specifier: workspace:*
         version: link:../agent-runtime
+      '@modelcontextprotocol/client':
+        specifier: ^2.0.0
+        version: 2.0.0
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.18.0
