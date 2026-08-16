@@ -11,11 +11,12 @@ const expectedExports = [
   'AgentConfigurationError',
   'AgentHarnessError',
   'AgentVariantError',
+  'createAgent',
   'ModelResolutionError',
 ];
 
 describe('package surface', () => {
-  it('exports only agent contracts and errors at this checkpoint', () => {
+  it('exports only the runnable single-agent API and errors', () => {
     expect(sortedKeys(sourceSurface)).toEqual(expectedExports);
     expect(sourceSurface).not.toHaveProperty('defineAgentProfile');
     expect(sourceSurface).not.toHaveProperty('createAgentHarness');
