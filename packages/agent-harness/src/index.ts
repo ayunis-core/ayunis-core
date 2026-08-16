@@ -1,3 +1,4 @@
+export { createAgent } from './agent/create-agent';
 export type {
   Agent,
   AgentConfig,

@@ -1,47 +1,90 @@
 # @ayunis/agent-harness
 
-Runnable agent composition above `@ayunis/agent-runtime` and
+Runnable, immutable agents above `@ayunis/agent-runtime` and
 `@ayunis/agent-extensions`.
 
-The package is converging on one public abstraction:
+## Create and run an agent
 
 ```ts
-const agent = createAgent(config);
-const variant = agent.variant({
-  name: 'researcher-with-sources',
-  instructions: 'Prefer primary sources.',
-  extensions: [Sources.configure(options)],
+import { createAgent } from '@ayunis/agent-harness';
+import { RunContext } from '@ayunis/agent-runtime';
+
+const agent = createAgent({
+  name: 'researcher',
+  instructions: 'Answer with cited evidence.',
+  extensions: [KnowledgeBases.configure(knowledgeBaseOptions)],
+  modelSelector: { deployment: 'host-selected' },
+  resolveModel: async (selector, { context, signal }) =>
+    resolveHostModel({
+      selector,
+      organizationId: context.get('organizationId'),
+      signal,
+    }),
+  maxIterations: 12,
 });
 
-for await (const event of variant.run(input)) {
-  // consume runtime events
+const context = RunContext.create({ organizationId: 'org-1' });
+for await (const event of agent.run({
+  messages,
+  tools: hostTools,
+  context,
+  signal: abortController.signal,
+})) {
+  handleEvent(event);
 }
 ```
 
-At this checkpoint the root exports only the agent, configuration, run-input,
-model-resolver, and error contracts. The runnable `createAgent()` implementation
-will follow on the same package surface.
+The model selector is opaque to the package. `resolveModel()` receives the
+agent's frozen selector and the current run context on every public run, so the
+host remains responsible for model policy, credentials, and concrete provider
+construction. Creating an agent does not resolve a model, initialize an
+extension, or acquire a resource.
 
-Agent configuration has a stable name, instructions, configured extensions, an
-opaque host-owned model selector, a resolver callback, and simple run limits.
-Variants append instructions and extensions while inheriting model resolution
-and limits. Configuration is copied and frozen without resolving models,
-running extension setup, or acquiring resources.
+`agent.run()` forwards runtime events unchanged. Messages, authorization data,
+host tools, abort signals, durable capability state, and persistence remain
+host-owned inputs. When no context is supplied, the agent creates a fresh root
+`RunContext`.
 
-Messages, authorization context, capability persistence, and infrastructure
-remain host-owned inputs. The package intentionally has no public profile,
-registry, shared harness, model-policy/capability layer, or state-store
-protocol.
+## Variants
 
-## Private extension execution
+```ts
+const legalResearcher = agent.variant({
+  name: 'legal-researcher',
+  instructions: 'Prefer primary legal sources.',
+  extensions: [Skills.configure(skillsOptions)],
+});
+```
 
-Each future `agent.run()` owns one private extension engine. It sets configured
-extensions up in order, registers run-local APIs, projects owned instructions
-and tools, batches dirty-state reconciliation before model requests, and tears
-resources down in reverse order. State and newly acquired resources participate
-in engine transactions so prospective contributions can be collision-checked
-before an activation commits.
+A variant is another frozen runnable agent. It appends instructions and
+extensions while inheriting the base agent's model selector, resolver, limits,
+tool choice, and configured extensions. It cannot replace inherited settings
+or repeat an inherited extension.
 
-This machinery is deliberately absent from the root exports and package
-subpaths. It is an implementation detail of `createAgent()`, not another public
-runner, registry, or session abstraction.
+## Run lifecycle and isolation
+
+Every root run performs the following lifecycle:
+
+1. resolve the model for the run context;
+2. create a private extension engine and set up configured extensions in order;
+3. collision-check and compose host and extension instructions and tools;
+4. delegate execution to `@ayunis/agent-runtime`;
+5. close the runtime iterator and dispose extension resources in reverse order.
+
+Cleanup is idempotent and runs after completion, runtime failure, abort, setup
+rollback, or an explicit event-iterator `.return()`. Concurrent runs share only
+the frozen agent configuration; their extension state and run-owned resources
+are independent.
+
+Tools may use the runtime's `runChild()` seam. The harness intercepts child
+execution to create a new private extension engine around the child input and
+its derived child context. A child receives fresh extension state, hooks, and
+resources, does not inherit the parent's extension instances, and finalizes
+independently. Explicit child host hooks still apply to that child.
+
+## Public boundary
+
+The root package exports `createAgent()`, its agent/configuration/run types,
+model-resolver contracts, and attributed configuration/model-resolution errors.
+The extension engine remains private. There is no public profile, shared
+harness, registry, session runner, agent-state store, model-policy layer, or
+implicit persistence protocol.
