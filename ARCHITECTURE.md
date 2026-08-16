@@ -16,11 +16,57 @@ ayunis-core/
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
-├── packages/ui/              # Shared React design-system primitives
+├── packages/inference/        # Provider-neutral inference contracts
+├── packages/agent-runtime/    # Generic model/tool execution loop
+├── packages/agent-extensions/ # Run-scoped capability definitions
+├── packages/agent-harness/    # Runnable agents and private extension engine
+├── packages/ui/               # Shared React design-system primitives
 ├── ARCHITECTURE.md            # This file
 ├── AGENTS.md                  # AI coding agent guidelines
 └── docker-compose.yml         # Local dev infrastructure
 ```
+
+---
+
+## Agent SDK
+
+The Agent SDK has one-way package dependencies:
+
+```text
+@ayunis/inference
+        ↑
+@ayunis/agent-runtime
+        ↑
+@ayunis/agent-extensions
+        ↑
+@ayunis/agent-harness
+```
+
+- **`@ayunis/inference`** defines provider-neutral messages, schemas, request
+  contracts, and streamed provider output.
+- **`@ayunis/agent-runtime`** executes a resolved model request loop. It knows
+  about messages, models, tools, hooks, run context, and child execution, but
+  not extensions, skills, agents, tenants, or persistence.
+- **`@ayunis/agent-extensions`** defines run-scoped extension contracts and the
+  foundational KnowledgeBases, MCP, and Skills capabilities. Definitions own
+  setup and pure contribution logic, not execution orchestration.
+- **`@ayunis/agent-harness`** exposes immutable runnable agents through
+  `createAgent()`, `.variant()`, and `.run()`. Each run creates the private
+  extension engine that performs ordered setup, typed API registration,
+  transactional activation, contribution reconciliation, collision checks,
+  child-run isolation, and reverse-order cleanup before delegating to the
+  runtime.
+
+Host applications remain responsible for model selection and credentials,
+authorization, tenancy, persistence, knowledge retrieval, MCP connection
+resolution and transports, messages, durable capability state, and consuming
+run events. Those concerns enter through callbacks, tools, `RunContext`, and run
+inputs; the SDK packages do not depend on Ayunis Core infrastructure.
+
+There are no separate public profile, harness registry, extension engine,
+session runner, or agent state-store APIs. Shared routing, policy, resource
+lifecycle, or durable-instance abstractions should be introduced only when a
+concrete host requirement needs them.
 
 ---
 
