@@ -16,9 +16,10 @@ ayunis-core/
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
-├── packages/inference/        # Provider-agnostic inference contracts
-├── packages/agent-runtime/    # Bare agent loop and hook contracts
-├── packages/agent-extensions/ # Composable capabilities and resource lifetime
+├── packages/inference/        # Provider-neutral inference contracts
+├── packages/agent-runtime/    # Generic model/tool execution loop
+├── packages/agent-extensions/ # Run-scoped capability definitions
+├── packages/agent-harness/    # Runnable agents and private extension engine
 ├── packages/ui/               # Shared React design-system primitives
 ├── ARCHITECTURE.md            # This file
 ├── AGENTS.md                  # AI coding agent guidelines
@@ -27,9 +28,9 @@ ayunis-core/
 
 ---
 
-## Agent package layering
+## Agent SDK
 
-The reusable agent packages form a one-way stack:
+The Agent SDK has one-way package dependencies:
 
 ```text
 @ayunis/inference
@@ -38,21 +39,34 @@ The reusable agent packages form a one-way stack:
         ↑
 @ayunis/agent-extensions
         ↑
-future @ayunis/agent-harness
+@ayunis/agent-harness
 ```
 
-- [`@ayunis/inference`](packages/inference) defines provider-agnostic messages,
-  model requests, and streaming contracts.
-- [`@ayunis/agent-runtime`](packages/agent-runtime/README.md) is the bare agent
-  loop. Hooks are its only extension mechanism; the package has no resource
-  initialization or opinionated agent assembly.
-- [`@ayunis/agent-extensions`](packages/agent-extensions/README.md) resolves
-  named, composable manifests of tools, instructions, and hooks and owns their
-  optional cross-run resource lifetime. Static manifests merge into `RunInput`
-  before the runtime starts, while extension hooks remain ordinary runtime
-  hooks.
-- A future `@ayunis/agent-harness` may provide opinionated assemblies and
-  defaults on top of the lower layers and accept additional runtime extensions.
+- **`@ayunis/inference`** defines provider-neutral messages, schemas, request
+  contracts, and streamed provider output.
+- **`@ayunis/agent-runtime`** executes a resolved model request loop. It knows
+  about messages, models, tools, hooks, run context, and child execution, but
+  not extensions, skills, agents, tenants, or persistence.
+- **`@ayunis/agent-extensions`** defines run-scoped extension contracts and the
+  foundational KnowledgeBases, MCP, and Skills capabilities. Definitions own
+  setup and pure contribution logic, not execution orchestration.
+- **`@ayunis/agent-harness`** exposes immutable runnable agents through
+  `createAgent()`, `.variant()`, and `.run()`. Each run creates the private
+  extension engine that performs ordered setup, typed API registration,
+  transactional activation, contribution reconciliation, collision checks,
+  child-run isolation, and reverse-order cleanup before delegating to the
+  runtime.
+
+Host applications remain responsible for model selection and credentials,
+authorization, tenancy, persistence, knowledge retrieval, MCP connection
+resolution and transports, messages, durable capability state, and consuming
+run events. Those concerns enter through callbacks, tools, `RunContext`, and run
+inputs; the SDK packages do not depend on Ayunis Core infrastructure.
+
+There are no separate public profile, harness registry, extension engine,
+session runner, or agent state-store APIs. Shared routing, policy, resource
+lifecycle, or durable-instance abstractions should be introduced only when a
+concrete host requirement needs them.
 
 Runtime extensions are not **Agent Plugins**. Agent Plugins v1 is a portable
 filesystem package standard centered on `plugin.json`, Agent Skills, and
