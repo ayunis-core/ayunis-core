@@ -1,6 +1,6 @@
 # Runtime libraries available to user-submitted code inside the sandbox.
 # Exact pins keep released sandbox images reproducible; Dependabot
 # (pip, /ayunis-core-code-execution/sandbox) bumps them weekly.
-numpy==2.5.1
+numpy==2.5.2
 pandas==3.0.5
 matplotlib==3.11.1
