@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Hook } from '../contracts/hook';
+import type { Tool } from '../contracts/tool';
 import {
   MockProvider,
   textTurn,
   toolCallTurn,
 } from '../providers/mock/mock-provider';
+import { PendingMutations } from './mutations';
 import { baseInput, collectEvents, echoTool } from './test-helpers';
 
 const twoIterationModel = (): MockProvider =>
@@ -13,6 +15,33 @@ const twoIterationModel = (): MockProvider =>
     toolCallTurn({ id: 'c1', name: 'echo', input: { value: 'x' } }),
     textTurn('Done'),
   ]);
+
+describe('PendingMutations tool previews', () => {
+  it('does not expose or pass through the mutable run tool array', () => {
+    const original = echoTool();
+    const added = echoTool({ name: 'added' });
+    const config = {
+      messages: [],
+      tools: [original],
+      instructions: '',
+    };
+    const mutations = new PendingMutations();
+    mutations.transformTools((tools) => {
+      (tools as Tool[]).push(added);
+      throw new Error('transform failed');
+    });
+
+    expect(() => mutations.getProspectiveTools(config.tools)).toThrow(
+      'transform failed',
+    );
+    expect(config.tools).toEqual([original]);
+
+    const clean = new PendingMutations();
+    const prospective = clean.getProspectiveTools(config.tools);
+    expect(() => (prospective as Tool[]).push(added)).toThrow();
+    expect(config.tools).toEqual([original]);
+  });
+});
 
 describe('hook mutations', () => {
   it('applies runStart mutations to the first model call', async () => {
@@ -52,6 +81,79 @@ describe('hook mutations', () => {
     expect(model.requests[0].messages[0].content[0]).toMatchObject({
       text: '[GREETING]',
     });
+  });
+
+  it('exposes same-phase prospective tools without re-running transforms', async () => {
+    const injected = echoTool({ name: 'injected_tool' });
+    const seen: string[][] = [];
+    let transforms = 0;
+    const injector: Hook = {
+      name: 'injector',
+      afterModelCall: (ctx) => {
+        if (ctx.iteration === 0) {
+          ctx.addTools(injected);
+          ctx.transformTools((tools) => {
+            transforms += 1;
+            return [...tools];
+          });
+        }
+      },
+    };
+    const observer: Hook = {
+      name: 'observer',
+      afterModelCall: (ctx) => {
+        if (ctx.iteration === 0) {
+          seen.push(ctx.getProspectiveTools().map((tool) => tool.name));
+        }
+      },
+    };
+    const model = twoIterationModel();
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [echoTool()],
+        hooks: [injector, observer],
+      }),
+    );
+
+    expect(seen).toEqual([['echo', 'injected_tool']]);
+    expect(transforms).toBe(1);
+    expect(model.requests[1].tools.map((tool) => tool.name)).toEqual([
+      'echo',
+      'injected_tool',
+    ]);
+  });
+
+  it('lets a tool transform inspect the last completed projection once', async () => {
+    const original = echoTool();
+    const added = echoTool({ name: 'added' });
+    const transformed = echoTool({ name: 'transformed' });
+    const seen: string[][] = [];
+    let transforms = 0;
+    const inspector: Hook = {
+      name: 'inspector',
+      beforeModelCall: (ctx) => {
+        ctx.addTools(added);
+        ctx.transformTools((tools) => {
+          transforms += 1;
+          seen.push(ctx.getProspectiveTools().map((tool) => tool.name));
+          return [...tools, transformed];
+        });
+        ctx.removeTools('added');
+      },
+    };
+    const model = new MockProvider([textTurn('Done')]);
+    const input = baseInput(model, { tools: [original], hooks: [inspector] });
+
+    await collectEvents(input);
+
+    expect(seen).toEqual([['echo', 'added']]);
+    expect(transforms).toBe(1);
+    expect(model.requests[0].tools.map((tool) => tool.name)).toEqual([
+      'echo',
+      'transformed',
+    ]);
+    expect(input.tools).toEqual([original]);
   });
 
   it('applies afterToolCall tool injection to the next iteration only', async () => {
@@ -131,6 +233,80 @@ describe('hook mutations', () => {
 
     expect(model.requests[1].instructions).toBe(
       'Refreshed system prompt.\n\nActivated skill note.',
+    );
+  });
+
+  it('transforms tools after earlier same-phase operations', async () => {
+    const replacement = echoTool({ name: 'replacement' });
+    const transformed = echoTool({ name: 'transformed' });
+    const projector: Hook = {
+      name: 'projector',
+      afterToolCall: (ctx) => {
+        ctx.addTools(replacement);
+        ctx.removeTools('echo');
+        ctx.transformTools((tools) => [...tools, transformed]);
+      },
+    };
+    const model = twoIterationModel();
+    await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [projector] }),
+    );
+
+    expect(model.requests[1].tools.map((tool) => tool.name)).toEqual([
+      'replacement',
+      'transformed',
+    ]);
+  });
+
+  it('transforms instructions after earlier same-phase operations', async () => {
+    const projector: Hook = {
+      name: 'projector',
+      afterToolCall: (ctx) => {
+        ctx.setInstructions('Replacement.');
+        ctx.addInstructions('Addition.');
+        ctx.transformInstructions((instructions) =>
+          instructions.replace('Addition.', 'Transformed.'),
+        );
+      },
+    };
+    const model = twoIterationModel();
+    await collectEvents(
+      baseInput(model, { tools: [echoTool()], hooks: [projector] }),
+    );
+
+    expect(model.requests[1].instructions).toBe('Replacement.\n\nTransformed.');
+  });
+
+  it('does not call the provider or mutate configuration when a transform fails', async () => {
+    const originalTool = echoTool();
+    const failing: Hook = {
+      name: 'failing-projector',
+      beforeModelCall: (ctx) => {
+        ctx.addTools(echoTool({ name: 'temporary' }));
+        ctx.transformTools((tools) => {
+          (tools as Tool[]).push(echoTool({ name: 'corrupting' }));
+          ctx.getProspectiveTools();
+          throw new Error('projection failed');
+        });
+      },
+    };
+    const model = new MockProvider([textTurn('unreachable')]);
+    const input = baseInput(model, {
+      tools: [originalTool],
+      hooks: [failing],
+    });
+    const events = await collectEvents(input);
+
+    expect(model.requests).toHaveLength(0);
+    expect(input.tools).toEqual([originalTool]);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'error',
+          code: 'RUN_FAILED',
+          message: 'projection failed',
+        }),
+      ]),
     );
   });
 

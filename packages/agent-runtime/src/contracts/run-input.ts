@@ -1,4 +1,5 @@
 import type { RunContext } from '../context/run-context';
+import type { RunEvent } from './event';
 import type { Hook } from './hook';
 import type { Message } from './message';
 import type { ModelProvider, ToolChoice } from './provider';
@@ -25,11 +26,15 @@ export interface RunInput {
   /** Maximum complete model-and-tool iterations. Default: 20. */
   maxIterations?: number;
   toolChoice?: ToolChoice;
+  /** Optional host override for child execution. */
+  childRunHandler?: ChildRunHandler;
 }
 
 /**
  * Input for a child (subagent) run via ToolExecutionContext.runChild.
- * The child context is derived automatically; hooks are inherited from
- * the parent unless explicitly overridden.
+ * The child context and selected handler are controlled by the parent run.
  */
-export type ChildRunInput = Omit<RunInput, 'context'>;
+export type ChildRunInput = Omit<RunInput, 'context' | 'childRunHandler'>;
+
+/** Receives a child input with its already-derived child context. */
+export type ChildRunHandler = (input: RunInput) => AsyncIterable<RunEvent>;

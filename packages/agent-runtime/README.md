@@ -46,7 +46,7 @@ instead. A completed model call whose tool-call arguments did not arrive
 intact — unparseable JSON, or a token-limit finish while tool calls were being
 emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
 through `modelCallInterrupted`, so hosts can persist its intact text and
-thinking. Three consecutive tool *phases* in which one tool fails with the
+thinking. Three consecutive tool _phases_ in which one tool fails with the
 identical error text end the run with `TOOL_REPEATEDLY_FAILING` after the
 failing phase's tool-result message is emitted — repetition across phases
 proves the model saw the error and did not adapt, whereas repeats inside a
@@ -90,8 +90,18 @@ no call from a corrupted turn ever reaches execution.
 Buffered mutations (`addTools`/`removeTools`/`setTools`, `addInstructions`,
 `transformMessages`) apply at the next request assembly: `runStart`/
 `beforeModelCall` mutations affect the imminent model call, `afterModelCall`/
-`afterToolCall` mutations the next iteration. `abort` and `emit` are
-immediate.
+`afterToolCall` mutations the next iteration. `transformTools` and
+`transformInstructions` receive the prospective values produced by earlier
+same-phase mutations, so hosts can validate or replace a complete projection
+before the provider request. `getProspectiveTools()` reads that buffered tool
+projection synchronously; transform results are cached so each transform runs
+once. `abort` and `emit` are immediate.
+
+By default `ToolExecutionContext.runChild()` recursively calls the runtime with
+a derived context and inherited parent hooks. Hosts may provide a
+`childRunHandler` to `run()` to take control of child execution. The handler
+receives an input containing the derived child context; parent hooks are not
+implicitly copied across this host-controlled boundary.
 
 `runEnd` failures do not replace the run's original status. They produce a
 `finalization_error` event with hook attribution before the terminal

@@ -2,7 +2,11 @@ import type { RunContext } from '../context/run-context';
 import type { RunEvent } from '../contracts/event';
 import type { Message } from '../contracts/message';
 import type { ModelProvider, ToolChoice } from '../contracts/provider';
-import type { ChildRunInput, RunInput } from '../contracts/run-input';
+import type {
+  ChildRunHandler,
+  ChildRunInput,
+  RunInput,
+} from '../contracts/run-input';
 import type { Tool } from '../contracts/tool';
 import type { EmitBuffer } from './event-queue';
 import type { HookRunner } from './hook-runner';
@@ -45,6 +49,7 @@ export interface RunState {
   readonly emits: EmitBuffer;
   readonly abortState: AbortState;
   readonly hookRunner: HookRunner;
+  readonly childRunHandler?: ChildRunHandler;
   readonly runChild: (input: ChildRunInput) => AsyncIterable<RunEvent>;
 }
 
