@@ -55,6 +55,7 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
                 <FormLabel>{t(`${prefix}.password`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
+                    data-testid="reset-new-password"
                     placeholder={t(`${prefix}.passwordPlaceholder`)}
                     {...field}
                   />
@@ -71,6 +72,7 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
                 <FormLabel>{t(`${prefix}.confirmPassword`)}</FormLabel>
                 <FormControl>
                   <PasswordInput
+                    data-testid="reset-confirm-password"
                     placeholder={t(`${prefix}.confirmPasswordPlaceholder`)}
                     {...field}
                   />
@@ -79,7 +81,12 @@ export function ResetPasswordPage({ token, mode }: Readonly<Props>) {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+            data-testid="reset-submit"
+          >
             {isLoading ? t(`${prefix}.resetting`) : t(`${prefix}.submitButton`)}
           </Button>
         </form>
