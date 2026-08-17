@@ -58,7 +58,9 @@ export default function UsersSettingsPage({
       title={t('layout.users')}
     >
       <div className="space-y-4">
-        {}
+        <div className="text-muted-foreground text-xs font-medium">
+          screenshot and video verification branch
+        </div>
         {(invites.length > 0 || invitesSearch || invitesTotal > 0) && (
           <InvitesSection
             invites={invites}
