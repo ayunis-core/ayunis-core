@@ -107,6 +107,18 @@ describe('validateEnv', () => {
         validateEnv(baseEnv({ FEATURE_SKILLS_ENABLED: 'yes' })),
       ).toThrow(/FEATURE_SKILLS_ENABLED/);
     });
+
+    it('rejects a non-boolean webhook disable flag', () => {
+      expect(() =>
+        validateEnv(baseEnv({ DISABLE_ORG_EVENTS_WEBHOOKS: 'yes' })),
+      ).toThrow(/DISABLE_ORG_EVENTS_WEBHOOKS/);
+    });
+
+    it('rejects a non-boolean mock inference flag', () => {
+      expect(() => validateEnv(baseEnv({ MOCK_INFERENCE: '1' }))).toThrow(
+        /MOCK_INFERENCE/,
+      );
+    });
   });
 
   describe('production rules', () => {

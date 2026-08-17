@@ -22,6 +22,12 @@ pnpm run build                 # Must succeed
 pnpm run lint                  # Must pass
 ```
 
+**User-facing change?** The definition of done includes e2e coverage — load
+the `e2e` skill: add/update the journey spec in `ayunis-core-e2e/` and run it
+green before submitting. Add `data-testid`s to touched components in the same
+PR (`<feature>-<element>`, kebab-case) — text selectors are banned because
+the UI is i18n'd.
+
 ## Architecture (Feature-Sliced Design)
 
 ```text

@@ -1,0 +1,33 @@
+{
+  "name": "ayunis-core-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "playwright test --project=chromium",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "openapi:generate": "orval --config orval.config.ts",
+    "test:ui": "playwright test --project=chromium --ui",
+    "test:headed": "playwright test --project=chromium --headed",
+    "screenshots": "playwright test --project=screenshots",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "axios": "^1.13.2",
+    "eslint": "^10.6.0",
+    "eslint-plugin-playwright": "^2.11.0",
+    "jiti": "^2.7.0",
+    "typescript": "^5.9.3",
+    "orval": "^7.21.0",
+    "typescript-eslint": "^8.64.0"
+  }
+}

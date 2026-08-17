@@ -52,6 +52,56 @@ describe('appConfig', () => {
     });
   });
 
+  describe('mockInference', () => {
+    it('is true when NODE_ENV is test', () => {
+      process.env.NODE_ENV = 'test';
+      delete process.env.MOCK_INFERENCE;
+
+      expect(appConfig().mockInference).toBe(true);
+    });
+
+    it('is true in development when MOCK_INFERENCE=true', () => {
+      process.env.NODE_ENV = 'development';
+      process.env.MOCK_INFERENCE = 'true';
+
+      expect(appConfig().mockInference).toBe(true);
+    });
+
+    it('is false by default', () => {
+      process.env.NODE_ENV = 'development';
+      delete process.env.MOCK_INFERENCE;
+
+      expect(appConfig().mockInference).toBe(false);
+    });
+
+    it('refuses MOCK_INFERENCE=true in production', () => {
+      process.env.NODE_ENV = 'production';
+      process.env.MOCK_INFERENCE = 'true';
+
+      expect(() => appConfig()).toThrow(
+        'MOCK_INFERENCE must not be enabled in production',
+      );
+    });
+  });
+
+  describe('orgEventsWebhookUrl', () => {
+    it('uses the configured org events webhook URL by default', () => {
+      process.env.ORG_EVENTS_WEBHOOK_URL = 'https://events.example.test/hooks';
+      delete process.env.DISABLE_ORG_EVENTS_WEBHOOKS;
+
+      expect(appConfig().orgEventsWebhookUrl).toBe(
+        'https://events.example.test/hooks',
+      );
+    });
+
+    it('ignores the org events webhook URL when webhooks are disabled', () => {
+      process.env.ORG_EVENTS_WEBHOOK_URL = 'https://events.example.test/hooks';
+      process.env.DISABLE_ORG_EVENTS_WEBHOOKS = 'true';
+
+      expect(appConfig().orgEventsWebhookUrl).toBeUndefined();
+    });
+  });
+
   describe('hosting flags', () => {
     it('derives isSelfHosted and isCloudHosted from APP_ENVIRONMENT', () => {
       process.env.APP_ENVIRONMENT = 'self-hosted';

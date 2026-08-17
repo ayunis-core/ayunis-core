@@ -38,6 +38,8 @@ export class EnvironmentVariables {
   // App / HTTP
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) PORT?: number;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) DISABLE_REGISTRATION?: string;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) DISABLE_ORG_EVENTS_WEBHOOKS?: string;
+  @IsOptional() @IsIn(BOOLEAN_STRINGS) MOCK_INFERENCE?: string;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
