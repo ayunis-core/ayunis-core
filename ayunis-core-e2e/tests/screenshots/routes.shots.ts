@@ -1,45 +1,21 @@
-import { rmSync, mkdirSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import type { Page } from '@playwright/test';
-import { test, expect } from '../../src/fixtures/test';
-import { sendMessage, startThread } from '../../src/flows/chat.flow';
+import { expect, type Page } from '@playwright/test';
+import { test } from '../../src/fixtures/test';
+import { startThread } from '../../src/flows/chat.flow';
+import { recordGif } from './lib/record-gif';
+import { shotPath } from './lib/media-paths';
+import {
+  routeAnchor,
+  SCREENSHOT_ROUTES,
+  VIEWPORTS,
+  type ScreenshotRoute,
+  type ScreenshotRouteName,
+  type ViewportLabel,
+} from './routes';
+import { demoScenesByRoute } from './scenes';
 
-// Captures full-page screenshots of key routes for PR review — run
-// explicitly via `--project=screenshots` (not part of the regular suite).
-// Output lands in screenshots-output/ (override with SCREENSHOTS_DIR);
-// CI publishes it to the PR via scripts/publish-pr-screenshots.sh.
-const outDir = process.env.SCREENSHOTS_DIR ?? 'screenshots-output';
-
-const VIEWPORTS = [
-  { label: 'desktop', width: 1280, height: 800 },
-  { label: 'mobile', width: 375, height: 812 },
-] as const;
-
-// Anchor: proves the page rendered before shooting. Sidebars only exist in
-// the DOM on desktop (mobile puts them in an on-demand Sheet), so mobile
-// waits on the always-mounted content wrapper instead.
-const MOBILE_ANCHOR = '[data-slot="sidebar-inset"]';
-
-const ROUTES = [
-  { path: '/chat', name: 'chat', anchor: 'sidebar' },
-  {
-    path: '/admin-settings/users',
-    name: 'admin-users',
-    anchor: 'settings-sidebar',
-  },
-  {
-    path: '/admin-settings/instructions',
-    name: 'admin-instructions',
-    anchor: 'settings-sidebar',
-  },
-  {
-    path: '/settings/account',
-    name: 'settings-account',
-    anchor: 'settings-sidebar',
-  },
-] as const;
-
+// Captures full-page screenshots and short demos of key routes for PR review —
+// run explicitly via `--project=screenshots` (not part of the regular suite).
+// CI publishes output to the PR via scripts/publish-pr-screenshots.sh.
 const selectedRoutes = process.env.SCREENSHOT_ROUTES?.split(',').filter(
   Boolean,
 );
@@ -48,120 +24,55 @@ function shouldCapture(name: string): boolean {
   return selectedRoutes === undefined || selectedRoutes.includes(name);
 }
 
-function shotPath(name: string, viewport: string): string {
-  return path.join(outDir, `${name}--${viewport}.png`);
-}
-
-function gifPath(name: string, viewport: string): string {
-  return path.join(outDir, `${name}--${viewport}.gif`);
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function recordGif(
+async function expectRouteReady(
   page: Page,
-  name: string,
-  viewport: string,
-  action: () => Promise<void>,
+  route: ScreenshotRoute,
+  viewport: ViewportLabel,
 ): Promise<void> {
-  const framesDir = path.join(outDir, 'frames', `${name}--${viewport}`);
-  rmSync(framesDir, { recursive: true, force: true });
-  mkdirSync(framesDir, { recursive: true });
+  await expect(routeAnchor(page, route, viewport)).toBeVisible();
+}
 
-  const session = await page.context().newCDPSession(page);
-  let frameCount = 0;
-  session.on('Page.screencastFrame', ({ data, sessionId }) => {
-    const frameName = `f-${String(frameCount).padStart(4, '0')}.jpg`;
-    writeFileSync(path.join(framesDir, frameName), Buffer.from(data, 'base64'));
-    frameCount += 1;
-    void session.send('Page.screencastFrameAck', { sessionId });
-  });
-
-  await session.send('Page.startScreencast', {
-    format: 'jpeg',
-    quality: 80,
-    everyNthFrame: 1,
-  });
-  try {
-    await action();
-    await delay(400);
-  } finally {
-    await session.send('Page.stopScreencast');
-    await session.detach();
-  }
-
-  if (frameCount === 0) return;
-  const result = spawnSync(
-    'ffmpeg',
-    [
-      '-y',
-      '-framerate',
-      '10',
-      '-pattern_type',
-      'glob',
-      '-i',
-      path.join(framesDir, 'f-*.jpg'),
-      '-vf',
-      'fps=10,scale=1000:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse',
-      gifPath(name, viewport),
-    ],
-    { stdio: 'inherit' },
-  );
-  if (result.status !== 0) {
-    throw new Error(`ffmpeg failed for ${name} (${viewport})`);
+async function recordRouteScenes(
+  page: Page,
+  route: ScreenshotRoute,
+  viewport: ViewportLabel,
+): Promise<void> {
+  for (const scene of demoScenesByRoute[route.name]) {
+    await page.goto(route.path);
+    await expectRouteReady(page, route, viewport);
+    await recordGif(page, route.name, scene.name, viewport, () =>
+      scene.action(page),
+    );
   }
 }
 
-async function interactWithRoute(page: Page, name: string): Promise<void> {
-  if (name === 'chat') {
-    await page.getByTestId('input').fill('Kurzer Video-Check');
-    await delay(700);
-    await page.getByTestId('input').clear();
-    return;
-  }
-  if (name === 'admin-users') {
-    await page.getByRole('button').last().click();
-    await delay(900);
-    await page.keyboard.press('Escape');
-    return;
-  }
-  if (name === 'admin-instructions') {
-    await page.locator('#org-system-prompt-textarea').fill('Kurzer Video-Check');
-    await delay(700);
-    await page.locator('#disable-internet-access-switch').scrollIntoViewIfNeeded();
-    return;
-  }
-  if (name === 'settings-account') {
-    await page.locator('#full-name').focus();
-    await delay(700);
-    await page.locator('#email').scrollIntoViewIfNeeded();
+async function recordConversationScenes(
+  page: Page,
+  viewport: ViewportLabel,
+): Promise<void> {
+  const routeName: ScreenshotRouteName = 'chat-conversation';
+  for (const scene of demoScenesByRoute[routeName]) {
+    await startThread(page, 'Screenshot this conversation');
+    await recordGif(page, routeName, scene.name, viewport, () =>
+      scene.action(page),
+    );
   }
 }
 
 for (const viewport of VIEWPORTS) {
-  const anchorOf =
-    viewport.label === 'desktop'
-      ? (page: Page, route: (typeof ROUTES)[number]) =>
-          page.getByTestId(route.anchor)
-      : (page: Page) => page.locator(MOBILE_ANCHOR);
-
   test.describe(`${viewport.label}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
-    for (const route of ROUTES) {
+    for (const route of SCREENSHOT_ROUTES) {
       if (shouldCapture(route.name)) {
         test(`${route.name}`, async ({ page }) => {
           await page.goto(route.path);
-          await expect(anchorOf(page, route)).toBeVisible();
+          await expect(routeAnchor(page, route, viewport.label)).toBeVisible();
           await page.screenshot({
             path: shotPath(route.name, viewport.label),
             fullPage: true,
           });
-          await recordGif(page, route.name, viewport.label, () =>
-            interactWithRoute(page, route.name),
-          );
+          await recordRouteScenes(page, route, viewport.label);
         });
       }
     }
@@ -169,13 +80,12 @@ for (const viewport of VIEWPORTS) {
     if (shouldCapture('chat-conversation')) {
       test('chat-conversation', async ({ page }) => {
         await startThread(page, 'Screenshot this conversation');
+        await expect(page.getByTestId('input')).toBeVisible();
         await page.screenshot({
           path: shotPath('chat-conversation', viewport.label),
           fullPage: true,
         });
-        await recordGif(page, 'chat-conversation', viewport.label, () =>
-          sendMessage(page, 'Kurzer Video-Check'),
-        );
+        await recordConversationScenes(page, viewport.label);
       });
     }
   });
