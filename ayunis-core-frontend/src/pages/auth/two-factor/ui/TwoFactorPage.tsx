@@ -6,6 +6,7 @@ import {
   RecoveryCodesPanel,
 } from '@/widgets/mfa-enrollment';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import { useMfaLoginEnroll } from '../api/useMfaLoginEnroll';
 import { TwoFactorVerifyForm } from './TwoFactorVerifyForm';
 
@@ -54,7 +55,7 @@ function EnrollFlow({ redirect }: Readonly<{ redirect?: string }>) {
       <RecoveryCodesPanel
         codes={recoveryCodes}
         continueLabel={t('twoFactor.enroll.continue')}
-        onContinue={() => void navigate({ to: redirect || '/chat' })}
+        onContinue={() => void navigate({ to: safeRedirectPath(redirect) })}
       />
     );
   }

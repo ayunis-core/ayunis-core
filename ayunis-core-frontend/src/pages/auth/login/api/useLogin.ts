@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useAuthenticationControllerLogin } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 
@@ -52,7 +53,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
             return;
           }
           // With cookie-based auth, the backend automatically sets HTTP-only cookies
-          void navigate({ to: redirect || '/chat' });
+          void navigate({ to: safeRedirectPath(redirect) });
         },
         onError: (error) => {
           try {

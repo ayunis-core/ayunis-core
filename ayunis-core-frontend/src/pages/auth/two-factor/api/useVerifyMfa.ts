@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useMfaLoginControllerVerify } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 
 export function useVerifyMfa({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
@@ -17,7 +18,7 @@ export function useVerifyMfa({ redirect }: { redirect?: string }) {
       { data: { code } },
       {
         onSuccess: () => {
-          void navigate({ to: redirect || '/chat' });
+          void navigate({ to: safeRedirectPath(redirect) });
         },
         onError: (error) => {
           try {
