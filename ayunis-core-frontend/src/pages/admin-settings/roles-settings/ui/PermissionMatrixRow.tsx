@@ -1,10 +1,15 @@
 import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { TableCell, TableRow } from '@ayunis/ui/components/table';
-import type { EditableRole, Permission } from '../model/types';
+import type {
+  EditableRole,
+  Permission,
+} from '@/pages/admin-settings/roles-settings/model/types';
+import { InfoHint } from './InfoHint';
 
 interface PermissionMatrixRowProps {
   permission: Permission;
   label: string;
+  hint: string;
   userChecked: boolean;
   managerChecked: boolean;
   disabled: boolean;
@@ -14,6 +19,7 @@ interface PermissionMatrixRowProps {
 export function PermissionMatrixRow({
   permission,
   label,
+  hint,
   userChecked,
   managerChecked,
   disabled,
@@ -21,7 +27,13 @@ export function PermissionMatrixRow({
 }: Readonly<PermissionMatrixRowProps>) {
   return (
     <TableRow>
-      <TableCell className="font-medium">{label}</TableCell>
+      <TableCell className="font-medium">
+        <InfoHint
+          label={label}
+          hint={hint}
+          testId={`permission-hint-${permission}`}
+        />
+      </TableCell>
       <TableCell className="text-center">
         <Checkbox
           checked={userChecked}
