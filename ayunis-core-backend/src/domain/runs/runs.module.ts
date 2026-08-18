@@ -33,6 +33,7 @@ import { CreditLimitGuardService } from './application/services/credit-limit-gua
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
+import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -105,6 +106,7 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
     InferenceOrchestratorService,
     InferenceUsageGuard,
     RunTelemetryService,
+    UnmaskedTermsService,
   ],
   exports: [
     ExecuteRunUseCase,

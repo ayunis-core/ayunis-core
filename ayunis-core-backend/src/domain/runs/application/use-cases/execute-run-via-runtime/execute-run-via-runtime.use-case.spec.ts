@@ -42,6 +42,7 @@ import type { ToolAssemblyService } from 'src/domain/runs/application/services/t
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import type { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
@@ -298,6 +299,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
       .fn()
       .mockResolvedValue({ contents: [], piiMasks: null }),
   };
+  const unmaskedTermsService = {
+    revealUnmaskedTerms: jest
+      .fn()
+      .mockImplementation((messages: readonly Message[]) =>
+        Promise.resolve([...messages]),
+      ),
+  } as unknown as UnmaskedTermsService;
 
   const useCase = new ExecuteRunViaRuntimeUseCase(
     contextService,
@@ -319,6 +327,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     skillActivationHookFactory,
     runTelemetryService,
     toolResultCollector as ToolResultCollectorService,
+    unmaskedTermsService,
     toolUsageHookFactory,
     contextBudgetHookFactory,
     buildWorkspaceRunContextUseCase,

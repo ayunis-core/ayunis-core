@@ -32,6 +32,8 @@ import type {
   RunThreadResponseDto,
 } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
+import type { PiiMaskEntry } from '@/widgets/markdown';
+import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
@@ -204,6 +206,25 @@ export default function ChatPage({
       return [...prev, message];
     });
   }, []);
+
+  const { unmaskPiiMask } = useUnmaskPiiMask({
+    threadId: thread.id,
+    onSuccess: setPiiMasks,
+  });
+
+  const handleUnmaskRequest = useCallback(
+    (entry: PiiMaskEntry) => {
+      confirm({
+        title: t('chat.piiMask.unmaskTitle', { value: entry.value }),
+        description: t('chat.piiMask.unmaskDescription'),
+        confirmText: t('chat.piiMask.unmaskConfirm'),
+        cancelText: t('chat.piiMask.unmaskCancel'),
+        variant: 'destructive',
+        onConfirm: () => unmaskPiiMask(entry.id),
+      });
+    },
+    [confirm, t, unmaskPiiMask],
+  );
 
   const handleMasks = useCallback((data: RunMasksResponseDto) => {
     // Events carry the thread's full dictionary — replace-by-token merge is
@@ -480,7 +501,7 @@ export default function ChatPage({
   }
   return (
     <AppLayout>
-      <PiiMaskProvider masks={piiMasks}>
+      <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
         <ChatInterfaceLayout
           chatHeader={chatHeader}
           chatContent={chatContent}

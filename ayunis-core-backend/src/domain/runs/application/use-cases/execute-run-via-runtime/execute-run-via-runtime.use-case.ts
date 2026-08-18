@@ -48,6 +48,7 @@ import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-a
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
 import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
@@ -111,6 +112,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly runTelemetryService: RunTelemetryService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
+    private readonly unmaskedTermsService: UnmaskedTermsService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
@@ -292,8 +294,13 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   private async startRun(prepared: PreparedRuntimeRun, signal?: AbortSignal) {
+    const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
+      prepared.thread.messages,
+      prepared.thread.id,
+      prepared.isAnonymous,
+    );
     const messages = await this.runtimeHistoryMaterializer.materialize({
-      messages: prepared.thread.messages,
+      messages: historyMessages,
       orgId: prepared.orgId,
       tools: prepared.backendTools,
       maxTokens: MAX_CONTEXT_TOKENS,

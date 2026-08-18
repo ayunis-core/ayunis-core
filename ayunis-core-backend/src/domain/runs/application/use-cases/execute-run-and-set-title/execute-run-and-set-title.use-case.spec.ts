@@ -2,7 +2,7 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID, type UUID } from 'crypto';
 import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
-import type { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
+import type { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import type { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
@@ -14,7 +14,7 @@ import type {
   RunErrorEvent,
   RunMasksEvent,
   RunMessageEvent,
-} from '../../run-events';
+} from 'src/domain/runs/application/run-events';
 import { RunPiiMasksUpdate } from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
@@ -130,9 +130,11 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
       const masksEvent = events[masksIndex] as RunMasksEvent;
       expect(masksEvent.masks).toEqual([
         {
+          id: mask.id,
           token: '{{pii:PERSON_NAME_1}}',
           value: 'Max Mustermann',
           category: PiiCategory.PERSON_NAME,
+          unmasked: false,
         },
       ]);
 
