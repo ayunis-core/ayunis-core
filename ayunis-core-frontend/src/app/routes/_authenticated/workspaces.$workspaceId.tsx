@@ -13,6 +13,8 @@ import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   workspaceContextControllerFindContext,
   getWorkspaceContextControllerFindContextQueryKey,
+  artifactsControllerFindByWorkspace,
+  getArtifactsControllerFindByWorkspaceQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 const WORKSPACE_CHATS_LIMIT = 100;
 
@@ -55,7 +57,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
           throw redirect({ to: '/workspaces' });
         });
 
-      const [chats, context] = await Promise.all([
+      const [chats, context, artifacts] = await Promise.all([
         queryClient.fetchQuery({
           queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
           queryFn: () => threadsControllerFindAll(chatsParams),
@@ -65,6 +67,13 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
             queryKey:
               getWorkspaceContextControllerFindContextQueryKey(workspaceId),
             queryFn: () => workspaceContextControllerFindContext(workspaceId),
+          })
+          .catch(() => null),
+        queryClient
+          .fetchQuery({
+            queryKey:
+              getArtifactsControllerFindByWorkspaceQueryKey(workspaceId),
+            queryFn: () => artifactsControllerFindByWorkspace(workspaceId),
           })
           .catch(() => null),
       ]);
@@ -91,6 +100,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         isEmbeddingModelEnabled:
           embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
         context,
+        artifacts,
       };
     },
   },
@@ -104,6 +114,7 @@ function RouteComponent() {
     selectedModelId,
     isEmbeddingModelEnabled,
     context,
+    artifacts,
   } = Route.useLoaderData();
   return (
     <WorkspacePage
@@ -113,6 +124,7 @@ function RouteComponent() {
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       context={context}
+      artifacts={artifacts}
     />
   );
 }

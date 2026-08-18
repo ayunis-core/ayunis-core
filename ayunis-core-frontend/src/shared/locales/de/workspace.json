@@ -5,11 +5,30 @@
     "knowledgeTab": "Wissen",
     "skillsTab": "Fähigkeiten",
     "instructionsTab": "Anweisungen",
+    "artifactsTab": "Artefakte",
     "emptyChats": "Noch keine Chats. Chats, die Sie diesem Projekt hinzufügen, erscheinen hier.",
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
     "settings": "Einstellungen",
     "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
+  },
+  "artifacts": {
+    "title": "Projektartefakte",
+    "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Projekt.",
+    "emptyTitle": "Noch keine Artefakte",
+    "empty": "Artefakte aus Projektchats erscheinen hier.",
+    "loadError": {
+      "title": "Projektartefakte konnten nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu, bevor Sie Projektartefakte öffnen."
+    },
+    "untitled": "Unbenanntes Artefakt",
+    "open": "Öffnen",
+    "version": "Version {{version}}",
+    "type": {
+      "document": "Dokument",
+      "diagram": "Diagramm",
+      "spreadsheet": "Tabelle"
+    }
   },
   "chat": {
     "untitled": "Unbenannter Chat",

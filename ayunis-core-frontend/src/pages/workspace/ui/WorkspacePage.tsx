@@ -21,6 +21,7 @@ import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import { useWorkspaceContextControllerFindContext } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
+  ArtifactResponseDto,
   GetThreadsResponseDtoItem,
   WorkspaceContextResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -34,6 +35,7 @@ import {
   WorkspaceKnowledgeTab,
   WorkspaceSkillsTab,
 } from './WorkspaceContextTabs';
+import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 
 interface WorkspacePageProps {
   workspace: Workspace;
@@ -43,6 +45,7 @@ interface WorkspacePageProps {
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
   context: WorkspaceContextResponseDto | null;
+  artifacts: ArtifactResponseDto[] | null;
 }
 
 export default function WorkspacePage({
@@ -52,6 +55,7 @@ export default function WorkspacePage({
   selectedModelId,
   isEmbeddingModelEnabled,
   context,
+  artifacts,
 }: Readonly<WorkspacePageProps>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
@@ -138,6 +142,12 @@ export default function WorkspacePage({
                 >
                   {t('page.instructionsTab')}
                 </TabsTrigger>
+                <TabsTrigger value="artifacts">
+                  {t('page.artifactsTab')}
+                  {artifacts ? (
+                    <Badge variant="secondary">{artifacts.length}</Badge>
+                  ) : null}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="chats" className="pt-4">
                 <WorkspaceChatsTab
@@ -191,6 +201,9 @@ export default function WorkspacePage({
                 ) : (
                   <WorkspaceContextLoadError />
                 )}
+              </TabsContent>
+              <TabsContent value="artifacts" className="pt-4">
+                <WorkspaceArtifactsTab artifacts={artifacts} />
               </TabsContent>
             </Tabs>
           </div>

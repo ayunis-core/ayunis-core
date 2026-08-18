@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useArtifact } from '../api/useArtifact';
 import { useUpdateArtifact } from '../api/useUpdateArtifact';
@@ -8,9 +9,13 @@ import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayu
 import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
-export function useArtifactActions(threadId: string) {
+export function useArtifactActions(
+  threadId: string,
+  initialArtifactId?: string,
+) {
   const { t } = useTranslation('chat');
-  const [openArtifactId, setOpenArtifactId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const openArtifactId = initialArtifactId ?? null;
 
   const { artifact: openArtifact } = useArtifact(openArtifactId);
 
@@ -30,9 +35,17 @@ export function useArtifactActions(threadId: string) {
     title: openArtifact?.title ?? 'document',
   });
 
-  const handleOpenArtifact = useCallback((artifactId: string) => {
-    setOpenArtifactId(artifactId);
-  }, []);
+  const handleOpenArtifact = useCallback(
+    (artifactId: string) => {
+      void navigate({
+        to: '/chats/$threadId',
+        params: { threadId },
+        search: { artifactId },
+        replace: true,
+      });
+    },
+    [navigate, threadId],
+  );
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
@@ -72,8 +85,13 @@ export function useArtifactActions(threadId: string) {
   );
 
   const handleCloseArtifact = useCallback(() => {
-    setOpenArtifactId(null);
-  }, []);
+    void navigate({
+      to: '/chats/$threadId',
+      params: { threadId },
+      search: { artifactId: undefined },
+      replace: true,
+    });
+  }, [navigate, threadId]);
 
   return {
     openArtifact,

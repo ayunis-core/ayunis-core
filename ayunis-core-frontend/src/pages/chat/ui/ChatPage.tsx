@@ -16,7 +16,6 @@ import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import type { Thread, Message } from '../model/openapi';
 import { showError } from '@/shared/lib/toast';
-
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/thread-run';
@@ -62,11 +61,13 @@ const PROCESSING_POLL_INTERVAL = 5000;
 interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
+  readonly initialArtifactId?: string;
 }
 
 export default function ChatPage({
   thread: initialThread,
   isEmbeddingModelEnabled,
+  initialArtifactId,
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
@@ -150,7 +151,7 @@ export default function ChatPage({
     handleRevertArtifact,
     handleExportArtifact,
     handleCloseArtifact,
-  } = useArtifactActions(thread.id);
+  } = useArtifactActions(thread.id, initialArtifactId);
 
   const { handleLetterheadChange } = useLetterheadChange({
     artifactId: openArtifact?.id ?? '',
