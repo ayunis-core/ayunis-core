@@ -8,6 +8,7 @@ import {
   Artifact,
   DiagramArtifact,
   DocumentArtifact,
+  EmailArtifact,
   SpreadsheetArtifact,
 } from '../../../domain/artifact.entity';
 import { ArtifactVersion } from '../../../domain/artifact-version.entity';
@@ -109,6 +110,8 @@ export class CreateArtifactUseCase {
         return new DiagramArtifact(base);
       case ArtifactType.SPREADSHEET:
         return new SpreadsheetArtifact(base);
+      case ArtifactType.EMAIL:
+        return new EmailArtifact(base);
     }
   }
 
@@ -131,6 +134,9 @@ export class CreateArtifactUseCase {
     }
     if (artifact instanceof SpreadsheetArtifact) {
       return new SpreadsheetArtifact(base);
+    }
+    if (artifact instanceof EmailArtifact) {
+      return new EmailArtifact(base);
     }
     return new DiagramArtifact(base);
   }

@@ -85,3 +85,18 @@ export class SpreadsheetArtifact extends Artifact {
     super({ ...params, type: ArtifactType.SPREADSHEET });
   }
 }
+
+export class EmailArtifact extends Artifact {
+  constructor(params: {
+    id?: UUID;
+    threadId: UUID;
+    userId: UUID;
+    title: string;
+    currentVersionNumber?: number;
+    versions?: ArtifactVersion[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, type: ArtifactType.EMAIL });
+  }
+}

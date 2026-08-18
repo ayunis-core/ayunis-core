@@ -20,6 +20,7 @@ export async function addVersionWithRetry(params: {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
+    title?: string;
   }>;
 }): Promise<ArtifactVersion> {
   const { repository, logger, artifactId } = params;

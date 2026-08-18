@@ -171,8 +171,11 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DIAGRAM);
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
+      expect(types).toContain(ToolType.CREATE_EMAIL);
+      expect(types).toContain(ToolType.UPDATE_EMAIL);
+      expect(types).toContain(ToolType.READ_EMAIL);
 
-      expect(types.length).toBe(28);
+      expect(types.length).toBe(31);
     });
   });
 });

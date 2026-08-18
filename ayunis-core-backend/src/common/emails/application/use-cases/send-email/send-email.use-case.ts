@@ -12,6 +12,8 @@ export class SendEmailUseCase {
     try {
       const email = new Email({
         to: command.to,
+        cc: command.cc,
+        bcc: command.bcc,
         subject: command.subject,
         text: command.text,
         html: command.html,

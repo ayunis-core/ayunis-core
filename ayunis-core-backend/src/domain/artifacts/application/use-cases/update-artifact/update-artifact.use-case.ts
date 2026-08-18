@@ -141,6 +141,7 @@ export class UpdateArtifactUseCase {
         return {
           expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
           letterheadId: command.letterheadId,
+          title: command.title,
           version: new ArtifactVersion({
             artifactId: freshArtifact.id,
             versionNumber: freshArtifact.currentVersionNumber + 1,

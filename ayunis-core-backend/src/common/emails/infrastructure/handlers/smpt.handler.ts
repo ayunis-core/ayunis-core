@@ -24,6 +24,8 @@ export class SmptHandler implements EmailHandlerPort {
     await this.transporter.sendMail({
       from: 'Ayunis <noreply@mails.ayunis.com>',
       to: email.to,
+      cc: email.cc,
+      bcc: email.bcc,
       subject: email.subject,
       text: email.html ? '' : email.text,
       html: email.html,

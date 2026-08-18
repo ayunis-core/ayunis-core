@@ -38,6 +38,9 @@ import { GenerateImageToolHandler } from './application/handlers/generate-image-
 import { ModelsModule } from '../models/models.module';
 import { UsageModule } from '../usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { CreateEmailToolHandler } from './application/handlers/create-email-tool.handler';
+import { UpdateEmailToolHandler } from './application/handlers/update-email-tool.handler';
+import { ReadEmailToolHandler } from './application/handlers/read-email-tool.handler';
 
 @Module({
   imports: [
@@ -80,6 +83,9 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     UpdateDiagramToolHandler,
     CreateSpreadsheetToolHandler,
     UpdateSpreadsheetToolHandler,
+    CreateEmailToolHandler,
+    UpdateEmailToolHandler,
+    ReadEmailToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

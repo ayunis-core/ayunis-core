@@ -119,13 +119,14 @@ describe('ArtifactToolAssemblerService', () => {
     return tools.find((t) => t.name === type.toString());
   }
 
-  it('should always offer create tools for document, diagram, and spreadsheet', async () => {
+  it('should always offer create tools for every artifact type', async () => {
     const tools = await service.assembleArtifactTools(thread);
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.CREATE_DOCUMENT);
     expect(names).toContain(ToolType.CREATE_DIAGRAM);
     expect(names).toContain(ToolType.CREATE_SPREADSHEET);
+    expect(names).toContain(ToolType.CREATE_EMAIL);
   });
 
   it('should not offer update_diagram or update_spreadsheet on an empty thread', async () => {

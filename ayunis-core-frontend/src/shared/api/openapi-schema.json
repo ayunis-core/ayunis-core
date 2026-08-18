@@ -7424,6 +7424,40 @@
         "tags": ["artifacts"]
       }
     },
+    "/artifacts/{id}/send": {
+      "post": {
+        "operationId": "ArtifactsController_send",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the email artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The email was sent or was already sent for this version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailDeliveryResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Delivery is already in progress"
+          }
+        },
+        "summary": "Send the current version of an email artifact",
+        "tags": ["artifacts"]
+      }
+    },
     "/artifacts/thread/{threadId}": {
       "get": {
         "operationId": "ArtifactsController_findByThread",
@@ -16966,8 +17000,8 @@
           },
           "type": {
             "type": "string",
-            "description": "The kind of artifact \u2014 document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram", "spreadsheet"],
+            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
+            "enum": ["document", "diagram", "spreadsheet", "email"],
             "example": "document"
           },
           "threadId": {
@@ -17048,6 +17082,35 @@
             "nullable": true
           }
         }
+      },
+      "EmailDeliveryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the delivery"
+          },
+          "artifactId": {
+            "type": "string",
+            "description": "Email artifact identifier"
+          },
+          "versionNumber": {
+            "type": "number",
+            "description": "Version sent or being sent"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "sent", "failed"]
+          },
+          "sentAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "artifactId", "versionNumber", "status", "createdAt"]
       },
       "RevertArtifactDto": {
         "type": "object",

@@ -3860,7 +3860,7 @@ export interface ArtifactVersionResponseDto {
 }
 
 /**
- * The kind of artifact — document (HTML) or diagram (mermaid)
+ * The kind of artifact — document (HTML), diagram (mermaid), spreadsheet, or email draft
  */
 export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
 
@@ -3870,12 +3870,13 @@ export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
   spreadsheet: 'spreadsheet',
+  email: 'email',
 } as const;
 
 export interface ArtifactResponseDto {
   /** Unique identifier of the artifact */
   id: string;
-  /** The kind of artifact — document (HTML) or diagram (mermaid) */
+  /** The kind of artifact — document (HTML), diagram (mermaid), spreadsheet, or email draft */
   type: ArtifactResponseDtoType;
   /** The thread this artifact belongs to */
   threadId: string;
@@ -3920,6 +3921,29 @@ export interface UpdateArtifactDto {
    * @nullable
    */
   letterheadId?: string | null;
+}
+
+export type EmailDeliveryResponseDtoStatus = typeof EmailDeliveryResponseDtoStatus[keyof typeof EmailDeliveryResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmailDeliveryResponseDtoStatus = {
+  pending: 'pending',
+  sent: 'sent',
+  failed: 'failed',
+} as const;
+
+export interface EmailDeliveryResponseDto {
+  /** Unique identifier of the delivery */
+  id: string;
+  /** Email artifact identifier */
+  artifactId: string;
+  /** Version sent or being sent */
+  versionNumber: number;
+  status: EmailDeliveryResponseDtoStatus;
+  /** @nullable */
+  sentAt?: string | null;
+  createdAt: string;
 }
 
 export interface RevertArtifactDto {

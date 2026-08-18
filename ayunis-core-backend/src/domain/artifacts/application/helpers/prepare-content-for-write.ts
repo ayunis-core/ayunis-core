@@ -1,6 +1,10 @@
 import { ArtifactType } from '../../domain/value-objects/artifact-type.enum';
 import { sanitizeHtmlContent } from './sanitize-html-content';
 import {
+  parseEmailContent,
+  serializeEmailContent,
+} from './email-content-format';
+import {
   parseSpreadsheetContent,
   serializeSpreadsheetContent,
 } from './spreadsheet-content-format';
@@ -14,6 +18,8 @@ const CONTENT_NORMALIZERS = {
   [ArtifactType.SPREADSHEET]: (content: string) =>
     serializeSpreadsheetContent(parseSpreadsheetContent(content)),
   [ArtifactType.DIAGRAM]: identity,
+  [ArtifactType.EMAIL]: (content: string) =>
+    serializeEmailContent(parseEmailContent(content)),
 } satisfies Record<ArtifactType, ContentNormalizer>;
 
 export function prepareContentForWrite(

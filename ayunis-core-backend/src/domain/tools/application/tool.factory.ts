@@ -38,6 +38,9 @@ import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
 import { CreateSpreadsheetTool } from '../domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from '../domain/tools/update-spreadsheet-tool.entity';
+import { CreateEmailTool } from '../domain/tools/create-email-tool.entity';
+import { UpdateEmailTool } from '../domain/tools/update-email-tool.entity';
+import { ReadEmailTool } from '../domain/tools/read-email-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -59,6 +62,9 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
   [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
+  [ToolType.CREATE_EMAIL]: () => new CreateEmailTool(),
+  [ToolType.UPDATE_EMAIL]: () => new UpdateEmailTool(),
+  [ToolType.READ_EMAIL]: () => new ReadEmailTool(),
 };
 
 @Injectable()

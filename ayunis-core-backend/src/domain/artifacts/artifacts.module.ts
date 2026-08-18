@@ -13,6 +13,9 @@ import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
+import { EmailsModule } from 'src/common/emails/emails.module';
+import { EmailDeliveryRepository } from './application/ports/email-delivery.repository.port';
+import { LocalEmailDeliveryRepository } from './infrastructure/persistence/local/local-email-delivery.repository';
 
 // Use cases
 import { CreateArtifactUseCase } from './application/use-cases/create-artifact/create-artifact.use-case';
@@ -23,6 +26,7 @@ import { FindArtifactWithVersionsUseCase } from './application/use-cases/find-ar
 import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
 import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
+import { SendEmailArtifactUseCase } from './application/use-cases/send-email-artifact/send-email-artifact.use-case';
 
 @Module({
   imports: [
@@ -31,12 +35,17 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
     LetterheadsModule,
     StorageModule,
     ThreadPiiMasksModule,
+    EmailsModule,
   ],
   controllers: [ArtifactsController],
   providers: [
     {
       provide: ArtifactsRepository,
       useExisting: LocalArtifactsRepository,
+    },
+    {
+      provide: EmailDeliveryRepository,
+      useExisting: LocalEmailDeliveryRepository,
     },
     {
       provide: DocumentExportPort,
@@ -55,6 +64,7 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
     FindArtifactWithVersionsUseCase,
     RevertArtifactUseCase,
     ExportArtifactUseCase,
+    SendEmailArtifactUseCase,
     // Infrastructure
     PdfLetterheadCompositor,
     // Mappers

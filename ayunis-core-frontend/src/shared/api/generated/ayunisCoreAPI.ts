@@ -84,6 +84,7 @@ import type {
   CreditUsageResponseDto,
   CreditsPerEuroResponseDto,
   DeleteAllPendingInvitesResponseDto,
+  EmailDeliveryResponseDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -15368,6 +15369,69 @@ export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof 
 
 
 
+/**
+ * @summary Send the current version of an email artifact
+ */
+export const artifactsControllerSend = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<EmailDeliveryResponseDto>(
+      {url: `/artifacts/${id}/send`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getArtifactsControllerSendMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerSend>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerSend>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['artifactsControllerSend'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerSend>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  artifactsControllerSend(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerSendMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerSend>>>
+    
+    export type ArtifactsControllerSendMutationError = void
+
+    /**
+ * @summary Send the current version of an email artifact
+ */
+export const useArtifactsControllerSend = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerSend>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerSend>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getArtifactsControllerSendMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Get all artifacts for a thread
  */

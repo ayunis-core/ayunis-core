@@ -3,6 +3,7 @@ import type { AuthorType } from 'src/domain/artifacts/domain/value-objects/autho
 
 export class UpdateArtifactCommand {
   readonly artifactId: UUID;
+  readonly title?: string;
   readonly content?: string;
   readonly authorType?: AuthorType;
   readonly expectedVersionNumber?: number;
@@ -10,12 +11,14 @@ export class UpdateArtifactCommand {
 
   constructor(params: {
     artifactId: UUID;
+    title?: string;
     content?: string;
     authorType?: AuthorType;
     expectedVersionNumber?: number;
     letterheadId?: UUID | null;
   }) {
     this.artifactId = params.artifactId;
+    this.title = params.title;
     this.content = params.content;
     this.authorType = params.authorType;
     this.expectedVersionNumber = params.expectedVersionNumber;

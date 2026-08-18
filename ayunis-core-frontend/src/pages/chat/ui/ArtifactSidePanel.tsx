@@ -84,6 +84,10 @@ export function ArtifactSidePanel({
             isExporting={isExporting}
           />
         );
+      case 'email':
+        return null;
+      default:
+        return null;
     }
   };
 

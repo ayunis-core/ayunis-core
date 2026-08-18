@@ -43,6 +43,12 @@ import { CreateSpreadsheetToolHandler } from './handlers/create-spreadsheet-tool
 import { CreateSpreadsheetTool } from '../domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetToolHandler } from './handlers/update-spreadsheet-tool.handler';
 import { UpdateSpreadsheetTool } from '../domain/tools/update-spreadsheet-tool.entity';
+import { CreateEmailToolHandler } from './handlers/create-email-tool.handler';
+import { CreateEmailTool } from '../domain/tools/create-email-tool.entity';
+import { UpdateEmailToolHandler } from './handlers/update-email-tool.handler';
+import { UpdateEmailTool } from '../domain/tools/update-email-tool.entity';
+import { ReadEmailToolHandler } from './handlers/read-email-tool.handler';
+import { ReadEmailTool } from '../domain/tools/read-email-tool.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
 type ToolConstructor = abstract new (...args: any[]) => Tool;
@@ -51,6 +57,7 @@ type ToolConstructor = abstract new (...args: any[]) => Tool;
 export class ToolHandlerRegistry {
   private readonly handlers: [ToolConstructor, ToolExecutionHandler][];
 
+  // eslint-disable-next-line max-lines-per-function -- NestJS DI keeps the tool-to-handler wiring explicit
   constructor(
     @InjectPinoLogger(ToolHandlerRegistry.name)
     private readonly logger: PinoLogger,
@@ -74,6 +81,9 @@ export class ToolHandlerRegistry {
     updateDiagramToolHandler: UpdateDiagramToolHandler,
     createSpreadsheetToolHandler: CreateSpreadsheetToolHandler,
     updateSpreadsheetToolHandler: UpdateSpreadsheetToolHandler,
+    createEmailToolHandler: CreateEmailToolHandler,
+    updateEmailToolHandler: UpdateEmailToolHandler,
+    readEmailToolHandler: ReadEmailToolHandler,
   ) {
     this.handlers = [
       [HttpTool, httpToolHandler],
@@ -94,9 +104,30 @@ export class ToolHandlerRegistry {
       [GenerateImageTool, generateImageToolHandler],
       [CreateDiagramTool, createDiagramToolHandler],
       [UpdateDiagramTool, updateDiagramToolHandler],
+    ];
+    this.addStructuredArtifactHandlers(
+      createSpreadsheetToolHandler,
+      updateSpreadsheetToolHandler,
+      createEmailToolHandler,
+      updateEmailToolHandler,
+      readEmailToolHandler,
+    );
+  }
+
+  private addStructuredArtifactHandlers(
+    createSpreadsheetToolHandler: CreateSpreadsheetToolHandler,
+    updateSpreadsheetToolHandler: UpdateSpreadsheetToolHandler,
+    createEmailToolHandler: CreateEmailToolHandler,
+    updateEmailToolHandler: UpdateEmailToolHandler,
+    readEmailToolHandler: ReadEmailToolHandler,
+  ): void {
+    this.handlers.push(
       [CreateSpreadsheetTool, createSpreadsheetToolHandler],
       [UpdateSpreadsheetTool, updateSpreadsheetToolHandler],
-    ];
+      [CreateEmailTool, createEmailToolHandler],
+      [UpdateEmailTool, updateEmailToolHandler],
+      [ReadEmailTool, readEmailToolHandler],
+    );
   }
 
   getHandler(tool: Tool): ToolExecutionHandler {

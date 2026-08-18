@@ -31,6 +31,7 @@ export abstract class ArtifactsRepository {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
+    title?: string;
   }): Promise<ArtifactVersion>;
   abstract updateLetterheadId(
     artifactId: UUID,

@@ -19,6 +19,9 @@ export enum ArtifactErrorCode {
   ARTIFACT_LETTERHEAD_NOT_SUPPORTED = 'ARTIFACT_LETTERHEAD_NOT_SUPPORTED',
   ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
   ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
+  ARTIFACT_INVALID_EMAIL_CONTENT = 'ARTIFACT_INVALID_EMAIL_CONTENT',
+  ARTIFACT_EMAIL_NOT_SENDABLE = 'ARTIFACT_EMAIL_NOT_SENDABLE',
+  ARTIFACT_EMAIL_DELIVERY_IN_PROGRESS = 'ARTIFACT_EMAIL_DELIVERY_IN_PROGRESS',
   ARTIFACT_EXPORT_TIMEOUT = 'ARTIFACT_EXPORT_TIMEOUT',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
@@ -159,6 +162,39 @@ export class InvalidSpreadsheetContentError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_INVALID_SPREADSHEET_CONTENT,
       400,
       metadata,
+    );
+  }
+}
+
+export class InvalidEmailContentError extends ArtifactError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid email content: ${reason}`,
+      ArtifactErrorCode.ARTIFACT_INVALID_EMAIL_CONTENT,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class ArtifactEmailNotSendableError extends ArtifactError {
+  constructor(artifactType: string, metadata?: ErrorMetadata) {
+    super(
+      `Artifacts of type '${artifactType}' cannot be sent as email`,
+      ArtifactErrorCode.ARTIFACT_EMAIL_NOT_SENDABLE,
+      400,
+      { artifactType, ...metadata },
+    );
+  }
+}
+
+export class ArtifactEmailDeliveryInProgressError extends ArtifactError {
+  constructor(artifactId: string, metadata?: ErrorMetadata) {
+    super(
+      `Email delivery for artifact '${artifactId}' is already in progress`,
+      ArtifactErrorCode.ARTIFACT_EMAIL_DELIVERY_IN_PROGRESS,
+      409,
+      { artifactId, ...metadata },
     );
   }
 }

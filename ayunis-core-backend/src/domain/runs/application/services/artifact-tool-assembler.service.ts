@@ -14,6 +14,7 @@ import {
   Artifact,
   DiagramArtifact,
   DocumentArtifact,
+  EmailArtifact,
   SpreadsheetArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
@@ -76,7 +77,31 @@ export class ArtifactToolAssemblerService {
           return `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})${warning}`;
         },
       )),
+      await this.assembleCreateTool(ToolType.CREATE_EMAIL),
+      ...(await this.assembleEmailTools(threadArtifacts)),
     ];
+  }
+
+  private async assembleEmailTools(
+    threadArtifacts: Artifact[],
+  ): Promise<Tool[]> {
+    const emails = threadArtifacts.filter((a) => a instanceof EmailArtifact);
+    if (emails.length === 0) return [];
+
+    const suffix = `\n\nAvailable emails in this conversation:\n${emails
+      .map(
+        (email) =>
+          `- ${email.id}: "${email.title}" (version ${email.currentVersionNumber})`,
+      )
+      .join('\n')}`;
+
+    return Promise.all(
+      [ToolType.UPDATE_EMAIL, ToolType.READ_EMAIL].map(async (type) => {
+        const tool = await this.assembleCreateTool(type);
+        tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
+        return tool;
+      }),
+    );
   }
 
   private async assembleCreateTool(type: ToolType): Promise<Tool> {

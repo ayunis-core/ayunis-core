@@ -130,8 +130,10 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
+    title?: string;
   }): Promise<ArtifactVersion> {
-    const { version, expectedCurrentVersionNumber, letterheadId } = params;
+    const { version, expectedCurrentVersionNumber, letterheadId, title } =
+      params;
 
     this.logVersionUpdate(params);
 
@@ -149,6 +151,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
               },
               {
                 currentVersionNumber: version.versionNumber,
+                ...(title === undefined ? {} : { title }),
                 updatedAt: new Date(),
               },
             )
@@ -159,6 +162,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
               },
               {
                 currentVersionNumber: version.versionNumber,
+                ...(title === undefined ? {} : { title }),
                 letterheadId,
                 updatedAt: new Date(),
               },

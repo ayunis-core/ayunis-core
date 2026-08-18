@@ -31,6 +31,7 @@ import { FindArtifactsByWorkspaceUseCase } from '../../application/use-cases/fin
 import { FindArtifactWithVersionsUseCase } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { RevertArtifactUseCase } from '../../application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from '../../application/use-cases/export-artifact/export-artifact.use-case';
+import { SendEmailArtifactUseCase } from '../../application/use-cases/send-email-artifact/send-email-artifact.use-case';
 
 import { CreateArtifactCommand } from '../../application/use-cases/create-artifact/create-artifact.command';
 import { UpdateArtifactCommand } from '../../application/use-cases/update-artifact/update-artifact.command';
@@ -39,6 +40,7 @@ import { FindArtifactsByWorkspaceQuery } from '../../application/use-cases/find-
 import { FindArtifactWithVersionsQuery } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { RevertArtifactCommand } from '../../application/use-cases/revert-artifact/revert-artifact.command';
 import { ExportArtifactCommand } from '../../application/use-cases/export-artifact/export-artifact.command';
+import { SendEmailArtifactCommand } from '../../application/use-cases/send-email-artifact/send-email-artifact.command';
 
 import { CreateArtifactDto } from './dtos/create-artifact.dto';
 import { UpdateArtifactDto } from './dtos/update-artifact.dto';
@@ -49,6 +51,7 @@ import {
   ArtifactVersionResponseDto,
 } from './dtos/artifact-response.dto';
 import { ArtifactDtoMapper } from './mappers/artifact-dto.mapper';
+import { EmailDeliveryResponseDto } from './dtos/email-delivery-response.dto';
 
 @ApiTags('artifacts')
 @Controller('artifacts')
@@ -63,6 +66,7 @@ export class ArtifactsController {
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly revertArtifactUseCase: RevertArtifactUseCase,
     private readonly exportArtifactUseCase: ExportArtifactUseCase,
+    private readonly sendEmailArtifactUseCase: SendEmailArtifactUseCase,
     private readonly artifactDtoMapper: ArtifactDtoMapper,
   ) {}
 
@@ -124,6 +128,37 @@ export class ArtifactsController {
       return this.artifactDtoMapper.toVersionDto(result);
     }
     res.status(HttpStatus.NO_CONTENT);
+  }
+
+  @Post(':id/send')
+  @ApiOperation({ summary: 'Send the current version of an email artifact' })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the email artifact',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'The email was sent or was already sent for this version',
+    type: EmailDeliveryResponseDto,
+  })
+  @ApiResponse({ status: 409, description: 'Delivery is already in progress' })
+  async send(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<EmailDeliveryResponseDto> {
+    this.logger.info({ artifactId: id }, 'send email artifact');
+    const delivery = await this.sendEmailArtifactUseCase.execute(
+      new SendEmailArtifactCommand({ artifactId: id }),
+    );
+    return {
+      id: delivery.id,
+      artifactId: delivery.artifactId,
+      versionNumber: delivery.versionNumber,
+      status: delivery.status,
+      sentAt: delivery.sentAt?.toISOString() ?? null,
+      createdAt: delivery.createdAt.toISOString(),
+    };
   }
 
   @Get(':id')

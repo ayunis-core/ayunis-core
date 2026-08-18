@@ -1,4 +1,10 @@
-import { FileText, GitBranch, Table2, type LucideIcon } from 'lucide-react';
+import {
+  FileText,
+  GitBranch,
+  Mail,
+  Table2,
+  type LucideIcon,
+} from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -36,6 +42,7 @@ const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
   document: FileText,
   diagram: GitBranch,
   spreadsheet: Table2,
+  email: Mail,
 };
 
 export function WorkspaceArtifactsTab({
