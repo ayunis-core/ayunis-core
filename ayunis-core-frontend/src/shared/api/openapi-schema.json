@@ -7458,6 +7458,40 @@
         "tags": ["artifacts"]
       }
     },
+    "/artifacts/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByWorkspace",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts from chats in the workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts in a workspace",
+        "tags": ["artifacts"]
+      }
+    },
     "/artifacts/{id}/revert": {
       "post": {
         "operationId": "ArtifactsController_revert",

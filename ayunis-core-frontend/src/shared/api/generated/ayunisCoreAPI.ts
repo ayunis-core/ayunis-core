@@ -15462,6 +15462,99 @@ export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<ty
 
 
 /**
+ * @summary Get all artifacts in a workspace
+ */
+export const artifactsControllerFindByWorkspace = (
+    workspaceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ArtifactResponseDto[]>(
+      {url: `/artifacts/workspace/${workspaceId}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getArtifactsControllerFindByWorkspaceQueryKey = (workspaceId?: string,) => {
+    return [
+    `/artifacts/workspace/${workspaceId}`
+    ] as const;
+    }
+
+    
+export const getArtifactsControllerFindByWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByWorkspaceQueryKey(workspaceId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>> = ({ signal }) => artifactsControllerFindByWorkspace(workspaceId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workspaceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindByWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>>
+export type ArtifactsControllerFindByWorkspaceQueryError = unknown
+
+
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all artifacts in a workspace
+ */
+
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindByWorkspaceQueryOptions(workspaceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * @summary Revert an artifact to a specific version
  */
 export const artifactsControllerRevert = (

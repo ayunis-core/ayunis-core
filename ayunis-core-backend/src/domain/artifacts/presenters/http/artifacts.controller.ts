@@ -21,10 +21,13 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { UUID } from 'crypto';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 import { CreateArtifactUseCase } from '../../application/use-cases/create-artifact/create-artifact.use-case';
 import { UpdateArtifactUseCase } from '../../application/use-cases/update-artifact/update-artifact.use-case';
 import { FindArtifactsByThreadUseCase } from '../../application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsByWorkspaceUseCase } from '../../application/use-cases/find-artifacts-by-workspace/find-artifacts-by-workspace.use-case';
 import { FindArtifactWithVersionsUseCase } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { RevertArtifactUseCase } from '../../application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from '../../application/use-cases/export-artifact/export-artifact.use-case';
@@ -32,6 +35,7 @@ import { ExportArtifactUseCase } from '../../application/use-cases/export-artifa
 import { CreateArtifactCommand } from '../../application/use-cases/create-artifact/create-artifact.command';
 import { UpdateArtifactCommand } from '../../application/use-cases/update-artifact/update-artifact.command';
 import { FindArtifactsByThreadQuery } from '../../application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
+import { FindArtifactsByWorkspaceQuery } from '../../application/use-cases/find-artifacts-by-workspace/find-artifacts-by-workspace.query';
 import { FindArtifactWithVersionsQuery } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { RevertArtifactCommand } from '../../application/use-cases/revert-artifact/revert-artifact.command';
 import { ExportArtifactCommand } from '../../application/use-cases/export-artifact/export-artifact.command';
@@ -55,6 +59,7 @@ export class ArtifactsController {
     private readonly createArtifactUseCase: CreateArtifactUseCase,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
+    private readonly findArtifactsByWorkspaceUseCase: FindArtifactsByWorkspaceUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly revertArtifactUseCase: RevertArtifactUseCase,
     private readonly exportArtifactUseCase: ExportArtifactUseCase,
@@ -166,6 +171,30 @@ export class ArtifactsController {
       new FindArtifactsByThreadQuery({ threadId }),
     );
     return artifacts.map((a) => this.artifactDtoMapper.toDto(a));
+  }
+
+  @Get('workspace/:workspaceId')
+  @RequireFeature(FeatureFlag.Workspaces)
+  @ApiOperation({ summary: 'Get all artifacts in a workspace' })
+  @ApiParam({
+    name: 'workspaceId',
+    description: 'The UUID of the workspace',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of artifacts from chats in the workspace',
+    type: [ArtifactResponseDto],
+  })
+  async findByWorkspace(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: UUID,
+  ): Promise<ArtifactResponseDto[]> {
+    this.logger.info({ workspaceId }, 'findByWorkspace');
+    const artifacts = await this.findArtifactsByWorkspaceUseCase.execute(
+      new FindArtifactsByWorkspaceQuery({ workspaceId }),
+    );
+    return artifacts.map((artifact) => this.artifactDtoMapper.toDto(artifact));
   }
 
   @Post(':id/revert')

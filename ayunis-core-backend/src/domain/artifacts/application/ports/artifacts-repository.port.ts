@@ -6,6 +6,10 @@ export abstract class ArtifactsRepository {
   abstract create(artifact: Artifact): Promise<Artifact>;
   abstract findById(id: UUID, userId: UUID): Promise<Artifact | null>;
   abstract findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]>;
+  abstract findByWorkspaceId(
+    workspaceId: UUID,
+    userId: UUID,
+  ): Promise<Artifact[]>;
   abstract findByIdWithVersions(
     id: UUID,
     userId: UUID,

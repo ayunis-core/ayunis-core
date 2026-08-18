@@ -15,6 +15,7 @@ import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import { isUniqueConstraintViolation } from './unique-constraint.util';
+import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
@@ -58,6 +59,27 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       where: { threadId, userId },
       order: { createdAt: 'ASC' },
     });
+    return records.map((r) => this.artifactMapper.toDomain(r));
+  }
+
+  async findByWorkspaceId(
+    workspaceId: UUID,
+    userId: UUID,
+  ): Promise<Artifact[]> {
+    const records = await this.artifactRepo
+      .createQueryBuilder('artifact')
+      .innerJoin(
+        ThreadRecord,
+        'thread',
+        'thread.id = artifact.threadId AND thread.userId = :userId',
+        { userId },
+      )
+      .where('artifact.userId = :userId', { userId })
+      .andWhere('thread.workspaceId = :workspaceId', { workspaceId })
+      .orderBy('artifact.updatedAt', 'DESC')
+      .addOrderBy('artifact.id', 'ASC')
+      .getMany();
+
     return records.map((r) => this.artifactMapper.toDomain(r));
   }
 
