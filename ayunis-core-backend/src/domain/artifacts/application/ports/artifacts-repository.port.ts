@@ -1,11 +1,25 @@
 import type { UUID } from 'crypto';
-import type { Artifact } from '../../domain/artifact.entity';
-import type { ArtifactVersion } from '../../domain/artifact-version.entity';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
+import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import type { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+
+export interface ArtifactsByWorkspaceListOptions {
+  search?: string;
+  type?: ArtifactType;
+  limit: number;
+  offset: number;
+}
 
 export abstract class ArtifactsRepository {
   abstract create(artifact: Artifact): Promise<Artifact>;
   abstract findById(id: UUID, userId: UUID): Promise<Artifact | null>;
   abstract findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]>;
+  abstract findByWorkspaceId(
+    workspaceId: UUID,
+    userId: UUID,
+    options: ArtifactsByWorkspaceListOptions,
+  ): Promise<Paginated<Artifact>>;
   abstract findByIdWithVersions(
     id: UUID,
     userId: UUID,

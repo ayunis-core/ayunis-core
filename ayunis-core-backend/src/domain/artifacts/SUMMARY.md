@@ -21,6 +21,7 @@ artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
 │   ├── artifact-version.entity.ts
+│   ├── artifacts.constants.ts
 │   └── value-objects/
 │       ├── artifact-type.enum.ts
 │       └── author-type.enum.ts
@@ -41,6 +42,7 @@ artifacts/
 │       ├── create-artifact/
 │       ├── update-artifact/
 │       ├── find-artifacts-by-thread/
+│       ├── find-artifacts-by-workspace/
 │       ├── find-artifact-with-versions/
 │       ├── revert-artifact/
 │       └── export-artifact/
@@ -68,6 +70,7 @@ artifacts/
 ## Dependencies
 
 - **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+- **WorkspacesModule** — Imported for workspace ownership validation when listing artifacts
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
 
@@ -94,4 +97,5 @@ artifacts/
 - Diagram content is stored without document HTML or spreadsheet normalization
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts
+- Workspace artifact listings ignore unsupported legacy discriminator values
 - Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)

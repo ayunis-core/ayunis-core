@@ -7757,6 +7757,75 @@
         "tags": ["artifacts"]
       }
     },
+    "/artifacts/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByWorkspace",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search artifacts by title",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by type",
+            "schema": {
+              "enum": ["document", "diagram", "spreadsheet"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of artifacts to return",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of artifacts to skip",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts from chats in the workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts in a workspace",
+        "tags": ["artifacts"]
+      }
+    },
     "/artifacts/{id}/revert": {
       "post": {
         "operationId": "ArtifactsController_revert",
@@ -17483,6 +17552,21 @@
             "nullable": true
           }
         }
+      },
+      "ArtifactListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
       },
       "RevertArtifactDto": {
         "type": "object",
