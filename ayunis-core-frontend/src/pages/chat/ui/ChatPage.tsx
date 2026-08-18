@@ -48,6 +48,7 @@ import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationA
 import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';
+import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
 
 const PROCESSING_POLL_INTERVAL = 5000;
@@ -210,15 +211,7 @@ export default function ChatPage({
   );
 
   const handleMasks = useCallback((data: RunMasksResponseDto) => {
-    // Events carry the thread's full dictionary — replace-by-token merge is
-    // idempotent and keeps any entries from earlier events.
-    setPiiMasks((prev) => {
-      const byToken = new Map(prev.map((mask) => [mask.token, mask]));
-      for (const mask of data.masks) {
-        byToken.set(mask.token, mask);
-      }
-      return [...byToken.values()];
-    });
+    setPiiMasks((prev) => mergePiiMasks(prev, data.masks));
   }, []);
 
   const handleFileUpload = (files: File[]) =>
