@@ -3870,6 +3870,7 @@ export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
   spreadsheet: 'spreadsheet',
+  email: 'email',
 } as const;
 
 export interface ArtifactResponseDto {
@@ -3920,6 +3921,34 @@ export interface UpdateArtifactDto {
    * @nullable
    */
   letterheadId?: string | null;
+}
+
+export type EmailDeliveryResponseDtoStatus = typeof EmailDeliveryResponseDtoStatus[keyof typeof EmailDeliveryResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EmailDeliveryResponseDtoStatus = {
+  pending: 'pending',
+  sent: 'sent',
+  failed: 'failed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type EmailDeliveryResponseDtoSentAt = { [key: string]: unknown } | null;
+
+export interface EmailDeliveryResponseDto {
+  /** Unique identifier of the delivery */
+  id: string;
+  /** Email artifact identifier */
+  artifactId: string;
+  /** Version sent or being sent */
+  versionNumber: number;
+  status: EmailDeliveryResponseDtoStatus;
+  /** @nullable */
+  sentAt?: EmailDeliveryResponseDtoSentAt;
+  createdAt: string;
 }
 
 export interface RevertArtifactDto {

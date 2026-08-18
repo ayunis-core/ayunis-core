@@ -52,6 +52,7 @@ export function DocumentWidgetCard({
           <p className="text-xs text-muted-foreground">{statusLabel}</p>
         </div>
         <Button
+          data-testid="chat-artifact-open-button"
           variant="outline"
           size="sm"
           className="h-8"

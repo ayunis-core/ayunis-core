@@ -7,7 +7,9 @@ import { useRevertArtifact } from '../api/useRevertArtifact';
 import { useExportArtifact } from '../api/useExportArtifact';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { showSuccess } from '@/shared/lib/toast';
+import { showError, showSuccess } from '@/shared/lib/toast';
+import { artifactsControllerSend } from '@/shared/api';
+import { useMutation } from '@tanstack/react-query';
 
 export function useArtifactActions(
   threadId: string,
@@ -46,6 +48,12 @@ export function useArtifactActions(
     },
     [navigate, threadId],
   );
+
+  const sendEmailMutation = useMutation({
+    mutationFn: () => artifactsControllerSend(openArtifactId ?? ''),
+    onSuccess: () => showSuccess(t('chat.emailSent')),
+    onError: () => showError(t('chat.emailSendFailed')),
+  });
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
@@ -93,6 +101,10 @@ export function useArtifactActions(
     });
   }, [navigate, threadId]);
 
+  const handleSendEmailArtifact = useCallback(async () => {
+    await sendEmailMutation.mutateAsync();
+  }, [sendEmailMutation]);
+
   return {
     openArtifact,
     isExporting,
@@ -101,5 +113,7 @@ export function useArtifactActions(
     handleRevertArtifact,
     handleExportArtifact,
     handleCloseArtifact,
+    handleSendEmailArtifact,
+    isSendingEmail: sendEmailMutation.isPending,
   };
 }

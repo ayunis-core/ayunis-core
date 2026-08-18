@@ -14,7 +14,7 @@
   },
   "artifacts": {
     "title": "Project artifacts",
-    "description": "Documents, diagrams, and spreadsheets created in chats in this project.",
+    "description": "Documents, diagrams, spreadsheets, and emails created in chats in this project.",
     "emptyTitle": "No artifacts yet",
     "empty": "Artifacts created in project chats will appear here.",
     "loadError": {
@@ -27,7 +27,8 @@
     "type": {
       "document": "Document",
       "diagram": "Diagram",
-      "spreadsheet": "Spreadsheet"
+      "spreadsheet": "Spreadsheet",
+      "email": "Email"
     }
   },
   "chat": {

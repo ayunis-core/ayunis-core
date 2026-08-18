@@ -21,6 +21,12 @@ const LazySpreadsheetEditor = lazy(() =>
   })),
 );
 
+const LazyEmailEditor = lazy(() =>
+  import('@/widgets/email-editor').then((m) => ({
+    default: m.EmailEditor,
+  })),
+);
+
 interface ArtifactSidePanelProps {
   readonly artifact: ArtifactResponseDto;
   readonly onSave: (content: string) => void | Promise<void>;
@@ -30,9 +36,11 @@ interface ArtifactSidePanelProps {
     unsavedContent?: string,
     versionNumber?: number,
   ) => void;
+  readonly onSend: () => void | Promise<void>;
   readonly onClose: () => void;
   readonly onLetterheadChange: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
+  readonly isSending?: boolean;
 }
 
 export function ArtifactSidePanel({
@@ -40,9 +48,11 @@ export function ArtifactSidePanel({
   onSave,
   onRevert,
   onExport,
+  onSend,
   onClose,
   onLetterheadChange,
   isExporting,
+  isSending,
 }: ArtifactSidePanelProps) {
   // key={artifact.id} forces a remount when another artifact is opened: the
   // editors keep local state (grid data, dirty flag, selected version) that
@@ -85,9 +95,17 @@ export function ArtifactSidePanel({
           />
         );
       case 'email':
-        return null;
-      default:
-        return null;
+        return (
+          <LazyEmailEditor
+            key={artifact.id}
+            artifact={artifact}
+            onSave={onSave}
+            onRevert={onRevert}
+            onClose={onClose}
+            onSend={onSend}
+            isSending={isSending}
+          />
+        );
     }
   };
 

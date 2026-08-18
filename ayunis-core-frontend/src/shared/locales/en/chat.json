@@ -12,6 +12,8 @@
     "cancelText": "Cancel",
     "errorDeleteThread": "Failed to delete chat",
     "artifactSaved": "Document saved successfully",
+    "emailSent": "Email sent successfully",
+    "emailSendFailed": "Email could not be sent",
     "unknownMessageType": "Unknown message type",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "errorExecutionError": "Error fetching response",
@@ -60,6 +62,8 @@
         "update_diagram": "Updated diagram",
         "create_spreadsheet": "Created spreadsheet",
         "update_spreadsheet": "Updated spreadsheet",
+        "create_email": "Created email draft",
+        "update_email": "Updated email draft",
         "chart": "Created chart",
         "generate_image": "Generated image",
         "send_email": "Drafted email",
@@ -173,6 +177,18 @@
         "updating": "Updating spreadsheet…",
         "generating": "Generating update…",
         "openInEditor": "Open spreadsheet"
+      },
+      "create_email": {
+        "title": "Email draft",
+        "created": "Email draft created",
+        "generating": "Generating email draft…",
+        "openInEditor": "Open email"
+      },
+      "update_email": {
+        "title": "Email draft updated",
+        "updated": "Email draft updated",
+        "generating": "Updating email draft…",
+        "openInEditor": "Open email"
       },
       "create_calendar_event": {
         "title": "Title",

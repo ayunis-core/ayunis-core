@@ -74,6 +74,29 @@
       "csv": "CSV (.csv)"
     }
   },
+  "email": {
+    "to": "An",
+    "cc": "Cc",
+    "bcc": "Bcc",
+    "subject": "Betreff",
+    "body": "Nachricht",
+    "invalidContent": "Diese E-Mail konnte nicht gelesen werden. Beim Speichern wird der Inhalt ersetzt.",
+    "viewingHistory": "Version {{version}} wird angezeigt (schreibgeschützt). Wählen Sie die aktuelle Version, um weiter zu bearbeiten.",
+    "send": {
+      "button": "Senden",
+      "sending": "Wird gesendet…",
+      "title": "E-Mail senden?",
+      "description": "Die gespeicherte Version der E-Mail wird an alle aufgeführten Empfänger gesendet.",
+      "confirm": "E-Mail senden",
+      "cancel": "Abbrechen"
+    },
+    "unsavedChanges": {
+      "title": "Ungespeicherte Änderungen",
+      "description": "Diese E-Mail enthält ungespeicherte Änderungen. Vor dem Schließen verwerfen?",
+      "discardAndClose": "Verwerfen & schließen",
+      "keepEditing": "Weiter bearbeiten"
+    }
+  },
   "diagram": {
     "export": {
       "svg": "SVG",

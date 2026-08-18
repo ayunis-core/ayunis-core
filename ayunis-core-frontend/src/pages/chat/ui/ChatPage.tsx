@@ -135,7 +135,6 @@ export default function ChatPage({
     setThreadTitle(thread.title);
     setPiiMasks(thread.piiMasks);
   }
-
   useEffect(() => {
     lastSubmissionRef.current = null;
   }, [thread.id]);
@@ -151,8 +150,9 @@ export default function ChatPage({
     handleRevertArtifact,
     handleExportArtifact,
     handleCloseArtifact,
+    handleSendEmailArtifact,
+    isSendingEmail,
   } = useArtifactActions(thread.id, initialArtifactId);
-
   const { handleLetterheadChange } = useLetterheadChange({
     artifactId: openArtifact?.id ?? '',
     threadId: thread.id,
@@ -166,7 +166,6 @@ export default function ChatPage({
     workspaceId: thread.workspaceId,
     onOpen: handleCloseArtifact,
   });
-
   const { deleteChat } = useDeleteThread({
     onBeforeDelete: resetRunState,
     onSuccess: () => {
@@ -177,7 +176,6 @@ export default function ChatPage({
       showError(t('chat.errorDeleteThread'));
     },
   });
-
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { createFileSource, isLoading: isCreatingFileSource } =
     useCreateFileSource({
@@ -463,9 +461,11 @@ export default function ChatPage({
         onSave={handleSaveArtifact}
         onRevert={handleRevertArtifact}
         onExport={handleExportArtifact}
+        onSend={handleSendEmailArtifact}
         onClose={handleCloseArtifact}
         onLetterheadChange={handleLetterheadChange}
         isExporting={isExporting}
+        isSending={isSendingEmail}
       />
     );
   } else if (workspaceContextPanel && workspaceContext) {

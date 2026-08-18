@@ -74,6 +74,29 @@
       "csv": "CSV (.csv)"
     }
   },
+  "email": {
+    "to": "To",
+    "cc": "Cc",
+    "bcc": "Bcc",
+    "subject": "Subject",
+    "body": "Message",
+    "invalidContent": "This email could not be read. Saving will replace its content.",
+    "viewingHistory": "Viewing version {{version}} (read-only). Select the current version to continue editing.",
+    "send": {
+      "button": "Send",
+      "sending": "Sending…",
+      "title": "Send email?",
+      "description": "This sends the saved version of the email to all listed recipients.",
+      "confirm": "Send email",
+      "cancel": "Cancel"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved changes",
+      "description": "This email has unsaved changes. Discard them before closing?",
+      "discardAndClose": "Discard & close",
+      "keepEditing": "Keep editing"
+    }
+  },
   "diagram": {
     "export": {
       "svg": "SVG",

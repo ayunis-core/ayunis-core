@@ -8,9 +8,11 @@ import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
 import CreateSpreadsheetWidget from './CreateSpreadsheetWidget';
 import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
+import CreateEmailWidget from './CreateEmailWidget';
+import UpdateEmailWidget from './UpdateEmailWidget';
 
 /**
- * Renders the chat widget for any document- or diagram-related tool call.
+ * Renders the chat widget for any artifact-related tool call.
  * Returns null when the tool call is not an artifact tool, so the caller can
  * continue its switch with other widget types.
  */
@@ -93,6 +95,25 @@ export function renderArtifactToolWidget(params: {
       return (
         <UpdateSpreadsheetWidget
           key={`update-spreadsheet-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'create_email':
+      return (
+        <CreateEmailWidget
+          key={`create-email-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          threadId={threadId}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'update_email':
+      return (
+        <UpdateEmailWidget
+          key={`update-email-${keySuffix}`}
           content={content}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}

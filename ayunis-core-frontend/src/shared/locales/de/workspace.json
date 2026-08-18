@@ -14,7 +14,7 @@
   },
   "artifacts": {
     "title": "Projektartefakte",
-    "description": "Dokumente, Diagramme und Tabellen aus Chats in diesem Projekt.",
+    "description": "Dokumente, Diagramme, Tabellen und E-Mails aus Chats in diesem Projekt.",
     "emptyTitle": "Noch keine Artefakte",
     "empty": "Artefakte aus Projektchats erscheinen hier.",
     "loadError": {
@@ -27,7 +27,8 @@
     "type": {
       "document": "Dokument",
       "diagram": "Diagramm",
-      "spreadsheet": "Tabelle"
+      "spreadsheet": "Tabelle",
+      "email": "E-Mail"
     }
   },
   "chat": {

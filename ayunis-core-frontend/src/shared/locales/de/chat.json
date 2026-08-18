@@ -12,6 +12,8 @@
     "cancelText": "Abbrechen",
     "errorDeleteThread": "Chat konnte nicht gelöscht werden",
     "artifactSaved": "Dokument erfolgreich gespeichert",
+    "emailSent": "E-Mail erfolgreich gesendet",
+    "emailSendFailed": "E-Mail konnte nicht gesendet werden",
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",
@@ -60,6 +62,8 @@
         "update_diagram": "Diagramm aktualisiert",
         "create_spreadsheet": "Tabelle erstellt",
         "update_spreadsheet": "Tabelle aktualisiert",
+        "create_email": "E-Mail-Entwurf erstellt",
+        "update_email": "E-Mail-Entwurf aktualisiert",
         "chart": "Diagramm erstellt",
         "generate_image": "Bild generiert",
         "send_email": "E-Mail entworfen",
@@ -173,6 +177,18 @@
         "updating": "Tabelle wird aktualisiert…",
         "generating": "Aktualisierung wird generiert…",
         "openInEditor": "Tabelle öffnen"
+      },
+      "create_email": {
+        "title": "E-Mail-Entwurf",
+        "created": "E-Mail-Entwurf erstellt",
+        "generating": "E-Mail-Entwurf wird erstellt…",
+        "openInEditor": "E-Mail öffnen"
+      },
+      "update_email": {
+        "title": "E-Mail-Entwurf aktualisiert",
+        "updated": "E-Mail-Entwurf aktualisiert",
+        "generating": "E-Mail-Entwurf wird aktualisiert…",
+        "openInEditor": "E-Mail öffnen"
       },
       "create_calendar_event": {
         "title": "Titel",
