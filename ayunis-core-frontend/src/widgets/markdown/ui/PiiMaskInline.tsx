@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   usePiiMasks,
   usePiiUnmaskRequest,
@@ -50,7 +51,7 @@ export default function PiiMaskInline({ token }: PiiMaskInlineProps) {
           <button
             type="button"
             data-testid="pii-mask"
-            className={`${highlight} cursor-pointer hover:bg-brand/25`}
+            className={cn(highlight, 'cursor-pointer hover:bg-brand/25')}
             onClick={() => onUnmaskRequest(entry)}
           >
             {entry.value}

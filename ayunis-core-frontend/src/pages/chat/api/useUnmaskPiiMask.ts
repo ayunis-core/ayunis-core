@@ -1,12 +1,14 @@
 import {
-  useThreadsControllerUnmaskPiiMask,
   getThreadsControllerFindOneQueryKey,
+  useThreadsControllerUnmaskPiiMask,
 } from '@/shared/api';
-import type { PiiMaskResponseDto } from '@/shared/api';
+import type { GetThreadResponseDto, PiiMaskResponseDto } from '@/shared/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
+import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import { useLayoutEffect, useRef } from 'react';
 
 interface UseUnmaskPiiMaskProps {
   threadId: string;
@@ -18,14 +20,24 @@ export function useUnmaskPiiMask({
   onSuccess,
 }: UseUnmaskPiiMaskProps) {
   const queryClient = useQueryClient();
+  const currentThreadIdRef = useRef(threadId);
+  useLayoutEffect(() => {
+    currentThreadIdRef.current = threadId;
+  }, [threadId]);
   const { t } = useTranslation('chat');
   const unmaskMutation = useThreadsControllerUnmaskPiiMask({
     mutation: {
-      onSuccess: (masks) => {
-        onSuccess?.(masks);
-        void queryClient.invalidateQueries({
-          queryKey: getThreadsControllerFindOneQueryKey(threadId),
-        });
+      onSuccess: async (masks, variables) => {
+        const queryKey = getThreadsControllerFindOneQueryKey(variables.id);
+        await queryClient.cancelQueries({ queryKey });
+        queryClient.setQueryData<GetThreadResponseDto>(queryKey, (thread) =>
+          thread
+            ? { ...thread, piiMasks: mergePiiMasks(thread.piiMasks, masks) }
+            : thread,
+        );
+        if (variables.id === currentThreadIdRef.current) {
+          onSuccess?.(masks);
+        }
         showSuccess(t('chat.piiMask.unmaskSuccess'));
       },
       onError: (error: unknown) => {
