@@ -4,9 +4,16 @@ import { sendMessage } from '../../src/flows/chat.flow';
 // Manual unmasking (AYC-807): in an anonymous chat a detected PII value is
 // rendered as a clickable masked term; after confirming, the term is
 // permanently unmasked for this thread and is no longer masked in follow-up
-// messages. Requires the anonymisation service (`./dev up --e2e
-// --with-anonymisation`).
+// messages. Requires the anonymisation service, which the CI stack does not
+// run — start the stack with `./dev up --e2e --with-anonymisation` and run
+// with E2E_WITH_ANONYMISATION=true.
 test.describe('PII mask manual unmasking', () => {
+  // eslint-disable-next-line playwright/no-skipped-test -- environment gate, not a disabled test: the CI stack runs without the anonymisation service
+  test.skip(
+    process.env.E2E_WITH_ANONYMISATION !== 'true',
+    'requires the anonymisation service (E2E_WITH_ANONYMISATION=true against a --with-anonymisation stack)',
+  );
+
   test('unmasks a term for the thread after confirmation', async ({
     page,
   }) => {
