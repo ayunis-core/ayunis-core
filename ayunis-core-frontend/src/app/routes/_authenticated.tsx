@@ -1,23 +1,13 @@
 import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import {
-  authenticationControllerMe,
-  getAuthenticationControllerMeQueryKey,
-} from '@/shared/api';
-import {
   appControllerIsCloud,
   getAppControllerIsCloudQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { queryOptions } from '@tanstack/react-query';
+import { meQueryOptions } from '@/shared/api/me-query-options';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';
 import { setAppsignalTags, clearAppsignalTags } from '@/shared/lib/appsignal';
-
-const meQueryOptions = () =>
-  queryOptions({
-    queryKey: getAuthenticationControllerMeQueryKey(),
-    queryFn: () => authenticationControllerMe(),
-  });
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
