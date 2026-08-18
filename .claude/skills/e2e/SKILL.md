@@ -41,11 +41,9 @@ pnpm --filter ayunis-core-e2e run openapi:generate       # refresh generated API
 Non-default slot: `E2E_BASE_URL=http://localhost:30N1 pnpm --filter ...`
 (API and Mailcatcher URLs derive from the slot; see `src/config.ts`).
 
-PR-review screenshots (`pnpm --filter ayunis-core-e2e run screenshots`)
-capture key routes at desktop + mobile into `screenshots-output/`. CI runs
-this automatically for frontend-touching PRs and posts a sticky comment with
-the images (`scripts/publish-pr-screenshots.sh`) — when a feature adds an
-important new page, add its route to `tests/screenshots/routes.shots.ts`.
+Temporary PR-review screenshots/GIFs use `pnpm --filter ayunis-core-e2e run pr-media:capture`. Scene definitions are not committed to product branches; use the `pr-media` skill to put `.pr-media/scenes.ts` on the disposable `pr-media/pr-<n>` branch for the PR.
+
+For visible frontend changes, PR media is part of the post-submit workflow: after the product PR exists, create temporary PR media unless the user explicitly opts out. Include desktop and mobile screenshots of the changed UI, plus a short GIF for changed interactions, dialogs, menus, or flows.
 
 ## Fixtures — import from `src/fixtures/test`, never `@playwright/test`
 

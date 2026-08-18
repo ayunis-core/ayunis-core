@@ -28,6 +28,11 @@ green before submitting. Add `data-testid`s to touched components in the same
 PR (`<feature>-<element>`, kebab-case) — text selectors are banned because
 the UI is i18n'd.
 
+**Visible UI change?** After the product PR exists, add temporary PR media by
+loading the `pr-media` skill and publishing scenes to `pr-media/pr-<number>`.
+This is required unless the user explicitly says not to add PR media. Do not
+commit media scenes to the product branch.
+
 ## Architecture (Feature-Sliced Design)
 
 ```text

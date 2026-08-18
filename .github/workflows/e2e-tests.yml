@@ -39,10 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
     steps:
-      - name: Delete hosted PR media branch
+      - name: Delete hosted PR media branch and comment
         env:
           GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
           PR_MEDIA_BRANCH: pr-media/pr-${{ github.event.pull_request.number }}
         run: |
           if gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${PR_MEDIA_BRANCH}" --silent; then
@@ -52,13 +54,23 @@ jobs:
             echo "No ${PR_MEDIA_BRANCH} branch to delete"
           fi
 
+          marker="<!-- pr-screenshots -->"
+          comment_ids="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --paginate --jq ".[] | select(.body | startswith(\"${marker}\")) | .id")"
+          while IFS= read -r comment_id; do
+            [ -n "$comment_id" ] || continue
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" > /dev/null
+            echo "Deleted screenshot comment ${comment_id} on PR #${PR}"
+          done <<< "$comment_ids"
+
   e2e:
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     outputs:
-      screenshot-routes: ${{ steps.screenshots.outputs.routes }}
+      pr-media-enabled: ${{ steps.pr-media-scenes.outputs.enabled }}
+      clear-pr-media-comment: ${{ steps.pr-media-scenes.outputs.clear-comment }}
 
     permissions:
       contents: read
@@ -232,43 +244,82 @@ jobs:
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
 
-      # -- PR screenshots (affected frontend routes only) -------------------
-      # Reuses the already-running stack to capture affected routes, hosts them
-      # on a pr-media/pr-<n> orphan branch, and upserts a sticky PR comment.
-      - name: Select UI screenshots
-        id: screenshots
+      # -- Temporary PR media ------------------------------------------------
+      # Scene code lives on pr-media/pr-<n> instead of the product branch.
+      # This job runs PR/scene code with read-only permissions; publishing
+      # happens later in a no-checkout write-token job.
+      - name: Load PR media scenes
+        id: pr-media-scenes
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
-          changed_files="$(mktemp)"
-          gh pr diff ${{ github.event.pull_request.number }} --repo "$GITHUB_REPOSITORY" --name-only > "$changed_files"
-          node ayunis-core-e2e/tests/screenshots/select-routes.mjs --from-file "$changed_files"
+          set -euo pipefail
+          ref="pr-media/pr-${PR}"
+          mkdir -p .pr-media
+          if ! gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${ref}" --silent 2>/dev/null; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+            echo "No PR media branch ${ref}"
+            exit 0
+          fi
+
+          scenes_error="$(mktemp)"
+          if ! gh api "repos/${GITHUB_REPOSITORY}/contents/.pr-media/scenes.ts?ref=${ref}" --jq .content > .pr-media/scenes.ts.b64 2>"${scenes_error}"; then
+            if grep -q "Not Found" "${scenes_error}"; then
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "clear-comment=true" >> "$GITHUB_OUTPUT"
+              echo "No .pr-media/scenes.ts on ${ref}"
+              exit 0
+            fi
+            cat "${scenes_error}" >&2
+            exit 1
+          fi
+
+          base64 -d .pr-media/scenes.ts.b64 > .pr-media/scenes.ts
+          cp .pr-media/scenes.ts ayunis-core-e2e/pr-media/scenes.generated.ts
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "clear-comment=false" >> "$GITHUB_OUTPUT"
+          echo "Loaded PR media scenes from ${ref}"
 
       - name: Install media tooling
-        if: github.event_name == 'pull_request' && steps.screenshots.outputs.routes != ''
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Capture UI screenshots and demos
-        if: github.event_name == 'pull_request' && steps.screenshots.outputs.routes != ''
-        run: pnpm --filter ayunis-core-e2e run screenshots
+      - name: Capture PR screenshots and demos
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        run: pnpm --filter ayunis-core-e2e run pr-media:capture
         env:
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
-          SCREENSHOT_ROUTES: ${{ steps.screenshots.outputs.routes }}
 
-      - name: Upload PR screenshots and demos
-        if: github.event_name == 'pull_request' && steps.screenshots.outputs.routes != ''
+      - name: Package PR media artifact
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p pr-media-artifact/.pr-media pr-media-artifact/media
+          cp .pr-media/scenes.ts pr-media-artifact/.pr-media/scenes.ts
+          shopt -s nullglob
+          media=(ayunis-core-e2e/screenshots-output/*.png ayunis-core-e2e/screenshots-output/*.gif)
+          if [ ${#media[@]} -eq 0 ]; then
+            echo "No PR media files were generated"
+            exit 1
+          fi
+          cp "${media[@]}" pr-media-artifact/media/
+
+      - name: Upload PR media artifact
+        if: github.event_name == 'pull_request' && steps.pr-media-scenes.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: pr-screenshots-${{ github.event.pull_request.number }}
-          path: |
-            ayunis-core-e2e/screenshots-output/*.png
-            ayunis-core-e2e/screenshots-output/*.gif
+          name: pr-media-${{ github.event.pull_request.number }}
+          path: pr-media-artifact
           if-no-files-found: error
+          retention-days: 3
+          include-hidden-files: true
 
       - name: Upload Playwright report
         if: failure()
@@ -290,18 +341,19 @@ jobs:
 
   publish-pr-media:
     needs: e2e
-    if: github.event_name == 'pull_request' && needs.e2e.outputs.screenshot-routes != ''
+    if: github.event_name == 'pull_request' && needs.e2e.outputs.pr-media-enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: write
+      issues: write
       pull-requests: write
     steps:
-      - name: Download screenshots and demos
+      - name: Download PR media artifact
         uses: actions/download-artifact@v4
         with:
-          name: pr-screenshots-${{ github.event.pull_request.number }}
-          path: pr-screenshots
+          name: pr-media-${{ github.event.pull_request.number }}
+          path: pr-media-artifact
 
       - name: Publish screenshots and demos to PR
         env:
@@ -310,7 +362,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          shots_dir="pr-screenshots"
+          shots_dir="pr-media-artifact/media"
           branch="pr-media/pr-${PR}"
           marker="<!-- pr-screenshots -->"
 
@@ -325,20 +377,35 @@ jobs:
 
           work="$(mktemp -d)"
           trap 'rm -rf "$work"' EXIT
+          git -C "$work" init -q
+          git -C "$work" remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          if git -C "$work" fetch -q --depth=1 origin "$branch"; then
+            git -C "$work" checkout -q -B "$branch" FETCH_HEAD
+          else
+            git -C "$work" checkout -q --orphan "$branch"
+            mkdir -p "$work/.pr-media"
+            cp pr-media-artifact/.pr-media/scenes.ts "$work/.pr-media/scenes.ts"
+          fi
+
           dest="$work/docs/pr-media/pr-${PR}"
+          rm -rf "$dest"
           mkdir -p "$dest"
           cp "${media[@]}" "$dest/"
 
-          git -C "$work" init -q -b "$branch"
           git -C "$work" add -A
-          git -C "$work" \
-            -c user.name="github-actions[bot]" \
-            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -qm "docs(pr-media): UI screenshots for PR #${PR}"
-          sha="$(git -C "$work" rev-parse HEAD)"
-          git -C "$work" push -qf \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "HEAD:refs/heads/${branch}"
+          if git -C "$work" diff --cached --quiet; then
+            sha="$(git -C "$work" rev-parse HEAD)"
+            echo "PR media files are unchanged on ${branch}; keeping ${sha}"
+          else
+            git -C "$work" \
+              -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qm "docs(pr-media): UI screenshots for PR #${PR}"
+            sha="$(git -C "$work" rev-parse HEAD)"
+            git -C "$work" push -q \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "HEAD:refs/heads/${branch}"
+          fi
 
           raw_base="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${sha}/docs/pr-media/pr-${PR}"
           body="$marker
@@ -395,9 +462,10 @@ jobs:
 
   clear-pr-media-comment:
     needs: e2e
-    if: github.event_name == 'pull_request' && needs.e2e.outputs.screenshot-routes == ''
+    if: github.event_name == 'pull_request' && needs.e2e.outputs.clear-pr-media-comment == 'true'
     runs-on: ubuntu-latest
     permissions:
+      issues: write
       pull-requests: write
     steps:
       - name: Delete stale screenshots comment

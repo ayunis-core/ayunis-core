@@ -172,7 +172,7 @@ New workflow `e2e-tests.yml`:
 
 ```text
 ayunis-core-e2e/
-  playwright.config.ts        # projects: setup, chromium, screenshots
+  playwright.config.ts        # projects: setup, chromium, pr-media
   src/
     fixtures/
       test.ts                 # fixture composition: page(authed), api, org, mail, pageErrors
@@ -191,8 +191,8 @@ ayunis-core-e2e/
     chat/                     # send/receive (mock LLM), thread CRUD, model switch
     admin/                    # org settings, teams, permitted models, toggles
     sources/                  # upload → queue-processed → usable in chat
-    screenshots/              # PR review screenshots
     smoke.spec.ts             # route-render sweep (kept from scaffold)
+  pr-media/                   # temporary PR media capture infrastructure
 ```
 
 Specs stay under the repo's 500-line file limit; one user journey per file.
@@ -222,7 +222,7 @@ happen later at submit time if the diff warrants it.)
 | **2. Core journeys** | journey specs green, parallel-safe | chat send/receive against mock (assert `{provider}::{model}` routing), thread rename/delete, register, invite via Mailcatcher, password reset, admin settings happy paths |
 | **3. CI** | workflow green on this branch | `e2e-tests.yml` as above, artifacts, non-blocking check — ✅ written; full CI job rehearsed locally (built backend serving the built SPA from `dist/frontend`, same origin: 15/15 in 11.9s). Green-on-GitHub pending first push |
 | **4. AI workflow** | skill usable end-to-end | ✅ `.claude/skills/e2e` (stack setup, fixture API, selector policy, add-a-spec guide with reference specs, failure debugging); DoD wired into `ayunis-core-frontend-dev` (validation sequence) and `linear-implement` (step 4); `qa` skill now runs relevant specs first and flags missing coverage as a DoD gap. Reference specs serve as the templates |
-| **5. Depth** | ongoing | **PR screenshots** ✅: the `screenshots` Playwright project captures key routes (desktop + mobile) for PRs touching the frontend; CI pushes them to a `pr-media/pr-<n>` orphan branch (existing repo convention) and upserts a sticky PR comment with sha-based raw URLs (`scripts/publish-pr-screenshots.sh`) — automates the `qa` skill's media pipeline and responsive check. Validated locally: 10 shots against slot 2, publish script dry-run. Still open: sources/KB with queue polling, teams/permissions, usage limits (`@seeded-org`), flip CI check to required. (Multi-chunk streaming mock already landed in Phase 2.) |
+| **5. Depth** | ongoing | **Temporary PR media** ✅: `pr-media` capture infrastructure is permanent, but scene files are opt-in and live only on `pr-media/pr-<n>` branches. CI fetches `.pr-media/scenes.ts` from that branch, captures exactly those screenshots/GIFs, publishes media back to the same disposable branch, and deletes it when the PR closes. Still open: sources/KB with queue polling, teams/permissions, usage limits (`@seeded-org`), flip CI check to required. (Multi-chunk streaming mock already landed in Phase 2.) |
 
 Phases 1–2 are the payoff point: from then on, "build a feature" includes "write
 the spec, run it, ship" — with no browser in the loop.

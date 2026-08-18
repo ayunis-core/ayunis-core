@@ -13,7 +13,7 @@
     "openapi:generate": "orval --config orval.config.ts",
     "test:ui": "playwright test --project=chromium --ui",
     "test:headed": "playwright test --project=chromium --headed",
-    "screenshots": "playwright test --project=screenshots",
+    "pr-media:capture": "playwright test --project=pr-media",
     "report": "playwright show-report",
     "codegen": "playwright codegen",
     "install:browsers": "playwright install chromium"
