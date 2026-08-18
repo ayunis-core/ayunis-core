@@ -8,7 +8,7 @@ const setupDependencies = process.env.CI ? [] : ['setup'];
 // Slot 2 → frontend on 3021. Override with E2E_BASE_URL for other slots.
 // Auth and org setup happen per worker via src/fixtures/test.ts + src/factories/.
 export default defineConfig({
-  testDir: './tests',
+  testDir: '.',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -38,15 +38,15 @@ export default defineConfig({
     },
     {
       name: 'chromium',
-      testIgnore: [/tests\/setup\//, /tests\/screenshots\//],
+      testIgnore: [/tests\/setup\//, /pr-media\//],
       dependencies: setupDependencies,
       use: { ...devices['Desktop Chrome'] },
     },
-    // PR-review screenshots — run explicitly: playwright test --project=screenshots
-    // (package scripts pin --project=chromium so this never runs by accident).
+    // Temporary PR-review media — run explicitly from CI when a pr-media/pr-N
+    // scene branch exists. The normal test script pins --project=chromium.
     {
-      name: 'screenshots',
-      testMatch: /tests\/screenshots\/.*\.shots\.ts/,
+      name: 'pr-media',
+      testMatch: /pr-media\/.*\.shots\.ts/,
       dependencies: setupDependencies,
       use: { ...devices['Desktop Chrome'] },
     },

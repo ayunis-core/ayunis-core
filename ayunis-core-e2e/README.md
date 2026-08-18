@@ -35,7 +35,7 @@ pnpm --filter ayunis-core-e2e report        # open last HTML report
 pnpm --filter ayunis-core-e2e lint          # selector/flake policy
 pnpm --filter ayunis-core-e2e typecheck
 pnpm --filter ayunis-core-e2e openapi:generate # regenerate typed API client
-pnpm --filter ayunis-core-e2e screenshots   # PR-review shots → screenshots-output/
+pnpm --filter ayunis-core-e2e pr-media:capture # temporary PR media scenes
 ```
 
 ## Configuration
@@ -82,6 +82,7 @@ src/
   flows/          Reusable browser journeys and page interactions
   assertions/     Shared assertion helpers when repetition appears
 tests/            Product journeys grouped by domain
+pr-media/         Temporary PR media capture infrastructure; scenes live on pr-media/pr-<n>
 ```
 
 ## Conventions
@@ -107,8 +108,4 @@ Postgres/Redis/MinIO/Mailcatcher as service containers and
 backend (port 3000); Playwright report, traces, and the backend log upload
 as artifacts on failure.
 
-For PRs that change `ayunis-core-frontend/`, the workflow additionally runs
-the `screenshots` project (key routes, desktop + mobile), pushes the images
-to a `pr-media/pr-<n>` orphan branch, and upserts a sticky PR comment
-embedding them (`scripts/publish-pr-screenshots.sh`) — automatic visual
-review media on every frontend PR.
+Temporary screenshots/GIFs are opt-in per PR. Add `.pr-media/scenes.ts` to the disposable `pr-media/pr-<n>` branch with `scripts/pr-media/update-scenes.sh --branch current <scenes.ts>`; CI fetches that scene file, captures exactly those scenes, publishes the media back to `pr-media/pr-<n>`, and deletes the branch/comment when the PR closes. No PR media scenes are committed to product branches.

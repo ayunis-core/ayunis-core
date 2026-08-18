@@ -3517,6 +3517,8 @@ export interface ThreadFavoriteResponseDto {
   referenceType: ThreadFavoriteResponseDtoReferenceType;
   /** @nullable */
   name: string | null;
+  /** @nullable */
+  workspaceId: string | null;
 }
 
 export type ToggleFavoriteDtoReferenceType = typeof ToggleFavoriteDtoReferenceType[keyof typeof ToggleFavoriteDtoReferenceType];
