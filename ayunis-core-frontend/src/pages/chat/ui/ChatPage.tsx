@@ -3,11 +3,11 @@ import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfac
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
-import { useMessageSend } from '../api/useMessageSend';
+import { useMessageSend } from '@/pages/chat/api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
-import type { Thread, Message } from '../model/openapi';
+import type { Thread, Message } from '@/pages/chat/model/openapi';
 import { showError } from '@/shared/lib/toast';
 
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -25,15 +25,17 @@ import type {
   RunThreadResponseDto,
 } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
+import type { PiiMaskEntry } from '@/widgets/markdown';
+import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
-import { useLetterheadChange } from '../hooks/useLetterheadChange';
-import { usePendingMessage } from '../hooks/usePendingMessage';
+import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
+import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
+import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
-import { useDeleteFileSource } from '../api/useDeleteFileSource';
-import { useArtifactActions } from '../hooks/useArtifactActions';
+import { useDeleteFileSource } from '@/pages/chat/api/useDeleteFileSource';
+import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -41,11 +43,11 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
-import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
-import { useDownloadSource } from '../api/useDownloadSource';
-import type { PendingImage } from '../api/useMessageSend';
-import { reconcileMessages } from '../lib/reconcile-thread-messages';
+import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
+import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
+import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
+import type { PendingImage } from '@/pages/chat/api/useMessageSend';
+import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
 
 const PROCESSING_POLL_INTERVAL = 5000;
@@ -187,6 +189,25 @@ export default function ChatPage({
       return [...prev, message];
     });
   }, []);
+
+  const { unmaskPiiMask } = useUnmaskPiiMask({
+    threadId: thread.id,
+    onSuccess: setPiiMasks,
+  });
+
+  const handleUnmaskRequest = useCallback(
+    (entry: PiiMaskEntry) => {
+      confirm({
+        title: t('chat.piiMask.unmaskTitle', { value: entry.value }),
+        description: t('chat.piiMask.unmaskDescription'),
+        confirmText: t('chat.piiMask.unmaskConfirm'),
+        cancelText: t('chat.piiMask.unmaskCancel'),
+        variant: 'destructive',
+        onConfirm: () => unmaskPiiMask(entry.id),
+      });
+    },
+    [confirm, t, unmaskPiiMask],
+  );
 
   const handleMasks = useCallback((data: RunMasksResponseDto) => {
     // Events carry the thread's full dictionary — replace-by-token merge is
@@ -434,7 +455,7 @@ export default function ChatPage({
 
   return (
     <AppLayout>
-      <PiiMaskProvider masks={piiMasks}>
+      <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
         <ChatInterfaceLayout
           chatHeader={chatHeader}
           chatContent={chatContent}

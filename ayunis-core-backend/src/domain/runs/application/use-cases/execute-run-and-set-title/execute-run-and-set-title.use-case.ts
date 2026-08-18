@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
 import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
-import { ExecuteRunUseCase } from '../execute-run/execute-run.use-case';
-import { ExecuteRunCommand } from '../execute-run/execute-run.command';
-import { FindThreadUseCase } from '../../../../threads/application/use-cases/find-thread/find-thread.use-case';
-import { FindThreadQuery } from '../../../../threads/application/use-cases/find-thread/find-thread.query';
-import { GenerateAndSetThreadTitleUseCase } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
-import { GenerateAndSetThreadTitleCommand } from '../../../../threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
+import { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
+import { GenerateAndSetThreadTitleCommand } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.command';
 import {
   RunEvent,
   RunMasksEvent,
@@ -15,18 +15,18 @@ import {
   RunThreadEvent,
   RunErrorEvent,
   RunSessionEvent,
-} from '../../run-events';
+} from 'src/domain/runs/application/run-events';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import {
   RunInput,
   RunUserInput,
 } from 'src/domain/runs/domain/run-input.entity';
-import { RunNoModelFoundError } from '../../runs.errors';
-import { Thread } from '../../../../threads/domain/thread.entity';
+import { RunNoModelFoundError } from 'src/domain/runs/application/runs.errors';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import {
@@ -35,8 +35,8 @@ import {
 } from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
-import { RunAnonymizationUnavailableError } from '../../runs.errors';
-import type { RunExecutionOutcome } from '../../run-execution-outcome';
+import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 
 @Injectable()
 export class ExecuteRunAndSetTitleUseCase {
@@ -143,9 +143,11 @@ export class ExecuteRunAndSetTitleUseCase {
         type: 'masks',
         threadId,
         masks: item.masks.map((mask) => ({
+          id: mask.id,
           token: mask.token,
           value: mask.value,
           category: mask.category,
+          unmasked: mask.unmasked,
         })),
         timestamp: new Date().toISOString(),
       };

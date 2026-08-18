@@ -11,11 +11,12 @@ import { TrimMessagesForContextCommand } from 'src/domain/messages/application/u
 import { StreamingInferenceService } from './streaming-inference.service';
 import { NonStreamingInferenceService } from './non-streaming-inference.service';
 import { InferenceUsageGuard } from './inference-usage-guard.service';
-import { enrichContentWithIntegration } from '../helpers/resolve-integration.helper';
+import { UnmaskedTermsService } from './unmasked-terms.service';
+import { enrichContentWithIntegration } from 'src/domain/runs/application/helpers/resolve-integration.helper';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { RunExecutionFailedError } from '../runs.errors';
-import type { RunParams } from '../use-cases/execute-run/run-params.interface';
-import { MAX_CONTEXT_TOKENS } from '../context-budget.constants';
+import { RunExecutionFailedError } from 'src/domain/runs/application/runs.errors';
+import type { RunParams } from 'src/domain/runs/application/use-cases/execute-run/run-params.interface';
+import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.constants';
 
 @Injectable()
 export class InferenceOrchestratorService {
@@ -26,6 +27,7 @@ export class InferenceOrchestratorService {
     private readonly streamingInferenceService: StreamingInferenceService,
     private readonly nonStreamingInferenceService: NonStreamingInferenceService,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
+    private readonly unmaskedTermsService: UnmaskedTermsService,
     @InjectPinoLogger(InferenceOrchestratorService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -33,11 +35,16 @@ export class InferenceOrchestratorService {
   async *runInference(
     params: RunParams,
   ): AsyncGenerator<Message, AssistantMessage | null, void> {
-    const trimmedMessages = this.trimMessagesForContextUseCase.execute(
+    const historyMessages = this.trimMessagesForContextUseCase.execute(
       new TrimMessagesForContextCommand(
         params.thread.messages,
         MAX_CONTEXT_TOKENS,
       ),
+    );
+    const trimmedMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
+      historyMessages,
+      params.thread.id,
+      params.isAnonymous,
     );
 
     try {

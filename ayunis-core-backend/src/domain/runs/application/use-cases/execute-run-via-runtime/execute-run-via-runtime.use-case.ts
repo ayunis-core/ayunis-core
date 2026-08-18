@@ -27,12 +27,12 @@ import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cas
 import {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
-import type { RunInput } from '../../../domain/run-input.entity';
+} from 'src/domain/runs/domain/run-input.entity';
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -41,30 +41,31 @@ import {
   RunNoModelFoundError,
   RunToolRepeatedlyFailingError,
   UnexpectedRunError,
-} from '../../runs.errors';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { MessageCleanupService } from '../../services/message-cleanup.service';
-import { RunTelemetryService } from '../../services/run-telemetry.service';
-import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
-import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
-import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
-import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
-import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
-import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
-import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
-import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
-import { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
-import { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
-import type { RunExecutionOutcome } from '../../run-execution-outcome';
-import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
+} from 'src/domain/runs/application/runs.errors';
+import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
+import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type {
   PreparedRuntimeRun,
   PreparedRuntimeTools,
 } from './execute-run-via-runtime.types';
-import { MAX_CONTEXT_TOKENS } from '../../context-budget.constants';
+import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.constants';
 
 const RUNTIME_MAX_ITERATIONS = 50;
 
@@ -107,6 +108,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly runTelemetryService: RunTelemetryService,
     private readonly toolResultCollectorService: ToolResultCollectorService,
+    private readonly unmaskedTermsService: UnmaskedTermsService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
     @InjectPinoLogger(ExecuteRunViaRuntimeUseCase.name)
@@ -276,8 +278,13 @@ export class ExecuteRunViaRuntimeUseCase {
   }
 
   private async startRun(prepared: PreparedRuntimeRun, signal?: AbortSignal) {
+    const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
+      prepared.thread.messages,
+      prepared.thread.id,
+      prepared.isAnonymous,
+    );
     const messages = await this.runtimeHistoryMaterializer.materialize({
-      messages: prepared.thread.messages,
+      messages: historyMessages,
       orgId: prepared.orgId,
       tools: prepared.backendTools,
       maxTokens: MAX_CONTEXT_TOKENS,

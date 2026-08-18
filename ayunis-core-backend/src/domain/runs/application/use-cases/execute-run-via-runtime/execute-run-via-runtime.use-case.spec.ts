@@ -34,33 +34,34 @@ import type { ResolveModelProviderUseCase } from 'src/domain/models/application/
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
-import type { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
-import type { MessageCleanupService } from '../../services/message-cleanup.service';
-import type { RunTelemetryService } from '../../services/run-telemetry.service';
-import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
+import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import type { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import type { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
-import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
-import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
-import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
-import { ToolUsedEvent } from '../../events/tool-used.event';
-import { RunMaxIterationsReachedError } from '../../runs.errors';
-import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
-import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
-import { CompleteTurnSelector } from '../../agent-runtime/complete-turn-selector';
-import type { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
-import type { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunMaxIterationsReachedError } from 'src/domain/runs/application/runs.errors';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { CompleteTurnSelector } from 'src/domain/runs/application/agent-runtime/complete-turn-selector';
+import type { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
+import type { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
-import { ExecuteRunCommand } from '../execute-run/execute-run.command';
-import { RunContextBudgetExceededError } from '../../runs.errors';
+} from 'src/domain/runs/domain/run-input.entity';
+import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import { ExecuteRunViaRuntimeUseCase } from './execute-run-via-runtime.use-case';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -281,6 +282,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
       .fn()
       .mockResolvedValue({ contents: [], piiMasks: null }),
   };
+  const unmaskedTermsService = {
+    revealUnmaskedTerms: jest
+      .fn()
+      .mockImplementation((messages: readonly Message[]) =>
+        Promise.resolve([...messages]),
+      ),
+  } as unknown as UnmaskedTermsService;
 
   const useCase = new ExecuteRunViaRuntimeUseCase(
     contextService,
@@ -302,6 +310,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     skillActivationHookFactory,
     runTelemetryService,
     toolResultCollector as ToolResultCollectorService,
+    unmaskedTermsService,
     toolUsageHookFactory,
     contextBudgetHookFactory,
     createPinoLoggerMock(),

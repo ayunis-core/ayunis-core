@@ -27,16 +27,16 @@ import {
   ApiExtraModels,
   ApiQuery,
 } from '@nestjs/swagger';
-import { CreateThreadUseCase } from '../../application/use-cases/create-thread/create-thread.use-case';
-import { FindThreadUseCase } from '../../application/use-cases/find-thread/find-thread.use-case';
-import { FindAllThreadsUseCase } from '../../application/use-cases/find-all-threads/find-all-threads.use-case';
-import { DeleteThreadUseCase } from '../../application/use-cases/delete-thread/delete-thread.use-case';
-import { CreateThreadCommand } from '../../application/use-cases/create-thread/create-thread.command';
-import { FindThreadQuery } from '../../application/use-cases/find-thread/find-thread.query';
-import { FindAllThreadsQuery } from '../../application/use-cases/find-all-threads/find-all-threads.query';
-import { DeleteThreadCommand } from '../../application/use-cases/delete-thread/delete-thread.command';
-import { UpdateThreadTitleUseCase } from '../../application/use-cases/update-thread-title/update-thread-title.use-case';
-import { UpdateThreadTitleCommand } from '../../application/use-cases/update-thread-title/update-thread-title.command';
+import { CreateThreadUseCase } from 'src/domain/threads/application/use-cases/create-thread/create-thread.use-case';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindAllThreadsUseCase } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.use-case';
+import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
+import { CreateThreadCommand } from 'src/domain/threads/application/use-cases/create-thread/create-thread.command';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { FindAllThreadsQuery } from 'src/domain/threads/application/use-cases/find-all-threads/find-all-threads.query';
+import { DeleteThreadCommand } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.command';
+import { UpdateThreadTitleUseCase } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.use-case';
+import { UpdateThreadTitleCommand } from 'src/domain/threads/application/use-cases/update-thread-title/update-thread-title.command';
 
 import { CreateThreadDto } from './dto/create-thread.dto';
 import { UpdateThreadTitleDto } from './dto/update-thread-title.dto';
@@ -51,6 +51,10 @@ import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
+import { UnmaskThreadPiiMaskUseCase } from 'src/domain/thread-pii-masks/application/use-cases/unmask-thread-pii-mask/unmask-thread-pii-mask.use-case';
+import { UnmaskThreadPiiMaskCommand } from 'src/domain/thread-pii-masks/application/use-cases/unmask-thread-pii-mask/unmask-thread-pii-mask.command';
+import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
+import { PiiMaskDtoMapper } from 'src/domain/thread-pii-masks/presenters/http/mappers/pii-mask.mapper';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
@@ -75,6 +79,8 @@ export class ThreadsController {
     private readonly getThreadDtoMapper: GetThreadDtoMapper,
     private readonly getThreadsDtoMapper: GetThreadsDtoMapper,
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
+    private readonly unmaskThreadPiiMaskUseCase: UnmaskThreadPiiMaskUseCase,
+    private readonly piiMaskDtoMapper: PiiMaskDtoMapper,
     private readonly configService: ConfigService,
   ) {}
 
@@ -256,6 +262,43 @@ export class ThreadsController {
         title: updateThreadTitleDto.title,
       }),
     );
+  }
+
+  @Post(':id/pii-masks/:maskId/unmask')
+  @ApiOperation({
+    summary:
+      'Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the thread',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiParam({
+    name: 'maskId',
+    description: 'The UUID of the mask dictionary entry to unmask',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The full updated PII mask dictionary of the thread',
+    type: [PiiMaskResponseDto],
+  })
+  @ApiResponse({ status: 404, description: 'Thread or mask not found' })
+  @HttpCode(HttpStatus.OK)
+  async unmaskPiiMask(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Param('maskId', ParseUUIDPipe) maskId: UUID,
+  ): Promise<PiiMaskResponseDto[]> {
+    this.logger.info({ id, maskId }, 'unmaskPiiMask');
+    // Asserts the thread exists and belongs to the current user.
+    await this.findThreadUseCase.execute(new FindThreadQuery(id));
+    const masks = await this.unmaskThreadPiiMaskUseCase.execute(
+      new UnmaskThreadPiiMaskCommand(id, maskId),
+    );
+    return this.piiMaskDtoMapper.toDtoArray(masks);
   }
 
   @Patch(':id/workspace')
