@@ -89,6 +89,22 @@ export default tseslint.config(
       ],
       '@typescript-eslint/prefer-optional-chain': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',
+      // Absolute imports only. `./sibling` stays fine; parent traversal does not.
+      // `warn` keeps the pre-existing backlog visible without failing repo-wide
+      // lint, while the pre-commit `--max-warnings=0` staged run blocks it on
+      // changed files.
+      '@typescript-eslint/no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              group: ['..', '../*', '../**'],
+              message:
+                "Use the absolute 'src/...' path instead of a relative import.",
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-import-type-side-effects': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
 

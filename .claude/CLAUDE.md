@@ -68,6 +68,12 @@ Watch for complexity creep. When a fix keeps growing — extra parameters, a wat
 
 When work creates or updates a PR, submitting it is an intermediate step. Immediately load `finish-pr` and keep ownership until CI and Cursor Bugbot are clean on the latest submitted revision. Fix actionable findings, amend and resubmit, then repeat the verification loop. Never report PR work as complete while checks are pending or failing, Bugbot has not finished, or actionable findings remain. If verification is prevented by an external condition or the same finding survives three fix attempts, report the work as blocked with evidence instead of calling it done.
 
+### 8. Absolute Imports
+
+New code always uses the path aliases, never relative imports: `src/...` in the backend, `@/...` in the frontend. Both are configured in the respective `tsconfig.json`. Same-directory `./sibling` imports are fine; parent traversal (`../`) is not.
+
+Enforced by `@typescript-eslint/no-restricted-imports` in both `eslint.config.mjs` files. It sits at `warn` so the pre-existing backlog stays visible without failing repo-wide lint, but the pre-commit staged ESLint run uses `--max-warnings=0` — so **any file you touch must have all of its `../` imports converted**, not just the lines you added. Don't go rewriting files you aren't already changing.
+
 ---
 
 ## Forbidden Actions
