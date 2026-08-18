@@ -64,9 +64,9 @@ import type {
   PreparedRuntimeRun,
   PreparedRuntimeTools,
 } from './execute-run-via-runtime.types';
+import { MAX_CONTEXT_TOKENS } from '../../context-budget.constants';
 
 const RUNTIME_MAX_ITERATIONS = 50;
-const MAX_CONTEXT_TOKENS = 80000;
 
 interface SeededInput {
   message: Message;

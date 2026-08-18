@@ -15,8 +15,7 @@ import { enrichContentWithIntegration } from '../helpers/resolve-integration.hel
 import { ApplicationError } from 'src/common/errors/base.error';
 import { RunExecutionFailedError } from '../runs.errors';
 import type { RunParams } from '../use-cases/execute-run/run-params.interface';
-
-const MAX_CONTEXT_TOKENS = 80000;
+import { MAX_CONTEXT_TOKENS } from '../context-budget.constants';
 
 @Injectable()
 export class InferenceOrchestratorService {

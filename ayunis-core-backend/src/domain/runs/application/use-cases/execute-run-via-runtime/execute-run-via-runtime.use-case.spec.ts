@@ -1117,8 +1117,16 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     expect(countTokens).toHaveBeenCalledTimes(4);
   });
 
+  it('accepts a latest turn at the 200k context budget', async () => {
+    const { useCase, provider } = buildHarness({ tokensPerMessage: 200_000 });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(provider.requests).toHaveLength(1);
+  });
+
   it('does not call the provider when the latest turn exceeds the budget', async () => {
-    const { useCase, provider } = buildHarness({ tokensPerMessage: 80_001 });
+    const { useCase, provider } = buildHarness({ tokensPerMessage: 200_001 });
 
     await expect(
       drain(await useCase.execute(userCommand())),
