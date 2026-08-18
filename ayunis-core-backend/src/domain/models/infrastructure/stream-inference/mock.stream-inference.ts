@@ -2,15 +2,18 @@ import type { ModelProvider, ProviderChunk } from '@ayunis/inference';
 import {
   StreamInferenceHandler,
   StreamInferenceInput,
-} from '../../application/ports/stream-inference.handler';
-import { StreamInferenceResponseChunk } from '../../application/ports/stream-inference.handler';
+} from 'src/domain/models/application/ports/stream-inference.handler';
+import {
+  StreamInferenceResponseChunk,
+  StreamInferenceResponseChunkToolCall,
+} from 'src/domain/models/application/ports/stream-inference.handler';
 import { Observable, from, of } from 'rxjs';
 import { concatMap, delay } from 'rxjs/operators';
 import { Injectable } from '@nestjs/common';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
 
 /**
  * Mock streaming inference handler for testing environments.
@@ -37,46 +40,40 @@ import type { Model } from '../../domain/model.entity';
  */
 @Injectable()
 export class MockStreamInferenceHandler extends StreamInferenceHandler {
+  private readonly malformedRetryMessageIds = new Set<string>();
+
   answer(
     input: StreamInferenceInput,
   ): Observable<StreamInferenceResponseChunk> {
-    // Extract the last user message to check for naming requests
     const lastUserMessage = input.messages
       .filter((m) => m.role === MessageRole.USER)
       .pop();
+    const textContent = firstTextContent(lastUserMessage?.content);
+
+    if (textContent === MALFORMED_TOOL_CALL_RETRY_PROMPT && lastUserMessage) {
+      return this.malformedRetryResponse(lastUserMessage.id, input.model);
+    }
 
     let responseText = `${input.model.provider}::${input.model.name}`;
 
-    // Handle chat naming requests for tests
-    if (lastUserMessage?.content && lastUserMessage.content.length > 0) {
-      const firstContent = lastUserMessage.content[0];
-      let textContent = '';
-
-      // Check if it's a TextMessageContent
-      if (firstContent.type === MessageContentType.TEXT) {
-        textContent = (firstContent as TextMessageContent).text;
-      }
-
-      // Check if this is a naming request
-      const namingMatch = /Name this chat (\S+)/i.exec(textContent);
-      if (namingMatch) {
-        // Include the requested name in the response
-        const requestedName = namingMatch[1];
-        responseText = `I'll name this chat ${requestedName}. You're talking to ${input.model.provider}::${input.model.name}`;
-      }
+    const namingMatch = /Name this chat (\S+)/i.exec(textContent);
+    if (namingMatch) {
+      const requestedName = namingMatch[1];
+      responseText = `I'll name this chat ${requestedName}. You're talking to ${input.model.provider}::${input.model.name}`;
     }
 
-    return from(splitIntoDeltas(responseText)).pipe(
-      concatMap((textContentDelta) =>
-        of(
-          new StreamInferenceResponseChunk({
-            textContentDelta,
-            toolCallsDelta: [],
-            thinkingDelta: null,
-          }),
-        ).pipe(delay(MOCK_CHUNK_DELAY_MS)),
-      ),
-    );
+    return textResponse(responseText);
+  }
+
+  private malformedRetryResponse(
+    messageId: string,
+    model: Model,
+  ): Observable<StreamInferenceResponseChunk> {
+    if (!this.malformedRetryMessageIds.delete(messageId)) {
+      this.malformedRetryMessageIds.add(messageId);
+      return malformedToolCallResponse();
+    }
+    return textResponse(`recovered::${model.provider}::${model.name}`);
   }
 
   /**
@@ -103,6 +100,63 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
 }
 
 const MOCK_CHUNK_DELAY_MS = 40;
+const MALFORMED_TOOL_CALL_RETRY_PROMPT =
+  'E2E trigger malformed completed tool call';
+
+function firstTextContent(
+  content: StreamInferenceInput['messages'][number]['content'] | undefined,
+): string {
+  const firstContent = content?.[0];
+  return firstContent?.type === MessageContentType.TEXT
+    ? (firstContent as TextMessageContent).text
+    : '';
+}
+
+function textResponse(
+  responseText: string,
+): Observable<StreamInferenceResponseChunk> {
+  return pacedChunks(
+    splitIntoDeltas(responseText).map(
+      (textContentDelta) =>
+        new StreamInferenceResponseChunk({
+          textContentDelta,
+          toolCallsDelta: [],
+          thinkingDelta: null,
+        }),
+    ),
+  );
+}
+
+function malformedToolCallResponse(): Observable<StreamInferenceResponseChunk> {
+  return pacedChunks([
+    new StreamInferenceResponseChunk({
+      textContentDelta: null,
+      toolCallsDelta: [
+        new StreamInferenceResponseChunkToolCall({
+          index: 0,
+          id: 'mock-malformed-call',
+          name: 'create_document',
+          argumentsDelta: '{"title":"Unvollständiger Bericht"',
+        }),
+      ],
+      thinkingDelta: null,
+    }),
+    new StreamInferenceResponseChunk({
+      textContentDelta: null,
+      toolCallsDelta: [],
+      thinkingDelta: null,
+      finishReason: 'stop',
+    }),
+  ]);
+}
+
+function pacedChunks(
+  chunks: StreamInferenceResponseChunk[],
+): Observable<StreamInferenceResponseChunk> {
+  return from(chunks).pipe(
+    concatMap((chunk) => of(chunk).pipe(delay(MOCK_CHUNK_DELAY_MS))),
+  );
+}
 
 function splitIntoDeltas(text: string, parts = 3): string[] {
   const size = Math.ceil(text.length / parts);

@@ -2,13 +2,14 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { from, Observable, throwError } from 'rxjs';
 import type { UUID } from 'crypto';
 import { StreamingInferenceService } from './streaming-inference.service';
-import { extractUsageFromChunks } from '../helpers/stream-usage.helper';
+import { extractUsageFromChunks } from 'src/domain/runs/application/helpers/stream-usage.helper';
 import {
   StreamInferenceResponseChunk,
   StreamInferenceResponseChunkToolCall,
 } from 'src/domain/models/application/ports/stream-inference.handler';
 import {
   InferenceFailedError,
+  InferenceMalformedToolCallError,
   InferenceStreamStalledError,
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
@@ -23,6 +24,7 @@ import type { InferenceUsageGuard } from './inference-usage-guard.service';
 import type { ContextService } from 'src/common/context/services/context.service';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
+import { RunExecutionFailedError } from 'src/domain/runs/application/runs.errors';
 
 describe('extractUsageFromChunks', () => {
   const chunkWithUsage = (usage: {
@@ -198,6 +200,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     );
     return {
       service,
+      execute,
       savedMessages,
       saveAssistantMessage,
       logger,
@@ -269,18 +272,22 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     });
   });
 
-  it('throws InferenceFailedError instead of executing a tool call whose final arguments are unparseable', async () => {
-    const { service, savedMessages, toolCallArgumentsLogger } = buildService([
-      toolCallChunk({
-        id: 'call_1',
-        name: 'create_document',
-        argumentsDelta:
-          '{"title":"Bürgerbrief Parkraumkonzept","content":"<h1>Parkraumkonzept</h1><p>Sehr geehrte Damen',
-      }),
-      finishChunk('stop'),
-    ]);
+  it('throws InferenceMalformedToolCallError when a retry also contains unparseable tool arguments', async () => {
+    const { service, execute, savedMessages, toolCallArgumentsLogger } =
+      buildService([
+        toolCallChunk({
+          id: 'call_1',
+          name: 'create_document',
+          argumentsDelta:
+            '{"title":"Bürgerbrief Parkraumkonzept","content":"<h1>Parkraumkonzept</h1><p>Sehr geehrte Damen',
+        }),
+        finishChunk('stop'),
+      ]);
 
-    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+    await expect(consume(service)).rejects.toThrow(
+      InferenceMalformedToolCallError,
+    );
+    expect(execute).toHaveBeenCalledTimes(2);
 
     // The broken call must not be persisted with guessed `{}` arguments —
     // that is what triggered the endless create_document loop (AYC-646).
@@ -294,6 +301,106 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       }),
       'Model emitted unparseable tool call arguments',
     );
+  });
+
+  it('retries malformed completed tool calls before persisting durable output (AYC-741)', async () => {
+    const malformedChunks = [
+      toolCallChunk({
+        id: 'call_1',
+        name: 'create_document',
+        argumentsDelta:
+          '{"title":"Bürgerbrief","content":"<h1>Parkraumkonzept</h1>',
+      }),
+      finishChunk('stop'),
+    ];
+    const healthyChunks = [
+      toolCallChunk({
+        id: 'call_2',
+        name: 'create_document',
+        argumentsDelta:
+          '{"title":"Bürgerbrief","content":"<h1>Parkraumkonzept</h1>"}',
+      }),
+      finishChunk('tool_calls'),
+    ];
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(from(malformedChunks))
+      .mockReturnValueOnce(from(healthyChunks));
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    const yielded = await consume(service);
+
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(savedMessages).toHaveLength(1);
+    const toolUses = savedMessages[0].content.filter(
+      (block) => block instanceof ToolUseMessageContent,
+    );
+    expect(toolUses).toHaveLength(1);
+    expect(new Set(yielded.map((message) => message.id)).size).toBe(1);
+  });
+
+  it('does not retry malformed completed tool calls after text was streamed', async () => {
+    const execute = jest.fn().mockReturnValue(
+      from([
+        StreamInferenceResponseChunk.text('Der Bericht beginnt hier'),
+        toolCallChunk({
+          id: 'call_1',
+          name: 'create_document',
+          argumentsDelta: '{"title":"Bericht","content":"<h1>Unvollst',
+        }),
+        finishChunk('stop'),
+      ]),
+    );
+    const { service } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow(
+      InferenceMalformedToolCallError,
+    );
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails when the retry after a malformed tool call produces no output', async () => {
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(
+        from([
+          toolCallChunk({
+            id: 'call_1',
+            name: 'create_document',
+            argumentsDelta: '{"title":"Unvollständiger Bericht"',
+          }),
+          finishChunk('stop'),
+        ]),
+      )
+      .mockReturnValueOnce(from([] as StreamInferenceResponseChunk[]));
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow(RunExecutionFailedError);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(savedMessages).toHaveLength(0);
+  });
+
+  it('fails when the retry after a malformed tool call produces only whitespace', async () => {
+    const execute = jest
+      .fn()
+      .mockReturnValueOnce(
+        from([
+          toolCallChunk({
+            id: 'call_1',
+            name: 'create_document',
+            argumentsDelta: '{"title":"Unvollständiger Bericht"',
+          }),
+          finishChunk('stop'),
+        ]),
+      )
+      .mockReturnValueOnce(
+        from([StreamInferenceResponseChunk.text('\n\n'), finishChunk('stop')]),
+      );
+    const { service, savedMessages } = buildServiceWithStream(execute);
+
+    await expect(consume(service)).rejects.toThrow(RunExecutionFailedError);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(savedMessages).toHaveLength(0);
   });
 
   it('throws InferenceTokenLimitError when the stream hits the token limit while emitting tool calls', async () => {
@@ -435,7 +542,9 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
       finishChunk('stop'),
     ]);
 
-    await expect(consume(service)).rejects.toThrow(InferenceFailedError);
+    await expect(consume(service)).rejects.toThrow(
+      InferenceMalformedToolCallError,
+    );
 
     // Persisting the intact sibling would re-execute half the turn on the
     // next run while the model never saw any results for it.
@@ -519,18 +628,15 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect((text as TextMessageContent).text).toContain('Antwort');
   });
 
-  it('gives an empty stream only one retry before returning empty-handed', async () => {
+  it('gives an empty stream only one retry before failing the run', async () => {
     const execute = jest
       .fn()
       .mockReturnValue(from([] as StreamInferenceResponseChunk[]));
     const { service, savedMessages } = buildServiceWithStream(execute);
 
-    const yielded = await consume(service);
+    await expect(consume(service)).rejects.toThrow(RunExecutionFailedError);
 
-    // The orchestrator turns a fully empty generator into
-    // RUN_EXECUTION_FAILED — the service must not loop beyond one retry.
     expect(execute).toHaveBeenCalledTimes(2);
-    expect(yielded).toHaveLength(0);
     expect(savedMessages).toHaveLength(0);
   });
 
@@ -550,13 +656,12 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it('does not retry non-stall stream failures', async () => {
-    const execute = jest
-      .fn()
-      .mockReturnValueOnce(throwError(() => new Error('provider exploded')));
+  it('does not retry unrelated inference failures', async () => {
+    const failure = new InferenceFailedError('Provider inference failed');
+    const execute = jest.fn().mockReturnValueOnce(throwError(() => failure));
     const { service } = buildServiceWithStream(execute);
 
-    await expect(consume(service)).rejects.toThrow('provider exploded');
+    await expect(consume(service)).rejects.toBe(failure);
     expect(execute).toHaveBeenCalledTimes(1);
   });
 

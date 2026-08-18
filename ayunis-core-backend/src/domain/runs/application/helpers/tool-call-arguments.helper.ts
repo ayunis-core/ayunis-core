@@ -1,7 +1,7 @@
 import type { PinoLogger } from 'nestjs-pino';
 import { safeJsonParse } from 'src/common/util/unicode-sanitizer';
 import {
-  InferenceFailedError,
+  InferenceMalformedToolCallError,
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 
@@ -66,8 +66,7 @@ export function assertToolCallArgumentsIntact(
     },
     'Model emitted unparseable tool call arguments',
   );
-  throw new InferenceFailedError(
-    'model emitted unparseable tool call arguments',
-    { toolNames: malformed.map((call) => call.name) },
-  );
+  throw new InferenceMalformedToolCallError({
+    toolNames: malformed.map((call) => call.name),
+  });
 }
