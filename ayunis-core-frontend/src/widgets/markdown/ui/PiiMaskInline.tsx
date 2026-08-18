@@ -4,7 +4,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { usePiiMasks, usePiiUnmaskRequest } from '@/widgets/markdown/model/pii-mask-context';
+import {
+  usePiiMasks,
+  usePiiUnmaskRequest,
+} from '@/widgets/markdown/model/pii-mask-context';
 
 interface PiiMaskInlineProps {
   readonly token: string;
