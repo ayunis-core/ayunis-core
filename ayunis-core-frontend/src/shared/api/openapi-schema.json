@@ -4188,6 +4188,53 @@
         "tags": ["threads"]
       }
     },
+    "/threads/{id}/pii-masks/{maskId}/unmask": {
+      "post": {
+        "operationId": "ThreadsController_unmaskPiiMask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "maskId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the mask dictionary entry to unmask",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The full updated PII mask dictionary of the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PiiMaskResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread or mask not found"
+          }
+        },
+        "summary": "Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread",
+        "tags": ["threads"]
+      }
+    },
     "/threads/{id}/workspace": {
       "patch": {
         "operationId": "ThreadsController_assignWorkspace",
@@ -14272,6 +14319,12 @@
       "PiiMaskResponseDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique id of the mask dictionary entry",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
           "token": {
             "type": "string",
             "description": "The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}}",
@@ -14290,9 +14343,14 @@
                 "$ref": "#/components/schemas/PiiCategory"
               }
             ]
+          },
+          "unmasked": {
+            "type": "boolean",
+            "description": "Whether the user manually unmasked this entry for the thread; the token still resolves in stored messages, but the value is no longer masked going forward",
+            "example": false
           }
         },
-        "required": ["token", "value", "category"]
+        "required": ["id", "token", "value", "category", "unmasked"]
       },
       "McpIntegrationSummaryResponseDto": {
         "type": "object",

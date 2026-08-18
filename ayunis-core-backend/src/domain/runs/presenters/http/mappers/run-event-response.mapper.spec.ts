@@ -88,9 +88,11 @@ describe('RunEventResponseMapper', () => {
       threadId: THREAD_ID,
       masks: [
         {
+          id: '123e4567-e89b-12d3-a456-426614174000',
           token: '[PERSON_1]',
           value: 'Max Mustermann',
           category: PiiCategory.PERSON_NAME,
+          unmasked: false,
         },
       ],
       timestamp: TIMESTAMP,

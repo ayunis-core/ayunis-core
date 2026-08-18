@@ -144,6 +144,7 @@ import type {
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
+  PiiMaskResponseDto,
   PiiWhitelistResponseDto,
   PredefinedConfigResponseDto,
   PriceResponseDto,
@@ -8480,6 +8481,70 @@ export const useThreadsControllerUpdateTitle = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerUpdateTitleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread
+ */
+export const threadsControllerUnmaskPiiMask = (
+    id: string,
+    maskId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PiiMaskResponseDto[]>(
+      {url: `/threads/${id}/pii-masks/${maskId}/unmask`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUnmaskPiiMaskMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext> => {
+
+const mutationKey = ['threadsControllerUnmaskPiiMask'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, {id: string;maskId: string}> = (props) => {
+          const {id,maskId} = props ?? {};
+
+          return  threadsControllerUnmaskPiiMask(id,maskId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUnmaskPiiMaskMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>>
+    
+    export type ThreadsControllerUnmaskPiiMaskMutationError = void
+
+    /**
+ * @summary Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread
+ */
+export const useThreadsControllerUnmaskPiiMask = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>,
+        TError,
+        {id: string;maskId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUnmaskPiiMaskMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

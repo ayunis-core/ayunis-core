@@ -10,6 +10,7 @@ export interface ThreadPiiMaskParams {
   category: PiiCategory;
   maskIndex: number;
   value: string;
+  unmasked?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,6 +20,10 @@ export interface ThreadPiiMaskParams {
  * stable `{{pii:CATEGORY_n}}` token. The token is what the LLM sees and what
  * is persisted in message text; the value is only ever shown to thread
  * participants in the frontend.
+ *
+ * A user may manually unmask an entry for the thread: the row is kept (its
+ * token still resolves in stored messages and its index stays reserved), but
+ * the value is exempt from future masking and revealed to the LLM.
  */
 export class ThreadPiiMask {
   id: UUID;
@@ -26,6 +31,7 @@ export class ThreadPiiMask {
   category: PiiCategory;
   maskIndex: number;
   value: string;
+  unmasked: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -35,6 +41,7 @@ export class ThreadPiiMask {
     this.category = params.category;
     this.maskIndex = params.maskIndex;
     this.value = params.value;
+    this.unmasked = params.unmasked ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

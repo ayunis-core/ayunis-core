@@ -2456,12 +2456,16 @@ export const PiiCategory = {
 } as const;
 
 export interface PiiMaskResponseDto {
+  /** Unique id of the mask dictionary entry */
+  id: string;
   /** The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}} */
   token: string;
   /** The original value the token stands in for */
   value: string;
   /** PII category of the masked value */
   category: PiiCategory;
+  /** Whether the user manually unmasked this entry for the thread; the token still resolves in stored messages, but the value is no longer masked going forward */
+  unmasked: boolean;
 }
 
 export interface McpIntegrationSummaryResponseDto {
