@@ -56,8 +56,6 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         offset: (page - 1) * WORKSPACE_CHATS_LIMIT,
       };
 
-      // Only a missing workspace should redirect. A transient failure loading
-      // the chats must not look like "this workspace does not exist".
       const workspace = await queryClient
         .fetchQuery({
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
@@ -72,10 +70,6 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         queryFn: () => threadsControllerFindAll(chatsParams),
       });
 
-      // The model queries only serve the embedded composer; a failure must
-      // not take down the whole workspace page (chats and settings work
-      // without them). Without a model the composer rejects sending with a
-      // toast, matching the new-chat page's no-model behavior.
       const [defaultModelResponse, embeddingModelResponse] = await Promise.all([
         queryClient.fetchQuery(queryDefaultModelOptions()).catch(() => null),
         queryClient
@@ -86,9 +80,6 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
       return {
         workspace,
         chats: chats.data,
-        // The list is capped, so the badge must use the server's total rather
-        // than the number of rows that happened to fit in one page.
-        // `total` is optional in the generated DTO; fall back to what loaded.
         chatCount: chats.pagination.total ?? chats.data.length,
         chatPagination: chats.pagination,
         chatSearch: search,

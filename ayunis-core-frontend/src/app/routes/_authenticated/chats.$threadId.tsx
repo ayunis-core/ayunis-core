@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { queryOptions } from '@tanstack/react-query';
+import { z } from 'zod';
 import {
   threadsControllerFindOne,
   getThreadsControllerFindOneQueryKey,
@@ -22,6 +23,9 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 
 export const Route = createFileRoute('/_authenticated/chats/$threadId')({
   component: RouteComponent,
+  validateSearch: z.object({
+    artifactId: z.string().optional(),
+  }),
   loader: async ({ params: { threadId }, context: { queryClient } }) => {
     // Prefetch the permitted models so ChatPage can decide synchronously
     // whether the thread's model is still available, instead of rendering
@@ -41,10 +45,12 @@ export const Route = createFileRoute('/_authenticated/chats/$threadId')({
 
 function RouteComponent() {
   const { thread, isEmbeddingModelEnabled } = Route.useLoaderData();
+  const { artifactId } = Route.useSearch();
   return (
     <ChatPage
       thread={thread}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      initialArtifactId={artifactId}
     />
   );
 }

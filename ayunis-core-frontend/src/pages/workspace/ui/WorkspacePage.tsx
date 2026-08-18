@@ -15,11 +15,13 @@ import { WorkspaceSettingsDialog } from '@/widgets/workspace-settings-dialog';
 import type { Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import {
+  useArtifactsControllerFindByWorkspace,
   useWorkspaceContextControllerListDocuments,
   useWorkspaceContextControllerListKnowledgeBases,
   useWorkspaceContextControllerListSkills,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { WorkspaceArtifactsTab } from './WorkspaceArtifactsTab';
 import { WorkspaceChatsTab } from './WorkspaceChatsTab';
 import { WorkspaceChatStarter } from './WorkspaceChatStarter';
 import { WorkspaceHeaderActions } from './WorkspaceHeaderActions';
@@ -33,7 +35,6 @@ import {
 interface WorkspacePageProps {
   workspace: Workspace;
   chats: GetThreadsResponseDtoItem[];
-  /** Total chats in the workspace, which can exceed the loaded page. */
   chatCount: number;
   chatPagination: { total?: number; limit: number; offset: number };
   chatSearch?: string;
@@ -67,10 +68,15 @@ export default function WorkspacePage({
     workspace.id,
     countParams,
   );
+  const { data: artifactCountPage } = useArtifactsControllerFindByWorkspace(
+    workspace.id,
+    countParams,
+  );
   const knowledgeCount =
     (knowledgeBasesPage?.pagination.total ?? 0) +
     (documentsPage?.pagination.total ?? 0);
   const skillsCount = skillsPage?.pagination.total ?? 0;
+  const artifactCount = artifactCountPage?.pagination.total ?? 0;
 
   return (
     <AppLayout>
@@ -106,6 +112,13 @@ export default function WorkspacePage({
                   <Badge variant="secondary">{chatCount}</Badge>
                 </TabsTrigger>
                 <TabsTrigger
+                  value="artifacts"
+                  data-testid="workspace-tab-artifacts"
+                >
+                  {t('page.artifactsTab')}
+                  <Badge variant="secondary">{artifactCount}</Badge>
+                </TabsTrigger>
+                <TabsTrigger
                   value="knowledge"
                   data-testid="workspace-tab-knowledge"
                 >
@@ -132,6 +145,9 @@ export default function WorkspacePage({
                   chatPagination={chatPagination}
                   onDeleteChat={deleteChat}
                 />
+              </TabsContent>
+              <TabsContent value="artifacts" className="pt-4">
+                <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="knowledge" className="pt-4">
                 <WorkspaceKnowledgeTab workspaceId={workspace.id} />

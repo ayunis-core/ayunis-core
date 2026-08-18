@@ -2,6 +2,7 @@ import {
   artifactsControllerUpdate,
   getArtifactsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
+  getArtifactsControllerFindByWorkspaceQueryKey,
 } from '@/shared/api';
 import type { UpdateArtifactDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 interface UseUpdateArtifactOptions {
   artifactId: string;
   threadId: string;
+  workspaceId?: string | null;
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 }
@@ -16,6 +18,7 @@ interface UseUpdateArtifactOptions {
 export function useUpdateArtifact({
   artifactId,
   threadId,
+  workspaceId,
   onSuccess,
   onError,
 }: UseUpdateArtifactOptions) {
@@ -33,6 +36,11 @@ export function useUpdateArtifact({
       void queryClient.invalidateQueries({
         queryKey: getArtifactsControllerFindByThreadQueryKey(threadId),
       });
+      if (workspaceId) {
+        void queryClient.invalidateQueries({
+          queryKey: getArtifactsControllerFindByWorkspaceQueryKey(workspaceId),
+        });
+      }
     },
   });
 
