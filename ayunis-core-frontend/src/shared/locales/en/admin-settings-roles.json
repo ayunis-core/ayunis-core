@@ -7,11 +7,25 @@
     "manager": "Manager",
     "admin": "Admin"
   },
+  "roleHints": {
+    "user": "The default role for members. Users can do exactly what is ticked in this column, and nothing else.",
+    "manager": "A member with its own, usually wider set of permissions — grant more than users get without making someone an admin.",
+    "admin": "Full access to the organisation and to these settings. Admins always hold every permission and cannot be restricted."
+  },
   "groups": {
     "teams": "Teams",
     "skills": "Skills",
     "knowledge_bases": "Knowledge bases"
   },
+  "permissionHints": {
+    "manage_teams": "Create, rename and delete teams.",
+    "assign_users_to_teams": "Add members to a team and remove them again. Does not allow creating or deleting teams.",
+    "manage_skills": "Create, edit and delete skills, including their instructions, sources and integrations.",
+    "share_skills": "Make a skill available to a team or to the whole organisation.",
+    "manage_knowledge_bases": "Create, edit and delete knowledge bases and the documents inside them.",
+    "share_knowledge_bases": "Make a knowledge base available to a team or to the whole organisation."
+  },
+  "hintTriggerLabel": "More information about {{label}}",
   "permissions": {
     "manage_teams": "Manage teams",
     "assign_users_to_teams": "Assign users to teams",
