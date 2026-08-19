@@ -7,11 +7,25 @@
     "manager": "Manager",
     "admin": "Admin"
   },
+  "roleHints": {
+    "user": "Die Standardrolle für Mitglieder. Benutzer können genau das, was in dieser Spalte angehakt ist – und sonst nichts.",
+    "manager": "Ein Mitglied mit einem eigenen, in der Regel weiter gefassten Berechtigungssatz – mehr Rechte als Benutzer, ohne Administrator zu sein.",
+    "admin": "Voller Zugriff auf die Organisation und auf diese Einstellungen. Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden."
+  },
   "groups": {
     "teams": "Teams",
     "skills": "Fähigkeiten",
     "knowledge_bases": "Wissenssammlungen"
   },
+  "permissionHints": {
+    "manage_teams": "Teams erstellen, umbenennen und löschen.",
+    "assign_users_to_teams": "Mitglieder zu einem Team hinzufügen und wieder entfernen. Erlaubt nicht, Teams zu erstellen oder zu löschen.",
+    "manage_skills": "Fähigkeiten erstellen, bearbeiten und löschen – einschließlich ihrer Anweisungen, Quellen und Integrationen.",
+    "share_skills": "Eine Fähigkeit für ein Team oder die gesamte Organisation freigeben.",
+    "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
+    "share_knowledge_bases": "Eine Wissenssammlung für ein Team oder die gesamte Organisation freigeben."
+  },
+  "hintTriggerLabel": "Weitere Informationen zu {{label}}",
   "permissions": {
     "manage_teams": "Teams verwalten",
     "assign_users_to_teams": "Benutzer zu Teams zuordnen",

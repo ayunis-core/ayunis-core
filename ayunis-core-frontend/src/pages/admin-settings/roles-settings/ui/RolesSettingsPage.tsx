@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
@@ -23,16 +23,19 @@ import type {
   EditableRole,
   RolePermissionsDraft,
   Permission,
-} from '../model/types';
+} from '@/pages/admin-settings/roles-settings/model/types';
 import {
   buildDraft,
   changedRoles,
   toggleDraft,
-} from '../lib/role-permissions-draft';
-import { PERMISSION_SECTIONS } from '../lib/catalog';
-import { useUpdateRolePermissions } from '../api/useUpdateRolePermissions';
+} from '@/pages/admin-settings/roles-settings/lib/role-permissions-draft';
+import { PERMISSION_SECTIONS } from '@/pages/admin-settings/roles-settings/lib/catalog';
+import { useUpdateRolePermissions } from '@/pages/admin-settings/roles-settings/api/useUpdateRolePermissions';
 import { PermissionMatrixRow } from './PermissionMatrixRow';
 import { PermissionGroupHeader } from './PermissionGroupHeader';
+import { InfoHint } from './InfoHint';
+
+const ROLE_COLUMNS = ['user', 'manager', 'admin'] as const;
 
 export function RolesSettingsPage() {
   const { t: tLayout } = useTranslation('admin-settings-layout');
@@ -101,9 +104,15 @@ export function RolesSettingsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>{t('columns.permission')}</TableHead>
-                <TableHead align="center">{t('columns.user')}</TableHead>
-                <TableHead align="center">{t('columns.manager')}</TableHead>
-                <TableHead align="center">{t('columns.admin')}</TableHead>
+                {ROLE_COLUMNS.map((role) => (
+                  <TableHead key={role} align="center">
+                    <InfoHint
+                      label={t(`columns.${role}`)}
+                      hint={t(`roleHints.${role}`)}
+                      testId={`role-hint-${role}`}
+                    />
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +124,7 @@ export function RolesSettingsPage() {
                       key={permission}
                       permission={permission}
                       label={t(`permissions.${permission}`)}
+                      hint={t(`permissionHints.${permission}`)}
                       userChecked={rows.user.has(permission)}
                       managerChecked={rows.manager.has(permission)}
                       disabled={isSaving}
