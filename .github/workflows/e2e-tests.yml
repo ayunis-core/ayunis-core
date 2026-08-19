@@ -63,7 +63,92 @@ jobs:
             echo "Deleted screenshot comment ${comment_id} on PR #${PR}"
           done <<< "$comment_ids"
 
+  backend-build:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build backend and runtime packages
+        working-directory: ayunis-core-backend
+        run: |
+          pnpm run build:deps
+          pnpm exec nest build
+
+      - name: Upload backend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-backend-build
+          path: |
+            ayunis-core-backend/dist
+            packages/agent-runtime/dist
+            packages/inference/dist
+            packages/provider-anthropic/dist
+            packages/provider-gemini/dist
+            packages/provider-mistral/dist
+            packages/provider-ollama/dist
+            packages/provider-openai/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  frontend-build:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: ayunis-core-frontend
+        run: pnpm run build
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-frontend-dist
+          path: ayunis-core-frontend/dist
+          if-no-files-found: error
+          retention-days: 1
+
   e2e:
+    needs:
+      - backend-build
+      - frontend-build
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -133,25 +218,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build backend
-        working-directory: ayunis-core-backend
-        # build:deps first: the workspace packages' dist/ is gitignored, and
-        # the compiled backend imports them at module load — without this the
-        # boot dies on module-not-found before the health check.
-        run: |
-          pnpm run build:deps
-          pnpm run build
-
-      - name: Build frontend
-        working-directory: ayunis-core-frontend
-        run: pnpm run build
+      - name: Download backend build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-backend-build
+          path: .
 
       # Same layout as the production image: the backend serves the SPA from
       # dist/frontend (ServeStaticModule), so browser and API share one origin.
-      - name: Bundle frontend into backend
-        run: |
-          rm -rf ayunis-core-backend/dist/frontend
-          cp -r ayunis-core-frontend/dist ayunis-core-backend/dist/frontend
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-frontend-dist
+          path: ayunis-core-backend/dist/frontend
 
       - name: Create backend environment file
         working-directory: ayunis-core-backend

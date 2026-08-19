@@ -52,7 +52,7 @@ export default [
 
 Guidelines:
 
-- Keep names kebab-case; output is `scene-name--viewport.png` and `scene-name--demo-name--viewport.gif`.
+- Keep scene and demo names kebab-case (`^[a-z0-9]+(?:-[a-z0-9]+)*$`); CI rejects unsafe names before publishing. Output is `scene-name--viewport.png` and `scene-name--demo-name--viewport.gif`.
 - Use `getByTestId` / `getByRole`; avoid text selectors where possible because the UI is localized.
 - Prefer short, deterministic interactions. No `waitForTimeout`; wait on locators or assertions.
 - Include only scenes the reviewer asked for.
