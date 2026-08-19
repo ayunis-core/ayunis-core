@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.28.0](https://github.com/ayunis-core/ayunis-core/compare/v2.27.0...v2.28.0) (2026-08-19)
+
+
+### Features
+
+* **admin-settings:** explain permissions and roles with tooltips (AYC-763) ([#1462](https://github.com/ayunis-core/ayunis-core/issues/1462)) ([e1d9751](https://github.com/ayunis-core/ayunis-core/commit/e1d9751507c7960785003029a6f338ba949dc14e))
+* **admin:** add searchable super-admin user list (AYC-766) ([#1472](https://github.com/ayunis-core/ayunis-core/issues/1472)) ([a0b2248](https://github.com/ayunis-core/ayunis-core/commit/a0b2248ab7de355997d767c941cb70f5574f25b4))
+* **chat:** increase context budget to 200k tokens (AYC-000) ([#1456](https://github.com/ayunis-core/ayunis-core/issues/1456)) ([8373e94](https://github.com/ayunis-core/ayunis-core/commit/8373e94a06913b6b000ee6d0246bcd848f328a25))
+* **e2e:** add deterministic playwright test suite (AYC-0000) ([#1388](https://github.com/ayunis-core/ayunis-core/issues/1388)) ([59200cf](https://github.com/ayunis-core/ayunis-core/commit/59200cf15b104cb4b5674d8ccf64205fe462eb33))
+* **e2e:** add temporary PR media scenes (AYC-0000) ([#1463](https://github.com/ayunis-core/ayunis-core/issues/1463)) ([24a6b59](https://github.com/ayunis-core/ayunis-core/commit/24a6b5934cf42e9fc7227bc24af53c76dff2d63a))
+
+
+### Bug Fixes
+
+* **auth:** redirect signed-in users away from the login page (AYC-659) ([#1453](https://github.com/ayunis-core/ayunis-core/issues/1453)) ([bc3ac3d](https://github.com/ayunis-core/ayunis-core/commit/bc3ac3de977a53bb828f4e9c924c6c6ed2c685db))
+* **runs:** log runtime provider rejection diagnostics (AYC-000) ([#1442](https://github.com/ayunis-core/ayunis-core/issues/1442)) ([a004102](https://github.com/ayunis-core/ayunis-core/commit/a004102b60c390702191417534935f061d4d5bcd))
+* **runs:** retry malformed completed tool calls (AYC-741) ([#1465](https://github.com/ayunis-core/ayunis-core/issues/1465)) ([d18ca89](https://github.com/ayunis-core/ayunis-core/commit/d18ca895f40bb9871878b5965899d274662cce0c))
+
+
+### Documentation
+
+* **skills:** split git-workflow into hot path and on-demand references (AYC-000) ([#1473](https://github.com/ayunis-core/ayunis-core/issues/1473)) ([cde8a24](https://github.com/ayunis-core/ayunis-core/commit/cde8a2485f537536f6c63bc43940dbab0a2a8cd1))
+
+
+### Tests
+
+* **e2e:** add screenshot demo scene registry (AYC-0000) ([#1396](https://github.com/ayunis-core/ayunis-core/issues/1396)) ([cbb134d](https://github.com/ayunis-core/ayunis-core/commit/cbb134df86e92eb4b5580f8a7ded055ecde6a8e0))
+* **e2e:** extract screenshot media helpers (AYC-0000) ([#1395](https://github.com/ayunis-core/ayunis-core/issues/1395)) ([1dfed3b](https://github.com/ayunis-core/ayunis-core/commit/1dfed3b030953500737a66db654f7ad4b4f416ea))
+* **frontend:** add e2e test ids (AYC-0000) ([#1397](https://github.com/ayunis-core/ayunis-core/issues/1397)) ([303b147](https://github.com/ayunis-core/ayunis-core/commit/303b1476ed66adf8011b6a730825f22f0bcd4a30))
+
+
+### Miscellaneous
+
+* **packages:** align agent-runtime, inference and provider engines to node 24 (AYC-000) ([#1455](https://github.com/ayunis-core/ayunis-core/issues/1455)) ([921bbde](https://github.com/ayunis-core/ayunis-core/commit/921bbdef9a277176e3f21676e8f06aaf89a35d7d))
+* **tooling:** enforce absolute imports via eslint (AYC-000) ([#1457](https://github.com/ayunis-core/ayunis-core/issues/1457)) ([fa761f0](https://github.com/ayunis-core/ayunis-core/commit/fa761f0d04ce48e63352c43f083f1ca0630eea3f))
+
+
+### CI/CD
+
+* **e2e:** reuse build artifacts for browser tests (AYC-0000) ([#1468](https://github.com/ayunis-core/ayunis-core/issues/1468)) ([70f99ce](https://github.com/ayunis-core/ayunis-core/commit/70f99ce8cefb5f87f7340279448775eca52bab2d))
+* reduce duplicated workflow setup (AYC-0000) ([#1470](https://github.com/ayunis-core/ayunis-core/issues/1470)) ([c140b1d](https://github.com/ayunis-core/ayunis-core/commit/c140b1de083d12373948b005ccfe64ab9dbd41bd))
+
 ## [2.27.0](https://github.com/ayunis-core/ayunis-core/compare/v2.26.0...v2.27.0) (2026-08-15)
 
 
