@@ -11,8 +11,16 @@ on:
       # otherwise slips through because no other workflow watches this file.
       - 'package.json'
       - '.github/workflows/security-audit.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
   schedule:
     - cron: '0 9 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   audit:
@@ -22,18 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       # Audits the whole workspace from the single root lockfile. Root
       # pnpm.overrides patch known-vulnerable transitive deps (basic-ftp,

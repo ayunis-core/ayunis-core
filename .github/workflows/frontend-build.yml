@@ -7,12 +7,20 @@ on:
       - 'packages/ui/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
   push:
     branches: [main]
     paths:
       - 'ayunis-core-frontend/**'
       - 'packages/ui/**'
       - 'pnpm-lock.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -25,18 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Run production build
         run: pnpm run build
