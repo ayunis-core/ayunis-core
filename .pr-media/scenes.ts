@@ -5,7 +5,10 @@ export default [
     name: 'admin-roles-permission-tooltips',
     path: '/admin-settings/roles',
     viewports: ['desktop', 'mobile'],
-    waitFor: async ({ page }) => page.getByTestId('settings-sidebar'),
+    // The permission table's own hint trigger: present at both widths (the
+    // settings sidebar is not rendered at 375px) and only after the roles
+    // request resolves, so no screenshot catches the loading spinner.
+    waitFor: async ({ page }) => page.getByTestId('permission-hint-manage_teams'),
     demos: [
       {
         name: 'role-column-hint',
