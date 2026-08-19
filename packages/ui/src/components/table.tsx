@@ -43,10 +43,7 @@ function TableBody({
   return (
     <tbody
       data-slot="table-body"
-      className={cn(
-        '[&_tr:last-child]:border-0 [&>tr]:hover:bg-muted/50',
-        className,
-      )}
+      className={cn('[&_tr:last-child]:border-0', className)}
       {...props}
     />
   );
@@ -96,7 +93,7 @@ function TableRow({
       className={cn(
         'data-[state=selected]:bg-muted border-b transition-colors',
         isClickable &&
-          'cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none',
+          'hover:bg-muted/50 cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none',
         className,
       )}
       onClick={onClick}
@@ -104,6 +101,32 @@ function TableRow({
       {...(isClickable && { tabIndex: 0 })}
       {...props}
     />
+  );
+}
+
+function TableGroupHeader({
+  className,
+  colSpan,
+  children,
+  ...props
+}: React.ComponentProps<'th'> & {
+  colSpan: number;
+}): React.ReactElement {
+  return (
+    <tr data-slot="table-group-header" className="border-b">
+      <th
+        scope="colgroup"
+        colSpan={colSpan}
+        data-slot="table-group-header-cell"
+        className={cn(
+          'text-muted-foreground px-2 pt-6 pb-2 text-left text-xs font-medium',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </th>
+    </tr>
   );
 }
 
@@ -192,6 +215,7 @@ export {
   TableHeader,
   TableBody,
   TableFooter,
+  TableGroupHeader,
   TableHead,
   TableRow,
   TableCell,

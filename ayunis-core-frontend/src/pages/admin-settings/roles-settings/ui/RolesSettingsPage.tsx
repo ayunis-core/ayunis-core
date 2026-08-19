@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import {
   Table,
   TableBody,
+  TableGroupHeader,
   TableHead,
   TableHeader,
   TableRow,
@@ -32,7 +33,6 @@ import {
 import { PERMISSION_SECTIONS } from '@/pages/admin-settings/roles-settings/lib/catalog';
 import { useUpdateRolePermissions } from '@/pages/admin-settings/roles-settings/api/useUpdateRolePermissions';
 import { PermissionMatrixRow } from './PermissionMatrixRow';
-import { PermissionGroupHeader } from './PermissionGroupHeader';
 import { InfoHint } from './InfoHint';
 
 const ROLE_COLUMNS = ['user', 'manager', 'admin'] as const;
@@ -118,7 +118,9 @@ export function RolesSettingsPage() {
             <TableBody>
               {PERMISSION_SECTIONS.map((section) => (
                 <Fragment key={section.group}>
-                  <PermissionGroupHeader label={t(`groups.${section.group}`)} />
+                  <TableGroupHeader colSpan={ROLE_COLUMNS.length + 1}>
+                    {t(`groups.${section.group}`)}
+                  </TableGroupHeader>
                   {section.permissions.map((permission) => (
                     <PermissionMatrixRow
                       key={permission}
