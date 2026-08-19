@@ -5,7 +5,12 @@ description: "MUST be loaded before ANY commit, push, or branch operation. Never
 
 # Git Workflow
 
-This project uses **Graphite** for stacked PRs. Always use `gt` commands, never raw `git commit`.
+This project uses **Graphite** for stacked PRs. Always use `gt`, never raw `git commit` or `git push`.
+
+| Situation | Read first |
+| --- | --- |
+| New PR, new branch, "based on main", or a follow-up that depends on unmerged work | `references/starting-work.md` — verify the base **before** the first edit |
+| A `gt` command aborted, warned, or no-op'd (untracked branch, must-restack, worktree collision, remote divergence) | `references/submit-troubleshooting.md` |
 
 ## Commit Message Format
 
@@ -49,9 +54,7 @@ wip(sources): add source entity and repository port (TASK-1)
 
 Projects using **release-please** auto-generate changelogs from squash-merged PR titles on `main`. Only semantic types (`feat`, `fix`, `refactor`, `perf`, `docs`, `ci`, `chore`, `test`) appear in the changelog. The `wip` type is **excluded from the changelog and does not trigger version bumps**.
 
-### When to use `wip:`
-
-Use `wip:` for any PR that is **part of a larger feature but does not complete it**. This is the default for stacked PRs in a multi-branch feature:
+Use `wip:` for any PR that is **part of a larger feature but does not complete it** — the default for stacked PRs in a multi-branch feature:
 
 ```text
 wip(sources): add source entity and repository port (TASK-1)        ← stack branch 1
@@ -59,155 +62,64 @@ wip(sources): implement source ingestion use case (TASK-1)           ← stack b
 feat(sources): add source management API and UI (TASK-1)             ← final branch, completes the feature
 ```
 
-Only the last PR uses `feat:` — that's the one that appears in the changelog as a single entry.
+Only the last PR uses `feat:` — that's the single changelog entry. Use a semantic type when the PR **delivers a complete, user-visible change** on its own (standalone bug fix, self-contained feature, CI/tooling change).
 
-### When to use semantic types
-
-Use `feat:`, `fix:`, etc. when the PR **delivers a complete, user-visible change** on its own:
-
-- A standalone bug fix → `fix(auth): correct date validation (TASK-2)`
-- A self-contained feature in a single PR → `feat(agents): add agent install page (TASK-3)`
-- CI/tooling change → `ci: add dead code workflow`
-
-### Rule of thumb
-
-> If this PR were the only one merged, would the change make sense to a user reading the changelog? If yes → semantic type. If no → `wip:`.
+> Rule of thumb: if this PR were the only one merged, would the change make sense to a user reading the changelog? Yes → semantic type. No → `wip:`.
 
 ## Branching & Stacking
 
-The worktree branch (if using worktrees) is the **base branch**. Graphite stacks are built on top of it.
-
-### Before starting new work — sync main and restack
-
-**Before editing any source in a stacked-PR context, sync local `main` to `origin` and restack.** Starting work on a stale base means the stack diverges from `main` while you edit, and the divergence only surfaces later as avoidable rebase conflicts at submit time. Do this *before the first edit*, not after:
-
-```bash
-git fetch origin
-git checkout main && git pull --ff-only origin main   # fast-forward local main
-git checkout <stack-branch>                            # back to where you work
-gt restack                                             # rebase the stack onto fresh main
-```
-
-`gt sync` (which prunes merged branches and pulls trunk) is the Graphite-native equivalent when you also want to clean up landed branches. Either way, confirm with `gt log short` that the stack sits on top of current `main` before touching code.
-
-This is distinct from the pre-submit fetch check below — that guards against overwriting remote commits when pushing. This one keeps your *base* current so the work you're about to write applies cleanly.
-
-### Choosing the base — stack on a dependency, don't default to main
-
-Before opening a follow-up PR, decide the base *deliberately*. The default is **not** always main. Ask one question: **does this change only make sense once an in-flight, unmerged PR lands?**
-
-- **Yes — it depends on unmerged work** → stack it *on top of that branch*, not main. Typical cases: a cleanup that removes code the open PR replaces, or a follow-up that builds on an API/behaviour the open PR introduces. `gt checkout <parent-branch>` first, then edit so `gt create` stacks the new branch on the dependency.
-- **No — it stands alone against current `main`** → fresh stack off main (the flow below).
-
-Branching a dependent change off main is the common mistake: it can merge *before* its prerequisite and break the build, or land as an out-of-order changelog entry. When you're unsure whether the dependency is real, ask — don't assume main.
-
-If you already branched off main and only then realise the work depends on an unlanded PR, re-parent it — don't rebuild:
-
-```bash
-gt move --onto <parent-branch>   # re-parent the current branch onto its real dependency
-```
-
-### Starting a new PR — verify the base branch BEFORE editing
-
-Before making **any edit** whose goal is a *new PR* / *new branch off main* / *port to a new PR*, verify that you are actually starting from the intended base. In a Graphite repo the working checkout is almost always mid-stack on some feature branch — being clean is not the same as being on main.
-
-Trigger phrases that require this pre-check (non-exhaustive): *"new PR based on main"*, *"port this into a new PR"*, *"open a new branch off main"*, *"start fresh from main"*, *"cherry-pick into a new stack"*.
-
-**First action, before any Edit/Write/`git show BR:path > file`:**
-
-```bash
-git branch --show-current      # confirm which branch is checked out
-git status --short             # confirm the tree is clean (or that you know what's dirty)
-gt log short                   # visualise the stack you're currently in
-```
-
-If you're not on `main` (or on the base branch the user named), do **not** start editing. Options:
-
-1. **Fresh stack off main:**
-
-   ```bash
-   gt checkout main && git pull --ff-only
-   # then let `gt create` start the new stack on your first commit
-   ```
-
-2. **New branch stacked on a specific base:** `gt checkout <base>` first, verify, then edit.
-3. **Ambiguous:** stop and ask. Never guess the base — landing edits on the wrong stack pollutes an existing PR and forces a painful cherry-pick to recover.
-
-Applies especially when a task instruction reads *"based on the current status of main"*. That phrasing is a hard signal that the current checkout is probably **not** the intended base. Editing first and switching later means uncommitted changes ride the checkout across branches — safe only when there's no overlap with either branch's tree; otherwise you either overwrite unrelated work or lose your edits.
+The worktree branch (if using worktrees) is the **base branch**; Graphite stacks are built on top of it. Being clean is not the same as being on `main`, and the default base is **not** always `main` — verify per `references/starting-work.md` before editing.
 
 ### New commit → new stacked branch
 
 Each logical unit of work gets its own `gt create`:
 
 ```bash
-# 1. Stage changes
 git add <files>
-
-# 2. Verify what's staged
-git status --short
-
-# 3. Create a new stacked branch (auto-stacks on current branch)
-gt create -m "<type>(<scope>): <description> (<ticket-id>)"
-
-# 4. If pre-commit hooks fail, fix issues and retry with gt modify
+git status --short                                                  # verify what's staged
+gt create -m "<type>(<scope>): <description> (<ticket-id>)"          # auto-stacks on current branch
+# if pre-commit hooks fail, fix the issues and retry with gt modify
 ```
 
 ### Amending the current branch
 
-Use when fixing QA findings, addressing PR review comments, bug bot findings, or correcting issues on the current branch. **Never use `gt create` for these fixes** — they belong to the same logical change and should be folded into the existing commit:
+Use when fixing QA findings, PR review comments, or bug bot findings. **Never `gt create` for these** — they belong to the same logical change:
 
 ```bash
-# 1. Stage fixes (or use -a flag to auto-stage all changes)
 git add <files>
-
-# 2. Amend the current stacked branch (keeps the existing commit message)
-gt modify
-
-# 3. This automatically restacks any descendant branches
+gt modify              # amends, keeps the message, restacks descendants
 ```
 
-- `gt modify` without flags amends the existing commit and keeps its message — no need to repeat `-m`.
-- Use `gt modify -a` to auto-stage all changes and amend in one step.
-- Use `gt modify -m "..."` only if you need to **change** the commit message.
-- With `--commit` it creates an additional commit on the branch — that's not what we want for fixes.
+- `gt modify -a` auto-stages all changes and amends in one step.
+- `gt modify -m "..."` only when the message must **change**.
+- `--commit` adds another commit to the branch — not what we want for fixes.
 
 ### Pushing to remote
 
-**Never use raw `git push`** — always use `gt submit`. Raw pushes bypass Graphite's metadata and desynchronize remote base branches, causing merge conflicts on GitHub.
+**Never raw `git push`** — it bypasses Graphite's metadata and desynchronizes remote base branches. **Always push the full stack**; pushing one branch after a restack or amend leaves descendants' remote refs stale, causing duplicate-commit conflicts the next time anyone restacks a child.
 
-**Always push the full stack** — never push a single branch. Pushing only one branch after a restack or amend leaves descendant branches' remote refs stale (old SHAs), which causes duplicate-commit merge conflicts the next time someone restacks a child branch.
-
-#### Before force-pushing: check for remote-only commits
-
-`--force` will overwrite remote commits that aren't in your local branch — most commonly commits authored by Cursor agents, CI bots, or teammates after you last pulled. Always reconcile first:
+Pre-flight, every time — `--force` overwrites remote commits, and under `--no-interactive` the warning does not halt:
 
 ```bash
-# 1. Fetch latest remote state for all stack branches
+git status --short                            # unrelated modified files? surface them, never bundle silently
 git fetch origin
-
-# 2. For EVERY branch in the stack — including ones you didn't touch this session
-gt log short                                  # show the stack
-git log --oneline HEAD..origin/<branch>       # commits on remote that aren't local
+gt log short                                  # list every branch in the stack
+git log --oneline HEAD..origin/<branch>       # remote-only commits — for EACH branch, not just the edited ones
 ```
 
-**Check every branch `gt log short` shows, not just the ones you edited.** Cursor Agent autofixes, CI commits, and teammate pushes routinely land on the lower (scaffold/base) branches of a stack you've been working in. `gt submit --stack --force --no-interactive` will silently overwrite those without prompting; the "remote updated" warning is informational, not a halt under `--no-interactive`. Skipping the sync check on "untouched" branches has overwritten work multiple times.
+Modified files you didn't touch this session (formatter passes, watcher artifacts) → `git restore` them or get explicit confirmation they belong in the commit; never bundle them silently.
 
-If `git log --oneline HEAD..origin/<branch>` shows any commits, **stop and reconcile** before pushing — typically by `git pull --rebase` or `gt restack` to fold those commits in. Never use `--force` to discard them silently.
-
-#### During the push: read Graphite's warnings
-
-Graphite prints `WARNING: Branch X has been updated remotely. Force submitting local version to remote...` when `--force` is about to overwrite remote commits. **Treat this warning as a halt condition** — abort the submit (Ctrl-C while it's iterating, or skip with `--no-interactive` only after you've verified there are no remote-only commits), pull the missing commits, then retry.
+Any commits in `HEAD..origin/<branch>` → **stop and reconcile** (`git pull --rebase` or `gt restack`). Never `--force` past them: Cursor agent autofixes, CI commits, and teammate pushes routinely land on branches you didn't touch this session.
 
 ```bash
-# Submit the full stack — but only after the pre-flight check above
-gt submit --stack --force --no-interactive
+gt submit --stack --force --no-interactive     # --publish to take PRs out of draft
 ```
 
-Use `--force` to update stale remote refs after a restack or amend. Add `--publish` to take PRs out of draft.
+`WARNING: Branch <name> has been updated remotely. Force submitting local version to remote...` is a **halt condition** → `references/submit-troubleshooting.md`.
 
 ### Verifying stack state after restack / submit
 
-Graphite operations can no-op silently (`gt restack` on a stack that's already up to date, or after a checkout to the wrong branch). Don't claim "done" until you've checked:
+Graphite operations can no-op silently. Don't claim "done" until you've checked:
 
 ```bash
 gt log short                       # current stack and which branch is checked out
@@ -215,85 +127,7 @@ git branch --show-current          # confirm you're not on main
 git status                         # confirm working tree is clean
 ```
 
-If `gt restack` produced no visible output, that often means the stack was already restacked or you're not on a stacked branch. Re-check `gt log short` before reporting success.
-
-### Untracked branch — `gt track` before any other `gt` op
-
-Any `gt` command against a branch Graphite doesn't know about aborts with:
-
-```text
-ERROR: Cannot perform this operation on untracked branch <name>.
-You can track it by specifying its parent with gt track.
-```
-
-This is the default state for branches created **outside Graphite** — most commonly:
-
-- `cursor/*` branches pushed by Cursor Cloud Agents
-- Feature branches fetched from teammates or CI that Graphite has never seen locally
-- Old branches carried over from a plain `git checkout` that predates Graphite
-
-**Recovery — do not surface the raw error to the user. Run this first, then retry the original command:**
-
-```bash
-gt track --parent main   # or the correct parent, e.g. gt track --parent <base-branch>
-```
-
-Almost always the parent is `main`. Only pick a different parent when the branch was clearly stacked on top of another feature branch (rare for `cursor/*` — those come off `main`).
-
-If `gt restack` still reports merge conflicts after tracking, the branch has genuinely diverged from `main` — resolve the conflicts, don't work around them by force-submitting.
-
-### Restack before submit
-
-`gt modify` automatically restacks descendants **only when those descendants are checked out in the same worktree**. If `gt submit --stack` aborts with `WARNING: You must restack before submitting this stack. ERROR: Aborting non-interactive submit.`, run `gt restack` first, then re-run the submit:
-
-```bash
-gt restack
-gt submit --stack --force --no-interactive
-```
-
-### Worktree + stack collisions
-
-When a descendant branch is checked out in another worktree, both `gt modify` and `gt restack` skip it with a message like:
-
-```text
-Did not restack branch <name> because it is checked out in worktree <path>.
-```
-
-`gt submit --stack` will then abort with the "must restack" error and looping won't fix it — the descendant *cannot* be restacked from here. Two valid recoveries:
-
-1. **`cd` into the blocking worktree** and restack + submit from there:
-
-   ```bash
-   gt submit --cwd <blocking-worktree-path> --no-stack --force --no-interactive
-   # or, equivalently, after cd-ing in:
-   cd <blocking-worktree-path>
-   gt restack && gt submit --stack --force --no-interactive
-   ```
-
-2. **Single-branch submit here, follow-up in the other worktree.** Submit only the amended branch from the current worktree, then leave the user a clear instruction to restack the descendant from its own worktree:
-
-   ```bash
-   gt submit --force --no-interactive   # pushes only the current branch
-   ```
-
-   Tell the user: *"<descendant-branch> is restacked locally but not pushed — run `gt restack && gt submit --stack --force` from its worktree at `<path>`."*
-
-This is the only situation where `gt submit` without `--stack` is acceptable. Outside this case, the "always push the full stack" rule stands.
-
-### Force-submit safety
-
-If `gt submit --stack --force` prints `WARNING: Branch <name> has been updated remotely. Force submitting local version to remote...`, **do not silently proceed**. The remote has commits that the local branch is about to overwrite. Stop and reconcile:
-
-```bash
-git fetch
-git log HEAD..origin/<branch>          # show what would be overwritten
-```
-
-Surface the divergence to the user (paste the log) and confirm before re-running the force submit. If the SHAs are actually equivalent (only metadata drift), say so and proceed; otherwise rebase locally first.
-
-### Pre-submit hygiene
-
-Before `gt modify` or `gt submit`, run `git status --short` and review the working tree. If files you didn't touch in this session are modified (formatter passes, removed `eslint-disable` comments, watcher artifacts, etc.), surface them to the user explicitly before staging — do not silently bundle them into the commit. Either `git restore` the unrelated files or get explicit confirmation that they belong in the commit.
+If `gt restack` produced no visible output, the stack was either already restacked or you're not on a stacked branch. Re-check `gt log short` before reporting success.
 
 ### Rules
 
