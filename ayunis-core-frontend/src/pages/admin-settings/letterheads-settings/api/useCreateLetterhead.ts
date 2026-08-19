@@ -5,7 +5,7 @@ import { getLetterheadsControllerFindAllQueryKey } from '@/shared/api/generated/
 import { customAxiosInstance } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { PageMargins } from '../model/types';
+import type { PageMargins } from '@/pages/admin-settings/letterheads-settings/model/types';
 
 interface CreateLetterheadParams {
   name: string;
@@ -60,6 +60,12 @@ export function useCreateLetterhead(onSuccess?: () => void) {
         switch (code) {
           case 'LETTERHEAD_INVALID_PDF':
             showError(t('letterheads.createDialog.invalidPdf'));
+            break;
+          case 'LETTERHEAD_PDF_NOT_SINGLE_PAGE':
+            showError(t('letterheads.createDialog.pdfNotSinglePage'));
+            break;
+          case 'LETTERHEAD_PDF_PASSWORD_PROTECTED':
+            showError(t('letterheads.createDialog.pdfPasswordProtected'));
             break;
           case 'LETTERHEAD_INVALID_PAGE_MARGINS':
             showError(t('letterheads.createDialog.invalidPageMargins'));

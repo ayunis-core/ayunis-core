@@ -3,36 +3,21 @@ import { Test } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { UUID } from 'crypto';
-import { PDFDocument } from 'pdf-lib';
 import { UpdateLetterheadUseCase } from './update-letterhead.use-case';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
+import { PdfNormalizerService } from 'src/domain/letterheads/application/services/pdf-normalizer.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import {
   LetterheadNotFoundError,
-  LetterheadInvalidPdfError,
-} from '../../letterheads.errors';
+  LetterheadPdfNotSinglePageError,
+} from 'src/domain/letterheads/application/letterheads.errors';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
-
-async function createSinglePagePdf(): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  doc.addPage();
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
-}
-
-async function createMultiPagePdf(pages: number): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  for (let i = 0; i < pages; i++) {
-    doc.addPage();
-  }
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
-}
+import { createPdf } from 'src/domain/letterheads/testing/pdf-fixtures';
 
 describe('UpdateLetterheadUseCase', () => {
   let useCase: UpdateLetterheadUseCase;
@@ -89,6 +74,15 @@ describe('UpdateLetterheadUseCase', () => {
           useValue: createPinoLoggerMock(),
         },
         LetterheadPdfService,
+        PdfNormalizerService,
+        {
+          provide: getLoggerToken(LetterheadPdfService.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
+          provide: getLoggerToken(PdfNormalizerService.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
@@ -145,7 +139,7 @@ describe('UpdateLetterheadUseCase', () => {
   });
 
   it('should replace the first-page PDF when a new buffer is provided', async () => {
-    const newPdf = await createSinglePagePdf();
+    const newPdf = await createPdf(1);
 
     const command = new UpdateLetterheadCommand({
       letterheadId: mockLetterheadId,
@@ -159,7 +153,7 @@ describe('UpdateLetterheadUseCase', () => {
   });
 
   it('should add a continuation PDF when provided', async () => {
-    const continuationPdf = await createSinglePagePdf();
+    const continuationPdf = await createPdf(1);
 
     const command = new UpdateLetterheadCommand({
       letterheadId: mockLetterheadId,
@@ -206,7 +200,7 @@ describe('UpdateLetterheadUseCase', () => {
   });
 
   it('should reject a multi-page first-page PDF replacement', async () => {
-    const multiPagePdf = await createMultiPagePdf(2);
+    const multiPagePdf = await createPdf(2);
 
     const command = new UpdateLetterheadCommand({
       letterheadId: mockLetterheadId,
@@ -214,7 +208,7 @@ describe('UpdateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
   });
 
@@ -244,6 +238,15 @@ describe('UpdateLetterheadUseCase', () => {
           useValue: createPinoLoggerMock(),
         },
         LetterheadPdfService,
+        PdfNormalizerService,
+        {
+          provide: getLoggerToken(LetterheadPdfService.name),
+          useValue: createPinoLoggerMock(),
+        },
+        {
+          provide: getLoggerToken(PdfNormalizerService.name),
+          useValue: createPinoLoggerMock(),
+        },
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },

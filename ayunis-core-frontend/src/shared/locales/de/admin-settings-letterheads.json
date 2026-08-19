@@ -33,6 +33,8 @@
       "error": "Fehler beim Erstellen des Briefpapiers.",
       "firstPageRequired": "Eine PDF-Datei für die erste Seite ist erforderlich.",
       "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "pdfNotSinglePage": "Das Briefpapier-PDF darf nur eine Seite enthalten.",
+      "pdfPasswordProtected": "Das PDF ist mit einem Passwort geschützt. Bitte laden Sie es ohne Passwortschutz hoch.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
       "pdfPreviewError": "PDF-Vorschau konnte nicht gerendert werden."
     },
@@ -44,6 +46,8 @@
       "success": "Briefpapier erfolgreich aktualisiert.",
       "error": "Fehler beim Aktualisieren des Briefpapiers.",
       "invalidPdf": "Bitte laden Sie eine gültige PDF-Datei hoch.",
+      "pdfNotSinglePage": "Das Briefpapier-PDF darf nur eine Seite enthalten.",
+      "pdfPasswordProtected": "Das PDF ist mit einem Passwort geschützt. Bitte laden Sie es ohne Passwortschutz hoch.",
       "invalidPageMargins": "Bitte geben Sie gültige nicht-negative Seitenränder ein.",
       "removeContinuationPage": "Folgeseiten-Briefpapier entfernen",
       "useDifferentFollowingPages": "Anderes Briefpapier für Folgeseiten verwenden"
