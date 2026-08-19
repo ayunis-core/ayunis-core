@@ -1,6 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { ModelProvider } from '../domain/value-objects/model-provider.enum';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 
 /**
@@ -13,6 +13,7 @@ export enum ModelErrorCode {
   MODEL_INVALID = 'MODEL_INVALID',
   MODEL_PROVIDER_NOT_SUPPORTED = 'MODEL_PROVIDER_NOT_SUPPORTED',
   INFERENCE_FAILED = 'INFERENCE_FAILED',
+  INFERENCE_MALFORMED_TOOL_CALL = 'INFERENCE_MALFORMED_TOOL_CALL',
   INFERENCE_TOKEN_LIMIT = 'INFERENCE_TOKEN_LIMIT',
   INFERENCE_ABORTED = 'INFERENCE_ABORTED',
   INFERENCE_IMAGE_TOO_LARGE = 'INFERENCE_IMAGE_TOO_LARGE',
@@ -179,6 +180,17 @@ export class InferenceFailedError extends ModelError {
     super(
       `Inference failed: ${reason}`,
       ModelErrorCode.INFERENCE_FAILED,
+      500,
+      metadata,
+    );
+  }
+}
+
+export class InferenceMalformedToolCallError extends ModelError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Inference failed: model emitted unparseable tool call arguments',
+      ModelErrorCode.INFERENCE_MALFORMED_TOOL_CALL,
       500,
       metadata,
     );

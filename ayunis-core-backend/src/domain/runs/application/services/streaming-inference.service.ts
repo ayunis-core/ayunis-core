@@ -18,26 +18,28 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelToolChoice } from 'src/domain/models/domain/value-objects/model-tool-choice.enum';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
-import { resolveIntegration } from '../helpers/resolve-integration.helper';
+import { resolveIntegration } from 'src/domain/runs/application/helpers/resolve-integration.helper';
 import {
   assertToolCallArgumentsIntact,
   parseFinalToolArguments,
-} from '../helpers/tool-call-arguments.helper';
+} from 'src/domain/runs/application/helpers/tool-call-arguments.helper';
 import {
+  InferenceMalformedToolCallError,
   InferenceStreamStalledError,
   InferenceTokenLimitError,
 } from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { InferenceCompletedEvent } from '../events/inference-completed.event';
-import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
-import { observableToBufferedAsyncIterable } from '../helpers/buffered-stream.helper';
-import { extractUsageFromChunks } from '../helpers/stream-usage.helper';
+import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
+import { extractInferenceErrorInfo } from 'src/domain/runs/application/helpers/extract-inference-error-info.helper';
+import { observableToBufferedAsyncIterable } from 'src/domain/runs/application/helpers/buffered-stream.helper';
+import { extractUsageFromChunks } from 'src/domain/runs/application/helpers/stream-usage.helper';
 import {
   AccumulatedState,
   AccumulatedToolCall,
   accumulateChunk,
   initialAccumulatedState,
-} from '../helpers/stream-accumulation.helper';
+} from 'src/domain/runs/application/helpers/stream-accumulation.helper';
+import { RunExecutionFailedError } from 'src/domain/runs/application/runs.errors';
 
 type AssistantContentBlock =
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
@@ -112,18 +114,18 @@ export class StreamingInferenceService {
       }
       // The stream completed without a single chunk — an empty provider
       // response. Nothing was shown or persisted, so one retry is as safe
-      // as the stall retry; a second empty attempt falls through to the
-      // orchestrator's RUN_EXECUTION_FAILED (incident #548).
+      // as the stall retry; an empty retry raises the existing
+      // RUN_EXECUTION_FAILED outcome (incident #548).
       this.logger.warn(
         { threadId: params.threadId },
         'Provider stream completed without any output; retrying once',
       );
     } catch (error) {
-      // A stall or a token-limit-truncated tool call is safe to retry as
-      // long as no durable output was streamed: the failed attempt persisted
-      // nothing, so the second attempt is indistinguishable from a slow
-      // first one. After durable output, a retry would duplicate content
-      // the user already watched arrive (AYC-652, AYC-669).
+      // A stall or malformed tool call is safe to retry as long as no durable
+      // output was streamed: the failed attempt persisted nothing, so the
+      // second attempt is indistinguishable from a slow first one. After
+      // durable output, a retry would duplicate content the user already
+      // watched arrive (AYC-652, AYC-669, AYC-741).
       if (!this.isRetryableBeforeOutput(error) || tracker.producedOutput) {
         throw error;
       }
@@ -135,13 +137,35 @@ export class StreamingInferenceService {
         'Recoverable inference failure before durable output; retrying once',
       );
     }
-    return yield* this.streamAttempt(params, freshTracker(), assistantMessage);
+    return yield* this.retryOnce(params, assistantMessage);
+  }
+
+  private async *retryOnce(
+    params: StreamingInferenceParams,
+    assistantMessage: AssistantMessage,
+  ): AsyncGenerator<AssistantMessage, boolean, unknown> {
+    const tracker = freshTracker();
+    const threadExists = yield* this.streamAttempt(
+      params,
+      tracker,
+      assistantMessage,
+    );
+    if (assistantMessage.content.length === 0) {
+      throw new RunExecutionFailedError(
+        'No final message received from streaming inference',
+      );
+    }
+    return threadExists;
   }
 
   private isRetryableBeforeOutput(
     error: unknown,
-  ): error is InferenceStreamStalledError | InferenceTokenLimitError {
+  ): error is
+    | InferenceMalformedToolCallError
+    | InferenceStreamStalledError
+    | InferenceTokenLimitError {
     return (
+      error instanceof InferenceMalformedToolCallError ||
       error instanceof InferenceStreamStalledError ||
       error instanceof InferenceTokenLimitError
     );
