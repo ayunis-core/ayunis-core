@@ -10,6 +10,25 @@ import {
   type PrMediaViewport,
 } from './types';
 
+const mediaNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function assertMediaName(kind: string, name: string): void {
+  if (!mediaNamePattern.test(name)) {
+    throw new Error(
+      `Invalid PR media ${kind} name "${name}". Use kebab-case: ${mediaNamePattern}`,
+    );
+  }
+}
+
+function validateSceneNames(sceneList: PrMediaScene[]): void {
+  for (const scene of sceneList) {
+    assertMediaName('scene', scene.name);
+    for (const demo of scene.demos ?? []) {
+      assertMediaName('demo', demo.name);
+    }
+  }
+}
+
 async function waitForScene(context: PrMediaContext, scene: PrMediaScene) {
   const locator = await scene.waitFor?.(context);
   if (locator) {
@@ -28,6 +47,8 @@ async function prepareScene(
 function viewportsFor(scene: PrMediaScene): PrMediaViewport[] {
   return scene.viewports ?? ['desktop', 'mobile'];
 }
+
+validateSceneNames(scenes);
 
 for (const scene of scenes) {
   for (const viewport of viewportsFor(scene)) {

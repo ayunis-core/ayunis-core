@@ -101,11 +101,19 @@ pr-media/         Temporary PR media capture infrastructure; scenes live on pr-m
 ## CI
 
 `.github/workflows/e2e-tests.yml` runs the suite on PRs touching backend,
-frontend, packages, or this package. It mirrors production serving: the
-built backend serves the built SPA from `dist/frontend` (same origin), with
+frontend, packages, or this package. Backend and frontend build jobs run first
+and upload short-lived `dist` artifacts; the e2e job downloads those artifacts
+instead of rebuilding them. It mirrors production serving: the built backend
+serves the built SPA from `dist/frontend` (same origin), with
 Postgres/Redis/MinIO/Mailcatcher as service containers and
-`MOCK_INFERENCE=true`. `E2E_BASE_URL`/`E2E_API_URL` both point at the
-backend (port 3000); Playwright report, traces, and the backend log upload
-as artifacts on failure.
+`MOCK_INFERENCE=true`. `E2E_BASE_URL`/`E2E_API_URL` both point at the backend
+(port 3000); Playwright report, traces, and the backend log upload as artifacts
+on failure.
 
-Temporary screenshots/GIFs are opt-in per PR. Add `.pr-media/scenes.ts` to the disposable `pr-media/pr-<n>` branch with `scripts/pr-media/update-scenes.sh --branch current <scenes.ts>`; CI fetches that scene file, captures exactly those scenes, publishes the media back to `pr-media/pr-<n>`, and deletes the branch/comment when the PR closes. No PR media scenes are committed to product branches.
+Temporary screenshots/GIFs are opt-in per PR. Add `.pr-media/scenes.ts` to the
+disposable `pr-media/pr-<n>` branch with
+`scripts/pr-media/update-scenes.sh --pr <n> <scenes.ts>`; CI fetches that scene
+file, captures exactly those scenes, publishes the media back to
+`pr-media/pr-<n>`, and deletes the branch/comment when the PR closes. No PR
+media scenes are committed to product branches. Scene and demo names must be
+kebab-case so generated filenames are safe and deterministic.

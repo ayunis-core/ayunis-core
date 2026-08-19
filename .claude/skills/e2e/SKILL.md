@@ -131,6 +131,7 @@ tests/<domain>/     Product journeys, one journey per spec file
   seeded scenarios (usage limits, academy states) are Phase 5 (`@seeded-org`).
 - Local runs cap at 4 workers and disable video deliberately (CPU contention
   causes 30s-timeout cascades) — don't raise them to "speed things up".
-- CI (`.github/workflows/e2e-tests.yml`) serves the **built** frontend from
-  the backend (same origin, port 3000) — dev-server-only behaviour won't
-  reproduce there.
+- CI (`.github/workflows/e2e-tests.yml`) builds backend/frontend in upstream
+  jobs, downloads those `dist` artifacts into the e2e job, and serves the
+  **built** frontend from the backend (same origin, port 3000) —
+  dev-server-only behaviour won't reproduce there.
