@@ -29,24 +29,34 @@ export class PdfNormalizerService {
    */
   async normalize(buffer: Buffer): Promise<PdfNormalizationResult> {
     const mupdf = await this.loadMupdf();
+    let document: Mupdf.Document | undefined;
     try {
-      const document = mupdf.PDFDocument.openDocument(
-        buffer,
-        'application/pdf',
-      );
+      document = mupdf.PDFDocument.openDocument(buffer, 'application/pdf');
       if (document.needsPassword()) {
         return { status: 'passwordRequired' };
       }
       if (!(document instanceof mupdf.PDFDocument)) {
         return { status: 'unreadable', reason: 'not a PDF document' };
       }
-      const bytes = document.saveToBuffer('encrypt=none').asUint8Array();
-      return { status: 'normalized', buffer: Buffer.from(bytes) };
+      return { status: 'normalized', buffer: this.saveDecrypted(document) };
     } catch (error) {
       return {
         status: 'unreadable',
         reason: error instanceof Error ? error.message : String(error),
       };
+    } finally {
+      // MuPDF objects live on the WASM heap, which JavaScript garbage
+      // collection does not reclaim.
+      document?.destroy();
+    }
+  }
+
+  private saveDecrypted(document: Mupdf.PDFDocument): Buffer {
+    const saved = document.saveToBuffer('encrypt=none');
+    try {
+      return Buffer.from(saved.asUint8Array());
+    } finally {
+      saved.destroy();
     }
   }
 
