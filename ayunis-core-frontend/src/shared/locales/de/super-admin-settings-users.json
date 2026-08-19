@@ -1,4 +1,22 @@
 {
+  "search": {
+    "placeholder": "Benutzer nach Name oder E-Mail suchen..."
+  },
+  "header": {
+    "title": "Benutzer",
+    "description": "Benutzer in allen Organisationen suchen und verwalten.",
+    "total": "{{count}} gesamt"
+  },
+  "table": {
+    "name": "Name",
+    "email": "E-Mail",
+    "organization": "Organisation",
+    "actions": "Aktionen"
+  },
+  "empty": {
+    "title": "Keine Benutzer gefunden",
+    "description": "Versuchen Sie einen anderen Namen oder eine andere E-Mail-Adresse."
+  },
   "export": {
     "title": "Nutzer-Export",
     "description": "Lade eine CSV-Datei mit allen Nutzern, inklusive ihrer Rolle, aus Organisationen mit einem aktiven oder zukünftigen Abonnement herunter.",

@@ -17,6 +17,7 @@
     "roleManager": "Manager",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
+    "openOrganization": "Organisation öffnen",
     "delete": "Löschen"
   },
   "empty": {
@@ -188,7 +189,8 @@
   },
   "deleteUser": {
     "success": "Benutzer erfolgreich gelöscht",
-    "error": "Benutzer konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+    "error": "Benutzer konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Benutzer nicht gefunden."
   },
   "confirmDelete": {
     "title": "Benutzer löschen",
@@ -208,6 +210,7 @@
     "copyButton": "Kopieren",
     "copiedButton": "Kopiert",
     "copied": "Link in Zwischenablage kopiert",
+    "copyError": "Link konnte nicht kopiert werden",
     "close": "Schließen"
   },
   "confirmPasswordReset": {

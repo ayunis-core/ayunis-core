@@ -20,6 +20,7 @@ import {
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
@@ -163,6 +164,51 @@ export class LocalUsersRepository extends UsersRepository {
 
     return new Paginated<User>({
       data: users,
+      limit: pagination.limit,
+      offset: pagination.offset,
+      total,
+    });
+  }
+
+  async findAllForSuperAdmin(
+    pagination: UsersPagination,
+    filters?: UsersFilters,
+  ): Promise<Paginated<SuperAdminUserListItem>> {
+    this.logger.info(
+      {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        hasSearch: filters?.search !== undefined,
+      },
+      'findAllForSuperAdmin',
+    );
+
+    const queryBuilder = this.users
+      .createQueryBuilder('user')
+      .innerJoinAndSelect('user.org', 'org')
+      .orderBy('user.createdAt', 'DESC');
+
+    if (filters?.search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${filters.search}%` },
+      );
+    }
+
+    const [records, total] = await queryBuilder
+      .skip(pagination.offset)
+      .take(pagination.limit)
+      .getManyAndCount();
+    const data = records.map(
+      (record) =>
+        new SuperAdminUserListItem({
+          user: UserMapper.toDomain(record),
+          orgName: record.org.name,
+        }),
+    );
+
+    return new Paginated({
+      data,
       limit: pagination.limit,
       offset: pagination.offset,
       total,

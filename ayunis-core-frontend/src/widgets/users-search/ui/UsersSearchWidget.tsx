@@ -10,6 +10,7 @@ interface UsersSearchWidgetProps {
   placeholderKey: string;
   /** Off for pages where the search box is not the primary control. */
   autoFocus?: boolean;
+  inputTestId?: string;
 }
 
 export function UsersSearchWidget({
@@ -18,6 +19,7 @@ export function UsersSearchWidget({
   translationNamespace,
   placeholderKey,
   autoFocus = true,
+  inputTestId,
 }: Readonly<UsersSearchWidgetProps>) {
   const { t } = useTranslation(translationNamespace);
   const [localValue, setLocalValue] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export function UsersSearchWidget({
         value={displayValue}
         onChange={handleChange}
         className="pl-10"
+        data-testid={inputTestId}
       />
     </div>
   );

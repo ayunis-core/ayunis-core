@@ -9,8 +9,8 @@ import { UserRecord } from './infrastructure/repositories/local/schema/user.reco
 import { PasswordSetTokenRecord } from './infrastructure/repositories/local/schema/password-set-token.record';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { HashingModule } from '../hashing/hashing.module';
-import { JwtConfigModule } from '../authentication/jwt.module';
+import { HashingModule } from 'src/iam/hashing/hashing.module';
+import { JwtConfigModule } from 'src/iam/authentication/jwt.module';
 import { EmailsModule } from 'src/common/emails/emails.module';
 import { EmailTemplatesModule } from 'src/common/email-templates/email-templates.module';
 
@@ -52,10 +52,10 @@ import { FindAllUserIdsByOrgIdUseCase } from './application/use-cases/find-all-u
 import { FindAllUserSummariesByOrgIdUseCase } from './application/use-cases/find-all-user-summaries-by-org-id/find-all-user-summaries-by-org-id.use-case';
 import { AdminTriggerPasswordResetUseCase } from './application/use-cases/admin-trigger-password-reset/admin-trigger-password-reset.use-case';
 import { SuperAdminTriggerPasswordResetUseCase } from './application/use-cases/super-admin-trigger-password-reset/super-admin-trigger-password-reset.use-case';
-import { InvitesModule } from '../invites/invites.module';
-import { OrgsModule } from '../orgs/orgs.module';
-import { SessionsModule } from '../sessions/sessions.module';
-import { PermissionsModule } from '../permissions/permissions.module';
+import { InvitesModule } from 'src/iam/invites/invites.module';
+import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { SessionsModule } from 'src/iam/sessions/sessions.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { SendSetInitialPasswordEmailUseCase } from './application/use-cases/send-set-initial-password-email/send-set-initial-password-email.use-case';
 import { TriggerSetInitialPasswordUseCase } from './application/use-cases/trigger-set-initial-password/trigger-set-initial-password.use-case';
 import { SuperAdminUsersController } from './presenters/http/super-admin-users.controller';
@@ -66,6 +66,9 @@ import { GetOrgAdminsUseCase } from './application/use-cases/get-org-admins/get-
 import { PromoteToSuperAdminUseCase } from './application/use-cases/promote-to-super-admin/promote-to-super-admin.use-case';
 import { DemoteFromSuperAdminUseCase } from './application/use-cases/demote-from-super-admin/demote-from-super-admin.use-case';
 import { ExportUsersUseCase } from './application/use-cases/export-users/export-users.use-case';
+import { SuperAdminFindAllUsersUseCase } from './application/use-cases/super-admin-find-all-users/super-admin-find-all-users.use-case';
+import { SuperAdminUserListItemResponseDtoMapper } from './presenters/http/mappers/super-admin-user-list-item-response-dto.mapper';
+import { SuperAdminUserListController } from './presenters/http/super-admin-user-list.controller';
 
 @Module({
   imports: [
@@ -84,6 +87,7 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     UserPasswordResetController,
     AdminUserController,
     SuperAdminUsersController,
+    SuperAdminUserListController,
     SuperAdminUserExportsController,
     SuperAdminManagementController,
   ],
@@ -142,11 +146,13 @@ import { ExportUsersUseCase } from './application/use-cases/export-users/export-
     PromoteToSuperAdminUseCase,
     DemoteFromSuperAdminUseCase,
     ExportUsersUseCase,
+    SuperAdminFindAllUsersUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
     UserResponseDtoMapper,
     SuperAdminUserResponseDtoMapper,
+    SuperAdminUserListItemResponseDtoMapper,
   ],
   exports: [
     CreateUserUseCase,

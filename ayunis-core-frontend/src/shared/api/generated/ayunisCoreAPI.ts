@@ -139,6 +139,7 @@ import type {
   OrgSystemPromptResponseDto,
   PaginatedInvitesListResponseDto,
   PaginatedOrgCertificateStatusesResponseDto,
+  PaginatedSuperAdminUsersListResponseDto,
   PaginatedTeamMembersResponseDto,
   PaginatedUsersListResponseDto,
   PermittedImageGenerationModelResponseDto,
@@ -201,6 +202,7 @@ import type {
   SuperAdminUsageDataControllerGetProviderUsageChartParams,
   SuperAdminUsageDataControllerGetProviderUsageParams,
   SuperAdminUsageDataControllerGetUserUsageParams,
+  SuperAdminUserListControllerGetAllUsersParams,
   SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
   TeamCreditLimitItemDto,
@@ -1693,6 +1695,101 @@ export const useSuperAdminUsersControllerCreateUser = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * Retrieve paginated users across all organizations for platform administration.
+ * @summary Get users across all organizations
+ */
+export const superAdminUserListControllerGetAllUsers = (
+    params?: SuperAdminUserListControllerGetAllUsersParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PaginatedSuperAdminUsersListResponseDto>(
+      {url: `/super-admin/users`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getSuperAdminUserListControllerGetAllUsersQueryKey = (params?: SuperAdminUserListControllerGetAllUsersParams,) => {
+    return [
+    `/super-admin/users`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSuperAdminUserListControllerGetAllUsersQueryOptions = <TData = Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError = void>(params?: SuperAdminUserListControllerGetAllUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminUserListControllerGetAllUsersQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>> = ({ signal }) => superAdminUserListControllerGetAllUsers(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminUserListControllerGetAllUsersQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>>
+export type SuperAdminUserListControllerGetAllUsersQueryError = void
+
+
+export function useSuperAdminUserListControllerGetAllUsers<TData = Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError = void>(
+ params: undefined |  SuperAdminUserListControllerGetAllUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUserListControllerGetAllUsers<TData = Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError = void>(
+ params?: SuperAdminUserListControllerGetAllUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminUserListControllerGetAllUsers<TData = Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError = void>(
+ params?: SuperAdminUserListControllerGetAllUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get users across all organizations
+ */
+
+export function useSuperAdminUserListControllerGetAllUsers<TData = Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError = void>(
+ params?: SuperAdminUserListControllerGetAllUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminUserListControllerGetAllUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminUserListControllerGetAllUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.
  * @summary Export users as CSV

@@ -9,10 +9,10 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
-import { Copy, Check } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { showSuccess } from '@/shared/lib/toast';
+import { showError, showSuccess } from '@/shared/lib/toast';
 
 interface PasswordResetSuccessDialogProps {
   open: boolean;
@@ -21,7 +21,7 @@ interface PasswordResetSuccessDialogProps {
   userEmail: string;
 }
 
-export default function PasswordResetSuccessDialog({
+export function PasswordResetSuccessDialog({
   open,
   onOpenChange,
   resetUrl,
@@ -30,9 +30,9 @@ export default function PasswordResetSuccessDialog({
   const { t } = useTranslation('super-admin-settings-org');
   const [isCopied, setIsCopied] = useState(false);
 
-  function handleClose() {
-    onOpenChange(false);
-    setIsCopied(false);
+  function handleOpenChange(nextOpen: boolean) {
+    onOpenChange(nextOpen);
+    if (!nextOpen) setIsCopied(false);
   }
 
   async function copyToClipboard() {
@@ -41,13 +41,13 @@ export default function PasswordResetSuccessDialog({
       setIsCopied(true);
       showSuccess(t('passwordResetSuccess.copied'));
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy URL:', err);
+    } catch {
+      showError(t('passwordResetSuccess.copyError'));
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>{t('passwordResetSuccess.title')}</DialogTitle>
@@ -72,22 +72,15 @@ export default function PasswordResetSuccessDialog({
                 variant="outline"
                 onClick={() => void copyToClipboard()}
               >
-                {isCopied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    <span>{t('passwordResetSuccess.copiedButton')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    <span>{t('passwordResetSuccess.copyButton')}</span>
-                  </>
-                )}
+                {isCopied ? <Check /> : <Copy />}
+                {isCopied
+                  ? t('passwordResetSuccess.copiedButton')
+                  : t('passwordResetSuccess.copyButton')}
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleClose}>
+            <Button onClick={() => handleOpenChange(false)}>
               {t('passwordResetSuccess.close')}
             </Button>
           </DialogFooter>

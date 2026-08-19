@@ -749,6 +749,66 @@
         "tags": ["Super Admin Users"]
       }
     },
+    "/super-admin/users": {
+      "get": {
+        "description": "Retrieve paginated users across all organizations for platform administration.",
+        "operationId": "SuperAdminUserListController_getAllUsers",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search users by name or email",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of users to return (default: 25)",
+            "schema": {
+              "default": 25,
+              "example": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of users to skip (default: 0)",
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved users across organizations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedSuperAdminUsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated or not authorized as super admin"
+          },
+          "500": {
+            "description": "Internal server error occurred while retrieving users"
+          }
+        },
+        "summary": "Get users across all organizations",
+        "tags": ["Super Admin Users"]
+      }
+    },
     "/super-admin/users/export/users.csv": {
       "get": {
         "description": "Export all users, regardless of role, from organizations with a non-cancelled subscription, including subscriptions that start in the future. Each row includes the user role. This endpoint is only accessible to super admins.",
@@ -11227,6 +11287,86 @@
           }
         },
         "required": ["email", "name", "role", "sendActivationEmail"]
+      },
+      "SuperAdminUserListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User unique identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "User email address",
+            "example": "john.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "description": "User role",
+            "enum": ["admin", "manager", "user"],
+            "example": "user"
+          },
+          "orgId": {
+            "type": "string",
+            "description": "Organization ID the user belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174001",
+            "format": "uuid"
+          },
+          "department": {
+            "type": "string",
+            "description": "Department the user belongs to",
+            "example": "hauptamt",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Date when the user was created",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "orgName": {
+            "type": "string",
+            "description": "Name of the organization the user belongs to",
+            "example": "Stadt Beispiel"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "orgId",
+          "createdAt",
+          "orgName"
+        ]
+      },
+      "PaginatedSuperAdminUsersListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Array of users for the current page",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuperAdminUserListItemResponseDto"
+            }
+          },
+          "pagination": {
+            "description": "Pagination metadata",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ]
+          }
+        },
+        "required": ["data", "pagination"]
       },
       "SuperAdminUserResponseDto": {
         "type": "object",

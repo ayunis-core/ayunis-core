@@ -14,66 +14,51 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type {
-  UserResponseDto,
-  UserResponseDtoRole,
-  PaginationDto,
-} from '@/shared/api';
-import { formatDate } from '@/shared/lib/format-date';
-import CreateUserDialog from './CreateUserDialog';
-import SuperAdminUsersSearch from './SuperAdminUsersSearch';
-import SuperAdminUsersPagination from './SuperAdminUsersPagination';
 import { SuperAdminUserActions } from '@/widgets/super-admin-user-actions';
+import type {
+  PaginationDto,
+  SuperAdminUserListItemResponseDto,
+} from '@/shared/api';
+import { UsersPagination } from './UsersPagination';
+import { UsersSearch } from './UsersSearch';
 
 interface UsersTableProps {
-  users: UserResponseDto[];
-  orgId: string;
+  users: SuperAdminUserListItemResponseDto[];
   pagination?: PaginationDto;
   search?: string;
   currentPage: number;
 }
 
-export default function UsersTable({
+export function UsersTable({
   users,
-  orgId,
   pagination,
   search,
   currentPage,
 }: Readonly<UsersTableProps>) {
-  const { t } = useTranslation('super-admin-settings-org');
-  const roleLabels: Record<UserResponseDtoRole, string> = {
-    admin: t('table.roleAdmin'),
-    manager: t('table.roleManager'),
-    user: t('table.roleUser'),
-  };
+  const { t } = useTranslation('super-admin-settings-users');
   const total = pagination?.total ?? 0;
   const limit = pagination?.limit ?? 25;
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <Card>
+    <Card data-testid="super-admin-users-table">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>
-              {t('header.title')}
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                {t('header.total', { count: total })}
-              </span>
-            </CardTitle>
-            <CardDescription>{t('header.description')}</CardDescription>
-          </div>
-          <CreateUserDialog orgId={orgId} />
-        </div>
+        <CardTitle>
+          {t('header.title')}
+          <span className="ml-2 text-sm font-normal text-muted-foreground">
+            {t('header.total', { count: total })}
+          </span>
+        </CardTitle>
+        <CardDescription>{t('header.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4">
-          <SuperAdminUsersSearch search={search} orgId={orgId} />
+          <UsersSearch search={search} />
         </div>
         {users.length === 0 ? (
           <div className="flex flex-col items-center justify-center space-y-2 py-10 text-center">
             <h3 className="text-lg font-semibold">{t('empty.title')}</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
+            <p className="max-w-sm text-sm text-muted-foreground">
               {t('empty.description')}
             </p>
           </div>
@@ -83,9 +68,8 @@ export default function UsersTable({
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('table.name')}</TableHead>
-                  <TableHead>{t('table.createdAt')}</TableHead>
                   <TableHead>{t('table.email')}</TableHead>
-                  <TableHead>{t('table.role')}</TableHead>
+                  <TableHead>{t('table.organization')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
                   </TableHead>
@@ -93,28 +77,21 @@ export default function UsersTable({
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.id} data-testid="super-admin-user-row">
                     <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell className="capitalize">
-                      {roleLabels[user.role]}
-                    </TableCell>
+                    <TableCell>{user.orgName}</TableCell>
                     <TableCell className="w-[100px]">
-                      <SuperAdminUserActions
-                        user={user}
-                        showOrganizationLink={false}
-                      />
+                      <SuperAdminUserActions user={user} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <SuperAdminUsersPagination
+            <UsersPagination
               currentPage={currentPage}
               totalPages={totalPages}
               search={search}
-              orgId={orgId}
             />
           </>
         )}
