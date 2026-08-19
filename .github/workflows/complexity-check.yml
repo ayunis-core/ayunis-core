@@ -6,6 +6,14 @@ on:
       - 'ayunis-core-backend/**/*.ts'
       - 'packages/**/*.ts'
       - 'packages/**/*.tsx'
+      - '.github/actions/setup-node-pnpm/action.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   complexity:
@@ -16,18 +24,8 @@ jobs:
         with:
           fetch-depth: 0 # Need full history for the diff
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Get changed TypeScript files
         id: changed-files

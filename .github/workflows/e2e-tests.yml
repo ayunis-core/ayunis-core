@@ -1,4 +1,4 @@
-name: E2E Tests
+name: App Integration
 
 # Browser tests against the real stack: built frontend served by the backend
 # (same-origin, like production), real Postgres/Redis/MinIO/Mailcatcher, and
@@ -26,15 +26,17 @@ on:
       - 'packages/ui/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/e2e-tests.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
   push:
     branches: [main]
 
 concurrency:
-  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  group: app-integration-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   cleanup-pr-media:
+    name: Cleanup PR media
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     permissions:
@@ -64,6 +66,7 @@ jobs:
           done <<< "$comment_ids"
 
   backend-build:
+    name: Build backend artifact
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -74,18 +77,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build backend and runtime packages
         working-directory: ayunis-core-backend
@@ -110,6 +103,7 @@ jobs:
           retention-days: 1
 
   frontend-build:
+    name: Build frontend artifact
     if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -120,18 +114,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build frontend
         working-directory: ayunis-core-frontend
@@ -146,6 +130,7 @@ jobs:
           retention-days: 1
 
   e2e:
+    name: Browser e2e
     needs:
       - backend-build
       - frontend-build
@@ -195,8 +180,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Start MinIO
         run: |
@@ -207,16 +192,6 @@ jobs:
             -e MINIO_ROOT_PASSWORD=ayunis-ci-minio-secret \
             quay.io/minio/minio:latest server /data
           timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Download backend build artifact
         uses: actions/download-artifact@v4
@@ -419,6 +394,7 @@ jobs:
           retention-days: 7
 
   publish-pr-media:
+    name: Publish PR media
     needs: e2e
     if: github.event_name == 'pull_request' && needs.e2e.outputs.pr-media-enabled == 'true'
     runs-on: ubuntu-latest
@@ -540,6 +516,7 @@ jobs:
           fi
 
   clear-pr-media-comment:
+    name: Clear PR media comment
     needs: e2e
     if: github.event_name == 'pull_request' && needs.e2e.outputs.clear-pr-media-comment == 'true'
     runs-on: ubuntu-latest

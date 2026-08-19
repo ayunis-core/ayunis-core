@@ -4,15 +4,15 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/pr-media/update-scenes.sh --pr <number> [--no-rerun] <scenes.ts>
-  scripts/pr-media/update-scenes.sh --branch current [--no-rerun] <scenes.ts>
+  scripts/update-scenes.sh --pr <number> [--no-rerun] <scenes.ts>
+  scripts/update-scenes.sh --branch current [--no-rerun] <scenes.ts>
 
 Creates or updates the disposable pr-media/pr-<number> branch with
 .pr-media/scenes.ts. Existing generated media on that branch is preserved until
 CI replaces it.
 
-Publishing the scene branch uses git only. Re-running the E2E workflow is
-best-effort; if GitHub API access is unavailable, rerun E2E Tests manually.
+Publishing the scene branch uses git only. Re-running the App Integration
+workflow is best-effort; if GitHub API access is unavailable, rerun it manually.
 EOF
 }
 
@@ -147,26 +147,26 @@ echo "Media branch: ${branch}"
 echo "Scene path: .pr-media/scenes.ts"
 
 if [ "$rerun" = false ]; then
-  echo "Skipped E2E rerun because --no-rerun was provided."
-  echo "Manually rerun the E2E Tests workflow for PR #${pr}."
+  echo "Skipped App Integration rerun because --no-rerun was provided."
+  echo "Manually rerun the App Integration workflow for PR #${pr}."
   exit 0
 fi
 
 if ! command -v gh >/dev/null 2>&1; then
-  echo "Media branch updated. Could not rerun E2E automatically because gh is unavailable."
-  echo "Manually rerun the E2E Tests workflow for PR #${pr}."
+  echo "Media branch updated. Could not rerun App Integration automatically because gh is unavailable."
+  echo "Manually rerun the App Integration workflow for PR #${pr}."
   exit 0
 fi
 
 head_branch="$(gh pr view "$pr" --json headRefName --jq .headRefName 2>/dev/null || true)"
 if [ -z "$head_branch" ]; then
   echo "Media branch updated. Could not resolve the PR head branch via GitHub API."
-  echo "Manually rerun the E2E Tests workflow for PR #${pr}."
+  echo "Manually rerun the App Integration workflow for PR #${pr}."
   exit 0
 fi
 
 run_info="$(gh run list \
-  --workflow "E2E Tests" \
+  --workflow "App Integration" \
   --branch "$head_branch" \
   --json databaseId,event,status \
   --jq 'map(select(.event == "pull_request")) | first | [.databaseId, .status] | @tsv' \
@@ -179,14 +179,14 @@ if [ -n "$run_info" ]; then
 fi
 
 if [ -z "$run_id" ]; then
-  echo "Media branch updated. No E2E Tests pull_request run found for ${head_branch}."
-  echo "Push/update the PR or manually rerun E2E Tests for PR #${pr}."
+  echo "Media branch updated. No App Integration pull_request run found for ${head_branch}."
+  echo "Push/update the PR or manually rerun App Integration for PR #${pr}."
 elif [ "$run_status" != "completed" ]; then
-  echo "Media branch updated. E2E Tests workflow run ${run_id} is ${run_status}, so it cannot be rerun automatically."
-  echo "If that run already loaded PR media scenes, manually rerun E2E Tests for PR #${pr}."
+  echo "Media branch updated. App Integration workflow run ${run_id} is ${run_status}, so it cannot be rerun automatically."
+  echo "If that run already loaded PR media scenes, manually rerun App Integration for PR #${pr}."
 elif gh run rerun "$run_id"; then
-  echo "Re-ran E2E Tests workflow run ${run_id} for ${head_branch}"
+  echo "Re-ran App Integration workflow run ${run_id} for ${head_branch}"
 else
-  echo "Media branch updated. Could not rerun E2E Tests workflow run ${run_id}."
-  echo "Manually rerun the E2E Tests workflow for PR #${pr}."
+  echo "Media branch updated. Could not rerun App Integration workflow run ${run_id}."
+  echo "Manually rerun the App Integration workflow for PR #${pr}."
 fi
