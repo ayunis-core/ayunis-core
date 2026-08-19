@@ -39,13 +39,13 @@ export default [
       await openWorkspaceDetail(page, contextWorkspaceName);
       await page.getByTestId('workspace-tab-skills').click();
 
-      return page.getByTestId('workspace-skills-add');
+      return page.getByTestId('workspace-skills-add').first();
     },
     demos: [
       {
         name: 'open-add-dialog',
         action: async ({ page, expect }) => {
-          await page.getByTestId('workspace-skills-add').click();
+          await page.getByTestId('workspace-skills-add').first().click();
           await expect(page.getByTestId('workspace-add-dialog')).toBeVisible();
         },
       },
