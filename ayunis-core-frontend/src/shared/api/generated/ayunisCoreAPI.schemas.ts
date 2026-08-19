@@ -192,6 +192,48 @@ export interface CreateUserDto {
 /**
  * User role
  */
+export type SuperAdminUserListItemResponseDtoRole = typeof SuperAdminUserListItemResponseDtoRole[keyof typeof SuperAdminUserListItemResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SuperAdminUserListItemResponseDtoRole = {
+  admin: 'admin',
+  manager: 'manager',
+  user: 'user',
+} as const;
+
+export interface SuperAdminUserListItemResponseDto {
+  /** User unique identifier */
+  id: string;
+  /** User name */
+  name: string;
+  /** User email address */
+  email: string;
+  /** User role */
+  role: SuperAdminUserListItemResponseDtoRole;
+  /** Organization ID the user belongs to */
+  orgId: string;
+  /**
+   * Department the user belongs to
+   * @nullable
+   */
+  department?: string | null;
+  /** Date when the user was created */
+  createdAt: string;
+  /** Name of the organization the user belongs to */
+  orgName: string;
+}
+
+export interface PaginatedSuperAdminUsersListResponseDto {
+  /** Array of users for the current page */
+  data: SuperAdminUserListItemResponseDto[];
+  /** Pagination metadata */
+  pagination: PaginationDto;
+}
+
+/**
+ * User role
+ */
 export type SuperAdminUserResponseDtoRole = typeof SuperAdminUserResponseDtoRole[keyof typeof SuperAdminUserResponseDtoRole];
 
 
@@ -5221,6 +5263,21 @@ export type UserPasswordResetControllerValidateResetToken200 = {
 };
 
 export type SuperAdminUsersControllerGetUsersByOrgIdParams = {
+/**
+ * Search users by name or email
+ */
+search?: string;
+/**
+ * Maximum number of users to return (default: 25)
+ */
+limit?: number;
+/**
+ * Number of users to skip (default: 0)
+ */
+offset?: number;
+};
+
+export type SuperAdminUserListControllerGetAllUsersParams = {
 /**
  * Search users by name or email
  */

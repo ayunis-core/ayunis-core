@@ -1,8 +1,9 @@
-import type { User } from '../../domain/user.entity';
+import type { User } from 'src/iam/users/domain/user.entity';
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
-import type { SystemRole } from '../../domain/value-objects/system-role.enum';
+import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { UserSummary } from 'src/iam/users/domain/user-summary';
+import type { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
 
 export interface UsersPagination {
   limit: number;
@@ -25,6 +26,10 @@ export abstract class UsersRepository {
     pagination: UsersPagination,
     filters?: UsersFilters,
   ): Promise<Paginated<User>>;
+  abstract findAllForSuperAdmin(
+    pagination: UsersPagination,
+    filters?: UsersFilters,
+  ): Promise<Paginated<SuperAdminUserListItem>>;
   abstract findAllIdsByOrgId(orgId: UUID): Promise<UUID[]>;
   abstract findAllSummariesByOrgId(
     orgId: UUID,

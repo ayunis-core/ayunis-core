@@ -17,6 +17,7 @@
     "roleManager": "Manager",
     "actions": "Actions",
     "sendPasswordReset": "Send Password Reset",
+    "openOrganization": "Open organization",
     "delete": "Delete"
   },
   "empty": {
@@ -188,7 +189,8 @@
   },
   "deleteUser": {
     "success": "User deleted successfully",
-    "error": "Failed to delete user. Please try again."
+    "error": "Failed to delete user. Please try again.",
+    "notFound": "User not found."
   },
   "confirmDelete": {
     "title": "Delete User",
@@ -208,6 +210,7 @@
     "copyButton": "Copy",
     "copiedButton": "Copied",
     "copied": "Link copied to clipboard",
+    "copyError": "Failed to copy the link",
     "close": "Close"
   },
   "confirmPasswordReset": {

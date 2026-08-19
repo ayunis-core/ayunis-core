@@ -10,7 +10,7 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { useRegister } from '../api';
+import { useRegister } from '@/pages/auth/register/api';
 import { useTranslation, Trans } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { Checkbox } from '@ayunis/ui/components/checkbox';
@@ -213,6 +213,7 @@ export function RegisterPage({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="legalAcceptance"
+                        data-testid="register-legal-acceptance"
                         required
                         checked={field.value}
                         onCheckedChange={field.onChange}

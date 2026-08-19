@@ -1,4 +1,12 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from '../../src/fixtures/test';
+
+async function acceptLegalTermsIfPresent(page: Page) {
+  const legalAcceptance = page.getByTestId('register-legal-acceptance');
+  if (await legalAcceptance.isVisible()) {
+    await legalAcceptance.click();
+  }
+}
 
 // Full self-service registration journey through the UI: register form →
 // "check your inbox" page → confirmation link from Mailcatcher → login.
@@ -17,6 +25,7 @@ test('registers a new org through the UI and confirms the email', async ({
   await page.getByTestId('register-user-name').fill('E2E Reg User');
   await page.getByTestId('register-org-name').fill(`E2E Reg Org ${unique}`);
   await page.getByTestId('register-password').fill(password);
+  await acceptLegalTermsIfPresent(page);
   await page.getByTestId('register-submit').click();
 
   await expect(page).toHaveURL(/\/email-confirm/);
