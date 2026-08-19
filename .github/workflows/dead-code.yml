@@ -7,196 +7,57 @@ on:
       - '**/*.tsx'
       - '**/knip.json'
       - '.github/workflows/dead-code.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  backend:
-    name: Backend
+  check:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ayunis-core-backend
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Backend
+            working-directory: ayunis-core-backend
+            precheck: pnpm run build:deps
+          - name: Agent Runtime
+            working-directory: packages/agent-runtime
+            precheck: ''
+          - name: Inference
+            working-directory: packages/inference
+            precheck: ''
+          - name: Provider Anthropic
+            working-directory: packages/provider-anthropic
+            precheck: ''
+          - name: Provider OpenAI
+            working-directory: packages/provider-openai
+            precheck: ''
+          - name: UI Package
+            working-directory: packages/ui
+            precheck: ''
+          - name: Frontend
+            working-directory: ayunis-core-frontend
+            precheck: ''
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build workspace packages
-        run: pnpm run build:deps
+      - name: Prepare workspace dependencies
+        if: matrix.precheck != ''
+        working-directory: ${{ matrix.working-directory }}
+        run: ${{ matrix.precheck }}
 
       - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  agent-runtime:
-    name: Agent Runtime
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/agent-runtime
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  inference:
-    name: Inference
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/inference
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  provider-anthropic:
-    name: Provider Anthropic
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/provider-anthropic
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  provider-openai:
-    name: Provider OpenAI
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/provider-openai
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  ui:
-    name: UI Package
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/ui
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
-        run: pnpm exec knip --include files,dependencies,unlisted
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
-
-  frontend:
-    name: Frontend
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ayunis-core-frontend
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check for dead code
+        working-directory: ${{ matrix.working-directory }}
         run: pnpm exec knip --include files,dependencies,unlisted
         continue-on-error: ${{ github.event_name == 'pull_request' }}

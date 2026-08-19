@@ -5,11 +5,19 @@ on:
     paths:
       - 'ayunis-core-backend/**'
       - '.github/workflows/backend-tests.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
       - 'docker-compose.yml'
   push:
     branches: [main]
     paths:
       - 'ayunis-core-backend/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint-and-typecheck:
@@ -22,18 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Build workspace packages
         run: pnpm run build:deps
@@ -75,8 +73,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       - name: Start MinIO
         run: |
@@ -88,16 +86,6 @@ jobs:
             quay.io/minio/minio:latest server /data
           # Wait for MinIO to be ready
           timeout 30 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Build workspace packages
         run: pnpm run build:deps

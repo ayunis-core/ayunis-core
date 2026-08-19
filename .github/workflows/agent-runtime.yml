@@ -5,10 +5,18 @@ on:
     paths:
       - 'packages/agent-runtime/**'
       - '.github/workflows/agent-runtime.yml'
+      - '.github/actions/setup-node-pnpm/action.yml'
   push:
     branches: [main]
     paths:
       - 'packages/agent-runtime/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
@@ -22,18 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
 
       # Workspace deps (e.g. @ayunis/inference) resolve via their built `dist`,
       # which `pnpm install` does not produce — build the dep closure first.

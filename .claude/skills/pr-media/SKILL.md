@@ -5,7 +5,7 @@ description: Create temporary PR-specific screenshots and short GIF demos withou
 
 # PR Media
 
-PR media scenes are temporary review aids. Never commit scene definitions to the product PR. Store them on the disposable `pr-media/pr-<number>` branch; the e2e workflow deletes that branch when the PR closes.
+PR media scenes are temporary review aids. Never commit scene definitions to the product PR. Store them on the disposable `pr-media/pr-<number>` branch; the App Integration workflow deletes that branch when the PR closes.
 
 For visible frontend changes, PR media is required after the product PR is created or updated unless the user explicitly says not to add PR media. Minimum coverage is a desktop screenshot and a mobile screenshot of the changed UI. Add a short GIF when the change affects an interaction, dialog, menu, transition, or multi-step flow.
 
@@ -22,10 +22,10 @@ For visible frontend changes, PR media is required after the product PR is creat
 3. Upload it to the media branch:
 
    ```bash
-   scripts/pr-media/update-scenes.sh --pr <number> /tmp/pr-media-scenes.ts
+   scripts/update-scenes.sh --pr <number> /tmp/pr-media-scenes.ts
    ```
 
-4. Re-run or wait for the e2e workflow. It will fetch `.pr-media/scenes.ts` from `pr-media/pr-<number>`, capture media with read-only permissions, then publish generated PNG/GIF files back to the same branch and upsert the sticky PR comment.
+4. Re-run or wait for the App Integration workflow. It will fetch `.pr-media/scenes.ts` from `pr-media/pr-<number>`, capture media with read-only permissions, then publish generated PNG/GIF files back to the same branch and upsert the sticky PR comment.
 
 ## Scene file shape
 
