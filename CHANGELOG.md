@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.29.0](https://github.com/ayunis-core/ayunis-core/compare/v2.28.0...v2.29.0) (2026-08-20)
+
+
+### Features
+
+* **artifacts:** list artifacts by project (AYC-702) ([#1458](https://github.com/ayunis-core/ayunis-core/issues/1458)) ([bebfeec](https://github.com/ayunis-core/ayunis-core/commit/bebfeecc647f7aafab75f02ad9a1b5573bab9e43))
+* **workspaces:** add project context frontend ui (AYC-701) ([#1402](https://github.com/ayunis-core/ayunis-core/issues/1402)) ([39835ac](https://github.com/ayunis-core/ayunis-core/commit/39835ac5e1a57408423e5d141f73eb1e7006b10b))
+* **workspaces:** show project artifacts (AYC-702) ([#1459](https://github.com/ayunis-core/ayunis-core/issues/1459)) ([dd8985d](https://github.com/ayunis-core/ayunis-core/commit/dd8985d4d0e471ca8a005535a107e638439bd212))
+
+
+### Bug Fixes
+
+* **workspaces:** quote knowledge base assignment alias (AYC-701) ([#1476](https://github.com/ayunis-core/ayunis-core/issues/1476)) ([272a07e](https://github.com/ayunis-core/ayunis-core/commit/272a07e86834b7d3a776cb7b624bb07afff05794))
+
+
+### Documentation
+
+* **workspaces:** document project context changes (AYC-701) ([#1404](https://github.com/ayunis-core/ayunis-core/issues/1404)) ([04e3afc](https://github.com/ayunis-core/ayunis-core/commit/04e3afc08652e35f37e2b1736e59154a7e84f92c))
+
 ## [2.28.0](https://github.com/ayunis-core/ayunis-core/compare/v2.27.0...v2.28.0) (2026-08-19)
 
 
