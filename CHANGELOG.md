@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.29.1](https://github.com/ayunis-core/ayunis-core/compare/v2.29.0...v2.29.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* **workspaces:** repair project listing queries (AYC-000) ([#1491](https://github.com/ayunis-core/ayunis-core/issues/1491)) ([91f71ea](https://github.com/ayunis-core/ayunis-core/commit/91f71eaeb02cb98e0c4c5b7400d21745b3883ead))
+
 ## [2.29.0](https://github.com/ayunis-core/ayunis-core/compare/v2.28.0...v2.29.0) (2026-08-20)
 
 
