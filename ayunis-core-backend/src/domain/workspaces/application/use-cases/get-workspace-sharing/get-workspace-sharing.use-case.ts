@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
@@ -35,17 +36,29 @@ export class GetWorkspaceSharingUseCase {
       { workspaceId: query.workspaceId },
       'Getting workspace sharing',
     );
-    await this.accessService.requireRole(query.workspaceId, WorkspaceRole.FULL);
+    const { workspace } = await this.accessService.requireRole(
+      query.workspaceId,
+      WorkspaceRole.FULL,
+    );
     const snapshot = await this.repository.findSharing(query.workspaceId);
     const [users, teams] = await Promise.all([
-      this.findUsers(snapshot),
+      this.findUsers(snapshot, workspace.userId),
       this.listTeamsUseCase.execute(),
     ]);
-    return this.toView(snapshot, users, teams);
+    return {
+      visibility: workspace.visibility,
+      ...this.toView(snapshot, users, teams, workspace.userId),
+    };
   }
 
-  private findUsers(snapshot: WorkspaceSharingSnapshot): Promise<User[]> {
-    const ids = new Set(snapshot.members.map(({ userId }) => userId));
+  private findUsers(
+    snapshot: WorkspaceSharingSnapshot,
+    ownerId: UUID,
+  ): Promise<User[]> {
+    const ids = new Set([
+      ownerId,
+      ...snapshot.members.map(({ userId }) => userId),
+    ]);
     for (const grant of snapshot.teamGrants) {
       grant.overrides.forEach(({ userId }) => ids.add(userId));
     }
@@ -58,10 +71,18 @@ export class GetWorkspaceSharingUseCase {
     snapshot: WorkspaceSharingSnapshot,
     users: User[],
     teams: TeamWithMemberCount[],
-  ): WorkspaceSharingView {
+    ownerId: UUID,
+  ): Omit<WorkspaceSharingView, 'visibility'> {
     const usersById = new Map(users.map((user) => [user.id, user]));
+    const owner = usersById.get(ownerId);
+    if (!owner) throw new Error('Workspace owner was not hydrated');
     const teamsById = new Map(teams.map((team) => [team.team.id, team]));
+    const grantedTeamIds = new Set(
+      snapshot.teamGrants.map(({ teamId }) => teamId),
+    );
     return {
+      owner,
+      availableTeams: teams.filter(({ team }) => !grantedTeamIds.has(team.id)),
       members: snapshot.members.flatMap((member) => {
         const user = usersById.get(member.userId);
         return user ? [{ user, role: member.role, status: member.status }] : [];
