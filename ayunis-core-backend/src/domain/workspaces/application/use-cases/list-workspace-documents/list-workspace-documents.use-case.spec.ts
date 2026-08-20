@@ -1,10 +1,9 @@
 import type { UUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ListSourcesByWorkspaceUseCase } from 'src/domain/sources/application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { ListWorkspaceDocumentsUseCase } from './list-workspace-documents.use-case';
 import { ListWorkspaceDocumentsQuery } from './list-workspace-documents.query';
 
@@ -17,20 +16,14 @@ describe('ListWorkspaceDocumentsUseCase', () => {
       offset: 4,
       total: 5,
     });
-    const workspacesRepository = {
-      findById: jest.fn().mockResolvedValue({}),
-    } as unknown as jest.Mocked<WorkspacesRepository>;
+    const accessService = { requireRole: jest.fn().mockResolvedValue({}) };
     const listSourcesByWorkspaceUseCase = {
       execute: jest.fn().mockResolvedValue(page),
     } as unknown as jest.Mocked<ListSourcesByWorkspaceUseCase>;
-    const contextService = {
-      get: jest.fn().mockReturnValue('223e4567-e89b-12d3-a456-426614174001'),
-    } as unknown as jest.Mocked<ContextService>;
     const useCase = new ListWorkspaceDocumentsUseCase(
       createPinoLoggerMock(),
-      workspacesRepository,
       listSourcesByWorkspaceUseCase,
-      contextService,
+      accessService as never,
     );
 
     const result = await useCase.execute(
@@ -43,6 +36,10 @@ describe('ListWorkspaceDocumentsUseCase', () => {
     );
 
     expect(result).toBe(page);
+    expect(accessService.requireRole).toHaveBeenCalledWith(
+      workspaceId,
+      WorkspaceRole.USE,
+    );
     expect(listSourcesByWorkspaceUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         workspaceId,
