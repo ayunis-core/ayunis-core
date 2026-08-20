@@ -47,8 +47,9 @@ to update it or browse attachment candidates.
 - **Context assignments** — workspace skills and knowledge bases are
   reference-only join rows into shared module-owned records. Attaching and
   detaching them requires `edit` plus access to the referenced resource. Direct
-  workspace documents are owned uploads: adding one creates a source and a
-  workspace-source assignment, while removal/deletion passes that source
+  workspace documents are owned uploads: editors can add or remove them, and
+  adding one creates a source and a workspace-source assignment. Removal or
+  deletion passes that source
   through `DeleteSourceUseCase` so indexed data and object-storage files are
   purged.
 - **Run context** — `BuildWorkspaceRunContextUseCase` requires `use` access and
