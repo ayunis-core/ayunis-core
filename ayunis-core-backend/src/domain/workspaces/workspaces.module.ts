@@ -55,6 +55,10 @@ import { LocalWorkspaceTeamMemberOverridesRepository } from './infrastructure/pe
 import { LocalWorkspaceTeamMemberOverridesRepositoryModule } from './infrastructure/persistence/local/local-workspace-team-member-overrides-repository.module';
 import { SetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases/set-workspace-team-member-override/set-workspace-team-member-override.use-case';
 import { ResetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases/reset-workspace-team-member-override/reset-workspace-team-member-override.use-case';
+import { WorkspaceSharingReadRepository } from './application/ports/workspace-sharing-read-repository.port';
+import { LocalWorkspaceSharingReadRepository } from './infrastructure/persistence/local/local-workspace-sharing-read.repository';
+import { LocalWorkspaceSharingReadRepositoryModule } from './infrastructure/persistence/local/local-workspace-sharing-read-repository.module';
+import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspace-sharing/get-workspace-sharing.use-case';
 
 @Module({
   imports: [
@@ -62,6 +66,7 @@ import { ResetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases
     LocalWorkspaceMembersRepositoryModule,
     LocalWorkspaceTeamGrantsRepositoryModule,
     LocalWorkspaceTeamMemberOverridesRepositoryModule,
+    LocalWorkspaceSharingReadRepositoryModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -91,6 +96,10 @@ import { ResetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases
       provide: WorkspaceTeamMemberOverridesRepository,
       useExisting: LocalWorkspaceTeamMemberOverridesRepository,
     },
+    {
+      provide: WorkspaceSharingReadRepository,
+      useExisting: LocalWorkspaceSharingReadRepository,
+    },
     WorkspaceAccessPolicyService,
     WorkspaceAccessService,
     GetWorkspaceAccessUseCase,
@@ -104,6 +113,7 @@ import { ResetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases
     RemoveWorkspaceTeamGrantUseCase,
     SetWorkspaceTeamMemberOverrideUseCase,
     ResetWorkspaceTeamMemberOverrideUseCase,
+    GetWorkspaceSharingUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
