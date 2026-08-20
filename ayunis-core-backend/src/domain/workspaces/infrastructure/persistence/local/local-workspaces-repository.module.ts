@@ -6,6 +6,9 @@ import { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowl
 import { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
+import { WorkspaceMemberRecord } from './schema/workspace-member.record';
+import { WorkspaceTeamGrantRecord } from './schema/workspace-team-grant.record';
+import { WorkspaceTeamMemberOverrideRecord } from './schema/workspace-team-member-override.record';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { WorkspaceMapper } from './mappers/workspace.mapper';
       WorkspaceSkillAssignmentRecord,
       WorkspaceKnowledgeBaseAssignmentRecord,
       WorkspaceSourceAssignmentRecord,
+      WorkspaceMemberRecord,
+      WorkspaceTeamGrantRecord,
+      WorkspaceTeamMemberOverrideRecord,
     ]),
   ],
   providers: [LocalWorkspacesRepository, WorkspaceMapper],

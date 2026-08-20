@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { WorkspaceVisibility } from 'src/domain/workspaces/domain/value-objects/workspace-visibility.enum';
 
 @Entity({ name: 'workspaces' })
 export class WorkspaceRecord extends BaseRecord {
@@ -20,6 +21,13 @@ export class WorkspaceRecord extends BaseRecord {
 
   @Column({ type: 'varchar', length: 32 })
   color: string;
+
+  @Column({
+    type: 'enum',
+    enum: WorkspaceVisibility,
+    default: WorkspaceVisibility.PRIVATE,
+  })
+  visibility: WorkspaceVisibility;
 
   @Column()
   @Index()
