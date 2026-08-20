@@ -2,6 +2,8 @@
   "page": {
     "title": "Projekte",
     "heading": "Projekte",
+    "owned": "Meine Projekte",
+    "shared": "Mit mir geteilt",
     "searchPlaceholder": "Projekte durchsuchen",
     "newWorkspace": "Neues Projekt",
     "emptyTitle": "Noch keine Projekte",
@@ -143,6 +145,55 @@
     },
     "description": {
       "maxLength": "Die Beschreibung ist zu lang"
+    }
+  },
+  "invitations": {
+    "title": "Einladungen",
+    "description": "Sie wurden zu diesem Projekt eingeladen.",
+    "accept": "Annehmen",
+    "decline": "Ablehnen",
+    "toast": {
+      "accepted": "Einladung angenommen",
+      "declined": "Einladung abgelehnt",
+      "error": "Die Einladung konnte nicht aktualisiert werden."
+    }
+  },
+  "sharing": {
+    "title": "Projekt teilen",
+    "description": "Mitglieder erhalten Zugriff auf Fähigkeiten, Wissen und Dokumente. Chats bleiben privat.",
+    "selectRecipient": "Person oder Team auswählen",
+    "people": "Personen",
+    "teams": "Teams",
+    "invite": "Einladen",
+    "owner": "Eigentümer",
+    "pending": "Ausstehend",
+    "loading": "Freigaben werden geladen …",
+    "loadError": "Die Freigaben konnten nicht geladen werden.",
+    "removeMember": "Mitglied entfernen",
+    "removeTeam": "Team entfernen",
+    "teamMembers_one": "{{count}} Person",
+    "teamMembers_other": "{{count}} Personen",
+    "customAccess": "Angepasster Zugriff",
+    "noAccess": "Kein Zugriff",
+    "resetOverride": "Teamzugriff wiederherstellen",
+    "accessLevels": {
+      "use": { "label": "Kann verwenden" },
+      "edit": { "label": "Kann bearbeiten" },
+      "full": { "label": "Vollzugriff" }
+    },
+    "organization": {
+      "title": "Für gesamte Organisation freigeben",
+      "description": "Alle in Ihrer Organisation können dieses Projekt sehen und nutzen.",
+      "memberTitle": "Gesamte Organisation",
+      "memberDescription": "Alle Mitglieder Ihrer Organisation"
+    },
+    "toast": {
+      "success": "Freigaben aktualisiert",
+      "alreadyExists": "Diese Person oder dieses Team hat bereits direkten Zugriff.",
+      "notEligible": "Die Auswahl gehört nicht zur Organisation oder zum Team.",
+      "ownerImmutable": "Der Zugriff des Eigentümers kann nicht geändert werden.",
+      "notFound": "Die Freigabe wurde nicht gefunden.",
+      "error": "Die Freigaben konnten nicht aktualisiert werden."
     }
   },
   "toast": {
