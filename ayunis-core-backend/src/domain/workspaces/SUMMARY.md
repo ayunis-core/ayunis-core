@@ -13,7 +13,8 @@ User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace collaboration is being introduced in stack layers. Direct member
 invitations, team grants and team-member overrides now exist at the application
-boundary; HTTP and frontend sharing flows follow later.
+boundary. The sharing read boundary returns hydrated members, grants and
+overrides; HTTP and frontend sharing flows follow later.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -68,6 +69,7 @@ workspaces/
 │   ├── ports/workspace-members-repository.port.ts
 │   ├── ports/workspace-team-grants-repository.port.ts
 │   ├── ports/workspace-team-member-overrides-repository.port.ts
+│   ├── ports/workspace-sharing-read-repository.port.ts
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
@@ -79,6 +81,7 @@ workspaces/
 │       ├── remove-workspace-team-grant/
 │       ├── set-workspace-team-member-override/
 │       ├── reset-workspace-team-member-override/
+│       ├── get-workspace-sharing/
 │       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
 │       ├── update-workspace/ / update-workspace-instruction/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
@@ -101,6 +104,7 @@ workspaces/
 │   ├── mappers/workspace-member.mapper.ts
 │   ├── mappers/workspace-team-grant.mapper.ts
 │   ├── mappers/workspace-team-member-override.mapper.ts
+│   ├── mappers/workspace-sharing.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   ├── local-workspace-access.repository.ts
 │   ├── local-workspace-members.repository.ts
@@ -109,6 +113,8 @@ workspaces/
 │   ├── local-workspace-team-grants-repository.module.ts
 │   ├── local-workspace-team-member-overrides.repository.ts
 │   ├── local-workspace-team-member-overrides-repository.module.ts
+│   ├── local-workspace-sharing-read.repository.ts
+│   ├── local-workspace-sharing-read-repository.module.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
 │   ├── workspaces.controller.ts
