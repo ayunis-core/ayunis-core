@@ -7,13 +7,14 @@ import type { FindOneSkillUseCase } from 'src/domain/skills/application/use-case
 import type { GetKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import type { GetSourcesByIdsUseCase } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.use-case';
 import type { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { WorkspaceRunContextResolverService } from 'src/domain/workspaces/application/services/workspace-run-context-resolver.service';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import {
-  createMockContextService,
   createMockWorkspacesRepository,
   TEST_USER_ID,
   TEST_WORKSPACE_ID,
   aWorkspace,
-} from '../../testing/workspace.fixtures';
+} from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { BuildWorkspaceRunContextQuery } from './build-workspace-run-context.query';
 import { BuildWorkspaceRunContextUseCase } from './build-workspace-run-context.use-case';
 
@@ -66,14 +67,25 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       findAccessibleKnowledgeBase: jest.fn().mockResolvedValue({}),
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
-    const useCase = new BuildWorkspaceRunContextUseCase(
+    const resolver = new WorkspaceRunContextResolverService(
       createPinoLoggerMock(),
-      repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,
       getKnowledgeBasesByIdsUseCase,
       knowledgeBaseAccessService,
-      createMockContextService(),
+    );
+    const accessService = {
+      requireAccessLevel: jest.fn().mockResolvedValue({
+        workspace: aWorkspace({
+          instruction: 'Use building department wording.',
+        }),
+      }),
+    };
+    const useCase = new BuildWorkspaceRunContextUseCase(
+      createPinoLoggerMock(),
+      repository,
+      accessService as never,
+      resolver,
     );
 
     const result = await useCase.execute(
@@ -81,6 +93,10 @@ describe('BuildWorkspaceRunContextUseCase', () => {
     );
 
     expect(result.instruction).toBe('Use building department wording.');
+    expect(accessService.requireAccessLevel).toHaveBeenCalledWith(
+      TEST_WORKSPACE_ID,
+      WorkspaceAccessLevel.USE,
+    );
     expect(result.skills).toEqual([skill]);
     expect(result.knowledgeBases).toHaveLength(1);
     expect(result.sources).toEqual([source]);
@@ -125,14 +141,22 @@ describe('BuildWorkspaceRunContextUseCase', () => {
       findAccessibleKnowledgeBase: jest.fn().mockResolvedValue({}),
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
-    const useCase = new BuildWorkspaceRunContextUseCase(
+    const resolver = new WorkspaceRunContextResolverService(
       createPinoLoggerMock(),
-      repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,
       getKnowledgeBasesByIdsUseCase,
       knowledgeBaseAccessService,
-      createMockContextService(),
+    );
+    const useCase = new BuildWorkspaceRunContextUseCase(
+      createPinoLoggerMock(),
+      repository,
+      {
+        requireAccessLevel: jest
+          .fn()
+          .mockResolvedValue({ workspace: aWorkspace() }),
+      } as never,
+      resolver,
     );
 
     const result = await useCase.execute(
@@ -183,14 +207,22 @@ describe('BuildWorkspaceRunContextUseCase', () => {
         ),
       countSourcesByKnowledgeBaseIds: jest.fn().mockResolvedValue(new Map()),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
-    const useCase = new BuildWorkspaceRunContextUseCase(
+    const resolver = new WorkspaceRunContextResolverService(
       createPinoLoggerMock(),
-      repository,
       findOneSkillUseCase,
       getSourcesByIdsUseCase,
       getKnowledgeBasesByIdsUseCase,
       knowledgeBaseAccessService,
-      createMockContextService(),
+    );
+    const useCase = new BuildWorkspaceRunContextUseCase(
+      createPinoLoggerMock(),
+      repository,
+      {
+        requireAccessLevel: jest
+          .fn()
+          .mockResolvedValue({ workspace: aWorkspace() }),
+      } as never,
+      resolver,
     );
 
     const result = await useCase.execute(
