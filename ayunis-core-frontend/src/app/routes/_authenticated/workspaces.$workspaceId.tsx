@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { z } from 'zod';
 import { WorkspacePage } from '@/pages/workspace';
 import {
   workspacesControllerFindOne,
@@ -13,7 +14,12 @@ import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 
-const WORKSPACE_CHATS_LIMIT = 100;
+const WORKSPACE_CHATS_LIMIT = 20;
+
+const searchSchema = z.object({
+  search: z.string().optional(),
+  page: z.number().min(1).optional().catch(1),
+});
 
 const queryDefaultModelOptions = () => ({
   queryKey: getModelsDefaultsControllerGetEffectiveDefaultModelQueryKey(),
@@ -27,8 +33,14 @@ const queryIsEmbeddingModelEnabledOptions = () => ({
 
 export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
   {
+    validateSearch: searchSchema,
+    loaderDeps: ({ search }) => search,
     component: RouteComponent,
-    loader: async ({ params: { workspaceId }, context: { queryClient } }) => {
+    loader: async ({
+      params: { workspaceId },
+      deps: { search, page = 1 },
+      context: { queryClient },
+    }) => {
       const featureToggles = await queryClient.fetchQuery({
         queryKey: getAppControllerFeatureTogglesQueryKey(),
         queryFn: () => appControllerFeatureToggles(),
@@ -39,8 +51,9 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
 
       const chatsParams = {
         workspaceId,
+        search: search || undefined,
         limit: WORKSPACE_CHATS_LIMIT,
-        offset: 0,
+        offset: (page - 1) * WORKSPACE_CHATS_LIMIT,
       };
 
       // Only a missing workspace should redirect. A transient failure loading
@@ -77,6 +90,9 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         // than the number of rows that happened to fit in one page.
         // `total` is optional in the generated DTO; fall back to what loaded.
         chatCount: chats.pagination.total ?? chats.data.length,
+        chatPagination: chats.pagination,
+        chatSearch: search,
+        chatPage: page,
         selectedModelId: defaultModelResponse?.permittedLanguageModel?.id,
         isEmbeddingModelEnabled:
           embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
@@ -90,14 +106,21 @@ function RouteComponent() {
     workspace,
     chats,
     chatCount,
+    chatPagination,
+    chatSearch,
+    chatPage,
     selectedModelId,
     isEmbeddingModelEnabled,
   } = Route.useLoaderData();
   return (
     <WorkspacePage
+      key={workspace.id}
       workspace={workspace}
       chats={chats}
       chatCount={chatCount}
+      chatPagination={chatPagination}
+      chatSearch={chatSearch}
+      chatPage={chatPage}
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />

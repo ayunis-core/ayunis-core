@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import AppLayout from '@/layouts/app-layout';
@@ -7,32 +8,48 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import type { Workspace } from '@/features/workspaces';
-import {
-  filterWorkspaces,
-  sortWorkspaces,
-  type WorkspaceSortKey,
-} from '../lib/sortWorkspaces';
+import type { WorkspaceSortKey } from '@/pages/workspaces/lib/sortWorkspaces';
+import { SearchPagination } from '@/widgets/pagination';
 import { WorkspacesContent } from './WorkspacesContent';
 import { WorkspacesEmptyState } from './WorkspacesEmptyState';
 import { WorkspacesToolbar } from './WorkspacesToolbar';
 
 interface WorkspacesPageProps {
   workspaces: Workspace[];
+  pagination: { total?: number; limit: number; offset: number };
+  search?: string;
+  currentPage: number;
+  sortKey: WorkspaceSortKey;
 }
 
 export default function WorkspacesPage({
   workspaces,
+  pagination,
+  search,
+  currentPage,
+  sortKey,
 }: Readonly<WorkspacesPageProps>) {
-  const { t, i18n } = useTranslation('workspaces');
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<WorkspaceSortKey>('updatedAt');
+  const { t } = useTranslation('workspaces');
+  const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const visible = sortWorkspaces(
-    filterWorkspaces(workspaces, search),
-    sortKey,
-    i18n.language,
-  );
+  const updateSearch = (value: string) => {
+    void navigate({
+      to: '/workspaces',
+      search: (previous) => ({
+        ...previous,
+        search: value || undefined,
+        page: undefined,
+      }),
+    });
+  };
+
+  const updateSort = (value: WorkspaceSortKey) => {
+    void navigate({
+      to: '/workspaces',
+      search: (previous) => ({ ...previous, sort: value, page: undefined }),
+    });
+  };
 
   const createButton = (
     <Button onClick={() => setIsCreateOpen(true)}>
@@ -44,7 +61,7 @@ export default function WorkspacesPage({
     <CreateWorkspaceDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
   );
 
-  if (workspaces.length === 0) {
+  if (workspaces.length === 0 && !search && currentPage === 1) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
@@ -70,10 +87,11 @@ export default function WorkspacesPage({
             breadcrumbs={[{ label: t('page.title') }]}
             action={
               <WorkspacesToolbar
-                search={search}
-                onSearchChange={setSearch}
+                key={search ?? ''}
+                search={search ?? ''}
+                onSearchChange={updateSearch}
                 sortKey={sortKey}
-                onSortKeyChange={setSortKey}
+                onSortKeyChange={updateSort}
                 createButton={createButton}
               />
             }
@@ -82,7 +100,14 @@ export default function WorkspacesPage({
         contentArea={
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold">{t('page.heading')}</h1>
-            <WorkspacesContent workspaces={visible} />
+            <WorkspacesContent workspaces={workspaces} />
+            <SearchPagination
+              currentPage={currentPage}
+              totalPages={Math.ceil((pagination.total ?? 0) / pagination.limit)}
+              to="/workspaces"
+              search={search}
+              extraSearchParams={{ sort: sortKey }}
+            />
           </div>
         }
       />

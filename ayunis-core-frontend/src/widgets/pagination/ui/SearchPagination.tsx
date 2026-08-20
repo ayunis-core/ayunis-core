@@ -4,6 +4,7 @@ interface SearchPaginationProps {
   currentPage: number;
   totalPages: number;
   to: string;
+  params?: Record<string, string>;
   search?: string;
   extraSearchParams?: Record<string, string | undefined>;
 }
@@ -16,6 +17,7 @@ export default function SearchPagination({
   currentPage,
   totalPages,
   to,
+  params,
   search,
   extraSearchParams,
 }: Readonly<SearchPaginationProps>) {
@@ -40,6 +42,7 @@ export default function SearchPagination({
       currentPage={currentPage}
       totalPages={totalPages}
       to={to}
+      params={params}
       buildSearchParams={buildSearchParams}
     />
   );

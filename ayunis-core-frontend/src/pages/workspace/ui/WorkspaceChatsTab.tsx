@@ -1,7 +1,14 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { Trash } from 'lucide-react';
+import { MessageSquare, Trash } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -16,25 +23,44 @@ import {
 } from '@/features/favorites';
 import { PinButton } from '@/shared/ui/pin-button';
 import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SearchPagination } from '@/widgets/pagination';
 
 interface WorkspaceChatsTabProps {
   chats: GetThreadsResponseDtoItem[];
-  /** Total chats in the workspace; more than `chats` when the page is capped. */
-  chatCount: number;
+  workspaceId: string;
+  chatSearch?: string;
+  chatPage: number;
+  chatPagination: { total?: number; limit: number; offset: number };
   onDeleteChat: (threadId: string) => void;
 }
 
 export function WorkspaceChatsTab({
   chats,
-  chatCount,
+  workspaceId,
+  chatSearch,
+  chatPage,
+  chatPagination,
   onDeleteChat,
 }: Readonly<WorkspaceChatsTabProps>) {
   const { t } = useTranslation('workspace');
   const { t: tChats } = useTranslation('chats');
   const { confirm } = useConfirmation();
+  const totalPages = Math.ceil(
+    (chatPagination.total ?? 0) / chatPagination.limit,
+  );
 
-  if (chats.length === 0) {
-    return <p className="text-muted-foreground">{t('page.emptyChats')}</p>;
+  if (chats.length === 0 && !chatSearch && chatPage === 1) {
+    return (
+      <Empty data-testid="workspace-chats-empty">
+        <EmptyMedia variant="icon">
+          <MessageSquare />
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyTitle>{t('page.emptyChatsTitle')}</EmptyTitle>
+          <EmptyDescription>{t('page.emptyChats')}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   function handleDelete(chat: GetThreadsResponseDtoItem) {
@@ -51,14 +77,19 @@ export function WorkspaceChatsTab({
 
   return (
     <div className="flex flex-col gap-2">
+      {chats.length === 0 ? (
+        <p className="text-muted-foreground">{t('page.noChatResults')}</p>
+      ) : null}
       {chats.map((chat) => (
         <WorkspaceChatRow key={chat.id} chat={chat} onDelete={handleDelete} />
       ))}
-      {chats.length < chatCount && (
-        <p className="text-sm text-muted-foreground">
-          {t('page.truncatedChats', { count: chats.length })}
-        </p>
-      )}
+      <SearchPagination
+        currentPage={chatPage}
+        totalPages={totalPages}
+        to="/workspaces/$workspaceId"
+        params={{ workspaceId }}
+        search={chatSearch}
+      />
     </div>
   );
 }

@@ -1,4 +1,11 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
@@ -47,6 +54,8 @@ import { useDownloadSource } from '../api/useDownloadSource';
 import type { PendingImage } from '../api/useMessageSend';
 import { reconcileMessages } from '../lib/reconcile-thread-messages';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
+import { WorkspaceContextSidePanel } from './WorkspaceContextSidePanel';
+import { useWorkspaceContextPanel } from '../hooks/useWorkspaceContextPanel';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
@@ -126,9 +135,6 @@ export default function ChatPage({
     setPiiMasks(thread.piiMasks);
   }
 
-  // ChatPage is reused across thread switches; drop any pending restore from
-  // the previous thread so a send that fails after navigation can't paste its
-  // prompt/images into the newly shown thread.
   useEffect(() => {
     lastSubmissionRef.current = null;
   }, [thread.id]);
@@ -149,6 +155,15 @@ export default function ChatPage({
   const { handleLetterheadChange } = useLetterheadChange({
     artifactId: openArtifact?.id ?? '',
     threadId: thread.id,
+  });
+  const {
+    context: workspaceContext,
+    panel: workspaceContextPanel,
+    toggle: toggleWorkspaceContextPanel,
+    close: closeWorkspaceContextPanel,
+  } = useWorkspaceContextPanel({
+    workspaceId: thread.workspaceId,
+    onOpen: handleCloseArtifact,
   });
 
   const { deleteChat } = useDeleteThread({
@@ -354,12 +369,20 @@ export default function ChatPage({
     setTimeout(() => setRenameDialogOpen(true), 0);
   }
 
+  function openArtifactPanel(artifactId: string) {
+    closeWorkspaceContextPanel();
+    handleOpenArtifact(artifactId);
+  }
+
   const chatHeader = (
     <ChatHeader
       threadId={thread.id}
       threadTitle={threadTitle}
       isAnonymous={thread.isAnonymous}
       workspaceId={thread.workspaceId}
+      workspaceContext={workspaceContext}
+      activeWorkspaceContextPanel={workspaceContextPanel}
+      onToggleWorkspaceContextPanel={toggleWorkspaceContextPanel}
       onRename={handleRenameThread}
       onDelete={handleDeleteThread}
     />
@@ -387,11 +410,10 @@ export default function ChatPage({
       threadId={thread.id}
       pendingSubmission={pendingSubmission}
       showLoadingPlaceholder={showLoadingPlaceholder}
-      onOpenArtifact={handleOpenArtifact}
+      onOpenArtifact={openArtifactPanel}
     />
   );
 
-  // Controls are always disabled — thread already has messages
   const chatInput = isModelUnavailable ? (
     <UnavailableModelNotice />
   ) : (
@@ -432,6 +454,29 @@ export default function ChatPage({
     </>
   );
 
+  let sidePanel: ReactNode;
+  if (openArtifact) {
+    sidePanel = (
+      <ArtifactSidePanel
+        artifact={openArtifact}
+        onSave={handleSaveArtifact}
+        onRevert={handleRevertArtifact}
+        onExport={handleExportArtifact}
+        onClose={handleCloseArtifact}
+        onLetterheadChange={handleLetterheadChange}
+        isExporting={isExporting}
+      />
+    );
+  } else if (workspaceContextPanel && workspaceContext) {
+    sidePanel = (
+      <WorkspaceContextSidePanel
+        context={workspaceContext}
+        panel={workspaceContextPanel}
+        onClose={closeWorkspaceContextPanel}
+      />
+    );
+  }
+
   return (
     <AppLayout>
       <PiiMaskProvider masks={piiMasks}>
@@ -440,19 +485,7 @@ export default function ChatPage({
           chatContent={chatContent}
           chatInput={chatInput}
           resetKey={thread.id}
-          sidePanel={
-            openArtifact ? (
-              <ArtifactSidePanel
-                artifact={openArtifact}
-                onSave={handleSaveArtifact}
-                onRevert={handleRevertArtifact}
-                onExport={handleExportArtifact}
-                onClose={handleCloseArtifact}
-                onLetterheadChange={handleLetterheadChange}
-                isExporting={isExporting}
-              />
-            ) : undefined
-          }
+          sidePanel={sidePanel}
         />
       </PiiMaskProvider>
       <RenameThreadDialog
