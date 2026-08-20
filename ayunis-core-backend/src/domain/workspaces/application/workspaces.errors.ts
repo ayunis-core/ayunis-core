@@ -16,6 +16,8 @@ export enum WorkspaceErrorCode {
   WORKSPACE_INVITATION_NOT_FOUND = 'WORKSPACE_INVITATION_NOT_FOUND',
   WORKSPACE_TEAM_GRANT_ALREADY_EXISTS = 'WORKSPACE_TEAM_GRANT_ALREADY_EXISTS',
   WORKSPACE_TEAM_GRANT_NOT_FOUND = 'WORKSPACE_TEAM_GRANT_NOT_FOUND',
+  WORKSPACE_TEAM_OVERRIDE_USER_NOT_ELIGIBLE = 'WORKSPACE_TEAM_OVERRIDE_USER_NOT_ELIGIBLE',
+  WORKSPACE_TEAM_OVERRIDE_NOT_FOUND = 'WORKSPACE_TEAM_OVERRIDE_NOT_FOUND',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -188,6 +190,28 @@ export class WorkspaceTeamGrantNotFoundError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_TEAM_GRANT_NOT_FOUND,
       404,
       { workspaceId, teamId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceTeamOverrideUserNotEligibleError extends WorkspaceError {
+  constructor(teamId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace team override users must belong to the granted team',
+      WorkspaceErrorCode.WORKSPACE_TEAM_OVERRIDE_USER_NOT_ELIGIBLE,
+      400,
+      { teamId, userId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceTeamOverrideNotFoundError extends WorkspaceError {
+  constructor(teamId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace team member override not found',
+      WorkspaceErrorCode.WORKSPACE_TEAM_OVERRIDE_NOT_FOUND,
+      404,
+      { teamId, userId, ...metadata },
     );
   }
 }

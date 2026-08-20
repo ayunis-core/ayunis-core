@@ -50,12 +50,18 @@ import { LocalWorkspaceTeamGrantsRepositoryModule } from './infrastructure/persi
 import { AddWorkspaceTeamGrantUseCase } from './application/use-cases/add-workspace-team-grant/add-workspace-team-grant.use-case';
 import { UpdateWorkspaceTeamGrantRoleUseCase } from './application/use-cases/update-workspace-team-grant-role/update-workspace-team-grant-role.use-case';
 import { RemoveWorkspaceTeamGrantUseCase } from './application/use-cases/remove-workspace-team-grant/remove-workspace-team-grant.use-case';
+import { WorkspaceTeamMemberOverridesRepository } from './application/ports/workspace-team-member-overrides-repository.port';
+import { LocalWorkspaceTeamMemberOverridesRepository } from './infrastructure/persistence/local/local-workspace-team-member-overrides.repository';
+import { LocalWorkspaceTeamMemberOverridesRepositoryModule } from './infrastructure/persistence/local/local-workspace-team-member-overrides-repository.module';
+import { SetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases/set-workspace-team-member-override/set-workspace-team-member-override.use-case';
+import { ResetWorkspaceTeamMemberOverrideUseCase } from './application/use-cases/reset-workspace-team-member-override/reset-workspace-team-member-override.use-case';
 
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
     LocalWorkspaceMembersRepositoryModule,
     LocalWorkspaceTeamGrantsRepositoryModule,
+    LocalWorkspaceTeamMemberOverridesRepositoryModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -81,6 +87,10 @@ import { RemoveWorkspaceTeamGrantUseCase } from './application/use-cases/remove-
       provide: WorkspaceTeamGrantsRepository,
       useExisting: LocalWorkspaceTeamGrantsRepository,
     },
+    {
+      provide: WorkspaceTeamMemberOverridesRepository,
+      useExisting: LocalWorkspaceTeamMemberOverridesRepository,
+    },
     WorkspaceAccessPolicyService,
     WorkspaceAccessService,
     GetWorkspaceAccessUseCase,
@@ -92,6 +102,8 @@ import { RemoveWorkspaceTeamGrantUseCase } from './application/use-cases/remove-
     AddWorkspaceTeamGrantUseCase,
     UpdateWorkspaceTeamGrantRoleUseCase,
     RemoveWorkspaceTeamGrantUseCase,
+    SetWorkspaceTeamMemberOverrideUseCase,
+    ResetWorkspaceTeamMemberOverrideUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
