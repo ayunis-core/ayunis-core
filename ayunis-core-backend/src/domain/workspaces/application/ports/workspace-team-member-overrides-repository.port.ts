@@ -14,6 +14,8 @@ export type WorkspaceTeamMemberOverrideInput = Omit<
 >;
 
 export abstract class WorkspaceTeamMemberOverridesRepository {
+  abstract hasTeamGrant(workspaceId: UUID, teamId: UUID): Promise<boolean>;
+
   abstract upsertOverride(
     workspaceId: UUID,
     teamId: UUID,

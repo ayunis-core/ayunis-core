@@ -3526,6 +3526,8 @@ export interface WorkspaceResponseDto {
   updatedAt: string;
   /** Effective access level for the caller (list responses only) */
   accessLevel?: WorkspaceResponseDtoAccessLevel;
+  /** Whether the caller owns the workspace */
+  isOwner?: boolean;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
@@ -3673,6 +3675,210 @@ export interface UpdateWorkspaceInstructionDto {
    * @nullable
    */
   instruction: string | null;
+}
+
+export type WorkspaceAccessResponseDtoAccessLevel = typeof WorkspaceAccessResponseDtoAccessLevel[keyof typeof WorkspaceAccessResponseDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceAccessResponseDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceAccessResponseDto {
+  accessLevel: WorkspaceAccessResponseDtoAccessLevel;
+  isOwner: boolean;
+}
+
+export interface WorkspaceSharingUserDto {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface WorkspaceSharingAvailableTeamDto {
+  id: string;
+  name: string;
+  memberCount: number;
+}
+
+export type WorkspaceSharingMemberDtoAccessLevel = typeof WorkspaceSharingMemberDtoAccessLevel[keyof typeof WorkspaceSharingMemberDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingMemberDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export type WorkspaceSharingMemberDtoStatus = typeof WorkspaceSharingMemberDtoStatus[keyof typeof WorkspaceSharingMemberDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingMemberDtoStatus = {
+  pending: 'pending',
+  active: 'active',
+} as const;
+
+export interface WorkspaceSharingMemberDto {
+  user: WorkspaceSharingUserDto;
+  accessLevel: WorkspaceSharingMemberDtoAccessLevel;
+  status: WorkspaceSharingMemberDtoStatus;
+}
+
+/**
+ * @nullable
+ */
+export type WorkspaceSharingOverrideDtoAccessLevel = typeof WorkspaceSharingOverrideDtoAccessLevel[keyof typeof WorkspaceSharingOverrideDtoAccessLevel] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingOverrideDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceSharingOverrideDto {
+  user: WorkspaceSharingUserDto;
+  /** @nullable */
+  accessLevel: WorkspaceSharingOverrideDtoAccessLevel;
+  excluded: boolean;
+}
+
+export type WorkspaceSharingTeamGrantDtoAccessLevel = typeof WorkspaceSharingTeamGrantDtoAccessLevel[keyof typeof WorkspaceSharingTeamGrantDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingTeamGrantDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceSharingTeamGrantDto {
+  id: string;
+  name: string;
+  memberCount: number;
+  accessLevel: WorkspaceSharingTeamGrantDtoAccessLevel;
+  overrides: WorkspaceSharingOverrideDto[];
+}
+
+export type WorkspaceSharingResponseDtoVisibility = typeof WorkspaceSharingResponseDtoVisibility[keyof typeof WorkspaceSharingResponseDtoVisibility];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingResponseDtoVisibility = {
+  private: 'private',
+  organization: 'organization',
+} as const;
+
+export interface WorkspaceSharingResponseDto {
+  visibility: WorkspaceSharingResponseDtoVisibility;
+  owner: WorkspaceSharingUserDto;
+  availableTeams: WorkspaceSharingAvailableTeamDto[];
+  members: WorkspaceSharingMemberDto[];
+  teamGrants: WorkspaceSharingTeamGrantDto[];
+}
+
+export type UpdateWorkspaceVisibilityDtoVisibility = typeof UpdateWorkspaceVisibilityDtoVisibility[keyof typeof UpdateWorkspaceVisibilityDtoVisibility];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateWorkspaceVisibilityDtoVisibility = {
+  private: 'private',
+  organization: 'organization',
+} as const;
+
+export interface UpdateWorkspaceVisibilityDto {
+  visibility: UpdateWorkspaceVisibilityDtoVisibility;
+}
+
+export type InviteWorkspaceMemberDtoAccessLevel = typeof InviteWorkspaceMemberDtoAccessLevel[keyof typeof InviteWorkspaceMemberDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteWorkspaceMemberDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface InviteWorkspaceMemberDto {
+  userId: string;
+  accessLevel: InviteWorkspaceMemberDtoAccessLevel;
+}
+
+export type WorkspaceAccessLevelDtoAccessLevel = typeof WorkspaceAccessLevelDtoAccessLevel[keyof typeof WorkspaceAccessLevelDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceAccessLevelDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceAccessLevelDto {
+  accessLevel: WorkspaceAccessLevelDtoAccessLevel;
+}
+
+export type AddWorkspaceTeamGrantDtoAccessLevel = typeof AddWorkspaceTeamGrantDtoAccessLevel[keyof typeof AddWorkspaceTeamGrantDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddWorkspaceTeamGrantDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface AddWorkspaceTeamGrantDto {
+  teamId: string;
+  accessLevel: AddWorkspaceTeamGrantDtoAccessLevel;
+}
+
+/**
+ * @nullable
+ */
+export type SetWorkspaceTeamMemberOverrideDtoAccessLevel = typeof SetWorkspaceTeamMemberOverrideDtoAccessLevel[keyof typeof SetWorkspaceTeamMemberOverrideDtoAccessLevel] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SetWorkspaceTeamMemberOverrideDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface SetWorkspaceTeamMemberOverrideDto {
+  /** @nullable */
+  accessLevel: SetWorkspaceTeamMemberOverrideDtoAccessLevel;
+}
+
+export interface WorkspaceInvitationWorkspaceDto {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export type WorkspaceInvitationResponseDtoAccessLevel = typeof WorkspaceInvitationResponseDtoAccessLevel[keyof typeof WorkspaceInvitationResponseDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceInvitationResponseDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceInvitationResponseDto {
+  workspace: WorkspaceInvitationWorkspaceDto;
+  accessLevel: WorkspaceInvitationResponseDtoAccessLevel;
 }
 
 export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];

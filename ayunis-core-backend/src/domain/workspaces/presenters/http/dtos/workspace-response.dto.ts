@@ -61,6 +61,11 @@ export class WorkspaceResponseDto {
   accessLevel?: WorkspaceAccessLevel;
 
   @ApiPropertyOptional({
+    description: 'Whether the caller owns the workspace',
+  })
+  isOwner?: boolean;
+
+  @ApiPropertyOptional({
     description:
       'Number of chats filed under the workspace (list responses only)',
     example: 3,
