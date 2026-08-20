@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { Paginated } from 'src/common/pagination/paginated.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { ListWorkspaceKnowledgeBaseCandidatesQuery } from './list-workspace-knowledge-base-candidates.query';
 
 export interface WorkspaceKnowledgeBaseCandidate {
@@ -26,7 +23,7 @@ export class ListWorkspaceKnowledgeBaseCandidatesUseCase {
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -34,20 +31,10 @@ export class ListWorkspaceKnowledgeBaseCandidatesUseCase {
     query: ListWorkspaceKnowledgeBaseCandidatesQuery,
   ): Promise<Paginated<WorkspaceKnowledgeBaseCandidate>> {
     this.logger.info(
-      {
-        workspaceId: query.workspaceId,
-      },
+      { workspaceId: query.workspaceId },
       'listWorkspaceKnowledgeBaseCandidates',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
-      query.workspaceId,
-    );
-    if (!workspace) throw new WorkspaceNotFoundError(query.workspaceId);
-
+    await this.accessService.requireRole(query.workspaceId, WorkspaceRole.EDIT);
     const [accessible, refs] = await Promise.all([
       this.knowledgeBaseAccessService.findAllAccessiblePaginated(undefined, {
         search: query.search,

@@ -1,10 +1,10 @@
 import type { UUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { ListWorkspaceKnowledgeBaseCandidatesUseCase } from './list-workspace-knowledge-base-candidates.use-case';
 import { ListWorkspaceKnowledgeBaseCandidatesQuery } from './list-workspace-knowledge-base-candidates.query';
 
@@ -46,14 +46,12 @@ describe('ListWorkspaceKnowledgeBaseCandidatesUseCase', () => {
         .fn()
         .mockResolvedValue(new Map([[knowledgeBaseId, 0]])),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
-    const contextService = {
-      get: jest.fn().mockReturnValue('523e4567-e89b-12d3-a456-426614174004'),
-    } as unknown as jest.Mocked<ContextService>;
+    const accessService = { requireRole: jest.fn().mockResolvedValue({}) };
     const useCase = new ListWorkspaceKnowledgeBaseCandidatesUseCase(
       createPinoLoggerMock(),
       workspacesRepository,
       knowledgeBaseAccessService,
-      contextService,
+      accessService as never,
     );
 
     const result = await useCase.execute(
@@ -69,6 +67,10 @@ describe('ListWorkspaceKnowledgeBaseCandidatesUseCase', () => {
       { knowledgeBase, documentCount: 0, isAttached: true },
     ]);
     expect(result.total).toBe(5);
+    expect(accessService.requireRole).toHaveBeenCalledWith(
+      workspaceId,
+      WorkspaceRole.EDIT,
+    );
     expect(
       knowledgeBaseAccessService.findAllAccessiblePaginated,
     ).toHaveBeenCalledWith(undefined, {
