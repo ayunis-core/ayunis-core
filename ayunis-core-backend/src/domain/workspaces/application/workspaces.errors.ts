@@ -9,6 +9,11 @@ export enum WorkspaceErrorCode {
   MISSING_FILE = 'MISSING_FILE',
   WORKSPACE_SOURCE_LIMIT_EXCEEDED = 'WORKSPACE_SOURCE_LIMIT_EXCEEDED',
   WORKSPACE_INSUFFICIENT_ROLE = 'WORKSPACE_INSUFFICIENT_ROLE',
+  WORKSPACE_OWNER_ACCESS_IMMUTABLE = 'WORKSPACE_OWNER_ACCESS_IMMUTABLE',
+  WORKSPACE_MEMBER_NOT_ELIGIBLE = 'WORKSPACE_MEMBER_NOT_ELIGIBLE',
+  WORKSPACE_MEMBER_ALREADY_EXISTS = 'WORKSPACE_MEMBER_ALREADY_EXISTS',
+  WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
+  WORKSPACE_INVITATION_NOT_FOUND = 'WORKSPACE_INVITATION_NOT_FOUND',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -104,6 +109,61 @@ export class WorkspaceInsufficientAccessLevelError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INSUFFICIENT_ROLE,
       403,
       { workspaceId, requiredAccessLevel, actualAccessLevel, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceOwnerAccessImmutableError extends WorkspaceError {
+  constructor(workspaceId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace owner access cannot be changed',
+      WorkspaceErrorCode.WORKSPACE_OWNER_ACCESS_IMMUTABLE,
+      400,
+      { workspaceId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceMemberNotEligibleError extends WorkspaceError {
+  constructor(userId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace members must belong to the same organization',
+      WorkspaceErrorCode.WORKSPACE_MEMBER_NOT_ELIGIBLE,
+      400,
+      { userId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceMemberAlreadyExistsError extends WorkspaceError {
+  constructor(workspaceId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      'The user already has a direct workspace membership or invitation',
+      WorkspaceErrorCode.WORKSPACE_MEMBER_ALREADY_EXISTS,
+      409,
+      { workspaceId, userId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceMemberNotFoundError extends WorkspaceError {
+  constructor(workspaceId: string, userId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace member not found',
+      WorkspaceErrorCode.WORKSPACE_MEMBER_NOT_FOUND,
+      404,
+      { workspaceId, userId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceInvitationNotFoundError extends WorkspaceError {
+  constructor(workspaceId: string, metadata?: ErrorMetadata) {
+    super(
+      'Pending workspace invitation not found',
+      WorkspaceErrorCode.WORKSPACE_INVITATION_NOT_FOUND,
+      404,
+      { workspaceId, ...metadata },
     );
   }
 }
