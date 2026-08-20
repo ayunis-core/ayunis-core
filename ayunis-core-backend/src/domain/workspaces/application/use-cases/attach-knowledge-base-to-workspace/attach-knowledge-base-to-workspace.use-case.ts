@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from '../../workspaces.errors';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { AttachKnowledgeBaseToWorkspaceCommand } from './attach-knowledge-base-to-workspace.command';
 
 @Injectable()
@@ -18,7 +15,7 @@ export class AttachKnowledgeBaseToWorkspaceUseCase {
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -30,15 +27,10 @@ export class AttachKnowledgeBaseToWorkspaceUseCase {
       },
       'attachKnowledgeBaseToWorkspace',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    await this.accessService.requireAccessLevel(
       command.workspaceId,
+      WorkspaceAccessLevel.EDIT,
     );
-    if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
-
     await this.knowledgeBaseAccessService.findAccessibleKnowledgeBase(
       command.knowledgeBaseId,
     );

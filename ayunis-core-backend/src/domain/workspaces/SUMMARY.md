@@ -44,7 +44,14 @@ to update it or browse attachment candidates.
   purge their object-storage assets, which no database cascade can reach.
 - **Creation** — `CreateWorkspaceUseCase` saves the workspace, then calls
   `AddFavoriteUseCase` so new workspaces appear in the user's favorites.
-- **Context assignments** — workspace skills and knowledge bases are reference-only join rows into shared module-owned records. Direct workspace documents are owned uploads: adding one creates a source and a workspace-source assignment, while removal/deletion passes that source through `DeleteSourceUseCase` so indexed data and object-storage files are purged.
+- **Context assignments** — workspace skills and knowledge bases are
+  reference-only join rows into shared module-owned records. Attaching requires
+  `edit` workspace access plus access to the referenced resource; detaching only
+  requires `edit` workspace access. Direct workspace documents are owned
+  uploads: adding one creates a source and a
+  workspace-source assignment, while removal/deletion passes that source
+  through `DeleteSourceUseCase` so indexed data and object-storage files are
+  purged.
 - **Run context** — `BuildWorkspaceRunContextUseCase` requires `use` access and
   resolves the workspace's instruction, skills, knowledge bases, documents and
   MCP integrations through `WorkspaceRunContextResolverService`. The
