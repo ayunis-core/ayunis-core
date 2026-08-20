@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
-import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { ListAccessibleSkillsQuery } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.query';
+import { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { ListWorkspaceSkillCandidatesQuery } from './list-workspace-skill-candidates.query';
 
 export interface WorkspaceSkillCandidate {
@@ -26,7 +23,7 @@ export class ListWorkspaceSkillCandidatesUseCase {
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly listAccessibleSkillsUseCase: ListAccessibleSkillsUseCase,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -34,20 +31,10 @@ export class ListWorkspaceSkillCandidatesUseCase {
     query: ListWorkspaceSkillCandidatesQuery,
   ): Promise<Paginated<WorkspaceSkillCandidate>> {
     this.logger.info(
-      {
-        workspaceId: query.workspaceId,
-      },
+      { workspaceId: query.workspaceId },
       'listWorkspaceSkillCandidates',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
-      query.workspaceId,
-    );
-    if (!workspace) throw new WorkspaceNotFoundError(query.workspaceId);
-
+    await this.accessService.requireRole(query.workspaceId, WorkspaceRole.EDIT);
     const [skills, refs] = await Promise.all([
       this.listAccessibleSkillsUseCase.execute(
         new ListAccessibleSkillsQuery({
