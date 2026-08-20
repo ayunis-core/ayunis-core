@@ -24,6 +24,7 @@ import { AddDocumentToWorkspaceUseCase } from './application/use-cases/add-docum
 import { RemoveDocumentFromWorkspaceUseCase } from './application/use-cases/remove-document-from-workspace/remove-document-from-workspace.use-case';
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { BuildWorkspaceRunContextUseCase } from './application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { WorkspaceRunContextResolverService } from './application/services/workspace-run-context-resolver.service';
 import { ListWorkspaceSkillCandidatesUseCase } from './application/use-cases/list-workspace-skill-candidates/list-workspace-skill-candidates.use-case';
 import { ListWorkspaceKnowledgeBaseCandidatesUseCase } from './application/use-cases/list-workspace-knowledge-base-candidates/list-workspace-knowledge-base-candidates.use-case';
 import { ListWorkspaceSkillsUseCase } from './application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
@@ -137,6 +138,7 @@ import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-
     AddDocumentToWorkspaceUseCase,
     RemoveDocumentFromWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
+    WorkspaceRunContextResolverService,
     BuildWorkspaceRunContextUseCase,
     ListWorkspaceSkillCandidatesUseCase,
     ListWorkspaceKnowledgeBaseCandidatesUseCase,
