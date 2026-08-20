@@ -3486,6 +3486,19 @@ export interface CreateWorkspaceDto {
   color?: string;
 }
 
+/**
+ * Effective access role for the caller (list responses only)
+ */
+export type WorkspaceResponseDtoRole = typeof WorkspaceResponseDtoRole[keyof typeof WorkspaceResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceResponseDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
 export interface WorkspaceResponseDto {
   /** Unique identifier of the workspace */
   id: string;
@@ -3509,6 +3522,10 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** Effective access role for the caller (list responses only) */
+  role?: WorkspaceResponseDtoRole;
+  /** Whether the caller owns the workspace */
+  isOwner?: boolean;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */
@@ -3656,6 +3673,210 @@ export interface UpdateWorkspaceInstructionDto {
    * @nullable
    */
   instruction: string | null;
+}
+
+export type WorkspaceAccessResponseDtoRole = typeof WorkspaceAccessResponseDtoRole[keyof typeof WorkspaceAccessResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceAccessResponseDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceAccessResponseDto {
+  role: WorkspaceAccessResponseDtoRole;
+  isOwner: boolean;
+}
+
+export interface WorkspaceSharingUserDto {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface WorkspaceSharingAvailableTeamDto {
+  id: string;
+  name: string;
+  memberCount: number;
+}
+
+export type WorkspaceSharingMemberDtoRole = typeof WorkspaceSharingMemberDtoRole[keyof typeof WorkspaceSharingMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingMemberDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export type WorkspaceSharingMemberDtoStatus = typeof WorkspaceSharingMemberDtoStatus[keyof typeof WorkspaceSharingMemberDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingMemberDtoStatus = {
+  pending: 'pending',
+  active: 'active',
+} as const;
+
+export interface WorkspaceSharingMemberDto {
+  user: WorkspaceSharingUserDto;
+  role: WorkspaceSharingMemberDtoRole;
+  status: WorkspaceSharingMemberDtoStatus;
+}
+
+/**
+ * @nullable
+ */
+export type WorkspaceSharingOverrideDtoRole = typeof WorkspaceSharingOverrideDtoRole[keyof typeof WorkspaceSharingOverrideDtoRole] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingOverrideDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceSharingOverrideDto {
+  user: WorkspaceSharingUserDto;
+  /** @nullable */
+  role: WorkspaceSharingOverrideDtoRole;
+  excluded: boolean;
+}
+
+export type WorkspaceSharingTeamGrantDtoRole = typeof WorkspaceSharingTeamGrantDtoRole[keyof typeof WorkspaceSharingTeamGrantDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingTeamGrantDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceSharingTeamGrantDto {
+  id: string;
+  name: string;
+  memberCount: number;
+  role: WorkspaceSharingTeamGrantDtoRole;
+  overrides: WorkspaceSharingOverrideDto[];
+}
+
+export type WorkspaceSharingResponseDtoVisibility = typeof WorkspaceSharingResponseDtoVisibility[keyof typeof WorkspaceSharingResponseDtoVisibility];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceSharingResponseDtoVisibility = {
+  private: 'private',
+  organization: 'organization',
+} as const;
+
+export interface WorkspaceSharingResponseDto {
+  visibility: WorkspaceSharingResponseDtoVisibility;
+  owner: WorkspaceSharingUserDto;
+  availableTeams: WorkspaceSharingAvailableTeamDto[];
+  members: WorkspaceSharingMemberDto[];
+  teamGrants: WorkspaceSharingTeamGrantDto[];
+}
+
+export type UpdateWorkspaceVisibilityDtoVisibility = typeof UpdateWorkspaceVisibilityDtoVisibility[keyof typeof UpdateWorkspaceVisibilityDtoVisibility];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateWorkspaceVisibilityDtoVisibility = {
+  private: 'private',
+  organization: 'organization',
+} as const;
+
+export interface UpdateWorkspaceVisibilityDto {
+  visibility: UpdateWorkspaceVisibilityDtoVisibility;
+}
+
+export type InviteWorkspaceMemberDtoRole = typeof InviteWorkspaceMemberDtoRole[keyof typeof InviteWorkspaceMemberDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InviteWorkspaceMemberDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface InviteWorkspaceMemberDto {
+  userId: string;
+  role: InviteWorkspaceMemberDtoRole;
+}
+
+export type WorkspaceRoleDtoRole = typeof WorkspaceRoleDtoRole[keyof typeof WorkspaceRoleDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceRoleDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceRoleDto {
+  role: WorkspaceRoleDtoRole;
+}
+
+export type AddWorkspaceTeamGrantDtoRole = typeof AddWorkspaceTeamGrantDtoRole[keyof typeof AddWorkspaceTeamGrantDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const AddWorkspaceTeamGrantDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface AddWorkspaceTeamGrantDto {
+  teamId: string;
+  role: AddWorkspaceTeamGrantDtoRole;
+}
+
+/**
+ * @nullable
+ */
+export type SetWorkspaceTeamMemberOverrideDtoRole = typeof SetWorkspaceTeamMemberOverrideDtoRole[keyof typeof SetWorkspaceTeamMemberOverrideDtoRole] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SetWorkspaceTeamMemberOverrideDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface SetWorkspaceTeamMemberOverrideDto {
+  /** @nullable */
+  role: SetWorkspaceTeamMemberOverrideDtoRole;
+}
+
+export interface WorkspaceInvitationWorkspaceDto {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export type WorkspaceInvitationResponseDtoRole = typeof WorkspaceInvitationResponseDtoRole[keyof typeof WorkspaceInvitationResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceInvitationResponseDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
+export interface WorkspaceInvitationResponseDto {
+  workspace: WorkspaceInvitationWorkspaceDto;
+  role: WorkspaceInvitationResponseDtoRole;
 }
 
 export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];

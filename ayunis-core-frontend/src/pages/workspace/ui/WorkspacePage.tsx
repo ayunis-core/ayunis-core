@@ -12,7 +12,8 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { WorkspaceSettingsDialog } from '@/widgets/workspace-settings-dialog';
-import type { Workspace } from '@/features/workspaces';
+import { WorkspaceSharingDialog } from '@/widgets/workspace-sharing-dialog';
+import { canEditWorkspace, type Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import {
   useArtifactsControllerFindByWorkspace,
@@ -56,6 +57,8 @@ export default function WorkspacePage({
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const canEdit = canEditWorkspace(workspace.role);
   const { deleteChat } = useDeleteChat();
   const countParams = { limit: 1, offset: 0 };
   const { data: skillsPage } = useWorkspaceContextControllerListSkills(
@@ -91,6 +94,7 @@ export default function WorkspacePage({
               <WorkspaceHeaderActions
                 workspace={workspace}
                 onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenSharing={() => setIsSharingOpen(true)}
               />
             }
           />
@@ -150,13 +154,22 @@ export default function WorkspacePage({
                 <WorkspaceArtifactsTab workspaceId={workspace.id} />
               </TabsContent>
               <TabsContent value="knowledge" className="pt-4">
-                <WorkspaceKnowledgeTab workspaceId={workspace.id} />
+                <WorkspaceKnowledgeTab
+                  workspaceId={workspace.id}
+                  canEdit={canEdit}
+                />
               </TabsContent>
               <TabsContent value="skills" className="pt-4">
-                <WorkspaceSkillsTab workspaceId={workspace.id} />
+                <WorkspaceSkillsTab
+                  workspaceId={workspace.id}
+                  canEdit={canEdit}
+                />
               </TabsContent>
               <TabsContent value="instructions" className="pt-4">
-                <WorkspaceInstructionsTab workspaceId={workspace.id} />
+                <WorkspaceInstructionsTab
+                  workspaceId={workspace.id}
+                  canEdit={canEdit}
+                />
               </TabsContent>
             </Tabs>
           </div>
@@ -167,7 +180,13 @@ export default function WorkspacePage({
         workspace={workspace}
         open={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
+        canDelete={workspace.isOwner}
         onDeleted={() => void navigate({ to: '/workspaces' })}
+      />
+      <WorkspaceSharingDialog
+        workspaceId={workspace.id}
+        open={isSharingOpen}
+        onOpenChange={setIsSharingOpen}
       />
     </AppLayout>
   );

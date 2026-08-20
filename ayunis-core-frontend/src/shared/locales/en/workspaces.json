@@ -2,6 +2,8 @@
   "page": {
     "title": "Projects",
     "heading": "Projects",
+    "owned": "My projects",
+    "shared": "Shared with me",
     "searchPlaceholder": "Search projects",
     "newWorkspace": "New project",
     "emptyTitle": "No projects yet",
@@ -143,6 +145,55 @@
     },
     "description": {
       "maxLength": "The description is too long"
+    }
+  },
+  "invitations": {
+    "title": "Invitations",
+    "description": "You have been invited to this project.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "toast": {
+      "accepted": "Invitation accepted",
+      "declined": "Invitation declined",
+      "error": "The invitation could not be updated."
+    }
+  },
+  "sharing": {
+    "title": "Share project",
+    "description": "Members get access to skills, knowledge, and documents. Chats remain private.",
+    "selectRecipient": "Select a person or team",
+    "people": "People",
+    "teams": "Teams",
+    "invite": "Invite",
+    "owner": "Owner",
+    "pending": "Pending",
+    "loading": "Loading sharing settings …",
+    "loadError": "Sharing settings could not be loaded.",
+    "removeMember": "Remove member",
+    "removeTeam": "Remove team",
+    "teamMembers_one": "{{count}} person",
+    "teamMembers_other": "{{count}} people",
+    "customAccess": "Custom access",
+    "noAccess": "No access",
+    "resetOverride": "Restore team access",
+    "roles": {
+      "use": { "label": "Can use" },
+      "edit": { "label": "Can edit" },
+      "full": { "label": "Full access" }
+    },
+    "organization": {
+      "title": "Share with the entire organization",
+      "description": "Everyone in your organization can see and use this project.",
+      "memberTitle": "Entire organization",
+      "memberDescription": "All members of your organization"
+    },
+    "toast": {
+      "success": "Sharing settings updated",
+      "alreadyExists": "This person or team already has direct access.",
+      "notEligible": "The selection does not belong to the organization or team.",
+      "ownerImmutable": "Owner access cannot be changed.",
+      "notFound": "The sharing entry was not found.",
+      "error": "Sharing settings could not be updated."
     }
   },
   "toast": {

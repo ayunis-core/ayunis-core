@@ -20,7 +20,8 @@ import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceCo
 
 export function WorkspaceSkillsTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canEdit,
+}: Readonly<{ workspaceId: string; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -40,12 +41,12 @@ export function WorkspaceSkillsTab({
       workspaceId,
       candidateParams,
       {
-        query: { enabled: isDialogOpen },
+        query: { enabled: canEdit && isDialogOpen },
       },
     );
   const { attachSkills, detachSkill } = useWorkspaceContextActions(workspaceId);
 
-  const addButton = (
+  const addButton = canEdit ? (
     <Button
       variant="outline"
       size="sm"
@@ -54,7 +55,7 @@ export function WorkspaceSkillsTab({
     >
       <Plus /> {t('context.skills.add')}
     </Button>
-  );
+  ) : undefined;
   const skills = skillPage?.data ?? [];
 
   return (
@@ -82,10 +83,12 @@ export function WorkspaceSkillsTab({
               title={skill.name}
               description={skill.shortDescription}
               action={
-                <RemoveButton
-                  label={t('context.skills.detach')}
-                  onClick={() => detachSkill(skill.id)}
-                />
+                canEdit ? (
+                  <RemoveButton
+                    label={t('context.skills.detach')}
+                    onClick={() => detachSkill(skill.id)}
+                  />
+                ) : undefined
               }
             />
           ))}

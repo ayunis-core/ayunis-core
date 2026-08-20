@@ -13,7 +13,8 @@ import { WorkspaceContextSection } from './WorkspaceContextList';
 
 export function WorkspaceInstructionsTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canEdit,
+}: Readonly<{ workspaceId: string; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const { updateInstruction, isSavingInstruction } =
     useWorkspaceContextActions(workspaceId);
@@ -43,6 +44,7 @@ export function WorkspaceInstructionsTab({
       <Textarea
         value={value}
         data-testid="workspace-instruction-input"
+        readOnly={!canEdit}
         onChange={(event) => {
           setValue(event.target.value);
           setIsDirty(true);
@@ -50,20 +52,22 @@ export function WorkspaceInstructionsTab({
         placeholder={t('context.instructions.placeholder')}
         rows={8}
       />
-      <div className="flex justify-end">
-        <Button
-          data-testid="workspace-instruction-save"
-          disabled={isSavingInstruction || !isDirty}
-          onClick={() => {
-            const instruction = value.trim() || null;
-            void updateInstruction(instruction).then(() => {
-              setIsDirty(false);
-            });
-          }}
-        >
-          {t('context.instructions.save')}
-        </Button>
-      </div>
+      {canEdit ? (
+        <div className="flex justify-end">
+          <Button
+            data-testid="workspace-instruction-save"
+            disabled={isSavingInstruction || !isDirty}
+            onClick={() => {
+              const instruction = value.trim() || null;
+              void updateInstruction(instruction).then(() => {
+                setIsDirty(false);
+              });
+            }}
+          >
+            {t('context.instructions.save')}
+          </Button>
+        </div>
+      ) : null}
     </WorkspaceContextSection>
   );
 }
