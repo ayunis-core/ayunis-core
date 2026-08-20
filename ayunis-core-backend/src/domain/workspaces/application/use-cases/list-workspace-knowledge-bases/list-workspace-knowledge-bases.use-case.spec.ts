@@ -1,10 +1,9 @@
 import type { UUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { ListWorkspaceKnowledgeBasesUseCase } from './list-workspace-knowledge-bases.use-case';
 import { ListWorkspaceKnowledgeBasesQuery } from './list-workspace-knowledge-bases.query';
 
@@ -24,23 +23,19 @@ describe('ListWorkspaceKnowledgeBasesUseCase', () => {
       offset: 4,
       total: 5,
     });
-    const workspacesRepository = {
-      findById: jest.fn().mockResolvedValue({}),
-    } as unknown as jest.Mocked<WorkspacesRepository>;
+    const accessService = {
+      requireAccessLevel: jest.fn().mockResolvedValue({}),
+    };
     const knowledgeBaseAccessService = {
       findAllAccessiblePaginated: jest.fn().mockResolvedValue(page),
       countSourcesByKnowledgeBaseIds: jest
         .fn()
         .mockResolvedValue(new Map([[knowledgeBase.id, 3]])),
     } as unknown as jest.Mocked<KnowledgeBaseAccessService>;
-    const contextService = {
-      get: jest.fn().mockReturnValue('523e4567-e89b-12d3-a456-426614174004'),
-    } as unknown as jest.Mocked<ContextService>;
     const useCase = new ListWorkspaceKnowledgeBasesUseCase(
       createPinoLoggerMock(),
-      workspacesRepository,
       knowledgeBaseAccessService,
-      contextService,
+      accessService as never,
     );
 
     const result = await useCase.execute(
@@ -61,6 +56,10 @@ describe('ListWorkspaceKnowledgeBasesUseCase', () => {
       },
     ]);
     expect(result.total).toBe(5);
+    expect(accessService.requireAccessLevel).toHaveBeenCalledWith(
+      workspaceId,
+      WorkspaceAccessLevel.USE,
+    );
     expect(
       knowledgeBaseAccessService.findAllAccessiblePaginated,
     ).toHaveBeenCalledWith(workspaceId, {

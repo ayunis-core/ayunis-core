@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { ListSourcesByWorkspaceUseCase } from 'src/domain/sources/application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
 import { ListSourcesByWorkspaceQuery } from 'src/domain/sources/application/use-cases/list-sources-by-workspace/list-sources-by-workspace.query';
+import { ListSourcesByWorkspaceUseCase } from 'src/domain/sources/application/use-cases/list-sources-by-workspace/list-sources-by-workspace.use-case';
 import type { Source } from 'src/domain/sources/domain/source.entity';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { ListWorkspaceDocumentsQuery } from './list-workspace-documents.query';
 
 @Injectable()
@@ -19,28 +15,22 @@ export class ListWorkspaceDocumentsUseCase {
   constructor(
     @InjectPinoLogger(ListWorkspaceDocumentsUseCase.name)
     private readonly logger: PinoLogger,
-    private readonly workspacesRepository: WorkspacesRepository,
     private readonly listSourcesByWorkspaceUseCase: ListSourcesByWorkspaceUseCase,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(
     query: ListWorkspaceDocumentsQuery,
   ): Promise<Paginated<Source>> {
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
     this.logger.info(
       { workspaceId: query.workspaceId },
       'listWorkspaceDocuments',
     );
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    await this.accessService.requireAccessLevel(
       query.workspaceId,
+      WorkspaceAccessLevel.USE,
     );
-    if (!workspace) throw new WorkspaceNotFoundError(query.workspaceId);
-
     return this.listSourcesByWorkspaceUseCase.execute(
       new ListSourcesByWorkspaceQuery({
         workspaceId: query.workspaceId,
