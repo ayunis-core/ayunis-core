@@ -8,8 +8,9 @@ favorites and their order are owned by the `favorites` module.
 
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 (iteration 1 of the Workspaces/Projects
-plan) — sharing, skills, knowledge and retention settings arrive in later
-iterations.
+plan). Workspaces are not shareable yet, but they can carry a private
+instruction and attached skills, knowledge bases and documents for their
+owner's chats.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -49,6 +50,19 @@ workspaces/
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
+│       ├── attach-skill-to-workspace/
+│       ├── detach-skill-from-workspace/
+│       ├── attach-knowledge-base-to-workspace/
+│       ├── detach-knowledge-base-from-workspace/
+│       ├── add-document-to-workspace/
+│       ├── remove-document-from-workspace/
+│       ├── update-workspace-instruction/
+│       ├── build-workspace-run-context/
+│       ├── list-workspace-skill-candidates/
+│       ├── list-workspace-knowledge-base-candidates/
+│       ├── list-workspace-skills/
+│       ├── list-workspace-knowledge-bases/
+│       ├── list-workspace-documents/
 │       ├── find-all-workspaces/
 │       ├── find-workspaces-by-ids/
 │       ├── find-workspace/
@@ -75,6 +89,17 @@ workspaces/
 | GET | `/workspaces/:id` | Read one |
 | PATCH | `/workspaces/:id` | Update name / description / icon / colour |
 | DELETE | `/workspaces/:id` | Delete the workspace and its chats |
+| GET | `/workspaces/:id/context` | Read the full runtime context |
+| GET | `/workspaces/:id/context/skill-candidates` | List accessible skills with attachment state |
+| GET | `/workspaces/:id/context/knowledge-base-candidates` | List accessible knowledge bases with attachment state |
+| GET | `/workspaces/:id/context/skills` | List attached skills |
+| GET | `/workspaces/:id/context/knowledge-bases` | List attached knowledge bases |
+| GET | `/workspaces/:id/context/documents` | List attached documents |
+| POST / DELETE | `/workspaces/:id/context/skills/:skillId` | Attach or detach a skill |
+| POST / DELETE | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId` | Attach or detach a knowledge base |
+| POST | `/workspaces/:id/context/documents` | Upload and attach a document |
+| DELETE | `/workspaces/:id/context/documents/:documentId` | Remove an attached document |
+| PATCH | `/workspaces/:id/context/instruction` | Update the workspace instruction |
 
 ## Cross-Module Boundaries
 
@@ -88,5 +113,17 @@ repository reads the `threads` table directly (raw SQL) to derive per-workspace
 chat counts and last activity. Favorites resolves workspace
 metadata through the exported, user-scoped `FindWorkspacesByIdsUseCase`.
 
+Workspace context use cases consume exported skills, knowledge-bases and
+sources application use cases/services for access checks, candidate lists and
+document processing. The workspace repository owns only the assignment rows;
+the referenced entity modules remain responsible for entity access and
+processing.
+
 The repository port is deliberately not exported — cross-module access goes
 through the exported use cases.
+
+Workspace context list endpoints use dedicated paginated use cases. Candidate
+and attached lists apply search, access checks, workspace assignments, ordering,
+offset, limit, and total-count queries in the database. The full `/context`
+endpoint remains the unpaginated runtime-context projection used when starting
+or running a workspace chat.

@@ -3,6 +3,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
+import * as path from 'path';
 
 export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
@@ -37,7 +38,12 @@ export function removeUploadedFile(path: string): void {
 export const SOURCE_FILE_UPLOAD_OPTIONS: MulterOptions = {
   // eslint-disable-next-line sonarjs/content-length -- multer file size limit, not HTTP Content-Length
   storage: diskStorage({
-    destination: './uploads',
+    destination: (_req, _file, cb) => {
+      const uploadsPath = path.resolve('./uploads');
+      fs.mkdir(uploadsPath, { recursive: true }, (error) => {
+        cb(error, uploadsPath);
+      });
+    },
     filename: (req, file, cb) => {
       cb(null, `${randomUUID()}${extname(file.originalname)}`);
     },

@@ -5,6 +5,8 @@ import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adap
 import { randomUUID } from 'crypto';
 
 import { LocalSkillRepository } from './local-skill.repository';
+import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
+import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
 import type { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
@@ -61,6 +63,8 @@ describe('LocalSkillRepository', () => {
       skillRepo,
       activationRepo,
       mapper,
+      {} as LocalSkillAccessiblePageFinder,
+      new LocalSkillKnowledgeBaseIdsFinder(),
       txHost,
     );
   });
@@ -93,6 +97,86 @@ describe('LocalSkillRepository', () => {
         SkillNotActiveError,
       );
     });
+  });
+
+  it('returns a database-paginated page of accessible skills', async () => {
+    const sharedSkillId = randomUUID();
+    const workspaceId = randomUUID();
+    const records = [
+      { id: randomUUID(), name: 'Citizen requests' } as SkillRecord,
+      { id: randomUUID(), name: 'Budget planning' } as SkillRecord,
+    ];
+    const queryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getManyAndCount: jest.fn().mockResolvedValue([records, 7]),
+    };
+    const skillRepository = {
+      manager: {} as EntityManager,
+      createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+    } as unknown as jest.Mocked<Repository<SkillRecord>>;
+    const mapper = {
+      toDomain: jest.fn((record: SkillRecord) => record),
+    } as unknown as SkillMapper;
+    const repository = new LocalSkillRepository(
+      createPinoLoggerMock(),
+      skillRepository,
+      activationRepo,
+      mapper,
+      new LocalSkillAccessiblePageFinder(skillRepository),
+      new LocalSkillKnowledgeBaseIdsFinder(),
+      {
+        tx: mockManager,
+      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
+    );
+
+    const result = await repository.findPaginatedAccessible(
+      userId,
+      workspaceId,
+      [sharedSkillId],
+      {
+        search: 'citizen',
+        limit: 2,
+        offset: 4,
+      },
+    );
+
+    expect(result.data).toEqual(records);
+    expect(result.total).toBe(7);
+    expect(result.limit).toBe(2);
+    expect(result.offset).toBe(4);
+    expect(queryBuilder.skip).toHaveBeenCalledWith(4);
+    expect(queryBuilder.take).toHaveBeenCalledWith(2);
+    expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns knowledge-base IDs linked to the supplied skills', async () => {
+    const linkedKnowledgeBaseIds = [randomUUID(), randomUUID()];
+    const queryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      from: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      distinct: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(
+        linkedKnowledgeBaseIds.map((knowledgeBaseId) => ({
+          knowledgeBaseId,
+        })),
+      ),
+    };
+    mockManager.createQueryBuilder.mockReturnValue(queryBuilder);
+
+    await expect(
+      repository.findKnowledgeBaseIdsBySkillIds([skillId]),
+    ).resolves.toEqual(linkedKnowledgeBaseIds);
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'knowledgeBase."userId" = skill."userId"',
+    );
   });
 
   describe('toggleSkillPinned', () => {

@@ -11,6 +11,7 @@ export class WorkspaceMapper {
       orgId: record.orgId,
       name: record.name,
       description: record.description,
+      instruction: record.instruction,
       icon: record.icon,
       color: record.color,
       createdAt: record.createdAt,
@@ -25,6 +26,7 @@ export class WorkspaceMapper {
     record.orgId = domain.orgId;
     record.name = domain.name;
     record.description = domain.description;
+    record.instruction = domain.instruction;
     record.icon = domain.icon;
     record.color = domain.color;
     record.createdAt = domain.createdAt;

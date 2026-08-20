@@ -9,9 +9,16 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
@@ -28,6 +35,9 @@ import { CreateWorkspaceDto } from './dtos/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dtos/update-workspace.dto';
 import { WorkspaceResponseDto } from './dtos/workspace-response.dto';
 import { WorkspaceDtoMapper } from './mappers/workspace-dto.mapper';
+import { FindAllWorkspacesQuery } from 'src/domain/workspaces/application/use-cases/find-all-workspaces/find-all-workspaces.query';
+import { FindAllWorkspacesQueryParamsDto } from './dtos/find-all-workspaces-query-params.dto';
+import { WorkspaceListResponseDto } from './dtos/workspace-list-response.dto';
 
 @ApiTags('workspaces')
 @Controller('workspaces')
@@ -66,15 +76,27 @@ export class WorkspacesController {
 
   @Get()
   @ApiOperation({ summary: 'List the current user’s workspaces' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['updatedAt', 'createdAt', 'name'],
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number, default: 20 })
+  @ApiQuery({ name: 'offset', required: false, type: Number, default: 0 })
   @ApiResponse({
     status: 200,
-    description: 'The workspaces ordered by most recent update',
-    type: [WorkspaceResponseDto],
+    description: 'A page of workspaces ordered by the requested sort',
+    type: WorkspaceListResponseDto,
   })
-  async findAll(): Promise<WorkspaceResponseDto[]> {
+  async findAll(
+    @Query() queryParams: FindAllWorkspacesQueryParamsDto,
+  ): Promise<WorkspaceListResponseDto> {
     this.logger.info('findAll');
-    const items = await this.findAllWorkspacesUseCase.execute();
-    return items.map((item) => this.workspaceDtoMapper.toListItemDto(item));
+    const page = await this.findAllWorkspacesUseCase.execute(
+      new FindAllWorkspacesQuery(queryParams),
+    );
+    return this.workspaceDtoMapper.toPaginatedDto(page);
   }
 
   @Get(':id')

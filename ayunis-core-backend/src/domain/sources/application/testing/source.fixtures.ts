@@ -1,6 +1,6 @@
-import type { SourceRepository } from '../ports/source.repository';
-import type { Source } from '../../domain/source.entity';
-import type { TextSource } from '../../domain/sources/text-source.entity';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
 // Port mock factory — defaults model the "empty" state: finders resolve to
 // null/[], save echoes its argument, deletes resolve, guarded UPDATEs report
@@ -25,5 +25,11 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     delete: jest.fn().mockResolvedValue(undefined),
     deleteMany: jest.fn().mockResolvedValue(undefined),
     findUnreferencedIds: jest.fn().mockResolvedValue([]),
+    findPaginatedByWorkspaceId: jest.fn().mockResolvedValue({
+      data: [],
+      total: 0,
+      limit: 20,
+      offset: 0,
+    }),
   };
 }

@@ -1,11 +1,24 @@
 import type { UUID } from 'crypto';
-import type { KnowledgeBase } from '../../domain/knowledge-base.entity';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import type { Source } from 'src/domain/sources/domain/source.entity';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
+
+export interface KnowledgeBaseListOptions {
+  search?: string;
+  limit: number;
+  offset: number;
+}
 
 export abstract class KnowledgeBaseRepository {
   abstract findById(id: UUID): Promise<KnowledgeBase | null>;
   abstract findByIds(ids: UUID[]): Promise<KnowledgeBase[]>;
   abstract findAllByUserId(userId: UUID): Promise<KnowledgeBase[]>;
+  abstract findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedKnowledgeBaseIds: UUID[],
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBase>>;
   abstract save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase>;
   abstract delete(knowledgeBase: KnowledgeBase): Promise<void>;
   abstract assignSourceToKnowledgeBase(
@@ -18,6 +31,9 @@ export abstract class KnowledgeBaseRepository {
   abstract countSourcesByKnowledgeBaseId(
     knowledgeBaseId: UUID,
   ): Promise<number>;
+  abstract countSourcesByKnowledgeBaseIds(
+    knowledgeBaseIds: UUID[],
+  ): Promise<Map<UUID, number>>;
   abstract findSourceByIdAndKnowledgeBaseId(
     sourceId: UUID,
     knowledgeBaseId: UUID,

@@ -3,17 +3,17 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetKnowledgeBaseDocumentTextUseCase } from './get-knowledge-base-document-text.use-case';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { GetKnowledgeBaseDocumentTextQuery } from './get-knowledge-base-document-text.query';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { randomUUID } from 'crypto';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
-import { KnowledgeBaseAccessService } from '../../services/knowledge-base-access.service';
+import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 
 describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   let useCase: GetKnowledgeBaseDocumentTextUseCase;
@@ -30,6 +30,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
       findById: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
     } as unknown as jest.Mocked<KnowledgeBaseRepository>;
 
     mockAccessService = {

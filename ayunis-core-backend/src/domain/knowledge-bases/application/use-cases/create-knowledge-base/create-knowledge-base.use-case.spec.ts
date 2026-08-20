@@ -4,9 +4,9 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateKnowledgeBaseUseCase } from './create-knowledge-base.use-case';
 import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { UUID } from 'crypto';
 
 describe('CreateKnowledgeBaseUseCase', () => {
@@ -27,6 +27,8 @@ describe('CreateKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

@@ -6,15 +6,21 @@ import { randomUUID, UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
-import { SkillRepository } from '../../../application/ports/skill.repository';
-import { Skill } from '../../../domain/skill.entity';
+import {
+  SkillRepository,
+  type SkillListOptions,
+} from 'src/domain/skills/application/ports/skill.repository';
+import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
+import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
+import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   SkillNotActiveError,
   SkillNotFoundError,
-} from '../../../application/skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 
 const SKILL_RELATIONS = [
   'sources',
@@ -32,6 +38,8 @@ export class LocalSkillRepository implements SkillRepository {
     @InjectRepository(SkillActivationRecord)
     private readonly activationRepository: Repository<SkillActivationRecord>,
     private readonly skillMapper: SkillMapper,
+    private readonly accessiblePageFinder: LocalSkillAccessiblePageFinder,
+    private readonly knowledgeBaseIdsFinder: LocalSkillKnowledgeBaseIdsFinder,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
@@ -195,6 +203,39 @@ export class LocalSkillRepository implements SkillRepository {
     });
 
     return records.map((r) => this.skillMapper.toDomain(r));
+  }
+
+  async findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedSkillIds: UUID[],
+    options: SkillListOptions,
+  ): Promise<Paginated<Skill>> {
+    this.logger.info(
+      {
+        userId,
+        workspaceId,
+        search: options.search,
+        limit: options.limit,
+        offset: options.offset,
+      },
+      'findPaginatedAccessible',
+    );
+
+    const [records, total] = await this.accessiblePageFinder
+      .buildQuery(userId, workspaceId, sharedSkillIds, options)
+      .orderBy('LOWER(skill.name)', 'ASC')
+      .addOrderBy('skill.id', 'ASC')
+      .skip(options.offset)
+      .take(options.limit)
+      .getManyAndCount();
+
+    return new Paginated({
+      data: records.map((record) => this.skillMapper.toDomain(record)),
+      limit: options.limit,
+      offset: options.offset,
+      total,
+    });
   }
 
   async findActiveByOwner(userId: UUID): Promise<Skill[]> {
@@ -420,6 +461,17 @@ export class LocalSkillRepository implements SkillRepository {
       .getMany();
 
     return records.map((r) => this.skillMapper.toDomain(r));
+  }
+
+  async findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]> {
+    this.logger.info(
+      { skillCount: skillIds.length },
+      'findKnowledgeBaseIdsBySkillIds',
+    );
+    return this.knowledgeBaseIdsFinder.findKnowledgeBaseIdsBySkillIds(
+      skillIds,
+      this.getManager(),
+    );
   }
 
   async removeKnowledgeBaseFromSkills(

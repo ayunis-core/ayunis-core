@@ -11,7 +11,6 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
@@ -25,40 +24,36 @@ import {
   ApiBodyOptions,
   ApiParamOptions,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, resolve } from 'path';
-import { randomUUID } from 'crypto';
 import * as fs from 'fs';
-
-const UPLOADS_DIR = './uploads';
-fs.mkdirSync(resolve(UPLOADS_DIR), { recursive: true });
 import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import {
-  detectFileType,
-  isDocumentSourceFile,
-  getCanonicalMimeType,
-} from 'src/common/util/file-type';
+  cleanupTempUploadFile,
+  createDocumentUploadInterceptor,
+  resolveDocumentUploadMimeType,
+  type UploadedDocument,
+} from 'src/common/http/document-upload';
 
-import { CreateKnowledgeBaseUseCase } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
-import { UpdateKnowledgeBaseUseCase } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
-import { DeleteKnowledgeBaseUseCase } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
-import { AddDocumentToKnowledgeBaseUseCase } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
-import { AddUrlToKnowledgeBaseUseCase } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
-import { RemoveDocumentFromKnowledgeBaseUseCase } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
-import { ListKnowledgeBaseDocumentsUseCase } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
-import { KnowledgeBaseAccessService } from '../../application/services/knowledge-base-access.service';
+import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
+import { CreateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
+import { CreateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.command';
+import { UpdateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
+import { UpdateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.command';
+import { DeleteKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
+import { DeleteKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
+import { AddDocumentToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
+import { AddDocumentToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
+import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
+import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
+import { RemoveDocumentFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
+import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
+import { ListKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
+import { ListKnowledgeBaseDocumentsQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
+import { MissingFileError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 
-import { CreateKnowledgeBaseCommand } from '../../application/use-cases/create-knowledge-base/create-knowledge-base.command';
-import { UpdateKnowledgeBaseCommand } from '../../application/use-cases/update-knowledge-base/update-knowledge-base.command';
-import { DeleteKnowledgeBaseCommand } from '../../application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
-import { AddDocumentToKnowledgeBaseCommand } from '../../application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
-import { AddUrlToKnowledgeBaseCommand } from '../../application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
-import { RemoveDocumentFromKnowledgeBaseCommand } from '../../application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
-import { ListKnowledgeBaseDocumentsQuery } from '../../application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
@@ -70,23 +65,11 @@ import {
   KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseDocumentListResponseDto,
 } from './dto/knowledge-base-document-response.dto';
-import { MissingFileError } from '../../application/knowledge-bases.errors';
-import { KnowledgeBasesConstants } from '../../domain/knowledge-bases.constants';
 import { KnowledgeBaseDtoMapper } from './mappers/knowledge-base-dto.mapper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
 import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
-
-interface UploadedDocument {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-  path: string;
-}
 
 const KB_ID_PARAM: ApiParamOptions = {
   name: 'id',
@@ -109,20 +92,9 @@ const DOCUMENT_UPLOAD_API_BODY: ApiBodyOptions = {
   },
 };
 
-/* eslint-disable sonarjs/content-length -- multer file size limit, not HTTP Content-Length */
-const DocumentUploadInterceptor = FileInterceptor('file', {
-  storage: diskStorage({
-    destination: UPLOADS_DIR,
-    filename: (_req, file, cb) => {
-      cb(null, `${randomUUID()}${extname(file.originalname)}`);
-    },
-  }),
-  limits: { fileSize: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES },
-  // Browsers send the multipart filename as raw UTF-8 bytes; busboy defaults to
-  // latin1, which garbles umlauts and other non-ASCII characters into mojibake.
-  defParamCharset: 'utf8',
-});
-/* eslint-enable sonarjs/content-length */
+const DocumentUploadInterceptor = createDocumentUploadInterceptor(
+  KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES,
+);
 
 @ApiTags('knowledge-bases')
 @RequireFeature(FeatureFlag.KnowledgeBases)
@@ -340,9 +312,8 @@ export class KnowledgeBasesController {
       },
       'addDocument',
     );
-    const canonicalMimeType = await this.resolveDocumentMimeType(file);
-
     try {
+      const canonicalMimeType = this.resolveDocumentMimeType(file);
       return await this.processDocumentUpload(
         userId,
         id,
@@ -373,26 +344,14 @@ export class KnowledgeBasesController {
     return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
-  private async resolveDocumentMimeType(
-    file: UploadedDocument,
-  ): Promise<string> {
-    const detectedType = detectFileType(file.mimetype, file.originalname);
-    if (!isDocumentSourceFile(detectedType)) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
-      );
-    }
-
-    const canonicalMimeType = getCanonicalMimeType(detectedType);
-    if (!canonicalMimeType) {
-      await this.cleanupTempFile(file.path);
-      throw new BadRequestException(
-        `Unable to determine MIME type for detected file type: ${detectedType}`,
-      );
-    }
-
-    return canonicalMimeType;
+  private resolveDocumentMimeType(file: UploadedDocument): string {
+    return resolveDocumentUploadMimeType({
+      file,
+      errorMessage: (reason, detectedType) =>
+        reason === 'missing-mime'
+          ? `Unable to determine MIME type for detected file type: ${detectedType}`
+          : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, TXT, EML, and audio files (MP3, M4A, WAV, WebM).`,
+    });
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -485,16 +444,6 @@ export class KnowledgeBasesController {
   }
 
   private async cleanupTempFile(filePath: string): Promise<void> {
-    try {
-      await fs.promises.unlink(filePath);
-    } catch (error) {
-      this.logger.warn(
-        {
-          fileName: filePath,
-          err: error as Error,
-        },
-        'Failed to clean up temp file',
-      );
-    }
+    await cleanupTempUploadFile(filePath, this.logger);
   }
 }

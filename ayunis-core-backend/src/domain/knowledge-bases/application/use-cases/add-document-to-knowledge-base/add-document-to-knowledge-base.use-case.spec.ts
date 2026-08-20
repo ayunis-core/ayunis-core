@@ -6,9 +6,9 @@ import type { UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { AddDocumentToKnowledgeBaseUseCase } from './add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from './add-document-to-knowledge-base.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -47,6 +47,8 @@ describe('AddDocumentToKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     mockStartDocumentProcessingUseCase = {

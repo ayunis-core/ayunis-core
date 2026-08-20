@@ -52,6 +52,7 @@ skills/
 │       ├── unassign-knowledge-base-from-skill/
 │       ├── list-skill-knowledge-bases/
 │       ├── check-knowledge-base-skill-share-access/  # KB reachable via a shared skill of the KB owner? (exported, used by knowledge-bases)
+│       ├── find-knowledge-base-ids-accessible-via-shared-skills/  # bulk KB access projection for shared-skill lists (exported, used by knowledge-bases)
 │       └── install-skill-from-marketplace/
 ├── infrastructure/
 │   └── persistence/local/

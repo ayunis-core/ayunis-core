@@ -22,6 +22,14 @@ export class WorkspaceResponseDto {
   description: string | null;
 
   @ApiProperty({
+    type: String,
+    description: 'Instructions that apply to every chat in the workspace',
+    example: 'Answer with the tone and policies of the building department.',
+    nullable: true,
+  })
+  instruction: string | null;
+
+  @ApiProperty({
     description: 'Key of the workspace icon from the client icon catalogue',
     example: 'landmark',
   })

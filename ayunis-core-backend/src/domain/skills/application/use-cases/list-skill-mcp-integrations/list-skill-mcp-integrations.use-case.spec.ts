@@ -5,13 +5,16 @@ import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ListSkillMcpIntegrationsUseCase } from './list-skill-mcp-integrations.use-case';
 import { ListSkillMcpIntegrationsQuery } from './list-skill-mcp-integrations.query';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
-import { SkillNotFoundError, UnexpectedSkillError } from '../../skills.errors';
+import {
+  SkillNotFoundError,
+  UnexpectedSkillError,
+} from 'src/domain/skills/application/skills.errors';
 import type { UUID } from 'crypto';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import { PredefinedMcpIntegrationSlug } from 'src/domain/mcp/domain/value-objects/predefined-mcp-integration-slug.enum';
@@ -51,7 +54,9 @@ describe('ListSkillMcpIntegrationsUseCase', () => {
       pinSkill: jest.fn(),
       getPinnedSkillIds: jest.fn(),
       findSkillsByKnowledgeBaseAndOwners: jest.fn(),
+      findKnowledgeBaseIdsBySkillIds: jest.fn(),
       removeKnowledgeBaseFromSkills: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     } as jest.Mocked<SkillRepository>;
 
     const mockGetMcpIntegrationsByIdsUseCase = {

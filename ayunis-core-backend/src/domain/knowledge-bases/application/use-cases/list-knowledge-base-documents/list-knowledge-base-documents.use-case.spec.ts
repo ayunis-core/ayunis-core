@@ -5,9 +5,9 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { ListKnowledgeBaseDocumentsUseCase } from './list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from './list-knowledge-base-documents.query';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { KnowledgeBaseNotFoundError } from '../../knowledge-bases.errors';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 
@@ -30,6 +30,8 @@ describe('ListKnowledgeBaseDocumentsUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

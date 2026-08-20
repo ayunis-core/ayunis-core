@@ -1,5 +1,12 @@
 import type { UUID } from 'crypto';
-import type { Skill } from '../../domain/skill.entity';
+import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
+
+export interface SkillListOptions {
+  search?: string;
+  limit: number;
+  offset: number;
+}
 
 export abstract class SkillRepository {
   abstract create(skill: Skill): Promise<Skill>;
@@ -7,6 +14,12 @@ export abstract class SkillRepository {
   abstract delete(skillId: UUID, userId: UUID): Promise<void>;
   abstract findOne(id: UUID, userId: UUID): Promise<Skill | null>;
   abstract findAllByOwner(userId: UUID): Promise<Skill[]>;
+  abstract findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedSkillIds: UUID[],
+    options: SkillListOptions,
+  ): Promise<Paginated<Skill>>;
   abstract findActiveByOwner(userId: UUID): Promise<Skill[]>;
   abstract findByNameAndOwner(
     name: string,
@@ -34,6 +47,7 @@ export abstract class SkillRepository {
     knowledgeBaseId: UUID,
     ownerIds: UUID[],
   ): Promise<Skill[]>;
+  abstract findKnowledgeBaseIdsBySkillIds(skillIds: UUID[]): Promise<UUID[]>;
   abstract removeKnowledgeBaseFromSkills(
     knowledgeBaseId: UUID,
     skillIds: UUID[],

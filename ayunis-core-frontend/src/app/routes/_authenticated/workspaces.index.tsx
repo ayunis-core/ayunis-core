@@ -17,11 +17,12 @@ export const Route = createFileRoute('/_authenticated/workspaces/')({
     if (!featureToggles.workspacesEnabled) {
       throw redirect({ to: '/chat' });
     }
+    const params = { limit: 100, offset: 0 };
     const workspaces = await queryClient.fetchQuery({
-      queryKey: getWorkspacesControllerFindAllQueryKey(),
-      queryFn: () => workspacesControllerFindAll(),
+      queryKey: getWorkspacesControllerFindAllQueryKey(params),
+      queryFn: () => workspacesControllerFindAll(params),
     });
-    return { workspaces };
+    return { workspaces: workspaces.data };
   },
 });
 

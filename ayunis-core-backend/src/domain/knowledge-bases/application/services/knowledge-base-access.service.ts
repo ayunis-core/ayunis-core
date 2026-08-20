@@ -1,18 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
-import { KnowledgeBaseRepository } from '../ports/knowledge-base.repository';
+import {
+  KnowledgeBaseRepository,
+  type KnowledgeBaseListOptions,
+} from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { FindShareByEntityUseCase } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.use-case';
 import { FindShareByEntityQuery } from 'src/domain/shares/application/use-cases/find-share-by-entity/find-share-by-entity.query';
 import { FindSharesByScopeUseCase } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.use-case';
 import { FindSharesByScopeQuery } from 'src/domain/shares/application/use-cases/find-shares-by-scope/find-shares-by-scope.query';
 import { CheckKnowledgeBaseSkillShareAccessUseCase } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.use-case';
 import { CheckKnowledgeBaseSkillShareAccessQuery } from 'src/domain/skills/application/use-cases/check-knowledge-base-skill-share-access/check-knowledge-base-skill-share-access.query';
+import { FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase } from 'src/domain/skills/application/use-cases/find-knowledge-base-ids-accessible-via-shared-skills/find-knowledge-base-ids-accessible-via-shared-skills.use-case';
 import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { KnowledgeBaseNotFoundError } from '../knowledge-bases.errors';
-import type { KnowledgeBase } from '../../domain/knowledge-base.entity';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import type { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 export interface KnowledgeBaseWithShareStatus {
   knowledgeBase: KnowledgeBase;
@@ -28,6 +33,7 @@ export class KnowledgeBaseAccessService {
     private readonly findShareByEntityUseCase: FindShareByEntityUseCase,
     private readonly findSharesByScopeUseCase: FindSharesByScopeUseCase,
     private readonly checkKnowledgeBaseSkillShareAccessUseCase: CheckKnowledgeBaseSkillShareAccessUseCase,
+    private readonly findKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase: FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -106,9 +112,19 @@ export class KnowledgeBaseAccessService {
   }
 
   /**
-   * Resolves whether a knowledge base is shared with the given user.
-   * Returns false for KB owners, even if the KB has been shared.
+   * Counts sources for multiple knowledge bases in one repository operation.
    */
+  async countSourcesByKnowledgeBaseIds(
+    knowledgeBaseIds: UUID[],
+  ): Promise<Map<UUID, number>> {
+    if (knowledgeBaseIds.length === 0) {
+      return new Map();
+    }
+    return this.knowledgeBaseRepository.countSourcesByKnowledgeBaseIds(
+      knowledgeBaseIds,
+    );
+  }
+
   async resolveIsShared(kbId: UUID, userId: UUID): Promise<boolean> {
     const kb = await this.knowledgeBaseRepository.findById(kbId);
     if (kb?.userId === userId) {
@@ -132,11 +148,9 @@ export class KnowledgeBaseAccessService {
     }
 
     // 1. Fetch owned KBs and shares in parallel
-    const [ownedKbs, shares] = await Promise.all([
+    const [ownedKbs, sharedKnowledgeBaseIds] = await Promise.all([
       this.knowledgeBaseRepository.findAllByUserId(userId),
-      this.findSharesByScopeUseCase.execute(
-        new FindSharesByScopeQuery(SharedEntityType.KNOWLEDGE_BASE),
-      ),
+      this.findAccessibleSharedKnowledgeBaseIds(),
     ]);
 
     const ownedKbIds = new Set(ownedKbs.map((kb) => kb.id));
@@ -149,9 +163,9 @@ export class KnowledgeBaseAccessService {
     );
 
     // 2. Extract shared KB IDs and deduplicate against owned
-    const sharedKbIds = shares
-      .map((s) => s.entityId)
-      .filter((id) => !ownedKbIds.has(id));
+    const sharedKbIds = sharedKnowledgeBaseIds.filter(
+      (id) => !ownedKbIds.has(id),
+    );
 
     this.logger.debug(
       {
@@ -182,5 +196,51 @@ export class KnowledgeBaseAccessService {
     );
 
     return [...ownedResults, ...sharedResults];
+  }
+
+  async findAllAccessiblePaginated(
+    workspaceId: UUID | undefined,
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBaseWithShareStatus>> {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
+
+    const sharedIds = await this.findAccessibleSharedKnowledgeBaseIds();
+    const page = await this.knowledgeBaseRepository.findPaginatedAccessible(
+      userId,
+      workspaceId,
+      sharedIds,
+      options,
+    );
+    const sharedIdSet = new Set(sharedIds);
+
+    return new Paginated({
+      data: page.data.map((knowledgeBase) => ({
+        knowledgeBase,
+        isShared:
+          knowledgeBase.userId !== userId && sharedIdSet.has(knowledgeBase.id),
+      })),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
+    });
+  }
+
+  private async findAccessibleSharedKnowledgeBaseIds(): Promise<UUID[]> {
+    const [directShares, skillSharedIds] = await Promise.all([
+      this.findSharesByScopeUseCase.execute(
+        new FindSharesByScopeQuery(SharedEntityType.KNOWLEDGE_BASE),
+      ),
+      this.findKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase.execute(),
+    ]);
+
+    return [
+      ...new Set([
+        ...directShares.map((share) => share.entityId),
+        ...skillSharedIds,
+      ]),
+    ];
   }
 }

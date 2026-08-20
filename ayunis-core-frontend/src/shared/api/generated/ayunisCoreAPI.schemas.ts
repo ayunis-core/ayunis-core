@@ -3496,6 +3496,11 @@ export interface WorkspaceResponseDto {
    * @nullable
    */
   description: string | null;
+  /**
+   * Instructions that apply to every chat in the workspace
+   * @nullable
+   */
+  instruction: string | null;
   /** Key of the workspace icon from the client icon catalogue */
   icon: string;
   /** Palette key or #rrggbb literal for the workspace colour */
@@ -3510,6 +3515,11 @@ export interface WorkspaceResponseDto {
   lastActivityAt?: string;
 }
 
+export interface WorkspaceListResponseDto {
+  data: WorkspaceResponseDto[];
+  pagination: PaginationDto;
+}
+
 export interface UpdateWorkspaceDto {
   /** Name of the workspace */
   name?: string;
@@ -3522,6 +3532,130 @@ export interface UpdateWorkspaceDto {
   icon?: string;
   /** Palette key or #rrggbb literal for the workspace colour */
   color?: string;
+}
+
+export interface WorkspaceSkillResponseDto {
+  id: string;
+  name: string;
+  shortDescription: string;
+}
+
+export interface WorkspaceKnowledgeBaseResponseDto {
+  id: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  documentCount: number;
+}
+
+export type WorkspaceDocumentResponseDtoType = typeof WorkspaceDocumentResponseDtoType[keyof typeof WorkspaceDocumentResponseDtoType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceDocumentResponseDtoType = {
+  text: 'text',
+  data: 'data',
+} as const;
+
+export type WorkspaceDocumentResponseDtoCreatedBy = typeof WorkspaceDocumentResponseDtoCreatedBy[keyof typeof WorkspaceDocumentResponseDtoCreatedBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceDocumentResponseDtoCreatedBy = {
+  user: 'user',
+  llm: 'llm',
+  system: 'system',
+} as const;
+
+export type WorkspaceDocumentResponseDtoStatus = typeof WorkspaceDocumentResponseDtoStatus[keyof typeof WorkspaceDocumentResponseDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceDocumentResponseDtoStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type WorkspaceDocumentResponseDtoTextType = typeof WorkspaceDocumentResponseDtoTextType[keyof typeof WorkspaceDocumentResponseDtoTextType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceDocumentResponseDtoTextType = {
+  file: 'file',
+  web: 'web',
+} as const;
+
+export interface WorkspaceDocumentResponseDto {
+  id: string;
+  name: string;
+  type: WorkspaceDocumentResponseDtoType;
+  createdBy: WorkspaceDocumentResponseDtoCreatedBy;
+  status: WorkspaceDocumentResponseDtoStatus;
+  /** @nullable */
+  processingError: string | null;
+  textType?: WorkspaceDocumentResponseDtoTextType;
+  url?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkspaceContextResponseDto {
+  /** @nullable */
+  instruction: string | null;
+  skills: WorkspaceSkillResponseDto[];
+  knowledgeBases: WorkspaceKnowledgeBaseResponseDto[];
+  documents: WorkspaceDocumentResponseDto[];
+}
+
+export interface WorkspaceSkillCandidateResponseDto {
+  id: string;
+  name: string;
+  shortDescription: string;
+  isAttached: boolean;
+}
+
+export interface WorkspaceSkillCandidateListResponseDto {
+  data: WorkspaceSkillCandidateResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface WorkspaceKnowledgeBaseCandidateResponseDto {
+  id: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  documentCount: number;
+  isAttached: boolean;
+}
+
+export interface WorkspaceKnowledgeBaseCandidateListResponseDto {
+  data: WorkspaceKnowledgeBaseCandidateResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface WorkspaceSkillListResponseDto {
+  data: WorkspaceSkillResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface WorkspaceKnowledgeBaseListResponseDto {
+  data: WorkspaceKnowledgeBaseResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface WorkspaceDocumentListResponseDto {
+  data: WorkspaceDocumentResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface UpdateWorkspaceInstructionDto {
+  /**
+   * Instructions that apply to every chat in the workspace
+   * @maxLength 10000
+   * @nullable
+   */
+  instruction: string | null;
 }
 
 export type WorkspaceFavoriteResponseDtoReferenceType = typeof WorkspaceFavoriteResponseDtoReferenceType[keyof typeof WorkspaceFavoriteResponseDtoReferenceType];
@@ -5408,6 +5542,57 @@ export const SharesControllerGetSharesEntityType = {
 
 export type SkillSourcesControllerAddFileSourceBody = {
   /** The file to upload (max 25 MB) */
+  file: Blob;
+};
+
+export type WorkspacesControllerFindAllParams = {
+offset?: number;
+limit?: number;
+sort?: WorkspacesControllerFindAllSort;
+search?: string;
+};
+
+export type WorkspacesControllerFindAllSort = typeof WorkspacesControllerFindAllSort[keyof typeof WorkspacesControllerFindAllSort];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspacesControllerFindAllSort = {
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt',
+  name: 'name',
+} as const;
+
+export type WorkspaceContextControllerListSkillCandidatesParams = {
+offset?: number;
+limit?: number;
+search?: string;
+};
+
+export type WorkspaceContextControllerListKnowledgeBaseCandidatesParams = {
+offset?: number;
+limit?: number;
+search?: string;
+};
+
+export type WorkspaceContextControllerListSkillsParams = {
+offset?: number;
+limit?: number;
+search?: string;
+};
+
+export type WorkspaceContextControllerListKnowledgeBasesParams = {
+offset?: number;
+limit?: number;
+search?: string;
+};
+
+export type WorkspaceContextControllerListDocumentsParams = {
+offset?: number;
+limit?: number;
+search?: string;
+};
+
+export type WorkspaceContextControllerAddDocumentBody = {
   file: Blob;
 };
 

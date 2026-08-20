@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import type { UUID } from 'crypto';
-import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
+import {
+  KnowledgeBaseRepository,
+  type KnowledgeBaseListOptions,
+} from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 
 @Injectable()
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
@@ -55,6 +59,84 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
+  async findPaginatedAccessible(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedKnowledgeBaseIds: UUID[],
+    options: KnowledgeBaseListOptions,
+  ): Promise<Paginated<KnowledgeBase>> {
+    this.logger.debug(
+      {
+        userId,
+        workspaceId,
+        search: options.search,
+        limit: options.limit,
+        offset: options.offset,
+      },
+      'findPaginatedAccessible',
+    );
+
+    const [records, total] = await this.buildAccessibleKnowledgeBasesQuery(
+      userId,
+      workspaceId,
+      sharedKnowledgeBaseIds,
+      options,
+    )
+      .orderBy('LOWER(knowledgeBase.name)', 'ASC')
+      .addOrderBy('knowledgeBase.id', 'ASC')
+      .skip(options.offset)
+      .take(options.limit)
+      .getManyAndCount();
+
+    return new Paginated({
+      data: records.map((record) => this.mapper.toDomain(record)),
+      limit: options.limit,
+      offset: options.offset,
+      total,
+    });
+  }
+
+  private buildAccessibleKnowledgeBasesQuery(
+    userId: UUID,
+    workspaceId: UUID | undefined,
+    sharedKnowledgeBaseIds: UUID[],
+    options: KnowledgeBaseListOptions,
+  ): SelectQueryBuilder<KnowledgeBaseRecord> {
+    const queryBuilder = this.repository
+      .createQueryBuilder('knowledgeBase')
+      .where(
+        new Brackets((accessQuery) => {
+          accessQuery.where('knowledgeBase.userId = :userId', { userId });
+          if (sharedKnowledgeBaseIds.length > 0) {
+            accessQuery.orWhere(
+              'knowledgeBase.id IN (:...sharedKnowledgeBaseIds)',
+              { sharedKnowledgeBaseIds },
+            );
+          }
+        }),
+      );
+
+    if (workspaceId) {
+      queryBuilder.andWhere(
+        `EXISTS (
+          SELECT 1
+          FROM workspace_knowledge_base_assignments assignment
+          WHERE assignment."workspaceId" = :workspaceId
+            AND assignment."knowledgeBaseId" = knowledgeBase.id
+        )`,
+        { workspaceId },
+      );
+    }
+
+    if (options.search) {
+      queryBuilder.andWhere('knowledgeBase.name ILIKE :search', {
+        search: `%${options.search}%`,
+      });
+    }
+
+    return queryBuilder;
+  }
+
   async save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase> {
     this.logger.debug({ id: knowledgeBase.id }, 'save');
     const record = this.mapper.toRecord(knowledgeBase);
@@ -91,6 +173,36 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   async countSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<number> {
     this.logger.debug({ knowledgeBaseId }, 'countSourcesByKnowledgeBaseId');
     return this.sourceRepository.count({ where: { knowledgeBaseId } });
+  }
+
+  async countSourcesByKnowledgeBaseIds(
+    knowledgeBaseIds: UUID[],
+  ): Promise<Map<UUID, number>> {
+    if (knowledgeBaseIds.length === 0) {
+      return new Map();
+    }
+
+    this.logger.debug(
+      { count: knowledgeBaseIds.length },
+      'countSourcesByKnowledgeBaseIds',
+    );
+    const rows = await this.sourceRepository
+      .createQueryBuilder('source')
+      .select('source.knowledgeBaseId', 'knowledgeBaseId')
+      .addSelect('COUNT(source.id)', 'count')
+      .where('source.knowledgeBaseId IN (:...knowledgeBaseIds)', {
+        knowledgeBaseIds,
+      })
+      .groupBy('source.knowledgeBaseId')
+      .getRawMany<{ knowledgeBaseId: UUID; count: string }>();
+
+    const counts = new Map<UUID, number>(
+      knowledgeBaseIds.map((knowledgeBaseId) => [knowledgeBaseId, 0]),
+    );
+    for (const row of rows) {
+      counts.set(row.knowledgeBaseId, Number(row.count));
+    }
+    return counts;
   }
 
   async findSourceByIdAndKnowledgeBaseId(

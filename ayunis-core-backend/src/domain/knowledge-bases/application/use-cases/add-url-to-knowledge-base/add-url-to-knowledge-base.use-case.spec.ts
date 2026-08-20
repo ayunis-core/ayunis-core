@@ -6,13 +6,13 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { AddUrlToKnowledgeBaseUseCase } from './add-url-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseCommand } from './add-url-to-knowledge-base.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   KnowledgeBaseSourceLimitExceededError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -63,6 +63,8 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue(0),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     mockStartUrlCrawlUseCase = {

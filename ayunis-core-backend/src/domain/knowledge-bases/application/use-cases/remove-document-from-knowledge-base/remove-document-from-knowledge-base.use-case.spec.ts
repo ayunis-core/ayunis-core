@@ -12,12 +12,12 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './remove-document-from-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseCommand } from './remove-document-from-knowledge-base.command';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import {
   KnowledgeBaseNotFoundError,
   DocumentNotInKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
 import { UrlSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -43,6 +43,8 @@ describe('RemoveDocumentFromKnowledgeBaseUseCase', () => {
       findSourcesByKnowledgeBaseId: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
+      countSourcesByKnowledgeBaseIds: jest.fn(),
+      findPaginatedAccessible: jest.fn(),
     };
 
     mockDeleteSourceUseCase = {

@@ -3,6 +3,11 @@ export const WORKSPACE_DESCRIPTION_MAX_LENGTH = 1000;
 
 export const DEFAULT_WORKSPACE_ICON = 'folder';
 export const DEFAULT_WORKSPACE_COLOR = 'violet';
+export const WORKSPACE_MAX_SOURCES = 500;
+export const WORKSPACE_DEFAULT_LIST_LIMIT = 20;
+export const WORKSPACE_MAX_LIST_LIMIT = 100;
+export const WORKSPACE_CONTEXT_DEFAULT_LIST_LIMIT = 20;
+export const WORKSPACE_CONTEXT_MAX_LIST_LIMIT = 100;
 
 /**
  * Icons and colours are chosen from a catalogue the frontend owns; the backend
