@@ -122,7 +122,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
           SELECT 1
           FROM workspace_knowledge_base_assignments assignment
           WHERE assignment."workspaceId" = :workspaceId
-            AND assignment."knowledgeBaseId" = knowledgeBase.id
+            AND assignment."knowledgeBaseId" = "knowledgeBase"."id"
         )`,
         { workspaceId },
       );
