@@ -1,18 +1,19 @@
 import { Test } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import {
   InvalidWorkspaceAppearanceError,
   InvalidWorkspaceDescriptionError,
 } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { WORKSPACE_DESCRIPTION_MAX_LENGTH } from 'src/domain/workspaces/domain/workspaces.constants';
 import {
   aWorkspace,
-  createMockContextService,
   createMockWorkspacesRepository,
+  TEST_USER_ID,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { UpdateWorkspaceCommand } from './update-workspace.command';
@@ -21,9 +22,15 @@ import { UpdateWorkspaceUseCase } from './update-workspace.use-case';
 describe('UpdateWorkspaceUseCase', () => {
   let useCase: UpdateWorkspaceUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
+  let accessService: { requireAccessLevel: jest.Mock };
 
   beforeEach(async () => {
     repository = createMockWorkspacesRepository();
+    accessService = {
+      requireAccessLevel: jest.fn().mockImplementation(async () => ({
+        workspace: await repository.findById(TEST_USER_ID, TEST_WORKSPACE_ID),
+      })),
+    };
     const module = await Test.createTestingModule({
       providers: [
         UpdateWorkspaceUseCase,
@@ -32,7 +39,7 @@ describe('UpdateWorkspaceUseCase', () => {
           useValue: createPinoLoggerMock(),
         },
         { provide: WorkspacesRepository, useValue: repository },
-        { provide: ContextService, useValue: createMockContextService() },
+        { provide: WorkspaceAccessService, useValue: accessService },
       ],
     }).compile();
     useCase = module.get(UpdateWorkspaceUseCase);
@@ -59,6 +66,10 @@ describe('UpdateWorkspaceUseCase', () => {
     expect(updated.color).toBe('#112233');
     expect(updated.description).toBe('Beschreibung');
     expect(updated.icon).toBe('folder');
+    expect(accessService.requireAccessLevel).toHaveBeenCalledWith(
+      TEST_WORKSPACE_ID,
+      WorkspaceAccessLevel.EDIT,
+    );
   });
 
   it('clears the description when null is sent', async () => {
@@ -134,8 +145,10 @@ describe('UpdateWorkspaceUseCase', () => {
     expect(updated.updatedAt).toEqual(before);
   });
 
-  it('throws when the workspace does not belong to the caller', async () => {
-    repository.findById.mockResolvedValue(null);
+  it('throws when the workspace is unavailable to the caller', async () => {
+    accessService.requireAccessLevel.mockRejectedValue(
+      new WorkspaceNotFoundError(TEST_WORKSPACE_ID),
+    );
 
     await expect(
       useCase.execute(
