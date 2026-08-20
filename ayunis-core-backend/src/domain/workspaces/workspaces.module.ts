@@ -59,6 +59,10 @@ import { WorkspaceSharingReadRepository } from './application/ports/workspace-sh
 import { LocalWorkspaceSharingReadRepository } from './infrastructure/persistence/local/local-workspace-sharing-read.repository';
 import { LocalWorkspaceSharingReadRepositoryModule } from './infrastructure/persistence/local/local-workspace-sharing-read-repository.module';
 import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspace-sharing/get-workspace-sharing.use-case';
+import { WorkspaceInvitationsReadRepository } from './application/ports/workspace-invitations-read-repository.port';
+import { LocalWorkspaceInvitationsReadRepository } from './infrastructure/persistence/local/local-workspace-invitations-read.repository';
+import { LocalWorkspaceInvitationsReadRepositoryModule } from './infrastructure/persistence/local/local-workspace-invitations-read-repository.module';
+import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-my-workspace-invitations/list-my-workspace-invitations.use-case';
 
 @Module({
   imports: [
@@ -67,6 +71,7 @@ import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspac
     LocalWorkspaceTeamGrantsRepositoryModule,
     LocalWorkspaceTeamMemberOverridesRepositoryModule,
     LocalWorkspaceSharingReadRepositoryModule,
+    LocalWorkspaceInvitationsReadRepositoryModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -100,6 +105,10 @@ import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspac
       provide: WorkspaceSharingReadRepository,
       useExisting: LocalWorkspaceSharingReadRepository,
     },
+    {
+      provide: WorkspaceInvitationsReadRepository,
+      useExisting: LocalWorkspaceInvitationsReadRepository,
+    },
     WorkspaceAccessPolicyService,
     WorkspaceAccessService,
     GetWorkspaceAccessUseCase,
@@ -114,6 +123,7 @@ import { GetWorkspaceSharingUseCase } from './application/use-cases/get-workspac
     SetWorkspaceTeamMemberOverrideUseCase,
     ResetWorkspaceTeamMemberOverrideUseCase,
     GetWorkspaceSharingUseCase,
+    ListMyWorkspaceInvitationsUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
