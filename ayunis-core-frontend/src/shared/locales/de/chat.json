@@ -12,6 +12,15 @@
     "cancelText": "Abbrechen",
     "errorDeleteThread": "Chat konnte nicht gelöscht werden",
     "artifactSaved": "Dokument erfolgreich gespeichert",
+    "artifactPanel": {
+      "title": "Erstellter Inhalt",
+      "close": "Schließen",
+      "loadErrorTitle": "Inhalt konnte nicht geladen werden",
+      "loadErrorDescription": "Der Inhalt konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "notFoundTitle": "Inhalt nicht gefunden",
+      "notFoundDescription": "Dieser Inhalt existiert möglicherweise nicht mehr.",
+      "retry": "Erneut versuchen"
+    },
     "unknownMessageType": "Unbekannter Nachrichtentyp",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "errorExecutionError": "Fehler beim Abruf der Antwort",

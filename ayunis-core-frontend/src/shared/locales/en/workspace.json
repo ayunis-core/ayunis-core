@@ -5,6 +5,7 @@
     "knowledgeTab": "Knowledge",
     "skillsTab": "Skills",
     "instructionsTab": "Instructions",
+    "artifactsTab": "Created content",
     "emptyChatsTitle": "No chats yet",
     "emptyChats": "Chats you add to this project will appear here.",
     "noChatResults": "No chats found.",
@@ -12,6 +13,24 @@
     "unpin": "Unpin",
     "settings": "Settings",
     "truncatedChats": "Showing the first {{count}} chats"
+  },
+  "artifacts": {
+    "title": "Project artifacts",
+    "description": "Documents, diagrams, and spreadsheets created in chats in this project.",
+    "emptyTitle": "No artifacts yet",
+    "empty": "Artifacts created in project chats will appear here.",
+    "loadError": {
+      "title": "Project artifacts could not be loaded",
+      "description": "Reload the page before opening project artifacts."
+    },
+    "untitled": "Untitled artifact",
+    "open": "Open",
+    "version": "Version {{version}}",
+    "type": {
+      "document": "Document",
+      "diagram": "Diagram",
+      "spreadsheet": "Spreadsheet"
+    }
   },
   "chat": {
     "untitled": "Untitled chat",

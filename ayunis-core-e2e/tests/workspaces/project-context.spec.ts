@@ -20,6 +20,27 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
   await expect(page.getByTestId("workspace-chats-empty")).toBeVisible();
   await expect(page.getByTestId("workspace-chats-search")).toHaveCount(0);
 
+  await expect
+    .poll(() =>
+      page
+        .getByRole("tab")
+        .evaluateAll((tabs) =>
+          tabs.map((tab) => tab.getAttribute("data-testid")),
+        ),
+    )
+    .toEqual([
+      "workspace-tab-chats",
+      "workspace-tab-artifacts",
+      "workspace-tab-knowledge",
+      "workspace-tab-skills",
+      "workspace-tab-instructions",
+    ]);
+  await expect(page.getByTestId("workspace-tab-artifacts")).toContainText(
+    "Erstellte Inhalte",
+  );
+  await page.getByTestId("workspace-tab-artifacts").click();
+  await expect(page.getByTestId("workspace-artifacts-search")).toHaveCount(0);
+
   await page.getByTestId("workspace-tab-skills").click();
   await expect(page.getByTestId("workspace-skills-search")).toHaveCount(0);
   await page.getByTestId("workspace-skills-add").first().click();
@@ -128,4 +149,27 @@ test("shows project context in the chat side dock", async ({ page, api }) => {
 
   await page.getByTestId("workspace-context-toggle-knowledge").click();
   await expect(page.getByTestId("workspace-context-panel-item")).toHaveCount(1);
+});
+
+test("recovers from a missing artifact deep link", async ({ page, api }) => {
+  const fixture = await createProjectContextFixture(api, uniqueSuffix());
+  const thread = await createProjectThread(api, fixture.workspace.id);
+  const missingArtifactId = "00000000-0000-4000-8000-000000000000";
+
+  await page.route(`**/api/artifacts/${missingArtifactId}`, (route) =>
+    route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ code: "ARTIFACT_NOT_FOUND" }),
+    }),
+  );
+
+  await page.goto(`/chats/${thread.id}?artifactId=${missingArtifactId}`);
+  await expect(page.getByTestId("artifact-side-panel-error")).toBeVisible();
+  await expect(page.getByTestId("artifact-side-panel-not-found")).toBeVisible();
+  await expect(page.getByTestId("artifact-side-panel-retry")).toHaveCount(0);
+
+  await page.getByTestId("artifact-side-panel-close").click();
+  await expect(page).toHaveURL(new RegExp(`/chats/${thread.id}$`));
+  await expect(page.getByTestId("artifact-side-panel-error")).toHaveCount(0);
 });

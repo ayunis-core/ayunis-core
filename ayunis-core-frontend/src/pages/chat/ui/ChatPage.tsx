@@ -10,13 +10,12 @@ import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfac
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { groupMessagesIntoRuns } from '@/pages/chat/ui/agent-run-timeline';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
-import { useMessageSend } from '../api/useMessageSend';
+import { useMessageSend } from '@/pages/chat/api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
-import type { Thread, Message } from '../model/openapi';
+import type { Thread, Message } from '@/pages/chat/model/openapi';
 import { showError } from '@/shared/lib/toast';
-
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import { useDeleteThread } from '@/features/thread-run';
@@ -33,14 +32,14 @@ import type {
 } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useRunErrorHandler } from '../hooks/useRunErrorHandler';
-import { useLetterheadChange } from '../hooks/useLetterheadChange';
-import { usePendingMessage } from '../hooks/usePendingMessage';
+import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
+import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
+import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
-import { useDeleteFileSource } from '../api/useDeleteFileSource';
-import { useArtifactActions } from '../hooks/useArtifactActions';
+import { useDeleteFileSource } from '@/pages/chat/api/useDeleteFileSource';
+import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import {
@@ -48,25 +47,27 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useKnowledgeBaseAttachment } from '../api/useKnowledgeBaseAttachment';
-import { useMcpIntegrationAttachment } from '../api/useMcpIntegrationAttachment';
-import { useDownloadSource } from '../api/useDownloadSource';
-import type { PendingImage } from '../api/useMessageSend';
-import { reconcileMessages } from '../lib/reconcile-thread-messages';
+import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
+import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
+import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
+import type { PendingImage } from '@/pages/chat/api/useMessageSend';
+import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
 import { WorkspaceContextSidePanel } from './WorkspaceContextSidePanel';
-import { useWorkspaceContextPanel } from '../hooks/useWorkspaceContextPanel';
+import { useWorkspaceContextPanel } from '@/pages/chat/hooks/useWorkspaceContextPanel';
 
 const PROCESSING_POLL_INTERVAL = 5000;
 
 interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
+  readonly initialArtifactId?: string;
 }
 
 export default function ChatPage({
   thread: initialThread,
   isEmbeddingModelEnabled,
+  initialArtifactId,
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
   const { confirm } = useConfirmation();
@@ -143,18 +144,20 @@ export default function ChatPage({
   );
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const {
-    openArtifact,
+    artifactPanel,
+    isArtifactPanelOpen,
     isExporting,
     handleOpenArtifact,
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
     handleCloseArtifact,
-  } = useArtifactActions(thread.id);
+  } = useArtifactActions(thread.id, initialArtifactId, thread.workspaceId);
 
   const { handleLetterheadChange } = useLetterheadChange({
-    artifactId: openArtifact?.id ?? '',
+    artifactId: artifactPanel.artifact?.id ?? '',
     threadId: thread.id,
+    workspaceId: thread.workspaceId,
   });
   const {
     context: workspaceContext,
@@ -455,14 +458,13 @@ export default function ChatPage({
   );
 
   let sidePanel: ReactNode;
-  if (openArtifact) {
+  if (isArtifactPanelOpen) {
     sidePanel = (
       <ArtifactSidePanel
-        artifact={openArtifact}
+        {...artifactPanel}
         onSave={handleSaveArtifact}
         onRevert={handleRevertArtifact}
         onExport={handleExportArtifact}
-        onClose={handleCloseArtifact}
         onLetterheadChange={handleLetterheadChange}
         isExporting={isExporting}
       />
@@ -476,7 +478,6 @@ export default function ChatPage({
       />
     );
   }
-
   return (
     <AppLayout>
       <PiiMaskProvider masks={piiMasks}>

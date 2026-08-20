@@ -1,4 +1,13 @@
 import { lazy, Suspense } from 'react';
+import { isAxiosError } from 'axios';
+import { AlertTriangle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@ayunis/ui/components/button';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
 import type { ArtifactResponseDto } from '@/shared/api';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ArtifactSidePanelSkeleton from './ArtifactSidePanelSkeleton';
@@ -22,7 +31,10 @@ const LazySpreadsheetEditor = lazy(() =>
 );
 
 interface ArtifactSidePanelProps {
-  readonly artifact: ArtifactResponseDto;
+  readonly artifact: ArtifactResponseDto | null;
+  readonly isLoading?: boolean;
+  readonly error?: unknown;
+  readonly onRetry: () => void;
   readonly onSave: (content: string) => void | Promise<void>;
   readonly onRevert: (versionNumber: number) => void;
   readonly onExport: (
@@ -37,6 +49,9 @@ interface ArtifactSidePanelProps {
 
 export function ArtifactSidePanel({
   artifact,
+  isLoading = false,
+  error,
+  onRetry,
   onSave,
   onRevert,
   onExport,
@@ -44,6 +59,75 @@ export function ArtifactSidePanel({
   onLetterheadChange,
   isExporting,
 }: ArtifactSidePanelProps) {
+  const { t } = useTranslation('chat');
+  const hasArtifactNotFoundError =
+    isAxiosError(error) && error.response?.status === 404;
+  const hasArtifactLoadError = Boolean(error) && !hasArtifactNotFoundError;
+
+  if (!artifact) {
+    if (isLoading) {
+      return <ArtifactSidePanelSkeleton onClose={onClose} />;
+    }
+
+    return (
+      <aside
+        className="flex h-full min-h-0 flex-col overflow-hidden border-l bg-background"
+        data-testid="artifact-side-panel-error"
+      >
+        <div className="flex items-center justify-between border-b px-3 py-2">
+          <h2 className="truncate text-sm font-semibold">
+            {t('chat.artifactPanel.title')}
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            data-testid="artifact-side-panel-close"
+            onClick={onClose}
+            aria-label={t('chat.artifactPanel.close')}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+        <div className="flex flex-1 items-start p-4">
+          <Alert variant="warning">
+            <AlertTriangle />
+            <AlertTitle
+              data-testid={
+                hasArtifactNotFoundError
+                  ? 'artifact-side-panel-not-found'
+                  : 'artifact-side-panel-load-error'
+              }
+            >
+              {t(
+                hasArtifactLoadError
+                  ? 'chat.artifactPanel.loadErrorTitle'
+                  : 'chat.artifactPanel.notFoundTitle',
+              )}
+            </AlertTitle>
+            <AlertDescription>
+              {t(
+                hasArtifactLoadError
+                  ? 'chat.artifactPanel.loadErrorDescription'
+                  : 'chat.artifactPanel.notFoundDescription',
+              )}
+              {hasArtifactLoadError && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  data-testid="artifact-side-panel-retry"
+                  onClick={onRetry}
+                >
+                  {t('chat.artifactPanel.retry')}
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </aside>
+    );
+  }
+
   // key={artifact.id} forces a remount when another artifact is opened: the
   // editors keep local state (grid data, dirty flag, selected version) that
   // must not leak from one artifact to the next.
@@ -92,6 +176,7 @@ export function ArtifactSidePanel({
       fallback={
         <ArtifactSidePanelSkeleton
           variant={artifact.type === 'spreadsheet' ? 'spreadsheet' : 'document'}
+          onClose={onClose}
         />
       }
     >

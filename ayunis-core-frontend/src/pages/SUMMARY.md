@@ -4,6 +4,8 @@ Page components composing widgets and features for each application route.
 
 Route-level page modules handle authentication, chat conversations, agent management, prompt libraries, knowledge base management, skill management, user settings, organization admin settings, and super-admin platform management. Each page follows a consistent internal structure with api/, ui/, and model/ subdirectories separating data hooks, components, and types.
 
+The workspace page also includes the Erstellte Inhalte tab for project artifacts. Artifact rows open the corresponding chat editor through URL search parameters, while artifact lists load within the workspace tabs.
+
 The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Its route loader fetches workspace context and attachable skill/knowledge-base candidates, while `api/useWorkspaceContextActions.ts` owns context mutations and invalidates the workspace context queries after changes.
 
 The `super-admin-settings/users/` page provides a searchable cross-organization user directory with password reset, organization navigation, deletion, and CSV export controls.
