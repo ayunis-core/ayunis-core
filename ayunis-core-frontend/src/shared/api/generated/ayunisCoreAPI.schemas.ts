@@ -3486,6 +3486,19 @@ export interface CreateWorkspaceDto {
   color?: string;
 }
 
+/**
+ * Effective access role for the caller (list responses only)
+ */
+export type WorkspaceResponseDtoRole = typeof WorkspaceResponseDtoRole[keyof typeof WorkspaceResponseDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceResponseDtoRole = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
 export interface WorkspaceResponseDto {
   /** Unique identifier of the workspace */
   id: string;
@@ -3509,6 +3522,8 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** Effective access role for the caller (list responses only) */
+  role?: WorkspaceResponseDtoRole;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */

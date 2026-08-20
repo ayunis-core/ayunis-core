@@ -1,6 +1,6 @@
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { WorkspaceMapper } from 'src/domain/workspaces/infrastructure/persistence/local/mappers/workspace.mapper';
 import { LocalWorkspaceAccessRepository } from 'src/domain/workspaces/infrastructure/persistence/local/local-workspace-access.repository';
 import { WorkspaceMemberRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-member.record';
@@ -9,6 +9,7 @@ import { WorkspaceTeamGrantRecord } from 'src/domain/workspaces/infrastructure/p
 import { WorkspaceTeamMemberOverrideRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-team-member-override.record';
 import { WorkspaceMemberStatus } from 'src/domain/workspaces/domain/value-objects/workspace-member-status.enum';
 import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
+import { WorkspaceVisibility } from 'src/domain/workspaces/domain/value-objects/workspace-visibility.enum';
 import {
   aWorkspace,
   TEST_ORG_ID,
@@ -20,8 +21,23 @@ const TEAM_ID = '44444444-4444-4444-8444-444444444444' as UUID;
 const TEAM_GRANT_ID = '55555555-5555-4555-8555-555555555555' as UUID;
 
 describe('LocalWorkspaceAccessRepository', () => {
-  const workspaceRepo = { findOne: jest.fn() };
-  const memberRepo = { findOne: jest.fn() };
+  const queryBuilder = {
+    leftJoin: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getManyAndCount: jest.fn(),
+  };
+  const workspaceRepo = {
+    findOne: jest.fn(),
+    createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+  };
+  const memberRepo = { findOne: jest.fn(), find: jest.fn() };
   const teamGrantRepo = { find: jest.fn() };
   const overrideRepo = { find: jest.fn() };
   const mapper = { toDomain: jest.fn() };
@@ -98,6 +114,64 @@ describe('LocalWorkspaceAccessRepository', () => {
     expect(workspaceRepo.findOne).toHaveBeenCalledWith({
       where: { id: TEST_WORKSPACE_ID, orgId: TEST_ORG_ID },
     });
+  });
+
+  it('lists and hydrates accessible workspaces with batched access queries', async () => {
+    const workspace = aWorkspace({
+      userId: randomUUID(),
+      visibility: WorkspaceVisibility.PRIVATE,
+    });
+    const workspaceRecord = {
+      id: TEST_WORKSPACE_ID,
+    } as WorkspaceRecord;
+    queryBuilder.getManyAndCount.mockResolvedValue([[workspaceRecord], 1]);
+    mapper.toDomain.mockReturnValue(workspace);
+    memberRepo.find.mockResolvedValue([
+      {
+        workspaceId: TEST_WORKSPACE_ID,
+        role: WorkspaceRole.USE,
+        status: WorkspaceMemberStatus.ACTIVE,
+      },
+    ]);
+    teamGrantRepo.find.mockResolvedValue([
+      {
+        id: TEAM_GRANT_ID,
+        workspaceId: TEST_WORKSPACE_ID,
+        teamId: TEAM_ID,
+        role: WorkspaceRole.EDIT,
+      },
+    ]);
+    overrideRepo.find.mockResolvedValue([]);
+
+    await expect(
+      repository.findAccessSnapshots(
+        { orgId: TEST_ORG_ID, userId: TEST_USER_ID, teamIds: [TEAM_ID] },
+        { limit: 20, offset: 0, sort: 'updatedAt' },
+      ),
+    ).resolves.toMatchObject({
+      data: [
+        {
+          workspace,
+          directMembership: {
+            role: WorkspaceRole.USE,
+            status: WorkspaceMemberStatus.ACTIVE,
+          },
+          teamGrants: [{ teamId: TEAM_ID, role: WorkspaceRole.EDIT }],
+        },
+      ],
+      total: 1,
+    });
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      expect.any(String),
+      'effective_activity_at',
+    );
+    expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+      'effective_activity_at',
+      'DESC',
+    );
+    expect(memberRepo.find).toHaveBeenCalledTimes(1);
+    expect(teamGrantRepo.find).toHaveBeenCalledTimes(1);
+    expect(overrideRepo.find).toHaveBeenCalledTimes(1);
   });
 
   it('returns null without querying grants when the workspace is outside the org', async () => {

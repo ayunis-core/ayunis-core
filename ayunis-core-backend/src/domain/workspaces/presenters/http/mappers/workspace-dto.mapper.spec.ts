@@ -1,5 +1,6 @@
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { aWorkspace } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { WorkspaceDtoMapper } from './workspace-dto.mapper';
 
 describe('WorkspaceDtoMapper', () => {
@@ -14,7 +15,14 @@ describe('WorkspaceDtoMapper', () => {
 
     const result = mapper.toPaginatedDto(
       new Paginated({
-        data: [{ workspace, chatCount: 4, lastActivityAt }],
+        data: [
+          {
+            workspace,
+            role: WorkspaceRole.EDIT,
+            chatCount: 4,
+            lastActivityAt,
+          },
+        ],
         limit: 20,
         offset: 0,
         total: 1,
@@ -32,6 +40,7 @@ describe('WorkspaceDtoMapper', () => {
           color: workspace.color,
           createdAt: workspace.createdAt.toISOString(),
           updatedAt: workspace.updatedAt.toISOString(),
+          role: WorkspaceRole.EDIT,
           chatCount: 4,
           lastActivityAt: lastActivityAt.toISOString(),
         },

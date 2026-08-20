@@ -1,6 +1,7 @@
 import { getLoggerToken } from 'nestjs-pino';
 import { Test } from '@nestjs/testing';
 import { randomUUID, type UUID } from 'crypto';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspaceAccessRepository } from 'src/domain/workspaces/application/ports/workspace-access-repository.port';
@@ -24,7 +25,10 @@ import {
 const TEAM_ID = '44444444-4444-4444-8444-444444444444' as UUID;
 
 describe('WorkspaceAccessService', () => {
-  const repository = { findAccessSnapshot: jest.fn() };
+  const repository = {
+    findAccessSnapshot: jest.fn(),
+    findAccessSnapshots: jest.fn(),
+  };
   const listMyTeams = { execute: jest.fn() };
   const contextService = { get: jest.fn() };
   let service: WorkspaceAccessService;
@@ -75,6 +79,48 @@ describe('WorkspaceAccessService', () => {
       userId: TEST_USER_ID,
       teamIds: [TEAM_ID],
     });
+  });
+
+  it('lists accessible workspaces with their effective roles in one batch', async () => {
+    const workspace = aWorkspace({ userId: randomUUID() });
+    repository.findAccessSnapshots.mockResolvedValue(
+      new Paginated({
+        data: [
+          {
+            workspace,
+            directMembership: {
+              role: WorkspaceRole.USE,
+              status: WorkspaceMemberStatus.ACTIVE,
+            },
+            teamGrants: [{ teamId: TEAM_ID, role: WorkspaceRole.EDIT }],
+          },
+        ],
+        limit: 20,
+        offset: 0,
+        total: 1,
+      }),
+    );
+
+    await expect(
+      service.findAllAccessible({ limit: 20, offset: 0, sort: 'updatedAt' }),
+    ).resolves.toEqual(
+      new Paginated({
+        data: [
+          expect.objectContaining({ workspace, role: WorkspaceRole.EDIT }),
+        ],
+        limit: 20,
+        offset: 0,
+        total: 1,
+      }),
+    );
+    expect(repository.findAccessSnapshots).toHaveBeenCalledWith(
+      {
+        orgId: TEST_ORG_ID,
+        userId: TEST_USER_ID,
+        teamIds: [TEAM_ID],
+      },
+      { limit: 20, offset: 0, sort: 'updatedAt' },
+    );
   });
 
   it('rejects an accessible workspace when the role is insufficient', async () => {

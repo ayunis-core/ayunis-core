@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
+import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { WorkspaceAccessRepository } from 'src/domain/workspaces/application/ports/workspace-access-repository.port';
+import {
+  WorkspaceAccessRepository,
+  type WorkspaceAccessSnapshot,
+} from 'src/domain/workspaces/application/ports/workspace-access-repository.port';
+import type { WorkspaceListOptions } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import {
   WorkspaceInsufficientRoleError,
   WorkspaceNotFoundError,
@@ -44,14 +49,24 @@ export class WorkspaceAccessService {
     });
     if (!snapshot) return null;
 
-    const resolution = this.policy.resolve({
-      isOwner: snapshot.workspace.userId === userId,
-      directMembership: snapshot.directMembership,
-      teamGrants: snapshot.teamGrants,
-      organizationVisible:
-        snapshot.workspace.visibility === WorkspaceVisibility.ORGANIZATION,
+    return this.resolveSnapshotOrNull(snapshot, userId);
+  }
+
+  async findAllAccessible(
+    query: WorkspaceListOptions,
+  ): Promise<Paginated<ResolvedWorkspaceAccess>> {
+    const { userId, orgId } = this.getContext();
+    const teams = await this.listMyTeamsUseCase.execute();
+    const page = await this.repository.findAccessSnapshots(
+      { orgId, userId, teamIds: teams.map(({ id }) => id) },
+      query,
+    );
+    return new Paginated({
+      data: page.data.map((snapshot) => this.resolveSnapshot(snapshot, userId)),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
     });
-    return resolution ? { workspace: snapshot.workspace, ...resolution } : null;
   }
 
   async requireRole(
@@ -68,6 +83,31 @@ export class WorkspaceAccessService {
       );
     }
     return access;
+  }
+
+  private resolveSnapshot(
+    snapshot: WorkspaceAccessSnapshot,
+    userId: UUID,
+  ): ResolvedWorkspaceAccess {
+    const resolution = this.resolveSnapshotOrNull(snapshot, userId);
+    if (!resolution) {
+      throw new Error(`Accessible workspace snapshot has no access source`);
+    }
+    return resolution;
+  }
+
+  private resolveSnapshotOrNull(
+    snapshot: WorkspaceAccessSnapshot,
+    userId: UUID,
+  ): ResolvedWorkspaceAccess | null {
+    const resolution = this.policy.resolve({
+      isOwner: snapshot.workspace.userId === userId,
+      directMembership: snapshot.directMembership,
+      teamGrants: snapshot.teamGrants,
+      organizationVisible:
+        snapshot.workspace.visibility === WorkspaceVisibility.ORGANIZATION,
+    });
+    return resolution ? { workspace: snapshot.workspace, ...resolution } : null;
   }
 
   private getContext(): { userId: UUID; orgId: UUID } {

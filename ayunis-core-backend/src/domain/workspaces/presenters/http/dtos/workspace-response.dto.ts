@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 
 export class WorkspaceResponseDto {
   @ApiProperty({
@@ -52,6 +53,12 @@ export class WorkspaceResponseDto {
     example: '2026-08-11T10:30:00.000Z',
   })
   updatedAt: string;
+
+  @ApiPropertyOptional({
+    description: 'Effective access role for the caller (list responses only)',
+    enum: WorkspaceRole,
+  })
+  role?: WorkspaceRole;
 
   @ApiPropertyOptional({
     description:
