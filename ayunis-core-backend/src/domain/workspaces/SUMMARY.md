@@ -12,8 +12,8 @@ the workspace. User-specific favorites and their order are owned by the
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace collaboration is being introduced in stack layers. Direct member
-invitations and team grant role management now exist at the application
-boundary; member overrides, HTTP and frontend sharing flows follow later.
+invitations, team grants and team-member overrides now exist at the application
+boundary; HTTP and frontend sharing flows follow later.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -31,8 +31,8 @@ The whole module sits behind the `workspacesEnabled` feature flag
 - **Collaboration** — workspaces persist private/organization visibility.
   Direct-member use cases manage pending invitations, acceptance, roles and
   removal. Team grant use cases add, update and remove immediate team access.
-  Team-scoped member-override records provide the next sharing layer's
-  persistence foundation; HTTP sharing endpoints follow later.
+  Team-scoped member overrides can replace or exclude a member's grant without
+  affecting other team members; HTTP sharing endpoints follow later.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   _before_ the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
@@ -67,6 +67,7 @@ workspaces/
 │   ├── ports/workspace-access-repository.port.ts
 │   ├── ports/workspace-members-repository.port.ts
 │   ├── ports/workspace-team-grants-repository.port.ts
+│   ├── ports/workspace-team-member-overrides-repository.port.ts
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
@@ -76,6 +77,8 @@ workspaces/
 │       ├── remove-workspace-member/
 │       ├── add-workspace-team-grant/ / update-workspace-team-grant-role/
 │       ├── remove-workspace-team-grant/
+│       ├── set-workspace-team-member-override/
+│       ├── reset-workspace-team-member-override/
 │       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
 │       ├── update-workspace/ / update-workspace-instruction/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
@@ -97,12 +100,15 @@ workspaces/
 │   ├── mappers/workspace.mapper.ts
 │   ├── mappers/workspace-member.mapper.ts
 │   ├── mappers/workspace-team-grant.mapper.ts
+│   ├── mappers/workspace-team-member-override.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   ├── local-workspace-access.repository.ts
 │   ├── local-workspace-members.repository.ts
 │   ├── local-workspace-members-repository.module.ts
 │   ├── local-workspace-team-grants.repository.ts
 │   ├── local-workspace-team-grants-repository.module.ts
+│   ├── local-workspace-team-member-overrides.repository.ts
+│   ├── local-workspace-team-member-overrides-repository.module.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
 │   ├── workspaces.controller.ts
