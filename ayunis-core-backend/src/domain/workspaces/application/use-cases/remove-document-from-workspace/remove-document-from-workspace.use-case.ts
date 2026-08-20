@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from '../../workspaces.errors';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { RemoveDocumentFromWorkspaceCommand } from './remove-document-from-workspace.command';
 
 @Injectable()
@@ -19,27 +16,19 @@ export class RemoveDocumentFromWorkspaceUseCase {
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: RemoveDocumentFromWorkspaceCommand): Promise<void> {
     this.logger.info(
-      {
-        workspaceId: command.workspaceId,
-        sourceId: command.sourceId,
-      },
+      { workspaceId: command.workspaceId, sourceId: command.sourceId },
       'removeDocumentFromWorkspace',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    const { workspace } = await this.accessService.requireAccessLevel(
       command.workspaceId,
+      WorkspaceAccessLevel.EDIT,
     );
-    if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
-
     const refs = await this.workspacesRepository.getContextRefs(
       command.workspaceId,
     );

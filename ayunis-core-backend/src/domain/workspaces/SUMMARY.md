@@ -48,8 +48,8 @@ to update it or browse attachment candidates.
   reference-only join rows into shared module-owned records. Attaching requires
   `edit` workspace access plus access to the referenced resource; detaching only
   requires `edit` workspace access. Direct workspace documents are owned
-  uploads: adding one creates a source and a
-  workspace-source assignment, while removal/deletion passes that source
+  uploads: editors can add or remove them, and adding one creates a source and a
+  workspace-source assignment. Removal or deletion passes that source
   through `DeleteSourceUseCase` so indexed data and object-storage files are
   purged.
 - **Run context** — `BuildWorkspaceRunContextUseCase` requires `use` access and

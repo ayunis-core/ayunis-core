@@ -2,20 +2,19 @@ import type { UUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { DeleteSourceCommand } from 'src/domain/sources/application/use-cases/delete-source/delete-source.command';
 import { DeleteSourceUseCase } from 'src/domain/sources/application/use-cases/delete-source/delete-source.use-case';
-import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
+import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import { WORKSPACE_MAX_SOURCES } from 'src/domain/workspaces/domain/workspaces.constants';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
   UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
   WorkspaceSourceLimitExceededError,
-} from '../../workspaces.errors';
+} from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
+import { WORKSPACE_MAX_SOURCES } from 'src/domain/workspaces/domain/workspaces.constants';
 import { AddDocumentToWorkspaceCommand } from './add-document-to-workspace.command';
 
 @Injectable()
@@ -26,29 +25,20 @@ export class AddDocumentToWorkspaceUseCase {
     private readonly workspacesRepository: WorkspacesRepository,
     private readonly startDocumentProcessingUseCase: StartDocumentProcessingUseCase,
     private readonly deleteSourceUseCase: DeleteSourceUseCase,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(command: AddDocumentToWorkspaceCommand): Promise<FileSource> {
     this.logger.info(
-      {
-        workspaceId: command.workspaceId,
-        fileName: command.fileName,
-      },
+      { workspaceId: command.workspaceId, fileName: command.fileName },
       'addDocumentToWorkspace',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    const { workspace } = await this.accessService.requireAccessLevel(
       command.workspaceId,
+      WorkspaceAccessLevel.EDIT,
     );
-    if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
-
     await this.assertSourceCapacity(command.workspaceId);
-
     const source = await this.startDocumentProcessingUseCase.execute(
       new StartDocumentProcessingCommand({
         fileData: command.fileData,
