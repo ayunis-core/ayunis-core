@@ -29,6 +29,12 @@ import { ListWorkspaceKnowledgeBaseCandidatesUseCase } from './application/use-c
 import { ListWorkspaceSkillsUseCase } from './application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
 import { ListWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-workspace-knowledge-bases/list-workspace-knowledge-bases.use-case';
 import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-workspace-documents/list-workspace-documents.use-case';
+import { TeamsModule } from 'src/iam/teams/teams.module';
+import { WorkspaceAccessRepository } from './application/ports/workspace-access-repository.port';
+import { LocalWorkspaceAccessRepository } from './infrastructure/persistence/local/local-workspace-access.repository';
+import { WorkspaceAccessService } from './application/services/workspace-access.service';
+import { WorkspaceAccessPolicyService } from './application/services/workspace-access-policy.service';
+import { GetWorkspaceAccessUseCase } from './application/use-cases/get-workspace-access/get-workspace-access.use-case';
 
 @Module({
   imports: [
@@ -37,6 +43,7 @@ import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-work
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
     SourcesModule,
+    TeamsModule,
   ],
   controllers: [WorkspacesController, WorkspaceContextController],
   providers: [
@@ -44,6 +51,13 @@ import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-work
       provide: WorkspacesRepository,
       useExisting: LocalWorkspacesRepository,
     },
+    {
+      provide: WorkspaceAccessRepository,
+      useExisting: LocalWorkspaceAccessRepository,
+    },
+    WorkspaceAccessPolicyService,
+    WorkspaceAccessService,
+    GetWorkspaceAccessUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
@@ -74,6 +88,7 @@ import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-work
     UpdateWorkspaceUseCase,
     DeleteWorkspaceUseCase,
     BuildWorkspaceRunContextUseCase,
+    GetWorkspaceAccessUseCase,
   ],
 })
 export class WorkspacesModule {}
