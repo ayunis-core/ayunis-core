@@ -27,6 +27,10 @@ The whole module sits behind the `workspacesEnabled` feature flag
   catalogue. The backend only guards their shape (`WORKSPACE_ICON_PATTERN`,
   `WORKSPACE_COLOR_PATTERN`); `color` is either a palette key or a `#rrggbb`
   literal produced by the custom-colour picker.
+- **Collaboration foundation** — workspaces persist private/organization
+  visibility. Direct member, team grant, and team-scoped member-override
+  records provide the role/access schema; the sharing API and use-case
+  authorization are added in the following stack layers.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   _before_ the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
@@ -46,11 +50,13 @@ The whole module sits behind the `workspacesEnabled` feature flag
 ```text
 workspaces/
 ├── domain/
-│   ├── workspace.entity.ts          # rename/describe/restyle/instruct
+│   ├── workspace.entity.ts          # identity, appearance and visibility
 │   ├── workspace-run-context.entity.ts
+│   ├── value-objects/               # role, visibility, membership status
 │   └── workspaces.constants.ts      # limits, defaults, icon/colour patterns
 ├── application/
 │   ├── workspaces.errors.ts
+│   ├── services/workspace-access-policy.service.ts
 │   ├── util/workspace-fields.ts     # field validation (name/description/appearance)
 │   ├── events/
 │   │   └── workspace-deletion-requested.event.ts
@@ -87,6 +93,9 @@ workspaces/
 │   ├── schema/workspace-skill-assignment.record.ts
 │   ├── schema/workspace-knowledge-base-assignment.record.ts
 │   ├── schema/workspace-source-assignment.record.ts
+│   ├── schema/workspace-member.record.ts
+│   ├── schema/workspace-team-grant.record.ts
+│   ├── schema/workspace-team-member-override.record.ts
 │   ├── mappers/workspace.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   └── local-workspaces-repository.module.ts
