@@ -27,12 +27,12 @@ import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cas
 import {
   RunUserInput,
   RunToolResultInput,
-} from '../../../domain/run-input.entity';
-import type { RunInput } from '../../../domain/run-input.entity';
+} from 'src/domain/runs/domain/run-input.entity';
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -41,30 +41,33 @@ import {
   RunNoModelFoundError,
   RunToolRepeatedlyFailingError,
   UnexpectedRunError,
-} from '../../runs.errors';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { MessageCleanupService } from '../../services/message-cleanup.service';
-import { RunTelemetryService } from '../../services/run-telemetry.service';
-import { ToolResultCollectorService } from '../../services/tool-result-collector.service';
-import { BackendToolAdapter } from '../../agent-runtime/backend-tool.adapter';
-import { PersistenceHookFactory } from '../../agent-runtime/hooks/persistence-hook.factory';
-import { UsageHookFactory } from '../../agent-runtime/hooks/usage-hook.factory';
-import { ToolUsageHookFactory } from '../../agent-runtime/hooks/tool-usage-hook.factory';
-import { SkillActivationHookFactory } from '../../agent-runtime/hooks/skill-activation-hook.factory';
-import { ContextBudgetHookFactory } from '../../agent-runtime/hooks/context-budget-hook.factory';
-import { adaptRunEventsToStream } from '../../agent-runtime/run-event-stream.adapter';
-import { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
-import { RuntimeModelProviderDecorator } from '../../agent-runtime/runtime-model-provider.decorator';
-import { RuntimeHistoryMaterializer } from '../../agent-runtime/runtime-history-materializer';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
-import type { RunExecutionOutcome } from '../../run-execution-outcome';
-import type { ExecuteRunCommand } from '../execute-run/execute-run.command';
+} from 'src/domain/runs/application/runs.errors';
+import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
+import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
+import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
+import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import type {
   PreparedRuntimeRun,
   PreparedRuntimeTools,
 } from './execute-run-via-runtime.types';
-import { MAX_CONTEXT_TOKENS } from '../../context-budget.constants';
+import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.constants';
+import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 
 const RUNTIME_MAX_ITERATIONS = 50;
 
@@ -109,6 +112,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly toolResultCollectorService: ToolResultCollectorService,
     private readonly toolUsageHookFactory: ToolUsageHookFactory,
     private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
+    private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     @InjectPinoLogger(ExecuteRunViaRuntimeUseCase.name)
     private readonly logger: PinoLogger,
     @InjectPinoLogger('RunEventStreamAdapter')
@@ -145,21 +149,21 @@ export class ExecuteRunViaRuntimeUseCase {
       { userId, orgId },
       permittedModel.model,
     );
-
-    const isAnonymous =
-      found.thread.isAnonymous || permittedModel.anonymousOnly;
+    const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
-    const canUseTools = permittedModel.model.canUseTools;
+    const workspaceContext = await this.buildWorkspaceContext(found.thread);
     const activated = await this.activateSkillIfRequested(
       command,
       found.thread,
+      workspaceContext,
     );
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
         activated.thread,
         activeSkills,
-        canUseTools,
-        isAnonymous,
+        permittedModel.model.canUseTools,
+        anonymous,
+        workspaceContext,
       );
 
     return {
@@ -167,14 +171,21 @@ export class ExecuteRunViaRuntimeUseCase {
       model: permittedModel.model,
       orgId,
       userId,
-      isAnonymous,
+      isAnonymous: anonymous,
       instructions: appendSkillActivatedNote(instructions, activated.skillName),
       ...this.prepareTools(tools),
       activeSkills,
-      canUseTools,
+      canUseTools: permittedModel.model.canUseTools,
       skillInstructions: activated.skillInstructions,
       activatedSkillName: activated.skillName,
     };
+  }
+
+  private buildWorkspaceContext(thread: Thread) {
+    if (!thread.workspaceId) return Promise.resolve(undefined);
+    return this.buildWorkspaceRunContextUseCase.execute(
+      new BuildWorkspaceRunContextQuery(thread.workspaceId),
+    );
   }
 
   private prepareTools(backendTools: BackendTool[]): PreparedRuntimeTools {
@@ -185,15 +196,10 @@ export class ExecuteRunViaRuntimeUseCase {
     };
   }
 
-  /**
-   * Activates the requested skill on the thread before tool assembly, so the
-   * skill's sources, integrations and knowledge bases are reflected in the
-   * assembled tools. Returns the refreshed thread and the skill's instructions
-   * (folded into the user message, as the legacy loop does).
-   */
   private async activateSkillIfRequested(
     command: ExecuteRunCommand,
     thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
   ): Promise<{
     thread: Thread;
     skillInstructions?: string;
@@ -202,6 +208,11 @@ export class ExecuteRunViaRuntimeUseCase {
     const input = command.input;
     if (!(input instanceof RunUserInput) || !input.skillId) {
       return { thread };
+    }
+    if (workspaceContext?.skills.some((skill) => skill.id === input.skillId)) {
+      throw new RunInvalidInputError(
+        'Project skills are already active in this workspace',
+      );
     }
     const activation = await this.skillActivationService.activateOnThread(
       input.skillId,

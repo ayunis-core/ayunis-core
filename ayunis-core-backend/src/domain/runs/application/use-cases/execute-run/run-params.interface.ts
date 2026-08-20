@@ -7,6 +7,7 @@ import type {
   RunToolResultInput,
 } from 'src/domain/runs/domain/run-input.entity';
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
+import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 
 export interface RunParams {
   thread: Thread;
@@ -18,6 +19,7 @@ export interface RunParams {
   orgId: UUID;
   isAnonymous: boolean;
   activeSkills: Skill[];
+  workspaceContext?: WorkspaceRunContext;
   skillId?: UUID;
   skillInstructions?: string;
   activatedSkillName?: string;
