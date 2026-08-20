@@ -12,6 +12,7 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "settings": "Settings",
+    "share": "Share",
     "truncatedChats": "Showing the first {{count}} chats"
   },
   "artifacts": {

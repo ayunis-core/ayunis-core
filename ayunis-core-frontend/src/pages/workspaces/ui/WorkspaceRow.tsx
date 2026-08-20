@@ -49,7 +49,9 @@ export function WorkspaceRow({ workspace }: Readonly<WorkspaceRowProps>) {
         </ItemDescription>
       </ItemContent>
       <ItemActions className="relative">
-        <WorkspacePinButton workspaceId={workspace.id} />
+        {workspace.isOwner ? (
+          <WorkspacePinButton workspaceId={workspace.id} />
+        ) : null}
       </ItemActions>
     </Item>
   );

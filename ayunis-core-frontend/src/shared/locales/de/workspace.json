@@ -12,6 +12,7 @@
     "pin": "Anheften",
     "unpin": "Nicht mehr anheften",
     "settings": "Einstellungen",
+    "share": "Teilen",
     "truncatedChats": "Die ersten {{count}} Chats werden angezeigt"
   },
   "artifacts": {

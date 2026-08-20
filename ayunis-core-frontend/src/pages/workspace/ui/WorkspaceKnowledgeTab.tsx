@@ -30,7 +30,8 @@ const ACCEPTED_DOCUMENT_FILE_TYPES =
 
 export function WorkspaceKnowledgeTab({
   workspaceId,
-}: Readonly<{ workspaceId: string }>) {
+  canEdit,
+}: Readonly<{ workspaceId: string; canEdit: boolean }>) {
   const { t } = useTranslation('workspace');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -70,7 +71,7 @@ export function WorkspaceKnowledgeTab({
     useWorkspaceContextControllerListKnowledgeBaseCandidates(
       workspaceId,
       candidateParams,
-      { query: { enabled: isDialogOpen } },
+      { query: { enabled: canEdit && isDialogOpen } },
     );
   const {
     attachKnowledgeBases,
@@ -88,8 +89,8 @@ export function WorkspaceKnowledgeTab({
         page={knowledgePage}
         total={pageTotal(knowledgePageData?.pagination)}
         onPageChange={setKnowledgePage}
-        onDetach={detachKnowledgeBase}
-        onAdd={() => setIsDialogOpen(true)}
+        onDetach={canEdit ? detachKnowledgeBase : undefined}
+        onAdd={canEdit ? () => setIsDialogOpen(true) : undefined}
       />
       <WorkspaceDocumentsSection
         items={documentPageData?.data ?? []}
@@ -97,10 +98,10 @@ export function WorkspaceKnowledgeTab({
         page={documentPage}
         total={pageTotal(documentPageData?.pagination)}
         onPageChange={setDocumentPage}
-        onRemove={removeDocument}
+        onRemove={canEdit ? removeDocument : undefined}
         fileInputRef={fileInputRef}
         isUploading={isUploadingDocument}
-        onUpload={(file) => uploadDocument(file)}
+        onUpload={canEdit ? (file) => uploadDocument(file) : undefined}
       />
       <AddWorkspaceItemsDialog
         open={isDialogOpen}
@@ -140,11 +141,11 @@ function WorkspaceKnowledgeBaseSection({
   page: number;
   total: number;
   onPageChange: (page: number) => void;
-  onDetach: (id: string) => void;
-  onAdd: () => void;
+  onDetach?: (id: string) => void;
+  onAdd?: () => void;
 }>) {
   const { t } = useTranslation('workspace');
-  const addButton = (
+  const addButton = onAdd ? (
     <Button
       variant="outline"
       size="sm"
@@ -153,7 +154,7 @@ function WorkspaceKnowledgeBaseSection({
     >
       <Plus /> {t('context.knowledge.add')}
     </Button>
-  );
+  ) : undefined;
 
   return (
     <WorkspaceContextSection
@@ -182,10 +183,12 @@ function WorkspaceKnowledgeBaseSection({
                 count: knowledgeBase.documentCount,
               })}
               action={
-                <RemoveButton
-                  label={t('context.knowledge.detach')}
-                  onClick={() => onDetach(knowledgeBase.id)}
-                />
+                onDetach ? (
+                  <RemoveButton
+                    label={t('context.knowledge.detach')}
+                    onClick={() => onDetach(knowledgeBase.id)}
+                  />
+                ) : undefined
               }
             />
           ))}
@@ -217,10 +220,10 @@ function WorkspaceDocumentsSection({
   page: number;
   total: number;
   onPageChange: (page: number) => void;
-  onRemove: (id: string) => void;
+  onRemove?: (id: string) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
   isUploading: boolean;
-  onUpload: (file: File) => void;
+  onUpload?: (file: File) => void;
 }>) {
   const { t } = useTranslation('workspace');
   return (
@@ -228,29 +231,31 @@ function WorkspaceDocumentsSection({
       title={t('context.documents.title')}
       description={t('context.documents.description')}
       action={
-        <>
-          <input
-            ref={fileInputRef}
-            type="file"
-            data-testid="workspace-document-file-input"
-            className="hidden"
-            accept={ACCEPTED_DOCUMENT_FILE_TYPES}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) onUpload(file);
-              event.target.value = '';
-            }}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            data-testid="workspace-document-upload"
-            disabled={isUploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload /> {t('context.documents.upload')}
-          </Button>
-        </>
+        onUpload ? (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              data-testid="workspace-document-file-input"
+              className="hidden"
+              accept={ACCEPTED_DOCUMENT_FILE_TYPES}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onUpload(file);
+                event.target.value = '';
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="workspace-document-upload"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload /> {t('context.documents.upload')}
+            </Button>
+          </>
+        ) : undefined
       }
     >
       {isLoading ? <p>{t('context.addDialog.loading')}</p> : null}
@@ -276,10 +281,12 @@ function WorkspaceDocumentsSection({
                 )
               }
               action={
-                <RemoveButton
-                  label={t('context.documents.remove')}
-                  onClick={() => onRemove(document.id)}
-                />
+                onRemove ? (
+                  <RemoveButton
+                    label={t('context.documents.remove')}
+                    onClick={() => onRemove(document.id)}
+                  />
+                ) : undefined
               }
             />
           ))}
