@@ -7196,6 +7196,487 @@
         "tags": ["workspaces"]
       }
     },
+    "/workspaces/{workspaceId}/access": {
+      "get": {
+        "operationId": "WorkspaceSharingController_getAccess",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceAccessResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user workspace access",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/sharing": {
+      "get": {
+        "operationId": "WorkspaceSharingController_getSharing",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSharingResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get workspace sharing settings",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/sharing/visibility": {
+      "patch": {
+        "operationId": "WorkspaceSharingController_updateVisibility",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceVisibilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Update workspace visibility",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/members": {
+      "post": {
+        "operationId": "WorkspaceMembersController_invite",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteWorkspaceMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Invite a workspace member",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/members/{userId}": {
+      "patch": {
+        "operationId": "WorkspaceMembersController_updateRole",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Update a workspace member role",
+        "tags": ["workspace-sharing"]
+      },
+      "delete": {
+        "operationId": "WorkspaceMembersController_remove",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a workspace member or invitation",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/team-grants": {
+      "post": {
+        "operationId": "WorkspaceTeamGrantsController_add",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWorkspaceTeamGrantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Grant a team workspace access",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/team-grants/{teamId}": {
+      "patch": {
+        "operationId": "WorkspaceTeamGrantsController_updateRole",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Update a workspace team role",
+        "tags": ["workspace-sharing"]
+      },
+      "delete": {
+        "operationId": "WorkspaceTeamGrantsController_remove",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove a workspace team grant",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspaces/{workspaceId}/team-grants/{teamId}/overrides/{userId}": {
+      "put": {
+        "operationId": "WorkspaceTeamGrantsController_setOverride",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetWorkspaceTeamMemberOverrideDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Set a team member workspace override",
+        "tags": ["workspace-sharing"]
+      },
+      "delete": {
+        "operationId": "WorkspaceTeamGrantsController_resetOverride",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Reset a team member workspace override",
+        "tags": ["workspace-sharing"]
+      }
+    },
+    "/workspace-invitations": {
+      "get": {
+        "operationId": "WorkspaceInvitationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceInvitationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List my pending workspace invitations",
+        "tags": ["workspace-invitations"]
+      }
+    },
+    "/workspace-invitations/{workspaceId}/accept": {
+      "post": {
+        "operationId": "WorkspaceInvitationsController_accept",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Accept a workspace invitation",
+        "tags": ["workspace-invitations"]
+      }
+    },
+    "/workspace-invitations/{workspaceId}/decline": {
+      "post": {
+        "operationId": "WorkspaceInvitationsController_decline",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Decline a workspace invitation",
+        "tags": ["workspace-invitations"]
+      }
+    },
+    "/workspaces/{workspaceId}/team-grants/{teamId}/members": {
+      "get": {
+        "operationId": "WorkspaceTeamGrantMembersController_list",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teamId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceSharingUserDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List members of a granted workspace team",
+        "tags": ["workspace-sharing"]
+      }
+    },
     "/favorites": {
       "get": {
         "operationId": "FavoritesController_findAll",
@@ -16715,6 +17196,10 @@
             "description": "Effective access role for the caller (list responses only)",
             "enum": ["use", "edit", "full"]
           },
+          "isOwner": {
+            "type": "boolean",
+            "description": "Whether the caller owns the workspace"
+          },
           "chatCount": {
             "type": "number",
             "description": "Number of chats filed under the workspace (list responses only)",
@@ -17016,6 +17501,240 @@
           }
         },
         "required": ["instruction"]
+      },
+      "WorkspaceAccessResponseDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          },
+          "isOwner": {
+            "type": "boolean"
+          }
+        },
+        "required": ["role", "isOwner"]
+      },
+      "WorkspaceSharingUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": ["id", "name", "email"]
+      },
+      "WorkspaceSharingAvailableTeamDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "name", "memberCount"]
+      },
+      "WorkspaceSharingMemberDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/WorkspaceSharingUserDto"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "active"]
+          }
+        },
+        "required": ["user", "role", "status"]
+      },
+      "WorkspaceSharingOverrideDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/WorkspaceSharingUserDto"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"],
+            "nullable": true
+          },
+          "excluded": {
+            "type": "boolean"
+          }
+        },
+        "required": ["user", "role", "excluded"]
+      },
+      "WorkspaceSharingTeamGrantDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "memberCount": {
+            "type": "number"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSharingOverrideDto"
+            }
+          }
+        },
+        "required": ["id", "name", "memberCount", "role", "overrides"]
+      },
+      "WorkspaceSharingResponseDto": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": ["private", "organization"]
+          },
+          "owner": {
+            "$ref": "#/components/schemas/WorkspaceSharingUserDto"
+          },
+          "availableTeams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSharingAvailableTeamDto"
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSharingMemberDto"
+            }
+          },
+          "teamGrants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSharingTeamGrantDto"
+            }
+          }
+        },
+        "required": [
+          "visibility",
+          "owner",
+          "availableTeams",
+          "members",
+          "teamGrants"
+        ]
+      },
+      "UpdateWorkspaceVisibilityDto": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "type": "string",
+            "enum": ["private", "organization"]
+          }
+        },
+        "required": ["visibility"]
+      },
+      "InviteWorkspaceMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          }
+        },
+        "required": ["userId", "role"]
+      },
+      "WorkspaceRoleDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          }
+        },
+        "required": ["role"]
+      },
+      "AddWorkspaceTeamGrantDto": {
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          }
+        },
+        "required": ["teamId", "role"]
+      },
+      "SetWorkspaceTeamMemberOverrideDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"],
+            "nullable": true
+          }
+        },
+        "required": ["role"]
+      },
+      "WorkspaceInvitationWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "icon", "color"]
+      },
+      "WorkspaceInvitationResponseDto": {
+        "type": "object",
+        "properties": {
+          "workspace": {
+            "$ref": "#/components/schemas/WorkspaceInvitationWorkspaceDto"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["use", "edit", "full"]
+          }
+        },
+        "required": ["workspace", "role"]
       },
       "WorkspaceFavoriteResponseDto": {
         "type": "object",

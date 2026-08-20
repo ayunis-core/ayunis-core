@@ -35,6 +35,7 @@ import type {
   AddGlobalPiiWhitelistWordRequestDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
+  AddWorkspaceTeamGrantDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
   ApiKeyResponseDto,
@@ -104,6 +105,7 @@ import type {
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
   InviteDetailResponseDto,
+  InviteWorkspaceMemberDto,
   InvitesControllerGetInvitesParams,
   IpAllowlistResponseDto,
   IsCloudResponseDto,
@@ -179,6 +181,7 @@ import type {
   SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
+  SetWorkspaceTeamMemberOverrideDto,
   ShareResponseDto,
   SharesControllerGetSharesParams,
   SkillResponseDto,
@@ -252,6 +255,7 @@ import type {
   UpdateUserRoleDto,
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
+  UpdateWorkspaceVisibilityDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -272,6 +276,7 @@ import type {
   UserSystemPromptResponseDto,
   UserUsageResponseDto,
   ValidationResponseDto,
+  WorkspaceAccessResponseDto,
   WorkspaceContextControllerAddDocumentBody,
   WorkspaceContextControllerListDocumentsParams,
   WorkspaceContextControllerListKnowledgeBaseCandidatesParams,
@@ -281,10 +286,14 @@ import type {
   WorkspaceContextResponseDto,
   WorkspaceDocumentListResponseDto,
   WorkspaceDocumentResponseDto,
+  WorkspaceInvitationResponseDto,
   WorkspaceKnowledgeBaseCandidateListResponseDto,
   WorkspaceKnowledgeBaseListResponseDto,
   WorkspaceListResponseDto,
   WorkspaceResponseDto,
+  WorkspaceRoleDto,
+  WorkspaceSharingResponseDto,
+  WorkspaceSharingUserDto,
   WorkspaceSkillCandidateListResponseDto,
   WorkspaceSkillListResponseDto,
   WorkspacesControllerFindAllParams
@@ -14575,6 +14584,1097 @@ const {mutation: mutationOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     
+/**
+ * @summary Get the current user workspace access
+ */
+export const workspaceSharingControllerGetAccess = (
+    workspaceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceAccessResponseDto>(
+      {url: `/workspaces/${workspaceId}/access`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceSharingControllerGetAccessQueryKey = (workspaceId?: string,) => {
+    return [
+    `/workspaces/${workspaceId}/access`
+    ] as const;
+    }
+
+    
+export const getWorkspaceSharingControllerGetAccessQueryOptions = <TData = Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError = unknown>(workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceSharingControllerGetAccessQueryKey(workspaceId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>> = ({ signal }) => workspaceSharingControllerGetAccess(workspaceId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workspaceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceSharingControllerGetAccessQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>>
+export type WorkspaceSharingControllerGetAccessQueryError = unknown
+
+
+export function useWorkspaceSharingControllerGetAccess<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError = unknown>(
+ workspaceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerGetAccess<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerGetAccess<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current user workspace access
+ */
+
+export function useWorkspaceSharingControllerGetAccess<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetAccess>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceSharingControllerGetAccessQueryOptions(workspaceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get workspace sharing settings
+ */
+export const workspaceSharingControllerGetSharing = (
+    workspaceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceSharingResponseDto>(
+      {url: `/workspaces/${workspaceId}/sharing`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceSharingControllerGetSharingQueryKey = (workspaceId?: string,) => {
+    return [
+    `/workspaces/${workspaceId}/sharing`
+    ] as const;
+    }
+
+    
+export const getWorkspaceSharingControllerGetSharingQueryOptions = <TData = Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError = unknown>(workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceSharingControllerGetSharingQueryKey(workspaceId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>> = ({ signal }) => workspaceSharingControllerGetSharing(workspaceId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workspaceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceSharingControllerGetSharingQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>>
+export type WorkspaceSharingControllerGetSharingQueryError = unknown
+
+
+export function useWorkspaceSharingControllerGetSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError = unknown>(
+ workspaceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerGetSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceSharingControllerGetSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get workspace sharing settings
+ */
+
+export function useWorkspaceSharingControllerGetSharing<TData = Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError = unknown>(
+ workspaceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceSharingControllerGetSharing>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceSharingControllerGetSharingQueryOptions(workspaceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Update workspace visibility
+ */
+export const workspaceSharingControllerUpdateVisibility = (
+    workspaceId: string,
+    updateWorkspaceVisibilityDto: UpdateWorkspaceVisibilityDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/sharing/visibility`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateWorkspaceVisibilityDto
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceSharingControllerUpdateVisibilityMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>, TError,{workspaceId: string;data: UpdateWorkspaceVisibilityDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>, TError,{workspaceId: string;data: UpdateWorkspaceVisibilityDto}, TContext> => {
+
+const mutationKey = ['workspaceSharingControllerUpdateVisibility'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>, {workspaceId: string;data: UpdateWorkspaceVisibilityDto}> = (props) => {
+          const {workspaceId,data} = props ?? {};
+
+          return  workspaceSharingControllerUpdateVisibility(workspaceId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceSharingControllerUpdateVisibilityMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>>
+    export type WorkspaceSharingControllerUpdateVisibilityMutationBody = UpdateWorkspaceVisibilityDto
+    export type WorkspaceSharingControllerUpdateVisibilityMutationError = unknown
+
+    /**
+ * @summary Update workspace visibility
+ */
+export const useWorkspaceSharingControllerUpdateVisibility = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>, TError,{workspaceId: string;data: UpdateWorkspaceVisibilityDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceSharingControllerUpdateVisibility>>,
+        TError,
+        {workspaceId: string;data: UpdateWorkspaceVisibilityDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceSharingControllerUpdateVisibilityMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Invite a workspace member
+ */
+export const workspaceMembersControllerInvite = (
+    workspaceId: string,
+    inviteWorkspaceMemberDto: InviteWorkspaceMemberDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/members`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: inviteWorkspaceMemberDto, signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceMembersControllerInviteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerInvite>>, TError,{workspaceId: string;data: InviteWorkspaceMemberDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerInvite>>, TError,{workspaceId: string;data: InviteWorkspaceMemberDto}, TContext> => {
+
+const mutationKey = ['workspaceMembersControllerInvite'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerInvite>>, {workspaceId: string;data: InviteWorkspaceMemberDto}> = (props) => {
+          const {workspaceId,data} = props ?? {};
+
+          return  workspaceMembersControllerInvite(workspaceId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerInviteMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerInvite>>>
+    export type WorkspaceMembersControllerInviteMutationBody = InviteWorkspaceMemberDto
+    export type WorkspaceMembersControllerInviteMutationError = unknown
+
+    /**
+ * @summary Invite a workspace member
+ */
+export const useWorkspaceMembersControllerInvite = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerInvite>>, TError,{workspaceId: string;data: InviteWorkspaceMemberDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerInvite>>,
+        TError,
+        {workspaceId: string;data: InviteWorkspaceMemberDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceMembersControllerInviteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Update a workspace member role
+ */
+export const workspaceMembersControllerUpdateRole = (
+    workspaceId: string,
+    userId: string,
+    workspaceRoleDto: WorkspaceRoleDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/members/${userId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: workspaceRoleDto
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceMembersControllerUpdateRoleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,{workspaceId: string;userId: string;data: WorkspaceRoleDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,{workspaceId: string;userId: string;data: WorkspaceRoleDto}, TContext> => {
+
+const mutationKey = ['workspaceMembersControllerUpdateRole'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, {workspaceId: string;userId: string;data: WorkspaceRoleDto}> = (props) => {
+          const {workspaceId,userId,data} = props ?? {};
+
+          return  workspaceMembersControllerUpdateRole(workspaceId,userId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerUpdateRoleMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>>
+    export type WorkspaceMembersControllerUpdateRoleMutationBody = WorkspaceRoleDto
+    export type WorkspaceMembersControllerUpdateRoleMutationError = unknown
+
+    /**
+ * @summary Update a workspace member role
+ */
+export const useWorkspaceMembersControllerUpdateRole = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>, TError,{workspaceId: string;userId: string;data: WorkspaceRoleDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerUpdateRole>>,
+        TError,
+        {workspaceId: string;userId: string;data: WorkspaceRoleDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceMembersControllerUpdateRoleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a workspace member or invitation
+ */
+export const workspaceMembersControllerRemove = (
+    workspaceId: string,
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/members/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceMembersControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,{workspaceId: string;userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,{workspaceId: string;userId: string}, TContext> => {
+
+const mutationKey = ['workspaceMembersControllerRemove'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, {workspaceId: string;userId: string}> = (props) => {
+          const {workspaceId,userId} = props ?? {};
+
+          return  workspaceMembersControllerRemove(workspaceId,userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>>
+    
+    export type WorkspaceMembersControllerRemoveMutationError = unknown
+
+    /**
+ * @summary Remove a workspace member or invitation
+ */
+export const useWorkspaceMembersControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,{workspaceId: string;userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerRemove>>,
+        TError,
+        {workspaceId: string;userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceMembersControllerRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Grant a team workspace access
+ */
+export const workspaceTeamGrantsControllerAdd = (
+    workspaceId: string,
+    addWorkspaceTeamGrantDto: AddWorkspaceTeamGrantDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/team-grants`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addWorkspaceTeamGrantDto, signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceTeamGrantsControllerAddMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>, TError,{workspaceId: string;data: AddWorkspaceTeamGrantDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>, TError,{workspaceId: string;data: AddWorkspaceTeamGrantDto}, TContext> => {
+
+const mutationKey = ['workspaceTeamGrantsControllerAdd'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>, {workspaceId: string;data: AddWorkspaceTeamGrantDto}> = (props) => {
+          const {workspaceId,data} = props ?? {};
+
+          return  workspaceTeamGrantsControllerAdd(workspaceId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceTeamGrantsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>>
+    export type WorkspaceTeamGrantsControllerAddMutationBody = AddWorkspaceTeamGrantDto
+    export type WorkspaceTeamGrantsControllerAddMutationError = unknown
+
+    /**
+ * @summary Grant a team workspace access
+ */
+export const useWorkspaceTeamGrantsControllerAdd = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>, TError,{workspaceId: string;data: AddWorkspaceTeamGrantDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceTeamGrantsControllerAdd>>,
+        TError,
+        {workspaceId: string;data: AddWorkspaceTeamGrantDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceTeamGrantsControllerAddMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Update a workspace team role
+ */
+export const workspaceTeamGrantsControllerUpdateRole = (
+    workspaceId: string,
+    teamId: string,
+    workspaceRoleDto: WorkspaceRoleDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/team-grants/${teamId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: workspaceRoleDto
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceTeamGrantsControllerUpdateRoleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>, TError,{workspaceId: string;teamId: string;data: WorkspaceRoleDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>, TError,{workspaceId: string;teamId: string;data: WorkspaceRoleDto}, TContext> => {
+
+const mutationKey = ['workspaceTeamGrantsControllerUpdateRole'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>, {workspaceId: string;teamId: string;data: WorkspaceRoleDto}> = (props) => {
+          const {workspaceId,teamId,data} = props ?? {};
+
+          return  workspaceTeamGrantsControllerUpdateRole(workspaceId,teamId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceTeamGrantsControllerUpdateRoleMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>>
+    export type WorkspaceTeamGrantsControllerUpdateRoleMutationBody = WorkspaceRoleDto
+    export type WorkspaceTeamGrantsControllerUpdateRoleMutationError = unknown
+
+    /**
+ * @summary Update a workspace team role
+ */
+export const useWorkspaceTeamGrantsControllerUpdateRole = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>, TError,{workspaceId: string;teamId: string;data: WorkspaceRoleDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceTeamGrantsControllerUpdateRole>>,
+        TError,
+        {workspaceId: string;teamId: string;data: WorkspaceRoleDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceTeamGrantsControllerUpdateRoleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove a workspace team grant
+ */
+export const workspaceTeamGrantsControllerRemove = (
+    workspaceId: string,
+    teamId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/team-grants/${teamId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceTeamGrantsControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>, TError,{workspaceId: string;teamId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>, TError,{workspaceId: string;teamId: string}, TContext> => {
+
+const mutationKey = ['workspaceTeamGrantsControllerRemove'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>, {workspaceId: string;teamId: string}> = (props) => {
+          const {workspaceId,teamId} = props ?? {};
+
+          return  workspaceTeamGrantsControllerRemove(workspaceId,teamId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceTeamGrantsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>>
+    
+    export type WorkspaceTeamGrantsControllerRemoveMutationError = unknown
+
+    /**
+ * @summary Remove a workspace team grant
+ */
+export const useWorkspaceTeamGrantsControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>, TError,{workspaceId: string;teamId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceTeamGrantsControllerRemove>>,
+        TError,
+        {workspaceId: string;teamId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceTeamGrantsControllerRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set a team member workspace override
+ */
+export const workspaceTeamGrantsControllerSetOverride = (
+    workspaceId: string,
+    teamId: string,
+    userId: string,
+    setWorkspaceTeamMemberOverrideDto: SetWorkspaceTeamMemberOverrideDto,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/team-grants/${teamId}/overrides/${userId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setWorkspaceTeamMemberOverrideDto
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceTeamGrantsControllerSetOverrideMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>, TError,{workspaceId: string;teamId: string;userId: string;data: SetWorkspaceTeamMemberOverrideDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>, TError,{workspaceId: string;teamId: string;userId: string;data: SetWorkspaceTeamMemberOverrideDto}, TContext> => {
+
+const mutationKey = ['workspaceTeamGrantsControllerSetOverride'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>, {workspaceId: string;teamId: string;userId: string;data: SetWorkspaceTeamMemberOverrideDto}> = (props) => {
+          const {workspaceId,teamId,userId,data} = props ?? {};
+
+          return  workspaceTeamGrantsControllerSetOverride(workspaceId,teamId,userId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceTeamGrantsControllerSetOverrideMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>>
+    export type WorkspaceTeamGrantsControllerSetOverrideMutationBody = SetWorkspaceTeamMemberOverrideDto
+    export type WorkspaceTeamGrantsControllerSetOverrideMutationError = unknown
+
+    /**
+ * @summary Set a team member workspace override
+ */
+export const useWorkspaceTeamGrantsControllerSetOverride = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>, TError,{workspaceId: string;teamId: string;userId: string;data: SetWorkspaceTeamMemberOverrideDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceTeamGrantsControllerSetOverride>>,
+        TError,
+        {workspaceId: string;teamId: string;userId: string;data: SetWorkspaceTeamMemberOverrideDto},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceTeamGrantsControllerSetOverrideMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Reset a team member workspace override
+ */
+export const workspaceTeamGrantsControllerResetOverride = (
+    workspaceId: string,
+    teamId: string,
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${workspaceId}/team-grants/${teamId}/overrides/${userId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceTeamGrantsControllerResetOverrideMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>, TError,{workspaceId: string;teamId: string;userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>, TError,{workspaceId: string;teamId: string;userId: string}, TContext> => {
+
+const mutationKey = ['workspaceTeamGrantsControllerResetOverride'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>, {workspaceId: string;teamId: string;userId: string}> = (props) => {
+          const {workspaceId,teamId,userId} = props ?? {};
+
+          return  workspaceTeamGrantsControllerResetOverride(workspaceId,teamId,userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceTeamGrantsControllerResetOverrideMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>>
+    
+    export type WorkspaceTeamGrantsControllerResetOverrideMutationError = unknown
+
+    /**
+ * @summary Reset a team member workspace override
+ */
+export const useWorkspaceTeamGrantsControllerResetOverride = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>, TError,{workspaceId: string;teamId: string;userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceTeamGrantsControllerResetOverride>>,
+        TError,
+        {workspaceId: string;teamId: string;userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceTeamGrantsControllerResetOverrideMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List my pending workspace invitations
+ */
+export const workspaceInvitationsControllerList = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceInvitationResponseDto[]>(
+      {url: `/workspace-invitations`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceInvitationsControllerListQueryKey = () => {
+    return [
+    `/workspace-invitations`
+    ] as const;
+    }
+
+    
+export const getWorkspaceInvitationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceInvitationsControllerListQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>> = ({ signal }) => workspaceInvitationsControllerList(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceInvitationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>>
+export type WorkspaceInvitationsControllerListQueryError = unknown
+
+
+export function useWorkspaceInvitationsControllerList<TData = Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceInvitationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceInvitationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceInvitationsControllerList<TData = Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceInvitationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceInvitationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceInvitationsControllerList<TData = Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List my pending workspace invitations
+ */
+
+export function useWorkspaceInvitationsControllerList<TData = Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceInvitationsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Accept a workspace invitation
+ */
+export const workspaceInvitationsControllerAccept = (
+    workspaceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspace-invitations/${workspaceId}/accept`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceInvitationsControllerAcceptMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>, TError,{workspaceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>, TError,{workspaceId: string}, TContext> => {
+
+const mutationKey = ['workspaceInvitationsControllerAccept'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>, {workspaceId: string}> = (props) => {
+          const {workspaceId} = props ?? {};
+
+          return  workspaceInvitationsControllerAccept(workspaceId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceInvitationsControllerAcceptMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>>
+    
+    export type WorkspaceInvitationsControllerAcceptMutationError = unknown
+
+    /**
+ * @summary Accept a workspace invitation
+ */
+export const useWorkspaceInvitationsControllerAccept = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>, TError,{workspaceId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceInvitationsControllerAccept>>,
+        TError,
+        {workspaceId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceInvitationsControllerAcceptMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Decline a workspace invitation
+ */
+export const workspaceInvitationsControllerDecline = (
+    workspaceId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/workspace-invitations/${workspaceId}/decline`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getWorkspaceInvitationsControllerDeclineMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>, TError,{workspaceId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>, TError,{workspaceId: string}, TContext> => {
+
+const mutationKey = ['workspaceInvitationsControllerDecline'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>, {workspaceId: string}> = (props) => {
+          const {workspaceId} = props ?? {};
+
+          return  workspaceInvitationsControllerDecline(workspaceId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceInvitationsControllerDeclineMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>>
+    
+    export type WorkspaceInvitationsControllerDeclineMutationError = unknown
+
+    /**
+ * @summary Decline a workspace invitation
+ */
+export const useWorkspaceInvitationsControllerDecline = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>, TError,{workspaceId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceInvitationsControllerDecline>>,
+        TError,
+        {workspaceId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWorkspaceInvitationsControllerDeclineMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List members of a granted workspace team
+ */
+export const workspaceTeamGrantMembersControllerList = (
+    workspaceId: string,
+    teamId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<WorkspaceSharingUserDto[]>(
+      {url: `/workspaces/${workspaceId}/team-grants/${teamId}/members`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getWorkspaceTeamGrantMembersControllerListQueryKey = (workspaceId?: string,
+    teamId?: string,) => {
+    return [
+    `/workspaces/${workspaceId}/team-grants/${teamId}/members`
+    ] as const;
+    }
+
+    
+export const getWorkspaceTeamGrantMembersControllerListQueryOptions = <TData = Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError = unknown>(workspaceId: string,
+    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getWorkspaceTeamGrantMembersControllerListQueryKey(workspaceId,teamId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>> = ({ signal }) => workspaceTeamGrantMembersControllerList(workspaceId,teamId, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workspaceId && teamId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type WorkspaceTeamGrantMembersControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>>
+export type WorkspaceTeamGrantMembersControllerListQueryError = unknown
+
+
+export function useWorkspaceTeamGrantMembersControllerList<TData = Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError = unknown>(
+ workspaceId: string,
+    teamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceTeamGrantMembersControllerList<TData = Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError = unknown>(
+ workspaceId: string,
+    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useWorkspaceTeamGrantMembersControllerList<TData = Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError = unknown>(
+ workspaceId: string,
+    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List members of a granted workspace team
+ */
+
+export function useWorkspaceTeamGrantMembersControllerList<TData = Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError = unknown>(
+ workspaceId: string,
+    teamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof workspaceTeamGrantMembersControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getWorkspaceTeamGrantMembersControllerListQueryOptions(workspaceId,teamId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
 /**
  * @summary Get the current user favorites
  */

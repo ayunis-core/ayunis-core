@@ -64,6 +64,14 @@ import { WorkspaceInvitationsReadRepository } from './application/ports/workspac
 import { LocalWorkspaceInvitationsReadRepository } from './infrastructure/persistence/local/local-workspace-invitations-read.repository';
 import { LocalWorkspaceInvitationsReadRepositoryModule } from './infrastructure/persistence/local/local-workspace-invitations-read-repository.module';
 import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-my-workspace-invitations/list-my-workspace-invitations.use-case';
+import { UpdateWorkspaceVisibilityUseCase } from './application/use-cases/update-workspace-visibility/update-workspace-visibility.use-case';
+import { WorkspaceSharingController } from './presenters/http/workspace-sharing.controller';
+import { WorkspaceMembersController } from './presenters/http/workspace-members.controller';
+import { WorkspaceTeamGrantsController } from './presenters/http/workspace-team-grants.controller';
+import { WorkspaceInvitationsController } from './presenters/http/workspace-invitations.controller';
+import { WorkspaceSharingDtoMapper } from './presenters/http/mappers/workspace-sharing-dto.mapper';
+import { ListWorkspaceTeamMembersUseCase } from './application/use-cases/list-workspace-team-members/list-workspace-team-members.use-case';
+import { WorkspaceTeamGrantMembersController } from './presenters/http/workspace-team-grant-members.controller';
 
 @Module({
   imports: [
@@ -80,7 +88,15 @@ import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-
     TeamsModule,
     UsersModule,
   ],
-  controllers: [WorkspacesController, WorkspaceContextController],
+  controllers: [
+    WorkspacesController,
+    WorkspaceContextController,
+    WorkspaceSharingController,
+    WorkspaceMembersController,
+    WorkspaceTeamGrantsController,
+    WorkspaceInvitationsController,
+    WorkspaceTeamGrantMembersController,
+  ],
   providers: [
     {
       provide: WorkspacesRepository,
@@ -125,6 +141,8 @@ import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-
     ResetWorkspaceTeamMemberOverrideUseCase,
     GetWorkspaceSharingUseCase,
     ListMyWorkspaceInvitationsUseCase,
+    ListWorkspaceTeamMembersUseCase,
+    UpdateWorkspaceVisibilityUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
@@ -147,6 +165,7 @@ import { ListMyWorkspaceInvitationsUseCase } from './application/use-cases/list-
     ListWorkspaceDocumentsUseCase,
     WorkspaceDtoMapper,
     WorkspaceContextDtoMapper,
+    WorkspaceSharingDtoMapper,
   ],
   exports: [
     CreateWorkspaceUseCase,

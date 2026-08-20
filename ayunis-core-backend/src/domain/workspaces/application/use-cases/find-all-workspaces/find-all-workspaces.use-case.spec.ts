@@ -18,7 +18,13 @@ describe('FindAllWorkspacesUseCase', () => {
     const accessService = {
       findAllAccessible: jest.fn().mockResolvedValue(
         new Paginated({
-          data: [{ workspace, role: WorkspaceRole.EDIT, sources: [] }],
+          data: [
+            {
+              workspace,
+              role: WorkspaceRole.EDIT,
+              sources: [{ type: 'owner' }],
+            },
+          ],
           limit: 20,
           offset: 0,
           total: 1,
@@ -37,6 +43,7 @@ describe('FindAllWorkspacesUseCase', () => {
           {
             workspace,
             role: WorkspaceRole.EDIT,
+            isOwner: true,
             chatCount: 3,
             lastActivityAt: workspace.updatedAt,
           },
@@ -80,6 +87,7 @@ describe('FindAllWorkspacesUseCase', () => {
 
     expect(data[0]).toMatchObject({
       role: WorkspaceRole.USE,
+      isOwner: false,
       chatCount: 1,
       lastActivityAt: chatActivity,
     });

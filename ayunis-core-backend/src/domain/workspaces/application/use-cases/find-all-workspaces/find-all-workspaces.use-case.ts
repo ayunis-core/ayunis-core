@@ -12,6 +12,7 @@ import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
 export interface WorkspaceListItem {
   workspace: Workspace;
   role: WorkspaceRole;
+  isOwner: boolean;
   chatCount: number;
   lastActivityAt: Date;
 }
@@ -35,12 +36,13 @@ export class FindAllWorkspacesUseCase {
       page.data.map(({ workspace }) => workspace.id),
     );
     return new Paginated({
-      data: page.data.map(({ workspace, role }) => {
+      data: page.data.map(({ workspace, role, sources }) => {
         const threadStats = stats.get(workspace.id);
         const chatActivity = threadStats?.lastActivityAt;
         return {
           workspace,
           role,
+          isOwner: sources.some(({ type }) => type === 'owner'),
           chatCount: threadStats?.chatCount ?? 0,
           lastActivityAt:
             chatActivity && chatActivity > workspace.updatedAt
