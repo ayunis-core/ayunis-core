@@ -5,13 +5,13 @@ import { Test } from '@nestjs/testing';
 import type { UUID } from 'crypto';
 import { RetrieveUrlUseCase } from './retrieve-url.use-case';
 import { RetrieveUrlCommand } from './retrieve-url.command';
-import type { RawUrlResponse } from '../../ports/url-retriever.handler';
-import { UrlRetrieverHandler } from '../../ports/url-retriever.handler';
+import type { RawUrlResponse } from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
+import { UrlRetrieverHandler } from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import {
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
-} from '../../url-retriever.errors';
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
@@ -19,7 +19,11 @@ import {
   FileRetrieverPage,
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
-import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
+import {
+  FileTooLargeError,
+  TooManyPagesError,
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111' as UUID;
 
@@ -37,6 +41,7 @@ describe('RetrieveUrlUseCase', () => {
   let mockHandler: { fetch: jest.Mock; parseHtml: jest.Mock };
   let mockAssertCrawlDomainAccess: Partial<AssertCrawlDomainAccessUseCase>;
   let mockRetrieveFileContent: { execute: jest.Mock };
+  let mockPreflightCheck: { execute: jest.Mock };
 
   beforeAll(async () => {
     mockHandler = { fetch: jest.fn(), parseHtml: jest.fn() };
@@ -44,6 +49,7 @@ describe('RetrieveUrlUseCase', () => {
       execute: jest.fn().mockResolvedValue(undefined),
     };
     mockRetrieveFileContent = { execute: jest.fn() };
+    mockPreflightCheck = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -61,6 +67,10 @@ describe('RetrieveUrlUseCase', () => {
           provide: RetrieveFileContentUseCase,
           useValue: mockRetrieveFileContent,
         },
+        {
+          provide: PreflightCheckUseCase,
+          useValue: mockPreflightCheck,
+        },
       ],
     }).compile();
 
@@ -76,6 +86,7 @@ describe('RetrieveUrlUseCase', () => {
     mockHandler.parseHtml.mockReturnValue(
       new UrlRetrieverResult('parsed', 'https://example.com', 'Title'),
     );
+    mockPreflightCheck.execute.mockResolvedValue(undefined);
   });
 
   it('should be defined', () => {
@@ -460,5 +471,67 @@ describe('RetrieveUrlUseCase', () => {
     const error = await useCase.execute(command).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(FileTooLargeError);
     expect((error as FileTooLargeError).statusCode).toBe(413);
+  });
+
+  describe('PDF preflight page cap', () => {
+    beforeEach(() => {
+      mockHandler.fetch.mockResolvedValue(
+        rawResponse({
+          contentType: 'application/pdf',
+          finalUrl: 'https://acme.test/files/haushaltsplan.pdf',
+          body: Buffer.from('%PDF-1.7 binary'),
+        }),
+      );
+      mockRetrieveFileContent.execute.mockResolvedValue(
+        new FileRetrieverResult([new FileRetrieverPage('Budget', 1)]),
+      );
+    });
+
+    it('runs the preflight page-count check on a fetched PDF before parsing it', async () => {
+      const command = new RetrieveUrlCommand(
+        'https://acme.test/files/haushaltsplan.pdf',
+        ORG_ID,
+      );
+
+      await useCase.execute(command);
+
+      expect(mockPreflightCheck.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fileName: 'haushaltsplan.pdf',
+          fileType: 'application/pdf',
+        }),
+      );
+      expect(
+        mockPreflightCheck.execute.mock.invocationCallOrder[0],
+      ).toBeLessThan(
+        mockRetrieveFileContent.execute.mock.invocationCallOrder[0],
+      );
+    });
+
+    it('rejects an over-long PDF with a 422 without starting the OCR job', async () => {
+      const command = new RetrieveUrlCommand(
+        'https://acme.test/files/haushaltsplan.pdf',
+        ORG_ID,
+      );
+      mockPreflightCheck.execute.mockRejectedValue(
+        new TooManyPagesError({ pageCount: 4200, maxPages: 1000 }),
+      );
+
+      const error = await useCase.execute(command).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(TooManyPagesError);
+      expect((error as TooManyPagesError).statusCode).toBe(422);
+      // The whole point of the guard: no expensive parse is attempted.
+      expect(mockRetrieveFileContent.execute).not.toHaveBeenCalled();
+    });
+
+    it('does not run the PDF preflight check for an HTML response', async () => {
+      const command = new RetrieveUrlCommand('https://example.com', ORG_ID);
+      mockHandler.fetch.mockResolvedValue(rawResponse({}));
+
+      await useCase.execute(command);
+
+      expect(mockPreflightCheck.execute).not.toHaveBeenCalled();
+    });
   });
 });
