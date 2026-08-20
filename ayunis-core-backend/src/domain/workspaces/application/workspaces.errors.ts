@@ -8,6 +8,7 @@ export enum WorkspaceErrorCode {
   WORKSPACE_INVALID_APPEARANCE = 'WORKSPACE_INVALID_APPEARANCE',
   MISSING_FILE = 'MISSING_FILE',
   WORKSPACE_SOURCE_LIMIT_EXCEEDED = 'WORKSPACE_SOURCE_LIMIT_EXCEEDED',
+  WORKSPACE_INSUFFICIENT_ROLE = 'WORKSPACE_INSUFFICIENT_ROLE',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -87,6 +88,22 @@ export class WorkspaceSourceLimitExceededError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_SOURCE_LIMIT_EXCEEDED,
       400,
       { maxSources, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceInsufficientRoleError extends WorkspaceError {
+  constructor(
+    workspaceId: string,
+    requiredRole: string,
+    actualRole: string,
+    metadata?: ErrorMetadata,
+  ) {
+    super(
+      `Workspace role '${requiredRole}' is required`,
+      WorkspaceErrorCode.WORKSPACE_INSUFFICIENT_ROLE,
+      403,
+      { workspaceId, requiredRole, actualRole, ...metadata },
     );
   }
 }

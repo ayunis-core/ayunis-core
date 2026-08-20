@@ -60,32 +60,21 @@ workspaces/
 │   ├── util/workspace-fields.ts     # field validation (name/description/appearance)
 │   ├── events/
 │   │   └── workspace-deletion-requested.event.ts
+│   ├── services/workspace-access.service.ts
 │   ├── ports/workspaces-repository.port.ts
+│   ├── ports/workspace-access-repository.port.ts
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
-│       ├── attach-skill-to-workspace/
-│       ├── detach-skill-from-workspace/
-│       ├── attach-knowledge-base-to-workspace/
-│       ├── detach-knowledge-base-from-workspace/
-│       ├── add-document-to-workspace/
-│       ├── remove-document-from-workspace/
-│       ├── update-workspace-instruction/
-│       ├── build-workspace-run-context/
-│       ├── list-workspace-skill-candidates/
-│       ├── list-workspace-knowledge-base-candidates/
-│       ├── list-workspace-skills/
-│       ├── list-workspace-knowledge-bases/
-│       ├── list-workspace-documents/
-│       ├── find-all-workspaces/
-│       ├── find-workspaces-by-ids/
-│       ├── find-workspace/
-│       ├── update-workspace/
-│       ├── update-workspace-instruction/
+│       ├── get-workspace-access/
+│       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
+│       ├── update-workspace/ / update-workspace-instruction/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
 │       ├── attach-knowledge-base-to-workspace/ / detach-knowledge-base-from-workspace/
 │       ├── add-document-to-workspace/ / remove-document-from-workspace/
-│       ├── list-workspace-*-candidates/
+│       ├── list-workspace-skill-candidates/ / list-workspace-skills/
+│       ├── list-workspace-knowledge-base-candidates/ / list-workspace-knowledge-bases/
+│       ├── list-workspace-documents/
 │       ├── build-workspace-run-context/
 │       └── delete-workspace/
 ├── infrastructure/persistence/local/
@@ -98,6 +87,7 @@ workspaces/
 │   ├── schema/workspace-team-member-override.record.ts
 │   ├── mappers/workspace.mapper.ts
 │   ├── local-workspaces.repository.ts
+│   ├── local-workspace-access.repository.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
 │   ├── workspaces.controller.ts
@@ -149,8 +139,12 @@ document processing. The workspace repository owns only the assignment rows;
 the referenced entity modules remain responsible for entity access and
 processing.
 
-The repository port is deliberately not exported — cross-module access goes
-through the exported use cases.
+The repository ports are deliberately not exported — cross-module access goes
+through exported use cases. `GetWorkspaceAccessUseCase` resolves direct,
+team-derived and organization access into one effective role and is the public
+authorization boundary for modules that operate on workspace children. Team
+membership is resolved through `ListMyTeamsUseCase` from IAM; access persistence
+never reads IAM repositories directly.
 
 Workspace context list endpoints use dedicated paginated use cases. Candidate
 and attached lists apply search, access checks, workspace assignments, ordering,
