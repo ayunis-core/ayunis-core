@@ -1,0 +1,47 @@
+name: Architecture Hygiene
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Collect architecture signals
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/architecture-hygiene/collect.ts
+
+      - name: Review architecture signals
+        run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/architecture-hygiene/review.ts
+        env:
+          ARCHITECTURE_REVIEW_API_KEY: ${{ secrets.ARCHITECTURE_REVIEW_API_KEY }}
+          ARCHITECTURE_REVIEW_API_URL: ${{ vars.ARCHITECTURE_REVIEW_API_URL }}
+          ARCHITECTURE_REVIEW_MODEL: ${{ vars.ARCHITECTURE_REVIEW_MODEL }}
+
+      - name: Add report to job summary
+        run: cat architecture-hygiene/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload architecture hygiene report
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-hygiene-report
+          path: architecture-hygiene
+          retention-days: 14
