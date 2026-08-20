@@ -23,7 +23,8 @@ The whole module sits behind the `workspacesEnabled` feature flag
 
 - **Workspace** — owned by exactly one user and scoped to their org. Shared
   users need `use` to read workspace metadata and attached context, and `edit`
-to update it or browse attachment candidates.
+  to update it or browse attachment candidates. Listings batch owner, direct,
+  team, and organization access resolution and expose each effective role.
 - **Per-user favorite state** — owned by the favorites module; a workspace row
   carries no pin or order state. Access checks stay with the workspace use
   cases — favorites trusts its callers.

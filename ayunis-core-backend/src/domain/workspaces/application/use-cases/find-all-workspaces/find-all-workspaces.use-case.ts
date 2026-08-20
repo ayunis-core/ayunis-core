@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
+import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
 import { FindAllWorkspacesQuery } from './find-all-workspaces.query';
 
 export interface WorkspaceListItem {
   workspace: Workspace;
+  role: WorkspaceRole;
   chatCount: number;
-  /** Later of the workspace's own edit and its most recent chat activity. */
   lastActivityAt: Date;
 }
 
@@ -23,49 +22,35 @@ export class FindAllWorkspacesUseCase {
     @InjectPinoLogger(FindAllWorkspacesUseCase.name)
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
   async execute(
     query: FindAllWorkspacesQuery = new FindAllWorkspacesQuery(),
   ): Promise<Paginated<WorkspaceListItem>> {
-    this.logger.info('Finding all workspaces');
-
-    const workspaces = await this.workspacesRepository.findAllByUserId(
-      this.resolveUserId(),
-      query,
-    );
+    this.logger.info('Finding all accessible workspaces');
+    const page = await this.accessService.findAllAccessible(query);
     const stats = await this.workspacesRepository.getThreadStats(
-      workspaces.data.map((workspace) => workspace.id),
+      page.data.map(({ workspace }) => workspace.id),
     );
-
-    const data = workspaces.data.map((workspace) => {
-      const threadStats = stats.get(workspace.id);
-      const chatActivity = threadStats?.lastActivityAt;
-      return {
-        workspace,
-        chatCount: threadStats?.chatCount ?? 0,
-        lastActivityAt:
-          chatActivity && chatActivity > workspace.updatedAt
-            ? chatActivity
-            : workspace.updatedAt,
-      };
-    });
-
     return new Paginated({
-      data,
-      limit: workspaces.limit,
-      offset: workspaces.offset,
-      total: workspaces.total,
+      data: page.data.map(({ workspace, role }) => {
+        const threadStats = stats.get(workspace.id);
+        const chatActivity = threadStats?.lastActivityAt;
+        return {
+          workspace,
+          role,
+          chatCount: threadStats?.chatCount ?? 0,
+          lastActivityAt:
+            chatActivity && chatActivity > workspace.updatedAt
+              ? chatActivity
+              : workspace.updatedAt,
+        };
+      }),
+      limit: page.limit,
+      offset: page.offset,
+      total: page.total,
     });
-  }
-
-  private resolveUserId(): UUID {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-    return userId;
   }
 }
