@@ -13,6 +13,10 @@ export type {
   SubscriptionFixture,
   AcademyChapterFixture,
   AcademyCompletionFixture,
+  KnowledgeBaseFixture,
+  SeedDocumentFixture,
+  SkillFixture,
+  WorkspaceFixture,
 } from 'src/db/fixtures/minimal-fixture.types';
 
 export type LanguageModelKey = (typeof LANGUAGE_MODEL_KEYS)[number];
