@@ -3994,6 +3994,11 @@ export interface UpdateArtifactDto {
   letterheadId?: string | null;
 }
 
+export interface ArtifactListResponseDto {
+  data: ArtifactResponseDto[];
+  pagination: PaginationDto;
+}
+
 export interface RevertArtifactDto {
   /** The version number to revert to */
   versionNumber: number;
@@ -5597,6 +5602,35 @@ export type WorkspaceContextControllerAddDocumentBody = {
 };
 
 export type FavoritesControllerFindAll200Item = WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto;
+
+export type ArtifactsControllerFindByWorkspaceParams = {
+/**
+ * Search artifacts by title
+ */
+search?: string;
+/**
+ * Filter by type
+ */
+type?: ArtifactsControllerFindByWorkspaceType;
+/**
+ * Maximum number of artifacts to return
+ */
+limit?: number;
+/**
+ * Number of artifacts to skip
+ */
+offset?: number;
+};
+
+export type ArtifactsControllerFindByWorkspaceType = typeof ArtifactsControllerFindByWorkspaceType[keyof typeof ArtifactsControllerFindByWorkspaceType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ArtifactsControllerFindByWorkspaceType = {
+  document: 'document',
+  diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
+} as const;
 
 export type ArtifactsControllerExportParams = {
 /**

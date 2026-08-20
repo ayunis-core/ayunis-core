@@ -21,40 +21,52 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { UUID } from 'crypto';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 
-import { CreateArtifactUseCase } from '../../application/use-cases/create-artifact/create-artifact.use-case';
-import { UpdateArtifactUseCase } from '../../application/use-cases/update-artifact/update-artifact.use-case';
-import { FindArtifactsByThreadUseCase } from '../../application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
-import { FindArtifactWithVersionsUseCase } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
-import { RevertArtifactUseCase } from '../../application/use-cases/revert-artifact/revert-artifact.use-case';
-import { ExportArtifactUseCase } from '../../application/use-cases/export-artifact/export-artifact.use-case';
+import { CreateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.use-case';
+import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
+import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsByWorkspaceUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-workspace/find-artifacts-by-workspace.use-case';
+import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
+import { RevertArtifactUseCase } from 'src/domain/artifacts/application/use-cases/revert-artifact/revert-artifact.use-case';
+import { ExportArtifactUseCase } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.use-case';
 
-import { CreateArtifactCommand } from '../../application/use-cases/create-artifact/create-artifact.command';
-import { UpdateArtifactCommand } from '../../application/use-cases/update-artifact/update-artifact.command';
-import { FindArtifactsByThreadQuery } from '../../application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
-import { FindArtifactWithVersionsQuery } from '../../application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
-import { RevertArtifactCommand } from '../../application/use-cases/revert-artifact/revert-artifact.command';
-import { ExportArtifactCommand } from '../../application/use-cases/export-artifact/export-artifact.command';
+import { CreateArtifactCommand } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.command';
+import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
+import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
+import { FindArtifactsByWorkspaceQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-workspace/find-artifacts-by-workspace.query';
+import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
+import { RevertArtifactCommand } from 'src/domain/artifacts/application/use-cases/revert-artifact/revert-artifact.command';
+import { ExportArtifactCommand } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.command';
 
 import { CreateArtifactDto } from './dtos/create-artifact.dto';
 import { UpdateArtifactDto } from './dtos/update-artifact.dto';
 import { RevertArtifactDto } from './dtos/revert-artifact.dto';
 import { ExportArtifactQueryDto } from './dtos/export-artifact.dto';
+import { FindArtifactsByWorkspaceQueryParamsDto } from './dtos/find-artifacts-by-workspace-query-params.dto';
 import {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
 } from './dtos/artifact-response.dto';
+import { ArtifactListResponseDto } from './dtos/artifact-list-response.dto';
 import { ArtifactDtoMapper } from './mappers/artifact-dto.mapper';
 
 @ApiTags('artifacts')
 @Controller('artifacts')
 export class ArtifactsController {
+  // NestJS injects each use case explicitly to keep the HTTP adapter composition visible.
+  // eslint-disable-next-line max-params
   constructor(
     @InjectPinoLogger(ArtifactsController.name)
     private readonly logger: PinoLogger,
     private readonly createArtifactUseCase: CreateArtifactUseCase,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
     private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
+    private readonly findArtifactsByWorkspaceUseCase: FindArtifactsByWorkspaceUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly revertArtifactUseCase: RevertArtifactUseCase,
     private readonly exportArtifactUseCase: ExportArtifactUseCase,
@@ -166,6 +178,54 @@ export class ArtifactsController {
       new FindArtifactsByThreadQuery({ threadId }),
     );
     return artifacts.map((a) => this.artifactDtoMapper.toDto(a));
+  }
+
+  @Get('workspace/:workspaceId')
+  @RequireFeature(FeatureFlag.Workspaces)
+  @ApiOperation({ summary: 'Get all artifacts in a workspace' })
+  @ApiParam({
+    name: 'workspaceId',
+    description: 'The UUID of the workspace',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of artifacts from chats in the workspace',
+    type: ArtifactListResponseDto,
+  })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, enum: ArtifactType })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  async findByWorkspace(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: UUID,
+    @Query() queryParams: FindArtifactsByWorkspaceQueryParamsDto,
+  ): Promise<ArtifactListResponseDto> {
+    this.logger.info({ workspaceId }, 'findByWorkspace');
+    const pagination = queryParams.toPagination();
+    const page = await this.findArtifactsByWorkspaceUseCase.execute(
+      new FindArtifactsByWorkspaceQuery({
+        workspaceId,
+        search: queryParams.search,
+        type: queryParams.type,
+        ...pagination,
+      }),
+    );
+    return this.toArtifactListDto(page);
+  }
+
+  private toArtifactListDto(
+    page: Paginated<Artifact>,
+  ): ArtifactListResponseDto {
+    return {
+      data: page.data.map((artifact) => this.artifactDtoMapper.toDto(artifact)),
+      pagination: {
+        limit: page.limit,
+        offset: page.offset,
+        total: page.total,
+      },
+    };
   }
 
   @Post(':id/revert')

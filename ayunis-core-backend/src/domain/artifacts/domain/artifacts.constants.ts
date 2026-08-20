@@ -1,0 +1,2 @@
+export const ARTIFACT_DEFAULT_LIST_LIMIT = 20;
+export const ARTIFACT_MAX_LIST_LIMIT = 100;
