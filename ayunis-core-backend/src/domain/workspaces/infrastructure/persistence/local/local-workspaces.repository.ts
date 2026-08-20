@@ -118,9 +118,9 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
              workspace."updatedAt"
            )
          )`,
-        'effectiveActivityAt',
+        'effective_activity_at',
       )
-      .orderBy('"effectiveActivityAt"', 'DESC');
+      .orderBy('effective_activity_at', 'DESC');
   }
 
   async findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]> {

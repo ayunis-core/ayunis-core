@@ -18,10 +18,10 @@ export class LocalSkillKnowledgeBaseIdsFinder {
       .innerJoin(
         'knowledge_bases',
         'knowledgeBase',
-        'knowledgeBase.id = skb."knowledgeBasesId"',
+        '"knowledgeBase".id = skb."knowledgeBasesId"',
       )
       .where('skill.id IN (:...skillIds)', { skillIds })
-      .andWhere('knowledgeBase."userId" = skill."userId"')
+      .andWhere('"knowledgeBase"."userId" = skill."userId"')
       .distinct(true)
       .getRawMany<{ knowledgeBaseId: UUID }>();
 
