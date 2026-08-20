@@ -15,10 +15,12 @@ import { WorkspaceSkillAssignmentRecord } from './schema/workspace-skill-assignm
 import { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowledge-base-assignment.record';
 import { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import type {
-  WorkspaceListOptions,
-  WorkspaceSortKey,
-} from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import type { WorkspaceListOptions } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import {
+  applyWorkspaceSearch,
+  applyWorkspaceSort,
+  joinWorkspaceActivity,
+} from './workspace-list-query.helpers';
 
 @Injectable()
 export class LocalWorkspacesRepository extends WorkspacesRepository {
@@ -67,7 +69,7 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     const countQuery = this.repo
       .createQueryBuilder('workspace')
       .where('workspace.userId = :userId', { userId });
-    this.applyWorkspaceSearch(countQuery, query.search);
+    applyWorkspaceSearch(countQuery, query.search);
     return countQuery;
   }
 
@@ -75,52 +77,14 @@ export class LocalWorkspacesRepository extends WorkspacesRepository {
     userId: UUID,
     query: Pick<WorkspaceListOptions, 'search' | 'sort'>,
   ): SelectQueryBuilder<WorkspaceRecord> {
-    const listQuery = this.repo
-      .createQueryBuilder('workspace')
-      .leftJoin('threads', 'thread', 'thread."workspaceId" = workspace.id')
-      .where('workspace.userId = :userId', { userId })
-      .addGroupBy('workspace.id');
-
-    this.applyWorkspaceSearch(listQuery, query.search);
-    this.applyWorkspaceSort(listQuery, query.sort);
+    const listQuery = joinWorkspaceActivity(
+      this.repo
+        .createQueryBuilder('workspace')
+        .where('workspace.userId = :userId', { userId }),
+    );
+    applyWorkspaceSearch(listQuery, query.search);
+    applyWorkspaceSort(listQuery, query.sort);
     return listQuery;
-  }
-
-  private applyWorkspaceSearch(
-    query: SelectQueryBuilder<WorkspaceRecord>,
-    search?: string,
-  ): void {
-    if (search) {
-      query.andWhere('workspace.name ILIKE :search', {
-        search: `%${search}%`,
-      });
-    }
-  }
-
-  private applyWorkspaceSort(
-    query: SelectQueryBuilder<WorkspaceRecord>,
-    sort: WorkspaceSortKey,
-  ): void {
-    if (sort === 'name') {
-      query.orderBy('LOWER(workspace.name)', 'ASC');
-      return;
-    }
-    if (sort === 'createdAt') {
-      query.orderBy('workspace.createdAt', 'DESC');
-      return;
-    }
-    query
-      .addSelect(
-        `GREATEST(
-           workspace."updatedAt",
-           COALESCE(
-             MAX(COALESCE(thread."lastActivityAt", thread."createdAt")),
-             workspace."updatedAt"
-           )
-         )`,
-        'effective_activity_at',
-      )
-      .orderBy('effective_activity_at', 'DESC');
   }
 
   async findAllByIds(userId: UUID, ids: UUID[]): Promise<Workspace[]> {

@@ -16823,6 +16823,11 @@
             "description": "When the workspace was last updated",
             "example": "2026-08-11T10:30:00.000Z"
           },
+          "accessLevel": {
+            "type": "string",
+            "description": "Effective access level for the caller (list responses only)",
+            "enum": ["use", "edit", "full"]
+          },
           "chatCount": {
             "type": "number",
             "description": "Number of chats filed under the workspace (list responses only)",

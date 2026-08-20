@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 
 export class WorkspaceResponseDto {
   @ApiProperty({
@@ -52,6 +53,12 @@ export class WorkspaceResponseDto {
     example: '2026-08-11T10:30:00.000Z',
   })
   updatedAt: string;
+
+  @ApiPropertyOptional({
+    description: 'Effective access level for the caller (list responses only)',
+    enum: WorkspaceAccessLevel,
+  })
+  accessLevel?: WorkspaceAccessLevel;
 
   @ApiPropertyOptional({
     description:
