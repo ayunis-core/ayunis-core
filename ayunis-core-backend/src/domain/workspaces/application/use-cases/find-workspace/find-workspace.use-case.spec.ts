@@ -1,25 +1,21 @@
 import { Test } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
-import { ContextService } from 'src/common/context/services/context.service';
-import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
-import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import {
-  aWorkspace,
-  createMockContextService,
-  createMockWorkspacesRepository,
-  TEST_USER_ID,
   TEST_WORKSPACE_ID,
+  aWorkspace,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceRole } from 'src/domain/workspaces/domain/value-objects/workspace-role.enum';
 import { FindWorkspaceQuery } from './find-workspace.query';
 import { FindWorkspaceUseCase } from './find-workspace.use-case';
 
 describe('FindWorkspaceUseCase', () => {
-  let useCase: FindWorkspaceUseCase;
-  let repository: jest.Mocked<WorkspacesRepository>;
-
-  beforeEach(async () => {
-    repository = createMockWorkspacesRepository();
+  it('returns a workspace available with use access', async () => {
+    const workspace = aWorkspace();
+    const accessService = {
+      requireRole: jest.fn().mockResolvedValue({ workspace }),
+    };
     const module = await Test.createTestingModule({
       providers: [
         FindWorkspaceUseCase,
@@ -27,35 +23,17 @@ describe('FindWorkspaceUseCase', () => {
           provide: getLoggerToken(FindWorkspaceUseCase.name),
           useValue: createPinoLoggerMock(),
         },
-        { provide: WorkspacesRepository, useValue: repository },
-        { provide: ContextService, useValue: createMockContextService() },
+        { provide: WorkspaceAccessService, useValue: accessService },
       ],
     }).compile();
-    useCase = module.get(FindWorkspaceUseCase);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('returns the workspace scoped to the caller', async () => {
-    const workspace = aWorkspace();
-    repository.findById.mockResolvedValue(workspace);
+    const useCase = module.get(FindWorkspaceUseCase);
 
     await expect(
       useCase.execute(new FindWorkspaceQuery(TEST_WORKSPACE_ID)),
     ).resolves.toBe(workspace);
-    expect(repository.findById).toHaveBeenCalledWith(
-      TEST_USER_ID,
+    expect(accessService.requireRole).toHaveBeenCalledWith(
       TEST_WORKSPACE_ID,
+      WorkspaceRole.USE,
     );
-  });
-
-  it('throws when the workspace does not belong to the caller', async () => {
-    repository.findById.mockResolvedValue(null);
-
-    await expect(
-      useCase.execute(new FindWorkspaceQuery(TEST_WORKSPACE_ID)),
-    ).rejects.toThrow(WorkspaceNotFoundError);
   });
 });
