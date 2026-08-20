@@ -8,7 +8,7 @@ import type { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-
 import type { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
 
 describe('LocalWorkspacesRepository', () => {
-  it('quotes the computed activity alias for PostgreSQL ordering', async () => {
+  it('uses a PostgreSQL-safe activity alias for paginated ordering', async () => {
     const countQuery = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -49,8 +49,12 @@ describe('LocalWorkspacesRepository', () => {
       offset: 0,
     });
 
+    expect(listQuery.addSelect).toHaveBeenCalledWith(
+      expect.any(String),
+      'effective_activity_at',
+    );
     expect(listQuery.orderBy).toHaveBeenCalledWith(
-      '"effectiveActivityAt"',
+      'effective_activity_at',
       'DESC',
     );
   });

@@ -139,7 +139,8 @@ export class LocalSourceRepository extends SourceRepository {
     }
 
     const [records, total] = await queryBuilder
-      .orderBy('LOWER(source.name)', 'ASC')
+      .addSelect('LOWER(source.name)', 'lower_source_name')
+      .orderBy('lower_source_name', 'ASC')
       .addOrderBy('source.id', 'ASC')
       .skip(options.offset)
       .take(options.limit)

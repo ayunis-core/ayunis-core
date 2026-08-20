@@ -174,8 +174,13 @@ describe('LocalSkillRepository', () => {
     await expect(
       repository.findKnowledgeBaseIdsBySkillIds([skillId]),
     ).resolves.toEqual(linkedKnowledgeBaseIds);
+    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+      'knowledge_bases',
+      'knowledgeBase',
+      '"knowledgeBase".id = skb."knowledgeBasesId"',
+    );
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      'knowledgeBase."userId" = skill."userId"',
+      '"knowledgeBase"."userId" = skill."userId"',
     );
   });
 

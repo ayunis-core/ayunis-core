@@ -20,6 +20,7 @@ describe('LocalSourceRepository', () => {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       addOrderBy: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
@@ -53,6 +54,14 @@ describe('LocalSourceRepository', () => {
     expect(result.total).toBe(3);
     expect(result.limit).toBe(1);
     expect(result.offset).toBe(2);
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      'LOWER(source.name)',
+      'lower_source_name',
+    );
+    expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+      'lower_source_name',
+      'ASC',
+    );
     expect(queryBuilder.skip).toHaveBeenCalledWith(2);
     expect(queryBuilder.take).toHaveBeenCalledWith(1);
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
