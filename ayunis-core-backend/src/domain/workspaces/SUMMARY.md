@@ -12,8 +12,8 @@ the workspace. User-specific favorites and their order are owned by the
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace collaboration is being introduced in stack layers. Direct member
-invitations and access-level management now exist at the application boundary; HTTP and
-frontend sharing flows follow in later layers.
+invitations and team-grant access-level management now exist at the application
+boundary; member overrides, HTTP and frontend sharing flows follow later.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -30,9 +30,9 @@ The whole module sits behind the `workspacesEnabled` feature flag
   literal produced by the custom-colour picker.
 - **Collaboration** — workspaces persist private/organization visibility.
   Direct-member use cases manage pending invitations, acceptance, access levels
-  and removal. Team grant and team-scoped member-override records provide the
-  next sharing layer's persistence foundation; HTTP sharing endpoints follow
-  later.
+  and removal. Team-grant use cases add, update and remove immediate team
+  access. Team-scoped member-override records provide the next sharing layer's
+  persistence foundation; HTTP sharing endpoints follow later.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   _before_ the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
@@ -66,6 +66,7 @@ workspaces/
 │   ├── ports/workspaces-repository.port.ts
 │   ├── ports/workspace-access-repository.port.ts
 │   ├── ports/workspace-members-repository.port.ts
+│   ├── ports/workspace-team-grants-repository.port.ts
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
@@ -73,6 +74,8 @@ workspaces/
 │       ├── invite-workspace-member/ / accept-workspace-invitation/
 │       ├── decline-workspace-invitation/ / update-workspace-member-access-level/
 │       ├── remove-workspace-member/
+│       ├── add-workspace-team-grant/ / update-workspace-team-grant-access-level/
+│       ├── remove-workspace-team-grant/
 │       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
 │       ├── update-workspace/ / update-workspace-instruction/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
@@ -93,10 +96,13 @@ workspaces/
 │   ├── schema/workspace-team-member-override.record.ts
 │   ├── mappers/workspace.mapper.ts
 │   ├── mappers/workspace-member.mapper.ts
+│   ├── mappers/workspace-team-grant.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   ├── local-workspace-access.repository.ts
 │   ├── local-workspace-members.repository.ts
 │   ├── local-workspace-members-repository.module.ts
+│   ├── local-workspace-team-grants.repository.ts
+│   ├── local-workspace-team-grants-repository.module.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
 │   ├── workspaces.controller.ts
@@ -150,11 +156,13 @@ processing.
 
 The repository ports are deliberately not exported — cross-module access goes
 through exported use cases. `GetWorkspaceAccessUseCase` resolves direct,
-team-derived and organization access into one effective access level and is the public
-authorization boundary for modules that operate on workspace children. Team
-membership is resolved through `ListMyTeamsUseCase` from IAM; access persistence
-never reads IAM repositories directly. Direct invitations use exported
-`FindUsersByIdsUseCase` to constrain invitees to the caller's organization.
+team-derived and organization access into one effective access level and is the
+public authorization boundary for modules that operate on workspace children.
+Team membership is resolved through `ListMyTeamsUseCase` from IAM, while team
+grant creation uses `GetTeamUseCase` to keep grants inside the caller's
+organization; access persistence never reads IAM repositories directly. Direct
+invitations use exported `FindUsersByIdsUseCase` to constrain invitees to the
+caller's organization.
 
 Workspace context list endpoints use dedicated paginated use cases. Candidate
 and attached lists apply search, access checks, workspace assignments, ordering,

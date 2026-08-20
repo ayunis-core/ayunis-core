@@ -14,6 +14,8 @@ export enum WorkspaceErrorCode {
   WORKSPACE_MEMBER_ALREADY_EXISTS = 'WORKSPACE_MEMBER_ALREADY_EXISTS',
   WORKSPACE_MEMBER_NOT_FOUND = 'WORKSPACE_MEMBER_NOT_FOUND',
   WORKSPACE_INVITATION_NOT_FOUND = 'WORKSPACE_INVITATION_NOT_FOUND',
+  WORKSPACE_TEAM_GRANT_ALREADY_EXISTS = 'WORKSPACE_TEAM_GRANT_ALREADY_EXISTS',
+  WORKSPACE_TEAM_GRANT_NOT_FOUND = 'WORKSPACE_TEAM_GRANT_NOT_FOUND',
   UNEXPECTED_WORKSPACE_ERROR = 'UNEXPECTED_WORKSPACE_ERROR',
 }
 
@@ -164,6 +166,28 @@ export class WorkspaceInvitationNotFoundError extends WorkspaceError {
       WorkspaceErrorCode.WORKSPACE_INVITATION_NOT_FOUND,
       404,
       { workspaceId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceTeamGrantAlreadyExistsError extends WorkspaceError {
+  constructor(workspaceId: string, teamId: string, metadata?: ErrorMetadata) {
+    super(
+      'The team already has access to the workspace',
+      WorkspaceErrorCode.WORKSPACE_TEAM_GRANT_ALREADY_EXISTS,
+      409,
+      { workspaceId, teamId, ...metadata },
+    );
+  }
+}
+
+export class WorkspaceTeamGrantNotFoundError extends WorkspaceError {
+  constructor(workspaceId: string, teamId: string, metadata?: ErrorMetadata) {
+    super(
+      'Workspace team grant not found',
+      WorkspaceErrorCode.WORKSPACE_TEAM_GRANT_NOT_FOUND,
+      404,
+      { workspaceId, teamId, ...metadata },
     );
   }
 }
