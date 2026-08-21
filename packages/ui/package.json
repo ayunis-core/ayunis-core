@@ -79,7 +79,7 @@
     "recharts": "^2.15.4",
     "sonner": "^2.0.5",
     "tailwindcss": "^4.3.2",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.64.0"
   }
 }
