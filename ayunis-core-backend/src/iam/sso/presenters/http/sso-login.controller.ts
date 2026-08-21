@@ -15,7 +15,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   ApiFoundResponse,
   ApiConsumes,
-  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -23,6 +22,8 @@ import {
 import type { UUID } from 'crypto';
 import type { CookieOptions, Request, Response } from 'express';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { Public } from 'src/common/guards/public.guard';
 import {
   clearCookies,
@@ -52,8 +53,14 @@ import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-c
 import { SsoBackchannelLogoutRequestDto } from 'src/iam/sso/presenters/http/dto/sso-backchannel-logout.request-dto';
 import { SsoLogoutResponseDto } from 'src/iam/sso/presenters/http/dto/sso-logout.response-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
+import { SsoErrorCode } from 'src/iam/sso/application/sso.errors';
 
 const SSO_LOGIN_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
+
+interface BrowserRedirect {
+  url: string;
+  statusCode: HttpStatus.FOUND;
+}
 
 @ApiTags('SSO')
 @Controller('auth/sso')
@@ -87,17 +94,22 @@ export class SsoLoginController {
   async start(
     @Param('orgId', ParseUUIDPipe) orgId: UUID,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<{ url: string; statusCode: number }> {
-    const { authorizationUrl, browserBinding } =
-      await this.startOrgSsoLogin.execute(new StartOrgSsoLoginCommand(orgId));
-    // A cached authorize redirect would reuse a spent transaction and a stale
-    // correlation cookie, so the callback's browser binding check would fail.
+  ): Promise<BrowserRedirect> {
     response.setHeader('Cache-Control', 'no-store');
-    response.cookie(this.correlationCookieName(), browserBinding, {
-      ...this.correlationCookieOptions(),
-      maxAge: SSO_LOGIN_COOKIE_MAX_AGE_MS,
-    });
-    return { url: authorizationUrl, statusCode: HttpStatus.FOUND };
+    try {
+      const { authorizationUrl, browserBinding } =
+        await this.startOrgSsoLogin.execute(new StartOrgSsoLoginCommand(orgId));
+      // A cached authorize redirect would reuse a spent transaction and a stale
+      // correlation cookie, so the callback's browser binding check would fail.
+      response.cookie(this.correlationCookieName(), browserBinding, {
+        ...this.correlationCookieOptions(),
+        maxAge: SSO_LOGIN_COOKIE_MAX_AGE_MS,
+      });
+      return { url: authorizationUrl, statusCode: HttpStatus.FOUND };
+    } catch (error) {
+      reportUnexpectedError(error);
+      return this.errorRedirect(error);
+    }
   }
 
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
@@ -125,27 +137,36 @@ export class SsoLoginController {
   @Public()
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('oidc/callback')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @Redirect(undefined, HttpStatus.FOUND)
   @ApiOperation({ summary: 'Complete an organization-pinned SSO login' })
-  @ApiNoContentResponse({
-    description: 'Core session or MFA-pending cookie issued',
+  @ApiFoundResponse({
+    description: 'Core session or MFA-pending cookie issued and redirected',
   })
   async callback(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<void> {
+  ): Promise<BrowserRedirect> {
     response.setHeader('Cache-Control', 'no-store');
     const callbackParameters = new URL(request.originalUrl, 'http://localhost')
       .searchParams;
     const cookieName = this.correlationCookieName();
     const browserBinding = this.cookieValue(request, cookieName);
-    const result = await this.completeSsoAuthentication.execute(
-      new CompleteSsoAuthenticationCommand(callbackParameters, browserBinding),
-    );
-    if (result.kind === 'authenticated') {
-      this.setSessionCookies(response, result.session);
+    try {
+      const result = await this.completeSsoAuthentication.execute(
+        new CompleteSsoAuthenticationCommand(
+          callbackParameters,
+          browserBinding,
+        ),
+      );
+      if (result.kind === 'authenticated') {
+        this.setSessionCookies(response, result.session);
+      }
+      response.clearCookie(cookieName, this.correlationCookieOptions());
+      return this.frontendRedirect(result.redirectPath);
+    } catch (error) {
+      reportUnexpectedError(error);
+      return this.errorRedirect(error);
     }
-    response.clearCookie(cookieName, this.correlationCookieOptions());
   }
 
   @Public()
@@ -197,6 +218,28 @@ export class SsoLoginController {
     }
     clearCookies(response, this.configService);
     setMfaPendingCookie(response, result.mfaPendingToken, this.configService);
+  }
+
+  private errorRedirect(error: unknown): BrowserRedirect {
+    const code =
+      error instanceof ApplicationError ? error.code : SsoErrorCode.UNEXPECTED;
+    const url = new URL('/sso/error', this.frontendBaseUrl());
+    url.searchParams.set('code', code);
+    return { url: url.toString(), statusCode: HttpStatus.FOUND };
+  }
+
+  private frontendRedirect(path: string): BrowserRedirect {
+    return {
+      url: new URL(path, this.frontendBaseUrl()).toString(),
+      statusCode: HttpStatus.FOUND,
+    };
+  }
+
+  private frontendBaseUrl(): string {
+    return this.configService.get<string>(
+      'app.frontend.baseUrl',
+      'http://localhost:3001',
+    );
   }
 
   private correlationCookieName(): string {

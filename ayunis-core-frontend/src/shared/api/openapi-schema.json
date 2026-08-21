@@ -11666,8 +11666,8 @@
         "operationId": "SsoLoginController_callback",
         "parameters": [],
         "responses": {
-          "204": {
-            "description": "Core session or MFA-pending cookie issued"
+          "302": {
+            "description": "Core session or MFA-pending cookie issued and redirected"
           }
         },
         "summary": "Complete an organization-pinned SSO login",

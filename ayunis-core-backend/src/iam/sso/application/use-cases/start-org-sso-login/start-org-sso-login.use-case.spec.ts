@@ -52,7 +52,7 @@ describe(StartOrgSsoLoginUseCase.name, () => {
         browserBindingHash: createHash('sha256')
           .update(result.browserBinding)
           .digest('hex'),
-        postLoginPath: '/',
+        postLoginPath: '/sso/success',
         encryptedCodeVerifier: 'encrypted:pkce-verifier',
         encryptedNonce: 'encrypted:oidc-nonce',
         purpose: SsoLoginPurpose.LOGIN,

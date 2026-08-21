@@ -7,7 +7,16 @@ import type { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/
 import type { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import type { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
 import type { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
+import {
+  SsoAccountLinkRequiredError,
+  SsoConnectionNotAvailableError,
+} from 'src/iam/sso/application/sso.errors';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
+
+jest.mock('src/common/errors/report-unexpected-error.helper', () => ({
+  reportUnexpectedError: jest.fn(),
+}));
 
 describe(SsoLoginController.name, () => {
   const discovery = { execute: jest.fn() };
@@ -85,9 +94,31 @@ describe(SsoLoginController.name, () => {
     );
   });
 
+  it('redirects an unavailable organization link to the fixed SSO error page', async () => {
+    start.execute.mockRejectedValue(new SsoConnectionNotAvailableError());
+
+    await expect(controller.start(SSO_TEST_ORG_ID, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/error?code=SSO_CONNECTION_NOT_AVAILABLE',
+      statusCode: 302,
+    });
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store',
+    );
+  });
+
+  it('reports unexpected start failures before redirecting', async () => {
+    const error = new Error('provider unavailable');
+    start.execute.mockRejectedValue(error);
+
+    await controller.start(SSO_TEST_ORG_ID, response);
+
+    expect(reportUnexpectedError).toHaveBeenCalledWith(error);
+  });
+
   it('preserves duplicate callback parameters for strict state validation', async () => {
     completeAuthentication.execute.mockResolvedValue({
-      postLoginPath: '/',
+      redirectPath: '/sso/success',
       kind: 'authenticated',
       session: {
         status: 'authenticated',
@@ -99,7 +130,10 @@ describe(SsoLoginController.name, () => {
       cookies: { ayunis_sso_login: 'browser-binding' },
     } as unknown as Request;
 
-    await controller.callback(request, response);
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/success',
+      statusCode: 302,
+    });
 
     const command = completeAuthentication.execute.mock.calls[0][0];
     expect(command.callbackParameters.getAll('state')).toEqual(['one', 'two']);
@@ -125,7 +159,7 @@ describe(SsoLoginController.name, () => {
 
   it('sets only the MFA pending cookie when Core MFA is required', async () => {
     completeAuthentication.execute.mockResolvedValue({
-      postLoginPath: '/',
+      redirectPath: '/two-factor?redirect=%2Fsso%2Fsuccess',
       kind: 'authenticated',
       session: {
         status: 'mfa_required',
@@ -138,7 +172,10 @@ describe(SsoLoginController.name, () => {
       cookies: { ayunis_sso_login: 'browser-binding' },
     } as unknown as Request;
 
-    await controller.callback(request, response);
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/two-factor?redirect=%2Fsso%2Fsuccess',
+      statusCode: 302,
+    });
 
     expect(response.cookie).toHaveBeenCalledTimes(1);
     expect(response.cookie).toHaveBeenCalledWith(
@@ -154,6 +191,27 @@ describe(SsoLoginController.name, () => {
       'refresh_token',
       expect.any(Object),
     );
+  });
+
+  it('routes users who must enroll MFA to the enrollment flow', async () => {
+    completeAuthentication.execute.mockResolvedValue({
+      redirectPath: '/two-factor?redirect=%2Fsso%2Fsuccess&enroll=true',
+      kind: 'authenticated',
+      session: {
+        status: 'mfa_required',
+        mfaPendingToken: 'signed-pending-token',
+        enrollmentRequired: true,
+      },
+    });
+    const request = {
+      originalUrl: '/api/auth/sso/oidc/callback?code=code&state=state',
+      cookies: { ayunis_sso_login: 'browser-binding' },
+    } as unknown as Request;
+
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/two-factor?redirect=%2Fsso%2Fsuccess&enroll=true',
+      statusCode: 302,
+    });
   });
 
   it('starts an authenticated account-link transaction without redirecting', async () => {
@@ -181,14 +239,17 @@ describe(SsoLoginController.name, () => {
   it('does not issue session cookies after account linking', async () => {
     completeAuthentication.execute.mockResolvedValue({
       kind: 'linked',
-      postLoginPath: '/',
+      redirectPath: '/settings/account?ssoLinked=true',
     });
     const request = {
       originalUrl: '/api/auth/sso/oidc/callback?code=code&state=state',
       cookies: { ayunis_sso_login: 'browser-binding' },
     } as unknown as Request;
 
-    await controller.callback(request, response);
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/settings/account?ssoLinked=true',
+      statusCode: 302,
+    });
 
     expect(response.cookie).not.toHaveBeenCalled();
     expect(response.clearCookie).toHaveBeenCalled();
@@ -196,17 +257,33 @@ describe(SsoLoginController.name, () => {
 
   it('keeps the correlation cookie when callback validation fails', async () => {
     completeAuthentication.execute.mockRejectedValue(
-      new Error('invalid callback'),
+      new SsoAccountLinkRequiredError(),
     );
     const request = {
       originalUrl: '/api/auth/sso/oidc/callback?state=invalid',
       cookies: { ayunis_sso_login: 'browser-binding' },
     } as unknown as Request;
 
-    await expect(controller.callback(request, response)).rejects.toThrow(
-      'invalid callback',
-    );
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/error?code=SSO_ACCOUNT_LINK_REQUIRED',
+      statusCode: 302,
+    });
     expect(response.clearCookie).not.toHaveBeenCalled();
+  });
+
+  it('does not expose unexpected callback failures in the error redirect', async () => {
+    const error = new Error('database password leaked in error');
+    completeAuthentication.execute.mockRejectedValue(error);
+    const request = {
+      originalUrl: '/api/auth/sso/oidc/callback?state=invalid',
+      cookies: { ayunis_sso_login: 'browser-binding' },
+    } as unknown as Request;
+
+    await expect(controller.callback(request, response)).resolves.toEqual({
+      url: 'http://localhost:3001/sso/error?code=SSO_UNEXPECTED_ERROR',
+      statusCode: 302,
+    });
+    expect(reportUnexpectedError).toHaveBeenCalledWith(error);
   });
 
   it('clears Core cookies and returns the optional broker logout URL', async () => {

@@ -53,6 +53,7 @@ describe(StartSsoAccountLinkUseCase.name, () => {
           .digest('hex'),
         purpose: SsoLoginPurpose.LINK,
         linkUserId: USER_ID,
+        postLoginPath: '/settings/account?ssoLinked=true',
       }),
     );
   });
