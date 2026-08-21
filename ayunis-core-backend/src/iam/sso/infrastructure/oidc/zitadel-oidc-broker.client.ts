@@ -223,11 +223,21 @@ export class ZitadelOidcBrokerClient
       callbackUrl: config.callbackUrl,
       allowInsecureRequests: config.allowInsecureRequests,
       reauthenticationMaxAgeSeconds: config.reauthenticationMaxAgeSeconds,
-      postLogoutRedirectUrl: this.configService.get<string>(
+      postLogoutRedirectUrl: this.frontendLoginUrl(),
+    };
+  }
+
+  private frontendLoginUrl(): string {
+    const url = new URL(
+      this.configService.get<string>(
         'app.frontend.baseUrl',
         'http://localhost:3001',
       ),
-    };
+    );
+    url.pathname = `${url.pathname.replace(/\/$/, '')}/login`;
+    url.search = '';
+    url.hash = '';
+    return url.toString();
   }
 
   private validatedLogoutClaims(

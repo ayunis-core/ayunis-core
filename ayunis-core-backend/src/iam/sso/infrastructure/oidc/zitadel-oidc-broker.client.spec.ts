@@ -165,9 +165,17 @@ describe('ZitadelOidcBrokerClient', () => {
     expect(client.createEndSessionUrl()).toBe(
       'https://sso.ayunis.de/oidc/v1/end_session?' +
         'client_id=ayunis-core-client&' +
-        'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2F',
+        'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2Flogin',
     );
     expect(oidc.discovery).not.toHaveBeenCalled();
+  });
+
+  it('keeps the frontend base path in the post-logout redirect', () => {
+    const client = buildClient(config, 'https://core.ayunis.de/app/');
+
+    expect(client.createEndSessionUrl()).toContain(
+      'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2Fapp%2Flogin',
+    );
   });
 
   it('validates a signed back-channel logout token for this relying party', async () => {
@@ -374,10 +382,13 @@ describe('ZitadelOidcBrokerClient', () => {
   });
 });
 
-function buildClient(values: Partial<typeof config>): ZitadelOidcBrokerClient {
+function buildClient(
+  values: Partial<typeof config>,
+  frontendBaseUrl = 'https://core.ayunis.de/',
+): ZitadelOidcBrokerClient {
   const configService = {
     get: jest.fn((key: string) =>
-      key === 'app.frontend.baseUrl' ? 'https://core.ayunis.de/' : values,
+      key === 'app.frontend.baseUrl' ? frontendBaseUrl : values,
     ),
   };
   return new ZitadelOidcBrokerClient(configService as never);

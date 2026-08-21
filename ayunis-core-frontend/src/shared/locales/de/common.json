@@ -17,6 +17,9 @@
       "cancelText": "Abbrechen"
     },
     "accountSettings": "Konto-Einstellungen",
+    "logout": {
+      "error": "Die Abmeldung konnte vom Server nicht bestätigt werden. Melden Sie sich erneut ab, falls Ihre Sitzung noch aktiv ist."
+    },
     "adminSettings": "Admin-Einstellungen",
     "superAdminSettings": "Super Admin-Einstellungen",
     "signOut": "Abmelden",

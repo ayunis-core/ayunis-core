@@ -17,6 +17,9 @@
       "cancelText": "Cancel"
     },
     "accountSettings": "Account Settings",
+    "logout": {
+      "error": "We could not confirm the logout with the server. Please sign in again if your session remains active."
+    },
     "adminSettings": "Admin Settings",
     "superAdminSettings": "Super Admin Settings",
     "signOut": "Sign out",
