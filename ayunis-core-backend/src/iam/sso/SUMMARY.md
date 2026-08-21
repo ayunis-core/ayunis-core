@@ -3,7 +3,9 @@ Persists organization SSO configuration and links validated broker identities to
 
 Each organization can have one SSO connection with a unique verified email domain, its verification timestamp, and an optional unique Zitadel organization ID. The enabled flag is the runtime login switch and requires a broker organization mapping. JIT provisioning is an independent opt-in through `jitProvisioningEnabled`; invitations remain available regardless of that setting.
 
-Federated identities use the exact validated OIDC issuer and subject as their durable unique key and reference the internal Ayunis user. Organization and user deletion cascade to their corresponding SSO records. This module does not persist customer IdP credentials or the future self-service onboarding lifecycle, and it does not implement account linking, provisioning, or authorization decisions.
+Federated identities use the exact validated OIDC issuer and subject as their durable unique key and reference the internal Ayunis user. Organization and user deletion cascade to their corresponding SSO records. This module does not persist customer IdP credentials or the future self-service onboarding lifecycle; account linking, admission orchestration, and authorization decisions remain later phases.
+
+`FederatedIdentitiesRepository` persists those mappings through the ambient transaction manager, allowing the provisioning phase to commit a user, its identity mapping, and invitation consumption as one unit. The database uniqueness constraint on `(issuer, subject)` remains the concurrency backstop.
 
 `OidcBrokerClient` is the application port for OIDC authorization and callback validation. `ZitadelOidcBrokerClient` is its single relying-party adapter. It uses Authorization Code with PKCE, state, and nonce; pins the selected Zitadel organization in the authorization request; validates the response through `openid-client`; loads profile claims from UserInfo; and returns no broker tokens to callers. Its environment values are optional as a group so local authentication remains available before SSO is configured.
 
