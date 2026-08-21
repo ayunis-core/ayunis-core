@@ -9,6 +9,8 @@ Federated identities use the exact validated OIDC issuer and subject as their du
 
 `SsoLoginTransaction` stores a state hash, browser-binding hash, fixed post-login path, encrypted PKCE verifier and nonce, pinned Ayunis and Zitadel organization IDs, and a ten-minute expiry. `SsoLoginTransactionsRepository` provides atomic one-time consumption, `SsoLoginTransactionEncryptionPort` protects the verifier and nonce at rest, and `SsoLoginTransactionCleanupTask` removes expired records. Broker tokens are never persisted.
 
+The login orchestration use cases discover an enabled connection from a validated email domain, start an organization-pinned broker authorization request, and complete only a matching one-time callback whose verified email domain and Zitadel organization match that connection. Public HTTP adapters are added separately from user admission and Core session issuance.
+
 `OrgSsoConnection` owns normalized connection state, while `OrgSsoConnectionsRepository` defines lookups, persistence, and conditional updates for routing and runtime flags. The Postgres adapter reports database constraint violations without deciding application conflicts and uses conditional writes to prevent stale operator changes from overwriting newer state.
 
 For V1, reusable application use cases read and configure a verified domain and its Zitadel organization mapping. New mappings are disabled by default, repeated configuration is idempotent, and an enabled mapping must be disabled before its routing identifiers can change. Separate use cases control runtime enablement and JIT provisioning so Superadmin HTTP adapters and later automation can reuse the same boundary.
