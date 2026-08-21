@@ -11,39 +11,37 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import type { UUID } from 'crypto';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { setCookies, clearMfaPendingCookie } from 'src/common/util/cookie.util';
-import { ActiveUser } from '../../domain/active-user.entity';
-import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
-import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
-import { LoginCommand } from '../../application/use-cases/login/login.command';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
+import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
-import type { MfaPendingJwtPayload } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
-import { MfaPendingJwtService } from 'src/iam/mfa/application/services/mfa-pending-jwt.service';
+import {
+  MfaPendingJwtService,
+  type MfaPendingJwtPayload,
+} from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
 import { VerifyMfaCodeUseCase } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.use-case';
 import { VerifyMfaCodeCommand } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.command';
 import { SetupTotpUseCase } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.use-case';
 import { SetupTotpCommand } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.command';
 import { ConfirmTotpUseCase } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.use-case';
 import { ConfirmTotpCommand } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.command';
-import {
-  InvalidMfaPendingTokenError,
-  MfaEnrollmentNotAllowedError,
-} from 'src/iam/mfa/application/mfa.errors';
+import { MfaEnrollmentNotAllowedError } from 'src/iam/mfa/application/mfa.errors';
+import { InvalidMfaPendingTokenError } from 'src/iam/authentication/application/authentication.errors';
 import { MfaCodeRequestDto } from 'src/iam/mfa/presenters/http/dtos/mfa-code-request.dto';
 import { MfaSetupResponseDto } from 'src/iam/mfa/presenters/http/dtos/mfa-setup-response.dto';
 import {
   SuccessResponseDto,
   MfaLoginConfirmResponseDto,
-} from './dtos/auth-response.dto';
+} from 'src/iam/authentication/presenters/http/dtos/auth-response.dto';
 
 /**
  * Completes a login that entered the MFA pending state. All routes are
  * public in the guard sense but require a valid MFA pending cookie, which
- * only a successful password login can set.
+ * only a successful primary authentication can set.
  */
 @ApiTags('Authentication')
 @Controller('auth/mfa')
@@ -67,7 +65,7 @@ export class MfaLoginController {
   @ApiOperation({
     summary: 'Complete login with a TOTP or recovery code',
     description:
-      'Requires the MFA pending cookie set by a successful password login.',
+      'Requires the MFA pending cookie set by successful authentication.',
   })
   @ApiResponse({ status: HttpStatus.OK, type: SuccessResponseDto })
   async verify(
@@ -81,7 +79,7 @@ export class MfaLoginController {
     await this.verifyMfaCodeUseCase.execute(
       new VerifyMfaCodeCommand(payload.sub, dto.code),
     );
-    await this.completeLogin(res, payload.sub);
+    await this.completeLogin(res, payload);
     return res.json({ success: true });
   }
 
@@ -136,7 +134,7 @@ export class MfaLoginController {
     const recoveryCodes = await this.confirmTotpUseCase.execute(
       new ConfirmTotpCommand(payload.sub, dto.code),
     );
-    await this.completeLogin(res, payload.sub);
+    await this.completeLogin(res, payload);
     return res.json({ success: true, recoveryCodes });
   }
 
@@ -152,9 +150,12 @@ export class MfaLoginController {
     return this.mfaPendingJwtService.verify(token);
   }
 
-  private async completeLogin(res: Response, userId: UUID): Promise<void> {
+  private async completeLogin(
+    res: Response,
+    payload: MfaPendingJwtPayload,
+  ): Promise<void> {
     const user = await this.findUserByIdUseCase.execute(
-      new FindUserByIdQuery(userId),
+      new FindUserByIdQuery(payload.sub),
     );
     const tokens = await this.loginUseCase.execute(
       new LoginCommand(
@@ -167,7 +168,8 @@ export class MfaLoginController {
           orgId: user.orgId,
           name: user.name,
         }),
-        SessionAuthenticationMethod.PASSWORD,
+        payload.authenticationMethod,
+        payload.zitadelSessionId,
       ),
     );
 
