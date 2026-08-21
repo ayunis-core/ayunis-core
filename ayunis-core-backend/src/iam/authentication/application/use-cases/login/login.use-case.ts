@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { AuthenticationRepository } from '../../ports/authentication.repository';
-import { AUTHENTICATION_REPOSITORY } from '../../tokens/authentication-repository.token';
-import { LoginCommand } from './login.command';
+import { AuthenticationRepository } from 'src/iam/authentication/application/ports/authentication.repository';
+import { AUTHENTICATION_REPOSITORY } from 'src/iam/authentication/application/tokens/authentication-repository.token';
+import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
 import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
-import { UnexpectedAuthenticationError } from '../../authentication.errors';
+import { UnexpectedAuthenticationError } from 'src/iam/authentication/application/authentication.errors';
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -33,7 +33,11 @@ export class LoginUseCase {
       command.user,
     );
     const session = await this.createSessionUseCase.execute(
-      new CreateSessionCommand(command.user.id, command.authenticationMethod),
+      new CreateSessionCommand(
+        command.user.id,
+        command.authenticationMethod,
+        command.zitadelSessionId,
+      ),
     );
 
     return new AuthTokens(accessToken, session.refreshToken);

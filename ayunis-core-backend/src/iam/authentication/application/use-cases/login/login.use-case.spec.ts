@@ -59,6 +59,7 @@ describe('LoginUseCase', () => {
     const command = new LoginCommand(
       activeUser,
       SessionAuthenticationMethod.SSO,
+      'zitadel-session-id',
     );
 
     jest
@@ -80,6 +81,7 @@ describe('LoginUseCase', () => {
       expect.objectContaining({
         userId: activeUser.id,
         authenticationMethod: SessionAuthenticationMethod.SSO,
+        zitadelSessionId: 'zitadel-session-id',
       }),
     );
   });

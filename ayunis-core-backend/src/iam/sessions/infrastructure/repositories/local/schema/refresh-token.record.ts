@@ -29,6 +29,10 @@ export class RefreshTokenRecord extends BaseRecord {
   })
   authenticationMethod: SessionAuthenticationMethod;
 
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  zitadelSessionId: string | null;
+
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 

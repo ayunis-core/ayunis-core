@@ -5,5 +5,6 @@ export class LoginCommand {
   constructor(
     public readonly user: ActiveUser,
     public readonly authenticationMethod: SessionAuthenticationMethod,
+    public readonly zitadelSessionId: string | null = null,
   ) {}
 }

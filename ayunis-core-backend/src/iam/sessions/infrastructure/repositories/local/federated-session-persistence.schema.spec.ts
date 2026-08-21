@@ -18,4 +18,19 @@ describe('Federated session persistence', () => {
       default: SessionAuthenticationMethod.PASSWORD,
     });
   });
+
+  it('indexes the optional Zitadel session identifier', () => {
+    expect(columnFor('zitadelSessionId')?.options).toMatchObject({
+      type: 'varchar',
+      nullable: true,
+    });
+    expect(
+      getMetadataArgsStorage().indices.some(
+        (index) =>
+          index.target === RefreshTokenRecord &&
+          Array.isArray(index.columns) &&
+          index.columns.includes('zitadelSessionId'),
+      ),
+    ).toBe(true);
+  });
 });
