@@ -30,4 +30,10 @@ export class FeatureTogglesResponseDto {
     example: false,
   })
   agentRuntimeEnabled: boolean;
+
+  @ApiProperty({
+    description: 'Whether employee-facing SSO login is enabled',
+    example: false,
+  })
+  ssoLoginEnabled: boolean;
 }

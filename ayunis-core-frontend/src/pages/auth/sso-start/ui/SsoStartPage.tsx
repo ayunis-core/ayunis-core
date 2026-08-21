@@ -1,17 +1,48 @@
 import { LoaderCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { beginSso } from '@/features/sso';
+import { z } from 'zod';
+import {
+  beginSso,
+  showSsoConnectionUnavailable,
+  useDiscoverSso,
+} from '@/features/sso';
 import OnboardingLayout from '@/layouts/onboarding-layout';
 
 interface SsoStartPageProps {
-  orgId: string;
+  identifier: string;
 }
 
-export function SsoStartPage({ orgId }: Readonly<SsoStartPageProps>) {
-  const { t } = useTranslation('auth');
+const orgIdSchema = z.string().uuid();
 
-  useEffect(() => beginSso(orgId), [orgId]);
+export function SsoStartPage({ identifier }: Readonly<SsoStartPageProps>) {
+  const { t } = useTranslation('auth');
+  const { discover } = useDiscoverSso();
+
+  useEffect(() => {
+    if (orgIdSchema.safeParse(identifier).success) {
+      beginSso(identifier);
+      return;
+    }
+
+    let active = true;
+    void discover(`sso@${identifier.trim().toLowerCase()}`)
+      .then((result) => {
+        if (!active) return;
+        if (result.available && result.orgId) {
+          beginSso(result.orgId);
+          return;
+        }
+        showSsoConnectionUnavailable();
+      })
+      .catch(() => {
+        if (active) showSsoConnectionUnavailable();
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [discover, identifier]);
 
   return (
     <OnboardingLayout

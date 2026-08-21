@@ -6,23 +6,22 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import { useTranslation } from 'react-i18next';
-import * as z from 'zod';
+import {
+  createLoginFormSchema,
+  type LoginFormFields,
+} from '@/pages/auth/login/model/login-form';
 
 export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const loginMutation = useAuthenticationControllerLogin();
 
-  const loginFormSchema = z.object({
-    email: z.string().email({
-      message: t('login.emailInvalid'),
-    }),
-    password: z.string().min(1, {
-      message: t('login.passwordRequired'),
-    }),
+  const loginFormSchema = createLoginFormSchema({
+    emailInvalid: t('login.emailInvalid'),
+    passwordRequired: t('login.passwordRequired'),
   });
 
-  const form = useForm<z.infer<typeof loginFormSchema>>({
+  const form = useForm<LoginFormFields>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: '',
@@ -30,7 +29,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof loginFormSchema>) => {
+  const onSubmit = (values: LoginFormFields) => {
     loginMutation.mutate(
       {
         data: {

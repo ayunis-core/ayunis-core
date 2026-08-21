@@ -20,6 +20,7 @@ test('super admin searches users and opens their organization', async ({
 }) => {
   await page.goto('/login');
   await page.getByTestId('email').fill('admin@demo.local');
+  await page.getByTestId('login-continue').click();
   await page.getByTestId('password').fill('admin');
   await page.getByTestId('submit').click();
   await expect(page).not.toHaveURL(/\/login/);

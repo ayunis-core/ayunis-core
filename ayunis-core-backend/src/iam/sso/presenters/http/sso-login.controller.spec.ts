@@ -13,6 +13,8 @@ import {
 } from 'src/iam/sso/application/sso.errors';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
+import { FEATURE_KEY } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 jest.mock('src/common/errors/report-unexpected-error.helper', () => ({
   reportUnexpectedError: jest.fn(),
@@ -45,6 +47,12 @@ describe(SsoLoginController.name, () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('gates employee-facing SSO routes behind the SSO login feature', () => {
+    expect(Reflect.getMetadata(FEATURE_KEY, SsoLoginController)).toBe(
+      FeatureFlag.SsoLogin,
+    );
   });
 
   it('returns only the organization routing result for email discovery', async () => {

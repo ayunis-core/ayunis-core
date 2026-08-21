@@ -23,6 +23,8 @@ export interface FeatureTogglesResponseDto {
   workspacesEnabled: boolean;
   /** Whether runs use the independent agent runtime */
   agentRuntimeEnabled: boolean;
+  /** Whether employee-facing SSO login is enabled */
+  ssoLoginEnabled: boolean;
 }
 
 /**
@@ -5373,6 +5375,33 @@ export interface SetOrgSsoEnabledRequestDto {
 
 export interface SetOrgSsoStateRequestDto {
   enabled: boolean;
+}
+
+export interface DiscoverSsoDto {
+  email: string;
+}
+
+export interface SsoDiscoveryResponseDto {
+  available: boolean;
+  orgId?: string;
+}
+
+export interface SsoAuthorizationResponseDto {
+  authorizationUrl: string;
+}
+
+export interface SsoLogoutResponseDto {
+  success: boolean;
+  /**
+   * Broker logout URL for the user agent, or null for Core-only logout
+   * @nullable
+   */
+  brokerLogoutUrl: string | null;
+}
+
+export interface SsoBackchannelLogoutRequestDto {
+  /** Signed OpenID Connect logout token */
+  logout_token: string;
 }
 
 export type UserControllerGetUsersInOrganizationParams = {

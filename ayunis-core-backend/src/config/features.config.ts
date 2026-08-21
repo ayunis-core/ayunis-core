@@ -6,6 +6,7 @@ export enum FeatureFlag {
   Skills = 'skillsEnabled',
   Workspaces = 'workspacesEnabled',
   AgentRuntime = 'agentRuntimeEnabled',
+  SsoLogin = 'ssoLoginEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -44,6 +45,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
   // (AYC-148).
   agentRuntimeEnabled: parseBooleanWithDefault(
     process.env.FEATURE_AGENT_RUNTIME_ENABLED,
+    false,
+  ),
+  ssoLoginEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_SSO_LOGIN_ENABLED,
     false,
   ),
 }));

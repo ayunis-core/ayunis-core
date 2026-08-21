@@ -35,6 +35,7 @@ test('registers a new org through the UI and confirms the email', async ({
   await expect(page).toHaveURL(/\/login\?.*emailVerified=true/);
 
   await page.getByTestId('email').fill(email);
+  await page.getByTestId('login-continue').click();
   await page.getByTestId('password').fill(password);
   await page.getByTestId('submit').click();
   await expect(page).not.toHaveURL(/\/login/);

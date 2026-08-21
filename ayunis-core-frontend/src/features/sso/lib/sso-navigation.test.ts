@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSsoStartUrl,
+  rememberSsoPostLoginPath,
   resolveSsoStartUrl,
+  takeSsoPostLoginPath,
 } from '@/features/sso/lib/sso-navigation';
 
 describe('buildSsoStartUrl', () => {
@@ -30,4 +32,20 @@ describe('buildSsoStartUrl', () => {
       'https://core.ayunis.de/sso/error?code=SSO_CONNECTION_NOT_AVAILABLE',
     );
   });
+
+  it('keeps a safe internal continuation for the completed login', () => {
+    rememberSsoPostLoginPath('/settings/account');
+
+    expect(takeSsoPostLoginPath()).toBe('/settings/account');
+    expect(takeSsoPostLoginPath()).toBe('/chat');
+  });
+
+  it.each(['https://attacker.example', '//attacker.example'])(
+    'rejects an external continuation: %s',
+    (path) => {
+      rememberSsoPostLoginPath(path);
+
+      expect(takeSsoPostLoginPath()).toBe('/chat');
+    },
+  );
 });

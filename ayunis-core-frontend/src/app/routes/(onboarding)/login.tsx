@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import LoginPage from '@/pages/auth/login';
 import { meQueryOptions } from '@/shared/api/me-query-options';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
+import { getAppControllerFeatureTogglesQueryOptions } from '@/shared/api/generated/ayunisCoreAPI';
 import z from 'zod';
 
 export const Route = createFileRoute('/(onboarding)/login')({
@@ -22,13 +23,25 @@ export const Route = createFileRoute('/(onboarding)/login')({
     }
   },
   loaderDeps: ({ search }) => search,
-  loader: ({ deps: { emailVerified, redirect } }) => {
-    return { emailVerified, redirect };
+  loader: async ({ context: { queryClient }, deps }) => {
+    const toggles = await queryClient
+      .fetchQuery(getAppControllerFeatureTogglesQueryOptions())
+      .catch(() => null);
+    return {
+      ...deps,
+      ssoLoginEnabled: toggles?.ssoLoginEnabled ?? false,
+    };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { emailVerified, redirect } = Route.useSearch();
-  return <LoginPage redirect={redirect} emailVerified={emailVerified} />;
+  const { emailVerified, redirect, ssoLoginEnabled } = Route.useLoaderData();
+  return (
+    <LoginPage
+      redirect={redirect}
+      emailVerified={emailVerified}
+      ssoLoginEnabled={ssoLoginEnabled}
+    />
+  );
 }
