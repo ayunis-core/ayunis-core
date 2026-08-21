@@ -3,7 +3,7 @@ import type { PrMediaScene, PrMediaContext } from './types';
 const projectName = 'Projektfreigabe Demo';
 
 async function ensureProject({ page }: PrMediaContext) {
-  const projectLink = page.getByRole('link', {
+  const projectLink = page.getByRole('main').getByRole('link', {
     name: projectName,
     exact: true,
   });
