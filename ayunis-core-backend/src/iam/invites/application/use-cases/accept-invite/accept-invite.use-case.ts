@@ -1,28 +1,32 @@
+import { Transactional } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { InvitesRepository } from '../../ports/invites.repository';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
-  InviteJwtPayload,
-  InviteJwtService,
-} from '../../services/invite-jwt.service';
-import { AcceptInviteCommand } from './accept-invite.command';
-import {
-  InviteNotFoundError,
-  InviteExpiredError,
   InviteAlreadyAcceptedError,
+  InviteExpiredError,
+  InviteNotFoundError,
   InvalidInviteTokenError,
   InvalidPasswordError,
+  UnexpectedInviteError,
   UserAlreadyExistsError,
-} from '../../invites.errors';
-import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
-import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
+} from 'src/iam/invites/application/invites.errors';
+import { InvitesRepository } from 'src/iam/invites/application/ports/invites.repository';
+import {
+  InviteJwtService,
+  type InviteJwtPayload,
+} from 'src/iam/invites/application/services/invite-jwt.service';
+import { AcceptInviteCommand } from 'src/iam/invites/application/use-cases/accept-invite/accept-invite.command';
 import { Invite } from 'src/iam/invites/domain/invite.entity';
-import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
-import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
-import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
+import { CreateUserUseCase } from 'src/iam/users/application/use-cases/create-user/create-user.use-case';
 import { FindUserByEmailQuery } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.query';
-import { UnexpectedInviteError } from '../../invites.errors';
-import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { FindUserByEmailUseCase } from 'src/iam/users/application/use-cases/find-user-by-email/find-user-by-email.use-case';
+import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class AcceptInviteUseCase {
@@ -34,6 +38,8 @@ export class AcceptInviteUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly isValidPasswordUseCase: IsValidPasswordUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
+    private readonly publishUserCreated: UserCreatedEventPublisher,
+    private readonly acquireAllocationLock: AcquireSeatAllocationLockUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedInviteError)
@@ -43,8 +49,7 @@ export class AcceptInviteUseCase {
     this.logger.info({ hasToken: !!command.inviteToken }, 'execute');
 
     const invite = await this.resolveValidatedInvite(command);
-
-    await this.createUserUseCase.execute(
+    const preparedUser = await this.createUserUseCase.prepare(
       new CreateUserCommand({
         email: invite.email,
         password: command.password,
@@ -57,13 +62,10 @@ export class AcceptInviteUseCase {
       }),
     );
 
-    await this.invitesRepository.accept(invite.id);
-
+    const user = await this.acceptAndCreateUser(invite, preparedUser);
+    this.publishUserCreated.publish(user);
     this.logger.debug(
-      {
-        inviteId: invite.id,
-        email: invite.email,
-      },
+      { inviteId: invite.id, email: invite.email },
       'Invite accepted successfully',
     );
 
@@ -74,7 +76,20 @@ export class AcceptInviteUseCase {
     };
   }
 
-  // eslint-disable-next-line max-lines-per-function -- existing flow is unchanged except for logging migration
+  @Transactional()
+  private async acceptAndCreateUser(
+    invite: Invite,
+    preparedUser: User,
+  ): Promise<User> {
+    await this.acquireAllocationLock.execute(invite.orgId);
+    this.rejectExpiredInvite(invite);
+    await this.rejectExistingUser(invite.email);
+    if (!(await this.invitesRepository.accept(invite.id))) {
+      throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
+    }
+    return this.createUserUseCase.createPreparedWithoutPublishing(preparedUser);
+  }
+
   private async resolveValidatedInvite(
     command: AcceptInviteCommand,
   ): Promise<Invite> {
@@ -82,12 +97,7 @@ export class AcceptInviteUseCase {
     try {
       payload = this.inviteJwtService.verifyInviteToken(command.inviteToken);
     } catch (error) {
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Invalid invite token',
-      );
+      this.logger.error({ err: error as Error }, 'Invalid invite token');
       throw new InvalidInviteTokenError('Token verification failed');
     }
 
@@ -97,31 +107,12 @@ export class AcceptInviteUseCase {
       throw new InviteNotFoundError(payload.inviteId);
     }
 
-    const existingUser = await this.findUserByEmailUseCase.execute(
-      new FindUserByEmailQuery(invite.email),
-    );
-    if (existingUser) {
-      throw new UserAlreadyExistsError();
-    }
-
+    await this.rejectExistingUser(invite.email);
     if (invite.acceptedAt) {
       this.logger.error({ inviteId: invite.id }, 'Invite already accepted');
       throw new InviteAlreadyAcceptedError({ inviteId: invite.id });
     }
-
-    if (invite.expiresAt < new Date()) {
-      this.logger.error(
-        {
-          inviteId: invite.id,
-          expiresAt: invite.expiresAt,
-        },
-        'Invite expired',
-      );
-      throw new InviteExpiredError({
-        inviteId: invite.id,
-        expiresAt: invite.expiresAt,
-      });
-    }
+    this.rejectExpiredInvite(invite);
 
     if (
       !(await this.isValidPasswordUseCase.execute(
@@ -130,7 +121,25 @@ export class AcceptInviteUseCase {
     ) {
       throw new InvalidPasswordError();
     }
-
     return invite;
+  }
+
+  private async rejectExistingUser(email: string): Promise<void> {
+    const existingUser = await this.findUserByEmailUseCase.execute(
+      new FindUserByEmailQuery(email),
+    );
+    if (existingUser) throw new UserAlreadyExistsError();
+  }
+
+  private rejectExpiredInvite(invite: Invite): void {
+    if (invite.expiresAt >= new Date()) return;
+    this.logger.error(
+      { inviteId: invite.id, expiresAt: invite.expiresAt },
+      'Invite expired',
+    );
+    throw new InviteExpiredError({
+      inviteId: invite.id,
+      expiresAt: invite.expiresAt,
+    });
   }
 }

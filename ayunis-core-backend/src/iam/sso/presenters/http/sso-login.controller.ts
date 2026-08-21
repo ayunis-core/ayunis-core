@@ -31,6 +31,8 @@ import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { DiscoverSsoDto } from 'src/iam/sso/presenters/http/dto/discover-sso.request-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
+import { ProvisionOrgSsoUserCommand } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.command';
+import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 
 const SSO_LOGIN_COOKIE_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -41,6 +43,7 @@ export class SsoLoginController {
     private readonly discoverOrgSso: DiscoverOrgSsoUseCase,
     private readonly startOrgSsoLogin: StartOrgSsoLoginUseCase,
     private readonly completeOrgSsoLogin: CompleteOrgSsoLoginUseCase,
+    private readonly provisionOrgSsoUser: ProvisionOrgSsoUserUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -90,8 +93,11 @@ export class SsoLoginController {
       .searchParams;
     const cookieName = this.correlationCookieName();
     const browserBinding = this.cookieValue(request, cookieName);
-    await this.completeOrgSsoLogin.execute(
+    const login = await this.completeOrgSsoLogin.execute(
       new CompleteOrgSsoLoginCommand(callbackParameters, browserBinding),
+    );
+    await this.provisionOrgSsoUser.execute(
+      new ProvisionOrgSsoUserCommand(login),
     );
     response.clearCookie(cookieName, this.correlationCookieOptions());
   }

@@ -1,25 +1,24 @@
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { CreateUserUseCase } from './create-user.use-case';
 import { CreateUserCommand } from './create-user.command';
-import { UserCreatedEvent } from '../../events/user-created.event';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   UserAlreadyExistsError,
   UserEmailProviderBlacklistedError,
-} from '../../users.errors';
-import type { UsersRepository } from '../../ports/users.repository';
+} from 'src/iam/users/application/users.errors';
+import type { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import type { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
 import type { ConfigService } from '@nestjs/config';
-import type { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
+import type { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
   let usersRepository: jest.Mocked<UsersRepository>;
   let hashTextUseCase: jest.Mocked<HashTextUseCase>;
   let configService: jest.Mocked<ConfigService>;
-  let eventEmitter: jest.Mocked<EventEmitter2>;
+  let publishUserCreated: jest.Mocked<UserCreatedEventPublisher>;
 
   const orgId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
 
@@ -50,33 +49,26 @@ describe('CreateUserUseCase', () => {
       }),
     } as unknown as jest.Mocked<ConfigService>;
 
-    eventEmitter = {
-      emitAsync: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<EventEmitter2>;
+    publishUserCreated = {
+      publish: jest.fn(),
+    } as unknown as jest.Mocked<UserCreatedEventPublisher>;
 
     useCase = new CreateUserUseCase(
       createPinoLoggerMock(),
       usersRepository,
       hashTextUseCase,
       configService,
-      eventEmitter,
+      publishUserCreated,
     );
   });
 
-  it('should emit UserCreatedEvent with user data after user creation', async () => {
+  it('publishes the created user after persistence succeeds', async () => {
     const result = await useCase.execute(validCommand);
 
-    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-      UserCreatedEvent.EVENT_NAME,
-      expect.objectContaining({
-        userId: result.id,
-        orgId,
-        user: result,
-      }),
-    );
+    expect(publishUserCreated.publish).toHaveBeenCalledWith(result);
   });
 
-  it('should include department on user in UserCreatedEvent', async () => {
+  it('publishes the created user with its department', async () => {
     const commandWithDept = new CreateUserCommand({
       email: 'counter@ayunis.de',
       password: 'Sicher3sPasswort!',
@@ -90,13 +82,8 @@ describe('CreateUserUseCase', () => {
 
     const result = await useCase.execute(commandWithDept);
 
-    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-      UserCreatedEvent.EVENT_NAME,
-      expect.objectContaining({
-        userId: result.id,
-        orgId,
-        user: expect.objectContaining({ department: 'bauamt' }),
-      }),
+    expect(publishUserCreated.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ id: result.id, department: 'bauamt' }),
     );
   });
 
@@ -116,7 +103,7 @@ describe('CreateUserUseCase', () => {
     await expect(useCase.execute(validCommand)).rejects.toThrow(
       UserAlreadyExistsError,
     );
-    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
   });
 
   it('should not emit UserCreatedEvent when email provider is blacklisted', async () => {
@@ -128,27 +115,7 @@ describe('CreateUserUseCase', () => {
     await expect(useCase.execute(blacklistedCommand)).rejects.toThrow(
       UserEmailProviderBlacklistedError,
     );
-    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
-  });
-
-  it('should catch and log emitAsync rejection without throwing', async () => {
-    eventEmitter.emitAsync.mockRejectedValue(
-      new Error('Listener failed unexpectedly'),
-    );
-
-    const result = await useCase.execute(validCommand);
-
-    expect(result).toBeDefined();
-    expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
-      UserCreatedEvent.EVENT_NAME,
-      expect.objectContaining({
-        userId: result.id,
-        orgId,
-      }),
-    );
-
-    // Flush microtask queue so the .catch() handler runs
-    await new Promise(process.nextTick);
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
   });
 
   it('should pass department from command to the created user entity', async () => {
@@ -175,6 +142,26 @@ describe('CreateUserUseCase', () => {
     usersRepository.create.mockRejectedValue(new Error('Database error'));
 
     await expect(useCase.execute(validCommand)).rejects.toThrow();
-    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
+  });
+
+  it('can defer publishing to an outer transaction boundary', async () => {
+    const result = await useCase.createWithoutPublishing(validCommand);
+
+    expect(result.email).toBe(validCommand.email);
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
+  });
+
+  it('can prepare a user before persisting it', async () => {
+    const preparedUser = await useCase.prepare(validCommand);
+
+    expect(preparedUser.passwordHash).toBe('hashed-password-value');
+    expect(usersRepository.create).not.toHaveBeenCalled();
+
+    const result = await useCase.createPreparedWithoutPublishing(preparedUser);
+
+    expect(result).toBe(preparedUser);
+    expect(usersRepository.create).toHaveBeenCalledWith(preparedUser);
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
   });
 });

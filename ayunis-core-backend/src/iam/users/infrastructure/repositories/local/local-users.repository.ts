@@ -11,8 +11,8 @@ import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { EntityManager, Repository, ILike, In } from 'typeorm';
-import { UserRecord } from './schema/user.record';
-import { UserMapper } from './mappers/user.mapper';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
+import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 import {
   UserNotFoundError,
   UserAlreadyExistsError,
@@ -21,6 +21,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { SuperAdminUserListItem } from 'src/iam/users/domain/super-admin-user-list-item';
+import { exactEmail } from 'src/common/db/exact-email.operator';
 
 @Injectable()
 export class LocalUsersRepository extends UsersRepository {
@@ -70,7 +71,7 @@ export class LocalUsersRepository extends UsersRepository {
   async findOneByEmail(email: string): Promise<User | null> {
     this.logger.info({ email }, 'findOneByEmail');
     const userRecord = await this.users.findOne({
-      where: { email: ILike(email) },
+      where: { email: exactEmail(email) },
     });
     if (!userRecord) {
       this.logger.debug({ email }, 'User not found by email');
@@ -251,7 +252,7 @@ export class LocalUsersRepository extends UsersRepository {
     this.logger.info({ userId: user.id, email: user.email }, 'create');
     // Check if user already exists by email (case-insensitive)
     const existingUser = await this.users.findOne({
-      where: { email: ILike(user.email) },
+      where: { email: exactEmail(user.email) },
     });
 
     if (existingUser) {
@@ -267,11 +268,17 @@ export class LocalUsersRepository extends UsersRepository {
     }
 
     const userEntity = UserMapper.toEntity(user);
-    const savedUserEntity = await this.users.save(userEntity);
+    let savedUserEntity: UserRecord;
+    try {
+      savedUserEntity = await this.users.save(userEntity);
+    } catch (error: unknown) {
+      if (isUserEmailUniqueViolation(error)) {
+        throw new UserAlreadyExistsError(user.email);
+      }
+      throw error;
+    }
     this.logger.debug(
-      {
-        userId: savedUserEntity.id,
-      },
+      { userId: savedUserEntity.id },
       'User created successfully',
     );
     return UserMapper.toDomain(savedUserEntity);
@@ -339,4 +346,15 @@ export class LocalUsersRepository extends UsersRepository {
     }
     return Promise.resolve(true);
   }
+}
+
+function isUserEmailUniqueViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const value = error as Record<string, unknown>;
+  const driver = value.driverError as Record<string, unknown> | undefined;
+  return (
+    (driver?.code ?? value.code) === '23505' &&
+    (driver?.constraint ?? value.constraint) ===
+      'UQ_97672ac88f789774dd47f7c8be3'
+  );
 }

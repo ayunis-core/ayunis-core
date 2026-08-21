@@ -4,11 +4,13 @@ import type { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cas
 import type { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import type { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
+import type { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 
 describe(SsoLoginController.name, () => {
   const discovery = { execute: jest.fn() };
   const start = { execute: jest.fn() };
   const complete = { execute: jest.fn() };
+  const provision = { execute: jest.fn() };
   const configService = {
     get: jest.fn().mockImplementation((_key, defaultValue) => defaultValue),
   };
@@ -21,6 +23,7 @@ describe(SsoLoginController.name, () => {
     discovery as unknown as DiscoverOrgSsoUseCase,
     start as unknown as StartOrgSsoLoginUseCase,
     complete as unknown as CompleteOrgSsoLoginUseCase,
+    provision as unknown as ProvisionOrgSsoUserUseCase,
     configService as never,
   );
 
@@ -74,7 +77,7 @@ describe(SsoLoginController.name, () => {
   });
 
   it('preserves duplicate callback parameters for strict state validation', async () => {
-    complete.execute.mockResolvedValue({});
+    complete.execute.mockResolvedValue({ orgId: SSO_TEST_ORG_ID });
     const request = {
       originalUrl: '/api/auth/sso/oidc/callback?code=code&state=one&state=two',
       cookies: { ayunis_sso_login: 'browser-binding' },
@@ -85,6 +88,9 @@ describe(SsoLoginController.name, () => {
     const command = complete.execute.mock.calls[0][0];
     expect(command.callbackParameters.getAll('state')).toEqual(['one', 'two']);
     expect(command.browserBinding).toBe('browser-binding');
+    expect(provision.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ login: { orgId: SSO_TEST_ORG_ID } }),
+    );
     expect(response.clearCookie).toHaveBeenCalledWith(
       'ayunis_sso_login',
       expect.objectContaining({ httpOnly: true, sameSite: 'lax', path: '/' }),

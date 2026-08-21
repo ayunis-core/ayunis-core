@@ -92,6 +92,7 @@ describe('ZitadelOidcBrokerClient', () => {
     jest.mocked(oidc.fetchUserInfo).mockResolvedValue({
       sub: 'zitadel-user',
       email: 'staff@demo.com',
+      name: 'Erika Mustermann',
       email_verified: true,
       'urn:zitadel:iam:user:resourceowner:id': '385820595704561666',
     });
@@ -112,6 +113,7 @@ describe('ZitadelOidcBrokerClient', () => {
       issuer: config.issuer,
       subject: 'zitadel-user',
       email: 'staff@demo.com',
+      name: 'Erika Mustermann',
       emailVerified: true,
       zitadelOrgId: '385820595704561666',
       sessionId: 'zitadel-session',
@@ -162,6 +164,39 @@ describe('ZitadelOidcBrokerClient', () => {
       }),
     ).rejects.toMatchObject({ code: 'SSO_BROKER_RESPONSE_INVALID' });
   });
+
+  it.each([null, '', '   '])(
+    'falls back to the email when optional profile names are %p',
+    async (name) => {
+      const tokenResponse = {
+        access_token: 'server-side-access-token',
+        claims: () => ({ sub: 'zitadel-user', sid: 'zitadel-session' }),
+      };
+      jest
+        .mocked(oidc.authorizationCodeGrant)
+        .mockResolvedValue(tokenResponse as never);
+      jest.mocked(oidc.fetchUserInfo).mockResolvedValue({
+        sub: 'zitadel-user',
+        email: 'staff@demo.com',
+        name,
+        preferred_username: '',
+        email_verified: true,
+        'urn:zitadel:iam:user:resourceowner:id': '385820595704561666',
+      } as never);
+
+      const result = await buildClient(config).validateCallback({
+        callbackParameters: new URLSearchParams({
+          code: 'authorization-code',
+          state: 'oauth-state',
+        }),
+        codeVerifier: 'pkce-verifier',
+        expectedState: 'oauth-state',
+        expectedNonce: 'oidc-nonce',
+      });
+
+      expect(result.name).toBe('staff@demo.com');
+    },
+  );
 
   it('classifies broker discovery transport failures as provider failures', async () => {
     const failure = Object.assign(new Error('connect failed'), {

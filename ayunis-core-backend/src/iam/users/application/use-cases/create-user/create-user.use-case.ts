@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UsersRepository } from '../../ports/users.repository';
-import { CreateUserCommand } from './create-user.command';
-import { User } from '../../../domain/user.entity';
-import { HashTextUseCase } from '../../../../hashing/application/use-cases/hash-text/hash-text.use-case';
-import { HashTextCommand } from '../../../../hashing/application/use-cases/hash-text/hash-text.command';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { HashingError } from 'src/iam/hashing/application/hashing.errors';
+import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
+import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { CreateUserCommand } from 'src/iam/users/application/use-cases/create-user/create-user.command';
 import {
   UserAlreadyExistsError,
-  UserInvalidInputError,
   UserEmailProviderBlacklistedError,
-} from '../../users.errors';
-import { HashingError } from '../../../../hashing/application/hashing.errors';
-import { ConfigService } from '@nestjs/config';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UserCreatedEvent } from '../../events/user-created.event';
+  UserInvalidInputError,
+} from 'src/iam/users/application/users.errors';
+import { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -24,10 +23,21 @@ export class CreateUserUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly configService: ConfigService,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly publishUserCreated: UserCreatedEventPublisher,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<User> {
+    const user = await this.createWithoutPublishing(command);
+    this.publishUserCreated.publish(user);
+    return user;
+  }
+
+  async createWithoutPublishing(command: CreateUserCommand): Promise<User> {
+    const user = await this.prepare(command);
+    return this.createPreparedWithoutPublishing(user);
+  }
+
+  async prepare(command: CreateUserCommand): Promise<User> {
     this.logger.info(
       {
         email: command.email,
@@ -38,62 +48,50 @@ export class CreateUserUseCase {
       },
       'createUser',
     );
+
     this.assertEmailProviderAllowed(command.email);
     try {
-      return await this.createUser(command);
+      await this.assertUserDoesNotExist(command.email);
+      const passwordHash = await this.hashPassword(command);
+      return new User({
+        email: command.email,
+        emailVerified: command.emailVerified,
+        passwordHash,
+        orgId: command.orgId,
+        role: command.role,
+        name: command.name,
+        hasAcceptedMarketing: command.hasAcceptedMarketing,
+        department: command.department,
+      });
     } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      this.logger.error(
-        {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          email: command.email,
-          role: command.role,
-        },
-        'User creation failed',
-      );
-      throw new UserInvalidInputError('User creation failed');
+      this.throwCreationError(error, command.email, command.role);
+    }
+  }
+
+  async createPreparedWithoutPublishing(user: User): Promise<User> {
+    try {
+      return await this.persistUser(user);
+    } catch (error) {
+      this.throwCreationError(error, user.email, user.role);
     }
   }
 
   private assertEmailProviderAllowed(email: string): void {
-    const provider = email.split('@')[1];
+    const emailProvider = email.split('@')[1];
     const blacklist = this.configService.get<string[]>(
       'auth.emailProviderBlacklist',
     )!;
-    if (blacklist.includes(provider)) {
-      throw new UserEmailProviderBlacklistedError(provider);
+    if (blacklist.includes(emailProvider)) {
+      throw new UserEmailProviderBlacklistedError(emailProvider);
     }
   }
 
-  private async createUser(command: CreateUserCommand): Promise<User> {
+  private async assertUserDoesNotExist(email: string): Promise<void> {
     this.logger.debug('Checking if user already exists');
-    const existingUser = await this.usersRepository.findOneByEmail(
-      command.email,
-    );
-    if (existingUser) {
-      this.logger.warn({ email: command.email }, 'User already exists');
+    if (await this.usersRepository.findOneByEmail(email)) {
+      this.logger.warn({ email }, 'User already exists');
       throw new UserAlreadyExistsError('User already exists');
     }
-
-    const passwordHash = await this.hashPassword(command);
-    this.logger.debug('Creating new user');
-    const user = new User({
-      email: command.email,
-      emailVerified: command.emailVerified,
-      passwordHash,
-      orgId: command.orgId,
-      role: command.role,
-      name: command.name,
-      hasAcceptedMarketing: command.hasAcceptedMarketing,
-      department: command.department,
-    });
-    const createdUser = await this.usersRepository.create(user);
-    this.logger.debug(
-      { userId: createdUser.id, role: command.role },
-      'User created successfully',
-    );
-    this.emitUserCreated(createdUser, command);
-    return createdUser;
   }
 
   private async hashPassword(command: CreateUserCommand): Promise<string> {
@@ -115,20 +113,30 @@ export class CreateUserUseCase {
     }
   }
 
-  private emitUserCreated(user: User, command: CreateUserCommand): void {
-    this.eventEmitter
-      .emitAsync(
-        UserCreatedEvent.EVENT_NAME,
-        new UserCreatedEvent(user.id, command.orgId, user),
-      )
-      .catch((err: unknown) => {
-        this.logger.error(
-          {
-            error: err instanceof Error ? err.message : 'Unknown error',
-            userId: user.id,
-          },
-          'Failed to emit UserCreatedEvent',
-        );
-      });
+  private async persistUser(user: User): Promise<User> {
+    this.logger.debug('Creating new user');
+    const createdUser = await this.usersRepository.create(user);
+    this.logger.debug(
+      { userId: createdUser.id, role: user.role },
+      'User created successfully',
+    );
+    return createdUser;
+  }
+
+  private throwCreationError(
+    error: unknown,
+    email: string,
+    role: User['role'],
+  ): never {
+    if (error instanceof ApplicationError) throw error;
+    this.logger.error(
+      {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        email,
+        role,
+      },
+      'User creation failed',
+    );
+    throw new UserInvalidInputError('User creation failed');
   }
 }
