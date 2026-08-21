@@ -78,6 +78,11 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.chart'),
         target: asString(params.title),
       };
+    case 'map':
+      return {
+        verb: t('chat.timeline.actions.map'),
+        target: asString(params.title),
+      };
     case 'generate_image':
       return {
         verb: t('chat.timeline.actions.generate_image'),

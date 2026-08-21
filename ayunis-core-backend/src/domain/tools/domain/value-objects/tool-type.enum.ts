@@ -11,6 +11,7 @@ export enum ToolType {
   BAR_CHART = 'bar_chart',
   LINE_CHART = 'line_chart',
   PIE_CHART = 'pie_chart',
+  MAP = 'map',
   MCP_TOOL = 'mcp_tool',
   MCP_RESOURCE = 'mcp_resource',
   MCP_PROMPT = 'mcp_prompt',

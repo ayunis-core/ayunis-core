@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Store,
   GraduationCap,
+  FileText,
 } from 'lucide-react';
 
 import {
@@ -259,6 +260,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </Link>
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem asChild>
+                  <a href="/THIRD_PARTY_NOTICES.txt">
+                    <FileText />
+                    {t('sidebar.openSourceLicenses')}
+                  </a>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>
                   <LogOut />
                   {t('sidebar.signOut')}

@@ -316,6 +316,7 @@ export class ToolAssemblyService {
         ToolType.BAR_CHART,
         ToolType.LINE_CHART,
         ToolType.PIE_CHART,
+        ToolType.MAP,
       ])),
     );
 

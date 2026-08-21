@@ -70,6 +70,7 @@
         "create_spreadsheet": "Tabelle erstellt",
         "update_spreadsheet": "Tabelle aktualisiert",
         "chart": "Diagramm erstellt",
+        "map": "Karte erstellt",
         "generate_image": "Bild generiert",
         "send_email": "E-Mail entworfen",
         "create_calendar_event": "Kalendereintrag erstellt",
@@ -84,6 +85,11 @@
         "http": "HTTP-Anfrage ausgeführt",
         "use_tool": "{{tool}} verwendet"
       }
+    },
+    "map": {
+      "loading": "Karte wird vorbereitet…",
+      "invalid": "Diese Karte kann nicht angezeigt werden, da ihre Daten leer oder ungültig sind.",
+      "ariaLabel": "Interaktive Karte: {{title}}"
     },
     "tools": {
       "internet_search": "Im Internet suchen",
