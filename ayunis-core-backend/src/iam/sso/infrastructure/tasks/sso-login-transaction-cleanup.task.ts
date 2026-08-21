@@ -11,7 +11,7 @@ export class SsoLoginTransactionCleanupTask {
     private readonly transactions: SsoLoginTransactionsRepository,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_5AM)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCleanup(): Promise<void> {
     try {
       const deleted = await this.transactions.deleteExpired(new Date());

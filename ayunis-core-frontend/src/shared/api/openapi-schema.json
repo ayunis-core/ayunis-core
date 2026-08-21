@@ -11588,6 +11588,71 @@
         "summary": "Enable or disable JIT user provisioning",
         "tags": ["Super Admin SSO Connections"]
       }
+    },
+    "/auth/sso/discover": {
+      "post": {
+        "operationId": "SsoLoginController_discover",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverSsoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoDiscoveryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Discover enabled SSO from a work email",
+        "tags": ["SSO"]
+      }
+    },
+    "/auth/sso/organizations/{orgId}/start": {
+      "get": {
+        "operationId": "SsoLoginController_start",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the identity broker"
+          }
+        },
+        "summary": "Start SSO for an enabled organization",
+        "tags": ["SSO"]
+      }
+    },
+    "/auth/sso/oidc/callback": {
+      "get": {
+        "operationId": "SsoLoginController_callback",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "OIDC response validated"
+          }
+        },
+        "summary": "Validate an organization-pinned OIDC callback",
+        "tags": ["SSO"]
+      }
     }
   },
   "info": {
@@ -20174,6 +20239,29 @@
           }
         },
         "required": ["enabled"]
+      },
+      "DiscoverSsoDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "staff@stadt.example"
+          }
+        },
+        "required": ["email"]
+      },
+      "SsoDiscoveryResponseDto": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["available"]
       }
     }
   }

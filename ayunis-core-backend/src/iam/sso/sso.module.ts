@@ -22,6 +22,7 @@ import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistenc
 import { PostgresSsoLoginTransactionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-login-transactions.repository';
 import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-login-transaction-cleanup.task';
 import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/mappers/org-sso-connection-response-dto.mapper';
+import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
 import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/super-admin-sso-connections.controller';
 
 @Module({
@@ -33,7 +34,7 @@ import { SuperAdminSsoConnectionsController } from 'src/iam/sso/presenters/http/
     ]),
     OrgsModule,
   ],
-  controllers: [SuperAdminSsoConnectionsController],
+  controllers: [SuperAdminSsoConnectionsController, SsoLoginController],
   providers: [
     OrgSsoConnectionMapper,
     OrgSsoConnectionResponseDtoMapper,
