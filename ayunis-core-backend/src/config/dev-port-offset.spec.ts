@@ -59,8 +59,7 @@ describe('applyDevPortOffset', () => {
       ANONYMIZE_SERVICE_URL: 'http://localhost:8002',
       GOTENBERG_URL: 'http://localhost:3100',
       FRONTEND_BASEURL: 'http://localhost:3001',
-      SSO_OIDC_CALLBACK_URL:
-        'http://localhost:3000/api/auth/sso/oidc/callback',
+      SSO_OIDC_CALLBACK_URL: 'http://localhost:3000/api/auth/sso/oidc/callback',
     };
 
     applyDevPortOffset(env);
