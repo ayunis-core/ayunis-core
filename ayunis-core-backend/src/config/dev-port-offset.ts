@@ -23,6 +23,7 @@ const URL_VARS = [
   'GOTENBERG_URL',
   'FRONTEND_BASEURL',
   'BACKEND_BASEURL',
+  'SSO_OIDC_CALLBACK_URL',
 ] as const;
 
 const URL_LIST_VARS = ['CORS_ALLOWED_ORIGINS'] as const;
