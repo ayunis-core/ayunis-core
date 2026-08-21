@@ -1,50 +1,117 @@
 import type { UUID } from 'crypto';
 import { PDFDocument } from 'pdf-lib';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import {
+  LetterheadInvalidPdfError,
+  LetterheadPdfNotSinglePageError,
+  LetterheadPdfPasswordProtectedError,
+} from 'src/domain/letterheads/application/letterheads.errors';
+import {
+  createPdf,
+  encryptPdf,
+} from 'src/domain/letterheads/testing/pdf-fixtures';
 import { LetterheadPdfService } from './letterhead-pdf.service';
-import { LetterheadInvalidPdfError } from '../letterheads.errors';
+import { PdfNormalizerService } from './pdf-normalizer.service';
 
-async function createSinglePagePdf(): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  doc.addPage();
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
-}
-
-async function createMultiPagePdf(pages: number): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  for (let i = 0; i < pages; i++) {
-    doc.addPage();
+async function isReadableByPdfLib(buffer: Buffer): Promise<boolean> {
+  try {
+    await PDFDocument.load(buffer);
+    return true;
+  } catch {
+    return false;
   }
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
 }
 
 describe('LetterheadPdfService', () => {
   let service: LetterheadPdfService;
 
   beforeEach(() => {
-    service = new LetterheadPdfService();
+    service = new LetterheadPdfService(
+      createPinoLoggerMock(),
+      new PdfNormalizerService(createPinoLoggerMock()),
+    );
   });
 
-  describe('validateSinglePagePdf', () => {
-    it('should accept a valid single-page PDF', async () => {
-      const pdf = await createSinglePagePdf();
-      await expect(
-        service.validateSinglePagePdf(pdf, 'first page'),
-      ).resolves.toBeUndefined();
+  describe('prepareSinglePagePdf', () => {
+    it('should keep a valid single-page PDF byte-for-byte', async () => {
+      const pdf = await createPdf(1);
+
+      const prepared = await service.prepareSinglePagePdf(pdf, 'first page');
+
+      expect(prepared).toBe(pdf);
     });
 
-    it('should reject a multi-page PDF', async () => {
-      const pdf = await createMultiPagePdf(3);
+    it('should reject a multi-page PDF and report the page count', async () => {
+      const pdf = await createPdf(3);
+
       await expect(
-        service.validateSinglePagePdf(pdf, 'first page'),
-      ).rejects.toThrow(LetterheadInvalidPdfError);
+        service.prepareSinglePagePdf(pdf, 'first page'),
+      ).rejects.toMatchObject({
+        constructor: LetterheadPdfNotSinglePageError,
+        metadata: { pageCount: 3 },
+      });
     });
 
-    it('should reject an invalid buffer', async () => {
+    it('should accept a permission-encrypted PDF that pdf-lib alone rejects', async () => {
+      const encrypted = await encryptPdf(
+        await createPdf(1),
+        'encrypt=aes-256,owner-password=locked',
+      );
+      expect(await isReadableByPdfLib(encrypted)).toBe(false);
+
+      const prepared = await service.prepareSinglePagePdf(
+        encrypted,
+        'first page',
+      );
+
+      expect(await isReadableByPdfLib(prepared)).toBe(true);
+    });
+
+    it('should produce a decrypted PDF that can be composited onto an export', async () => {
+      const encrypted = await encryptPdf(
+        await createPdf(1),
+        'encrypt=rc4-128,owner-password=locked',
+      );
+
+      const prepared = await service.prepareSinglePagePdf(
+        encrypted,
+        'first page',
+      );
+
+      const background = await PDFDocument.load(prepared);
+      const output = await PDFDocument.create();
+      const [embedded] = await output.embedPdf(background, [0]);
+      output.addPage().drawPage(embedded);
+      await expect(output.save()).resolves.toBeDefined();
+    });
+
+    it('should reject an encrypted PDF that has more than one page', async () => {
+      const encrypted = await encryptPdf(
+        await createPdf(2),
+        'encrypt=aes-256,owner-password=locked',
+      );
+
+      await expect(
+        service.prepareSinglePagePdf(encrypted, 'first page'),
+      ).rejects.toThrow(LetterheadPdfNotSinglePageError);
+    });
+
+    it('should reject a PDF that needs a user password', async () => {
+      const encrypted = await encryptPdf(
+        await createPdf(1),
+        'encrypt=aes-256,user-password=secret,owner-password=locked',
+      );
+
+      await expect(
+        service.prepareSinglePagePdf(encrypted, 'first page'),
+      ).rejects.toThrow(LetterheadPdfPasswordProtectedError);
+    });
+
+    it('should reject a buffer that is not a PDF', async () => {
       const buffer = Buffer.from('not a pdf');
+
       await expect(
-        service.validateSinglePagePdf(buffer, 'first page'),
+        service.prepareSinglePagePdf(buffer, 'first page'),
       ).rejects.toThrow(LetterheadInvalidPdfError);
     });
   });

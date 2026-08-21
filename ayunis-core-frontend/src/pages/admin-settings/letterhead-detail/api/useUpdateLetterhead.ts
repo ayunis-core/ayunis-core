@@ -82,6 +82,12 @@ export function useUpdateLetterhead() {
           case 'LETTERHEAD_INVALID_PDF':
             showError(t('letterheads.editDialog.invalidPdf'));
             break;
+          case 'LETTERHEAD_PDF_NOT_SINGLE_PAGE':
+            showError(t('letterheads.editDialog.pdfNotSinglePage'));
+            break;
+          case 'LETTERHEAD_PDF_PASSWORD_PROTECTED':
+            showError(t('letterheads.editDialog.pdfPasswordProtected'));
+            break;
           case 'LETTERHEAD_INVALID_PAGE_MARGINS':
             showError(t('letterheads.editDialog.invalidPageMargins'));
             break;

@@ -6,28 +6,34 @@ import type { UUID } from 'crypto';
 import { PDFDocument } from 'pdf-lib';
 import { CreateLetterheadUseCase } from './create-letterhead.use-case';
 import { CreateLetterheadCommand } from './create-letterhead.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
+import { PdfNormalizerService } from 'src/domain/letterheads/application/services/pdf-normalizer.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
-import { LetterheadInvalidPdfError } from '../../letterheads.errors';
+import {
+  LetterheadInvalidPdfError,
+  LetterheadPdfNotSinglePageError,
+} from 'src/domain/letterheads/application/letterheads.errors';
+import {
+  createPdf,
+  encryptPdf,
+} from 'src/domain/letterheads/testing/pdf-fixtures';
 
-async function createSinglePagePdf(): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  doc.addPage();
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
-}
-
-async function createMultiPagePdf(pages: number): Promise<Buffer> {
-  const doc = await PDFDocument.create();
-  for (let i = 0; i < pages; i++) {
-    doc.addPage();
-  }
-  const bytes = await doc.save();
-  return Buffer.from(bytes);
-}
+/** Providers the letterhead PDF pipeline needs on top of the use case's own. */
+const pdfPipelineProviders = () => [
+  LetterheadPdfService,
+  PdfNormalizerService,
+  {
+    provide: getLoggerToken(LetterheadPdfService.name),
+    useValue: createPinoLoggerMock(),
+  },
+  {
+    provide: getLoggerToken(PdfNormalizerService.name),
+    useValue: createPinoLoggerMock(),
+  },
+];
 
 describe('CreateLetterheadUseCase', () => {
   let useCase: CreateLetterheadUseCase;
@@ -66,7 +72,7 @@ describe('CreateLetterheadUseCase', () => {
           provide: getLoggerToken(CreateLetterheadUseCase.name),
           useValue: createPinoLoggerMock(),
         },
-        LetterheadPdfService,
+        ...pdfPipelineProviders(),
         { provide: LetterheadsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: mockUploadObjectUseCase },
@@ -85,7 +91,7 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should create a letterhead with first-page PDF only', async () => {
-    const pdfBuffer = await createSinglePagePdf();
+    const pdfBuffer = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'Stadtverwaltung Musterstadt',
@@ -107,8 +113,8 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should create a letterhead with both first-page and continuation PDFs', async () => {
-    const firstPagePdf = await createSinglePagePdf();
-    const continuationPdf = await createSinglePagePdf();
+    const firstPagePdf = await createPdf(1);
+    const continuationPdf = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'Amt für Finanzen',
@@ -125,7 +131,7 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should reject a multi-page first-page PDF', async () => {
-    const multiPagePdf = await createMultiPagePdf(3);
+    const multiPagePdf = await createPdf(3);
 
     const command = new CreateLetterheadCommand({
       name: 'Invalid Letterhead',
@@ -135,14 +141,14 @@ describe('CreateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
     expect(letterheadsRepository.save).not.toHaveBeenCalled();
   });
 
   it('should reject a multi-page continuation PDF', async () => {
-    const firstPagePdf = await createSinglePagePdf();
-    const multiPageContinuation = await createMultiPagePdf(2);
+    const firstPagePdf = await createPdf(1);
+    const multiPageContinuation = await createPdf(2);
 
     const command = new CreateLetterheadCommand({
       name: 'Invalid Continuation',
@@ -153,9 +159,30 @@ describe('CreateLetterheadUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      LetterheadInvalidPdfError,
+      LetterheadPdfNotSinglePageError,
     );
     expect(letterheadsRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('should store a decrypted copy of a permission-encrypted PDF', async () => {
+    const encryptedPdf = await encryptPdf(
+      await createPdf(1),
+      'encrypt=aes-256,owner-password=locked',
+    );
+
+    const command = new CreateLetterheadCommand({
+      name: 'Permission-locked Letterhead',
+      firstPagePdfBuffer: encryptedPdf,
+      firstPageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
+      continuationPageMargins: { top: 20, bottom: 20, left: 20, right: 20 },
+    });
+
+    await useCase.execute(command);
+
+    const uploaded = uploadObjectUseCase.execute.mock.calls[0][0]
+      .data as Buffer;
+    expect(uploaded).not.toEqual(encryptedPdf);
+    await expect(PDFDocument.load(uploaded)).resolves.toBeDefined();
   });
 
   it('should reject an invalid PDF buffer', async () => {
@@ -185,7 +212,7 @@ describe('CreateLetterheadUseCase', () => {
           provide: getLoggerToken(CreateLetterheadUseCase.name),
           useValue: createPinoLoggerMock(),
         },
-        LetterheadPdfService,
+        ...pdfPipelineProviders(),
         { provide: LetterheadsRepository, useValue: letterheadsRepository },
         { provide: ContextService, useValue: mockContextService },
         { provide: UploadObjectUseCase, useValue: uploadObjectUseCase },
@@ -193,7 +220,7 @@ describe('CreateLetterheadUseCase', () => {
     }).compile();
 
     const useCaseNoOrg = module.get(CreateLetterheadUseCase);
-    const pdfBuffer = await createSinglePagePdf();
+    const pdfBuffer = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'No Org',
@@ -208,7 +235,7 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should set description to null when not provided', async () => {
-    const pdfBuffer = await createSinglePagePdf();
+    const pdfBuffer = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'Minimal Letterhead',
@@ -223,7 +250,7 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should store files under the correct org-scoped path', async () => {
-    const pdfBuffer = await createSinglePagePdf();
+    const pdfBuffer = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'Path Test',
@@ -240,7 +267,7 @@ describe('CreateLetterheadUseCase', () => {
   });
 
   it('should construct the entity only once with valid storage paths', async () => {
-    const pdfBuffer = await createSinglePagePdf();
+    const pdfBuffer = await createPdf(1);
 
     const command = new CreateLetterheadCommand({
       name: 'Single Construction',

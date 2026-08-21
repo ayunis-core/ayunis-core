@@ -23,7 +23,8 @@ letterheads/
 │   ├── ports/
 │   │   └── letterheads-repository.port.ts
 │   ├── services/
-│   │   └── letterhead-pdf.service.ts   # Shared PDF validation & storage path builder
+│   │   ├── letterhead-pdf.service.ts   # Shared PDF validation & storage path builder
+│   │   └── pdf-normalizer.service.ts   # MuPDF rewrite for PDFs pdf-lib cannot read
 │   └── use-cases/
 │       ├── create-letterhead/
 │       ├── delete-letterhead/
@@ -62,6 +63,7 @@ letterheads/
 
 - Page margins are validated (non-negative, finite) when a `Letterhead` entity is constructed
 - Uploaded PDFs are validated with `pdf-lib` and must be exactly one page each
+- When `pdf-lib` cannot read an upload (permission-encrypted files, broken cross-reference tables), it is rewritten through MuPDF and the normalized copy is stored — pdf-lib also composites the letterhead at export time, so only bytes it accepts may be stored. PDFs needing a user password are rejected as `LETTERHEAD_PDF_PASSWORD_PROTECTED`, unreadable ones as `LETTERHEAD_INVALID_PDF`, and multi-page ones as `LETTERHEAD_PDF_NOT_SINGLE_PAGE`
 - Create stores the first-page PDF and optional continuation PDF under org-scoped storage paths like `letterheads/<orgId>/<letterheadId>/...`
 - Update can replace either PDF, update metadata/margins, or remove the continuation page and delete its stored object
 - Find-all and find-one are organization-scoped via request context

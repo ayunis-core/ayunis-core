@@ -6,10 +6,10 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/upload-object/upload-object.use-case';
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { UnexpectedLetterheadError } from '../../letterheads.errors';
-import { Letterhead } from '../../../domain/letterhead.entity';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { UnexpectedLetterheadError } from 'src/domain/letterheads/application/letterheads.errors';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { CreateLetterheadCommand } from './create-letterhead.command';
 
 @Injectable()
@@ -43,7 +43,7 @@ export class CreateLetterheadUseCase {
     command: CreateLetterheadCommand,
   ): Promise<Letterhead> {
     const orgId = this.resolveOrgId();
-    await this.validatePdfs(command);
+    const pdfs = await this.preparePdfs(command);
     const letterheadId = randomUUID();
     const firstPagePath = this.letterheadPdfService.buildStoragePath(
       orgId,
@@ -51,12 +51,12 @@ export class CreateLetterheadUseCase {
       'first-page.pdf',
     );
     await this.uploadObjectUseCase.execute(
-      new UploadObjectCommand(firstPagePath, command.firstPagePdfBuffer),
+      new UploadObjectCommand(firstPagePath, pdfs.firstPage),
     );
     const continuationPagePath = await this.uploadContinuationPage(
       orgId,
       letterheadId,
-      command.continuationPagePdfBuffer,
+      pdfs.continuationPage,
     );
     return this.letterheadsRepository.save(
       new Letterhead({
@@ -78,17 +78,22 @@ export class CreateLetterheadUseCase {
     return orgId;
   }
 
-  private async validatePdfs(command: CreateLetterheadCommand): Promise<void> {
-    await this.letterheadPdfService.validateSinglePagePdf(
+  private async preparePdfs(
+    command: CreateLetterheadCommand,
+  ): Promise<{ firstPage: Buffer; continuationPage: Buffer | null }> {
+    const firstPage = await this.letterheadPdfService.prepareSinglePagePdf(
       command.firstPagePdfBuffer,
       'first page',
     );
-    if (command.continuationPagePdfBuffer) {
-      await this.letterheadPdfService.validateSinglePagePdf(
+    if (!command.continuationPagePdfBuffer) {
+      return { firstPage, continuationPage: null };
+    }
+    const continuationPage =
+      await this.letterheadPdfService.prepareSinglePagePdf(
         command.continuationPagePdfBuffer,
         'continuation page',
       );
-    }
+    return { firstPage, continuationPage };
   }
 
   private async uploadContinuationPage(

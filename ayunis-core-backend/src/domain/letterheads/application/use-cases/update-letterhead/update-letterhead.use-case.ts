@@ -8,13 +8,13 @@ import { UploadObjectUseCase } from 'src/domain/storage/application/use-cases/up
 import { UploadObjectCommand } from 'src/domain/storage/application/use-cases/upload-object/upload-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
-import { LetterheadsRepository } from '../../ports/letterheads-repository.port';
-import { Letterhead } from '../../../domain/letterhead.entity';
+import { LetterheadsRepository } from 'src/domain/letterheads/application/ports/letterheads-repository.port';
+import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import {
   LetterheadNotFoundError,
   UnexpectedLetterheadError,
-} from '../../letterheads.errors';
-import { LetterheadPdfService } from '../../services/letterhead-pdf.service';
+} from 'src/domain/letterheads/application/letterheads.errors';
+import { LetterheadPdfService } from 'src/domain/letterheads/application/services/letterhead-pdf.service';
 import { UpdateLetterheadCommand } from './update-letterhead.command';
 
 @Injectable()
@@ -89,8 +89,11 @@ export class UpdateLetterheadUseCase {
     buffer?: Buffer,
   ): Promise<string> {
     if (!buffer) return existing.firstPageStoragePath;
-    await this.letterheadPdfService.validateSinglePagePdf(buffer, 'first page');
-    return this.uploadPdf(orgId, existing.id, 'first-page.pdf', buffer);
+    const firstPage = await this.letterheadPdfService.prepareSinglePagePdf(
+      buffer,
+      'first page',
+    );
+    return this.uploadPdf(orgId, existing.id, 'first-page.pdf', firstPage);
   }
 
   private async resolveContinuationPage(
@@ -99,15 +102,16 @@ export class UpdateLetterheadUseCase {
     command: UpdateLetterheadCommand,
   ): Promise<string | null> {
     if (command.continuationPagePdfBuffer) {
-      await this.letterheadPdfService.validateSinglePagePdf(
-        command.continuationPagePdfBuffer,
-        'continuation page',
-      );
+      const continuationPage =
+        await this.letterheadPdfService.prepareSinglePagePdf(
+          command.continuationPagePdfBuffer,
+          'continuation page',
+        );
       return this.uploadPdf(
         orgId,
         existing.id,
         'continuation.pdf',
-        command.continuationPagePdfBuffer,
+        continuationPage,
       );
     }
     if (!command.removeContinuationPage) {
