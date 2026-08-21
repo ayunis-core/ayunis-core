@@ -10,4 +10,15 @@ describe('User persistence', () => {
 
     expect(passwordHashColumn?.options).toMatchObject({ nullable: true });
   });
+
+  it('indexes organization-scoped user lookups', () => {
+    const index = getMetadataArgsStorage().indices.find(
+      (candidate) =>
+        candidate.target === UserRecord &&
+        Array.isArray(candidate.columns) &&
+        candidate.columns.includes('orgId'),
+    );
+
+    expect(index).toBeDefined();
+  });
 });

@@ -202,6 +202,36 @@ describe('GetActiveSubscriptionUseCase', () => {
   });
 
   describe('seat-based subscription', () => {
+    it('runs seat queries sequentially on the transactional connection', async () => {
+      setupSuperAdminContext();
+      subscriptionRepository.findByOrgId.mockResolvedValue([
+        createSeatBasedSubscription(orgId),
+      ]);
+      let resolveInvites!: (value: Paginated<never>) => void;
+      getInvitesByOrgUseCase.execute.mockReturnValue(
+        new Promise((resolve) => {
+          resolveInvites = resolve;
+        }),
+      );
+      findUsersByOrgIdUseCase.execute.mockResolvedValue(
+        new Paginated({ data: [], limit: 1000, offset: 0, total: 2 }),
+      );
+
+      const result = useCase.execute(
+        new GetActiveSubscriptionQuery({ orgId, requestingUserId }),
+      );
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(getInvitesByOrgUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(findUsersByOrgIdUseCase.execute).not.toHaveBeenCalled();
+
+      resolveInvites(
+        new Paginated({ data: [], limit: 1000, offset: 0, total: 1 }),
+      );
+      await expect(result).resolves.toMatchObject({ availableSeats: 7 });
+      expect(findUsersByOrgIdUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+
     it('should return subscription with computed available seats', async () => {
       setupSuperAdminContext();
       const subscription = createSeatBasedSubscription(orgId, {

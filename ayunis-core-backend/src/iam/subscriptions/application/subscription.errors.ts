@@ -214,10 +214,21 @@ export class InvalidSubscriptionDataError extends SubscriptionError {
 export class UnexpectedSubscriptionError extends SubscriptionError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Unexpected error: ${reason ? `: ${reason}` : ''}`,
+      reason ? `Unexpected error: ${reason}` : 'Unexpected error',
       SubscriptionErrorCode.UNEXPECTED_ERROR,
       500,
       metadata,
+    );
+  }
+}
+
+export class UnexpectedSeatAdmissionError extends SubscriptionError {
+  constructor(error: Error) {
+    super(
+      'Unexpected error checking seat admission',
+      SubscriptionErrorCode.UNEXPECTED_ERROR,
+      500,
+      { error },
     );
   }
 }

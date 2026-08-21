@@ -25,6 +25,12 @@ import { SendInvitationEmailUseCase } from './application/use-cases/send-invitat
 import { DeleteInviteByEmailUseCase } from './application/use-cases/delete-invite-by-email/delete-invite-by-email.use-case';
 import { DeleteAllPendingInvitesUseCase } from './application/use-cases/delete-all-pending-invites/delete-all-pending-invites.use-case';
 import { ResendExpiredInviteUseCase } from './application/use-cases/resend-expired-invite/resend-expired-invite.use-case';
+import { PendingInviteCountsRepository } from 'src/iam/invites/application/ports/pending-invite-counts.repository';
+import { LocalPendingInviteCountsRepository } from 'src/iam/invites/infrastructure/persistence/local/local-pending-invite-counts.repository';
+import { CountPendingInvitesByOrgIdUseCase } from 'src/iam/invites/application/use-cases/count-pending-invites-by-org-id/count-pending-invites-by-org-id.use-case';
+import { CreateInviteWithSeatReservationUseCase } from 'src/iam/invites/application/use-cases/create-invite-with-seat-reservation/create-invite-with-seat-reservation.use-case';
+import { BulkInviteDeliveryService } from 'src/iam/invites/application/services/bulk-invite-delivery.service';
+import { BulkInviteValidatorService } from 'src/iam/invites/application/services/bulk-invite-validator.service';
 
 // Presenters
 import { InvitesController } from './presenters/http/invites.controller';
@@ -58,6 +64,10 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
       provide: InvitesRepository,
       useClass: LocalInvitesRepository,
     },
+    {
+      provide: PendingInviteCountsRepository,
+      useClass: LocalPendingInviteCountsRepository,
+    },
 
     // Services
     InviteJwtService,
@@ -69,6 +79,10 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     DeleteInviteUseCase,
     DeleteAllPendingInvitesUseCase,
     ResendExpiredInviteUseCase,
+    CountPendingInvitesByOrgIdUseCase,
+    CreateInviteWithSeatReservationUseCase,
+    BulkInviteDeliveryService,
+    BulkInviteValidatorService,
     GetInvitesByOrgUseCase,
     GetInviteByTokenUseCase,
     SendInvitationEmailUseCase,
@@ -85,6 +99,7 @@ import { EmailTemplatesModule } from '../../common/email-templates/email-templat
     SendInvitationEmailUseCase,
     InviteJwtService,
     DeleteInviteByEmailUseCase,
+    CountPendingInvitesByOrgIdUseCase,
   ],
 })
 export class InvitesModule {}
