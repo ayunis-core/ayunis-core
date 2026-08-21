@@ -129,6 +129,7 @@ export class ZitadelOidcBrokerClient extends OidcBrokerClient {
         RESOURCE_OWNER_ID_CLAIM,
       ),
       sessionId: this.optionalString(claims?.sid, 'sid'),
+      authenticationMethods: this.optionalStringArray(claims?.amr),
     };
   }
 
@@ -241,5 +242,23 @@ export class ZitadelOidcBrokerClient extends OidcBrokerClient {
       throw new InvalidSsoBrokerResponseError(field);
     }
     return value.trim() || undefined;
+  }
+
+  private optionalStringArray(value: unknown): string[] {
+    if (value === undefined || value === null) return [];
+    if (!this.isNonEmptyStringArray(value)) {
+      return [];
+    }
+    return [...value];
+  }
+
+  private isNonEmptyStringArray(value: unknown): value is string[] {
+    return (
+      Array.isArray(value) &&
+      value.every(
+        (entry: unknown): entry is string =>
+          typeof entry === 'string' && entry.length > 0,
+      )
+    );
   }
 }

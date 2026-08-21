@@ -24419,7 +24419,7 @@ export function useSsoLoginControllerStart<TData = Awaited<ReturnType<typeof sso
 
 
 /**
- * @summary Validate an organization-pinned OIDC callback
+ * @summary Complete an organization-pinned SSO login
  */
 export const ssoLoginControllerCallback = (
     
@@ -24490,7 +24490,7 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Validate an organization-pinned OIDC callback
+ * @summary Complete an organization-pinned SSO login
  */
 
 export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof ssoLoginControllerCallback>>, TError = unknown>(

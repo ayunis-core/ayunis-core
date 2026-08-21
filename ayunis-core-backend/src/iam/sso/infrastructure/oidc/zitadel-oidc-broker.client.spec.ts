@@ -84,7 +84,11 @@ describe('ZitadelOidcBrokerClient', () => {
   it('validates the callback against the exact state, nonce and PKCE verifier', async () => {
     const tokenResponse = {
       access_token: 'server-side-access-token',
-      claims: () => ({ sub: 'zitadel-user', sid: 'zitadel-session' }),
+      claims: () => ({
+        sub: 'zitadel-user',
+        sid: 'zitadel-session',
+        amr: ['pwd', 'otp', 'mfa'],
+      }),
     };
     jest
       .mocked(oidc.authorizationCodeGrant)
@@ -117,6 +121,7 @@ describe('ZitadelOidcBrokerClient', () => {
       emailVerified: true,
       zitadelOrgId: '385820595704561666',
       sessionId: 'zitadel-session',
+      authenticationMethods: ['pwd', 'otp', 'mfa'],
     });
     const expectedCallbackUrl = new URL(config.callbackUrl);
     expectedCallbackUrl.search = callbackParameters.toString();
@@ -163,6 +168,32 @@ describe('ZitadelOidcBrokerClient', () => {
         expectedNonce: 'oidc-nonce',
       }),
     ).rejects.toMatchObject({ code: 'SSO_BROKER_RESPONSE_INVALID' });
+  });
+
+  it('treats a malformed authentication-method claim as no MFA assurance', async () => {
+    jest.mocked(oidc.authorizationCodeGrant).mockResolvedValue({
+      access_token: 'server-side-access-token',
+      claims: () => ({ sub: 'zitadel-user', amr: 'mfa' }),
+    } as never);
+    jest.mocked(oidc.fetchUserInfo).mockResolvedValue({
+      sub: 'zitadel-user',
+      email: 'staff@demo.com',
+      name: 'Erika Mustermann',
+      email_verified: true,
+      'urn:zitadel:iam:user:resourceowner:id': '385820595704561666',
+    });
+
+    await expect(
+      buildClient(config).validateCallback({
+        callbackParameters: new URLSearchParams({
+          code: 'authorization-code',
+          state: 'oauth-state',
+        }),
+        codeVerifier: 'pkce-verifier',
+        expectedState: 'oauth-state',
+        expectedNonce: 'oidc-nonce',
+      }),
+    ).resolves.toMatchObject({ authenticationMethods: [] });
   });
 
   it.each([null, '', '   '])(
