@@ -21,6 +21,7 @@ export enum SsoErrorCode {
   ACCOUNT_LINK_MISMATCH = 'SSO_ACCOUNT_LINK_MISMATCH',
   JIT_PROVISIONING_DISABLED = 'SSO_JIT_PROVISIONING_DISABLED',
   INVITE_EXPIRED = 'SSO_INVITE_EXPIRED',
+  LOGOUT_TOKEN_INVALID = 'SSO_LOGOUT_TOKEN_INVALID',
   UNEXPECTED = 'SSO_UNEXPECTED_ERROR',
 }
 
@@ -200,6 +201,16 @@ export class SsoInviteExpiredError extends SsoError {
       'The invitation for this SSO account has expired',
       SsoErrorCode.INVITE_EXPIRED,
       409,
+    );
+  }
+}
+
+export class InvalidSsoLogoutTokenError extends SsoError {
+  constructor() {
+    super(
+      'The SSO logout token is invalid',
+      SsoErrorCode.LOGOUT_TOKEN_INVALID,
+      400,
     );
   }
 }

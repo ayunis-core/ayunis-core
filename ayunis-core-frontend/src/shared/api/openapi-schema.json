@@ -11673,6 +11673,49 @@
         "summary": "Complete an organization-pinned SSO login",
         "tags": ["SSO"]
       }
+    },
+    "/auth/sso/session/logout": {
+      "post": {
+        "operationId": "SsoLoginController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoLogoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke the Core session and prepare broker logout",
+        "tags": ["SSO"]
+      }
+    },
+    "/auth/sso/oidc/backchannel-logout": {
+      "post": {
+        "operationId": "SsoLoginController_backchannelLogout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SsoBackchannelLogoutRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Matching Core SSO sessions revoked"
+          }
+        },
+        "summary": "Process a signed broker back-channel logout",
+        "tags": ["SSO"]
+      }
     }
   },
   "info": {
@@ -20292,6 +20335,31 @@
           }
         },
         "required": ["authorizationUrl"]
+      },
+      "SsoLogoutResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "brokerLogoutUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Broker logout URL for the user agent, or null for Core-only logout"
+          }
+        },
+        "required": ["success", "brokerLogoutUrl"]
+      },
+      "SsoBackchannelLogoutRequestDto": {
+        "type": "object",
+        "properties": {
+          "logout_token": {
+            "type": "string",
+            "description": "Signed OpenID Connect logout token"
+          }
+        },
+        "required": ["logout_token"]
       }
     }
   }

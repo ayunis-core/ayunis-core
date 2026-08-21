@@ -10,6 +10,8 @@ import { RevokeSessionFamilyUseCase } from './application/use-cases/revoke-sessi
 import { RevokeAllSessionsForUserUseCase } from './application/use-cases/revoke-all-sessions-for-user/revoke-all-sessions-for-user.use-case';
 import { RevokeOtherSessionsForUserUseCase } from './application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.use-case';
 import { SessionsCleanupTask } from './infrastructure/tasks/sessions-cleanup.task';
+import { RevokeSessionsByZitadelSessionUseCase } from 'src/iam/sessions/application/use-cases/revoke-sessions-by-zitadel-session/revoke-sessions-by-zitadel-session.use-case';
+import { RevokeSsoSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-sso-sessions-for-user/revoke-sso-sessions-for-user.use-case';
 
 /**
  * Owns server-side refresh-token session state. Imports nothing from the users
@@ -30,6 +32,8 @@ import { SessionsCleanupTask } from './infrastructure/tasks/sessions-cleanup.tas
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,
+    RevokeSessionsByZitadelSessionUseCase,
+    RevokeSsoSessionsForUserUseCase,
     SessionsCleanupTask,
   ],
   exports: [
@@ -38,6 +42,8 @@ import { SessionsCleanupTask } from './infrastructure/tasks/sessions-cleanup.tas
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,
+    RevokeSessionsByZitadelSessionUseCase,
+    RevokeSsoSessionsForUserUseCase,
   ],
 })
 export class SessionsModule {}

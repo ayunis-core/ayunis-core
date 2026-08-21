@@ -6,6 +6,7 @@ import {
   createMockRefreshTokensRepository,
   TEST_FAMILY_ID,
 } from '../../testing/refresh-token.fixtures';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('RevokeSessionFamilyUseCase', () => {
   let useCase: RevokeSessionFamilyUseCase;
@@ -24,7 +25,12 @@ describe('RevokeSessionFamilyUseCase', () => {
   it('should revoke the family of a known token', async () => {
     repository.findByTokenHash.mockResolvedValue(aRefreshToken());
 
-    await useCase.execute(new RevokeSessionFamilyCommand('token'));
+    await expect(
+      useCase.execute(new RevokeSessionFamilyCommand('token')),
+    ).resolves.toEqual({
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      zitadelSessionId: null,
+    });
 
     expect(repository.revokeFamily).toHaveBeenCalledWith(TEST_FAMILY_ID);
   });
@@ -34,7 +40,7 @@ describe('RevokeSessionFamilyUseCase', () => {
 
     await expect(
       useCase.execute(new RevokeSessionFamilyCommand('unknown')),
-    ).resolves.toBeUndefined();
+    ).resolves.toBeNull();
     expect(repository.revokeFamily).not.toHaveBeenCalled();
   });
 });

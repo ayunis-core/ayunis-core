@@ -187,7 +187,9 @@ import type {
   SkillSourcesControllerAddFileSourceBody,
   SkillTemplateResponseDto,
   SsoAuthorizationResponseDto,
+  SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
+  SsoLogoutResponseDto,
   SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -24575,3 +24577,133 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
 
 
 
+/**
+ * @summary Revoke the Core session and prepare broker logout
+ */
+export const ssoLoginControllerLogout = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<SsoLogoutResponseDto>(
+      {url: `/auth/sso/session/logout`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getSsoLoginControllerLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext> => {
+
+const mutationKey = ['ssoLoginControllerLogout'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, void> = () => {
+          
+
+          return  ssoLoginControllerLogout()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SsoLoginControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerLogout>>>
+    
+    export type SsoLoginControllerLogoutMutationError = unknown
+
+    /**
+ * @summary Revoke the Core session and prepare broker logout
+ */
+export const useSsoLoginControllerLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ssoLoginControllerLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getSsoLoginControllerLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Process a signed broker back-channel logout
+ */
+export const ssoLoginControllerBackchannelLogout = (
+    ssoBackchannelLogoutRequestDto: SsoBackchannelLogoutRequestDto,
+ signal?: AbortSignal
+) => {
+      
+      const formUrlEncoded = new URLSearchParams();
+formUrlEncoded.append(`logout_token`, ssoBackchannelLogoutRequestDto.logout_token)
+
+      return customAxiosInstance<void>(
+      {url: `/auth/sso/oidc/backchannel-logout`, method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded', },
+       data: formUrlEncoded, signal
+    },
+      );
+    }
+  
+
+
+export const getSsoLoginControllerBackchannelLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>, TError,{data: SsoBackchannelLogoutRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>, TError,{data: SsoBackchannelLogoutRequestDto}, TContext> => {
+
+const mutationKey = ['ssoLoginControllerBackchannelLogout'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>, {data: SsoBackchannelLogoutRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  ssoLoginControllerBackchannelLogout(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SsoLoginControllerBackchannelLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>>
+    export type SsoLoginControllerBackchannelLogoutMutationBody = SsoBackchannelLogoutRequestDto
+    export type SsoLoginControllerBackchannelLogoutMutationError = unknown
+
+    /**
+ * @summary Process a signed broker back-channel logout
+ */
+export const useSsoLoginControllerBackchannelLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>, TError,{data: SsoBackchannelLogoutRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ssoLoginControllerBackchannelLogout>>,
+        TError,
+        {data: SsoBackchannelLogoutRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSsoLoginControllerBackchannelLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

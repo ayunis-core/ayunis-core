@@ -2,6 +2,7 @@ import * as oidc from 'openid-client';
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
 import { SsoBrokerNotConfiguredError } from 'src/iam/sso/application/sso.errors';
 import { ProviderConnectionError } from 'src/common/errors/provider.errors';
+import * as jose from 'jose';
 
 jest.mock('openid-client', () => ({
   allowInsecureRequests: jest.fn(),
@@ -20,6 +21,11 @@ jest.mock('openid-client', () => ({
   WWWAuthenticateChallengeError: class WWWAuthenticateChallengeError extends Error {},
 }));
 
+jest.mock('jose', () => ({
+  createRemoteJWKSet: jest.fn().mockReturnValue('remote-jwks'),
+  jwtVerify: jest.fn(),
+}));
+
 const config = {
   issuer: 'https://sso.ayunis.de',
   clientId: 'ayunis-core-client',
@@ -28,9 +34,17 @@ const config = {
   allowInsecureRequests: false,
 };
 
+// URI is the protocol-defined event identifier, not a transport endpoint.
+const BACKCHANNEL_LOGOUT_EVENT =
+  // eslint-disable-next-line sonarjs/no-clear-text-protocols
+  'http://schemas.openid.net/event/backchannel-logout';
+
 describe('ZitadelOidcBrokerClient', () => {
   const discovered = {
-    serverMetadata: () => ({ issuer: config.issuer }),
+    serverMetadata: () => ({
+      issuer: config.issuer,
+      jwks_uri: `${config.issuer}/oauth/v2/keys`,
+    }),
   };
 
   beforeEach(() => {
@@ -142,6 +156,89 @@ describe('ZitadelOidcBrokerClient', () => {
     );
   });
 
+  it('builds the registered Zitadel end-session URL without a provider roundtrip', () => {
+    const client = buildClient(config);
+
+    expect(client.createEndSessionUrl()).toBe(
+      'https://sso.ayunis.de/oidc/v1/end_session?' +
+        'client_id=ayunis-core-client&' +
+        'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2F',
+    );
+    expect(oidc.discovery).not.toHaveBeenCalled();
+  });
+
+  it('validates a signed back-channel logout token for this relying party', async () => {
+    jest.mocked(jose.jwtVerify).mockResolvedValue({
+      payload: {
+        iss: config.issuer,
+        aud: config.clientId,
+        iat: 1_786_720_000,
+        exp: 1_786_720_900,
+        jti: 'logout-token-id',
+        sub: 'zitadel-user',
+        sid: 'zitadel-session',
+        events: {
+          [BACKCHANNEL_LOGOUT_EVENT]: {},
+        },
+      },
+      protectedHeader: { alg: 'RS256' },
+    });
+
+    await expect(
+      buildClient(config).validateBackchannelLogoutToken('signed-token'),
+    ).resolves.toEqual({
+      issuer: config.issuer,
+      subject: 'zitadel-user',
+      sessionId: 'zitadel-session',
+    });
+    expect(jose.createRemoteJWKSet).toHaveBeenCalledWith(
+      new URL(`${config.issuer}/oauth/v2/keys`),
+    );
+    expect(jose.jwtVerify).toHaveBeenCalledWith(
+      'signed-token',
+      'remote-jwks',
+      expect.objectContaining({
+        issuer: config.issuer,
+        audience: config.clientId,
+        requiredClaims: ['iat', 'exp', 'jti'],
+      }),
+    );
+  });
+
+  it.each([
+    {
+      case: 'missing logout event',
+      payload: { sub: 'zitadel-user', events: {} },
+    },
+    {
+      case: 'ID-token nonce present',
+      payload: {
+        sub: 'zitadel-user',
+        nonce: 'not-allowed',
+        events: {
+          [BACKCHANNEL_LOGOUT_EVENT]: {},
+        },
+      },
+    },
+    {
+      case: 'missing subject and session',
+      payload: {
+        events: {
+          [BACKCHANNEL_LOGOUT_EVENT]: {},
+        },
+      },
+    },
+  ])('rejects a logout token with $case', async ({ payload }) => {
+    jest.mocked(jose.jwtVerify).mockResolvedValue({
+      payload,
+      protectedHeader: { alg: 'RS256' },
+    });
+
+    await expect(
+      buildClient(config).validateBackchannelLogoutToken('signed-token'),
+    ).rejects.toMatchObject({ code: 'SSO_LOGOUT_TOKEN_INVALID' });
+  });
+
   it('refuses to initialize from a partial relying-party configuration', async () => {
     const client = buildClient({ ...config, clientSecret: undefined });
 
@@ -244,6 +341,18 @@ describe('ZitadelOidcBrokerClient', () => {
     ).rejects.toBeInstanceOf(ProviderConnectionError);
   });
 
+  it('preserves provider failures while validating a logout token', async () => {
+    const failure = Object.assign(new Error('connect failed'), {
+      code: 'ECONNREFUSED',
+      hostname: 'sso.ayunis.de',
+    });
+    jest.mocked(oidc.discovery).mockRejectedValue(failure);
+
+    await expect(
+      buildClient(config).validateBackchannelLogoutToken('signed-token'),
+    ).rejects.toBeInstanceOf(ProviderConnectionError);
+  });
+
   it('enables insecure OIDC requests only when loopback development config permits it', async () => {
     const client = buildClient({ ...config, allowInsecureRequests: true });
 
@@ -264,7 +373,9 @@ describe('ZitadelOidcBrokerClient', () => {
 
 function buildClient(values: Partial<typeof config>): ZitadelOidcBrokerClient {
   const configService = {
-    get: jest.fn().mockReturnValue(values),
+    get: jest.fn((key: string) =>
+      key === 'app.frontend.baseUrl' ? 'https://core.ayunis.de/' : values,
+    ),
   };
   return new ZitadelOidcBrokerClient(configService as never);
 }
