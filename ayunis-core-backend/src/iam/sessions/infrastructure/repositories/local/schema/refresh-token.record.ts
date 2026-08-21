@@ -33,6 +33,9 @@ export class RefreshTokenRecord extends BaseRecord {
   @Column({ type: 'varchar', nullable: true })
   zitadelSessionId: string | null;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  familyExpiresAt: Date | null;
+
   @Column({ type: 'timestamptz' })
   expiresAt: Date;
 

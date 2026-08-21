@@ -38,6 +38,7 @@ interface CompleteSsoOidcConfig {
   callbackUrl: string;
   allowInsecureRequests: boolean;
   postLogoutRedirectUrl: string;
+  reauthenticationMaxAgeSeconds: number;
 }
 
 // URI is the protocol-defined event identifier, not a transport endpoint.
@@ -73,6 +74,7 @@ export class ZitadelOidcBrokerClient
       code_challenge_method: 'S256',
       state,
       nonce,
+      max_age: config.reauthenticationMaxAgeSeconds.toString(),
     });
     return {
       authorizationUrl: authorizationUrl.href,
@@ -163,6 +165,7 @@ export class ZitadelOidcBrokerClient
         expectedState: input.expectedState,
         expectedNonce: input.expectedNonce,
         idTokenExpected: true,
+        maxAge: this.requireConfig().reauthenticationMaxAgeSeconds,
       },
     );
     const claims = tokens.claims();
@@ -219,6 +222,7 @@ export class ZitadelOidcBrokerClient
       clientSecret: config.clientSecret,
       callbackUrl: config.callbackUrl,
       allowInsecureRequests: config.allowInsecureRequests,
+      reauthenticationMaxAgeSeconds: config.reauthenticationMaxAgeSeconds,
       postLogoutRedirectUrl: this.configService.get<string>(
         'app.frontend.baseUrl',
         'http://localhost:3001',

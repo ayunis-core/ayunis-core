@@ -19,6 +19,7 @@ export function aRefreshToken(
     tokenHash: string;
     authenticationMethod: SessionAuthenticationMethod;
     zitadelSessionId: string | null;
+    familyExpiresAt: Date | null;
     expiresAt: Date;
     usedAt: Date | null;
     revokedAt: Date | null;
@@ -32,6 +33,7 @@ export function aRefreshToken(
     authenticationMethod:
       overrides.authenticationMethod ?? SessionAuthenticationMethod.PASSWORD,
     zitadelSessionId: nullable(overrides.zitadelSessionId),
+    familyExpiresAt: nullable(overrides.familyExpiresAt),
     expiresAt:
       overrides.expiresAt ?? new Date(Date.now() + 7 * 24 * 3600 * 1000),
     usedAt: overrides.usedAt ?? null,

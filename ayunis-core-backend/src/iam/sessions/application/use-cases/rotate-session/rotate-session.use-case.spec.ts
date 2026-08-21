@@ -5,19 +5,19 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ConfigService } from '@nestjs/config';
 import { RotateSessionUseCase } from './rotate-session.use-case';
 import { RotateSessionCommand } from './rotate-session.command';
-import { RefreshTokensRepository } from '../../ports/refresh-tokens.repository';
-import { RefreshTokenFactory } from '../../services/refresh-token.factory';
+import { RefreshTokensRepository } from 'src/iam/sessions/application/ports/refresh-tokens.repository';
+import { RefreshTokenFactory } from 'src/iam/sessions/application/services/refresh-token.factory';
 import {
   RefreshTokenExpiredError,
   RefreshTokenNotFoundError,
   RefreshTokenReuseError,
-} from '../../sessions.errors';
+} from 'src/iam/sessions/application/sessions.errors';
 import {
   aRefreshToken,
   createMockRefreshTokensRepository,
   TEST_FAMILY_ID,
-} from '../../testing/refresh-token.fixtures';
-import { SessionAuthenticationMethod } from '../../../domain/value-objects/session-authentication-method.enum';
+} from 'src/iam/sessions/application/testing/refresh-token.fixtures';
+import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 
 describe('RotateSessionUseCase', () => {
   let useCase: RotateSessionUseCase;
@@ -72,9 +72,11 @@ describe('RotateSessionUseCase', () => {
   });
 
   it('preserves SSO provenance during rotation', async () => {
+    const familyExpiresAt = new Date(Date.now() + 86_400_000);
     const current = aRefreshToken({
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
+      familyExpiresAt,
     });
     repository.findByTokenHash.mockResolvedValue(current);
     repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
@@ -86,6 +88,25 @@ describe('RotateSessionUseCase', () => {
       familyId: current.familyId,
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: 'zitadel-session-id',
+      familyExpiresAt,
+    });
+  });
+
+  it('keeps password session expiry sliding during rotation', async () => {
+    const current = aRefreshToken({
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+    });
+    repository.findByTokenHash.mockResolvedValue(current);
+    repository.markUsedAndInsertSuccessor.mockResolvedValue(true);
+
+    await rotate();
+
+    expect(factory.create).toHaveBeenCalledWith({
+      userId: current.userId,
+      familyId: current.familyId,
+      authenticationMethod: SessionAuthenticationMethod.PASSWORD,
+      zitadelSessionId: null,
+      familyExpiresAt: undefined,
     });
   });
 

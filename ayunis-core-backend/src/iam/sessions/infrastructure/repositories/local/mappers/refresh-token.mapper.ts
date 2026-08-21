@@ -10,6 +10,7 @@ export class RefreshTokenMapper {
       tokenHash: record.tokenHash,
       authenticationMethod: record.authenticationMethod,
       zitadelSessionId: record.zitadelSessionId,
+      familyExpiresAt: record.familyExpiresAt,
       expiresAt: record.expiresAt,
       usedAt: record.usedAt,
       revokedAt: record.revokedAt,
@@ -27,6 +28,7 @@ export class RefreshTokenMapper {
     record.tokenHash = domain.tokenHash;
     record.authenticationMethod = domain.authenticationMethod;
     record.zitadelSessionId = domain.zitadelSessionId;
+    record.familyExpiresAt = domain.familyExpiresAt;
     record.expiresAt = domain.expiresAt;
     record.usedAt = domain.usedAt;
     record.revokedAt = domain.revokedAt;

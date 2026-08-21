@@ -9,6 +9,7 @@ describe('ssoOidcConfig', () => {
     delete process.env.SSO_OIDC_CLIENT_ID;
     delete process.env.SSO_OIDC_CLIENT_SECRET;
     delete process.env.SSO_OIDC_CALLBACK_URL;
+    delete process.env.SSO_REAUTH_MAX_AGE_SECONDS;
   });
 
   afterAll(() => {
@@ -28,6 +29,7 @@ describe('ssoOidcConfig', () => {
       clientSecret: 'client-secret',
       callbackUrl: 'https://core.ayunis.de/api/auth/sso/oidc/callback',
       allowInsecureRequests: false,
+      reauthenticationMaxAgeSeconds: 86_400,
     });
   });
 
@@ -38,6 +40,7 @@ describe('ssoOidcConfig', () => {
       clientSecret: undefined,
       callbackUrl: undefined,
       allowInsecureRequests: false,
+      reauthenticationMaxAgeSeconds: 86_400,
     });
   });
 
@@ -46,5 +49,11 @@ describe('ssoOidcConfig', () => {
     process.env.SSO_OIDC_ISSUER = 'http://localhost:8080';
 
     expect(ssoOidcConfig().allowInsecureRequests).toBe(true);
+  });
+
+  it('reads a configured SSO reauthentication window', () => {
+    process.env.SSO_REAUTH_MAX_AGE_SECONDS = '43200';
+
+    expect(ssoOidcConfig().reauthenticationMaxAgeSeconds).toBe(43_200);
   });
 });

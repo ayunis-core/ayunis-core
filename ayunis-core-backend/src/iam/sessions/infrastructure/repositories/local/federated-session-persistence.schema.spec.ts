@@ -33,4 +33,11 @@ describe('Federated session persistence', () => {
       ),
     ).toBe(true);
   });
+
+  it('stores the optional absolute SSO family expiry', () => {
+    expect(columnFor('familyExpiresAt')?.options).toMatchObject({
+      type: 'timestamptz',
+      nullable: true,
+    });
+  });
 });
