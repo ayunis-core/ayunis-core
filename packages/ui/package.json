@@ -46,7 +46,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.476.0",
     "radix-ui": "^1.6.1",
-    "react-day-picker": "^9.13.2",
+    "react-day-picker": "^10.0.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7"
   },
