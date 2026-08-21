@@ -5384,6 +5384,10 @@ export interface SsoDiscoveryResponseDto {
   orgId?: string;
 }
 
+export interface SsoAuthorizationResponseDto {
+  authorizationUrl: string;
+}
+
 export type UserControllerGetUsersInOrganizationParams = {
 /**
  * Search users by name or email

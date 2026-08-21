@@ -7,25 +7,23 @@ import {
   SsoConnectionNotAvailableError,
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
-import { StartOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.command';
+import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.command';
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 @Injectable()
-export class StartOrgSsoLoginUseCase {
+export class StartSsoAccountLinkUseCase {
   constructor(
-    @InjectPinoLogger(StartOrgSsoLoginUseCase.name)
+    @InjectPinoLogger(StartSsoAccountLinkUseCase.name)
     private readonly logger: PinoLogger,
     private readonly connections: OrgSsoConnectionsRepository,
     private readonly authorizationTransactions: SsoAuthorizationTransactionService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
-  async execute(
-    command: StartOrgSsoLoginCommand,
-  ): Promise<{ authorizationUrl: string; browserBinding: string }> {
+  async execute(command: StartSsoAccountLinkCommand) {
     this.logger.info(
-      { orgId: command.orgId },
-      'Starting organization SSO login',
+      { userId: command.userId, orgId: command.orgId },
+      'Starting SSO account linking',
     );
     const connection = await this.connections.findByOrgId(command.orgId);
     if (!connection?.enabled || !connection.zitadelOrgId) {
@@ -34,8 +32,8 @@ export class StartOrgSsoLoginUseCase {
     return this.authorizationTransactions.start({
       orgId: connection.orgId,
       zitadelOrgId: connection.zitadelOrgId,
-      purpose: SsoLoginPurpose.LOGIN,
-      linkUserId: null,
+      purpose: SsoLoginPurpose.LINK,
+      linkUserId: command.userId,
     });
   }
 }

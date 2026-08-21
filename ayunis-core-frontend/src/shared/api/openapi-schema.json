@@ -11641,6 +11641,26 @@
         "tags": ["SSO"]
       }
     },
+    "/auth/sso/link/start": {
+      "post": {
+        "operationId": "SsoLoginController_startLink",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoAuthorizationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Start linking SSO to the current account",
+        "tags": ["SSO"]
+      }
+    },
     "/auth/sso/oidc/callback": {
       "get": {
         "operationId": "SsoLoginController_callback",
@@ -20262,6 +20282,16 @@
           }
         },
         "required": ["available"]
+      },
+      "SsoAuthorizationResponseDto": {
+        "type": "object",
+        "properties": {
+          "authorizationUrl": {
+            "type": "string",
+            "example": "https://sso.ayunis.de/oauth/v2/authorize?client_id=core"
+          }
+        },
+        "required": ["authorizationUrl"]
       }
     }
   }
