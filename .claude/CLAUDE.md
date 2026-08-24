@@ -74,6 +74,20 @@ New code always uses the path aliases, never relative imports: `src/...` in the 
 
 Enforced by `@typescript-eslint/no-restricted-imports` in both `eslint.config.mjs` files. It sits at `warn` so the pre-existing backlog stays visible without failing repo-wide lint, but the pre-commit staged ESLint run uses `--max-warnings=0` — so **any file you touch must have all of its `../` imports converted**, not just the lines you added. Don't go rewriting files you aren't already changing.
 
+### 9. Access-Control and Cross-User Testing
+
+Any change that affects sharing, permissions, visibility, organization scope, team scope, or resource access must be tested with distinct principals. A same-user test is not evidence that shared access works.
+
+- Identify the owner, grantor, recipient, and relevant organization/team boundaries before writing the test.
+- Create the resource as the owner and authenticate the recipient through an independent user context.
+- Assert the recipient cannot access the resource before the grant, then grant access and assert that the recipient can access it afterward.
+- Exercise the API path that performs the access query and every affected user-facing surface, such as list pages, detail pages, pickers, or workspace tabs.
+- Assert the externally observable result: response status and data, visibility, shared markers, and user actions. Do not test only that an internal query or helper was called.
+- Keep the E2E setup isolated and dynamically generated. Add a deterministic seed fixture when the scenario must also be reproducible for manual testing.
+- Treat the scenario as incomplete until the focused E2E test passes in CI. Record the exact command and environment when reporting verification.
+
+For access-control regressions, the test must preserve the causal order: verify the denied state first, apply the share or permission change second, and verify the allowed state last. This prevents a test from passing because the resource was visible for an unrelated reason.
+
 ---
 
 ## Forbidden Actions
