@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
 import { PaginationDto } from 'src/common/pagination/pagination.dto';
@@ -44,6 +44,12 @@ export class UserResponseDto {
     nullable: true,
   })
   department?: string;
+
+  @ApiPropertyOptional({
+    description: 'Whether the account is locked after failed login attempts',
+    example: false,
+  })
+  isLocked?: boolean;
 
   @ApiProperty({
     description: 'Date when the user was created',

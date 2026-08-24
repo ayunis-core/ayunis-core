@@ -651,6 +651,38 @@
         "tags": ["Super Admin Users"]
       }
     },
+    "/super-admin/users/{userId}/unlock": {
+      "patch": {
+        "operationId": "SuperAdminUsersController_unlockUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User account unlocked"
+          },
+          "401": {
+            "description": "Requester is not authenticated"
+          },
+          "403": {
+            "description": "Requester is not a super admin"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Unlock a user in any organization",
+        "tags": ["Super Admin Users"]
+      }
+    },
     "/super-admin/users/{userId}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.",
@@ -939,6 +971,38 @@
         },
         "summary": "Remove super admin status from a user",
         "tags": ["Super Admin Management"]
+      }
+    },
+    "/users/{userId}/unlock": {
+      "patch": {
+        "operationId": "AdminUserAccountLockController_unlock",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User account unlocked"
+          },
+          "401": {
+            "description": "Requester is not authenticated"
+          },
+          "403": {
+            "description": "Requester is not an admin in the target organization"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Unlock a user in the current organization",
+        "tags": ["Users"]
       }
     },
     "/invites": {
@@ -11845,6 +11909,11 @@
             "example": "hauptamt",
             "nullable": true
           },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -12098,6 +12167,11 @@
             "example": "hauptamt",
             "nullable": true
           },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -12177,6 +12251,11 @@
             "description": "Department the user belongs to",
             "example": "hauptamt",
             "nullable": true
+          },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
           },
           "createdAt": {
             "format": "date-time",

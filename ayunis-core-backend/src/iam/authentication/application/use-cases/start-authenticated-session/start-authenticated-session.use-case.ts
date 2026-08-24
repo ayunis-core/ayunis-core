@@ -10,6 +10,8 @@ import { MfaPendingJwtService } from 'src/iam/authentication/application/service
 import { CheckMfaLoginRequirementQuery } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.query';
 import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cases/check-mfa-login-requirement/check-mfa-login-requirement.use-case';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
+import { AuthorizeUserLoginCommand } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.command';
+import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
 
 export type StartAuthenticatedSessionResult =
   | { status: 'authenticated'; tokens: AuthTokens }
@@ -27,6 +29,7 @@ export class StartAuthenticatedSessionUseCase {
     private readonly checkMfaLoginRequirement: CheckMfaLoginRequirementUseCase,
     private readonly mfaPendingTokens: MfaPendingJwtService,
     private readonly login: LoginUseCase,
+    private readonly authorizeUserLogin: AuthorizeUserLoginUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
@@ -61,6 +64,9 @@ export class StartAuthenticatedSessionUseCase {
       );
       return { status: 'authenticated', tokens };
     }
+    await this.authorizeUserLogin.execute(
+      new AuthorizeUserLoginCommand(command.user.id),
+    );
     return {
       status: 'mfa_required',
       mfaPendingToken: this.mfaPendingTokens.generate({

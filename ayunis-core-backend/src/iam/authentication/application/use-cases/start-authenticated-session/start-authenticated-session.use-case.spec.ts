@@ -9,6 +9,8 @@ import type { MfaPendingJwtService } from 'src/iam/authentication/application/se
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import type { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
+import { UserAuthenticationFailedError } from 'src/iam/users/application/users.errors';
 
 describe(StartAuthenticatedSessionUseCase.name, () => {
   const user = new ActiveUser({
@@ -23,11 +25,13 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
   const login = { execute: jest.fn() };
   const checkMfa = { execute: jest.fn() };
   const pendingTokens = { generate: jest.fn() };
+  const authorizeUserLogin = { execute: jest.fn() };
   const useCase = new StartAuthenticatedSessionUseCase(
     createPinoLoggerMock(),
     checkMfa as unknown as CheckMfaLoginRequirementUseCase,
     pendingTokens as unknown as MfaPendingJwtService,
     login as unknown as LoginUseCase,
+    authorizeUserLogin as unknown as AuthorizeUserLoginUseCase,
   );
 
   beforeEach(() => jest.clearAllMocks());
@@ -64,6 +68,9 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
       authenticationMethod: SessionAuthenticationMethod.SSO,
       zitadelSessionId: '385820595704563912',
     });
+    expect(authorizeUserLogin.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: user.id }),
+    );
     expect(login.execute).not.toHaveBeenCalled();
   });
 
@@ -136,6 +143,18 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
 
     expect(checkMfa.execute).toHaveBeenCalled();
     expect(login.execute).not.toHaveBeenCalled();
+  });
+
+  it('withholds an MFA pending token when the account is locked', async () => {
+    checkMfa.execute.mockResolvedValue('verify');
+    authorizeUserLogin.execute.mockRejectedValue(
+      new UserAuthenticationFailedError('Invalid credentials'),
+    );
+
+    await expect(useCase.execute(passwordCommand())).rejects.toThrow(
+      UserAuthenticationFailedError,
+    );
+    expect(pendingTokens.generate).not.toHaveBeenCalled();
   });
 
   function ssoCommand(): StartAuthenticatedSessionCommand {

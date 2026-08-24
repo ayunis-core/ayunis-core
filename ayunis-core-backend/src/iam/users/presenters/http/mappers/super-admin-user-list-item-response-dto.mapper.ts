@@ -13,7 +13,7 @@ export class SuperAdminUserListItemResponseDtoMapper {
 
   toDto(item: SuperAdminUserListItem): SuperAdminUserListItemResponseDto {
     return {
-      ...this.userResponseDtoMapper.toDto(item.user),
+      ...this.userResponseDtoMapper.toDto(item.user, true),
       orgName: item.orgName,
     };
   }

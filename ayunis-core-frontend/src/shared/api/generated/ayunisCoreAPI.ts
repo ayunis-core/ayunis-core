@@ -1589,6 +1589,68 @@ export const useSuperAdminUsersControllerDeleteUser = <TError = void,
     }
     
 /**
+ * @summary Unlock a user in any organization
+ */
+export const superAdminUsersControllerUnlockUser = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/users/${userId}/unlock`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminUsersControllerUnlockUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['superAdminUsersControllerUnlockUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  superAdminUsersControllerUnlockUser(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminUsersControllerUnlockUserMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>>
+    
+    export type SuperAdminUsersControllerUnlockUserMutationError = void
+
+    /**
+ * @summary Unlock a user in any organization
+ */
+export const useSuperAdminUsersControllerUnlockUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminUsersControllerUnlockUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
  * @summary Trigger password reset for a user
  */
@@ -2128,6 +2190,68 @@ export const useSuperAdminManagementControllerDemoteFromSuperAdmin = <TError = v
       > => {
 
       const mutationOptions = getSuperAdminManagementControllerDemoteFromSuperAdminMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Unlock a user in the current organization
+ */
+export const adminUserAccountLockControllerUnlock = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/${userId}/unlock`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getAdminUserAccountLockControllerUnlockMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['adminUserAccountLockControllerUnlock'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  adminUserAccountLockControllerUnlock(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUserAccountLockControllerUnlockMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>>
+    
+    export type AdminUserAccountLockControllerUnlockMutationError = void
+
+    /**
+ * @summary Unlock a user in the current organization
+ */
+export const useAdminUserAccountLockControllerUnlock = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminUserAccountLockControllerUnlockMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
