@@ -15,6 +15,7 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "roleManager": "Manager",
+    "status": "Status",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
     "openOrganization": "Organisation öffnen",

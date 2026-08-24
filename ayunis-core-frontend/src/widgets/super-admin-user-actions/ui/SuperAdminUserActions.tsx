@@ -6,7 +6,13 @@ import {
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import { useNavigate } from '@tanstack/react-router';
-import { Building2, Mail, MoreHorizontal, Trash2 } from 'lucide-react';
+import {
+  Building2,
+  LockOpen,
+  Mail,
+  MoreHorizontal,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -14,6 +20,8 @@ import {
   useSuperAdminTriggerPasswordReset,
 } from '@/features/super-admin-user-actions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import { useMe } from '@/widgets/app-sidebar/api/useMe';
+import { useSuperAdminUnlockUserAccount } from '@/widgets/super-admin-user-actions/api/useSuperAdminUnlockUserAccount';
 import { PasswordResetSuccessDialog } from './PasswordResetSuccessDialog';
 
 interface ActionableUser {
@@ -21,6 +29,7 @@ interface ActionableUser {
   name: string;
   email: string;
   orgId: string;
+  isLocked?: boolean;
 }
 
 interface SuperAdminUserActionsProps {
@@ -33,7 +42,11 @@ export function SuperAdminUserActions({
   showOrganizationLink = true,
 }: Readonly<SuperAdminUserActionsProps>) {
   const { t } = useTranslation('super-admin-settings-org');
+  const { t: tAccountLock } = useTranslation('common', {
+    keyPrefix: 'accountLock',
+  });
   const navigate = useNavigate();
+  const { user: currentUser } = useMe();
   const { confirm } = useConfirmation();
   const deleteUser = useSuperAdminDeleteUser(user.orgId);
   const [resetDialog, setResetDialog] = useState({
@@ -43,7 +56,11 @@ export function SuperAdminUserActions({
   const resetPassword = useSuperAdminTriggerPasswordReset({
     onSuccess: (resetUrl) => setResetDialog({ open: true, resetUrl }),
   });
-  const isPending = deleteUser.isPending || resetPassword.isPending;
+  const unlockUserAccount = useSuperAdminUnlockUserAccount(user.orgId);
+  const isPending =
+    deleteUser.isPending ||
+    resetPassword.isPending ||
+    unlockUserAccount.isPending;
 
   function confirmPasswordReset() {
     confirm({
@@ -70,6 +87,19 @@ export function SuperAdminUserActions({
     });
   }
 
+  function confirmUnlock() {
+    confirm({
+      title: tAccountLock('unlock.confirmTitle'),
+      description: tAccountLock('unlock.confirmDescription', {
+        name: user.name,
+      }),
+      confirmText: tAccountLock('unlock.confirmText'),
+      cancelText: tAccountLock('unlock.cancelText'),
+      variant: 'default',
+      onConfirm: () => unlockUserAccount.mutate({ userId: user.id }),
+    });
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -92,6 +122,15 @@ export function SuperAdminUserActions({
             <Mail />
             {t('table.sendPasswordReset')}
           </DropdownMenuItem>
+          {user.isLocked && user.id !== currentUser?.id && (
+            <DropdownMenuItem
+              onClick={confirmUnlock}
+              data-testid="user-unlock-account"
+            >
+              <LockOpen />
+              {tAccountLock('unlock.menuItem')}
+            </DropdownMenuItem>
+          )}
           {showOrganizationLink && (
             <DropdownMenuItem
               onClick={() =>

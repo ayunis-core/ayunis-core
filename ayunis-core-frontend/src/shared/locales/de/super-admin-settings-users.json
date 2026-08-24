@@ -11,6 +11,7 @@
     "name": "Name",
     "email": "E-Mail",
     "organization": "Organisation",
+    "status": "Status",
     "actions": "Aktionen"
   },
   "empty": {

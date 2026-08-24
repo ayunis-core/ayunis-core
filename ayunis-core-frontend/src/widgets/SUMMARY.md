@@ -4,7 +4,7 @@ Composite UI components reused across two or more application pages.
 
 Widget modules provide shared interactive components: app sidebar with thread navigation and user menu, chat input with voice recording and image support, artifact editing, the spreadsheet-editor widget with an editable grid, version history, and XLSX/CSV export, markdown rendering with syntax-highlighted code blocks, chart visualizations (line, bar, pie), MCP user-configuration forms, confirmation modal with context provider, super-admin user row actions, a one-time welcome-video dialog, the academy gate notice (why chat is locked, shown by the chat, new-chat and academy pages), the certificate-expiry notices (pre-expiry warning dialog plus the final-week countdown banner, both mounted in `AppLayout`; dismissal state lives in the slice's `model/` hook and the notice thresholds come from `features/academy`), and utility widgets for headers, empty states, tooltips, and thread renaming.
 
-The `super-admin-user-actions/` widget combines password reset, organization navigation, and deletion controls for the global and organization-specific super-admin user tables.
+The `super-admin-user-actions/` widget combines account recovery, password reset, organization navigation, and deletion controls for the global and organization-specific super-admin user tables. The `user-lock-status/` widget renders the translated active/locked badge shared by the admin and super-admin user tables.
 
 The app sidebar always clears the Core session on logout and follows the broker end-session URL only when the backend returns one for an SSO-origin session.
 
