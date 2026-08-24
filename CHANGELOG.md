@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.30.0](https://github.com/ayunis-core/ayunis-core/compare/v2.29.1...v2.30.0) (2026-08-24)
+
+
+### Features
+
+* **auth:** add email-first SSO discovery (AYC-643) ([#1417](https://github.com/ayunis-core/ayunis-core/issues/1417)) ([50d7fc9](https://github.com/ayunis-core/ayunis-core/commit/50d7fc9b7dfb22a9fa8cc6fd6c60cbc25674519b))
+* **auth:** add explicit SSO account linking (AYC-642) ([#1410](https://github.com/ayunis-core/ayunis-core/issues/1410)) ([ce358a5](https://github.com/ayunis-core/ayunis-core/commit/ce358a562f82af9cda5b6465f70b781c01f34a37))
+* **auth:** add fixed SSO completion routes (AYC-643) ([#1416](https://github.com/ayunis-core/ayunis-core/issues/1416)) ([dc0e5ba](https://github.com/ayunis-core/ayunis-core/commit/dc0e5ba4c924018dd9831cd0b9e4b051c263a6d7))
+* **auth:** add SSO account linking and logout UX (AYC-643) ([#1418](https://github.com/ayunis-core/ayunis-core/issues/1418)) ([301a839](https://github.com/ayunis-core/ayunis-core/commit/301a839997f6f3c5585aa868986beb720d2b2f58))
+* **auth:** bound SSO reauthentication lifetime (AYC-642) ([#1412](https://github.com/ayunis-core/ayunis-core/issues/1412)) ([29818a9](https://github.com/ayunis-core/ayunis-core/commit/29818a9bc8bd231736ad0764703b12c1a8d9cb7c))
+* **auth:** revoke broker-backed SSO sessions (AYC-642) ([#1411](https://github.com/ayunis-core/ayunis-core/issues/1411)) ([c2b5cda](https://github.com/ayunis-core/ayunis-core/commit/c2b5cda21a67446cf39b2e31129a94f0f734585f))
+* **auth:** share MFA-aware session completion (AYC-642) ([#1408](https://github.com/ayunis-core/ayunis-core/issues/1408)) ([2c15bb0](https://github.com/ayunis-core/ayunis-core/commit/2c15bb081aa9df46c90fde0104f6c3e2a8f3b041))
+* **chat:** add GeoJSON map displayable widget (AYC-729) ([#1379](https://github.com/ayunis-core/ayunis-core/issues/1379)) ([6c9d7d7](https://github.com/ayunis-core/ayunis-core/commit/6c9d7d76c5bf9395945963288afbe84016b70031))
+* **sso:** issue Core sessions from broker callback (AYC-642) ([#1409](https://github.com/ayunis-core/ayunis-core/issues/1409)) ([db12542](https://github.com/ayunis-core/ayunis-core/commit/db125426ce3d1c0f393e005c8d07b9702bbb12d1))
+
+
+### Bug Fixes
+
+* **observability:** suppress raw ERR_SOCKET_TIMEOUT duplicates (AYC-767) ([#1506](https://github.com/ayunis-core/ayunis-core/issues/1506)) ([cf9a835](https://github.com/ayunis-core/ayunis-core/commit/cf9a8354d060b2ac2c7b1dc2f75298849bd834a7))
+* **rag:** enforce PDF page cap on web-fetched and crawled PDFs (AYC-332) ([#1478](https://github.com/ayunis-core/ayunis-core/issues/1478)) ([8f2f4c8](https://github.com/ayunis-core/ayunis-core/commit/8f2f4c8bb54fb2bb2640df7a5096c5b106ba25ba))
+
+
+### Documentation
+
+* **auth:** add municipal SSO rollout runbook (AYC-643) ([#1420](https://github.com/ayunis-core/ayunis-core/issues/1420)) ([292775a](https://github.com/ayunis-core/ayunis-core/commit/292775abd74c9506c3118db59a7a61e9e4b0a6b7))
+
 ## [2.29.1](https://github.com/ayunis-core/ayunis-core/compare/v2.29.0...v2.29.1) (2026-08-20)
 
 
