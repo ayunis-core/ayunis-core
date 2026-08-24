@@ -2,8 +2,9 @@
 // the app boots; require() mirrors how it is consumed there.
 import createHttpError from 'http-errors';
 import { errors as undiciErrors } from 'undici';
-import { JobRetryScheduledError } from '../../domain/sources/infrastructure/queue/bullmq-job.helpers';
-import { MarketplaceUnavailableError } from '../../domain/marketplace/application/marketplace.errors';
+import { JobRetryScheduledError } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
+import { MarketplaceUnavailableError } from 'src/domain/marketplace/application/marketplace.errors';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 
 type UndiciRequest = {
   method?: string;
@@ -185,6 +186,13 @@ const ERROR_SAMPLES: Record<string, () => Error> = {
     Object.assign(new Error('timeout of 60000ms exceeded'), {
       code: 'ETIMEDOUT',
     }),
+  // agentkeepalive destroys an idle socket with this exact shape — the
+  // keep-alive agent the OpenAI SDK uses (incident #333).
+  'transport-socket-timeout': () =>
+    Object.assign(new Error('Socket timeout'), {
+      code: 'ERR_SOCKET_TIMEOUT',
+      timeout: 300000,
+    }),
   'transport-broken-pipe': () =>
     Object.assign(new Error('write EPIPE'), {
       code: 'EPIPE',
@@ -257,6 +265,20 @@ describe('SUPPRESSIONS registry', () => {
         expect(exceptionTypeOf(sample())).toBe(suppression.exceptionType);
       },
     );
+
+    // The other half of the raw-duplicate suppressions: dropping the errno
+    // must not touch the classified taxonomy the alerting relies on, which
+    // reports under PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER> (AYC-767).
+    it('leaves the classified provider taxonomy reporting', () => {
+      const classified = new ProviderTimeoutError({
+        provider: 'openai',
+        underlyingCode: 'ERR_SOCKET_TIMEOUT',
+      });
+      expect(exceptionTypeOf(classified)).toBe(
+        'PROVIDER_UNAVAILABLE_TIMEOUT_OPENAI',
+      );
+      expect(ignoredErrorTypes).not.toContain(exceptionTypeOf(classified));
+    });
   });
 
   describe('disableInstrumentation entries', () => {

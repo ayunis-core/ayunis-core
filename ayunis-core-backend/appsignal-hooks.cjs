@@ -203,6 +203,18 @@ const SUPPRESSIONS = [
     exceptionType: 'ETIMEDOUT',
   },
   {
+    id: 'transport-socket-timeout',
+    lever: 'ignoreErrors',
+    ticket: 'AYC-767',
+    reason:
+      'Idle-socket deadline raised by the keep-alive agent the OpenAI SDK ' +
+      'ships (agentkeepalive lib/agent.js, message "Socket timeout"). The ' +
+      'SDK retries it, and where it still fails a request the taxonomy ' +
+      'classifies it as PROVIDER_UNAVAILABLE_TIMEOUT_*; the raw http span ' +
+      'exception on the inference span is a duplicate (incident #333).',
+    exceptionType: 'ERR_SOCKET_TIMEOUT',
+  },
+  {
     id: 'transport-broken-pipe',
     lever: 'ignoreErrors',
     ticket: 'AYC-616',
