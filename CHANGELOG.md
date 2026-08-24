@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.30.1](https://github.com/ayunis-core/ayunis-core/compare/v2.30.0...v2.30.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **auth:** unify logout under authentication route (AYC-000) ([#1514](https://github.com/ayunis-core/ayunis-core/issues/1514)) ([e06b664](https://github.com/ayunis-core/ayunis-core/commit/e06b66466a10fb584c024477f801e64c0828744c))
+* **inference:** normalize unsupported strict tool schemas (AYC-000) ([#1513](https://github.com/ayunis-core/ayunis-core/issues/1513)) ([7998de6](https://github.com/ayunis-core/ayunis-core/commit/7998de6f967ef6efc5c23031b02ee7bd7c8f8878))
+
 ## [2.30.0](https://github.com/ayunis-core/ayunis-core/compare/v2.29.1...v2.30.0) (2026-08-24)
 
 
