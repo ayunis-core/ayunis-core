@@ -48,12 +48,9 @@ import { StartSsoAccountLinkCommand } from 'src/iam/sso/application/use-cases/st
 import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { DiscoverSsoDto } from 'src/iam/sso/presenters/http/dto/discover-sso.request-dto';
 import { SsoAuthorizationResponseDto } from 'src/iam/sso/presenters/http/dto/sso-authorization.response-dto';
-import { CompleteSsoLogoutCommand } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.command';
-import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
 import { HandleSsoBackchannelLogoutCommand } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.command';
 import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
 import { SsoBackchannelLogoutRequestDto } from 'src/iam/sso/presenters/http/dto/sso-backchannel-logout.request-dto';
-import { SsoLogoutResponseDto } from 'src/iam/sso/presenters/http/dto/sso-logout.response-dto';
 import { SsoDiscoveryResponseDto } from 'src/iam/sso/presenters/http/dto/sso-discovery.response-dto';
 import { SsoErrorCode } from 'src/iam/sso/application/sso.errors';
 
@@ -65,7 +62,6 @@ interface BrowserRedirect {
 }
 
 @ApiTags('SSO')
-@RequireFeature(FeatureFlag.SsoLogin)
 @Controller('auth/sso')
 export class SsoLoginController {
   constructor(
@@ -73,12 +69,12 @@ export class SsoLoginController {
     private readonly startOrgSsoLogin: StartOrgSsoLoginUseCase,
     private readonly completeSsoAuthentication: CompleteSsoAuthenticationUseCase,
     private readonly startSsoAccountLink: StartSsoAccountLinkUseCase,
-    private readonly completeSsoLogout: CompleteSsoLogoutUseCase,
     private readonly handleSsoBackchannelLogout: HandleSsoBackchannelLogoutUseCase,
     private readonly configService: ConfigService,
   ) {}
 
   @Public()
+  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Post('discover')
   @HttpCode(HttpStatus.OK)
@@ -89,6 +85,7 @@ export class SsoLoginController {
   }
 
   @Public()
+  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('organizations/:orgId/start')
   @Redirect(undefined, HttpStatus.FOUND)
@@ -115,6 +112,7 @@ export class SsoLoginController {
     }
   }
 
+  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Post('link/start')
   @HttpCode(HttpStatus.OK)
@@ -138,6 +136,7 @@ export class SsoLoginController {
   }
 
   @Public()
+  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('oidc/callback')
   @Redirect(undefined, HttpStatus.FOUND)
@@ -173,29 +172,7 @@ export class SsoLoginController {
   }
 
   @Public()
-  @Post('session/logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Revoke the Core session and prepare broker logout',
-  })
-  @ApiOkResponse({ type: SsoLogoutResponseDto })
-  async logout(
-    @Req() request: Request,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<SsoLogoutResponseDto> {
-    const refreshTokenName = this.configService.get<string>(
-      'auth.cookie.refreshTokenName',
-      'refresh_token',
-    );
-    const refreshToken = this.cookieValue(request, refreshTokenName);
-    clearCookies(response, this.configService);
-    const result = await this.completeSsoLogout.execute(
-      new CompleteSsoLogoutCommand(refreshToken),
-    );
-    return { success: true, ...result };
-  }
-
-  @Public()
+  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 3000, windowMs: 15 * 60 * 1000 })
   @Post('oidc/backchannel-logout')
   @HttpCode(HttpStatus.OK)

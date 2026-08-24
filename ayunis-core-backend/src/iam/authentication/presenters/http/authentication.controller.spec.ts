@@ -3,23 +3,22 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
-import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
-import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
-import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
+import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
+import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
+import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import type { Request, Response } from 'express';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { ActiveUser } from '../../domain/active-user.entity';
-import { AuthTokens } from '../../domain/auth-tokens.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { RATE_LIMIT_KEY } from 'src/common/decorators/rate-limit.decorator';
 import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
-import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
 
@@ -30,7 +29,6 @@ describe('AuthenticationController', () => {
   let mockRegisterUserUseCase: Partial<RegisterUserUseCase>;
   let mockGetCurrentUserUseCase: Partial<GetCurrentUserUseCase>;
   let mockStartAuthenticatedSessionUseCase: { execute: jest.Mock };
-  let mockRevokeSessionFamilyUseCase: { execute: jest.Mock };
   let mockConfigService: Partial<ConfigService>;
   let mockJwtService: Partial<JwtService>;
 
@@ -50,9 +48,6 @@ describe('AuthenticationController', () => {
     mockStartAuthenticatedSessionUseCase = {
       execute: jest.fn(),
     };
-    mockRevokeSessionFamilyUseCase = {
-      execute: jest.fn().mockResolvedValue(undefined),
-    };
     mockConfigService = {
       get: jest.fn(),
     };
@@ -70,10 +65,6 @@ describe('AuthenticationController', () => {
         {
           provide: StartAuthenticatedSessionUseCase,
           useValue: mockStartAuthenticatedSessionUseCase,
-        },
-        {
-          provide: RevokeSessionFamilyUseCase,
-          useValue: mockRevokeSessionFamilyUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: JwtService, useValue: mockJwtService },
