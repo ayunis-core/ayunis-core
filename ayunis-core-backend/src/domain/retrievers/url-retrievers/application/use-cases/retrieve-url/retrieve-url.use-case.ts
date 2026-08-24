@@ -5,17 +5,19 @@ import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
   RawUrlResponse,
   UrlRetrieverHandler,
-} from '../../ports/url-retriever.handler';
+} from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
 import {
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverParsingError,
-} from '../../url-retriever.errors';
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
 import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
+import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
+import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 
 const PDF_MIME_TYPE = 'application/pdf';
 
@@ -27,6 +29,7 @@ export class RetrieveUrlUseCase {
     private readonly handler: UrlRetrieverHandler,
     private readonly assertCrawlDomainAccessUseCase: AssertCrawlDomainAccessUseCase,
     private readonly retrieveFileContentUseCase: RetrieveFileContentUseCase,
+    private readonly preflightCheckUseCase: PreflightCheckUseCase,
   ) {}
 
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
@@ -171,10 +174,23 @@ export class RetrieveUrlUseCase {
    * Delegate PDF parsing to the file-retrieval pipeline (Mistral OCR or
    * pdf-parse), flattening the extracted pages into the text content the
    * crawler indexes. PDFs have no anchors to follow, so the result has no links.
+   *
+   * Fetched PDFs run the same preflight page-count guard as uploads (AYC-332):
+   * the download size is already bounded by the handler's streaming cap, but a
+   * small file can still hold thousands of pages and trigger a long, expensive
+   * OCR job. The guard throws TooManyPagesError (422), which propagates for a
+   * single fetch and is skipped per-page by the crawler.
    */
   private async parsePdf(raw: RawUrlResponse): Promise<UrlRetrieverResult> {
     const fileName = this.fileNameFromUrl(raw.finalUrl);
     try {
+      await this.preflightCheckUseCase.execute(
+        new PreflightCheckCommand({
+          fileData: raw.body,
+          fileName,
+          fileType: PDF_MIME_TYPE,
+        }),
+      );
       const result = await this.retrieveFileContentUseCase.execute(
         new RetrieveFileContentCommand({
           fileData: raw.body,

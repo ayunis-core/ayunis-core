@@ -15,10 +15,11 @@ jest.mock('p-limit', () => ({
 
 import { CrawlUrlUseCase } from './crawl-url.use-case';
 import { CrawlUrlCommand } from './crawl-url.command';
-import { RetrieveUrlUseCase } from '../retrieve-url/retrieve-url.use-case';
+import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
-import { UrlRetrieverProviderNotAvailableError } from '../../url-retriever.errors';
+import { UrlRetrieverProviderNotAvailableError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
 
@@ -306,6 +307,45 @@ describe('CrawlUrlUseCase', () => {
       // 'broken' is intentionally absent -> retriever rejects for it.
       'https://acme.test/ok': {},
     });
+    const useCase = await buildUseCase(retriever);
+
+    const result = await useCase.execute(
+      new CrawlUrlCommand('https://acme.test/', ORG_ID, 1),
+    );
+
+    expect(result.pages.map((p) => p.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/ok',
+    ]);
+  });
+
+  it('skips a PDF link that exceeds the page cap and keeps crawling the site', async () => {
+    // AYC-332: the PDF page cap is a hard error for a single fetch, but a crawl
+    // must not abandon a whole site because one linked PDF is too long.
+    const links: Record<string, string[]> = {
+      'https://acme.test/': [
+        'https://acme.test/haushaltsplan.pdf',
+        'https://acme.test/ok',
+      ],
+      'https://acme.test/ok': [],
+    };
+    const retriever = {
+      execute: jest.fn(({ url }: { url: string }) =>
+        url.endsWith('.pdf')
+          ? Promise.reject(
+              new TooManyPagesError({ pageCount: 4200, maxPages: 1000 }),
+            )
+          : Promise.resolve(
+              new UrlRetrieverResult(
+                `content of ${url}`,
+                url,
+                url,
+                {},
+                links[url],
+              ),
+            ),
+      ),
+    };
     const useCase = await buildUseCase(retriever);
 
     const result = await useCase.execute(
