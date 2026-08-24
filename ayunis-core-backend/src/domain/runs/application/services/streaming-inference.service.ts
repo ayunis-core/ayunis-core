@@ -23,11 +23,7 @@ import {
   assertToolCallArgumentsIntact,
   parseFinalToolArguments,
 } from 'src/domain/runs/application/helpers/tool-call-arguments.helper';
-import {
-  InferenceMalformedToolCallError,
-  InferenceStreamStalledError,
-  InferenceTokenLimitError,
-} from 'src/domain/models/application/models.errors';
+import { InferenceMalformedToolCallError } from 'src/domain/models/application/models.errors';
 import { ContextService } from 'src/common/context/services/context.service';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { extractInferenceErrorInfo } from 'src/domain/runs/application/helpers/extract-inference-error-info.helper';
@@ -39,7 +35,13 @@ import {
   accumulateChunk,
   initialAccumulatedState,
 } from 'src/domain/runs/application/helpers/stream-accumulation.helper';
-import { RunExecutionFailedError } from 'src/domain/runs/application/runs.errors';
+import {
+  assertRetryProducedContent,
+  freshOutputTracker,
+  isRetryableBeforeOutput,
+  OutputTracker,
+  withMalformedToolCallDiagnostics,
+} from 'src/domain/runs/application/helpers/streaming-retry.helper';
 
 type AssistantContentBlock =
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent;
@@ -52,25 +54,6 @@ interface StreamingInferenceParams {
   threadId: UUID;
   orgId: UUID;
 }
-
-/**
- * `producedOutput` is set as soon as an attempt streams durable content
- * (text or thinking) — after that, a retry would duplicate what the failed
- * attempt already saved. Tool-call deltas deliberately don't count: a
- * failed attempt never persists its tool calls, so a tool-only attempt
- * leaves nothing to duplicate. `yieldedContent` tracks any yield at all —
- * an attempt that completes without one produced an empty provider
- * response (incident #548) and is retried like a stall.
- */
-interface OutputTracker {
-  producedOutput: boolean;
-  yieldedContent: boolean;
-}
-
-const freshTracker = (): OutputTracker => ({
-  producedOutput: false,
-  yieldedContent: false,
-});
 
 /**
  * Executes streaming inference, accumulates response chunks, yields partial
@@ -95,7 +78,7 @@ export class StreamingInferenceService {
   async *executeStreamingInference(
     params: StreamingInferenceParams,
   ): AsyncGenerator<AssistantMessage, boolean, unknown> {
-    const tracker = freshTracker();
+    const tracker = freshOutputTracker();
     // One message entity for all attempts: the chat UI keys updates by
     // message id, so a retry under a fresh id would leave the failed
     // attempt's partial content on screen as a phantom message.
@@ -126,8 +109,12 @@ export class StreamingInferenceService {
       // second attempt is indistinguishable from a slow first one. After
       // durable output, a retry would duplicate content the user already
       // watched arrive (AYC-652, AYC-669, AYC-741).
-      if (!this.isRetryableBeforeOutput(error) || tracker.producedOutput) {
-        throw error;
+      if (!isRetryableBeforeOutput(error) || tracker.producedOutput) {
+        throw withMalformedToolCallDiagnostics(
+          error,
+          params.model,
+          'after_partial_output',
+        );
       }
       this.logger.warn(
         {
@@ -144,31 +131,54 @@ export class StreamingInferenceService {
     params: StreamingInferenceParams,
     assistantMessage: AssistantMessage,
   ): AsyncGenerator<AssistantMessage, boolean, unknown> {
-    const tracker = freshTracker();
-    const threadExists = yield* this.streamAttempt(
-      params,
-      tracker,
-      assistantMessage,
-    );
-    if (assistantMessage.content.length === 0) {
-      throw new RunExecutionFailedError(
-        'No final message received from streaming inference',
+    const tracker = freshOutputTracker();
+    try {
+      const threadExists = yield* this.streamAttempt(
+        params,
+        tracker,
+        assistantMessage,
       );
+      assertRetryProducedContent(assistantMessage);
+      return threadExists;
+    } catch (error) {
+      if (
+        !(error instanceof InferenceMalformedToolCallError) ||
+        tracker.producedOutput
+      ) {
+        throw withMalformedToolCallDiagnostics(
+          error,
+          params.model,
+          'after_partial_output',
+        );
+      }
+      this.logger.warn(
+        { threadId: params.threadId },
+        'Malformed tool call persisted after retry; retrying once more',
+      );
+      return yield* this.retryMalformedToolCall(params, assistantMessage);
     }
-    return threadExists;
   }
 
-  private isRetryableBeforeOutput(
-    error: unknown,
-  ): error is
-    | InferenceMalformedToolCallError
-    | InferenceStreamStalledError
-    | InferenceTokenLimitError {
-    return (
-      error instanceof InferenceMalformedToolCallError ||
-      error instanceof InferenceStreamStalledError ||
-      error instanceof InferenceTokenLimitError
-    );
+  private async *retryMalformedToolCall(
+    params: StreamingInferenceParams,
+    assistantMessage: AssistantMessage,
+  ): AsyncGenerator<AssistantMessage, boolean, unknown> {
+    const tracker = freshOutputTracker();
+    try {
+      const threadExists = yield* this.streamAttempt(
+        params,
+        tracker,
+        assistantMessage,
+      );
+      assertRetryProducedContent(assistantMessage);
+      return threadExists;
+    } catch (error) {
+      throw withMalformedToolCallDiagnostics(
+        error,
+        params.model,
+        tracker.producedOutput ? 'after_partial_output' : 'retry_exhausted',
+      );
+    }
   }
 
   private async *streamAttempt(
