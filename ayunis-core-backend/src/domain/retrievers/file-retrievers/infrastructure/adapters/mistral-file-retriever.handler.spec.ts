@@ -9,7 +9,7 @@ import {
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
-} from '../../application/file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
   ProviderConnectionError,
   ProviderRequestRejectedError,
@@ -17,7 +17,7 @@ import {
   ProviderTimeoutError,
 } from 'src/common/errors/provider.errors';
 import { MistralError } from '@mistralai/mistralai/models/errors';
-import { File } from '../../domain/file.entity';
+import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 
 // Mock the Mistral SDK
 jest.mock('@mistralai/mistralai', () => ({
@@ -354,16 +354,17 @@ describe('MistralFileRetrieverHandler', () => {
       expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
     });
 
-    it('keeps other Mistral 422 responses in the provider-unavailable taxonomy', async () => {
+    it('classifies unrecognized Mistral 422 responses as unprocessable documents', async () => {
       const mistralError = createMistralError(
         422,
-        '{"detail":"Request rejected by OCR capacity policy"}',
+        '{"detail":"Document could not be accepted for OCR"}',
       );
       mockClient.ocr.process.mockRejectedValue(mistralError);
 
-      await expect(handler.processFile(testFile)).rejects.toBeInstanceOf(
-        ProviderRequestRejectedError,
-      );
+      const result = handler.processFile(testFile);
+      await expect(result).rejects.toBeInstanceOf(UnprocessableDocumentError);
+      await expect(result).rejects.toMatchObject({ statusCode: 422 });
+      expect(mockClient.ocr.process).toHaveBeenCalledTimes(1);
     });
 
     it('does not classify a different rejection that only mentions the parser error type as a document error', async () => {
