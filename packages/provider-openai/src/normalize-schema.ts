@@ -28,10 +28,21 @@ const walker = new SchemaWalker((node) => {
   ) {
     delete node.format;
   }
+  convertOneOfToAnyOf(node);
+  delete node.minProperties;
+  delete node.maxProperties;
   convertDraft04ExclusiveBoundsNode(node);
   normalizeObjectType(node);
   return node;
 });
+
+// Strict function schemas reject `oneOf`; `anyOf` is the supported equivalent
+// for the disjoint alternatives used by our tools and provider integrations.
+function convertOneOfToAnyOf(schema: MutableSchema): void {
+  if (!Array.isArray(schema.oneOf)) return;
+  schema.anyOf = schema.oneOf;
+  delete schema.oneOf;
+}
 
 // Strict mode treats any schema declaring `properties` as an object, even when
 // an explicit `type: 'object'` is omitted (common in MCP-style schemas).

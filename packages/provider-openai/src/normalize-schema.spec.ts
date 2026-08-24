@@ -79,7 +79,7 @@ describe('normalizeSchemaForOpenAI', () => {
     });
   });
 
-  it('adds a null branch to optional oneOf properties', () => {
+  it('converts optional oneOf properties to nullable anyOf', () => {
     expect(
       normalizeSchemaForOpenAI({
         type: 'object',
@@ -93,13 +93,13 @@ describe('normalizeSchemaForOpenAI', () => {
       required: ['value'],
       properties: {
         value: {
-          oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'null' }],
+          anyOf: [{ type: 'string' }, { type: 'number' }, { type: 'null' }],
         },
       },
     });
   });
 
-  it('leaves oneOf properties that already allow null unchanged', () => {
+  it('converts oneOf properties that already allow null to anyOf', () => {
     expect(
       normalizeSchemaForOpenAI({
         type: 'object',
@@ -112,7 +112,7 @@ describe('normalizeSchemaForOpenAI', () => {
       additionalProperties: false,
       required: ['value'],
       properties: {
-        value: { oneOf: [{ type: 'string' }, { type: 'null' }] },
+        value: { anyOf: [{ type: 'string' }, { type: 'null' }] },
       },
     });
   });
@@ -446,6 +446,22 @@ describe('normalizeSchemaForOpenAI', () => {
     expect(
       normalizeSchemaForOpenAI({ type: 'string', format: 'date-time' }),
     ).toEqual({ type: 'string', format: 'date-time' });
+  });
+
+  it('removes unsupported object property-count constraints', () => {
+    expect(
+      normalizeSchemaForOpenAI({
+        type: 'object',
+        minProperties: 1,
+        maxProperties: 50,
+        properties: { label: { type: 'string' } },
+      }),
+    ).toEqual({
+      type: 'object',
+      additionalProperties: false,
+      required: ['label'],
+      properties: { label: { type: ['string', 'null'] } },
+    });
   });
 
   it('recurses into array items', () => {
