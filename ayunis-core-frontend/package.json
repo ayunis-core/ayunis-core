@@ -21,9 +21,9 @@
     "deps:check:strict": "dependency-cruiser src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
-    "@ayunis/ui": "workspace:*",
     "@appsignal/javascript": "^1.6.1",
     "@appsignal/plugin-window-events": "^1.0.26",
+    "@ayunis/ui": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -51,6 +51,7 @@
     "i18next": "^26.3.4",
     "i18next-browser-languagedetector": "^8.2.0",
     "lucide-react": "^0.476.0",
+    "maplibre-gl": "^6.3.0",
     "mermaid": "^11.16.0",
     "pdfjs-dist": "^5.5.207",
     "react": "^19.2.7",
@@ -73,6 +74,7 @@
     "@eslint/js": "^9.39.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
+    "@types/geojson": "^7946.0.16",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",

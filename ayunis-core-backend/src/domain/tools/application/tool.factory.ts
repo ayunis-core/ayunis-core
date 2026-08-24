@@ -38,6 +38,7 @@ import { CreateDiagramTool } from '../domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from '../domain/tools/update-diagram-tool.entity';
 import { CreateSpreadsheetTool } from '../domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from '../domain/tools/update-spreadsheet-tool.entity';
+import { MapTool } from '../domain/tools/map-tool.entity';
 
 type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
@@ -49,6 +50,7 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.BAR_CHART]: () => new BarChartTool(),
   [ToolType.LINE_CHART]: () => new LineChartTool(),
   [ToolType.PIE_CHART]: () => new PieChartTool(),
+  [ToolType.MAP]: () => new MapTool(),
   [ToolType.CREATE_SKILL]: () => new CreateSkillTool(),
   [ToolType.CREATE_DOCUMENT]: () => new CreateDocumentTool(),
   [ToolType.UPDATE_DOCUMENT]: () => new UpdateDocumentTool(),

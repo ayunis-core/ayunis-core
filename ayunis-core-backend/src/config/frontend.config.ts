@@ -20,6 +20,8 @@ export const FRONTEND_RUNTIME_KEYS = [
   'VITE_PLAUSIBLE_SRC',
   'VITE_GTM_CONTAINER_ID',
   'VITE_USERCENTRICS_SETTINGS_ID',
+  'VITE_MAP_BASEMAP_TILE_URL',
+  'VITE_MAP_BASEMAP_ATTRIBUTION',
 ] as const;
 
 export const frontendConfig = registerAs(

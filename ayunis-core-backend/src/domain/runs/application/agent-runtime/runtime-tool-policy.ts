@@ -8,6 +8,7 @@ import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spre
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
@@ -18,6 +19,7 @@ export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   return (
     tool instanceof BarChartTool ||
     tool instanceof LineChartTool ||
+    tool instanceof MapTool ||
     tool instanceof PieChartTool
   );
 }

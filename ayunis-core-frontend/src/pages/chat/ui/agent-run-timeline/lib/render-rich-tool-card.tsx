@@ -6,6 +6,7 @@ import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalend
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
+import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 import { renderArtifactToolWidget } from '@/pages/chat/ui/chat-widgets/renderArtifactToolWidget';
 import {
   BarChartWidget,
@@ -51,6 +52,10 @@ export function renderRichToolCard({
       return <LineChartWidget content={toolUse} isStreaming={isStreaming} />;
     case 'pie_chart':
       return <PieChartWidget content={toolUse} isStreaming={isStreaming} />;
+    case 'map':
+      return (
+        <LazyGeoJsonMapWidget content={toolUse} isStreaming={isStreaming} />
+      );
     case 'generate_image':
       return (
         <GenerateImageWidget
