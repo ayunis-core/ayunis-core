@@ -10,7 +10,7 @@ import { User } from 'src/iam/users/domain/user.entity';
 import type { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { UUID } from 'crypto';
-import { EntityManager, Repository, ILike, In } from 'typeorm';
+import { EntityManager, Repository, ILike, In, IsNull } from 'typeorm';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { UserMapper } from 'src/iam/users/infrastructure/repositories/local/mappers/user.mapper';
 import {
@@ -286,12 +286,17 @@ export class LocalUsersRepository extends UsersRepository {
 
   async update(user: User): Promise<User> {
     this.logger.info({ userId: user.id }, 'update');
-    // Verify user exists
-    const existingUser = await this.users.findOne({
-      where: { id: user.id },
-    });
-
-    if (!existingUser) {
+    const userEntity = UserMapper.toEntity(user);
+    userEntity.updatedAt = new Date();
+    const result = await this.users
+      .createQueryBuilder()
+      .update(UserRecord)
+      .set(userEntity)
+      .where('id = :userId', { userId: user.id })
+      .returning('*')
+      .execute();
+    const savedUserEntity = (result.raw as UserRecord[]).at(0);
+    if (!savedUserEntity) {
       this.logger.warn(
         {
           userId: user.id,
@@ -300,9 +305,6 @@ export class LocalUsersRepository extends UsersRepository {
       );
       throw new UserNotFoundError(user.id);
     }
-
-    const userEntity = UserMapper.toEntity(user);
-    const savedUserEntity = await this.users.save(userEntity);
     this.logger.debug(
       {
         userId: savedUserEntity.id,
@@ -310,6 +312,67 @@ export class LocalUsersRepository extends UsersRepository {
       'User updated successfully',
     );
     return UserMapper.toDomain(savedUserEntity);
+  }
+
+  async registerFailedLoginAttempt(
+    userId: UUID,
+    attemptedAt: Date,
+    windowStartedAfter: Date,
+    lockThreshold: number,
+  ): Promise<number | null> {
+    const threshold = Math.max(1, Math.floor(lockThreshold));
+    const windowExpired =
+      '("failedLoginWindowStartedAt" IS NULL OR ' +
+      '"failedLoginWindowStartedAt" < :windowStartedAfter::timestamptz)';
+    const nextAttempts =
+      `(CASE WHEN ${windowExpired} THEN 1 ` +
+      'ELSE "failedLoginAttempts" + 1 END)';
+
+    const result = await this.users
+      .createQueryBuilder()
+      .update(UserRecord)
+      .set({
+        failedLoginAttempts: () => nextAttempts,
+        failedLoginWindowStartedAt: () =>
+          `(CASE WHEN ${windowExpired} ` +
+          'THEN :attemptedAt::timestamptz ' +
+          'ELSE "failedLoginWindowStartedAt" END)',
+        lockedAt: () =>
+          `(CASE WHEN ${nextAttempts} >= ${threshold} ` +
+          'THEN :attemptedAt::timestamptz ELSE "lockedAt" END)',
+      })
+      .setParameters({
+        attemptedAt: attemptedAt.toISOString(),
+        windowStartedAfter: windowStartedAfter.toISOString(),
+      })
+      .where('id = :userId', { userId })
+      .andWhere('"lockedAt" IS NULL')
+      .returning('"failedLoginAttempts"')
+      .execute();
+
+    const raw = result.raw as Array<{ failedLoginAttempts?: unknown }>;
+    const attempts = raw[0]?.failedLoginAttempts;
+    return typeof attempts === 'number' ? attempts : null;
+  }
+
+  async resetFailedLoginAttempts(userId: UUID): Promise<boolean> {
+    const result = await this.users.update(
+      { id: userId, lockedAt: IsNull() },
+      { failedLoginAttempts: 0, failedLoginWindowStartedAt: null },
+    );
+    return result.affected === 1;
+  }
+
+  async clearLoginLock(userId: UUID): Promise<boolean> {
+    const result = await this.users.update(
+      { id: userId },
+      {
+        failedLoginAttempts: 0,
+        failedLoginWindowStartedAt: null,
+        lockedAt: null,
+      },
+    );
+    return result.affected === 1;
   }
 
   async delete(id: UUID): Promise<void> {

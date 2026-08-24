@@ -21,4 +21,26 @@ describe('User persistence', () => {
 
     expect(index).toBeDefined();
   });
+
+  it('persists the account lockout state on the user record', () => {
+    const lockoutColumns = getMetadataArgsStorage()
+      .columns.filter((column) => column.target === UserRecord)
+      .filter((column) =>
+        [
+          'failedLoginAttempts',
+          'failedLoginWindowStartedAt',
+          'lockedAt',
+        ].includes(column.propertyName),
+      );
+
+    expect(
+      lockoutColumns
+        .map((column) => column.propertyName)
+        .sort((first, second) => first.localeCompare(second)),
+    ).toEqual([
+      'failedLoginAttempts',
+      'failedLoginWindowStartedAt',
+      'lockedAt',
+    ]);
+  });
 });
