@@ -9,23 +9,24 @@ import {
   McpPrompt,
   McpToolCall,
   McpToolResult,
-} from '../ports/mcp-client.port';
-import { McpCredentialEncryptionPort } from '../ports/mcp-credential-encryption.port';
-import { McpIntegrationUserConfigRepositoryPort } from '../ports/mcp-integration-user-config.repository.port';
-import { McpIntegration } from '../../domain/mcp-integration.entity';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+  McpRequestOptions,
+} from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   ConfigField,
   isSystemFixedField,
-} from '../../domain/value-objects/integration-config-schema';
-import { BearerMcpIntegrationAuth } from '../../domain/auth/bearer-mcp-integration-auth.entity';
-import { CustomHeaderMcpIntegrationAuth } from '../../domain/auth/custom-header-mcp-integration-auth.entity';
-import { OAuthMcpIntegrationAuth } from '../../domain/auth/oauth-mcp-integration-auth.entity';
+} from 'src/domain/mcp/domain/value-objects/integration-config-schema';
+import { BearerMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/bearer-mcp-integration-auth.entity';
+import { CustomHeaderMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/custom-header-mcp-integration-auth.entity';
+import { OAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/oauth-mcp-integration-auth.entity';
 import {
   McpAuthenticationError,
   McpUserAuthorizationRequiredError,
-} from '../mcp.errors';
-import { McpOAuthUserTokenRepositoryPort } from '../ports/mcp-oauth-user-token.repository.port';
+} from 'src/domain/mcp/application/mcp.errors';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
 import { McpCapabilityCacheService } from './mcp-capability-cache.service';
 import { handleMcpOperationError } from './mcp-operation-error';
 
@@ -302,11 +303,12 @@ export class McpClientService {
   async listTools(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpTool[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listTools(config);
+      return await this.mcpClient.listTools(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(error, integration, 'listTools', userId);
@@ -317,11 +319,12 @@ export class McpClientService {
   async listResources(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpResource[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listResources(config);
+      return await this.mcpClient.listResources(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(
@@ -344,11 +347,12 @@ export class McpClientService {
   async listResourceTemplates(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpResource[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listResourceTemplates(config);
+      return await this.mcpClient.listResourceTemplates(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(
@@ -371,11 +375,12 @@ export class McpClientService {
   async listPrompts(
     integration: McpIntegration,
     userId?: UUID,
+    options?: McpRequestOptions,
   ): Promise<McpPrompt[]> {
     const config = await this.buildConnectionConfig(integration, userId);
 
     try {
-      return await this.mcpClient.listPrompts(config);
+      return await this.mcpClient.listPrompts(config, options);
     } catch (error) {
       if (this.isMethodNotFoundError(error)) return [];
       await this.handleOperationError(

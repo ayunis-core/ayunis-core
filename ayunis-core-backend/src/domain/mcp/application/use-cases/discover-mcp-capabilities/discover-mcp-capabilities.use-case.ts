@@ -1,37 +1,43 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import {
   McpTool as McpToolDto,
   McpResource as McpResourceDto,
   McpPrompt as McpPromptDto,
-} from '../../ports/mcp-client.port';
-import { McpClientService } from '../../services/mcp-client.service';
+  McpRequestOptions,
+} from 'src/domain/mcp/application/ports/mcp-client.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import {
   DiscoveredCapabilities,
   McpCapabilityCacheService,
-} from '../../services/mcp-capability-cache.service';
+} from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
   McpIntegrationAccessDeniedError,
   McpIntegrationDisabledError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { McpIntegration } from '../../../domain/mcp-integration.entity';
-import { McpTool } from '../../../domain/mcp-tool.entity';
+import { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
+import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import {
   McpResource,
   ResourceArgument,
-} from '../../../domain/mcp-resource.entity';
-import { McpPrompt, PromptArgument } from '../../../domain/mcp-prompt.entity';
+} from 'src/domain/mcp/domain/mcp-resource.entity';
+import {
+  McpPrompt,
+  PromptArgument,
+} from 'src/domain/mcp/domain/mcp-prompt.entity';
 import { UUID } from 'crypto';
 
 /**
  * Result interface containing discovered capabilities
  */
+const CAPABILITY_DISCOVERY_OPTIONS: McpRequestOptions = { timeout: 10000 };
+
 export interface CapabilitiesResult {
   tools: McpTool[];
   resources: McpResource[];
@@ -117,10 +123,26 @@ export class DiscoverMcpCapabilitiesUseCase {
     }
 
     const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-      this.mcpClientService.listTools(integration, userId),
-      this.mcpClientService.listResources(integration, userId),
-      this.mcpClientService.listResourceTemplates(integration, userId),
-      this.mcpClientService.listPrompts(integration, userId),
+      this.mcpClientService.listTools(
+        integration,
+        userId,
+        CAPABILITY_DISCOVERY_OPTIONS,
+      ),
+      this.mcpClientService.listResources(
+        integration,
+        userId,
+        CAPABILITY_DISCOVERY_OPTIONS,
+      ),
+      this.mcpClientService.listResourceTemplates(
+        integration,
+        userId,
+        CAPABILITY_DISCOVERY_OPTIONS,
+      ),
+      this.mcpClientService.listPrompts(
+        integration,
+        userId,
+        CAPABILITY_DISCOVERY_OPTIONS,
+      ),
     ]);
 
     return { tools, resources, resourceTemplates, prompts };

@@ -13,16 +13,17 @@ import {
   McpPrompt,
   McpToolCall,
   McpToolResult,
-} from '../../application/ports/mcp-client.port';
+  McpRequestOptions,
+} from 'src/domain/mcp/application/ports/mcp-client.port';
 import { McpOAuthProviderFactory } from './mcp-oauth-provider.factory';
-import { McpIntegrationsRepositoryPort } from '../../application/ports/mcp-integrations.repository.port';
-import { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import type { UUID } from 'crypto';
-import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
+import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
-} from '../../application/mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { McpClientPoolService } from './mcp-client-pool.service';
@@ -71,8 +72,9 @@ function isTimeoutOrAbortError(error: unknown, depth = 0): boolean {
  * Adapter that wraps @modelcontextprotocol/sdk to provide MCP client functionality.
  *
  * Reuses connections with the same server and authentication configuration,
- * closing them after one minute without an active operation. Each request
- * still has a 30-second SDK timeout.
+ * closing them after one minute without an active operation. Capability
+ * discovery uses a 10-second timeout so an unavailable integration does not
+ * hold up a run; explicit validation and runtime operations retain 30 seconds.
  *
  * Uses Streamable HTTP transport for HTTP-based connections (MCP protocol 2024-11-05+).
  */
@@ -94,23 +96,35 @@ export class McpSdkClientAdapter extends McpClientPort {
   /**
    * List all tools available on the MCP server
    */
-  async listTools(config: McpConnectionConfig): Promise<McpTool[]> {
-    return this.withClient(config, async (client) => {
-      const result = await client.listTools(undefined, this.requestOptions);
-
-      return result.tools;
-    });
+  async listTools(
+    config: McpConnectionConfig,
+    options: McpRequestOptions = this.requestOptions,
+  ): Promise<McpTool[]> {
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.listTools(undefined, options);
+        return result.tools;
+      },
+      options,
+    );
   }
 
   /**
    * List all resources available on the MCP server
    */
-  async listResources(config: McpConnectionConfig): Promise<McpResource[]> {
-    return this.withClient(config, async (client) => {
-      const result = await client.listResources(undefined, this.requestOptions);
-
-      return result.resources;
-    });
+  async listResources(
+    config: McpConnectionConfig,
+    options: McpRequestOptions = this.requestOptions,
+  ): Promise<McpResource[]> {
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.listResources(undefined, options);
+        return result.resources;
+      },
+      options,
+    );
   }
 
   /**
@@ -118,31 +132,38 @@ export class McpSdkClientAdapter extends McpClientPort {
    */
   async listResourceTemplates(
     config: McpConnectionConfig,
+    options: McpRequestOptions = this.requestOptions,
   ): Promise<McpResource[]> {
-    return this.withClient(config, async (client) => {
-      const result = await client.listResourceTemplates(
-        undefined,
-        this.requestOptions,
-      );
-
-      return result.resourceTemplates.map((resourceTemplate) => ({
-        uri: resourceTemplate.uriTemplate,
-        name: resourceTemplate.name,
-        description: resourceTemplate.description,
-        mimeType: resourceTemplate.mimeType,
-      }));
-    });
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.listResourceTemplates(undefined, options);
+        return result.resourceTemplates.map((resourceTemplate) => ({
+          uri: resourceTemplate.uriTemplate,
+          name: resourceTemplate.name,
+          description: resourceTemplate.description,
+          mimeType: resourceTemplate.mimeType,
+        }));
+      },
+      options,
+    );
   }
 
   /**
    * List all prompt templates available on the MCP server
    */
-  async listPrompts(config: McpConnectionConfig): Promise<McpPrompt[]> {
-    return this.withClient(config, async (client) => {
-      const result = await client.listPrompts(undefined, this.requestOptions);
-
-      return result.prompts;
-    });
+  async listPrompts(
+    config: McpConnectionConfig,
+    options: McpRequestOptions = this.requestOptions,
+  ): Promise<McpPrompt[]> {
+    return this.withClient(
+      config,
+      async (client) => {
+        const result = await client.listPrompts(undefined, options);
+        return result.prompts;
+      },
+      options,
+    );
   }
 
   /**
@@ -226,21 +247,24 @@ export class McpSdkClientAdapter extends McpClientPort {
   private async withClient<T>(
     config: McpConnectionConfig,
     operation: (client: Client) => Promise<T>,
+    requestOptions = this.requestOptions,
   ): Promise<T> {
     try {
       return await this.clientPool.withClient(
         config,
-        () => this.createClient(config),
+        () => this.createClient(config, requestOptions),
         operation,
+        { connectTimeout: requestOptions.timeout },
       );
     } catch (error) {
-      throw this.toOperationError(error, config);
+      throw this.toOperationError(error, config, requestOptions.timeout);
     }
   }
 
   private toOperationError(
     error: unknown,
     config: McpConnectionConfig,
+    timeoutMs: number,
   ): unknown {
     // Transport errnos (timeouts beyond the SDK's own codes, DNS, reset,
     // broken pipe) must not escape raw either: their raw span duplicates
@@ -251,11 +275,7 @@ export class McpSdkClientAdapter extends McpClientPort {
       isTimeoutOrAbortError(error) ||
       transport?.failureClass === ProviderFailureClass.TIMEOUT
     ) {
-      return new McpConnectionTimeoutError(
-        config.serverUrl,
-        this.requestOptions.timeout,
-        error,
-      );
+      return new McpConnectionTimeoutError(config.serverUrl, timeoutMs, error);
     }
     if (transport?.failureClass === ProviderFailureClass.CONNECTION) {
       return new McpConnectionFailedError(config.serverUrl, error);
@@ -299,7 +319,10 @@ export class McpSdkClientAdapter extends McpClientPort {
   /**
    * Create and connect a new MCP client
    */
-  private async createClient(config: McpConnectionConfig): Promise<Client> {
+  private async createClient(
+    config: McpConnectionConfig,
+    requestOptions: { timeout: number },
+  ): Promise<Client> {
     // Create Streamable HTTP transport (MCP protocol 2024-11-05+)
     // Only pass requestInit with headers when we have headers to add
     // Otherwise, let the SDK handle the default headers (Accept, Content-Type, etc.)
@@ -325,7 +348,7 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
 
     // Connect to server (covers the initialize handshake with the same timeout)
-    await client.connect(transport, this.requestOptions);
+    await client.connect(transport, requestOptions);
 
     return client;
   }

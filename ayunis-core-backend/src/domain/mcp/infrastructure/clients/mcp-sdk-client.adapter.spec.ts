@@ -5,13 +5,13 @@ import {
 } from '@modelcontextprotocol/client';
 import { McpSdkClientAdapter } from './mcp-sdk-client.adapter';
 import { McpClientPoolService } from './mcp-client-pool.service';
-import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
+import type { McpConnectionConfig } from 'src/domain/mcp/application/ports/mcp-client.port';
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
-} from '../../application/mcp.errors';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
+} from 'src/domain/mcp/application/mcp.errors';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
 
 jest.mock('@modelcontextprotocol/client', () => ({
@@ -20,6 +20,7 @@ jest.mock('@modelcontextprotocol/client', () => ({
 }));
 
 const REQUEST_TIMEOUT = { timeout: 30000 };
+const CAPABILITY_DISCOVERY_TIMEOUT = { timeout: 10000 };
 
 describe('McpSdkClientAdapter', () => {
   let adapter: McpSdkClientAdapter;
@@ -152,7 +153,7 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('enforces the timeout through the SDK request options', async () => {
+    it('uses the full timeout unless the caller supplies a shorter budget', async () => {
       await adapter.listTools(config);
 
       expect(clientMock.connect).toHaveBeenCalledWith(
@@ -164,33 +165,46 @@ describe('McpSdkClientAdapter', () => {
         REQUEST_TIMEOUT,
       );
     });
+
+    it('enforces a caller-supplied discovery timeout', async () => {
+      await adapter.listTools(config, CAPABILITY_DISCOVERY_TIMEOUT);
+
+      expect(clientMock.connect).toHaveBeenCalledWith(
+        expect.anything(),
+        CAPABILITY_DISCOVERY_TIMEOUT,
+      );
+      expect(clientMock.listTools).toHaveBeenCalledWith(
+        undefined,
+        CAPABILITY_DISCOVERY_TIMEOUT,
+      );
+    });
   });
 
   describe('request timeout forwarding', () => {
     it('passes the timeout to listResources', async () => {
-      await adapter.listResources(config);
+      await adapter.listResources(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listResources).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
     it('passes the timeout to listResourceTemplates', async () => {
-      await adapter.listResourceTemplates(config);
+      await adapter.listResourceTemplates(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listResourceTemplates).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
     it('passes the timeout to listPrompts', async () => {
-      await adapter.listPrompts(config);
+      await adapter.listPrompts(config, CAPABILITY_DISCOVERY_TIMEOUT);
 
       expect(clientMock.listPrompts).toHaveBeenCalledWith(
         undefined,
-        REQUEST_TIMEOUT,
+        CAPABILITY_DISCOVERY_TIMEOUT,
       );
     });
 
@@ -278,12 +292,12 @@ describe('McpSdkClientAdapter', () => {
       );
     });
 
-    it('produces a user-presentable message naming the 30s budget', async () => {
+    it('produces a user-presentable message naming the discovery budget', async () => {
       clientMock.listTools.mockRejectedValue(buildDomAbortError());
 
-      await expect(adapter.listTools(config)).rejects.toThrow(
-        /did not respond within 30s/,
-      );
+      await expect(
+        adapter.listTools(config, CAPABILITY_DISCOVERY_TIMEOUT),
+      ).rejects.toThrow(/did not respond within 10s/);
     });
 
     it('keeps the original error on the non-serialized cause', async () => {
@@ -396,6 +410,19 @@ describe('McpSdkClientAdapter', () => {
   });
 
   describe('validateConnection', () => {
+    it('keeps the full request timeout for explicit validation', async () => {
+      await adapter.validateConnection(config);
+
+      expect(clientMock.connect).toHaveBeenCalledWith(
+        expect.anything(),
+        REQUEST_TIMEOUT,
+      );
+      expect(clientMock.listTools).toHaveBeenCalledWith(
+        undefined,
+        REQUEST_TIMEOUT,
+      );
+    });
+
     it('reports the connection as valid when all listings succeed', async () => {
       await expect(adapter.validateConnection(config)).resolves.toEqual({
         valid: true,
