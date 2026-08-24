@@ -1,11 +1,13 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 
-export { InvalidPageMarginsError } from '../domain/letterhead.errors';
+export { InvalidPageMarginsError } from 'src/domain/letterheads/domain/letterhead.errors';
 
 export enum LetterheadErrorCode {
   LETTERHEAD_NOT_FOUND = 'LETTERHEAD_NOT_FOUND',
   LETTERHEAD_INVALID_PDF = 'LETTERHEAD_INVALID_PDF',
+  LETTERHEAD_PDF_NOT_SINGLE_PAGE = 'LETTERHEAD_PDF_NOT_SINGLE_PAGE',
+  LETTERHEAD_PDF_PASSWORD_PROTECTED = 'LETTERHEAD_PDF_PASSWORD_PROTECTED',
   LETTERHEAD_ORG_MISMATCH = 'LETTERHEAD_ORG_MISMATCH',
   UNEXPECTED_LETTERHEAD_ERROR = 'UNEXPECTED_LETTERHEAD_ERROR',
 }
@@ -39,6 +41,28 @@ export class LetterheadInvalidPdfError extends LetterheadError {
       LetterheadErrorCode.LETTERHEAD_INVALID_PDF,
       400,
       metadata,
+    );
+  }
+}
+
+export class LetterheadPdfNotSinglePageError extends LetterheadError {
+  constructor(label: string, pageCount: number, metadata?: ErrorMetadata) {
+    super(
+      `Letterhead PDF must be exactly 1 page, but the ${label} PDF has ${pageCount}`,
+      LetterheadErrorCode.LETTERHEAD_PDF_NOT_SINGLE_PAGE,
+      400,
+      { label, pageCount, ...metadata },
+    );
+  }
+}
+
+export class LetterheadPdfPasswordProtectedError extends LetterheadError {
+  constructor(label: string, metadata?: ErrorMetadata) {
+    super(
+      `The ${label} PDF is protected with a password and cannot be opened`,
+      LetterheadErrorCode.LETTERHEAD_PDF_PASSWORD_PROTECTED,
+      400,
+      { label, ...metadata },
     );
   }
 }

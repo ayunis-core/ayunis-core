@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { LetterheadsRepository } from './application/ports/letterheads-repository.port';
 import { LocalLetterheadsRepositoryModule } from './infrastructure/persistence/local/local-letterheads-repository.module';
 import { LocalLetterheadsRepository } from './infrastructure/persistence/local/local-letterheads.repository';
-import { StorageModule } from '../storage/storage.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
 import { LetterheadPdfService } from './application/services/letterhead-pdf.service';
+import { PdfNormalizerService } from './application/services/pdf-normalizer.service';
 import { CreateLetterheadUseCase } from './application/use-cases/create-letterhead/create-letterhead.use-case';
 import { FindAllLetterheadsUseCase } from './application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import { FindLetterheadUseCase } from './application/use-cases/find-letterhead/find-letterhead.use-case';
@@ -21,6 +22,7 @@ import { LetterheadDtoMapper } from './presenters/http/mappers/letterhead-dto.ma
       useExisting: LocalLetterheadsRepository,
     },
     LetterheadPdfService,
+    PdfNormalizerService,
     CreateLetterheadUseCase,
     FindAllLetterheadsUseCase,
     FindLetterheadUseCase,

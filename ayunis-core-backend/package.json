@@ -99,6 +99,7 @@
     "minio": "^8.0.5",
     "mjml": "^4.7.1",
     "multer": "^2.2.0",
+    "mupdf": "^1.28.0",
     "nest-commander": "^3.19.1",
     "nestjs-cls": "^6.0.1",
     "nestjs-pino": "^4.6.1",
