@@ -203,6 +203,15 @@ npm run seed:minimal:ts
 
 This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.
 
+The seed also creates a shared-skill knowledge-base scenario for manual access testing:
+
+- Admin: `admin@demo.local` / `admin`
+- Member: `shared-skill-viewer@demo.local` / `admin`
+- Shared skill: `Geteiltes Bürgerwissen`
+- Shared knowledge base: `Geteiltes Bürgerwissen`
+
+Sign in as the member and open `/knowledge-bases`. Select the shared tab and verify that the seeded knowledge base is listed with its shared badge. To test the workspace path, enable `FEATURE_WORKSPACES_ENABLED`, create a workspace as the member, open its **Wissen** tab, and use **Hinzufügen** to verify that the shared knowledge base is available.
+
 ## 🎯 First steps
 
 - Create an account

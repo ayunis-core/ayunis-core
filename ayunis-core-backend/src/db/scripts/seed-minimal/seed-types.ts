@@ -16,6 +16,7 @@ export type {
   KnowledgeBaseFixture,
   SeedDocumentFixture,
   SkillFixture,
+  SharedSkillKnowledgeBaseFixture,
   WorkspaceFixture,
 } from 'src/db/fixtures/minimal-fixture.types';
 
