@@ -10772,27 +10772,6 @@
         "tags": ["Authentication"]
       }
     },
-    "/auth/logout": {
-      "post": {
-        "description": "Log out the current user by clearing authentication cookies.",
-        "operationId": "AuthenticationController_logout",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Logout successful. Authentication cookies are cleared.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "User logout",
-        "tags": ["Authentication"]
-      }
-    },
     "/auth/mfa/verify": {
       "post": {
         "description": "Requires the MFA pending cookie set by successful authentication.",
@@ -11674,26 +11653,6 @@
         "tags": ["SSO"]
       }
     },
-    "/auth/sso/session/logout": {
-      "post": {
-        "operationId": "SsoLoginController_logout",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SsoLogoutResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Revoke the Core session and prepare broker logout",
-        "tags": ["SSO"]
-      }
-    },
     "/auth/sso/oidc/backchannel-logout": {
       "post": {
         "operationId": "SsoLoginController_backchannelLogout",
@@ -11715,6 +11674,26 @@
         },
         "summary": "Process a signed broker back-channel logout",
         "tags": ["SSO"]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "LogoutController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke the current session and log out",
+        "tags": ["Authentication"]
       }
     }
   },
@@ -20342,7 +20321,17 @@
         },
         "required": ["authorizationUrl"]
       },
-      "SsoLogoutResponseDto": {
+      "SsoBackchannelLogoutRequestDto": {
+        "type": "object",
+        "properties": {
+          "logout_token": {
+            "type": "string",
+            "description": "Signed OpenID Connect logout token"
+          }
+        },
+        "required": ["logout_token"]
+      },
+      "LogoutResponseDto": {
         "type": "object",
         "properties": {
           "success": {
@@ -20356,16 +20345,6 @@
           }
         },
         "required": ["success", "brokerLogoutUrl"]
-      },
-      "SsoBackchannelLogoutRequestDto": {
-        "type": "object",
-        "properties": {
-          "logout_token": {
-            "type": "string",
-            "description": "Signed OpenID Connect logout token"
-          }
-        },
-        "required": ["logout_token"]
       }
     }
   }

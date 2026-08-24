@@ -20,7 +20,7 @@ import {
   ApiUnauthorizedResponse,
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
-import { LocalAuthGuard } from '../../application/guards/local-auth.guard';
+import { LocalAuthGuard } from 'src/iam/authentication/application/guards/local-auth.guard';
 import { Public } from 'src/common/guards/public.guard';
 import { RegisterDto } from './dtos/register.dto';
 import { LoginDto } from './dtos/login.dto';
@@ -32,7 +32,7 @@ import {
 } from './dtos/auth-response.dto';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   setCookies,
   clearCookies,
@@ -43,17 +43,14 @@ import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/applica
 
 const LOGIN_BODY_DESCRIPTION = 'User credentials for authentication';
 
-// Import use cases
-import { LoginUseCase } from '../../application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token/refresh-token.use-case';
-import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
-import { GetCurrentUserUseCase } from '../../application/use-cases/get-current-user/get-current-user.use-case';
-import { RevokeSessionFamilyUseCase } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.use-case';
-import { RevokeSessionFamilyCommand } from 'src/iam/sessions/application/use-cases/revoke-session-family/revoke-session-family.command';
-import { LoginCommand } from '../../application/use-cases/login/login.command';
-import { RefreshTokenCommand } from '../../application/use-cases/refresh-token/refresh-token.command';
-import { RegisterUserCommand } from '../../application/use-cases/register-user/register-user.command';
-import { GetCurrentUserCommand } from '../../application/use-cases/get-current-user/get-current-user.command';
+import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
+import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
+import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
+import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
+import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
+import { RegisterUserCommand } from 'src/iam/authentication/application/use-cases/register-user/register-user.command';
+import { GetCurrentUserCommand } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.command';
 import { MeResponseDtoMapper } from './mappers/me-response-dto.mapper';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
@@ -68,7 +65,6 @@ export class AuthenticationController {
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
-    private readonly revokeSessionFamilyUseCase: RevokeSessionFamilyUseCase,
     private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
     private readonly configService: ConfigService,
     private readonly meResponseDtoMapper: MeResponseDtoMapper,
@@ -372,37 +368,5 @@ export class AuthenticationController {
         message: 'Not authenticated',
       });
     }
-  }
-
-  @Public()
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'User logout',
-    description: 'Log out the current user by clearing authentication cookies.',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Logout successful. Authentication cookies are cleared.',
-    type: SuccessResponseDto,
-  })
-  async logout(@Req() req: Request, @Res() res: Response) {
-    const refreshTokenName = this.configService.get<string>(
-      'auth.cookie.refreshTokenName',
-      'refresh_token',
-    );
-    const cookies = req.cookies as Record<string, string>;
-    const refreshToken = cookies[refreshTokenName];
-
-    if (refreshToken) {
-      // Revoke the whole family so the session cannot be resurrected via a
-      // still-live refresh token on another device sharing this login.
-      await this.revokeSessionFamilyUseCase.execute(
-        new RevokeSessionFamilyCommand(refreshToken),
-      );
-    }
-
-    clearCookies(res, this.configService);
-    return res.json({ success: true });
   }
 }

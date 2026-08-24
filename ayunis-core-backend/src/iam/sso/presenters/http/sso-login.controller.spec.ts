@@ -5,7 +5,6 @@ import type { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/u
 import type { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discover-org-sso/discover-org-sso.use-case';
 import type { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import type { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
-import type { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
 import type { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
 import {
   SsoAccountLinkRequiredError,
@@ -25,7 +24,6 @@ describe(SsoLoginController.name, () => {
   const start = { execute: jest.fn() };
   const completeAuthentication = { execute: jest.fn() };
   const startLink = { execute: jest.fn() };
-  const completeLogout = { execute: jest.fn() };
   const handleBackchannelLogout = { execute: jest.fn() };
   const configService = {
     get: jest.fn().mockImplementation((_key, defaultValue) => defaultValue),
@@ -40,7 +38,6 @@ describe(SsoLoginController.name, () => {
     start as unknown as StartOrgSsoLoginUseCase,
     completeAuthentication as unknown as CompleteSsoAuthenticationUseCase,
     startLink as unknown as StartSsoAccountLinkUseCase,
-    completeLogout as unknown as CompleteSsoLogoutUseCase,
     handleBackchannelLogout as unknown as HandleSsoBackchannelLogoutUseCase,
     configService as never,
   );
@@ -49,10 +46,23 @@ describe(SsoLoginController.name, () => {
     jest.clearAllMocks();
   });
 
-  it('gates employee-facing SSO routes behind the SSO login feature', () => {
-    expect(Reflect.getMetadata(FEATURE_KEY, SsoLoginController)).toBe(
-      FeatureFlag.SsoLogin,
-    );
+  it('keeps logout available while gating SSO-only routes', () => {
+    const gatedHandlers = [
+      controller.discover,
+      controller.start,
+      controller.startLink,
+      controller.callback,
+      controller.backchannelLogout,
+    ];
+
+    expect(
+      Reflect.getMetadata(FEATURE_KEY, SsoLoginController),
+    ).toBeUndefined();
+    for (const handler of gatedHandlers) {
+      expect(Reflect.getMetadata(FEATURE_KEY, handler)).toBe(
+        FeatureFlag.SsoLogin,
+      );
+    }
   });
 
   it('returns only the organization routing result for email discovery', async () => {
@@ -292,42 +302,6 @@ describe(SsoLoginController.name, () => {
       statusCode: 302,
     });
     expect(reportUnexpectedError).toHaveBeenCalledWith(error);
-  });
-
-  it('clears Core cookies and returns the optional broker logout URL', async () => {
-    completeLogout.execute.mockResolvedValue({
-      brokerLogoutUrl: 'https://sso.ayunis.de/oidc/v1/end_session',
-    });
-    const request = {
-      cookies: { refresh_token: 'refresh-token' },
-    } as unknown as Request;
-
-    await expect(controller.logout(request, response)).resolves.toEqual({
-      success: true,
-      brokerLogoutUrl: 'https://sso.ayunis.de/oidc/v1/end_session',
-    });
-    expect(completeLogout.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ refreshToken: 'refresh-token' }),
-    );
-    expect(response.clearCookie).toHaveBeenCalledWith(
-      'refresh_token',
-      expect.any(Object),
-    );
-  });
-
-  it('clears Core cookies when logout completion fails', async () => {
-    completeLogout.execute.mockRejectedValue(new Error('broker unavailable'));
-    const request = {
-      cookies: { refresh_token: 'refresh-token' },
-    } as unknown as Request;
-
-    await expect(controller.logout(request, response)).rejects.toThrow(
-      'broker unavailable',
-    );
-    expect(response.clearCookie).toHaveBeenCalledWith(
-      'refresh_token',
-      expect.any(Object),
-    );
   });
 
   it('passes the signed broker logout token to the back-channel boundary', async () => {

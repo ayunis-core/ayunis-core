@@ -117,6 +117,7 @@ import type {
   LetterheadResponseDto,
   LoginDto,
   LoginResponseDto,
+  LogoutResponseDto,
   MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
   MarketplaceSkillResponseDto,
@@ -189,7 +190,6 @@ import type {
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
-  SsoLogoutResponseDto,
   SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
@@ -22203,70 +22203,6 @@ export function useAuthenticationControllerMe<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * Log out the current user by clearing authentication cookies.
- * @summary User logout
- */
-export const authenticationControllerLogout = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SuccessResponseDto>(
-      {url: `/auth/logout`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getAuthenticationControllerLogoutMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerLogout>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerLogout>>, TError,void, TContext> => {
-
-const mutationKey = ['authenticationControllerLogout'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authenticationControllerLogout>>, void> = () => {
-          
-
-          return  authenticationControllerLogout()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthenticationControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof authenticationControllerLogout>>>
-    
-    export type AuthenticationControllerLogoutMutationError = unknown
-
-    /**
- * @summary User logout
- */
-export const useAuthenticationControllerLogout = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticationControllerLogout>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof authenticationControllerLogout>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getAuthenticationControllerLogoutMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
  * Requires the MFA pending cookie set by successful authentication.
  * @summary Complete login with a TOTP or recovery code
  */
@@ -24578,69 +24514,6 @@ export function useSsoLoginControllerCallback<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * @summary Revoke the Core session and prepare broker logout
- */
-export const ssoLoginControllerLogout = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<SsoLogoutResponseDto>(
-      {url: `/auth/sso/session/logout`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getSsoLoginControllerLogoutMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext> => {
-
-const mutationKey = ['ssoLoginControllerLogout'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, void> = () => {
-          
-
-          return  ssoLoginControllerLogout()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SsoLoginControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof ssoLoginControllerLogout>>>
-    
-    export type SsoLoginControllerLogoutMutationError = unknown
-
-    /**
- * @summary Revoke the Core session and prepare broker logout
- */
-export const useSsoLoginControllerLogout = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ssoLoginControllerLogout>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ssoLoginControllerLogout>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getSsoLoginControllerLogoutMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
  * @summary Process a signed broker back-channel logout
  */
 export const ssoLoginControllerBackchannelLogout = (
@@ -24703,6 +24576,69 @@ export const useSsoLoginControllerBackchannelLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getSsoLoginControllerBackchannelLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke the current session and log out
+ */
+export const logoutControllerLogout = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<LogoutResponseDto>(
+      {url: `/auth/logout`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getLogoutControllerLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext> => {
+
+const mutationKey = ['logoutControllerLogout'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutControllerLogout>>, void> = () => {
+          
+
+          return  logoutControllerLogout()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logoutControllerLogout>>>
+    
+    export type LogoutControllerLogoutMutationError = unknown
+
+    /**
+ * @summary Revoke the current session and log out
+ */
+export const useLogoutControllerLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutControllerLogout>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logoutControllerLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getLogoutControllerLogoutMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

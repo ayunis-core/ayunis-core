@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SsoLogoutResponseDto {
+export class LogoutResponseDto {
   @ApiProperty({ example: true })
   success: true;
 

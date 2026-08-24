@@ -19,7 +19,7 @@ const {
 }));
 
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
-  useSsoLoginControllerLogout: () => ({ mutate, isPending: false }),
+  useLogoutControllerLogout: () => ({ mutate, isPending: false }),
 }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
 vi.mock('@/shared/lib/appsignal', () => ({ clearAppsignalTags }));

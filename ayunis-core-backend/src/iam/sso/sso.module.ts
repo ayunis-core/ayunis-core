@@ -34,6 +34,7 @@ import { PostgresSsoProvisioningLock } from 'src/iam/sso/infrastructure/persiste
 import { ProvisionOrgSsoUserUseCase } from 'src/iam/sso/application/use-cases/provision-org-sso-user/provision-org-sso-user.use-case';
 import { CompleteSsoAuthenticationUseCase } from 'src/iam/sso/application/use-cases/complete-sso-authentication/complete-sso-authentication.use-case';
 import { SsoLoginController } from 'src/iam/sso/presenters/http/sso-login.controller';
+import { LogoutController } from 'src/iam/sso/presenters/http/logout.controller';
 import { SsoAuthorizationTransactionService } from 'src/iam/sso/application/services/sso-authorization-transaction.service';
 import { StartSsoAccountLinkUseCase } from 'src/iam/sso/application/use-cases/start-sso-account-link/start-sso-account-link.use-case';
 import { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-cases/link-federated-identity/link-federated-identity.use-case';
@@ -55,7 +56,11 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
     UsersModule,
     SessionsModule,
   ],
-  controllers: [SuperAdminSsoConnectionsController, SsoLoginController],
+  controllers: [
+    SuperAdminSsoConnectionsController,
+    SsoLoginController,
+    LogoutController,
+  ],
   providers: [
     OrgSsoConnectionMapper,
     FederatedIdentityMapper,
