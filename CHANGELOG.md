@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.30.2](https://github.com/ayunis-core/ayunis-core/compare/v2.30.1...v2.30.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* **models:** log Azure server diagnostics (AYC-827) ([#1517](https://github.com/ayunis-core/ayunis-core/issues/1517)) ([6c68ebf](https://github.com/ayunis-core/ayunis-core/commit/6c68ebff249e2bfc7978d348d32a788bd92fcb10))
+* **runtime:** retry empty provider responses (AYC-806) ([#1516](https://github.com/ayunis-core/ayunis-core/issues/1516)) ([cfe151b](https://github.com/ayunis-core/ayunis-core/commit/cfe151ba5bbc9d45b75f71e3e78503328e4cb9e5))
+
 ## [2.30.1](https://github.com/ayunis-core/ayunis-core/compare/v2.30.0...v2.30.1) (2026-08-24)
 
 
