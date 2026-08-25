@@ -42,8 +42,12 @@ the runtime loop or the provider's streamed chunks.
 Generic exceptions from a model provider become `PROVIDER_FAILED`. If a host
 provider boundary throws an `AgentRuntimeError`, the runtime preserves its
 stable `code`, `message`, and serializable `details` in the emitted error event
-instead. A completed model call whose tool-call arguments did not arrive
-intact — unparseable JSON, or a token-limit finish while tool calls were being
+instead. A stream that completes without assistant content is retried once.
+`afterModelCall` hooks run for every completed attempt so usage is retained,
+while assistant output is exposed only after a non-empty response. A repeated
+empty response ends as `PROVIDER_FAILED`. A completed model call whose
+tool-call arguments did not arrive intact — unparseable JSON, or a token-limit
+finish while tool calls were being
 emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
 through `modelCallInterrupted`, so hosts can persist its intact text and
 thinking. Three consecutive tool *phases* in which one tool fails with the

@@ -20,35 +20,25 @@ import { ChunkAccumulator } from './accumulator';
  * arrive, and returns the assembled assistant message. Provider failures
  * are wrapped in ProviderError; an aborted signal throws RunAbortedError.
  */
-export async function* streamModelCall(params: {
+interface ModelCallParams {
   model: ModelProvider;
   request: ProviderRequest;
   onInterrupted: (interruption: {
     message: AssistantMessage;
     reason: ModelCallInterruptionReason;
   }) => Promise<void>;
-}): AsyncGenerator<RunEventPayload, ModelCallResult> {
+}
+
+export async function* streamModelCall(
+  params: ModelCallParams,
+): AsyncGenerator<RunEventPayload, ModelCallResult> {
   const accumulator = new ChunkAccumulator();
   let completed = false;
   let result: ModelCallResult | null = null;
   let interruptionError: AgentRuntimeError | undefined;
   let interruptionReason: ModelCallInterruptionReason = 'consumer_abandoned';
   try {
-    const stream = openStream(params.model, params.request);
-    for await (const chunk of stream) {
-      const toolCallSnapshots = accumulator.accept(chunk);
-      yield* deltaEvents(chunk, toolCallSnapshots);
-      if (params.request.signal?.aborted) {
-        throw new RunAbortedError('Run aborted during model call');
-      }
-    }
-    result = accumulator.finalize();
-    for (const toolCall of result.invalidToolCallSnapshots) {
-      yield { type: 'tool_call_snapshot', toolCall };
-    }
-    // Inside the interruption boundary: a malformed turn must still fire
-    // modelCallInterrupted, whose hook persists the turn's intact text and
-    // thinking (tool calls are excluded from the partial message anyway).
+    result = yield* collectModelCall(params, accumulator);
     assertToolCallsIntact(result);
     completed = true;
   } catch (error) {
@@ -65,7 +55,25 @@ export async function* streamModelCall(params: {
       interruptionError,
     );
   }
-  // The try block either assigned `result` or threw — TS narrows accordingly.
+  return result;
+}
+
+async function* collectModelCall(
+  params: ModelCallParams,
+  accumulator: ChunkAccumulator,
+): AsyncGenerator<RunEventPayload, ModelCallResult> {
+  const stream = openStream(params.model, params.request);
+  for await (const chunk of stream) {
+    const toolCallSnapshots = accumulator.accept(chunk);
+    yield* deltaEvents(chunk, toolCallSnapshots);
+    if (params.request.signal?.aborted) {
+      throw new RunAbortedError('Run aborted during model call');
+    }
+  }
+  const result = accumulator.finalize();
+  for (const toolCall of result.invalidToolCallSnapshots) {
+    yield { type: 'tool_call_snapshot', toolCall };
+  }
   return result;
 }
 
