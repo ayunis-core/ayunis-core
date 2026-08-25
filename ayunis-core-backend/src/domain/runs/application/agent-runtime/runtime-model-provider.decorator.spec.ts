@@ -10,7 +10,7 @@ import type { UUID } from 'crypto';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { InferenceCompletedEvent } from '../events/inference-completed.event';
+import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
 
 const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -32,7 +32,7 @@ interface Harness {
   logger: ReturnType<typeof createPinoLoggerMock>;
 }
 
-function buildHarness(): Harness {
+function buildHarness(runtimeModel: LanguageModel = model): Harness {
   const emitAsync = jest.fn().mockResolvedValue([]);
   const logger = createPinoLoggerMock();
   const decorator = new RuntimeModelProviderDecorator(
@@ -43,7 +43,7 @@ function buildHarness(): Harness {
   );
   return {
     decorate: (provider) =>
-      decorator.decorate(provider, { userId, orgId, model }),
+      decorator.decorate(provider, { userId, orgId, model: runtimeModel }),
     emitAsync,
     logger,
   };
@@ -248,6 +248,31 @@ describe('RuntimeModelProviderDecorator', () => {
       jest.useRealTimers();
     },
   );
+
+  it('logs safe diagnostics for Azure server failures', async () => {
+    const upstream = Object.assign(new Error('service unavailable'), {
+      status: 503,
+      requestID: 'req_azure_503',
+    });
+    const azureModel = {
+      name: 'gpt-5.6-luna',
+      provider: 'azure',
+    } as LanguageModel;
+    const { decorate, logger } = buildHarness(azureModel);
+
+    await expect(collect(decorate(throwingProvider(upstream)))).rejects.toThrow(
+      'Provider azure returned a server error',
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'azure',
+        modelId: 'gpt-5.6-luna',
+        upstreamStatus: 503,
+        upstreamRequestId: 'req_azure_503',
+      }),
+      'Provider unavailable during runtime inference',
+    );
+  });
 
   it('records safe provider diagnostics without the raw provider message', async () => {
     const upstream = Object.assign(

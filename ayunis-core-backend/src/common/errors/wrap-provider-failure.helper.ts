@@ -1,5 +1,5 @@
 import { ApplicationError } from './base.error';
-import { extractUpstreamStatus } from './extract-upstream-status.helper';
+import { extractProviderErrorDiagnostics } from './extract-provider-error-diagnostics.helper';
 import { classifyTransportError } from './provider-transport-error.classifier';
 import type { ProviderUnavailableError } from './provider.errors';
 import {
@@ -48,9 +48,16 @@ function wrapByUpstreamStatus(
   error: unknown,
   source: ProviderFailureSource,
 ): ProviderUnavailableError | undefined {
-  const status = extractUpstreamStatus(error);
+  const diagnostics = extractProviderErrorDiagnostics(error);
+  const status = diagnostics.upstreamStatus;
   if (status === undefined) return undefined;
-  const context = { ...source, upstreamStatus: status };
+  const context = {
+    ...source,
+    upstreamStatus: status,
+    ...(diagnostics.upstreamRequestId && {
+      upstreamRequestId: diagnostics.upstreamRequestId,
+    }),
+  };
   if (status === 504 || status === 408) {
     return new ProviderTimeoutError(context, error);
   }

@@ -155,6 +155,9 @@ function toProviderContext(
     ...(typeof context.upstreamStatus === 'number' && {
       upstreamStatus: context.upstreamStatus,
     }),
+    ...(typeof context.upstreamRequestId === 'string' && {
+      upstreamRequestId: context.upstreamRequestId,
+    }),
   };
 }
 

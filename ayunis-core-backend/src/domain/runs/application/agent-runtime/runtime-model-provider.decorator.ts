@@ -12,6 +12,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { extractProviderErrorDiagnostics } from 'src/common/errors/extract-provider-error-diagnostics.helper';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -31,8 +32,8 @@ import {
   ModelErrorCode,
 } from 'src/domain/models/application/models.errors';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { InferenceCompletedEvent } from '../events/inference-completed.event';
-import { extractInferenceErrorInfo } from '../helpers/extract-inference-error-info.helper';
+import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
+import { extractInferenceErrorInfo } from 'src/domain/runs/application/helpers/extract-inference-error-info.helper';
 import { serializeRuntimeModelError } from './runtime-model-error';
 
 interface RuntimeModelCallContext {
@@ -153,12 +154,20 @@ export class RuntimeModelProviderDecorator {
     context: RuntimeModelCallContext,
     mappedError: ApplicationError,
   ): void {
-    if (
-      error instanceof ApplicationError ||
-      !(mappedError instanceof InferenceFailedError)
-    ) {
+    if (error instanceof ApplicationError) return;
+    if (mappedError instanceof ProviderUnavailableError) {
+      this.logger.error(
+        {
+          ...mappedError.context,
+          messageCount: request.messages.length,
+          toolCount: request.tools.length,
+          toolChoice: request.toolChoice,
+        },
+        'Provider unavailable during runtime inference',
+      );
       return;
     }
+    if (!(mappedError instanceof InferenceFailedError)) return;
     const diagnostics = extractProviderErrorDiagnostics(error);
     this.logger.error(
       {
