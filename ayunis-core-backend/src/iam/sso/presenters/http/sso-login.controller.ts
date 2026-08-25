@@ -172,7 +172,6 @@ export class SsoLoginController {
   }
 
   @Public()
-  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 3000, windowMs: 15 * 60 * 1000 })
   @Post('oidc/backchannel-logout')
   @HttpCode(HttpStatus.OK)

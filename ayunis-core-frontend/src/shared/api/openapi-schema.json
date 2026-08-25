@@ -20326,7 +20326,8 @@
         "properties": {
           "logout_token": {
             "type": "string",
-            "description": "Signed OpenID Connect logout token"
+            "description": "Signed OpenID Connect logout token",
+            "maxLength": 16384
           }
         },
         "required": ["logout_token"]
