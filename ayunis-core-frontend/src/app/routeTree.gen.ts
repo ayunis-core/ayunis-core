@@ -36,6 +36,7 @@ import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/
 import { Route as AuthenticatedSettingsGeneralRouteImport } from './routes/_authenticated/settings.general'
 import { Route as AuthenticatedSettingsChatRouteImport } from './routes/_authenticated/settings.chat'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedPrototypeChatContextRouteImport } from './routes/_authenticated/prototype.chat-context'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
 import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authenticated/chats.$threadId'
 import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
@@ -219,6 +220,12 @@ const AuthenticatedSettingsAccountRoute =
   AuthenticatedSettingsAccountRouteImport.update({
     id: '/settings/account',
     path: '/settings/account',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPrototypeChatContextRoute =
+  AuthenticatedPrototypeChatContextRouteImport.update({
+    id: '/prototype/chat-context',
+    path: '/prototype/chat-context',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedKnowledgeBasesIdRoute =
@@ -465,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/prototype/chat-context': typeof AuthenticatedPrototypeChatContextRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -528,6 +536,7 @@ export interface FileRoutesByTo {
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/prototype/chat-context': typeof AuthenticatedPrototypeChatContextRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -594,6 +603,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/_authenticated/prototype/chat-context': typeof AuthenticatedPrototypeChatContextRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/chat': typeof AuthenticatedSettingsChatRoute
   '/_authenticated/settings/general': typeof AuthenticatedSettingsGeneralRoute
@@ -660,6 +670,7 @@ export interface FileRouteTypes {
     | '/admin-settings/users'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
+    | '/prototype/chat-context'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
@@ -723,6 +734,7 @@ export interface FileRouteTypes {
     | '/admin-settings/users'
     | '/chats/$threadId'
     | '/knowledge-bases/$id'
+    | '/prototype/chat-context'
     | '/settings/account'
     | '/settings/chat'
     | '/settings/general'
@@ -788,6 +800,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/users'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/knowledge-bases/$id'
+    | '/_authenticated/prototype/chat-context'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/chat'
     | '/_authenticated/settings/general'
@@ -1029,6 +1042,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/account'
       fullPath: '/settings/account'
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/prototype/chat-context': {
+      id: '/_authenticated/prototype/chat-context'
+      path: '/prototype/chat-context'
+      fullPath: '/prototype/chat-context'
+      preLoaderRoute: typeof AuthenticatedPrototypeChatContextRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/knowledge-bases/$id': {
@@ -1348,6 +1368,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedPrototypeChatContextRoute: typeof AuthenticatedPrototypeChatContextRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsChatRoute: typeof AuthenticatedSettingsChatRoute
   AuthenticatedSettingsGeneralRoute: typeof AuthenticatedSettingsGeneralRoute
@@ -1383,6 +1404,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedPrototypeChatContextRoute:
+    AuthenticatedPrototypeChatContextRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
   AuthenticatedSettingsChatRoute: AuthenticatedSettingsChatRoute,
   AuthenticatedSettingsGeneralRoute: AuthenticatedSettingsGeneralRoute,
