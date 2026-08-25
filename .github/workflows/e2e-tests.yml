@@ -301,6 +301,26 @@ jobs:
           E2E_API_URL: http://localhost:3000
           E2E_MAIL_URL: http://localhost:1080
 
+      - name: Start backend with SSO login disabled
+        working-directory: ayunis-core-backend
+        run: |
+          FEATURE_SSO_LOGIN_ENABLED=false \
+            PORT=3001 \
+            FRONTEND_BASEURL=http://localhost:3001 \
+            CORS_ALLOWED_ORIGINS=http://localhost:3001 \
+            nohup node dist/src/main > backend-sso-disabled.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:3001/api/health; do sleep 2; done' \
+            || { cat backend-sso-disabled.log; exit 1; }
+
+      - name: Test logout lifecycle with SSO login disabled
+        run: >-
+          pnpm --filter ayunis-core-e2e exec playwright test
+          --project=sso-disabled
+        env:
+          E2E_BASE_URL: http://localhost:3001
+          E2E_API_URL: http://localhost:3001
+          E2E_MAIL_URL: http://localhost:1080
+
       # -- Temporary PR media ------------------------------------------------
       # Scene code lives on pr-media/pr-<n> instead of the product branch.
       # This job runs PR/scene code with read-only permissions; publishing
@@ -393,7 +413,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-log
-          path: ayunis-core-backend/backend.log
+          path: |
+            ayunis-core-backend/backend.log
+            ayunis-core-backend/backend-sso-disabled.log
           retention-days: 7
 
   publish-pr-media:

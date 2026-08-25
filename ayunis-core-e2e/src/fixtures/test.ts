@@ -10,6 +10,7 @@ interface TestFixtures {
   // Authenticated API context for the worker org's admin — use for test
   // setup and side-effect assertions, not for the behaviour under test.
   api: APIRequestContext;
+  publicApi: APIRequestContext;
   // Mailcatcher client for awaiting emails and extracting link tokens.
   mail: MailcatcherClient;
   // Opt-out for the page-error guard: test.use({ allowPageErrors: true }).
@@ -46,6 +47,12 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
       baseURL: config.apiURL,
       storageState: org.storageState,
     });
+    await use(context);
+    await context.dispose();
+  },
+
+  publicApi: async ({}, use) => {
+    const context = await apiRequest.newContext({ baseURL: config.apiURL });
     await use(context);
     await context.dispose();
   },

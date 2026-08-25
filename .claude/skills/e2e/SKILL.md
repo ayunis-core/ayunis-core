@@ -62,6 +62,8 @@ import { test, expect } from '../../src/fixtures/test';
 - `api` — authenticated `APIRequestContext` for setup and side-effect
   assertions (e.g. assert a toggle persisted via `GET`), not for the
   behaviour under test.
+- `publicApi` — unauthenticated `APIRequestContext` for public-endpoint
+  behaviour against the backend API URL.
 - `mail` — Mailcatcher client; `mail.extractLinkToken(email, '/accept-invite')`
   polls for the email and pulls the token from the frontend link.
 - `pageErrorGuard` (auto) — any uncaught page error fails the test. Opt out

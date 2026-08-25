@@ -5391,7 +5391,10 @@ export interface SsoAuthorizationResponseDto {
 }
 
 export interface SsoBackchannelLogoutRequestDto {
-  /** Signed OpenID Connect logout token */
+  /**
+   * Signed OpenID Connect logout token
+   * @maxLength 16384
+   */
   logout_token: string;
 }
 

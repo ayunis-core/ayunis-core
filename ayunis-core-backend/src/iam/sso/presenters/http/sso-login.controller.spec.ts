@@ -46,13 +46,12 @@ describe(SsoLoginController.name, () => {
     jest.clearAllMocks();
   });
 
-  it('keeps logout available while gating SSO-only routes', () => {
+  it('keeps lifecycle routes available while gating SSO entry routes', () => {
     const gatedHandlers = [
       controller.discover,
       controller.start,
       controller.startLink,
       controller.callback,
-      controller.backchannelLogout,
     ];
 
     expect(
@@ -63,6 +62,9 @@ describe(SsoLoginController.name, () => {
         FeatureFlag.SsoLogin,
       );
     }
+    expect(
+      Reflect.getMetadata(FEATURE_KEY, controller.backchannelLogout),
+    ).toBeUndefined();
   });
 
   it('returns only the organization routing result for email discovery', async () => {
