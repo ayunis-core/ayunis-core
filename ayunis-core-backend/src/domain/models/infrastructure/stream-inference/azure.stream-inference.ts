@@ -4,9 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { azure } from '@ayunis/provider-openai';
 import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import { RuntimeStreamInferenceHandler } from '../runtime/runtime-stream-inference.handler';
-import type { Model } from '../../domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from '../runtime/inference-config';
+import { RuntimeStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-stream-inference.handler';
+import type { Model } from 'src/domain/models/domain/model.entity';
+import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class AzureStreamInferenceHandler extends RuntimeStreamInferenceHandler {

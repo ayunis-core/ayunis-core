@@ -41,13 +41,17 @@ describe('wrapProviderFailure', () => {
     );
   });
 
-  it('wraps upstream 5xx responses as ProviderServerError with the status', () => {
+  it('wraps upstream 5xx responses with safe provider diagnostics', () => {
     const error = Object.assign(new Error('service unavailable'), {
       status: 503,
+      requestID: 'req_azure_503',
     });
     const wrapped = wrapProviderFailure(error, source);
     expect(wrapped).toBeInstanceOf(ProviderServerError);
-    expect(wrapped?.context.upstreamStatus).toBe(503);
+    expect(wrapped?.context).toMatchObject({
+      upstreamStatus: 503,
+      upstreamRequestId: 'req_azure_503',
+    });
   });
 
   it('wraps upstream 504 and 408 as ProviderTimeoutError', () => {

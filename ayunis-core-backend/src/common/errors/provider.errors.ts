@@ -27,6 +27,8 @@ export interface ProviderErrorContext {
   underlyingCode?: string;
   /** HTTP status the provider responded with, when it responded at all */
   upstreamStatus?: number;
+  /** Provider-assigned request id safe to share with support. */
+  upstreamRequestId?: string;
 }
 
 export const PROVIDER_UNAVAILABLE_PREFIX = 'PROVIDER_UNAVAILABLE';
