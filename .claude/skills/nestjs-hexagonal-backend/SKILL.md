@@ -162,6 +162,10 @@ throw new NotFoundException(); // ✗ HTTP exception
 
 For schema changes, use the `typeorm-migrations` skill. Never write migrations by hand — always auto-generate from entity changes.
 
+## Persistence Queries
+
+When creating or modifying repositories, finders, QueryBuilder code, or database calls in loops, load the `persistence-query-review` skill. Count the complete call path's database round trips and prefer an atomic database operation when it preserves the same behavior.
+
 ## Completion Checklist
 
 - [ ] `pnpm exec eslint <touched-files>` passes (avoid `pnpm run lint` — it's wired with `--fix`)
@@ -174,6 +178,7 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 - [ ] New entities have proper mappers
 - [ ] New module has a `SUMMARY.md` at its root (the repo convention; missing files are flagged by Bugbot)
 - [ ] New stateful or reusable responsibilities are extracted into dedicated module services
+- [ ] Changed persistence paths have no avoidable round trips, check-then-act races, or N+1 queries
 
 ## Anti-Patterns
 
