@@ -1,7 +1,11 @@
 import type { RunEventPayload } from '../contracts/event';
 import type { Message, ToolUseContent } from '../contracts/message';
 import type { ProviderRequest, Usage } from '../contracts/provider';
-import { ProviderError, RepeatedToolFailureError } from '../contracts/errors';
+import {
+  ProviderError,
+  RepeatedToolFailureError,
+  RunAbortedError,
+} from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
 import {
@@ -52,22 +56,7 @@ async function* runIteration(
     return { status: 'aborted' };
   }
   applyPendingMutations(state);
-  const result = yield* streamModelCall({
-    model: state.model,
-    request: assembleRequest(state),
-    onInterrupted: (interruption) =>
-      state.hookRunner.modelCallInterrupted({
-        iteration,
-        ...interruption,
-      }),
-  });
-  addUsage(state, result.usage);
-  await state.hookRunner.afterModelCall({
-    iteration,
-    message: result.message,
-    usage: result.usage,
-    finishReason: result.finishReason,
-  });
+  const result = yield* callModelWithEmptyRetry(state, iteration);
   assertProviderReturnedContent(result);
   state.messages.push(result.message);
   const toolCalls = getToolUseContents(result.message);
@@ -84,6 +73,51 @@ async function* runIteration(
   if (isSignalAborted(state)) return { status: 'aborted' };
   yield* runToolPhase(state, iteration, toolCalls, breaker);
   return completionAfterToolPhase(state, exitAfterToolPhase);
+}
+
+const MAX_EMPTY_RESPONSE_ATTEMPTS = 2;
+
+async function* callModelWithEmptyRetry(
+  state: RunState,
+  iteration: number,
+): AsyncGenerator<RunEventPayload, ModelCallResult> {
+  for (let attempt = 1; ; attempt++) {
+    const result = yield* callModel(state, iteration);
+    addUsage(state, result.usage);
+    if (result.message.content.length > 0) {
+      await runAfterModelCall(state, iteration, result);
+      return result;
+    }
+    await runAfterModelCall(state, iteration, result);
+    if (isAborted(state)) throw new RunAbortedError();
+    if (attempt >= MAX_EMPTY_RESPONSE_ATTEMPTS) return result;
+    applyPendingMutations(state);
+  }
+}
+
+function runAfterModelCall(
+  state: RunState,
+  iteration: number,
+  result: ModelCallResult,
+): Promise<void> {
+  return state.hookRunner.afterModelCall({
+    iteration,
+    message: result.message,
+    usage: result.usage,
+    finishReason: result.finishReason,
+  });
+}
+
+function callModel(
+  state: RunState,
+  iteration: number,
+): AsyncGenerator<RunEventPayload, ModelCallResult> {
+  return streamModelCall({
+    model: state.model,
+    request: assembleRequest(state),
+    onInterrupted: (interruption) =>
+      state.hookRunner.modelCallInterrupted({ iteration, ...interruption }),
+  });
 }
 
 const completionAfterToolPhase = (

@@ -704,11 +704,100 @@ describe('the agent loop', () => {
     expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'error' });
   });
 
-  it('rejects a provider response without assistant content', async () => {
-    const model = new MockProvider([[]]);
+  it('retries an empty provider response before failing the run', async () => {
+    const model = new MockProvider([[], textTurn('Recovered')]);
 
     const events = await collectEvents(baseInput(model));
 
+    expect(model.requests).toHaveLength(2);
+    expect(
+      events.find((event) => event.type === 'assistant_message'),
+    ).toMatchObject({
+      message: {
+        content: [{ type: 'text', text: 'Recovered' }],
+      },
+    });
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+    });
+  });
+
+  it('retains usage from an empty attempt that recovers', async () => {
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+      textTurn('Recovered', { inputTokens: 15, outputTokens: 4 }),
+    ]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
+      usage: { inputTokens: 27, outputTokens: 4 },
+    });
+  });
+
+  it('retains empty-attempt usage when the retry fails', async () => {
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+    ]);
+    const firstStream = model.stream.bind(model);
+    model.stream = (request) => {
+      if (model.requests.length === 0) return firstStream(request);
+      throw new Error('retry failed');
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'usage-observer', afterModelCall }],
+      }),
+    );
+
+    expect(afterModelCall).toHaveBeenCalledWith(
+      expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
+    );
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'error',
+      usage: { inputTokens: 12, outputTokens: 0 },
+    });
+  });
+
+  it('records an empty attempt without retrying after cancellation', async () => {
+    const controller = new AbortController();
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([
+      [{ finishReason: 'stop', usage: { inputTokens: 12, outputTokens: 0 } }],
+    ]);
+    const firstStream = model.stream.bind(model);
+    model.stream = async function* (request) {
+      yield* firstStream(request);
+      controller.abort();
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'usage-observer', afterModelCall }],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(model.requests).toHaveLength(1);
+    expect(afterModelCall).toHaveBeenCalledWith(
+      expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
+    );
+    expect(eventTypes(events)).toEqual(['run_start', 'run_end']);
+    expect(events.at(-1)).toMatchObject({ type: 'run_end', status: 'aborted' });
+  });
+
+  it('rejects repeated provider responses without assistant content', async () => {
+    const model = new MockProvider([[], []]);
+
+    const events = await collectEvents(baseInput(model));
+
+    expect(model.requests).toHaveLength(2);
     expect(eventTypes(events)).toEqual(['run_start', 'error', 'run_end']);
     expect(events.find((event) => event.type === 'error')).toMatchObject({
       code: 'PROVIDER_FAILED',
@@ -772,8 +861,9 @@ describe('the agent loop', () => {
       }),
     );
 
-    expect(afterModelCall).toHaveBeenCalledTimes(1);
-    expect(afterModelCall).toHaveBeenCalledWith(
+    expect(afterModelCall).toHaveBeenCalledTimes(2);
+    expect(afterModelCall).toHaveBeenNthCalledWith(
+      1,
       expect.objectContaining({ usage: { inputTokens: 12, outputTokens: 0 } }),
     );
     expect(events.at(-1)).toMatchObject({

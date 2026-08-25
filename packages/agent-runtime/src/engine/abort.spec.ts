@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AgentRuntimeError } from '../contracts/errors';
 import type { Hook } from '../contracts/hook';
@@ -245,6 +245,30 @@ describe('abort handling', () => {
     expect(events.at(-1)).toMatchObject({
       type: 'run_end',
       status: 'aborted',
+    });
+  });
+
+  it('persists a completed turn when the signal aborts as its stream closes', async () => {
+    const controller = new AbortController();
+    const afterModelCall = vi.fn();
+    const model = new MockProvider([textTurn('Final answer')]);
+    const stream = model.stream.bind(model);
+    model.stream = async function* (request) {
+      yield* stream(request);
+      controller.abort();
+    };
+
+    const events = await collectEvents(
+      baseInput(model, {
+        hooks: [{ name: 'persistence', afterModelCall }],
+        signal: controller.signal,
+      }),
+    );
+
+    expect(afterModelCall).toHaveBeenCalledTimes(1);
+    expect(events.at(-1)).toMatchObject({
+      type: 'run_end',
+      status: 'completed',
     });
   });
 
