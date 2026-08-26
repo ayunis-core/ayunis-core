@@ -44,8 +44,9 @@ The whole module sits behind the `workspacesEnabled` feature flag
 - **Creation** — `CreateWorkspaceUseCase` saves the workspace, then calls
   `AddFavoriteUseCase` so new workspaces appear in the user's favorites.
 - **Context assignments** — workspace skills and knowledge bases are reference-only join rows into shared module-owned records. Direct workspace documents are owned uploads: adding one creates a source and a workspace-source assignment, while removal/deletion passes that source through `DeleteSourceUseCase` so indexed data and object-storage files are purged.
-- **Run context** — `BuildWorkspaceRunContextUseCase` resolves the workspace's
-  instruction, skills, knowledge bases, documents and MCP integrations. The
+- **Run context** — `BuildWorkspaceRunContextUseCase` requires `use` access and
+  resolves the workspace's instruction, skills, knowledge bases, documents and
+  MCP integrations through `WorkspaceRunContextResolverService`. The
   runs module merges that context into tool assembly and the system prompt for
   chats whose `Thread.workspaceId` is set.
 
@@ -65,6 +66,7 @@ workspaces/
 │   ├── events/
 │   │   └── workspace-deletion-requested.event.ts
 │   ├── services/workspace-access.service.ts
+│   ├── services/workspace-run-context-resolver.service.ts
 │   ├── ports/workspaces-repository.port.ts
 │   ├── ports/workspace-access-repository.port.ts
 │   ├── ports/workspace-members-repository.port.ts
