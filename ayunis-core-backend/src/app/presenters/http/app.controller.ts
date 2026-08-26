@@ -90,6 +90,7 @@ export class AppController {
       skillsEnabled: this.features.skillsEnabled,
       workspacesEnabled: this.features.workspacesEnabled,
       agentRuntimeEnabled: this.features.agentRuntimeEnabled,
+      deferredToolLoadingEnabled: this.features.deferredToolLoadingEnabled,
       ssoLoginEnabled: this.features.ssoLoginEnabled,
     };
   }

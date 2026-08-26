@@ -6,6 +6,7 @@ describe('featuresConfig', () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
     delete process.env.FEATURE_AGENT_RUNTIME_ENABLED;
+    delete process.env.FEATURE_DEFERRED_TOOL_LOADING_ENABLED;
     delete process.env.FEATURE_SSO_LOGIN_ENABLED;
   });
 
@@ -21,6 +22,16 @@ describe('featuresConfig', () => {
     process.env.FEATURE_AGENT_RUNTIME_ENABLED = 'true';
 
     expect(featuresConfig().agentRuntimeEnabled).toBe(true);
+  });
+
+  it('defaults deferred tool loading to disabled', () => {
+    expect(featuresConfig().deferredToolLoadingEnabled).toBe(false);
+  });
+
+  it('enables deferred tool loading only when explicitly true', () => {
+    process.env.FEATURE_DEFERRED_TOOL_LOADING_ENABLED = 'true';
+
+    expect(featuresConfig().deferredToolLoadingEnabled).toBe(true);
   });
 
   it('defaults user-facing SSO login to disabled', () => {

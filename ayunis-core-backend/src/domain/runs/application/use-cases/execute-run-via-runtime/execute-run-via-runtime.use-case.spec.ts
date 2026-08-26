@@ -38,6 +38,7 @@ import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { InitialToolContextService } from 'src/domain/runs/application/services/initial-tool-context.service';
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
@@ -303,6 +304,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThreadUseCase,
     inferenceUsageGuard,
     toolAssemblyService,
+    new InitialToolContextService(toolAssemblyService),
     backendToolAdapter,
     skillActivationService,
     anonymizeTextForThreadUseCase,

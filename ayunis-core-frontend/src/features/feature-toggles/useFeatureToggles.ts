@@ -10,6 +10,7 @@ export function useFeatureToggles(): FeatureTogglesResponseDto {
     skillsEnabled: data?.skillsEnabled ?? false,
     workspacesEnabled: data?.workspacesEnabled ?? false,
     agentRuntimeEnabled: data?.agentRuntimeEnabled ?? false,
+    deferredToolLoadingEnabled: data?.deferredToolLoadingEnabled ?? false,
     ssoLoginEnabled: data?.ssoLoginEnabled ?? false,
   };
 }

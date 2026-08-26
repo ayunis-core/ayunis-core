@@ -6,6 +6,7 @@ export enum FeatureFlag {
   Skills = 'skillsEnabled',
   Workspaces = 'workspacesEnabled',
   AgentRuntime = 'agentRuntimeEnabled',
+  DeferredToolLoading = 'deferredToolLoadingEnabled',
   SsoLogin = 'ssoLoginEnabled',
 }
 
@@ -45,6 +46,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
   // (AYC-148).
   agentRuntimeEnabled: parseBooleanWithDefault(
     process.env.FEATURE_AGENT_RUNTIME_ENABLED,
+    false,
+  ),
+  deferredToolLoadingEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_DEFERRED_TOOL_LOADING_ENABLED,
     false,
   ),
   ssoLoginEnabled: parseBooleanWithDefault(

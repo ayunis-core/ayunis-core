@@ -33,6 +33,9 @@ import { CreditLimitGuardService } from './application/services/credit-limit-gua
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
+import { ToolLoadingPolicyService } from './application/services/tool-loading-policy.service';
+import { DeferredToolLoadingService } from './application/services/deferred-tool-loading.service';
+import { InitialToolContextService } from './application/services/initial-tool-context.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -94,6 +97,9 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
     SendMessageRequestValidator,
     SystemPromptBuilderService,
     ToolAssemblyService,
+    ToolLoadingPolicyService,
+    DeferredToolLoadingService,
+    InitialToolContextService,
     ArtifactToolAssemblerService,
     McpToolAssemblerService,
     ToolResultCollectorService,

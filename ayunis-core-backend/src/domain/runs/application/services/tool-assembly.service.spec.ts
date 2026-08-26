@@ -9,6 +9,9 @@ import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/mod
 import { ToolAssemblyService } from './tool-assembly.service';
 import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
+import { ToolLoadingPolicyService } from './tool-loading-policy.service';
+import { DeferredToolLoadingService } from './deferred-tool-loading.service';
+import type { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 
 describe('ToolAssemblyService — image generation tool assembly', () => {
   const mockOrgId = randomUUID();
@@ -23,19 +26,19 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
   }
 
   function createMockTool(type: ToolType) {
-    return { type, name: type, description: `mock ${type}` };
+    return { type, name: type, description: `mock ${type}`, parameters: {} };
   }
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (13 params):
+   * Constructor order (15 params):
    *  0 configService, 1 assembleToolsUseCase, 2 mcpToolAssembler,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
    *  5 getUserSystemPromptUseCase, 6 getOrgSystemPromptUseCase,
    *  7 findActiveAlwaysOnTemplatesUseCase,
    *  8 features, 9 contextService,
    *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
-   *  12 getOrgChatSettingsUseCase
+   *  12 getOrgChatSettingsUseCase, 13 toolLoadingPolicyService, 14 logger
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -48,6 +51,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     systemPromptBuild?: jest.Mock;
     alwaysOnTemplatesExecute?: jest.Mock;
     skillsEnabled?: boolean;
+    deferredToolLoadingEnabled?: boolean;
   }) {
     const configService = {
       get: jest
@@ -84,7 +88,10 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       execute:
         overrides.alwaysOnTemplatesExecute ?? jest.fn().mockResolvedValue([]),
     };
-    const features = { skillsEnabled: overrides.skillsEnabled ?? false };
+    const features = {
+      skillsEnabled: overrides.skillsEnabled ?? false,
+      deferredToolLoadingEnabled: overrides.deferredToolLoadingEnabled ?? false,
+    };
     const contextService = {
       get: overrides.contextServiceGet ?? jest.fn().mockReturnValue(undefined),
     };
@@ -120,6 +127,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getPermittedImageGenerationModelUseCase,
       artifactToolAssembler,
       getOrgChatSettingsUseCase,
+      new DeferredToolLoadingService(
+        new ToolLoadingPolicyService(),
+        assembleToolsUseCase as unknown as AssembleToolUseCase,
+        createPinoLoggerMock(),
+      ),
       createPinoLoggerMock(),
     );
 
@@ -131,6 +143,67 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       getOrgChatSettingsUseCase,
     };
   }
+
+  it('defers infrequent tools behind load_tools when enabled', async () => {
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      deferredToolLoadingEnabled: true,
+      internetSearchIsAvailable: true,
+    });
+
+    const tools = await service.assembleTools(createMockThread(), new Map());
+
+    expect(tools.map((tool: { name: string }) => tool.name)).toEqual([
+      ToolType.CODE_EXECUTION,
+      ToolType.SEND_EMAIL,
+      ToolType.CREATE_CALENDAR_EVENT,
+      ToolType.WEBSITE_CONTENT,
+      ToolType.INTERNET_SEARCH,
+      ToolType.LOAD_TOOLS,
+    ]);
+  });
+
+  it('reserves load_tools against exact MCP name collisions', async () => {
+    const integrationId = randomUUID();
+    const { service } = await buildService({
+      contextServiceGet: jest.fn().mockReturnValue(mockOrgId),
+      deferredToolLoadingEnabled: true,
+      discoverMcpExecute: jest.fn().mockResolvedValue({
+        tools: [
+          {
+            name: ToolType.LOAD_TOOLS,
+            description: 'third-party tool',
+            inputSchema: { type: 'object', properties: {} },
+            integrationId,
+          },
+        ],
+        resources: [],
+        prompts: [],
+        returnsPii: false,
+      }),
+      mcpIntegrationsExecute: jest
+        .fn()
+        .mockResolvedValue([{ id: integrationId, name: 'Conflicting Tools' }]),
+    });
+    const thread = new Thread({
+      userId: randomUUID(),
+      messages: [],
+      mcpIntegrationIds: [integrationId],
+      sourceAssignments: [],
+    });
+
+    const tools = await service.assembleTools(
+      thread,
+      new Map(),
+      undefined,
+      new Map(),
+      new Set([ToolType.LOAD_TOOLS]),
+    );
+
+    expect(
+      tools.filter((tool: { name: string }) => tool.name === 'load_tools'),
+    ).toHaveLength(1);
+  });
 
   it('keeps MCP tools whose name only collides with a built-in after wire translation', async () => {
     const integrationId = randomUUID();

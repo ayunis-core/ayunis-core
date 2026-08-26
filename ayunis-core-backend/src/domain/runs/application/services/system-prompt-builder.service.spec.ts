@@ -41,6 +41,19 @@ describe('SystemPromptBuilderService', () => {
     });
   });
 
+  describe('tool usage section', () => {
+    it('instructs the model to load deferred tools before calling them', () => {
+      const prompt = service.build({
+        tools: [],
+        currentTime: new Date('2026-01-15T10:00:00Z'),
+      });
+
+      expect(prompt).toContain(
+        'If a needed tool is listed by load_tools but is not currently available, call load_tools first.',
+      );
+    });
+  });
+
   describe('anonymization section', () => {
     it('includes the anonymized_data section when isAnonymous is true', () => {
       const prompt = service.build({

@@ -14,6 +14,7 @@ describe('AppController', () => {
         skillsEnabled: true,
         workspacesEnabled: true,
         agentRuntimeEnabled,
+        deferredToolLoadingEnabled: false,
         ssoLoginEnabled: false,
       };
       const controller = new AppController(

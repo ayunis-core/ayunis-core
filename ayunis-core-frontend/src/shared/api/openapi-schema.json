@@ -11756,6 +11756,11 @@
             "description": "Whether runs use the independent agent runtime",
             "example": false
           },
+          "deferredToolLoadingEnabled": {
+            "type": "boolean",
+            "description": "Whether provider requests use deferred tool loading",
+            "example": false
+          },
           "ssoLoginEnabled": {
             "type": "boolean",
             "description": "Whether employee-facing SSO login is enabled",
@@ -11768,6 +11773,7 @@
           "skillsEnabled",
           "workspacesEnabled",
           "agentRuntimeEnabled",
+          "deferredToolLoadingEnabled",
           "ssoLoginEnabled"
         ]
       },

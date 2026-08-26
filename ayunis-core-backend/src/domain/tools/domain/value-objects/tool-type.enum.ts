@@ -16,6 +16,7 @@ export enum ToolType {
   MCP_RESOURCE = 'mcp_resource',
   MCP_PROMPT = 'mcp_prompt',
   ACTIVATE_SKILL = 'activate_skill',
+  LOAD_TOOLS = 'load_tools',
   CREATE_SKILL = 'create_skill',
   EDIT_SKILL = 'edit_skill',
   KNOWLEDGE_QUERY = 'knowledge_query',

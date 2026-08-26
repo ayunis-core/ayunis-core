@@ -6,17 +6,17 @@ import { SourceGetTextToolHandler } from './application/handlers/source-get-text
 import { ToolConfigRepository } from './application/ports/tool-config.repository';
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';
-import { SourcesModule } from '../sources/sources.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
 import { LocalToolConfigRepositoryModule } from './infrastructure/persistence/local/local-tool-config-repository.module';
 import { InternetSearchToolHandler } from './application/handlers/internet-search-tool.handler';
 import { WebsiteContentToolHandler } from './application/handlers/website-content-tool.handler';
-import { RetrieverModule } from '../retrievers/retriever.module';
+import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/tool-config.mapper';
 import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
 import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
-import { ThreadsModule } from '../threads/threads.module';
-import { McpModule } from '../mcp/mcp.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { McpModule } from 'src/domain/mcp/mcp.module';
 import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
 import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
 import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
@@ -30,14 +30,15 @@ import { CreateDiagramToolHandler } from './application/handlers/create-diagram-
 import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
 import { CreateSpreadsheetToolHandler } from './application/handlers/create-spreadsheet-tool.handler';
 import { UpdateSpreadsheetToolHandler } from './application/handlers/update-spreadsheet-tool.handler';
-import { SkillsModule } from '../skills/skills.module';
-import { KnowledgeBasesModule } from '../knowledge-bases/knowledge-bases.module';
-import { SkillTemplatesModule } from '../skill-templates/skill-templates.module';
-import { ArtifactsModule } from '../artifacts/artifacts.module';
+import { SkillsModule } from 'src/domain/skills/skills.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
+import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
-import { ModelsModule } from '../models/models.module';
-import { UsageModule } from '../usage/usage.module';
+import { ModelsModule } from 'src/domain/models/models.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { LoadToolsToolHandler } from './application/handlers/load-tools-tool.handler';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
     UpdateDiagramToolHandler,
     CreateSpreadsheetToolHandler,
     UpdateSpreadsheetToolHandler,
+    LoadToolsToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,
