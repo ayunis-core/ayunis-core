@@ -37,78 +37,20 @@ export class KnowledgeBaseAccessService {
     private readonly contextService: ContextService,
   ) {}
 
-  /**
-   * Finds a knowledge base accessible to the current user (owned, shared, or
-   * linked to a skill shared with the user).
-   * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
-   */
   async findAccessibleKnowledgeBase(id: UUID): Promise<KnowledgeBase> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    // Try owned KB first
-    const kb = await this.knowledgeBaseRepository.findById(id);
-    if (kb?.userId === userId) {
-      return kb;
-    }
-
-    if (!kb) {
-      throw new KnowledgeBaseNotFoundError(id);
-    }
-
-    // If not owned, check if shared with user
-    const share = await this.findShareByEntityUseCase.execute(
-      new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
-    );
-
-    if (share) {
-      return kb;
-    }
-
-    // Sharing a skill implicitly grants read access to the owner's linked KBs
-    const accessibleViaSkill =
-      await this.checkKnowledgeBaseSkillShareAccessUseCase.execute(
-        new CheckKnowledgeBaseSkillShareAccessQuery(id, kb.userId),
-      );
-
-    if (accessibleViaSkill) {
-      return kb;
-    }
-
-    throw new KnowledgeBaseNotFoundError(id);
+    return this.findAccessibleKnowledgeBaseForUser(id, this.getUserId());
   }
 
-  /**
-   * Finds a single knowledge base accessible to the current user and resolves
-   * its shared status in one pass (single findById call).
-   * Throws KnowledgeBaseNotFoundError if the KB doesn't exist or isn't accessible.
-   */
   async findOneAccessible(id: UUID): Promise<KnowledgeBaseWithShareStatus> {
-    const userId = this.contextService.get('userId');
-    if (!userId) {
-      throw new UnauthorizedAccessError();
-    }
-
-    const kb = await this.knowledgeBaseRepository.findById(id);
-    if (!kb) {
-      throw new KnowledgeBaseNotFoundError(id);
-    }
-
-    if (kb.userId === userId) {
-      return { knowledgeBase: kb, isShared: false };
-    }
-
-    const share = await this.findShareByEntityUseCase.execute(
-      new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
+    const userId = this.getUserId();
+    const knowledgeBase = await this.findAccessibleKnowledgeBaseForUser(
+      id,
+      userId,
     );
-
-    if (share) {
-      return { knowledgeBase: kb, isShared: true };
-    }
-
-    throw new KnowledgeBaseNotFoundError(id);
+    return {
+      knowledgeBase,
+      isShared: knowledgeBase.userId !== userId,
+    };
   }
 
   /**
@@ -226,6 +168,44 @@ export class KnowledgeBaseAccessService {
       offset: page.offset,
       total: page.total,
     });
+  }
+
+  private getUserId(): UUID {
+    const userId = this.contextService.get('userId');
+    if (!userId) {
+      throw new UnauthorizedAccessError();
+    }
+    return userId;
+  }
+
+  private async findAccessibleKnowledgeBaseForUser(
+    id: UUID,
+    userId: UUID,
+  ): Promise<KnowledgeBase> {
+    const knowledgeBase = await this.knowledgeBaseRepository.findById(id);
+    if (!knowledgeBase) {
+      throw new KnowledgeBaseNotFoundError(id);
+    }
+    if (knowledgeBase.userId === userId) {
+      return knowledgeBase;
+    }
+
+    const directShare = await this.findShareByEntityUseCase.execute(
+      new FindShareByEntityQuery(SharedEntityType.KNOWLEDGE_BASE, id),
+    );
+    if (directShare) {
+      return knowledgeBase;
+    }
+
+    const isAccessibleViaSkill =
+      await this.checkKnowledgeBaseSkillShareAccessUseCase.execute(
+        new CheckKnowledgeBaseSkillShareAccessQuery(id, knowledgeBase.userId),
+      );
+    if (isAccessibleViaSkill) {
+      return knowledgeBase;
+    }
+
+    throw new KnowledgeBaseNotFoundError(id);
   }
 
   private async findAccessibleSharedKnowledgeBaseIds(): Promise<UUID[]> {
