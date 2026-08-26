@@ -3488,6 +3488,19 @@ export interface CreateWorkspaceDto {
   color?: string;
 }
 
+/**
+ * Effective access level for the caller (list responses only)
+ */
+export type WorkspaceResponseDtoAccessLevel = typeof WorkspaceResponseDtoAccessLevel[keyof typeof WorkspaceResponseDtoAccessLevel];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkspaceResponseDtoAccessLevel = {
+  use: 'use',
+  edit: 'edit',
+  full: 'full',
+} as const;
+
 export interface WorkspaceResponseDto {
   /** Unique identifier of the workspace */
   id: string;
@@ -3511,6 +3524,8 @@ export interface WorkspaceResponseDto {
   createdAt: string;
   /** When the workspace was last updated */
   updatedAt: string;
+  /** Effective access level for the caller (list responses only) */
+  accessLevel?: WorkspaceResponseDtoAccessLevel;
   /** Number of chats filed under the workspace (list responses only) */
   chatCount?: number;
   /** Later of the last edit and the most recent chat activity (list responses only) */

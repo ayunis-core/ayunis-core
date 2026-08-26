@@ -22,6 +22,7 @@ export class WorkspaceDtoMapper {
 
   toListItemDto(item: WorkspaceListItem): WorkspaceResponseDto {
     const dto = this.toDto(item.workspace);
+    dto.accessLevel = item.accessLevel;
     dto.chatCount = item.chatCount;
     dto.lastActivityAt = item.lastActivityAt.toISOString();
     return dto;

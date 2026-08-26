@@ -23,7 +23,9 @@ The whole module sits behind the `workspacesEnabled` feature flag
 
 - **Workspace** — owned by exactly one user and scoped to their org. Shared
   users need `use` to read workspace metadata and attached context, and `edit`
-to update it or browse attachment candidates.
+  to update it or browse attachment candidates. Listings batch owner, direct,
+  team, and organization access resolution and expose each effective access
+  level.
 - **Per-user favorite state** — owned by the favorites module; a workspace row
   carries no pin or order state. Access checks stay with the workspace use
   cases — favorites trusts its callers.
@@ -120,6 +122,7 @@ workspaces/
 │   ├── mappers/workspace-invitation.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   ├── local-workspace-access.repository.ts
+│   ├── workspace-list-query.helpers.ts
 │   ├── local-workspace-members.repository.ts
 │   ├── local-workspace-members-repository.module.ts
 │   ├── local-workspace-team-grants.repository.ts
@@ -144,7 +147,7 @@ workspaces/
 | Method        | Route                                                      | Purpose                                               |
 | ------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
 | POST          | `/workspaces`                                              | Create a workspace                                    |
-| GET           | `/workspaces`                                              | List by most recently updated                         |
+| GET           | `/workspaces`                                              | List accessible workspaces                            |
 | GET           | `/workspaces/:id`                                          | Read one                                              |
 | PATCH         | `/workspaces/:id`                                          | Update name / description / icon / colour             |
 | DELETE        | `/workspaces/:id`                                          | Delete the workspace and its chats                    |
@@ -169,8 +172,8 @@ importing favorites; `FavoritesModule` listens to clean up references.
 and listen for `WorkspaceDeletionRequestedEvent`. In the other direction the
 coupling is schema-level, not module-level: `getThreadStats` in the local
 repository reads the `threads` table directly (raw SQL) to derive per-workspace
-chat counts and last activity. Favorites resolves workspace
-metadata through the exported, user-scoped `FindWorkspacesByIdsUseCase`.
+chat counts and last activity. Favorites resolves accessible workspace metadata through the exported
+`FindWorkspacesByIdsUseCase`, including shared workspaces the user can pin.
 The runs module consumes the exported `BuildWorkspaceRunContextUseCase` to merge
 project context into chat execution. Assignment validation uses exported skills,
 knowledge-bases and sources application services/use cases.

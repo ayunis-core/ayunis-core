@@ -9,9 +9,9 @@ import { FindWorkspacesByIdsUseCase } from 'src/domain/workspaces/application/us
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { FavoriteReferenceType } from '../../domain/value-objects/favorite-reference-type.enum';
-import type { Favorite } from '../../domain/favorite.entity';
-import type { FavoriteResult } from '../use-cases/find-favorites/favorite.result';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
+import type { Favorite } from 'src/domain/favorites/domain/favorite.entity';
+import type { FavoriteResult } from 'src/domain/favorites/application/use-cases/find-favorites/favorite.result';
 
 @Injectable()
 export class FavoriteReferenceResolver {
@@ -29,7 +29,6 @@ export class FavoriteReferenceResolver {
     const [workspaces, threads] = await Promise.all([
       this.findWorkspacesByIdsUseCase.execute(
         new FindWorkspacesByIdsQuery(
-          userId,
           this.referenceIds(favorites, FavoriteReferenceType.Workspace),
         ),
       ),
@@ -68,7 +67,7 @@ export class FavoriteReferenceResolver {
   ): Promise<void> {
     if (referenceType === FavoriteReferenceType.Workspace) {
       const workspaces = await this.findWorkspacesByIdsUseCase.execute(
-        new FindWorkspacesByIdsQuery(userId, [referenceId]),
+        new FindWorkspacesByIdsQuery([referenceId]),
       );
       if (workspaces.length === 0) {
         throw new WorkspaceNotFoundError(referenceId);
