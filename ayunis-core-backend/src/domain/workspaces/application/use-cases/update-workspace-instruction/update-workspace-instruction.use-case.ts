@@ -1,14 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { ContextService } from 'src/common/context/services/context.service';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { UnexpectedWorkspaceError } from 'src/domain/workspaces/application/workspaces.errors';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { Workspace } from 'src/domain/workspaces/domain/workspace.entity';
-import { WorkspacesRepository } from '../../ports/workspaces-repository.port';
-import {
-  UnexpectedWorkspaceError,
-  WorkspaceNotFoundError,
-} from '../../workspaces.errors';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
 
 @Injectable()
@@ -17,7 +14,7 @@ export class UpdateWorkspaceInstructionUseCase {
     @InjectPinoLogger(UpdateWorkspaceInstructionUseCase.name)
     private readonly logger: PinoLogger,
     private readonly workspacesRepository: WorkspacesRepository,
-    private readonly contextService: ContextService,
+    private readonly accessService: WorkspaceAccessService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -25,20 +22,13 @@ export class UpdateWorkspaceInstructionUseCase {
     command: UpdateWorkspaceInstructionCommand,
   ): Promise<Workspace> {
     this.logger.info(
-      {
-        workspaceId: command.workspaceId,
-      },
+      { workspaceId: command.workspaceId },
       'updateWorkspaceInstruction',
     );
-    const userId = this.contextService.get('userId');
-    if (!userId) throw new UnauthorizedAccessError();
-
-    const workspace = await this.workspacesRepository.findById(
-      userId,
+    const { workspace } = await this.accessService.requireAccessLevel(
       command.workspaceId,
+      WorkspaceAccessLevel.EDIT,
     );
-    if (!workspace) throw new WorkspaceNotFoundError(command.workspaceId);
-
     workspace.instruct(command.instruction?.trim() || null);
     return this.workspacesRepository.save(workspace);
   }

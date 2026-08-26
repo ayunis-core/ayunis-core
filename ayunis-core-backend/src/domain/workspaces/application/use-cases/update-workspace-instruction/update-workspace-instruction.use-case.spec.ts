@@ -1,21 +1,24 @@
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
-  createMockContextService,
-  createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
   aWorkspace,
-} from '../../testing/workspace.fixtures';
+  createMockWorkspacesRepository,
+} from 'src/domain/workspaces/application/testing/workspace.fixtures';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { UpdateWorkspaceInstructionCommand } from './update-workspace-instruction.command';
 import { UpdateWorkspaceInstructionUseCase } from './update-workspace-instruction.use-case';
 
 describe('UpdateWorkspaceInstructionUseCase', () => {
-  it('stores trimmed project instructions', async () => {
+  it('stores trimmed project instructions with edit access', async () => {
     const repository = createMockWorkspacesRepository();
-    repository.findById.mockResolvedValue(aWorkspace());
+    const workspace = aWorkspace();
+    const accessService = {
+      requireAccessLevel: jest.fn().mockResolvedValue({ workspace }),
+    };
     const useCase = new UpdateWorkspaceInstructionUseCase(
       createPinoLoggerMock(),
       repository,
-      createMockContextService(),
+      accessService as never,
     );
 
     const result = await useCase.execute(
@@ -26,6 +29,10 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
     );
 
     expect(result.instruction).toBe('Use building department wording.');
+    expect(accessService.requireAccessLevel).toHaveBeenCalledWith(
+      TEST_WORKSPACE_ID,
+      WorkspaceAccessLevel.EDIT,
+    );
     expect(repository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         instruction: 'Use building department wording.',
@@ -35,13 +42,16 @@ describe('UpdateWorkspaceInstructionUseCase', () => {
 
   it('clears blank project instructions', async () => {
     const repository = createMockWorkspacesRepository();
-    repository.findById.mockResolvedValue(
-      aWorkspace({ instruction: 'Use building department wording.' }),
-    );
+    const workspace = aWorkspace({
+      instruction: 'Use building department wording.',
+    });
+    const accessService = {
+      requireAccessLevel: jest.fn().mockResolvedValue({ workspace }),
+    };
     const useCase = new UpdateWorkspaceInstructionUseCase(
       createPinoLoggerMock(),
       repository,
-      createMockContextService(),
+      accessService as never,
     );
 
     const result = await useCase.execute(
