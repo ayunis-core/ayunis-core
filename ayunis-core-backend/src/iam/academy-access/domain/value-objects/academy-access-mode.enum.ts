@@ -1,5 +1,5 @@
 /**
- * How strictly an org ties Ayunis Core chat to the KI-Führerschein certificate.
+ * How strictly an org ties chat access to the KI-Schulung nach EU AI Act certificate.
  * The catalogue is fixed at these three by the product requirement.
  */
 export enum AcademyAccessMode {

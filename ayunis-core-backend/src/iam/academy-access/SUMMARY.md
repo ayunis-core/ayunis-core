@@ -1,8 +1,8 @@
 # Academy Access
 
-Per-org gate tying **Ayunis Core chat** to the KI-Führerschein certificate
-issued by the academy (`src/domain/academy`). An org admin picks one of three
-`AcademyAccessMode`s; users without a valid certificate cannot start or advance
+Per-org gate tying **Ayunis Core chat** to the KI-Schulung nach EU AI Act
+certificate issued by the academy (`src/domain/academy`). An org admin picks one
+of three `AcademyAccessMode`s; users without a valid certificate cannot start or advance
 a conversation, while the academy itself stays reachable so they can earn one.
 
 ## Model

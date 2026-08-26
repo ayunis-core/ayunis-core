@@ -21159,7 +21159,7 @@ export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<t
 
 
 /**
- * Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.
+ * Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.
  * @summary Download the academy completion certificate
  */
 export const academyCertificateControllerGetCertificate = (

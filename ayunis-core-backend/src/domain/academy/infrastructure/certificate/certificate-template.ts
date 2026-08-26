@@ -123,7 +123,7 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
   <div class="intro">Hiermit wird best&auml;tigt, dass</div>
   <div class="name">{{userName}}</div>
   <div class="body-text">
-    den <strong>Ayunis Core KI-F&uuml;hrerschein</strong> erfolgreich
+    die <strong>Ayunis Core KI-Schulung nach EU AI Act</strong> erfolgreich
     abgeschlossen und die abschlie&szlig;ende Pr&uuml;fung bestanden hat.
   </div>
   <img class="mark" src="${AYC_MARK_DATA_URI}" alt="">

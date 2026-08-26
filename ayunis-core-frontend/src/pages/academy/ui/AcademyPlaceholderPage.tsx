@@ -17,22 +17,24 @@ export default function AcademyPlaceholderPage() {
   return (
     <AppLayout>
       <FullScreenMessageLayout header={header}>
-        <EmptyState
-          title={t('placeholder.title')}
-          description={t('placeholder.description')}
-          action={
-            <Button asChild>
-              <a
-                href={ACADEMY_LANDING_PAGE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="h-4 w-4" />
-                {t('placeholder.cta')}
-              </a>
-            </Button>
-          }
-        />
+        <div data-testid="academy-placeholder">
+          <EmptyState
+            title={t('placeholder.title')}
+            description={t('placeholder.description')}
+            action={
+              <Button asChild>
+                <a
+                  href={ACADEMY_LANDING_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {t('placeholder.cta')}
+                </a>
+              </Button>
+            }
+          />
+        </div>
       </FullScreenMessageLayout>
     </AppLayout>
   );

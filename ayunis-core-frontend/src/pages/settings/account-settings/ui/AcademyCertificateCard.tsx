@@ -20,9 +20,9 @@ import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas'
 import { formatDate } from '@/shared/lib/format-date';
 
 /**
- * When the user last earned the KI-Führerschein, and — for orgs on annual
- * renewal — when it has to be earned again. Renders nothing without the academy
- * add-on: an org that cannot take the certificate has no status to show.
+ * When the user last completed the KI-Schulung nach EU AI Act and — for orgs
+ * on annual renewal — when it has to be completed again. Renders nothing
+ * without the academy add-on because there is no training status to show.
  */
 export function AcademyCertificateCard() {
   const { t } = useTranslation('academy');

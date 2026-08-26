@@ -10204,7 +10204,7 @@
     },
     "/academy/certificate": {
       "get": {
-        "description": "Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.",
+        "description": "Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.",
         "operationId": "AcademyCertificateController_getCertificate",
         "parameters": [],
         "responses": {

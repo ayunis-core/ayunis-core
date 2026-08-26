@@ -1,6 +1,6 @@
 /**
- * How long a KI-Führerschein completion stays valid. Orgs that require annual
- * recertification gate on this window; orgs that require the certificate only
+ * How long a KI-Schulung nach EU AI Act completion stays valid. Orgs that
+ * require annual recertification gate on this window; orgs that require the certificate only
  * once ignore it.
  *
  * The academy owns this period so no other module has to import it across a
