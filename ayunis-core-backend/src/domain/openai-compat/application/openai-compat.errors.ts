@@ -5,12 +5,19 @@ export enum OpenAICompatErrorCode {
   INVALID_REQUEST = 'OPENAI_COMPAT_INVALID_REQUEST',
   MODEL_NOT_FOUND = 'OPENAI_COMPAT_MODEL_NOT_FOUND',
   TOKEN_LIMIT = 'OPENAI_COMPAT_TOKEN_LIMIT',
+  CONTENT_TOO_LARGE = 'OPENAI_COMPAT_CONTENT_TOO_LARGE',
   UNEXPECTED = 'OPENAI_COMPAT_UNEXPECTED',
 }
 
 export class OpenAIInvalidRequestError extends ApplicationError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(reason, OpenAICompatErrorCode.INVALID_REQUEST, 400, metadata);
+  }
+}
+
+export class OpenAIContentTooLargeError extends ApplicationError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(reason, OpenAICompatErrorCode.CONTENT_TOO_LARGE, 413, metadata);
   }
 }
 

@@ -47,10 +47,20 @@ export interface OpenAIChatCompletionInputAudioPart {
   input_audio: { data: string; format: string };
 }
 
+export interface OpenAIChatCompletionFilePart {
+  type: 'file';
+  file: {
+    filename?: string;
+    file_data?: string;
+    file_id?: string;
+  };
+}
+
 export type OpenAIChatCompletionContentPart =
   | OpenAIChatCompletionTextPart
   | OpenAIChatCompletionImagePart
-  | OpenAIChatCompletionInputAudioPart;
+  | OpenAIChatCompletionInputAudioPart
+  | OpenAIChatCompletionFilePart;
 
 export type OpenAIChatCompletionRole =
   'system' | 'developer' | 'user' | 'assistant' | 'tool';

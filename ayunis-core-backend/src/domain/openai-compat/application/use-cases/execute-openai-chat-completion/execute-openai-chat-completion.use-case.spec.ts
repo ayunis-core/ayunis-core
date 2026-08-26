@@ -6,9 +6,9 @@ import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-comple
 import type { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import type { GetInferenceUseCase } from 'src/domain/models/application/use-cases/get-inference/get-inference.use-case';
 import type { StreamInferenceUseCase } from 'src/domain/models/application/use-cases/stream-inference/stream-inference.use-case';
-import { OpenAIRequestMapper } from '../../mappers/openai-request.mapper';
-import { OpenAIResponseMapper } from '../../mappers/openai-response.mapper';
-import { OpenAIStreamMapper } from '../../mappers/openai-stream.mapper';
+import { OpenAIRequestMapper } from 'src/domain/openai-compat/application/mappers/openai-request.mapper';
+import { OpenAIResponseMapper } from 'src/domain/openai-compat/application/mappers/openai-response.mapper';
+import { OpenAIStreamMapper } from 'src/domain/openai-compat/application/mappers/openai-stream.mapper';
 import { StreamInferenceResponseChunk } from 'src/domain/models/application/ports/stream-inference.handler';
 import { InferenceResponse } from 'src/domain/models/application/ports/inference.handler';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -16,11 +16,12 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
-import { OpenAIModelNotFoundError } from '../../openai-compat.errors';
+import { OpenAIModelNotFoundError } from 'src/domain/openai-compat/application/openai-compat.errors';
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import { QuotaExceededError } from 'src/iam/quotas/application/quotas.errors';
 import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 import { InferenceTokenLimitError } from 'src/domain/models/application/models.errors';
+import type { OpenAIFileContentService } from 'src/domain/openai-compat/application/services/openai-file-content.service';
 
 describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let useCase: ExecuteOpenAIChatCompletionUseCase;
@@ -28,6 +29,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
   let getInferenceUseCase: jest.Mocked<GetInferenceUseCase>;
   let streamInferenceUseCase: jest.Mocked<StreamInferenceUseCase>;
   let inferenceUsageGuard: jest.Mocked<InferenceUsageGuard>;
+  let fileContentService: jest.Mocked<OpenAIFileContentService>;
 
   const orgId = randomUUID();
   const apiKeyId = randomUUID();
@@ -83,12 +85,17 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       collectUsage: jest.fn(),
     } as unknown as jest.Mocked<InferenceUsageGuard>;
 
+    fileContentService = {
+      expand: jest.fn().mockImplementation(async (request) => request),
+    } as unknown as jest.Mocked<OpenAIFileContentService>;
+
     useCase = new ExecuteOpenAIChatCompletionUseCase(
       createPinoLoggerMock(),
       getPermittedLanguageModelsUseCase,
       getInferenceUseCase,
       streamInferenceUseCase,
       inferenceUsageGuard,
+      fileContentService,
       new OpenAIRequestMapper(),
       new OpenAIResponseMapper(),
       new OpenAIStreamMapper(),
@@ -121,6 +128,51 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         { inputTokens: 10, outputTokens: 5 },
         expect.any(String),
       );
+    });
+
+    it('passes extracted inline file text to inference', async () => {
+      fileContentService.expand.mockResolvedValueOnce({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: '[Document: budget.pdf]\nCouncil budget\n[End document]',
+              },
+              { type: 'text', text: 'Summarize it.' },
+            ],
+          },
+        ],
+      });
+      getInferenceUseCase.execute.mockResolvedValue(
+        new InferenceResponse([new TextMessageContent('Summary')], {}),
+      );
+      const command = baseCommand({
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'file',
+                file: {
+                  filename: 'budget.pdf',
+                  file_data: Buffer.from('%PDF budget').toString('base64'),
+                },
+              },
+              { type: 'text', text: 'Summarize it.' },
+            ],
+          },
+        ],
+      });
+
+      await useCase.executeNonStreaming(command);
+
+      const inferenceCommand = getInferenceUseCase.execute.mock.calls[0][0];
+      expect(
+        (inferenceCommand.messages[0].content[0] as TextMessageContent).text,
+      ).toContain('Council budget');
     });
 
     it('returns token-limited partial text as a length completion', async () => {
@@ -196,6 +248,29 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
         usage: { inputTokens: input, outputTokens: output },
       });
     }
+
+    it('passes extracted inline file text to streaming inference', async () => {
+      fileContentService.expand.mockResolvedValueOnce({
+        model: 'gpt-4o',
+        stream: true,
+        messages: [
+          {
+            role: 'user',
+            content: '[Document: plan.pdf]\nMobility plan\n[End document]',
+          },
+        ],
+      });
+      const subject = new Subject<StreamInferenceResponseChunk>();
+      streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
+
+      await useCase.executeStreaming(baseCommand({ stream: true }));
+
+      const inferenceInput = streamInferenceUseCase.execute.mock.calls[0][0];
+      expect(
+        (inferenceInput.messages[0].content[0] as TextMessageContent).text,
+      ).toContain('Mobility plan');
+      subject.complete();
+    });
 
     it('sums usage across chunks via finalize', async () => {
       const subject = new Subject<StreamInferenceResponseChunk>();

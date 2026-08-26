@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
-import { ModelsModule } from '../models/models.module';
-import { RunsModule } from '../runs/runs.module';
+import { ModelsModule } from 'src/domain/models/models.module';
+import { RunsModule } from 'src/domain/runs/runs.module';
 import { AuthorizationModule } from 'src/iam/authorization/authorization.module';
 import { ChatCompletionsController } from './presenters/http/chat-completions.controller';
 import { ModelsController } from './presenters/http/models.controller';
@@ -15,6 +15,8 @@ import { OpenAIStreamMapper } from './application/mappers/openai-stream.mapper';
 import { OpenAIErrorMapper } from './application/mappers/openai-error.mapper';
 import { OpenAIExceptionFilter } from './presenters/http/filters/openai-exception.filter';
 import { ApplicationErrorFilter } from 'src/common/filters/application-error.filter';
+import { FileRetrieverModule } from 'src/domain/retrievers/file-retrievers/file-retriever.module';
+import { OpenAIFileContentService } from './application/services/openai-file-content.service';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { ApplicationErrorFilter } from 'src/common/filters/application-error.fil
     // is how IncrementTrialMessagesUseCase reaches the controller for the
     // trial-message accounting path.
     AuthorizationModule,
+    FileRetrieverModule,
     // ApiKeyStrategy is registered globally by IamModule; AuthGuard('api-key')
     // resolves it from Passport at request time and needs no import here.
     // `@Public()` is read by JwtAuthGuard via Reflector — also no import needed.
@@ -39,6 +42,7 @@ import { ApplicationErrorFilter } from 'src/common/filters/application-error.fil
     ListOpenAIModelsUseCase,
     GetOpenAIModelUseCase,
     OpenAIModelMapper,
+    OpenAIFileContentService,
     OpenAIRequestMapper,
     OpenAIResponseMapper,
     OpenAIStreamMapper,
