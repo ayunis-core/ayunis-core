@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { FileRetrieverHandler } from '../../application/ports/file-retriever.handler';
+import { FileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
-} from '../../domain/file-retriever-result.entity';
+} from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
 import {
   EmptyOcrResultError,
   FileRetrieverUnexpectedError,
   TooManyPagesError,
   UnprocessableDocumentError,
-} from '../../application/file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { ProviderRequestRejectedError } from 'src/common/errors/provider.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
@@ -19,7 +19,7 @@ import { Mistral } from '@mistralai/mistralai';
 import { OCRResponse } from '@mistralai/mistralai/models/components';
 import retryWithBackoff from 'src/common/util/retryWithBackoff';
 import { isTransientMistralError } from 'src/common/util/mistral-transient-error';
-import { File } from '../../domain/file.entity';
+import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { ConfigService } from '@nestjs/config';
 
 // A 404 from OCR right after a successful upload is files-API eventual
@@ -119,11 +119,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     // Reached only after `ocrWithReuploadRecovery` has probed the file and, if
     // it had vanished, re-uploaded once — so a surviving 3310 is the document,
     // not the AYC-556 dedup race that shares this error type. Mistral's 3740
-    // response likewise means its document parser rejected the PDF itself.
+    // response and all semantic 422 responses likewise mean OCR rejected the
+    // uploaded document; their body shapes are not a stable API contract.
     if (
       rejectsDocument(error, 'invalid_request_file') ||
       rejectsDocument(error, 'document_parser_invalid_file') ||
-      isRecurringUnprocessableRejection(error)
+      error.statusCode === 422
     ) {
       return new UnprocessableDocumentError(
         'The document could not be processed',
@@ -295,15 +296,6 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 function rejectsDocument(error: MistralError, errorType: string): boolean {
   if (error.statusCode !== 400) return false;
   return parseErrorBody(error)?.type === errorType;
-}
-
-function isRecurringUnprocessableRejection(error: MistralError): boolean {
-  if (error.statusCode !== 422) return false;
-  const body = parseErrorBody(error);
-  return (
-    (body?.type === 'invalid_file' && body.code === '1901') ||
-    body?.detail === 'Invalid file format.'
-  );
 }
 
 function parseErrorBody(
