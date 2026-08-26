@@ -3,6 +3,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import {
+  UserAccountLockedError,
   UserAuthenticationFailedError,
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
@@ -24,7 +25,11 @@ export class AuthorizeUserLoginUseCase {
       this.rejectLogin(command.userId);
     }
     if (user.lockedAt !== null) {
-      this.rejectLogin(command.userId);
+      this.logger.warn(
+        { userId: command.userId },
+        'User login rejected because account is locked',
+      );
+      throw new UserAccountLockedError();
     }
 
     const reset = await this.usersRepository.resetFailedLoginAttempts(

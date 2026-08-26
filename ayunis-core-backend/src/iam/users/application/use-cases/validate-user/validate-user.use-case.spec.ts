@@ -152,7 +152,11 @@ describe('ValidateUserUseCase', () => {
 
     await expect(
       useCase.execute(new ValidateUserQuery(user.email, 'password123')),
-    ).rejects.toThrow(UserAuthenticationFailedError);
+    ).rejects.toMatchObject({
+      code: 'USER_ACCOUNT_LOCKED',
+      statusCode: 401,
+      message: 'Account locked. Contact your administrator.',
+    });
 
     expect(mockCompareHashUseCase.execute).not.toHaveBeenCalled();
     expect(
@@ -174,7 +178,11 @@ describe('ValidateUserUseCase', () => {
 
     await expect(
       useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
-    ).rejects.toThrow(UserAuthenticationFailedError);
+    ).rejects.toMatchObject({
+      code: 'USER_ACCOUNT_LOCKED',
+      statusCode: 401,
+      message: 'Account locked. Contact your administrator.',
+    });
 
     expect(mockUsersRepository.registerFailedLoginAttempt).toHaveBeenCalledWith(
       user.id,
@@ -195,5 +203,21 @@ describe('ValidateUserUseCase', () => {
     await expect(
       useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
     ).rejects.toThrow(UserUnexpectedError);
+  });
+
+  it('keeps a concurrently deleted account response generic', async () => {
+    const user = aUser();
+    jest.spyOn(mockUsersRepository, 'findOneByEmail').mockResolvedValue(user);
+    jest.spyOn(mockCompareHashUseCase, 'execute').mockResolvedValue(false);
+    jest
+      .spyOn(mockUsersRepository, 'registerFailedLoginAttempt')
+      .mockResolvedValue(null);
+
+    await expect(
+      useCase.execute(new ValidateUserQuery(user.email, 'wrong-password')),
+    ).rejects.toMatchObject({
+      code: 'USER_AUTHENTICATION_FAILED',
+      statusCode: 401,
+    });
   });
 });
