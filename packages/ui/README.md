@@ -23,10 +23,24 @@ pnpm dlx shadcn@latest add button
 
 Components generated into `src/components` are exported automatically.
 
+## Storybook
+
+From the repository root, run Storybook in the background with:
+
+```bash
+./storybook up
+./storybook status
+./storybook logs
+./storybook down
+```
+
+Use `STORYBOOK_PORT=<port>` to override the default port (`6006`).
+
 ## Validation
 
 ```bash
 pnpm typecheck
 pnpm lint
 pnpm deps:check
+pnpm storybook:build
 ```
