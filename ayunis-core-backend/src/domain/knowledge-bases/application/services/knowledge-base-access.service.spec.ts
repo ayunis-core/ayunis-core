@@ -314,6 +314,17 @@ describe('KnowledgeBaseAccessService', () => {
       expect(result.isShared).toBe(true);
     });
 
+    it('should return a KB shared through a skill with isShared=true', async () => {
+      const sharedKb = makeKb(kbId, otherUserId);
+      knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
+      findShareByEntityUseCase.execute.mockResolvedValue(null);
+      checkKnowledgeBaseSkillShareAccessUseCase.execute.mockResolvedValue(true);
+
+      const result = await service.findOneAccessible(kbId);
+
+      expect(result).toEqual({ knowledgeBase: sharedKb, isShared: true });
+    });
+
     it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
       knowledgeBaseRepository.findById.mockResolvedValue(null);
 
