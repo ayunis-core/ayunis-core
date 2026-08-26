@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.30.3](https://github.com/ayunis-core/ayunis-core/compare/v2.30.2...v2.30.3) (2026-08-26)
+
+
+### Bug Fixes
+
+* **auth:** keep logout lifecycle available with SSO disabled (AYC-367) ([#1519](https://github.com/ayunis-core/ayunis-core/issues/1519)) ([688f67e](https://github.com/ayunis-core/ayunis-core/commit/688f67e9d204dad8ba675edfaffcb1c5cdb3781c))
+* **knowledge-bases:** open collections shared through skills (AYC-13) ([#1527](https://github.com/ayunis-core/ayunis-core/issues/1527)) ([7610a89](https://github.com/ayunis-core/ayunis-core/commit/7610a8932dc9d3c378975d14aaefe4fa91234a82))
+* **mcp:** bound capability discovery latency (AYC-825) ([#1503](https://github.com/ayunis-core/ayunis-core/issues/1503)) ([d6abbfb](https://github.com/ayunis-core/ayunis-core/commit/d6abbfb11ba56b58f90af0661f8e7db477072adb))
+* **observability:** log tool fingerprints on provider failures (AYC-827) ([#1523](https://github.com/ayunis-core/ayunis-core/issues/1523)) ([5a5ae01](https://github.com/ayunis-core/ayunis-core/commit/5a5ae01c8d56d937eb1f6be7673700b78af471e8))
+* **retrievers:** classify Mistral OCR 422 responses (AYC-813) ([#1505](https://github.com/ayunis-core/ayunis-core/issues/1505)) ([4b47a5d](https://github.com/ayunis-core/ayunis-core/commit/4b47a5dd66c639270c458484f251b0821ebd46fc))
+* **runs:** recover residual malformed tool calls (AYC-824) ([#1504](https://github.com/ayunis-core/ayunis-core/issues/1504)) ([c56aadc](https://github.com/ayunis-core/ayunis-core/commit/c56aadcbd869ce887d632f960ea290cdd2eae6fc))
+
+
+### Documentation
+
+* **agent:** require cross-user access testing (AYC-13) ([#1508](https://github.com/ayunis-core/ayunis-core/issues/1508)) ([1dcf35d](https://github.com/ayunis-core/ayunis-core/commit/1dcf35d7c855fdcdfea7775355e76533ecb2909f))
+
+
+### Tests
+
+* **e2e:** cover shared skill knowledge base access (AYC-13) ([#1502](https://github.com/ayunis-core/ayunis-core/issues/1502)) ([9d94b8b](https://github.com/ayunis-core/ayunis-core/commit/9d94b8b74bb78d82053f5950d172382037155c84))
+
+
+### Miscellaneous
+
+* **ai:** add persistence query review skill (AYC-377) ([#1522](https://github.com/ayunis-core/ayunis-core/issues/1522)) ([bf8a0f4](https://github.com/ayunis-core/ayunis-core/commit/bf8a0f483225e94bfb1e69a86e54246c8ee7e661))
+* **seed:** add shared skill knowledge base manual fixture (AYC-13) ([#1501](https://github.com/ayunis-core/ayunis-core/issues/1501)) ([24f711b](https://github.com/ayunis-core/ayunis-core/commit/24f711b97759d481c5a60faec694c9f73b33a556))
+* **ui:** add Storybook component catalog (AYC-000) ([#1353](https://github.com/ayunis-core/ayunis-core/issues/1353)) ([e5ecd39](https://github.com/ayunis-core/ayunis-core/commit/e5ecd397d22bf1cb9ffaad93d399a4151fd81fe1))
+
 ## [2.30.2](https://github.com/ayunis-core/ayunis-core/compare/v2.30.1...v2.30.2) (2026-08-25)
 
 
