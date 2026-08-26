@@ -12,6 +12,7 @@ import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-err
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { RuntimeModelProviderDecorator } from './runtime-model-provider.decorator';
+import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 
 const userId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const orgId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -32,7 +33,10 @@ interface Harness {
   logger: ReturnType<typeof createPinoLoggerMock>;
 }
 
-function buildHarness(runtimeModel: LanguageModel = model): Harness {
+function buildHarness(
+  runtimeModel: LanguageModel = model,
+  toolIntegrations?: RuntimeToolIntegrationRegistry,
+): Harness {
   const emitAsync = jest.fn().mockResolvedValue([]);
   const logger = createPinoLoggerMock();
   const decorator = new RuntimeModelProviderDecorator(
@@ -43,7 +47,12 @@ function buildHarness(runtimeModel: LanguageModel = model): Harness {
   );
   return {
     decorate: (provider) =>
-      decorator.decorate(provider, { userId, orgId, model: runtimeModel }),
+      decorator.decorate(provider, {
+        userId,
+        orgId,
+        model: runtimeModel,
+        ...(toolIntegrations ? { toolIntegrations } : {}),
+      }),
     emitAsync,
     logger,
   };
@@ -258,17 +267,48 @@ describe('RuntimeModelProviderDecorator', () => {
       name: 'gpt-5.6-luna',
       provider: 'azure',
     } as LanguageModel;
-    const { decorate, logger } = buildHarness(azureModel);
+    const toolIntegrations = {
+      get: (toolName: string) =>
+        toolName === 'search_municipal_records'
+          ? {
+              id: '323e4567-e89b-12d3-a456-426614174000',
+              name: 'Municipal Records MCP',
+              logoUrl: null,
+            }
+          : undefined,
+    } as RuntimeToolIntegrationRegistry;
+    const providerRequest: ProviderRequest = {
+      ...request,
+      tools: [
+        {
+          name: 'search_municipal_records',
+          description: 'Search municipal records',
+          parameters: { type: 'object', properties: {} },
+        },
+      ],
+      toolChoice: 'auto',
+    };
+    const { decorate, logger } = buildHarness(azureModel, toolIntegrations);
 
-    await expect(collect(decorate(throwingProvider(upstream)))).rejects.toThrow(
-      'Provider azure returned a server error',
-    );
+    await expect(
+      collect(decorate(throwingProvider(upstream)), providerRequest),
+    ).rejects.toThrow('Provider azure returned a server error');
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'azure',
         modelId: 'gpt-5.6-luna',
         upstreamStatus: 503,
         upstreamRequestId: 'req_azure_503',
+        toolSchemaBytes: expect.any(Number),
+        toolSetHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        tools: [
+          {
+            name: 'search_municipal_records',
+            schemaHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+            mcpIntegrationId: '323e4567-e89b-12d3-a456-426614174000',
+            mcpIntegrationName: 'Municipal Records MCP',
+          },
+        ],
       }),
       'Provider unavailable during runtime inference',
     );
