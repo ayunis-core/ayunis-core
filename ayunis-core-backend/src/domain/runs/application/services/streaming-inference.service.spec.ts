@@ -272,7 +272,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     });
   });
 
-  it('throws InferenceMalformedToolCallError when a retry also contains unparseable tool arguments', async () => {
+  it('classifies malformed tool-call retry exhaustion with provider diagnostics', async () => {
     const { service, execute, savedMessages, toolCallArgumentsLogger } =
       buildService([
         toolCallChunk({
@@ -284,10 +284,18 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
         finishChunk('stop'),
       ]);
 
-    await expect(consume(service)).rejects.toThrow(
-      InferenceMalformedToolCallError,
-    );
-    expect(execute).toHaveBeenCalledTimes(2);
+    const error = await consume(service).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+    expect(error).toMatchObject({
+      metadata: {
+        failureMode: 'retry_exhausted',
+        model: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        toolNames: ['create_document'],
+      },
+    });
+    expect(execute).toHaveBeenCalledTimes(3);
 
     // The broken call must not be persisted with guessed `{}` arguments —
     // that is what triggered the endless create_document loop (AYC-646).
@@ -303,7 +311,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     );
   });
 
-  it('retries malformed completed tool calls before persisting durable output (AYC-741)', async () => {
+  it('recovers when a second malformed attempt is followed by a valid tool call', async () => {
     const malformedChunks = [
       toolCallChunk({
         id: 'call_1',
@@ -325,12 +333,13 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     const execute = jest
       .fn()
       .mockReturnValueOnce(from(malformedChunks))
+      .mockReturnValueOnce(from(malformedChunks))
       .mockReturnValueOnce(from(healthyChunks));
     const { service, savedMessages } = buildServiceWithStream(execute);
 
     const yielded = await consume(service);
 
-    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(3);
     expect(savedMessages).toHaveLength(1);
     const toolUses = savedMessages[0].content.filter(
       (block) => block instanceof ToolUseMessageContent,
@@ -339,7 +348,7 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     expect(new Set(yielded.map((message) => message.id)).size).toBe(1);
   });
 
-  it('does not retry malformed completed tool calls after text was streamed', async () => {
+  it('classifies malformed calls after streamed text as partial-output failures', async () => {
     const execute = jest.fn().mockReturnValue(
       from([
         StreamInferenceResponseChunk.text('Der Bericht beginnt hier'),
@@ -353,9 +362,17 @@ describe('StreamingInferenceService.executeStreamingInference — tool-call inte
     );
     const { service } = buildServiceWithStream(execute);
 
-    await expect(consume(service)).rejects.toThrow(
-      InferenceMalformedToolCallError,
-    );
+    const error = await consume(service).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(InferenceMalformedToolCallError);
+    expect(error).toMatchObject({
+      metadata: {
+        failureMode: 'after_partial_output',
+        model: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        toolNames: ['create_document'],
+      },
+    });
     expect(execute).toHaveBeenCalledTimes(1);
   });
 
