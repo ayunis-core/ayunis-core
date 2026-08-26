@@ -1,11 +1,11 @@
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Trash2 } from 'lucide-react';
-import { useDeleteKnowledgeBase } from '../api/useDeleteKnowledgeBase';
+import { useDeleteKnowledgeBase } from '@/pages/knowledge-bases/api/useDeleteKnowledgeBase';
 import { PermissionGate } from '@/features/permissions';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
-import type { KnowledgeBase } from '../model/openapi';
+import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
 import {
   Item,
@@ -48,6 +48,7 @@ export default function KnowledgeBaseCard({
     <Item
       variant="outline"
       className="cursor-pointer"
+      data-testid={`knowledge-base-card-${knowledgeBase.id}`}
       onClick={() =>
         void router.navigate({
           to: '/knowledge-bases/$id',
@@ -59,7 +60,11 @@ export default function KnowledgeBaseCard({
         <ItemTitle>
           <span>{knowledgeBase.name}</span>
           {isShared && (
-            <Badge variant="secondary" className="ml-2 text-xs">
+            <Badge
+              variant="secondary"
+              className="ml-2 text-xs"
+              data-testid={`knowledge-base-shared-badge-${knowledgeBase.id}`}
+            >
               {t('shared.badge')}
             </Badge>
           )}
