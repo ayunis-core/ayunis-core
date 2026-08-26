@@ -35,15 +35,26 @@ import { LocalWorkspaceAccessRepository } from './infrastructure/persistence/loc
 import { WorkspaceAccessService } from './application/services/workspace-access.service';
 import { WorkspaceAccessPolicyService } from './application/services/workspace-access-policy.service';
 import { GetWorkspaceAccessUseCase } from './application/use-cases/get-workspace-access/get-workspace-access.use-case';
+import { UsersModule } from 'src/iam/users/users.module';
+import { InviteWorkspaceMemberUseCase } from './application/use-cases/invite-workspace-member/invite-workspace-member.use-case';
+import { AcceptWorkspaceInvitationUseCase } from './application/use-cases/accept-workspace-invitation/accept-workspace-invitation.use-case';
+import { DeclineWorkspaceInvitationUseCase } from './application/use-cases/decline-workspace-invitation/decline-workspace-invitation.use-case';
+import { UpdateWorkspaceMemberAccessLevelUseCase } from './application/use-cases/update-workspace-member-access-level/update-workspace-member-access-level.use-case';
+import { RemoveWorkspaceMemberUseCase } from './application/use-cases/remove-workspace-member/remove-workspace-member.use-case';
+import { WorkspaceMembersRepository } from './application/ports/workspace-members-repository.port';
+import { LocalWorkspaceMembersRepository } from './infrastructure/persistence/local/local-workspace-members.repository';
+import { LocalWorkspaceMembersRepositoryModule } from './infrastructure/persistence/local/local-workspace-members-repository.module';
 
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
+    LocalWorkspaceMembersRepositoryModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
     SourcesModule,
     TeamsModule,
+    UsersModule,
   ],
   controllers: [WorkspacesController, WorkspaceContextController],
   providers: [
@@ -55,9 +66,18 @@ import { GetWorkspaceAccessUseCase } from './application/use-cases/get-workspace
       provide: WorkspaceAccessRepository,
       useExisting: LocalWorkspaceAccessRepository,
     },
+    {
+      provide: WorkspaceMembersRepository,
+      useExisting: LocalWorkspaceMembersRepository,
+    },
     WorkspaceAccessPolicyService,
     WorkspaceAccessService,
     GetWorkspaceAccessUseCase,
+    InviteWorkspaceMemberUseCase,
+    AcceptWorkspaceInvitationUseCase,
+    DeclineWorkspaceInvitationUseCase,
+    UpdateWorkspaceMemberAccessLevelUseCase,
+    RemoveWorkspaceMemberUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,

@@ -11,8 +11,9 @@ the workspace. User-specific favorites and their order are owned by the
 
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
-Workspaces are not shareable yet, but they can carry a private instruction and
-attached skills, knowledge bases and documents for their owner's chats.
+Workspace collaboration is being introduced in stack layers. Direct member
+invitations and access-level management now exist at the application boundary; HTTP and
+frontend sharing flows follow in later layers.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -27,10 +28,11 @@ The whole module sits behind the `workspacesEnabled` feature flag
   catalogue. The backend only guards their shape (`WORKSPACE_ICON_PATTERN`,
   `WORKSPACE_COLOR_PATTERN`); `color` is either a palette key or a `#rrggbb`
   literal produced by the custom-colour picker.
-- **Collaboration foundation** — workspaces persist private/organization
-  visibility. Direct member, team grant, and team-scoped member-override
-  records provide the access-level schema; the sharing API and use-case
-  authorization are added in the following stack layers.
+- **Collaboration** — workspaces persist private/organization visibility.
+  Direct-member use cases manage pending invitations, acceptance, access levels
+  and removal. Team grant and team-scoped member-override records provide the
+  next sharing layer's persistence foundation; HTTP sharing endpoints follow
+  later.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   _before_ the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
@@ -63,10 +65,14 @@ workspaces/
 │   ├── services/workspace-access.service.ts
 │   ├── ports/workspaces-repository.port.ts
 │   ├── ports/workspace-access-repository.port.ts
+│   ├── ports/workspace-members-repository.port.ts
 │   ├── testing/workspace.fixtures.ts
 │   └── use-cases/
 │       ├── create-workspace/
 │       ├── get-workspace-access/
+│       ├── invite-workspace-member/ / accept-workspace-invitation/
+│       ├── decline-workspace-invitation/ / update-workspace-member-access-level/
+│       ├── remove-workspace-member/
 │       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
 │       ├── update-workspace/ / update-workspace-instruction/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
@@ -86,8 +92,11 @@ workspaces/
 │   ├── schema/workspace-team-grant.record.ts
 │   ├── schema/workspace-team-member-override.record.ts
 │   ├── mappers/workspace.mapper.ts
+│   ├── mappers/workspace-member.mapper.ts
 │   ├── local-workspaces.repository.ts
 │   ├── local-workspace-access.repository.ts
+│   ├── local-workspace-members.repository.ts
+│   ├── local-workspace-members-repository.module.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
 │   ├── workspaces.controller.ts
@@ -141,10 +150,11 @@ processing.
 
 The repository ports are deliberately not exported — cross-module access goes
 through exported use cases. `GetWorkspaceAccessUseCase` resolves direct,
-team-derived and organization access into one effective role and is the public
+team-derived and organization access into one effective access level and is the public
 authorization boundary for modules that operate on workspace children. Team
 membership is resolved through `ListMyTeamsUseCase` from IAM; access persistence
-never reads IAM repositories directly.
+never reads IAM repositories directly. Direct invitations use exported
+`FindUsersByIdsUseCase` to constrain invitees to the caller's organization.
 
 Workspace context list endpoints use dedicated paginated use cases. Candidate
 and attached lists apply search, access checks, workspace assignments, ordering,
