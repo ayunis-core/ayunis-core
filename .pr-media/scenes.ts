@@ -58,7 +58,11 @@ export default [
           /Ihr Konto ist gesperrt|Your account is locked/,
         );
         await expect(notifications).not.toContainText('10');
-        return notifications;
+        const lockedMessage = page.getByText(
+          /Ihr Konto ist gesperrt|Your account is locked/,
+        );
+        await expect(lockedMessage).toBeVisible();
+        return lockedMessage;
       } finally {
         await unauthenticatedApi.dispose();
         await mailApi.dispose();
