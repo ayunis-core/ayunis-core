@@ -34,12 +34,15 @@ import {
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { InferenceCompletedEvent } from 'src/domain/runs/application/events/inference-completed.event';
 import { extractInferenceErrorInfo } from 'src/domain/runs/application/helpers/extract-inference-error-info.helper';
+import { buildProviderRequestDiagnostics } from './provider-request-diagnostics.helper';
 import { serializeRuntimeModelError } from './runtime-model-error';
+import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 
 interface RuntimeModelCallContext {
   readonly userId: UUID;
   readonly orgId: UUID;
   readonly model: LanguageModel;
+  readonly toolIntegrations?: RuntimeToolIntegrationRegistry;
 }
 
 interface CallState {
@@ -155,6 +158,10 @@ export class RuntimeModelProviderDecorator {
     mappedError: ApplicationError,
   ): void {
     if (error instanceof ApplicationError) return;
+    const requestDiagnostics = buildProviderRequestDiagnostics(
+      request,
+      context.toolIntegrations,
+    );
     if (mappedError instanceof ProviderUnavailableError) {
       this.logger.error(
         {
@@ -162,6 +169,7 @@ export class RuntimeModelProviderDecorator {
           messageCount: request.messages.length,
           toolCount: request.tools.length,
           toolChoice: request.toolChoice,
+          ...requestDiagnostics,
         },
         'Provider unavailable during runtime inference',
       );
@@ -176,6 +184,7 @@ export class RuntimeModelProviderDecorator {
         messageCount: request.messages.length,
         toolCount: request.tools.length,
         toolChoice: request.toolChoice,
+        ...requestDiagnostics,
         errorName: error instanceof Error ? error.name : 'Unknown',
         status: diagnostics.upstreamStatus,
         ...diagnostics,

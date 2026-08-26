@@ -302,6 +302,7 @@ export class ExecuteRunViaRuntimeUseCase {
         userId: prepared.userId,
         orgId: prepared.orgId,
         model: prepared.model,
+        toolIntegrations: prepared.toolIntegrations,
       },
     );
     const context = RunContext.create({
