@@ -2,8 +2,10 @@ version = 1
 revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
-    "sys_platform != 'darwin'",
-    "sys_platform == 'darwin'",
+    "python_full_version >= '3.14' and sys_platform != 'darwin'",
+    "python_full_version < '3.14' and sys_platform != 'darwin'",
+    "python_full_version >= '3.14' and sys_platform == 'darwin'",
+    "python_full_version < '3.14' and sys_platform == 'darwin'",
 ]
 
 [[package]]
@@ -611,7 +613,7 @@ dependencies = [
 requires-dist = [
     { name = "de-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.139.0" },
-    { name = "presidio-analyzer", extras = ["gliner"], specifier = ">=2.2.360" },
+    { name = "presidio-analyzer", extras = ["gliner"], specifier = ">=2.2.364" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "torch", specifier = "==2.11.0", index = "https://download.pytorch.org/whl/cpu" },
@@ -813,11 +815,11 @@ wheels = [
 
 [[package]]
 name = "phonenumbers"
-version = "9.0.18"
+version = "9.0.35"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/01/c6/0e3e736ddae9f64cba0ffacd898e274dca36d062a996abd35c8fe815646e/phonenumbers-9.0.18.tar.gz", hash = "sha256:5537c61ba95b11b992c95e804da6e49193cc06b1224f632ade64631518a48ed1", size = 2298264, upload-time = "2025-11-07T07:37:07.322Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/9c/af506fdd7220cdf6fcea27a3b8d3dc5feb239f5072137c7900155c0c6cf9/phonenumbers-9.0.35.tar.gz", hash = "sha256:b19d97e8c448ccfd8d646888d2a65635372f75b9916006cc0a2f809b531baaea", size = 2306830, upload-time = "2026-07-26T08:28:17.303Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/b6/b17cf7488db707fee67022ea7eea6a33e8bbcf4b0cb5c9412878e8b182d3/phonenumbers-9.0.18-py2.py3-none-any.whl", hash = "sha256:d3354454ac31c97f8a08121df97a7145b8dca641f734c6f1518a41c2f60c5764", size = 2584121, upload-time = "2025-11-07T07:37:04.897Z" },
+    { url = "https://files.pythonhosted.org/packages/62/35/80f35904033e5584966c255a0140f48934d18c4711c04d4bcbdf5b330bfb/phonenumbers-9.0.35-py2.py3-none-any.whl", hash = "sha256:57ef9787ddf2bc8cc0906d5c876d43fcd65fa25e7330d00b9f2ba8528870b72a", size = 2595440, upload-time = "2026-07-26T08:28:14.033Z" },
 ]
 
 [[package]]
@@ -874,9 +876,11 @@ wheels = [
 
 [[package]]
 name = "presidio-analyzer"
-version = "2.2.362"
+version = "2.2.364"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "click" },
+    { name = "numpy" },
     { name = "phonenumbers" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -884,8 +888,9 @@ dependencies = [
     { name = "spacy" },
     { name = "tldextract" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/c7/50/408a41cf99d076107d3823d514bb6408e249132418f068673cb807839ce5/presidio_analyzer-2.2.364.tar.gz", hash = "sha256:51f27bacf199fb9777ade9552c0f0111e00a1d73cfe2d4797fc05c998de1e0b6", size = 154117, upload-time = "2026-07-22T07:54:36.264Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2f/8a/d6cf4bddbb11d9c78f5c9342bbbcde4f90fe4e3c7de114a836ec4ed8a6cf/presidio_analyzer-2.2.362-py3-none-any.whl", hash = "sha256:4c36438924b1fcb4df92ea5cf2d8dc57508808e116b10923c983b8732aa07d90", size = 201084, upload-time = "2026-03-15T12:40:43.801Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/15/44a64276cd5c45485716314addfb7966c24f61034d8ff8e9a78d13d0afbe/presidio_analyzer-2.2.364-py3-none-any.whl", hash = "sha256:0a9eeb60ccc416c505367b4989d056becb84ef082703ee3361c046fb75941739", size = 266299, upload-time = "2026-07-22T07:54:34.868Z" },
 ]
 
 [package.optional-dependencies]
@@ -1555,7 +1560,7 @@ wheels = [
 
 [[package]]
 name = "tldextract"
-version = "5.3.0"
+version = "5.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
@@ -1563,9 +1568,9 @@ dependencies = [
     { name = "requests" },
     { name = "requests-file" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/78/182641ea38e3cfd56e9c7b3c0d48a53d432eea755003aa544af96403d4ac/tldextract-5.3.0.tar.gz", hash = "sha256:b3d2b70a1594a0ecfa6967d57251527d58e00bb5a91a74387baa0d87a0678609", size = 128502, upload-time = "2025-04-22T06:19:37.491Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/7b/644fbbb49564a6cb124a8582013315a41148dba2f72209bba14a84242bf0/tldextract-5.3.1.tar.gz", hash = "sha256:a72756ca170b2510315076383ea2993478f7da6f897eef1f4a5400735d5057fb", size = 126105, upload-time = "2025-12-28T23:58:05.532Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/7c/ea488ef48f2f544566947ced88541bc45fae9e0e422b2edbf165ee07da99/tldextract-5.3.0-py3-none-any.whl", hash = "sha256:f70f31d10b55c83993f55e91ecb7c5d84532a8972f22ec578ecfbe5ea2292db2", size = 107384, upload-time = "2025-04-22T06:19:36.304Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/42/0e49d6d0aac449ca71952ec5bae764af009754fcb2e76a5cc097543747b3/tldextract-5.3.1-py3-none-any.whl", hash = "sha256:6bfe36d518de569c572062b788e16a659ccaceffc486d243af0484e8ecf432d9", size = 105886, upload-time = "2025-12-28T23:58:04.071Z" },
 ]
 
 [[package]]
@@ -1599,7 +1604,8 @@ name = "torch"
 version = "2.11.0"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
-    "sys_platform == 'darwin'",
+    "python_full_version >= '3.14' and sys_platform == 'darwin'",
+    "python_full_version < '3.14' and sys_platform == 'darwin'",
 ]
 dependencies = [
     { name = "filelock", marker = "sys_platform == 'darwin'" },
@@ -1624,7 +1630,8 @@ name = "torch"
 version = "2.11.0+cpu"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
-    "sys_platform != 'darwin'",
+    "python_full_version >= '3.14' and sys_platform != 'darwin'",
+    "python_full_version < '3.14' and sys_platform != 'darwin'",
 ]
 dependencies = [
     { name = "filelock", marker = "sys_platform != 'darwin'" },
