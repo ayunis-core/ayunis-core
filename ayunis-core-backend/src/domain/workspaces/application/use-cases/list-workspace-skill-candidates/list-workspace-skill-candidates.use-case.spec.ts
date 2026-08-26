@@ -1,10 +1,10 @@
 import type { UUID } from 'crypto';
-import type { ContextService } from 'src/common/context/services/context.service';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ListAccessibleSkillsUseCase } from 'src/domain/skills/application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
 import { ListWorkspaceSkillCandidatesUseCase } from './list-workspace-skill-candidates.use-case';
 import { ListWorkspaceSkillCandidatesQuery } from './list-workspace-skill-candidates.query';
 
@@ -36,14 +36,14 @@ describe('ListWorkspaceSkillCandidatesUseCase', () => {
     const listAccessibleSkillsUseCase = {
       execute: jest.fn().mockResolvedValue(page),
     } as unknown as jest.Mocked<ListAccessibleSkillsUseCase>;
-    const contextService = {
-      get: jest.fn().mockReturnValue('423e4567-e89b-12d3-a456-426614174003'),
-    } as unknown as jest.Mocked<ContextService>;
+    const accessService = {
+      requireAccessLevel: jest.fn().mockResolvedValue({}),
+    };
     const useCase = new ListWorkspaceSkillCandidatesUseCase(
       createPinoLoggerMock(),
       workspacesRepository,
       listAccessibleSkillsUseCase,
-      contextService,
+      accessService as never,
     );
 
     const result = await useCase.execute(
@@ -57,6 +57,10 @@ describe('ListWorkspaceSkillCandidatesUseCase', () => {
 
     expect(result.data).toEqual([{ skill, isAttached: true }]);
     expect(result.total).toBe(5);
+    expect(accessService.requireAccessLevel).toHaveBeenCalledWith(
+      workspaceId,
+      WorkspaceAccessLevel.EDIT,
+    );
     expect(listAccessibleSkillsUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         search: 'citizen',
