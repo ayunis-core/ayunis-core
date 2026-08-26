@@ -44,11 +44,18 @@ import { RemoveWorkspaceMemberUseCase } from './application/use-cases/remove-wor
 import { WorkspaceMembersRepository } from './application/ports/workspace-members-repository.port';
 import { LocalWorkspaceMembersRepository } from './infrastructure/persistence/local/local-workspace-members.repository';
 import { LocalWorkspaceMembersRepositoryModule } from './infrastructure/persistence/local/local-workspace-members-repository.module';
+import { WorkspaceTeamGrantsRepository } from './application/ports/workspace-team-grants-repository.port';
+import { LocalWorkspaceTeamGrantsRepository } from './infrastructure/persistence/local/local-workspace-team-grants.repository';
+import { LocalWorkspaceTeamGrantsRepositoryModule } from './infrastructure/persistence/local/local-workspace-team-grants-repository.module';
+import { AddWorkspaceTeamGrantUseCase } from './application/use-cases/add-workspace-team-grant/add-workspace-team-grant.use-case';
+import { UpdateWorkspaceTeamGrantAccessLevelUseCase } from './application/use-cases/update-workspace-team-grant-access-level/update-workspace-team-grant-access-level.use-case';
+import { RemoveWorkspaceTeamGrantUseCase } from './application/use-cases/remove-workspace-team-grant/remove-workspace-team-grant.use-case';
 
 @Module({
   imports: [
     LocalWorkspacesRepositoryModule,
     LocalWorkspaceMembersRepositoryModule,
+    LocalWorkspaceTeamGrantsRepositoryModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -70,6 +77,10 @@ import { LocalWorkspaceMembersRepositoryModule } from './infrastructure/persiste
       provide: WorkspaceMembersRepository,
       useExisting: LocalWorkspaceMembersRepository,
     },
+    {
+      provide: WorkspaceTeamGrantsRepository,
+      useExisting: LocalWorkspaceTeamGrantsRepository,
+    },
     WorkspaceAccessPolicyService,
     WorkspaceAccessService,
     GetWorkspaceAccessUseCase,
@@ -78,6 +89,9 @@ import { LocalWorkspaceMembersRepositoryModule } from './infrastructure/persiste
     DeclineWorkspaceInvitationUseCase,
     UpdateWorkspaceMemberAccessLevelUseCase,
     RemoveWorkspaceMemberUseCase,
+    AddWorkspaceTeamGrantUseCase,
+    UpdateWorkspaceTeamGrantAccessLevelUseCase,
+    RemoveWorkspaceTeamGrantUseCase,
     CreateWorkspaceUseCase,
     FindAllWorkspacesUseCase,
     FindWorkspaceUseCase,
