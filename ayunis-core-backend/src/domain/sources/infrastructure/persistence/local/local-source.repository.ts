@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { EntityManager, LessThan, Repository } from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -33,17 +35,34 @@ export class LocalSourceRepository extends SourceRepository {
     @InjectPinoLogger(LocalSourceRepository.name)
     private readonly logger: PinoLogger,
     @InjectRepository(SourceRecord)
-    private readonly sourceRepository: Repository<SourceRecord>,
-    @InjectRepository(TextSourceDetailsRecord)
-    private readonly textSourceDetailsRepository: Repository<TextSourceDetailsRecord>,
-    @InjectRepository(DataSourceDetailsRecord)
-    private readonly dataSourceDetailsRepository: Repository<DataSourceDetailsRecord>,
-    @InjectRepository(SourceContentChunkRecord)
-    private readonly sourceContentChunkRepository: Repository<SourceContentChunkRecord>,
+    private readonly defaultSourceRepository: Repository<SourceRecord>,
     private readonly mapper: SourceMapper,
     private readonly chunkMapper: SourceContentChunkMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
+  }
+
+  private getManager(): EntityManager {
+    // Scheduled and background callers can run without an active CLS context.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return this.txHost.tx ?? this.defaultSourceRepository.manager;
+  }
+
+  private get sourceRepository(): Repository<SourceRecord> {
+    return this.getManager().getRepository(SourceRecord);
+  }
+
+  private get textSourceDetailsRepository(): Repository<TextSourceDetailsRecord> {
+    return this.getManager().getRepository(TextSourceDetailsRecord);
+  }
+
+  private get dataSourceDetailsRepository(): Repository<DataSourceDetailsRecord> {
+    return this.getManager().getRepository(DataSourceDetailsRecord);
+  }
+
+  private get sourceContentChunkRepository(): Repository<SourceContentChunkRecord> {
+    return this.getManager().getRepository(SourceContentChunkRecord);
   }
 
   async findById(id: UUID): Promise<TextSource | DataSource | null> {
@@ -346,11 +365,7 @@ export class LocalSourceRepository extends SourceRepository {
 
   async delete(sourceId: UUID): Promise<void> {
     this.logger.info({ sourceId }, 'delete');
-    await this.sourceRepository
-      .createQueryBuilder()
-      .delete()
-      .where('id = :id', { id: sourceId })
-      .execute();
+    await this.sourceRepository.delete({ id: sourceId });
   }
 
   async deleteMany(sourceIds: UUID[]): Promise<void> {
@@ -358,11 +373,7 @@ export class LocalSourceRepository extends SourceRepository {
     if (sourceIds.length === 0) {
       return;
     }
-    await this.sourceRepository
-      .createQueryBuilder()
-      .delete()
-      .where('id IN (:...ids)', { ids: sourceIds })
-      .execute();
+    await this.sourceRepository.delete(sourceIds);
   }
 
   async findUnreferencedIds(
