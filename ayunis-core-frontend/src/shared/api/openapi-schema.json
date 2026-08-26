@@ -13290,6 +13290,10 @@
             "type": "boolean",
             "description": "Whether the model supports vision (image processing)"
           },
+          "hasProviderFault": {
+            "type": "boolean",
+            "description": "Whether the upstream provider currently has a known fault for this model"
+          },
           "isDefault": {
             "type": "boolean",
             "description": "Whether this is the default model"
@@ -13322,6 +13326,7 @@
           "canStream",
           "isReasoning",
           "canVision",
+          "hasProviderFault",
           "isDefault",
           "anonymousOnly"
         ]
@@ -13611,6 +13616,11 @@
             "description": "Whether the model supports vision (image processing)",
             "example": false
           },
+          "hasProviderFault": {
+            "type": "boolean",
+            "description": "Whether the upstream provider currently has a known fault for this model",
+            "example": false
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -13654,6 +13664,7 @@
           "canUseTools",
           "isReasoning",
           "canVision",
+          "hasProviderFault",
           "createdAt",
           "updatedAt"
         ]
@@ -13892,6 +13903,12 @@
             "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
             "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
             "maxLength": 500
+          },
+          "hasProviderFault": {
+            "type": "boolean",
+            "description": "Whether the upstream provider currently has a known fault for this model",
+            "example": false,
+            "default": false
           }
         },
         "required": [
@@ -13985,6 +14002,11 @@
             "description": "User-facing description of the model, shown in the model selector info card. Maintained by super admins.",
             "example": "Geeignet für komplexe Aufgaben und lange Dokumente.",
             "maxLength": 500
+          },
+          "hasProviderFault": {
+            "type": "boolean",
+            "description": "Whether the upstream provider currently has a known fault for this model. Omission preserves the existing value.",
+            "example": false
           }
         },
         "required": [

@@ -1,11 +1,11 @@
 import { CreateLanguageModelCommand } from './create-language-model.command';
 
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import {
   ModelAlreadyExistsError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Injectable } from '@nestjs/common';
 
@@ -33,6 +33,7 @@ export class CreateLanguageModelUseCase {
         isReasoning: command.isReasoning,
         canVision: command.canVision,
         isArchived: command.isArchived,
+        hasProviderFault: command.hasProviderFault,
         inputTokenCost: command.inputTokenCost,
         outputTokenCost: command.outputTokenCost,
         tier: command.tier,

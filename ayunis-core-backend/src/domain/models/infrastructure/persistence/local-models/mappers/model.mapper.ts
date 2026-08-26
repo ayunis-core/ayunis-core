@@ -11,7 +11,7 @@ import {
   LanguageModelRecord,
   EmbeddingModelRecord,
   ImageGenerationModelRecord,
-} from '../schema/model.record';
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 
 @Injectable()
 export class ModelMapper {
@@ -56,6 +56,7 @@ export class ModelMapper {
         isReasoning: record.isReasoning,
         canVision: record.canVision,
         isArchived: record.isArchived,
+        hasProviderFault: record.hasProviderFault,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         inputTokenCost: record.inputTokenCost,
@@ -108,6 +109,7 @@ export class ModelMapper {
       record.canUseTools = domain.canUseTools;
       record.isReasoning = domain.isReasoning;
       record.canVision = domain.canVision;
+      record.hasProviderFault = domain.hasProviderFault;
       record.isArchived = domain.isArchived;
       record.createdAt = domain.createdAt;
       record.updatedAt = domain.updatedAt;

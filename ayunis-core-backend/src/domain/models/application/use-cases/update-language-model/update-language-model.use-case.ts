@@ -1,16 +1,16 @@
 import { UpdateLanguageModelCommand } from './update-language-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import {
   ModelAlreadyExistsError,
   ModelNotFoundByIdError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
-import { ClearDefaultsByCatalogModelIdCommand } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
+import { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
+import { ClearDefaultsByCatalogModelIdCommand } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.command';
 
 @Injectable()
 export class UpdateLanguageModelUseCase {
@@ -42,7 +42,12 @@ export class UpdateLanguageModelUseCase {
     }
 
     const isBeingArchived = !existingModel.isArchived && command.isArchived;
-    const model = this.createModel(command);
+    const hasProviderFault =
+      command.hasProviderFault ??
+      (existingModel instanceof LanguageModel
+        ? existingModel.hasProviderFault
+        : false);
+    const model = this.createModel(command, hasProviderFault);
     await this.modelsRepository.save(model);
 
     if (isBeingArchived) {
@@ -60,7 +65,10 @@ export class UpdateLanguageModelUseCase {
     return model;
   }
 
-  private createModel(command: UpdateLanguageModelCommand): LanguageModel {
+  private createModel(
+    command: UpdateLanguageModelCommand,
+    hasProviderFault: boolean,
+  ): LanguageModel {
     return new LanguageModel({
       id: command.id,
       name: command.name,
@@ -71,6 +79,7 @@ export class UpdateLanguageModelUseCase {
       canUseTools: command.canUseTools,
       isReasoning: command.isReasoning,
       canVision: command.canVision,
+      hasProviderFault,
       inputTokenCost: command.inputTokenCost,
       outputTokenCost: command.outputTokenCost,
       tier: command.tier,

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import { PermittedLanguageModelResponseDto } from '../dto/permitted-language-model-response.dto';
-import { PermittedEmbeddingModelResponseDto } from '../dto/permitted-embedding-model-response.dto';
-import { PermittedImageGenerationModelResponseDto } from '../dto/permitted-image-generation-model-response.dto';
+import { PermittedLanguageModelResponseDto } from 'src/domain/models/presenters/http/dto/permitted-language-model-response.dto';
+import { PermittedEmbeddingModelResponseDto } from 'src/domain/models/presenters/http/dto/permitted-embedding-model-response.dto';
+import { PermittedImageGenerationModelResponseDto } from 'src/domain/models/presenters/http/dto/permitted-image-generation-model-response.dto';
 import {
   PermittedModel,
   PermittedLanguageModel,
@@ -36,6 +36,7 @@ export class ModelResponseDtoMapper {
       canStream: permittedModel.model.canStream,
       isReasoning: permittedModel.model.isReasoning,
       canVision: permittedModel.model.canVision,
+      hasProviderFault: permittedModel.model.hasProviderFault,
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
       tier: permittedModel.model.tier,

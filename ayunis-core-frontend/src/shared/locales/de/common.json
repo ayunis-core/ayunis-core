@@ -147,6 +147,7 @@
   },
   "models": {
     "availableHeading": "Verfügbare Modelle",
+    "providerFaultWarning": "Für dieses Modell ist derzeit eine Provider-Störung bekannt. Es funktioniert möglicherweise nicht zuverlässig.",
     "category": {
       "zero": "Sehr schwach",
       "low": "Schwach",

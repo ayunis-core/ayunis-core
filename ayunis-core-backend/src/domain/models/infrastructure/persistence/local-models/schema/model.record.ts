@@ -68,6 +68,12 @@ export class LanguageModelRecord extends ModelRecord {
   })
   canVision: boolean;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  hasProviderFault: boolean;
+
   @Column(tokenCostColumnOptions)
   inputTokenCost?: number;
 

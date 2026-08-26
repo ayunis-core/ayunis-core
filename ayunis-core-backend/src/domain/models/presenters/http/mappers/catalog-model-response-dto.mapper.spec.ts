@@ -1,10 +1,30 @@
 import { CatalogModelResponseDtoMapper } from './catalog-model-response-dto.mapper';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 
 describe('CatalogModelResponseDtoMapper', () => {
   const mapper = new CatalogModelResponseDtoMapper();
+
+  it('maps the provider fault status for language catalog models', () => {
+    const model = new LanguageModel({
+      id: '123e4567-e89b-12d3-a456-426614174333',
+      name: 'gpt-4o',
+      provider: ModelProvider.AZURE,
+      displayName: 'GPT-4o',
+      canStream: true,
+      canUseTools: true,
+      isReasoning: false,
+      canVision: true,
+      isArchived: false,
+      hasProviderFault: true,
+    });
+
+    const dto = mapper.toLanguageModelDto(model);
+
+    expect(dto.hasProviderFault).toBe(true);
+  });
 
   it('maps image-generation catalog models to DTOs', () => {
     const model = new ImageGenerationModel({

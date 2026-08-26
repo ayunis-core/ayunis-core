@@ -7,7 +7,8 @@ import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/a
 export type ModelInfoModel = Pick<
   PermittedLanguageModelResponseDto,
   'name' | 'provider' | 'displayName' | 'tier' | 'description'
->;
+> &
+  Partial<Pick<PermittedLanguageModelResponseDto, 'hasProviderFault'>>;
 
 interface ModelInfoCardProps {
   model: ModelInfoModel;

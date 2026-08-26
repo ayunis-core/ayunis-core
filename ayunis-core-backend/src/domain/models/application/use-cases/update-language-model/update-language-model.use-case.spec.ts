@@ -4,15 +4,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateLanguageModelUseCase } from './update-language-model.use-case';
 import { UpdateLanguageModelCommand } from './update-language-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ClearDefaultsByCatalogModelIdUseCase } from '../clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import {
   ModelAlreadyExistsError,
   ModelNotFoundByIdError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import type { UUID } from 'crypto';
 
 describe('UpdateLanguageModelUseCase', () => {
@@ -71,6 +71,7 @@ describe('UpdateLanguageModelUseCase', () => {
     id: UUID,
     isArchived: boolean,
     tier?: ModelTier,
+    hasProviderFault?: boolean,
   ): LanguageModel => {
     return new LanguageModel({
       id,
@@ -83,6 +84,7 @@ describe('UpdateLanguageModelUseCase', () => {
       canUseTools: true,
       canVision: false,
       tier,
+      hasProviderFault,
     });
   };
 
@@ -90,6 +92,7 @@ describe('UpdateLanguageModelUseCase', () => {
     id: UUID,
     isArchived: boolean,
     tier?: ModelTier,
+    hasProviderFault?: boolean,
   ): UpdateLanguageModelCommand => {
     return new UpdateLanguageModelCommand({
       id,
@@ -102,6 +105,7 @@ describe('UpdateLanguageModelUseCase', () => {
       canUseTools: true,
       canVision: false,
       tier,
+      hasProviderFault,
     });
   };
 
@@ -309,6 +313,40 @@ describe('UpdateLanguageModelUseCase', () => {
       expect(modelsRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ tier: ModelTier.HIGH }),
       );
+    });
+
+    it('preserves an existing provider fault when the update omits the status', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        true,
+      );
+      const command = createUpdateCommand(mockModelId, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result.hasProviderFault).toBe(true);
+    });
+
+    it('clears an existing provider fault when explicitly set to false', async () => {
+      const existingModel = createMockLanguageModel(
+        mockModelId,
+        false,
+        undefined,
+        true,
+      );
+      const command = createUpdateCommand(mockModelId, false, undefined, false);
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(command);
+
+      expect(result.hasProviderFault).toBe(false);
     });
 
     it('should clear tier when omitted from the command (full-replace semantics)', async () => {

@@ -8,6 +8,7 @@ export class UpdateLanguageModelCommand {
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
+  hasProviderFault?: boolean;
   canStream: boolean;
   canUseTools: boolean;
   isReasoning: boolean;
@@ -23,6 +24,7 @@ export class UpdateLanguageModelCommand {
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
+    hasProviderFault?: boolean;
     canStream: boolean;
     canUseTools: boolean;
     isReasoning: boolean;
@@ -37,6 +39,7 @@ export class UpdateLanguageModelCommand {
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;
+    this.hasProviderFault = params.hasProviderFault;
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;

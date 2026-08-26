@@ -147,6 +147,7 @@
   },
   "models": {
     "availableHeading": "Available models",
+    "providerFaultWarning": "This model currently has a known provider issue and may not work reliably.",
     "category": {
       "zero": "Very weak",
       "low": "Weak",

@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useCreateLanguageModel } from '../api/useCreateLanguageModel';
-import type { LanguageModelFormData } from '../model/types';
-import { normalizeLanguageModelFormData } from '../lib/normalizeLanguageModelFormData';
+import { useCreateLanguageModel } from '@/pages/super-admin-settings/models-catalog/api/useCreateLanguageModel';
+import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import { normalizeLanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/lib/normalizeLanguageModelFormData';
 import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
@@ -10,6 +10,7 @@ import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
 import { LanguageModelTierField } from './LanguageModelTierField';
 import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
 import { ModelPricingFields } from './ModelPricingFields';
+import { ModelCheckboxField } from './ModelCheckboxField';
 
 interface CreateLanguageModelDialogProps {
   open: boolean;
@@ -31,6 +32,7 @@ export function CreateLanguageModelDialog({
       canVision: false,
       isReasoning: false,
       isArchived: false,
+      hasProviderFault: false,
       tier: undefined,
       description: '',
     },
@@ -62,6 +64,13 @@ export function CreateLanguageModelDialog({
     >
       <LanguageModelTierField form={form} disabled={isCreating} />
       <LanguageModelDescriptionField form={form} disabled={isCreating} />
+      <ModelCheckboxField
+        control={form.control}
+        name="hasProviderFault"
+        label={t('models.catalog.dialog.providerFault')}
+        disabled={isCreating}
+        testId="model-catalog-provider-fault"
+      />
       <LanguageModelCapabilityFields form={form} disabled={isCreating} />
       <ModelPricingFields form={form} disabled={isCreating} />
     </ModelFormDialog>

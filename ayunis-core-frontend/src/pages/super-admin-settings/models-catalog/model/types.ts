@@ -20,6 +20,7 @@ export interface LanguageModelFormData extends ModelPricingFormData {
   canVision: boolean;
   isReasoning: boolean;
   isArchived: boolean;
+  hasProviderFault: boolean;
   tier?: CreateLanguageModelRequestDtoTier;
   description?: string;
 }

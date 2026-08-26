@@ -60,6 +60,7 @@ describe('ModelResponseDtoMapper', () => {
       canVision: true,
       isArchived: false,
       tier: ModelTier.MEDIUM,
+      hasProviderFault: true,
     });
     const permittedModel = new PermittedLanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174444',
@@ -82,6 +83,7 @@ describe('ModelResponseDtoMapper', () => {
       isDefault: true,
       anonymousOnly: false,
       tier: ModelTier.MEDIUM,
+      hasProviderFault: true,
     });
   });
 });

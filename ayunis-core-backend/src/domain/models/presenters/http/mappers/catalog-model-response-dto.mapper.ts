@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import { LanguageModelResponseDto } from '../dto/language-model-response.dto';
-import { EmbeddingModelResponseDto } from '../dto/embedding-model-response.dto';
-import { ModelResponseDto } from '../dto/model-response.dto';
-import { ImageGenerationModelResponseDto } from '../dto/image-generation-model-response.dto';
+import { LanguageModelResponseDto } from 'src/domain/models/presenters/http/dto/language-model-response.dto';
+import { EmbeddingModelResponseDto } from 'src/domain/models/presenters/http/dto/embedding-model-response.dto';
+import { ModelResponseDto } from 'src/domain/models/presenters/http/dto/model-response.dto';
+import { ImageGenerationModelResponseDto } from 'src/domain/models/presenters/http/dto/image-generation-model-response.dto';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
@@ -23,6 +23,7 @@ export class CatalogModelResponseDtoMapper {
       canUseTools: model.canUseTools,
       isReasoning: model.isReasoning,
       canVision: model.canVision,
+      hasProviderFault: model.hasProviderFault,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
       inputTokenCost: model.inputTokenCost,

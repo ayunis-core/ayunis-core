@@ -1,7 +1,7 @@
-import type { ModelProvider } from '../value-objects/model-provider.enum';
-import { Model } from '../model.entity';
-import { ModelType } from '../value-objects/model-type.enum';
-import type { ModelTier } from '../value-objects/model-tier.enum';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { Model } from 'src/domain/models/domain/model.entity';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
+import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
 import type { UUID } from 'crypto';
 
 export class LanguageModel extends Model {
@@ -9,6 +9,7 @@ export class LanguageModel extends Model {
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
   public readonly canVision: boolean;
+  public readonly hasProviderFault: boolean;
   /** Cost per million input tokens in EUR */
   public readonly inputTokenCost?: number;
   /** Cost per million output tokens in EUR */
@@ -34,6 +35,7 @@ export class LanguageModel extends Model {
     isReasoning: boolean;
     canVision: boolean;
     isArchived: boolean;
+    hasProviderFault?: boolean;
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
@@ -44,6 +46,7 @@ export class LanguageModel extends Model {
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
+    this.hasProviderFault = params.hasProviderFault ?? false;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateLanguageModelUseCase } from './create-language-model.use-case';
 import { CreateLanguageModelCommand } from './create-language-model.command';
-import { ModelsRepository } from '../../ports/models.repository';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelTier } from 'src/domain/models/domain/value-objects/model-tier.enum';
@@ -38,7 +38,10 @@ describe('CreateLanguageModelUseCase', () => {
     jest.clearAllMocks();
   });
 
-  const createCommand = (tier?: ModelTier): CreateLanguageModelCommand => {
+  const createCommand = (
+    tier?: ModelTier,
+    hasProviderFault?: boolean,
+  ): CreateLanguageModelCommand => {
     return new CreateLanguageModelCommand({
       name: 'gpt-4',
       displayName: 'GPT-4',
@@ -49,6 +52,7 @@ describe('CreateLanguageModelUseCase', () => {
       canUseTools: true,
       canVision: false,
       tier,
+      hasProviderFault,
     });
   };
 
@@ -87,6 +91,24 @@ describe('CreateLanguageModelUseCase', () => {
       expect(modelsRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ tier: undefined }),
       );
+    });
+
+    it('defaults the provider fault status to false when omitted', async () => {
+      modelsRepository.findOne.mockResolvedValue(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(createCommand());
+
+      expect(result.hasProviderFault).toBe(false);
+    });
+
+    it('persists an explicit provider fault status', async () => {
+      modelsRepository.findOne.mockResolvedValue(undefined);
+      modelsRepository.save.mockResolvedValue();
+
+      const result = await useCase.execute(createCommand(undefined, true));
+
+      expect(result.hasProviderFault).toBe(true);
     });
   });
 });
