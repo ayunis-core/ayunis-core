@@ -130,7 +130,13 @@ export const minimalFixture = {
           country: 'Germany',
         },
       },
-      members: [],
+      members: [
+        {
+          email: 'shared-skill-viewer@demo.local',
+          name: 'Shared Skill Viewer',
+          consumedCredits: 0,
+        },
+      ],
       teams: [],
       memberships: {},
       skills: [
@@ -147,6 +153,13 @@ export const minimalFixture = {
             'Ordnet Feuerwehr-Informationen nach Lage, Maßnahmen und offenen Punkten.',
           instructions:
             'Strukturiere Einsatzinformationen in Lage, Risiken, Maßnahmen, Zuständigkeiten und offene Rückfragen.',
+        },
+        {
+          name: 'Geteiltes Bürgerwissen',
+          shortDescription:
+            'Stellt eine geteilte Wissensbasis für Organisationsmitglieder bereit.',
+          instructions:
+            'Nutze die verknüpfte Wissensbasis, wenn du Fragen zu Bürgerdiensten beantwortest.',
         },
       ],
       knowledgeBases: [
@@ -171,6 +184,23 @@ export const minimalFixture = {
               text: 'Die Feuerwehr verfügt über ein HLF 20, eine Drehleiter und einen Einsatzleitwagen. Bei Alarmstufe 2 wird zusätzlich die Nachbarwehr informiert.',
             },
           ],
+        },
+        {
+          name: 'Geteiltes Bürgerwissen',
+          description:
+            'Manuelle Testdaten für den Zugriff auf eine Wissensbasis über einen geteilten Skill.',
+          documents: [
+            {
+              name: 'Geteiltes Bürgerwissen FAQ.txt',
+              text: 'Diese Wissensbasis ist über den Skill Geteiltes Bürgerwissen für andere Organisationsmitglieder lesbar.',
+            },
+          ],
+        },
+      ],
+      sharedSkillKnowledgeBases: [
+        {
+          skillName: 'Geteiltes Bürgerwissen',
+          knowledgeBaseName: 'Geteiltes Bürgerwissen',
         },
       ],
       // Iteration-1 workspaces (AYC-700): enough to fill the sidebar group,

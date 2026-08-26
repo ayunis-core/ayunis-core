@@ -110,6 +110,11 @@ export interface KnowledgeBaseFixture {
   documents: readonly SeedDocumentFixture[];
 }
 
+export interface SharedSkillKnowledgeBaseFixture {
+  skillName: string;
+  knowledgeBaseName: string;
+}
+
 /**
  * A workspace ("Projekt") owned by the org's admin user. The icon is a key
  * from the frontend catalogue (`shared/lib/workspace-appearance.ts`); the
@@ -145,6 +150,7 @@ export interface OrgFixture {
   academyCompletions?: readonly AcademyCompletionFixture[];
   skills?: readonly SkillFixture[];
   knowledgeBases?: readonly KnowledgeBaseFixture[];
+  sharedSkillKnowledgeBases?: readonly SharedSkillKnowledgeBaseFixture[];
   workspaces?: readonly WorkspaceFixture[];
 }
 
