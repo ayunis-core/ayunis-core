@@ -1,7 +1,7 @@
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { Client } from '@modelcontextprotocol/client';
 import { randomUUID } from 'crypto';
-import type { McpConnectionConfig } from '../../application/ports/mcp-client.port';
+import type { McpConnectionConfig } from 'src/domain/mcp/application/ports/mcp-client.port';
 import { McpClientPoolService } from './mcp-client-pool.service';
 
 describe('McpClientPoolService', () => {
@@ -38,6 +38,17 @@ describe('McpClientPoolService', () => {
 
     expect(createClient).toHaveBeenCalledTimes(1);
     expect(close).not.toHaveBeenCalled();
+  });
+
+  it('isolates clients with different connection timeout budgets', async () => {
+    await pool.withClient(config, createClient, async () => undefined, {
+      connectTimeout: 10000,
+    });
+    await pool.withClient(config, createClient, async () => undefined, {
+      connectTimeout: 30000,
+    });
+
+    expect(createClient).toHaveBeenCalledTimes(2);
   });
 
   it('reuses a client when equivalent headers have different insertion order', async () => {

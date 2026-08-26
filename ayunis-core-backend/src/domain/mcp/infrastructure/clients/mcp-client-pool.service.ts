@@ -5,10 +5,14 @@ import { createHash } from 'crypto';
 import type {
   McpConnectionConfig,
   McpConnectionScope,
-} from '../../application/ports/mcp-client.port';
+} from 'src/domain/mcp/application/ports/mcp-client.port';
 
 const CLIENT_IDLE_TIMEOUT_MS = 60_000;
 const MAX_IDLE_CLIENTS = 100;
+
+interface McpClientPoolOptions {
+  connectTimeout: number;
+}
 
 interface CachedClient {
   key: string;
@@ -42,8 +46,9 @@ export class McpClientPoolService implements OnModuleDestroy {
     config: McpConnectionConfig,
     createClient: () => Promise<Client>,
     operation: (client: Client) => Promise<T>,
+    options?: McpClientPoolOptions,
   ): Promise<T> {
-    const cached = this.acquireClient(config, createClient);
+    const cached = this.acquireClient(config, createClient, options);
     try {
       return await operation(await cached.client);
     } catch (error) {
@@ -69,11 +74,12 @@ export class McpClientPoolService implements OnModuleDestroy {
   private acquireClient(
     config: McpConnectionConfig,
     createClient: () => Promise<Client>,
+    options?: McpClientPoolOptions,
   ): CachedClient {
     if (this.shuttingDown) {
       throw new Error('MCP client pool is shutting down');
     }
-    const key = this.connectionKey(config);
+    const key = this.connectionKey(config, options);
     const cached = this.clients.get(key);
     if (cached) {
       if (cached.idleTimer) clearTimeout(cached.idleTimer);
@@ -171,7 +177,10 @@ export class McpClientPoolService implements OnModuleDestroy {
     return client.closePromise;
   }
 
-  private connectionKey(config: McpConnectionConfig): string {
+  private connectionKey(
+    config: McpConnectionConfig,
+    options?: McpClientPoolOptions,
+  ): string {
     const headers = Object.entries(config.headers ?? {}).sort(
       ([left], [right]) => left.localeCompare(right),
     );
@@ -184,7 +193,15 @@ export class McpClientPoolService implements OnModuleDestroy {
       ? [config.oauth.integrationId, config.oauth.userId, config.oauth.orgId]
       : null;
     return createHash('sha256')
-      .update(JSON.stringify([config.serverUrl, headers, scope, oauth]))
+      .update(
+        JSON.stringify([
+          config.serverUrl,
+          headers,
+          scope,
+          oauth,
+          options?.connectTimeout ?? null,
+        ]),
+      )
       .digest('base64url');
   }
 

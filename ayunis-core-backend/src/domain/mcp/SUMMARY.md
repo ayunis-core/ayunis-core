@@ -17,7 +17,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `EnableMcpIntegrationUseCase` / `DisableMcpIntegrationUseCase` — Toggles integration enabled state
 - `ValidateMcpIntegrationUseCase` — Validates connection to the MCP server
 - `ListPredefinedMcpIntegrationConfigsUseCase` — Lists available predefined integration configurations
-- `DiscoverMcpCapabilitiesUseCase` — Discovers tools, resources, and prompts from a server
+- `DiscoverMcpCapabilitiesUseCase` — Discovers tools, resources, and prompts with a 10-second request and connection budget so an unavailable integration cannot delay run preparation for the full 30-second validation/runtime-operation timeout
 - `ExecuteMcpToolUseCase` — Executes a tool on a remote MCP server
 - `RetrieveMcpResourceUseCase` — Retrieves a resource from a remote MCP server
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
@@ -26,8 +26,8 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 **Services:**
 
-- `McpClientService` — Handles authenticated server communication through the MCP SDK adapter
-- `McpClientPoolService` — Pools SDK connections per tenant, integration, user, and configuration; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
+- `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets
+- `McpClientPoolService` — Pools SDK connections per tenant, integration, user, configuration, and connection timeout budget; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`

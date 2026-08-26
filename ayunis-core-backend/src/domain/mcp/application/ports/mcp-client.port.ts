@@ -74,34 +74,49 @@ export interface McpToolResult {
   isError: boolean;
 }
 
+export interface McpRequestOptions {
+  timeout: number;
+}
+
 /**
  * Port interface for MCP client operations.
  * Abstracts the MCP SDK to allow testing and alternative implementations.
  *
  * Connections may be reused across operations with equivalent configuration.
- * All operations enforce a 30-second timeout.
+ * Capability discovery uses a shorter timeout than explicit validation and
+ * runtime tool/resource operations.
  */
 export abstract class McpClientPort {
   /**
    * List all tools available on the MCP server
    */
-  abstract listTools(config: McpConnectionConfig): Promise<McpTool[]>;
+  abstract listTools(
+    config: McpConnectionConfig,
+    options?: McpRequestOptions,
+  ): Promise<McpTool[]>;
 
   /**
    * List all resources available on the MCP server
    */
-  abstract listResources(config: McpConnectionConfig): Promise<McpResource[]>;
+  abstract listResources(
+    config: McpConnectionConfig,
+    options?: McpRequestOptions,
+  ): Promise<McpResource[]>;
 
   /**
    * List all resource templates available on the MCP server
    */
   abstract listResourceTemplates(
     config: McpConnectionConfig,
+    options?: McpRequestOptions,
   ): Promise<McpResource[]>;
   /**
    * List all prompt templates available on the MCP server
    */
-  abstract listPrompts(config: McpConnectionConfig): Promise<McpPrompt[]>;
+  abstract listPrompts(
+    config: McpConnectionConfig,
+    options?: McpRequestOptions,
+  ): Promise<McpPrompt[]>;
 
   /**
    * Execute a tool on the MCP server

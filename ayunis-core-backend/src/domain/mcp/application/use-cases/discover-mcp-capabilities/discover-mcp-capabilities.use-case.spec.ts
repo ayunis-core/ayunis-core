@@ -7,9 +7,9 @@ import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import { DiscoverMcpCapabilitiesUseCase } from './discover-mcp-capabilities.use-case';
 import { DiscoverMcpCapabilitiesQuery } from './discover-mcp-capabilities.query';
-import { McpIntegrationsRepositoryPort } from '../../ports/mcp-integrations.repository.port';
-import { McpClientService } from '../../services/mcp-client.service';
-import { McpCapabilityCacheService } from '../../services/mcp-capability-cache.service';
+import { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
+import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
+import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   McpIntegrationNotFoundError,
@@ -17,7 +17,7 @@ import {
   McpIntegrationDisabledError,
   McpConnectionTimeoutError,
   UnexpectedMcpError,
-} from '../../mcp.errors';
+} from 'src/domain/mcp/application/mcp.errors';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
 import type { CustomMcpIntegration } from 'src/domain/mcp/domain/integrations/custom-mcp-integration.entity';
 import { aCustomMcpIntegration } from 'src/domain/mcp/application/testing/mcp-integration.fixtures';
@@ -37,6 +37,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   const mockOrgId = randomUUID();
   const mockUserId = randomUUID();
   const mockIntegrationId = randomUUID();
+  const capabilityDiscoveryOptions = { timeout: 10000 };
 
   const mockContextGet = (key?: string | symbol) => {
     if (key === 'orgId') return mockOrgId;
@@ -192,10 +193,12 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(logger.info).toHaveBeenCalledWith(
         {
@@ -229,14 +232,17 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listResources).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
         integration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
     });
 
@@ -369,10 +375,12 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       expect(mcpClientService.listTools).toHaveBeenCalledWith(
         updatedIntegration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
       expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
         updatedIntegration,
         mockUserId,
+        capabilityDiscoveryOptions,
       );
     });
 
