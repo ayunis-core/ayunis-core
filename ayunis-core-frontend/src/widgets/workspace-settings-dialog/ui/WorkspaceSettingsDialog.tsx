@@ -24,7 +24,7 @@ import {
   WorkspaceFormDialog,
   type WorkspaceFormData,
 } from '@/widgets/workspace-form-dialog';
-import { useUpdateWorkspace } from '../api/useUpdateWorkspace';
+import { useUpdateWorkspace } from '@/widgets/workspace-settings-dialog/api/useUpdateWorkspace';
 
 function toFormValues(workspace: Workspace): WorkspaceFormData {
   return {
@@ -40,6 +40,7 @@ interface WorkspaceSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted?: () => void;
+  canDelete?: boolean;
 }
 
 export function WorkspaceSettingsDialog({
@@ -47,6 +48,7 @@ export function WorkspaceSettingsDialog({
   open,
   onOpenChange,
   onDeleted,
+  canDelete = false,
 }: Readonly<WorkspaceSettingsDialogProps>) {
   const { t } = useTranslation('workspaces');
   // A nested AlertDialog rather than the root-level confirmation modal: the
@@ -90,26 +92,28 @@ export function WorkspaceSettingsDialog({
         submitLabel={t('settingsDialog.submit')}
         submittingLabel={t('settingsDialog.submitting')}
         footerContent={
-          <Item variant="outline">
-            <ItemContent>
-              <ItemTitle>{t('deleteDialog.rowTitle')}</ItemTitle>
-              <ItemDescription>
-                {t('deleteDialog.rowDescription')}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={t('deleteDialog.rowTitle')}
-                onClick={() => setIsDeleteConfirmOpen(true)}
-                disabled={isDeleting}
-              >
-                <Trash2 className="text-destructive" />
-              </Button>
-            </ItemActions>
-          </Item>
+          canDelete ? (
+            <Item variant="outline">
+              <ItemContent>
+                <ItemTitle>{t('deleteDialog.rowTitle')}</ItemTitle>
+                <ItemDescription>
+                  {t('deleteDialog.rowDescription')}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t('deleteDialog.rowTitle')}
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="text-destructive" />
+                </Button>
+              </ItemActions>
+            </Item>
+          ) : undefined
         }
       />
       <AlertDialog

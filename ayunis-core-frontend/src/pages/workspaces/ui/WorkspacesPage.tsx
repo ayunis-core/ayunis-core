@@ -8,11 +8,13 @@ import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeade
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import type { Workspace } from '@/features/workspaces';
+import { useWorkspaceInvitationsControllerList } from '@/shared/api/generated/ayunisCoreAPI';
 import type { WorkspaceSortKey } from '@/pages/workspaces/lib/sortWorkspaces';
 import { SearchPagination } from '@/widgets/pagination';
 import { WorkspacesContent } from './WorkspacesContent';
 import { WorkspacesEmptyState } from './WorkspacesEmptyState';
 import { WorkspacesToolbar } from './WorkspacesToolbar';
+import { WorkspaceInvitations } from './WorkspaceInvitations';
 
 interface WorkspacesPageProps {
   workspaces: Workspace[];
@@ -32,6 +34,11 @@ export default function WorkspacesPage({
   const { t } = useTranslation('workspaces');
   const navigate = useNavigate();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const {
+    data: invitations = [],
+    isLoading: areInvitationsLoading,
+    isError: invitationsFailed,
+  } = useWorkspaceInvitationsControllerList();
 
   const updateSearch = (value: string) => {
     void navigate({
@@ -61,7 +68,14 @@ export default function WorkspacesPage({
     <CreateWorkspaceDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
   );
 
-  if (workspaces.length === 0 && !search && currentPage === 1) {
+  if (
+    workspaces.length === 0 &&
+    invitations.length === 0 &&
+    !areInvitationsLoading &&
+    !invitationsFailed &&
+    !search &&
+    currentPage === 1
+  ) {
     return (
       <AppLayout>
         <FullScreenMessageLayout
@@ -100,6 +114,7 @@ export default function WorkspacesPage({
         contentArea={
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold">{t('page.heading')}</h1>
+            <WorkspaceInvitations />
             <WorkspacesContent workspaces={workspaces} />
             <SearchPagination
               currentPage={currentPage}

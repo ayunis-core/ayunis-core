@@ -4,6 +4,8 @@ import { WorkspacePage } from '@/pages/workspace';
 import {
   workspacesControllerFindOne,
   getWorkspacesControllerFindOneQueryKey,
+  workspaceSharingControllerGetAccess,
+  getWorkspaceSharingControllerGetAccessQueryKey,
   threadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
   appControllerFeatureToggles,
@@ -56,14 +58,19 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         offset: (page - 1) * WORKSPACE_CHATS_LIMIT,
       };
 
-      const workspace = await queryClient
-        .fetchQuery({
+      const [workspaceDetails, access] = await Promise.all([
+        queryClient.fetchQuery({
           queryKey: getWorkspacesControllerFindOneQueryKey(workspaceId),
           queryFn: () => workspacesControllerFindOne(workspaceId),
-        })
-        .catch(() => {
-          throw redirect({ to: '/workspaces' });
-        });
+        }),
+        queryClient.fetchQuery({
+          queryKey: getWorkspaceSharingControllerGetAccessQueryKey(workspaceId),
+          queryFn: () => workspaceSharingControllerGetAccess(workspaceId),
+        }),
+      ]).catch(() => {
+        throw redirect({ to: '/workspaces' });
+      });
+      const workspace = { ...workspaceDetails, ...access };
 
       const chats = await queryClient.fetchQuery({
         queryKey: getThreadsControllerFindAllQueryKey(chatsParams),
