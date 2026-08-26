@@ -36,6 +36,7 @@ import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { Source } from 'src/domain/sources/domain/source.entity';
+import { DeferredToolLoadingService } from './deferred-tool-loading.service';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -54,6 +55,7 @@ export class ToolAssemblyService {
     private readonly getPermittedImageGenerationModelUseCase: GetPermittedImageGenerationModelUseCase,
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
     private readonly getOrgChatSettingsUseCase: GetOrgChatSettingsUseCase,
+    private readonly deferredToolLoadingService: DeferredToolLoadingService,
     @InjectPinoLogger(ToolAssemblyService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -68,6 +70,7 @@ export class ToolAssemblyService {
     canUseTools: boolean,
     isAnonymous: boolean,
     workspaceContext?: WorkspaceRunContext,
+    activatedToolNames: ReadonlySet<string> = new Set(),
   ): Promise<{ tools: Tool[]; instructions: string }> {
     const skillContext = await this.prepareRunSkillContext(
       activeSkills,
@@ -80,6 +83,7 @@ export class ToolAssemblyService {
           skillContext.slugMap,
           skillContext.workspaceContext,
           skillContext.editableSkillSlugs,
+          activatedToolNames,
         )
       : [];
 
@@ -209,10 +213,6 @@ export class ToolAssemblyService {
     return result;
   }
 
-  /**
-   * Fetch always-on skill templates (cached, 60s TTL). Failures are swallowed
-   * so a templates outage never blocks a run.
-   */
   private async fetchAlwaysOnTemplates(): Promise<SkillTemplate[]> {
     try {
       return await this.findActiveAlwaysOnTemplatesUseCase.execute(
@@ -302,14 +302,12 @@ export class ToolAssemblyService {
     slugMap: Map<string, string>,
     workspaceContext?: WorkspaceRunContext,
     editableSkillSlugs: Map<string, string> = slugMap,
+    activatedToolNames: ReadonlySet<string> = new Set(),
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
-    // Code execution tool is always available
-    tools.push(await this.assembleCodeExecutionTool(thread, workspaceContext));
-
-    // Always-available tools
     tools.push(
+      await this.assembleCodeExecutionTool(thread, workspaceContext),
       ...(await this.assembleSimpleTools([
         ToolType.SEND_EMAIL,
         ToolType.CREATE_CALENDAR_EVENT,
@@ -320,21 +318,12 @@ export class ToolAssemblyService {
       ])),
     );
 
-    // Artifact-related always-on tools (document create/update/edit/read +
-    // diagram and spreadsheet create/update). Handles letterhead suffix +
-    // artifact context injection internally.
     tools.push(
       ...(await this.artifactToolAssembler.assembleArtifactTools(thread)),
-    );
-
-    tools.push(
       ...(await this.assembleSkillManagementTools(editableSkillSlugs)),
+      ...(await this.assembleInternetTools()),
     );
 
-    // Internet tools (website content + search) — gated by the org chat setting
-    tools.push(...(await this.assembleInternetTools()));
-
-    // Image generation tool — available when org has a permitted image model
     tools.push(
       ...(await assembleImageGenerationTools({
         orgId: this.contextService.get('orgId'),
@@ -353,7 +342,7 @@ export class ToolAssemblyService {
 
     // MCP tools/resources go last: their names are third-party and must not
     // shadow a built-in tool of the same name.
-    const reservedNames = new Set(tools.map((tool) => tool.name));
+    const reservedNames = this.buildReservedToolNames(tools);
     tools.push(
       ...(await this.mcpToolAssembler.assemble(
         thread,
@@ -362,7 +351,17 @@ export class ToolAssemblyService {
       )),
     );
 
-    return tools;
+    const loading = this.deferredToolLoadingService;
+    const enabled = this.features.deferredToolLoadingEnabled;
+    return loading.apply(tools, activatedToolNames, enabled);
+  }
+
+  private buildReservedToolNames(tools: Tool[]): Set<string> {
+    const names = new Set(tools.map((tool) => tool.name));
+    if (this.features.deferredToolLoadingEnabled) {
+      names.add(ToolType.LOAD_TOOLS);
+    }
+    return names;
   }
 
   private async assembleCodeExecutionTool(

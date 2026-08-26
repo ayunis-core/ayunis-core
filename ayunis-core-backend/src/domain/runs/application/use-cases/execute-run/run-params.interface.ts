@@ -23,4 +23,5 @@ export interface RunParams {
   skillId?: UUID;
   skillInstructions?: string;
   activatedSkillName?: string;
+  activatedToolNames: Set<string>;
 }

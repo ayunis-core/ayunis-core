@@ -32,6 +32,12 @@ export class FeatureTogglesResponseDto {
   agentRuntimeEnabled: boolean;
 
   @ApiProperty({
+    description: 'Whether provider requests use deferred tool loading',
+    example: false,
+  })
+  deferredToolLoadingEnabled: boolean;
+
+  @ApiProperty({
     description: 'Whether employee-facing SSO login is enabled',
     example: false,
   })

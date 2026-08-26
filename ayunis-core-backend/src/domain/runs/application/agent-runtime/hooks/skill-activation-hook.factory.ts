@@ -5,12 +5,13 @@ import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { appendSkillActivatedNote } from '../../helpers/append-skill-activated-note';
+import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
-import { ToolAssemblyService } from '../../services/tool-assembly.service';
-import { BackendToolAdapter } from '../backend-tool.adapter';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { markToolAsRecentlyActivated } from 'src/domain/runs/application/helpers/mark-tool-as-recently-activated.helper';
 
 export interface SkillActivationHookParams {
   threadId: UUID;
@@ -19,16 +20,13 @@ export interface SkillActivationHookParams {
   isAnonymous: boolean;
   integrations: RuntimeToolIntegrationRegistry;
   activatedSkillName?: string;
+  activatedToolNames: Set<string>;
 }
 
 /**
- * Builds the skill-activation hook. When the model calls the `activate_skill`
- * signal tool, the tool handler has already copied the skill's sources, MCP
- * integrations and knowledge bases onto the thread and returned its
- * instructions as the tool result. This hook rebuilds the whole tool context
- * from the refreshed thread and swaps it in via `setTools`, so the newly
- * available tools are offered on the next model call — the mid-loop
- * full-replace the runtime's `setTools` escape hatch exists for.
+ * Skill activation changes thread resources, while load_tools changes the
+ * run-scoped tool selection. Both must replace the runtime context before the
+ * next model call.
  */
 @Injectable()
 export class SkillActivationHookFactory {
@@ -41,11 +39,23 @@ export class SkillActivationHookFactory {
 
   create(params: SkillActivationHookParams): Hook {
     const activateSkill = ToolType.ACTIVATE_SKILL as string;
+    const loadTools = ToolType.LOAD_TOOLS as string;
     return {
       name: 'ayunis-skill-activation',
       afterToolCall: async (ctx) => {
-        if (ctx.isError || ctx.toolCall.name !== activateSkill) {
-          return;
+        if (ctx.isError) return;
+        const isSkillActivation = ctx.toolCall.name === activateSkill;
+        const isToolLoading = ctx.toolCall.name === loadTools;
+        if (!isSkillActivation && !isToolLoading) return;
+        if (isToolLoading) {
+          const toolNames = ctx.toolCall.input.toolNames;
+          if (Array.isArray(toolNames)) {
+            toolNames
+              .filter((name): name is string => typeof name === 'string')
+              .forEach((name) =>
+                markToolAsRecentlyActivated(params.activatedToolNames, name),
+              );
+          }
         }
         const { thread } = await this.findThreadUseCase.execute(
           new FindThreadQuery(params.threadId),
@@ -62,6 +72,7 @@ export class SkillActivationHookFactory {
             params.canUseTools,
             params.isAnonymous,
             workspaceContext,
+            params.activatedToolNames,
           );
         params.integrations.replaceTools(tools);
         ctx.setTools(this.backendToolAdapter.toRuntimeTools(tools));

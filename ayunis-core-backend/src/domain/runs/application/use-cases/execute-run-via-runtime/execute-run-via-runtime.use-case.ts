@@ -44,6 +44,7 @@ import {
 } from 'src/domain/runs/application/runs.errors';
 import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
+import { InitialToolContextService } from 'src/domain/runs/application/services/initial-tool-context.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
@@ -95,6 +96,7 @@ export class ExecuteRunViaRuntimeUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
+    private readonly initialToolContextService: InitialToolContextService,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
@@ -141,10 +143,7 @@ export class ExecuteRunViaRuntimeUseCase {
     const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const permittedModel = found.thread.model;
-    if (!permittedModel) {
-      throw new RunNoModelFoundError({ threadId: found.thread.id });
-    }
+    const permittedModel = this.getPermittedModel(found.thread);
     await this.inferenceUsageGuard.preflight(
       { userId, orgId },
       permittedModel.model,
@@ -157,14 +156,14 @@ export class ExecuteRunViaRuntimeUseCase {
       found.thread,
       workspaceContext,
     );
-    const { tools, instructions } =
-      await this.toolAssemblyService.buildRunContext(
-        activated.thread,
+    const { tools, instructions, activatedToolNames } =
+      await this.initialToolContextService.build({
+        thread: activated.thread,
         activeSkills,
-        permittedModel.model.canUseTools,
-        anonymous,
+        canUseTools: permittedModel.model.canUseTools,
+        isAnonymous: anonymous,
         workspaceContext,
-      );
+      });
 
     return {
       thread: activated.thread,
@@ -178,7 +177,15 @@ export class ExecuteRunViaRuntimeUseCase {
       canUseTools: permittedModel.model.canUseTools,
       skillInstructions: activated.skillInstructions,
       activatedSkillName: activated.skillName,
+      activatedToolNames,
     };
+  }
+
+  private getPermittedModel(thread: Thread): NonNullable<Thread['model']> {
+    if (!thread.model) {
+      throw new RunNoModelFoundError({ threadId: thread.id });
+    }
+    return thread.model;
   }
 
   private buildWorkspaceContext(thread: Thread) {
@@ -343,6 +350,7 @@ export class ExecuteRunViaRuntimeUseCase {
         isAnonymous: prepared.isAnonymous,
         integrations: prepared.toolIntegrations,
         activatedSkillName: prepared.activatedSkillName,
+        activatedToolNames: prepared.activatedToolNames,
       }),
       this.contextBudgetHookFactory.create({
         maxTokens: MAX_CONTEXT_TOKENS,

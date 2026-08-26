@@ -6,17 +6,17 @@ import {
 } from 'src/domain/tools/domain/tools/http-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
-import { InternetSearchTool } from '../domain/tools/internet-search-tool.entity';
-import { SourceQueryTool } from '../domain/tools/source-query-tool.entity';
-import { WebsiteContentTool } from '../domain/tools/website-content-tool.entity';
-import { CreateSkillTool } from '../domain/tools/create-skill-tool.entity';
-import { EditSkillTool } from '../domain/tools/edit-skill-tool.entity';
-import { KnowledgeQueryTool } from '../domain/tools/knowledge-query-tool.entity';
-import { KnowledgeGetTextTool } from '../domain/tools/knowledge-get-text-tool.entity';
-import { CreateDocumentTool } from '../domain/tools/create-document-tool.entity';
-import { UpdateDocumentTool } from '../domain/tools/update-document-tool.entity';
-import { GenerateImageTool } from '../domain/tools/generate-image-tool.entity';
-import { MapTool } from '../domain/tools/map-tool.entity';
+import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
+import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
+import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
+import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
+import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
+import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
+import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
+import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
+import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { randomUUID } from 'crypto';
 
 describe('ToolFactory', () => {
@@ -179,8 +179,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_DIAGRAM);
       expect(types).toContain(ToolType.CREATE_SPREADSHEET);
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
+      expect(types).toContain(ToolType.LOAD_TOOLS);
 
-      expect(types.length).toBe(29);
+      expect(types.length).toBe(30);
     });
   });
 });

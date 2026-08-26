@@ -4,7 +4,7 @@ import type { LanguageModel } from 'src/domain/models/domain/models/language.mod
 import type { Skill } from 'src/domain/skills/domain/skill.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
-import type { RuntimeToolIntegrationRegistry } from '../../agent-runtime/runtime-tool-integration.registry';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 export interface PreparedRuntimeTools {
   tools: RuntimeTool[];
@@ -23,4 +23,5 @@ export interface PreparedRuntimeRun extends PreparedRuntimeTools {
   canUseTools: boolean;
   skillInstructions?: string;
   activatedSkillName?: string;
+  activatedToolNames: Set<string>;
 }

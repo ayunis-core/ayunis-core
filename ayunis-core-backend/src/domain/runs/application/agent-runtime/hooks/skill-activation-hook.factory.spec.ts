@@ -1,9 +1,9 @@
 import type { UUID } from 'crypto';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import type { ToolAssemblyService } from '../../services/tool-assembly.service';
+import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
-import type { BackendToolAdapter } from '../backend-tool.adapter';
-import { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import type { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import { SkillActivationHookFactory } from './skill-activation-hook.factory';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -44,15 +44,20 @@ function buildHook(
     isAnonymous: false,
     integrations: new RuntimeToolIntegrationRegistry([]),
     activatedSkillName: overrides.activatedSkillName,
+    activatedToolNames: new Set<string>(),
   };
   const hook = factory.create(hookParams);
   return { hook, buildRunContext, toRuntimeTools };
 }
 
-function toolCtx(name: string, isError = false) {
+function toolCtx(
+  name: string,
+  isError = false,
+  input: Record<string, unknown> = {},
+) {
   return {
     iteration: 0,
-    toolCall: { id: 'c1', name, input: {} },
+    toolCall: { id: 'c1', name, input },
     result: 'ok',
     isError,
     setTools: jest.fn(),
@@ -71,6 +76,24 @@ describe('SkillActivationHookFactory', () => {
     expect(ctx.setTools).toHaveBeenCalledWith([{ name: 'source_query' }]);
     expect(ctx.setInstructions).toHaveBeenCalledWith(
       'Use the newly activated sources.',
+    );
+  });
+
+  it('rebuilds the context with tools selected by load_tools', async () => {
+    const { hook, buildRunContext } = buildHook();
+    const ctx = toolCtx('load_tools', false, {
+      toolNames: ['create_document'],
+    });
+
+    await hook.afterToolCall!(ctx as never);
+
+    expect(buildRunContext).toHaveBeenCalledWith(
+      { id: threadId },
+      [],
+      true,
+      false,
+      undefined,
+      new Set(['create_document']),
     );
   });
 

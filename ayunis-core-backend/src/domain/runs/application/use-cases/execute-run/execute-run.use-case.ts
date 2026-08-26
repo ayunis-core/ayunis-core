@@ -31,7 +31,6 @@ import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-ca
 import { UUID } from 'crypto';
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
@@ -49,6 +48,7 @@ import type { RunParams } from './run-params.interface';
 import { ConfigService } from '@nestjs/config';
 import { ExecuteRunViaRuntimeUseCase } from 'src/domain/runs/application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
+import { applyToolContextChanges } from 'src/domain/runs/application/helpers/apply-tool-context-changes.helper';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
@@ -117,6 +117,7 @@ export class ExecuteRunUseCase {
         isAnonymous: prepared.isAnonymous,
         activeSkills: prepared.activeSkills,
         workspaceContext: prepared.workspaceContext,
+        activatedToolNames: new Set(),
         skillId:
           command.input instanceof RunUserInput
             ? command.input.skillId
@@ -324,29 +325,24 @@ export class ExecuteRunUseCase {
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(params.thread, toolResultMessage),
     );
-    // Masks first, so the client can resolve tokens in the message below.
+    // Masks must precede the message so the client can resolve its tokens.
     if (piiMasks) {
       yield new RunPiiMasksUpdate(piiMasks);
     }
     yield toolResultMessage;
 
-    // After the results are persisted and streamed, so the transcript stays
-    // intact when the breaker aborts the run.
     this.assertToolFailuresNotRepeating(breaker, outcomes);
 
-    const skillWasActivated = toolResultMessageContent.some(
-      (content) => content.toolName === (ToolType.ACTIVATE_SKILL as string),
-    );
-    if (skillWasActivated) {
+    if (
+      applyToolContextChanges(
+        toolResultMessageContent,
+        params.activatedToolNames,
+      )
+    ) {
       await this.refreshRunContext(params);
     }
   }
 
-  /**
-   * The model repeating one failing tool call and receiving the identical
-   * error back is a feedback loop that is not converging (AYC-646) — abort
-   * with one clear error instead of burning the remaining iterations.
-   */
   private assertToolFailuresNotRepeating(
     breaker: ToolFailureBreaker,
     outcomes: ToolResultOutcome[],
@@ -400,6 +396,7 @@ export class ExecuteRunUseCase {
       params.model.canUseTools,
       params.isAnonymous,
       params.workspaceContext,
+      params.activatedToolNames,
     );
     params.tools = refreshed.tools;
     params.instructions = refreshed.instructions;
