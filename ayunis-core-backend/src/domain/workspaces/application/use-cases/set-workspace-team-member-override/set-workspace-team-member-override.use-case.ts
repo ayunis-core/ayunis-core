@@ -42,6 +42,7 @@ export class SetWorkspaceTeamMemberOverrideUseCase {
       command.workspaceId,
       WorkspaceAccessLevel.FULL,
     );
+    await this.ensureTeamGrantExists(command);
     const isTeamMember = await this.checkMembershipUseCase.execute(
       new CheckUserTeamMembershipQuery({
         teamId: command.teamId,
@@ -66,5 +67,20 @@ export class SetWorkspaceTeamMemberOverrideUseCase {
       );
     }
     return override;
+  }
+
+  private async ensureTeamGrantExists(
+    command: SetWorkspaceTeamMemberOverrideCommand,
+  ): Promise<void> {
+    const exists = await this.repository.hasTeamGrant(
+      command.workspaceId,
+      command.teamId,
+    );
+    if (!exists) {
+      throw new WorkspaceTeamGrantNotFoundError(
+        command.workspaceId,
+        command.teamId,
+      );
+    }
   }
 }

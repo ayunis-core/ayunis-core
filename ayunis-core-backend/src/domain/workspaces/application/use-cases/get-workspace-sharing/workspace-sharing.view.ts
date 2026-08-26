@@ -1,5 +1,6 @@
 import type { WorkspaceMemberStatus } from 'src/domain/workspaces/domain/value-objects/workspace-member-status.enum';
 import type { WorkspaceAccessLevel } from 'src/domain/workspaces/domain/value-objects/workspace-access-level.enum';
+import type { WorkspaceVisibility } from 'src/domain/workspaces/domain/value-objects/workspace-visibility.enum';
 import type { Team } from 'src/iam/teams/domain/team.entity';
 import type { User } from 'src/iam/users/domain/user.entity';
 
@@ -22,7 +23,15 @@ export interface WorkspaceSharingTeamGrantView {
   overrides: WorkspaceSharingOverrideView[];
 }
 
+export interface WorkspaceSharingAvailableTeamView {
+  team: Team;
+  memberCount: number;
+}
+
 export interface WorkspaceSharingView {
+  visibility: WorkspaceVisibility;
+  owner: User;
+  availableTeams: WorkspaceSharingAvailableTeamView[];
   members: WorkspaceSharingMemberView[];
   teamGrants: WorkspaceSharingTeamGrantView[];
 }

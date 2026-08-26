@@ -6,6 +6,17 @@ import { WorkspaceDtoMapper } from './workspace-dto.mapper';
 describe('WorkspaceDtoMapper', () => {
   const mapper = new WorkspaceDtoMapper();
 
+  it('maps detail access metadata when provided', () => {
+    const workspace = aWorkspace();
+
+    expect(
+      mapper.toDto(workspace, {
+        accessLevel: WorkspaceAccessLevel.USE,
+        isOwner: false,
+      }),
+    ).toMatchObject({ accessLevel: WorkspaceAccessLevel.USE, isOwner: false });
+  });
+
   it('maps a paginated workspace list with chat activity metadata', () => {
     const workspace = aWorkspace({
       name: 'Council Documents',
@@ -19,6 +30,7 @@ describe('WorkspaceDtoMapper', () => {
           {
             workspace,
             accessLevel: WorkspaceAccessLevel.EDIT,
+            isOwner: true,
             chatCount: 4,
             lastActivityAt,
           },
@@ -41,6 +53,7 @@ describe('WorkspaceDtoMapper', () => {
           createdAt: workspace.createdAt.toISOString(),
           updatedAt: workspace.updatedAt.toISOString(),
           accessLevel: WorkspaceAccessLevel.EDIT,
+          isOwner: true,
           chatCount: 4,
           lastActivityAt: lastActivityAt.toISOString(),
         },

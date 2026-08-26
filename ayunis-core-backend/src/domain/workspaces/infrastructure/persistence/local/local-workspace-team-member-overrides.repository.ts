@@ -23,6 +23,10 @@ export class LocalWorkspaceTeamMemberOverridesRepository extends WorkspaceTeamMe
     super();
   }
 
+  async hasTeamGrant(workspaceId: UUID, teamId: UUID): Promise<boolean> {
+    return (await this.findTeamGrantId(workspaceId, teamId)) !== null;
+  }
+
   async upsertOverride(
     workspaceId: UUID,
     teamId: UUID,

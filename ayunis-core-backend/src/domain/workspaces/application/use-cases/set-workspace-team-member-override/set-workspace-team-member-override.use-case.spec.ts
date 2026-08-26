@@ -10,6 +10,7 @@ import { SetWorkspaceTeamMemberOverrideUseCase } from './set-workspace-team-memb
 describe('SetWorkspaceTeamMemberOverrideUseCase', () => {
   it('sets an access-level override for a member of the granted team', async () => {
     const repository = {
+      hasTeamGrant: jest.fn().mockResolvedValue(true),
       upsertOverride: jest.fn().mockResolvedValue({
         teamGrantId: 'grant-id',
         userId: TEST_USER_ID,
@@ -49,7 +50,7 @@ describe('SetWorkspaceTeamMemberOverrideUseCase', () => {
   it('rejects a user outside the granted team', async () => {
     const useCase = new SetWorkspaceTeamMemberOverrideUseCase(
       { info: jest.fn() } as never,
-      {} as never,
+      { hasTeamGrant: jest.fn().mockResolvedValue(true) } as never,
       { requireAccessLevel: jest.fn().mockResolvedValue({}) } as never,
       { execute: jest.fn().mockResolvedValue(false) } as never,
     );
@@ -66,12 +67,13 @@ describe('SetWorkspaceTeamMemberOverrideUseCase', () => {
     ).rejects.toThrow('must belong to the granted team');
   });
 
-  it('rejects a missing team grant', async () => {
+  it('rejects a missing team grant before checking team membership', async () => {
+    const membershipUseCase = { execute: jest.fn() };
     const useCase = new SetWorkspaceTeamMemberOverrideUseCase(
       { info: jest.fn() } as never,
-      { upsertOverride: jest.fn().mockResolvedValue(null) } as never,
+      { hasTeamGrant: jest.fn().mockResolvedValue(false) } as never,
       { requireAccessLevel: jest.fn().mockResolvedValue({}) } as never,
-      { execute: jest.fn().mockResolvedValue(true) } as never,
+      membershipUseCase as never,
     );
 
     await expect(
@@ -84,5 +86,6 @@ describe('SetWorkspaceTeamMemberOverrideUseCase', () => {
         ),
       ),
     ).rejects.toThrow('Workspace team grant not found');
+    expect(membershipUseCase.execute).not.toHaveBeenCalled();
   });
 });

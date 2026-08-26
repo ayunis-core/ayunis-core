@@ -11,10 +11,10 @@ the workspace. User-specific favorites and their order are owned by the
 
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
-Workspace collaboration is being introduced in stack layers. Direct member
-invitations, team grants and team-member overrides now exist at the application
-boundary. Read boundaries return hydrated sharing state and the current user's
-pending invitations; HTTP and frontend sharing flows follow later.
+Workspace collaboration supports direct invitations, team grants,
+team-member overrides, organization visibility, effective-access-level
+authorization, and HTTP sharing and invitation flows. The frontend sharing experience follows
+later.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -37,7 +37,8 @@ The whole module sits behind the `workspacesEnabled` feature flag
   Direct-member use cases manage pending invitations, acceptance, access levels
   and removal. Team-grant use cases add, update and remove immediate team
   access. Team-scoped member overrides can replace or exclude a member's grant
-  without affecting other team members; HTTP sharing endpoints follow later.
+  without affecting other team members. Full-access users manage these settings
+  through the sharing HTTP API.
 - **Deletion** — `DeleteWorkspaceUseCase` emits `WorkspaceDeletionRequestedEvent`
   _before_ the row delete and drains the listeners' deferred cleanup only after
   it succeeds, so a failed delete loses nothing. The favorites module listens
@@ -98,6 +99,7 @@ workspaces/
 │       ├── get-workspace-sharing/ / list-my-workspace-invitations/
 │       ├── find-all-workspaces/ / find-workspaces-by-ids/ / find-workspace/
 │       ├── update-workspace/ / update-workspace-instruction/
+│       ├── update-workspace-visibility/
 │       ├── attach-skill-to-workspace/ / detach-skill-from-workspace/
 │       ├── attach-knowledge-base-to-workspace/ / detach-knowledge-base-from-workspace/
 │       ├── add-document-to-workspace/ / remove-document-from-workspace/
@@ -135,8 +137,10 @@ workspaces/
 │   ├── local-workspace-invitations-read-repository.module.ts
 │   └── local-workspaces-repository.module.ts
 ├── presenters/http/
-│   ├── workspaces.controller.ts
-│   ├── workspace-context.controller.ts
+│   ├── workspaces.controller.ts / workspace-context.controller.ts
+│   ├── workspace-sharing.controller.ts / workspace-members.controller.ts
+│   ├── workspace-team-grants.controller.ts
+│   ├── workspace-invitations.controller.ts
 │   ├── dtos/
 │   └── mappers/
 └── workspaces.module.ts
@@ -144,24 +148,33 @@ workspaces/
 
 ## HTTP API
 
-| Method        | Route                                                      | Purpose                                               |
-| ------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
-| POST          | `/workspaces`                                              | Create a workspace                                    |
-| GET           | `/workspaces`                                              | List accessible workspaces                            |
-| GET           | `/workspaces/:id`                                          | Read one                                              |
-| PATCH         | `/workspaces/:id`                                          | Update name / description / icon / colour             |
-| DELETE        | `/workspaces/:id`                                          | Delete the workspace and its chats                    |
-| GET           | `/workspaces/:id/context`                                  | Read the full runtime context                         |
-| GET           | `/workspaces/:id/context/skill-candidates`                 | List accessible skills with attachment state          |
-| GET           | `/workspaces/:id/context/knowledge-base-candidates`        | List accessible knowledge bases with attachment state |
-| GET           | `/workspaces/:id/context/skills`                           | List attached skills                                  |
-| GET           | `/workspaces/:id/context/knowledge-bases`                  | List attached knowledge bases                         |
-| GET           | `/workspaces/:id/context/documents`                        | List attached documents                               |
-| POST / DELETE | `/workspaces/:id/context/skills/:skillId`                  | Attach or detach a skill                              |
-| POST / DELETE | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId` | Attach or detach a knowledge base                     |
-| POST          | `/workspaces/:id/context/documents`                        | Upload and attach a document                          |
-| DELETE        | `/workspaces/:id/context/documents/:documentId`            | Remove an attached document                           |
-| PATCH         | `/workspaces/:id/context/instruction`                      | Update the workspace instruction                      |
+| Method                | Route                                                      | Purpose                                                |
+| --------------------- | ---------------------------------------------------------- | ------------------------------------------------------ |
+| POST                  | `/workspaces`                                              | Create a workspace                                     |
+| GET                   | `/workspaces`                                              | List accessible workspaces                             |
+| GET                   | `/workspaces/:id`                                          | Read one                                               |
+| PATCH                 | `/workspaces/:id`                                          | Update name / description / icon / colour              |
+| DELETE                | `/workspaces/:id`                                          | Delete the workspace and its chats                     |
+| GET                   | `/workspaces/:id/context`                                  | Read the full runtime context                          |
+| GET                   | `/workspaces/:id/context/skill-candidates`                 | List accessible skills with attachment state           |
+| GET                   | `/workspaces/:id/context/knowledge-base-candidates`        | List accessible knowledge bases with attachment state  |
+| GET                   | `/workspaces/:id/context/skills`                           | List attached skills                                   |
+| GET                   | `/workspaces/:id/context/knowledge-bases`                  | List attached knowledge bases                          |
+| GET                   | `/workspaces/:id/context/documents`                        | List attached documents                                |
+| POST / DELETE         | `/workspaces/:id/context/skills/:skillId`                  | Attach or detach a skill                               |
+| POST / DELETE         | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId` | Attach or detach a knowledge base                      |
+| POST                  | `/workspaces/:id/context/documents`                        | Upload and attach a document                           |
+| DELETE                | `/workspaces/:id/context/documents/:documentId`            | Remove an attached document                            |
+| PATCH                 | `/workspaces/:id/context/instruction`                      | Update the workspace instruction                       |
+| GET                   | `/workspaces/:id/sharing`                                  | Read visibility, members, teams and overrides          |
+| PATCH                 | `/workspaces/:id/sharing/visibility`                       | Change private or organization visibility              |
+| POST / PATCH / DELETE | `/workspaces/:id/members[/:userId]`                        | Manage direct invitations and members                  |
+| POST / PATCH / DELETE | `/workspaces/:id/team-grants[/:teamId]`                    | Manage team grants                                     |
+| GET                   | `/workspaces/:id/team-grants/:teamId/members`              | List members of a granted team for override management |
+| PUT / DELETE          | `/workspaces/:id/team-grants/:teamId/overrides/:userId`    | Set or reset a team-member override                    |
+| GET                   | `/workspace-invitations`                                   | List the current user's pending invitations            |
+| POST                  | `/workspace-invitations/:workspaceId/accept`               | Accept an invitation                                   |
+| POST                  | `/workspace-invitations/:workspaceId/decline`              | Decline an invitation                                  |
 
 ## Cross-Module Boundaries
 

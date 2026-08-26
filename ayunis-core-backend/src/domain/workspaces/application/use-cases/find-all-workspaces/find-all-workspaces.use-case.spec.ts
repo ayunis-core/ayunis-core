@@ -22,7 +22,7 @@ describe('FindAllWorkspacesUseCase', () => {
             {
               workspace,
               accessLevel: WorkspaceAccessLevel.EDIT,
-              sources: [],
+              sources: [{ type: 'owner' }],
             },
           ],
           limit: 20,
@@ -43,6 +43,7 @@ describe('FindAllWorkspacesUseCase', () => {
           {
             workspace,
             accessLevel: WorkspaceAccessLevel.EDIT,
+            isOwner: true,
             chatCount: 3,
             lastActivityAt: workspace.updatedAt,
           },
@@ -88,6 +89,7 @@ describe('FindAllWorkspacesUseCase', () => {
 
     expect(data[0]).toMatchObject({
       accessLevel: WorkspaceAccessLevel.USE,
+      isOwner: false,
       chatCount: 1,
       lastActivityAt: chatActivity,
     });
