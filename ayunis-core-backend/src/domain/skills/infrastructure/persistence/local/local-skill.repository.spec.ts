@@ -7,32 +7,28 @@ import { randomUUID } from 'crypto';
 import { LocalSkillRepository } from './local-skill.repository';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
 import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
-import type { SkillRecord } from './schema/skill.record';
+import { SkillRecord } from './schema/skill.record';
 import { SkillActivationRecord } from './schema/skill-activation.record';
 import type { SkillMapper } from './mappers/skill.mapper';
 import { SkillNotActiveError } from 'src/domain/skills/application/skills.errors';
 
 describe('LocalSkillRepository', () => {
   let repository: LocalSkillRepository;
-  let activationRepo: jest.Mocked<Repository<SkillActivationRecord>>;
+  let skillMapper: jest.Mocked<Pick<SkillMapper, 'toDomain'>>;
   let mockManager: {
     findOne: jest.Mock;
     find: jest.Mock;
     count: jest.Mock;
+    delete: jest.Mock;
     query: jest.Mock;
     createQueryBuilder: jest.Mock;
+    getRepository: jest.Mock;
   };
 
   const userId = randomUUID();
   const skillId = randomUUID();
 
   beforeEach(() => {
-    activationRepo = {
-      find: jest.fn(),
-      count: jest.fn(),
-      manager: {} as EntityManager,
-    } as unknown as jest.Mocked<Repository<SkillActivationRecord>>;
-
     const skillRepo = {
       manager: {} as EntityManager,
     } as unknown as jest.Mocked<Repository<SkillRecord>>;
@@ -48,25 +44,65 @@ describe('LocalSkillRepository', () => {
       findOne: jest.fn(),
       find: jest.fn(),
       count: jest.fn(),
+      delete: jest.fn(),
       query: jest.fn(),
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+      getRepository: jest.fn(),
     };
+    mockManager.getRepository.mockReturnValue(mockManager);
 
     const txHost = {
       tx: mockManager,
     } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
-    const mapper = {} as SkillMapper;
+    skillMapper = {
+      toDomain: jest.fn(),
+    };
 
     repository = new LocalSkillRepository(
       createPinoLoggerMock(),
       skillRepo,
-      activationRepo,
-      mapper,
+      skillMapper as unknown as SkillMapper,
       {} as LocalSkillAccessiblePageFinder,
       new LocalSkillKnowledgeBaseIdsFinder(),
       txHost,
     );
+  });
+
+  describe('ambient transaction', () => {
+    it('finds a skill with relations written earlier in the transaction', async () => {
+      const sourceId = randomUUID();
+      const record = {
+        id: skillId,
+        userId,
+        sources: [{ id: sourceId }],
+        mcpIntegrations: [],
+        knowledgeBases: [],
+      } as unknown as SkillRecord;
+      const expected = { id: skillId, sourceIds: [sourceId] };
+      mockManager.findOne.mockResolvedValue(record);
+      skillMapper.toDomain.mockReturnValue(expected as never);
+
+      await expect(repository.findOne(skillId, userId)).resolves.toBe(expected);
+      expect(mockManager.getRepository).toHaveBeenCalledWith(SkillRecord);
+    });
+
+    it('deletes a skill through the ambient transaction', async () => {
+      mockManager.delete.mockResolvedValue({ affected: 1 });
+
+      await expect(repository.delete(skillId, userId)).resolves.toBeUndefined();
+    });
+
+    it('reads activation state from the ambient transaction', async () => {
+      mockManager.count.mockResolvedValue(1);
+
+      await expect(repository.isSkillActive(skillId, userId)).resolves.toBe(
+        true,
+      );
+      expect(mockManager.getRepository).toHaveBeenCalledWith(
+        SkillActivationRecord,
+      );
+    });
   });
 
   describe('pinSkill', () => {
@@ -125,7 +161,6 @@ describe('LocalSkillRepository', () => {
     const repository = new LocalSkillRepository(
       createPinoLoggerMock(),
       skillRepository,
-      activationRepo,
       mapper,
       new LocalSkillAccessiblePageFinder(skillRepository),
       new LocalSkillKnowledgeBaseIdsFinder(),
@@ -221,7 +256,7 @@ describe('LocalSkillRepository', () => {
       const result = await repository.isSkillPinned(skillId, userId);
 
       expect(result).toBe(true);
-      expect(mockManager.count).toHaveBeenCalledWith(SkillActivationRecord, {
+      expect(mockManager.count).toHaveBeenCalledWith({
         where: { skillId, userId, isPinned: true },
       });
     });
@@ -247,7 +282,7 @@ describe('LocalSkillRepository', () => {
       const result = await repository.getPinnedSkillIds(userId);
 
       expect(result).toEqual(new Set([pinnedSkillId1, pinnedSkillId2]));
-      expect(mockManager.find).toHaveBeenCalledWith(SkillActivationRecord, {
+      expect(mockManager.find).toHaveBeenCalledWith({
         where: { userId, isPinned: true },
         select: ['skillId'],
       });

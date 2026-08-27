@@ -215,7 +215,7 @@ function SourceItem({
     now - new Date(source.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Item>
+    <Item data-testid={`source-item-${source.id}`}>
       <ItemMedia variant="icon">
         <SourceItemIcon
           isProcessing={isProcessing}
