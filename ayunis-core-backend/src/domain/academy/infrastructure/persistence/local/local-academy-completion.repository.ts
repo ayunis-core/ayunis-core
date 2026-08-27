@@ -57,7 +57,21 @@ export class LocalAcademyCompletionRepository implements AcademyCompletionReposi
   async upsert(completion: AcademyCompletion): Promise<AcademyCompletion> {
     this.logger.log({ userId: completion.userId }, 'upsert');
     const record = this.mapper.completionToRecord(completion);
-    const saved = await this.repository.save(record);
+    const result = await this.repository
+      .createQueryBuilder()
+      .insert()
+      .into(AcademyCompletionRecord)
+      .values(record)
+      .orUpdate(['completedAt'], ['userId'])
+      .returning('*')
+      .execute();
+    const rows: unknown = result.raw;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error('Completion upsert returned no row');
+    }
+    const saved = this.repository.create(
+      rows[0] as Partial<AcademyCompletionRecord>,
+    );
     return this.mapper.completionToDomain(saved);
   }
 }

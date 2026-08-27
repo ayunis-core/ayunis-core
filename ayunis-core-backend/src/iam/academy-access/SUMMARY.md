@@ -1,8 +1,8 @@
 # Academy Access
 
 Per-org gate tying **Ayunis Core chat** to the KI-Schulung nach EU AI Act
-certificate issued by the academy (`src/domain/academy`). An org admin picks one
-of three `AcademyAccessMode`s; users without a valid certificate cannot start or advance
+completion recorded by the academy (`src/domain/academy`). An org admin picks one
+of three `AcademyAccessMode`s; users without a valid Academy completion cannot start or advance
 a conversation, while the academy itself stays reachable so they can earn one.
 
 ## Model
@@ -15,8 +15,8 @@ constructor, so the migration leaves every existing org ungated.
 `AcademyAccessMode`:
 
 - `unrestricted` — no gate (default, and the pre-gate behaviour)
-- `required_once` — the certificate must be earned once; the pass is permanent
-- `required_annually` — the certificate must be renewed every 12 months
+- `required_once` — the Academy must be completed once; completion is permanent
+- `required_annually` — the Academy must be completed again every 12 months
 
 ## Evaluation
 
@@ -31,7 +31,8 @@ request, so the checks are ordered cheapest-first and short-circuit:
    lock the org out with no way forward.
 3. `GetAcademyCompletionUseCase` (exported by `AcademyModule`) for
    `completedAt`/`expiresAt`. Only the academy knows the validity period; this
-   module never imports it.
+   module never imports it. Chapter confirmations remain entirely inside the
+   academy module.
 
 `expiresAt` is reported only in `required_annually` — surfacing it elsewhere
 would imply a deadline that mode does not have. Nothing is cached: "passing
@@ -67,7 +68,7 @@ Deliberately **not** gated:
 - `openai-compat` — API-key authenticated, and `ApiKeyPrincipal` has no
   `userId`; a machine principal has no certificate holder. The guard skips
   api-key principals for the same reason. **Known gap:** an org that enables the
-  gate *and* issues API keys retains an ungated inference path.
+  gate _and_ issues API keys retains an ungated inference path.
 - `shares` — org-sharing admin surface; gating it would stop a lapsed user from
   *un*sharing.
 

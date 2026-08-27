@@ -4,11 +4,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum AcademyErrorCode {
   CHAPTER_NOT_FOUND = 'CHAPTER_NOT_FOUND',
   COURSE_MODULE_NOT_FOUND = 'COURSE_MODULE_NOT_FOUND',
-  QUIZ_QUESTION_NOT_FOUND = 'QUIZ_QUESTION_NOT_FOUND',
   INVALID_REORDER = 'INVALID_REORDER',
-  INVALID_QUIZ_QUESTION = 'INVALID_QUIZ_QUESTION',
-  QUIZ_NOT_AVAILABLE = 'QUIZ_NOT_AVAILABLE',
-  INVALID_QUIZ_SUBMISSION = 'INVALID_QUIZ_SUBMISSION',
   COMPLETION_NOT_FOUND = 'COMPLETION_NOT_FOUND',
   UNEXPECTED_ACADEMY_ERROR = 'UNEXPECTED_ACADEMY_ERROR',
 }
@@ -46,17 +42,6 @@ export class CourseModuleNotFoundError extends AcademyError {
   }
 }
 
-export class QuizQuestionNotFoundError extends AcademyError {
-  constructor(quizQuestionId: string, metadata?: ErrorMetadata) {
-    super(
-      `Academy quiz question with ID ${quizQuestionId} not found`,
-      AcademyErrorCode.QUIZ_QUESTION_NOT_FOUND,
-      404,
-      metadata,
-    );
-  }
-}
-
 export class InvalidReorderError extends AcademyError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -65,29 +50,6 @@ export class InvalidReorderError extends AcademyError {
       400,
       metadata,
     );
-  }
-}
-
-export class InvalidQuizQuestionError extends AcademyError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(reason, AcademyErrorCode.INVALID_QUIZ_QUESTION, 400, metadata);
-  }
-}
-
-export class QuizNotAvailableError extends AcademyError {
-  constructor(chapterId: string, metadata?: ErrorMetadata) {
-    super(
-      `No quiz is available for chapter ${chapterId}`,
-      AcademyErrorCode.QUIZ_NOT_AVAILABLE,
-      400,
-      metadata,
-    );
-  }
-}
-
-export class InvalidQuizSubmissionError extends AcademyError {
-  constructor(reason: string, metadata?: ErrorMetadata) {
-    super(reason, AcademyErrorCode.INVALID_QUIZ_SUBMISSION, 400, metadata);
   }
 }
 
