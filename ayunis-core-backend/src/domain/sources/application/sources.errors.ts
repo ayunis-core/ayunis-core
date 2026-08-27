@@ -9,6 +9,7 @@ export enum SourceErrorCode {
   UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
   UNSUPPORTED_SOURCE_FILE_TYPE = 'UNSUPPORTED_SOURCE_FILE_TYPE',
   SPREADSHEET_PARSE_TIMEOUT = 'SPREADSHEET_PARSE_TIMEOUT',
+  UNPROCESSABLE_SPREADSHEET = 'UNPROCESSABLE_SPREADSHEET',
   SOURCE_NOT_READY = 'SOURCE_NOT_READY',
 }
 
@@ -110,6 +111,18 @@ export class SpreadsheetParseTimeoutError extends SourceError {
       422,
       metadata,
     );
+  }
+}
+
+export class UnprocessableSpreadsheetError extends SourceError {
+  constructor(cause: Error, metadata?: ErrorMetadata) {
+    super(
+      'The spreadsheet is malformed, encrypted, or cannot be read',
+      SourceErrorCode.UNPROCESSABLE_SPREADSHEET,
+      422,
+      metadata,
+    );
+    this.cause = cause;
   }
 }
 

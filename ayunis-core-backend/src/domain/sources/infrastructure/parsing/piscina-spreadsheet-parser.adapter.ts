@@ -5,8 +5,11 @@ import {
   ParsedCsvData,
   ParsedSheet,
   SpreadsheetParserPort,
-} from '../../application/ports/spreadsheet-parser.port';
-import { SpreadsheetParseTimeoutError } from '../../application/sources.errors';
+} from 'src/domain/sources/application/ports/spreadsheet-parser.port';
+import {
+  SpreadsheetParseTimeoutError,
+  UnprocessableSpreadsheetError,
+} from 'src/domain/sources/application/sources.errors';
 
 const MAX_WORKER_THREADS = 2;
 const WORKER_IDLE_TIMEOUT_MS = 30_000;
@@ -54,6 +57,12 @@ export class PiscinaSpreadsheetParserAdapter
       if (error instanceof Error && error.name === 'AbortError') {
         throw new SpreadsheetParseTimeoutError(PARSE_TIMEOUT_MS);
       }
+      const malformedWorkbook = classifyMalformedWorkbookError(error);
+      if (malformedWorkbook) {
+        throw new UnprocessableSpreadsheetError(malformedWorkbook.cause, {
+          parserReason: malformedWorkbook.reason,
+        });
+      }
       throw error;
     }
   }
@@ -75,4 +84,54 @@ export class PiscinaSpreadsheetParserAdapter
     });
     return this.pool;
   }
+}
+
+const MALFORMED_WORKBOOK_RULES = [
+  {
+    reason: 'encrypted_workbook',
+    pattern: /encrypted|password.?protected/i,
+  },
+  {
+    reason: 'unsupported_archive',
+    pattern: /unsupported zip/i,
+  },
+  {
+    reason: 'archive_size_mismatch',
+    pattern: /bad (?:compressed|uncompressed) size/i,
+  },
+  {
+    reason: 'invalid_container',
+    pattern: /invalid (?:zip|cfb|workbook)|unrecognized cfb header/i,
+  },
+  {
+    reason: 'missing_workbook_part',
+    pattern: /(?:cannot|could not) find (?:file .* in zip|.*workbook)/i,
+  },
+  {
+    reason: 'truncated_data',
+    pattern: /end of data/i,
+  },
+  {
+    reason: 'corrupt_workbook',
+    pattern: /corrupt/i,
+  },
+] as const;
+
+type MalformedWorkbookReason =
+  (typeof MALFORMED_WORKBOOK_RULES)[number]['reason'];
+
+interface MalformedWorkbookFailure {
+  cause: Error;
+  reason: MalformedWorkbookReason;
+}
+
+function classifyMalformedWorkbookError(
+  error: unknown,
+): MalformedWorkbookFailure | null {
+  if (!(error instanceof Error)) return null;
+
+  const matchingRule = MALFORMED_WORKBOOK_RULES.find(({ pattern }) =>
+    pattern.test(error.message),
+  );
+  return matchingRule ? { cause: error, reason: matchingRule.reason } : null;
 }
