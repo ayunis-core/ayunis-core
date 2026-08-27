@@ -21,6 +21,7 @@ import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spre
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { BackendToolAdapter } from './backend-tool.adapter';
 
 const orgId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -34,10 +35,11 @@ function fakeTool(name: string): BackendTool {
   } as unknown as BackendTool;
 }
 
-function toolCtx(): ToolExecutionContext {
+function toolCtx(isAnonymous = false): ToolExecutionContext {
   return {
-    context: RunContext.create({ orgId, threadId, isAnonymous: false }),
+    context: RunContext.create({ orgId, threadId, isAnonymous }),
     toolCallId: 'c1',
+    emit: jest.fn(),
   } as unknown as ToolExecutionContext;
 }
 
@@ -176,16 +178,24 @@ describe('BackendToolAdapter', () => {
     });
   });
 
-  it('truncates oversized executable results', async () => {
-    execute.mockResolvedValue('x'.repeat(25000));
+  it('returns executable results up to 200,000 characters', async () => {
+    const toolResult = 'x'.repeat(200_000);
+    execute.mockResolvedValue(toolResult);
 
     const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
     const result = await tool.execute!({}, toolCtx());
 
-    expect(result).toEqual({
-      result: expect.stringMatching(/too long to display/i),
-      isError: false,
-    });
+    expect(result).toEqual({ result: toolResult, isError: false });
+  });
+
+  it('leaves non-PII result limiting to the agent runtime', async () => {
+    const toolResult = `${'x'.repeat(200_000)}additional content`;
+    execute.mockResolvedValue(toolResult);
+
+    const [tool] = adapter.toRuntimeTools([fakeTool('search')]);
+    const result = await tool.execute!({}, toolCtx());
+
+    expect(result).toEqual({ result: toolResult, isError: false });
   });
 
   it('redacts PII tool output and emits masks in anonymous mode', async () => {
@@ -218,6 +228,29 @@ describe('BackendToolAdapter', () => {
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'thread_pii_masks' }),
     );
+  });
+
+  it('limits PII tool output before anonymization', async () => {
+    const retainedResult = 'x'.repeat(30_000);
+    execute.mockResolvedValue(`${retainedResult}discarded`);
+    anonymize.mockResolvedValue({
+      anonymizedText: 'anonymized result',
+      masks: [],
+    });
+    const piiTool = {
+      ...fakeTool('resident_lookup'),
+      returnsPii: true,
+    } as unknown as BackendTool;
+
+    const [tool] = adapter.toRuntimeTools([piiTool]);
+    const result = await tool.execute!({}, toolCtx(true));
+    const command = anonymize.mock.calls[0][0] as AnonymizeTextForThreadCommand;
+
+    expect(command.text).toBe(retainedResult);
+    expect(result).toEqual({
+      result: 'anonymized result\n[result truncated]',
+      isError: false,
+    });
   });
 
   it('stops the runtime when PII tool output cannot be anonymized', async () => {

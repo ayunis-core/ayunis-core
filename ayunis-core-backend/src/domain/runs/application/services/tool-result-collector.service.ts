@@ -14,7 +14,7 @@ import {
   isAcknowledgementOnlyTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
-} from '../agent-runtime/runtime-tool-policy';
+} from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
@@ -22,19 +22,24 @@ import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pi
 import { ApplicationError } from 'src/common/errors/base.error';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ToolUsedEvent } from '../events/tool-used.event';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
 import {
   RunToolCompletedEvent,
   type RunToolOutcome,
-} from '../events/run-tool-completed.event';
-import type { RunExecutionPath } from '../run-execution-path';
+} from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import {
   RunAnonymizationUnavailableError,
   RunToolExecutionFailedError,
-} from '../runs.errors';
-import { RunToolResultInput } from '../../domain/run-input.entity';
+} from 'src/domain/runs/application/runs.errors';
+import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  addToolResultTruncationNotice,
+  limitToolResult,
+  truncateToolResult,
+} from 'src/domain/runs/application/helpers/limit-tool-result.helper';
+import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 
-const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
@@ -447,15 +452,21 @@ export class ToolResultCollectorService {
         }
       });
 
-    if (result.length > MAX_TOOL_RESULT_LENGTH) {
-      result = `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
-    }
-
     let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
-      const anonymized = await this.anonymizeText(result, orgId, threadId);
-      result = anonymized.anonymizedText;
+      const limited = truncateToolResult(result, MAX_ANONYMIZATION_TEXT_LENGTH);
+      const anonymized = await this.anonymizeText(
+        limited.result,
+        orgId,
+        threadId,
+      );
+      const anonymizedResult = limited.truncated
+        ? addToolResultTruncationNotice(anonymized.anonymizedText)
+        : anonymized.anonymizedText;
+      result = limitToolResult(anonymizedResult);
       piiMasks = anonymized.masks;
+    } else {
+      result = limitToolResult(result);
     }
 
     return {

@@ -6,6 +6,7 @@ import type { AssistantMessage } from 'src/domain/messages/domain/messages/assis
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import type { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -13,10 +14,10 @@ import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entit
 import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
-import { RunToolResultInput } from '../../domain/run-input.entity';
-import { ToolUsedEvent } from '../events/tool-used.event';
-import { RunToolCompletedEvent } from '../events/run-tool-completed.event';
-import type { RunExecutionPath } from '../run-execution-path';
+import { RunToolResultInput } from 'src/domain/runs/domain/run-input.entity';
+import { ToolUsedEvent } from 'src/domain/runs/application/events/tool-used.event';
+import { RunToolCompletedEvent } from 'src/domain/runs/application/events/run-tool-completed.event';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 import { ToolResultCollectorService } from './tool-result-collector.service';
 
 const orgId = randomUUID();
@@ -139,6 +140,31 @@ describe('ToolResultCollectorService', () => {
     expect(executeTool).toHaveBeenCalledTimes(1);
   });
 
+  it('exposes backend tool results up to 200,000 characters', async () => {
+    const toolResult = 'x'.repeat(200_000);
+    executeTool.mockResolvedValue(toolResult);
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+
+    const result = await collect(service, thread, [backendTool]);
+
+    expect(result.contents[0].result).toBe(toolResult);
+  });
+
+  it('retains the first 200,000 characters of oversized backend tool results', async () => {
+    const retainedResult = 'x'.repeat(200_000);
+    executeTool.mockResolvedValue(`${retainedResult}discarded`);
+    const backendTool = new BackendTestTool('municipal_search');
+    const thread = threadWith(toolUse('search-1', backendTool.name));
+
+    const result = await collect(service, thread, [backendTool]);
+    const toolResult = result.contents[0].result;
+
+    expect(toolResult.startsWith(retainedResult)).toBe(true);
+    expect(toolResult.endsWith('[result truncated]')).toBe(true);
+    expect(toolResult).not.toContain('discarded');
+  });
+
   it('executes a hybrid artifact once and exposes the acknowledgement', async () => {
     const document = new CreateDocumentTool();
     const thread = threadWith(
@@ -241,6 +267,25 @@ describe('ToolResultCollectorService', () => {
 
     expect(result.contents[0].result).toBe('{{pii:PERSON_1}}');
     expect(result.piiMasks).toHaveLength(1);
+  });
+
+  it('limits PII tool output before anonymization', async () => {
+    const retainedResult = 'x'.repeat(30_000);
+    const backendTool = new BackendTestTool('resident_lookup', true);
+    executeTool.mockResolvedValue(`${retainedResult}discarded`);
+    anonymize.mockResolvedValue({
+      anonymizedText: 'anonymized result',
+      masks: [],
+    });
+    const thread = threadWith(toolUse('lookup-1', backendTool.name));
+
+    const result = await collect(service, thread, [backendTool], null, true);
+    const command = anonymize.mock.calls[0][0] as AnonymizeTextForThreadCommand;
+
+    expect(command.text).toBe(retainedResult);
+    expect(result.contents[0].result).toBe(
+      'anonymized result\n[result truncated]',
+    );
   });
 
   it('records a successful legacy tool outcome', async () => {

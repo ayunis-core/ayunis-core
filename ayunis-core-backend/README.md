@@ -69,10 +69,11 @@ Use `./dev up --slot 1` to run a second instance in parallel (e.g. for another w
 Environment precedence and the `DEV_PORT_OFFSET` slot derivation are
 documented in `src/config/SUMMARY.md`. Useful to know:
 
-- **Manual commands that need secrets** (Infisical path) must be prefixed,
-  because the DB config no longer lives in a local file:
-  `infisical run --env=dev --path=/backend -- pnpm seed` (same for
-  `pnpm run cli` and `pnpm run migration:*:dev`).
+- `pnpm seed` works directly after `./dev up`; the generated `.env.dev`
+  points standalone database commands at the selected slot. Other manual
+  commands that need the full Infisical environment must be prefixed:
+  `infisical run --env=dev --path=/backend -- pnpm run cli` (same for
+  `pnpm run migration:*:dev`).
 - **Personal overrides:** to change a shared value just for yourself (a
   feature flag, a temporary API key), set a *personal override* on the secret
   in the Infisical UI — the CLI resolves it automatically. Offline

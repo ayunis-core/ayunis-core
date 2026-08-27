@@ -323,7 +323,11 @@ cmd_up() {
       echo "DISABLE_ORG_EVENTS_WEBHOOKS=true"
       echo "ORG_EVENTS_WEBHOOK_URL="
     fi
-    if ! $INFISICAL_OK; then
+    if $INFISICAL_OK; then
+      echo "# Host-side database commands use the slot's published Postgres port."
+      echo "POSTGRES_HOST=localhost"
+      echo "POSTGRES_PORT=5432"
+    else
       cat <<EOF
 # Local fallback (no Infisical): base slot-0 connection config; ports are
 # offset by DEV_PORT_OFFSET at boot. Provider API keys belong in .env.

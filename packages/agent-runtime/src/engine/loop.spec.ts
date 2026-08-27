@@ -173,6 +173,51 @@ describe('the agent loop', () => {
     });
   });
 
+  it('sends tool results up to 200,000 characters without truncation', async () => {
+    const toolResult = 'x'.repeat(200_000);
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'large_result', input: {} }),
+      textTurn('Done'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [echoTool({ name: 'large_result', execute: () => toolResult })],
+      }),
+    );
+
+    expect(model.requests[1].messages.at(-1)).toMatchObject({
+      content: [expect.objectContaining({ result: toolResult })],
+    });
+  });
+
+  it('retains the first 200,000 characters of oversized tool results', async () => {
+    const retainedResult = 'x'.repeat(200_000);
+    const model = new MockProvider([
+      toolCallTurn({ id: 'call-1', name: 'large_result', input: {} }),
+      textTurn('Done'),
+    ]);
+
+    await collectEvents(
+      baseInput(model, {
+        tools: [
+          echoTool({
+            name: 'large_result',
+            execute: () => `${retainedResult}discarded`,
+          }),
+        ],
+      }),
+    );
+
+    expect(model.requests[1].messages.at(-1)).toMatchObject({
+      content: [
+        expect.objectContaining({
+          result: `${retainedResult}\n[result truncated]`,
+        }),
+      ],
+    });
+  });
+
   it('records an externally handled tool before exiting', async () => {
     const externallyHandled = echoTool({
       name: 'request_approval',

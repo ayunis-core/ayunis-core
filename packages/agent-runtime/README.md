@@ -50,7 +50,7 @@ tool-call arguments did not arrive intact — unparseable JSON, or a token-limit
 finish while tool calls were being
 emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
 through `modelCallInterrupted`, so hosts can persist its intact text and
-thinking. Three consecutive tool *phases* in which one tool fails with the
+thinking. Three consecutive tool _phases_ in which one tool fails with the
 identical error text end the run with `TOOL_REPEATEDLY_FAILING` after the
 failing phase's tool-result message is emitted — repetition across phases
 proves the model saw the error and did not adapt, whereas repeats inside a
@@ -84,6 +84,8 @@ an unexecuted call after cancellation while flushing the complete grouped
 result before the runtime exposes its message event.
 Executable tools may return either a string for success or
 `{ result, isError }` when the host needs to report an explicit failure status.
+Tool output is capped at 200,000 characters; oversized output preserves that
+full prefix and appends a truncation marker.
 The runtime accumulates providers' incremental tool-call fields and exposes
 `tool_call_snapshot` events containing the raw arguments received so far plus
 a best-effort parsed input. A terminal `invalid` snapshot preserves malformed

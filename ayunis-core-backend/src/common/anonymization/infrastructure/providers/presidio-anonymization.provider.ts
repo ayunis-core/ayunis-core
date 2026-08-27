@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { AnonymizationPort } from '../../application/ports/anonymization.port';
+import { AnonymizationPort } from 'src/common/anonymization/application/ports/anonymization.port';
 import {
   AnonymizationFailedError,
   AnonymizationInputTooLongError,
-} from '../../application/anonymization.errors';
+} from 'src/common/anonymization/application/anonymization.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
-import { PiiDetection } from '../../domain/pii-detection';
+import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
-
-// Keep this synchronized with ayunis-core-anonymize/app/models.py.
-const MAX_ANONYMIZATION_TEXT_LENGTH = 30_000;
+import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 
 function countCodePoints(text: string): number {
   let count = 0;
