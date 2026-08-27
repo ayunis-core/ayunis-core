@@ -31,6 +31,29 @@ describe('useRunErrorHandler', () => {
     );
   });
 
+  it.each([
+    'RUN_ANONYMIZATION_UNAVAILABLE',
+    'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE',
+    'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
+    'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE',
+    'PROVIDER_UNAVAILABLE_REJECTED_ANONYMIZE',
+  ])('shows the anonymization outage explanation for %s', (code) => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'Anonymization provider unavailable',
+      threadId: 'thread-1',
+      timestamp: '2026-08-27T12:00:00.000Z',
+      code,
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith(
+      'chat.errorAnonymizationUnavailable',
+    );
+  });
+
   it('shows the context-budget explanation for an oversized latest turn', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {
