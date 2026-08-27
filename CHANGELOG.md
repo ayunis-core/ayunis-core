@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.31.0](https://github.com/ayunis-core/ayunis-core/compare/v2.30.3...v2.31.0) (2026-08-27)
+
+
+### Features
+
+* **models:** warn users about provider faults (AYC-000) ([#1529](https://github.com/ayunis-core/ayunis-core/issues/1529)) ([6b9cf5d](https://github.com/ayunis-core/ayunis-core/commit/6b9cf5d98dd459e31697ff74e8618c1b2fc016a4))
+* **openai-compat:** support inline documents (AYC-835) ([#1530](https://github.com/ayunis-core/ayunis-core/issues/1530)) ([4d45446](https://github.com/ayunis-core/ayunis-core/commit/4d454468e95b7e60d8fda0f7506257c3bb430384))
+
+
+### Bug Fixes
+
+* **invites:** prevent global bulk invite conflicts (AYC-735) ([0812b16](https://github.com/ayunis-core/ayunis-core/commit/0812b16eff22f6b846c6b8b0ceb7fa6353788995))
+* **retrievers:** classify malformed pdf parse failures (AYC-810) ([#1537](https://github.com/ayunis-core/ayunis-core/issues/1537)) ([7408883](https://github.com/ayunis-core/ayunis-core/commit/74088833f23220c5d584d60cf11f1773f087ac65))
+* **runs:** abort deleted-thread tool persistence (AYC-738) ([#1539](https://github.com/ayunis-core/ayunis-core/issues/1539)) ([2befd9f](https://github.com/ayunis-core/ayunis-core/commit/2befd9f323ed0a9116adb0dba2f32407682205f3))
+* **runs:** preserve anonymization outage classes (AYC-739) ([#1540](https://github.com/ayunis-core/ayunis-core/issues/1540)) ([15e82cf](https://github.com/ayunis-core/ayunis-core/commit/15e82cfda730e442efb4056dd1bc52e46b4017d7))
+* **runs:** preserve large tool results (AYC-000) ([#1533](https://github.com/ayunis-core/ayunis-core/issues/1533)) ([9554199](https://github.com/ayunis-core/ayunis-core/commit/9554199ef044447e90d2ae36fcc1406cd2b8276a))
+* **runs:** recover malformed tool-only turns (AYC-811) ([#1541](https://github.com/ayunis-core/ayunis-core/issues/1541)) ([da3f595](https://github.com/ayunis-core/ayunis-core/commit/da3f5957d973f76ca27e850937f88131250cecc4))
+* **runs:** retry transient provider server failures (AYC-812) ([#1536](https://github.com/ayunis-core/ayunis-core/issues/1536)) ([e191f6f](https://github.com/ayunis-core/ayunis-core/commit/e191f6fb7b62df4bee2bcac152c30f93b59e5866))
+* **sources:** join ambient transactions for skill attachments (AYC-632) ([#1531](https://github.com/ayunis-core/ayunis-core/issues/1531)) ([dfe55bd](https://github.com/ayunis-core/ayunis-core/commit/dfe55bda76a7c5c66334693bea706c90af0b79da))
+* **sources:** reject malformed spreadsheet uploads (AYC-809) ([#1538](https://github.com/ayunis-core/ayunis-core/issues/1538)) ([7720f1c](https://github.com/ayunis-core/ayunis-core/commit/7720f1c8ac3028cd302db3d6447bd6532bd3c6e0))
+* **ui:** stop persisting sidebar cookie (AYC-000) ([#1535](https://github.com/ayunis-core/ayunis-core/issues/1535)) ([d4d13c8](https://github.com/ayunis-core/ayunis-core/commit/d4d13c8938fdc01d5be49c1cd13572a79f7412f2))
+
 ## [2.30.3](https://github.com/ayunis-core/ayunis-core/compare/v2.30.2...v2.30.3) (2026-08-26)
 
 
