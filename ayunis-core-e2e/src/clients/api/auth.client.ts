@@ -38,6 +38,12 @@ export async function isLoggedIn(api: APIRequestContext): Promise<boolean> {
   }
 }
 
+export async function markWelcomeVideoSeen(
+  api: APIRequestContext,
+): Promise<void> {
+  await generatedApi.onboardingControllerMarkWelcomeVideoSeen({ api });
+}
+
 export async function confirmEmail(
   api: APIRequestContext,
   token: string,
