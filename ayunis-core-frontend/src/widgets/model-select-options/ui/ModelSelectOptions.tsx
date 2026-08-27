@@ -13,6 +13,7 @@ import {
 import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
+import ModelProviderFaultIndicator from './ModelProviderFaultIndicator';
 
 export type ModelOption = ModelInfoModel & { id: string };
 
@@ -47,12 +48,14 @@ interface ModelSelectOptionsProps {
   models: ModelOption[];
   showFlag?: boolean;
   showHeading?: boolean;
+  showProviderFault?: boolean;
 }
 
 export default function ModelSelectOptions({
   models,
   showFlag = false,
   showHeading = true,
+  showProviderFault = false,
 }: Readonly<ModelSelectOptionsProps>) {
   const { t } = useTranslation('common');
   const [hoveredModel, setHoveredModel] = useState<ModelOption | null>(null);
@@ -100,6 +103,9 @@ export default function ModelSelectOptions({
                     </span>
                   ) : (
                     name
+                  )}
+                  {showProviderFault && model.hasProviderFault && (
+                    <ModelProviderFaultIndicator />
                   )}
                   {model.tier && (
                     // Radix portals the item text into the closed trigger;

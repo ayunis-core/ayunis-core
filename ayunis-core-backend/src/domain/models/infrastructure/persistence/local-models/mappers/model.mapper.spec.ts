@@ -3,7 +3,7 @@ import { ModelMapper } from './model.mapper';
 import {
   ImageGenerationModelRecord,
   LanguageModelRecord,
-} from '../schema/model.record';
+} from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
@@ -29,6 +29,7 @@ describe('ModelMapper', () => {
 
   const buildLanguageRecord = (
     tier: string | null | undefined,
+    hasProviderFault = false,
   ): LanguageModelRecord => {
     const record = new LanguageModelRecord();
     record.id = mockId;
@@ -40,6 +41,7 @@ describe('ModelMapper', () => {
     record.isReasoning = false;
     record.canVision = false;
     record.isArchived = false;
+    record.hasProviderFault = hasProviderFault;
     record.createdAt = new Date('2025-01-01T00:00:00Z');
     record.updatedAt = new Date('2025-01-02T00:00:00Z');
     record.tier = tier ?? null;
@@ -49,6 +51,7 @@ describe('ModelMapper', () => {
   const buildLanguageDomain = (
     tier?: ModelTier,
     description?: string,
+    hasProviderFault = false,
   ): LanguageModel => {
     return new LanguageModel({
       id: mockId,
@@ -64,6 +67,7 @@ describe('ModelMapper', () => {
       updatedAt: new Date('2025-01-02T00:00:00Z'),
       tier,
       description,
+      hasProviderFault,
     });
   };
 
@@ -103,6 +107,14 @@ describe('ModelMapper', () => {
       expect((domain as LanguageModel).tier).toBeUndefined();
       expect(warnSpy).not.toHaveBeenCalled();
     });
+
+    it('reads the provider fault status from the record', () => {
+      const record = buildLanguageRecord(null, true);
+
+      const domain = mapper.toDomain(record);
+
+      expect((domain as LanguageModel).hasProviderFault).toBe(true);
+    });
   });
 
   describe('toRecord (language model)', () => {
@@ -121,6 +133,14 @@ describe('ModelMapper', () => {
       const record = mapper.toRecord(domain);
 
       expect((record as LanguageModelRecord).tier).toBeNull();
+    });
+
+    it('writes the provider fault status onto the record', () => {
+      const domain = buildLanguageDomain(undefined, undefined, true);
+
+      const record = mapper.toRecord(domain);
+
+      expect((record as LanguageModelRecord).hasProviderFault).toBe(true);
     });
   });
 

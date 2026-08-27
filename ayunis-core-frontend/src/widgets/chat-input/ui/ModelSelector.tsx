@@ -35,6 +35,7 @@ export default function ModelSelector({
         className="border-none shadow-none"
         disabled={isDisabled || isDisabledModels}
         aria-label={t('chatInput.modelSelectorAriaLabel')}
+        data-testid="chat-model-selector"
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -44,7 +45,7 @@ export default function ModelSelector({
         align="end"
         className="min-w-[260px]"
       >
-        <ModelSelectOptions models={models} showFlag />
+        <ModelSelectOptions models={models} showFlag showProviderFault />
       </SelectContent>
     </Select>
   );

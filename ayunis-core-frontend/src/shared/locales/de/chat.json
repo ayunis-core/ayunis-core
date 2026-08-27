@@ -217,6 +217,7 @@
     },
     "modelUnavailableTitle": "KI-Modell nicht mehr verfügbar",
     "modelUnavailableDescription": "Das in diesem Chat verwendete KI-Modell ist nicht mehr verfügbar, daher kann diese Konversation nicht fortgesetzt werden. Starten Sie einen neuen Chat, um weiterzuarbeiten.",
+    "modelProviderFaultWarning": "Für das Modell „{{modelName}}“ ist derzeit eine Provider-Störung bekannt. Sie können die Konversation fortsetzen, Antworten können jedoch fehlschlagen.",
     "longChatWarningTitle": "Konversation zu lang",
     "longChatWarningDescription": "Für bessere Ergebnisse sollten Sie einen neuen Chat starten.",
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",

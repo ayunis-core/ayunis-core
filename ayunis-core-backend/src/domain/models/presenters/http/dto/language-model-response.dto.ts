@@ -78,6 +78,14 @@ export class LanguageModelResponseDto {
   canVision: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      'Whether the upstream provider currently has a known fault for this model',
+    example: false,
+  })
+  hasProviderFault: boolean;
+
+  @ApiProperty({
     type: 'string',
     format: 'date-time',
     description: 'The date the model was created',

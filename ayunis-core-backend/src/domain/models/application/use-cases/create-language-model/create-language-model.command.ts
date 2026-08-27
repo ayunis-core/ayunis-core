@@ -10,6 +10,7 @@ export class CreateLanguageModelCommand {
   isReasoning: boolean;
   canVision: boolean;
   isArchived: boolean;
+  hasProviderFault: boolean;
   inputTokenCost?: number;
   outputTokenCost?: number;
   tier?: ModelTier;
@@ -24,6 +25,7 @@ export class CreateLanguageModelCommand {
     isReasoning: boolean;
     canVision: boolean;
     isArchived: boolean;
+    hasProviderFault?: boolean;
     inputTokenCost?: number;
     outputTokenCost?: number;
     tier?: ModelTier;
@@ -37,6 +39,7 @@ export class CreateLanguageModelCommand {
     this.isReasoning = params.isReasoning;
     this.canVision = params.canVision;
     this.isArchived = params.isArchived;
+    this.hasProviderFault = params.hasProviderFault ?? false;
     this.inputTokenCost = params.inputTokenCost;
     this.outputTokenCost = params.outputTokenCost;
     this.tier = params.tier;

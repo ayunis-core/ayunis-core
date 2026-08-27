@@ -1,5 +1,5 @@
 import { LanguageModel } from './language.model';
-import { ModelProvider } from '../value-objects/model-provider.enum';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 describe('LanguageModel', () => {
   const makeModel = (costs: {
@@ -18,6 +18,28 @@ describe('LanguageModel', () => {
       inputTokenCost: costs.inputTokenCost,
       outputTokenCost: costs.outputTokenCost,
     });
+
+  describe('provider fault status', () => {
+    it('defaults to false when omitted', () => {
+      expect(makeModel({}).hasProviderFault).toBe(false);
+    });
+
+    it('preserves an explicit provider fault', () => {
+      const model = new LanguageModel({
+        name: 'gpt-4o',
+        provider: ModelProvider.OPENAI,
+        displayName: 'GPT-4o',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        isArchived: false,
+        hasProviderFault: true,
+      });
+
+      expect(model.hasProviderFault).toBe(true);
+    });
+  });
 
   describe('consumesCredits', () => {
     it('is false when both token costs are undefined (free open-source model)', () => {

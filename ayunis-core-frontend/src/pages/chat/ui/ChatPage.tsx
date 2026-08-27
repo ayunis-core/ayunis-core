@@ -14,6 +14,7 @@ import { useMessageSend } from '@/pages/chat/api/useMessageSend';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
+import ProviderFaultNotice from './ProviderFaultNotice';
 import type { Thread, Message } from '@/pages/chat/model/openapi';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -101,9 +102,7 @@ export default function ChatPage({
   const selectedModel = models.find((m) => m.id === thread.permittedModelId);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
-  // Detect if the model used in this thread is no longer accessible.
-  // Only flagged after the permitted-models query succeeds — a loading or
-  // errored query must not hide the input (AYC-666).
+  // A loading or errored models query must not hide the input (AYC-666).
   const isModelUnavailable = useMemo(() => {
     if (thread.permittedModelId)
       return !isLoadingModels && !isModelsError && !selectedModel;
@@ -301,7 +300,6 @@ export default function ChatPage({
       setIsStreaming(true);
       chatInputRef.current?.setMessage('');
 
-      // Pass files directly - they'll be uploaded as part of the multipart request
       const images: PendingImage[] | undefined =
         imageFiles && imageFiles.length > 0
           ? imageFiles.map((img) => ({
@@ -332,7 +330,6 @@ export default function ChatPage({
       const lastMessage = prev[prev.length - 1];
       // eslint-disable-next-line eqeqeq, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain -- guard against empty prev array where lastMessage would be undefined
       if (lastMessage != null && lastMessage.role === 'assistant') {
-        // Filter out tool_use content, keeping only text and thinking
         const cleanedContent = lastMessage.content.filter(
           (c) => c.type === 'text' || c.type === 'thinking',
         );
@@ -426,6 +423,9 @@ export default function ChatPage({
       </p>
       {thread.isLongChat && <LongChatWarning />}
       <AcademyGateNotice className="mb-2" />
+      {selectedModel?.hasProviderFault && (
+        <ProviderFaultNotice modelName={selectedModel.displayName} />
+      )}
       <ChatInput
         key={thread.id}
         ref={chatInputRef}

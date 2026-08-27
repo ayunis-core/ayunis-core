@@ -12,6 +12,7 @@ interface ModelCheckboxFieldProps<T extends FieldValues> {
   name: Path<T>;
   label: string;
   disabled: boolean;
+  testId?: string;
 }
 
 export function ModelCheckboxField<T extends FieldValues>({
@@ -19,6 +20,7 @@ export function ModelCheckboxField<T extends FieldValues>({
   name,
   label,
   disabled,
+  testId,
 }: Readonly<ModelCheckboxFieldProps<T>>) {
   return (
     <FormField
@@ -31,6 +33,7 @@ export function ModelCheckboxField<T extends FieldValues>({
               checked={field.value}
               onCheckedChange={field.onChange}
               disabled={disabled}
+              data-testid={testId}
             />
           </FormControl>
           <FormLabel>{label}</FormLabel>

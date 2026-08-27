@@ -38,6 +38,13 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
 
   @ApiProperty({
     type: 'boolean',
+    description:
+      'Whether the upstream provider currently has a known fault for this model',
+  })
+  hasProviderFault: boolean;
+
+  @ApiProperty({
+    type: 'boolean',
     description: 'Whether this is the default model',
   })
   isDefault: boolean;

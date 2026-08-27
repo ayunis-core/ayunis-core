@@ -1,9 +1,70 @@
 import type { APIRequestContext } from '@playwright/test';
+import type {
+  LanguageModelResponseDto,
+  PermittedLanguageModelResponseDto,
+} from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
 export interface DefaultModel {
   name: string;
   provider: string;
+}
+
+interface CreateLanguageCatalogModelInput {
+  name: string;
+  displayName: string;
+}
+
+export async function createLanguageCatalogModel(
+  api: APIRequestContext,
+  input: CreateLanguageCatalogModelInput,
+): Promise<LanguageModelResponseDto> {
+  return generatedApi.superAdminLanguageCatalogModelsControllerCreateLanguageModel(
+    {
+      ...input,
+      provider: 'openai',
+      canStream: true,
+      canUseTools: false,
+      isReasoning: false,
+      canVision: false,
+      isArchived: false,
+      hasProviderFault: false,
+    },
+    { api },
+  );
+}
+
+export async function deleteCatalogModel(
+  api: APIRequestContext,
+  modelId: string,
+): Promise<void> {
+  await generatedApi.superAdminCatalogModelsControllerDeleteCatalogModel(
+    modelId,
+    { api },
+  );
+}
+
+export async function permitLanguageModel(
+  api: APIRequestContext,
+  modelId: string,
+): Promise<PermittedLanguageModelResponseDto> {
+  await generatedApi.modelsControllerCreatePermittedModel({ modelId }, { api });
+  const permittedModel = (
+    await generatedApi.modelsControllerGetOrgPermittedLanguageModels({ api })
+  ).find((model) => model.modelId === modelId);
+  if (!permittedModel) {
+    throw new Error(`Permitted language model ${modelId} was not returned`);
+  }
+  return permittedModel;
+}
+
+export async function removePermittedModel(
+  api: APIRequestContext,
+  permittedModelId: string,
+): Promise<void> {
+  await generatedApi.modelsControllerDeletePermittedModel(permittedModelId, {
+    api,
+  });
 }
 
 export async function permitFirstLanguageModelAsDefault(

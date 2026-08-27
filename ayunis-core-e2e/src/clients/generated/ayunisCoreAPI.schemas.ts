@@ -1064,6 +1064,8 @@ export interface PermittedLanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /** Whether the upstream provider currently has a known fault for this model */
+  hasProviderFault: boolean;
   /** Whether this is the default model */
   isDefault: boolean;
   /** Whether this model enforces anonymous mode */
@@ -1302,6 +1304,8 @@ export interface LanguageModelResponseDto {
   isReasoning: boolean;
   /** Whether the model supports vision (image processing) */
   canVision: boolean;
+  /** Whether the upstream provider currently has a known fault for this model */
+  hasProviderFault: boolean;
   /** The date the model was created */
   createdAt: string;
   /** The date the model was last updated */
@@ -1502,6 +1506,8 @@ export interface CreateLanguageModelRequestDto {
    * @maxLength 500
    */
   description?: string;
+  /** Whether the upstream provider currently has a known fault for this model */
+  hasProviderFault?: boolean;
 }
 
 /**
@@ -1574,6 +1580,8 @@ export interface UpdateLanguageModelRequestDto {
    * @maxLength 500
    */
   description?: string;
+  /** Whether the upstream provider currently has a known fault for this model. Omission preserves the existing value. */
+  hasProviderFault?: boolean;
 }
 
 /**
