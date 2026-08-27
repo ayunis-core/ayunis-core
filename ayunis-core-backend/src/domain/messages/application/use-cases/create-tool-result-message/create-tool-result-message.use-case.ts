@@ -1,13 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import {
   MESSAGES_REPOSITORY,
   MessagesRepository,
-} from '../../ports/messages.repository';
-import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
-import { MessageCreationError } from '../../messages.errors';
+} from 'src/domain/messages/application/ports/messages.repository';
+import {
+  MessageThreadMissingError,
+  UnexpectedToolResultMessageError,
+} from 'src/domain/messages/application/messages.errors';
 
 @Injectable()
 export class CreateToolResultMessageUseCase {
@@ -18,9 +21,10 @@ export class CreateToolResultMessageUseCase {
     private readonly logger: PinoLogger,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedToolResultMessageError)
   async execute(
     command: CreateToolResultMessageCommand,
-  ): Promise<ToolResultMessage> {
+  ): Promise<ToolResultMessage | null> {
     this.logger.info(
       {
         threadId: command.threadId,
@@ -39,19 +43,14 @@ export class CreateToolResultMessageUseCase {
         toolResultMessage,
       )) as ToolResultMessage;
     } catch (error) {
-      this.logger.error(
-        {
-          threadId: command.threadId,
-          err: error as Error,
-        },
-        'Failed to create tool result message',
-      );
-      throw error instanceof Error
-        ? new MessageCreationError(MessageRole.TOOL.toLowerCase(), error)
-        : new MessageCreationError(
-            MessageRole.TOOL.toLowerCase(),
-            new Error('Unknown error'),
-          );
+      if (error instanceof MessageThreadMissingError) {
+        this.logger.warn(
+          { threadId: command.threadId },
+          'Skipped saving tool result message because thread no longer exists',
+        );
+        return null;
+      }
+      throw error;
     }
   }
 }

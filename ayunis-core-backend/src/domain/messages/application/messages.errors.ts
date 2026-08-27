@@ -73,6 +73,12 @@ export class MessageCreationError extends ApplicationError {
   }
 }
 
+export class UnexpectedToolResultMessageError extends MessageCreationError {
+  constructor(error: Error) {
+    super('tool', error);
+  }
+}
+
 export class MessageNotFoundError extends ApplicationError {
   constructor(messageId: string, metadata?: ErrorMetadata) {
     super(
