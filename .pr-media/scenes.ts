@@ -1,10 +1,12 @@
 import type { Page } from '@playwright/test';
 import type { PrMediaScene } from './types';
 import { login } from '../src/clients/api/auth.client';
+import { dismissWelcomeVideo } from '../src/clients/api/onboarding.client';
 
 async function openSeededConfirmation(page: Page): Promise<void> {
   await page.context().clearCookies();
   await login(page.request, 'admin@usage.local', 'admin');
+  await dismissWelcomeVideo(page.request);
   await page.goto('/academy');
   const chapterLink = page.getByTestId(/^academy-chapter-/).first();
   await chapterLink.waitFor();
