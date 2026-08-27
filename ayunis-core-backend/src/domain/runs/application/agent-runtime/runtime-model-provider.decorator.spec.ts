@@ -215,7 +215,7 @@ describe('RuntimeModelProviderDecorator', () => {
       Object.assign(new Error('service unavailable'), { status: 503 }),
       'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
       'provider_server',
-      1,
+      2,
     ],
     [
       'oversized image',
@@ -257,6 +257,38 @@ describe('RuntimeModelProviderDecorator', () => {
       jest.useRealTimers();
     },
   );
+
+  it('recovers when an upstream server failure happens before output', async () => {
+    jest.useFakeTimers();
+    let attempts = 0;
+    const upstream = Object.assign(new Error('internal server error'), {
+      status: 500,
+    });
+    const provider: ModelProvider = {
+      name: 'test:bedrock-recovery',
+      async *stream() {
+        attempts += 1;
+        if (attempts === 1) {
+          yield await Promise.reject(upstream);
+        }
+        yield { textDelta: 'Recovered response' };
+      },
+    };
+    const bedrockModel = {
+      name: 'claude-sonnet-4',
+      provider: 'bedrock',
+    } as LanguageModel;
+    const { decorate } = buildHarness(bedrockModel);
+
+    const collected = collect(decorate(provider));
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await expect(collected).resolves.toEqual([
+      { textDelta: 'Recovered response' },
+    ]);
+    expect(attempts).toBe(2);
+    jest.useRealTimers();
+  });
 
   it('logs safe diagnostics for Azure server failures', async () => {
     const upstream = Object.assign(new Error('service unavailable'), {
