@@ -1,4 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
+import type { SsoDiscoveryResponseDto } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
 export interface RegisterOrgInput {
@@ -44,7 +45,10 @@ export async function markWelcomeVideoSeen(
   await generatedApi.onboardingControllerMarkWelcomeVideoSeen({ api });
 }
 
-export async function discoverSso(api: APIRequestContext, email: string) {
+export function discoverSso(
+  api: APIRequestContext,
+  email: string,
+): Promise<SsoDiscoveryResponseDto> {
   return generatedApi.ssoLoginControllerDiscover({ email }, { api });
 }
 
