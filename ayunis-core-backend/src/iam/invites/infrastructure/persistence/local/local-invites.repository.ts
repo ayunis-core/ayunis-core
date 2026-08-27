@@ -161,33 +161,33 @@ export class LocalInvitesRepository implements InvitesRepository {
     return this.inviteMapper.toDomain(entity);
   }
 
-  async findByEmailsAndOrg(emails: string[], orgId: string): Promise<Invite[]> {
-    this.logger.info(
-      { emailCount: emails.length, orgId },
-      'findByEmailsAndOrg',
-    );
+  async findByEmails(emails: string[]): Promise<Invite[]> {
+    this.logger.info({ emailCount: emails.length }, 'findByEmails');
 
     if (emails.length === 0) {
       return [];
     }
 
-    // Convert emails to lowercase for case-insensitive comparison
+    // invites.email carries a GLOBAL unique constraint, so at most one invite
+    // row can exist per email across all orgs. Look invites up globally,
+    // case-insensitively, and regardless of organization or acceptance status:
+    // a pending invite in another org or an orphaned accepted invite is
+    // invisible to an org-scoped lookup yet still makes the batch insert fail
+    // with a DB unique violation, surfacing as a generic 500 instead of a
+    // clear validation error (AYC-735).
     const lowerEmails = emails.map((e) => e.toLowerCase());
 
     const entities = await this.invites
       .createQueryBuilder('invite')
-      .where('invite.orgId = :orgId', { orgId })
-      .andWhere('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
-      .andWhere('invite.acceptedAt IS NULL') // Only pending invites
+      .where('LOWER(invite.email) IN (:...emails)', { emails: lowerEmails })
       .getMany();
 
     this.logger.debug(
       {
-        orgId,
         requestedCount: emails.length,
         foundCount: entities.length,
       },
-      'Found invites by emails and org',
+      'Found invites by emails',
     );
 
     return entities.map((entity) => this.inviteMapper.toDomain(entity));

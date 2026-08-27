@@ -26,10 +26,7 @@ export class BulkInviteValidatorService {
     const occurrences = emailOccurrences(command);
     const duplicateErrors = duplicateEmailErrors(occurrences);
     const uniqueEmails = [...occurrences.keys()];
-    const invites = await this.invites.findByEmailsAndOrg(
-      uniqueEmails,
-      command.orgId,
-    );
+    const invites = await this.invites.findByEmails(uniqueEmails);
     const users = await this.findUsersByEmails.execute(
       new FindUsersByEmailsQuery(uniqueEmails),
     );
@@ -114,7 +111,7 @@ function rowError(
       row,
       originalEmail,
       'EMAIL_ALREADY_INVITED',
-      'Email already has a pending invite',
+      'Email already has an invite',
     );
   }
   if (userEmails.has(email)) {
