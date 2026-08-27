@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { FileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
+import {
+  FileRetrieverHandler,
+  type FileRetrieverProcessOptions,
+} from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
@@ -59,7 +62,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     });
   }
 
-  async processFile(file: File): Promise<FileRetrieverResult> {
+  async processFile(
+    file: File,
+    options?: FileRetrieverProcessOptions,
+  ): Promise<FileRetrieverResult> {
     try {
       this.logger.debug(
         { fileName: file.filename, fileType: file.fileType },
@@ -70,7 +76,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
       const blobPart: BlobPart = file.fileData as unknown as BlobPart;
       const fileBlob = new Blob([blobPart], { type: file.fileType });
 
-      const ocrResponse = await this.ocrWithReuploadRecovery(fileBlob);
+      const ocrResponse = await this.ocrWithReuploadRecovery(
+        fileBlob,
+        options?.pageLimit,
+      );
 
       return this.parseResponse(ocrResponse);
     } catch (error) {
@@ -181,10 +190,13 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
    * / code 3310 also covers unrelated failures that re-uploading cannot fix,
    * and error wording is not a stable contract.
    */
-  private async ocrWithReuploadRecovery(fileBlob: Blob): Promise<OCRResponse> {
+  private async ocrWithReuploadRecovery(
+    fileBlob: Blob,
+    pageLimit?: number,
+  ): Promise<OCRResponse> {
     const fileId = await this.uploadFile(fileBlob);
     try {
-      const response = await this.runOcr(fileId);
+      const response = await this.runOcr(fileId, pageLimit);
       await this.deleteFileBestEffort(fileId);
       return response;
     } catch (error) {
@@ -202,7 +214,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
     const freshFileId = await this.uploadFile(fileBlob);
     try {
-      return await this.runOcr(freshFileId);
+      return await this.runOcr(freshFileId, pageLimit);
     } finally {
       await this.deleteFileBestEffort(freshFileId);
     }
@@ -228,7 +240,10 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
    * not delete before `ocrWithReuploadRecovery` has probed whether the file
    * still exists.
    */
-  private async runOcr(fileId: string): Promise<OCRResponse> {
+  private async runOcr(
+    fileId: string,
+    pageLimit?: number,
+  ): Promise<OCRResponse> {
     return retryWithBackoff({
       fn: () =>
         this.client.ocr.process({
@@ -241,6 +256,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
           // response body enough to push large documents into the 120s
           // body-read deadline (AYC-655).
           includeImageBase64: false,
+          ...(pageLimit === undefined ? {} : { pages: `0-${pageLimit - 1}` }),
         }),
       maxRetries: 3,
       delay: 1000,

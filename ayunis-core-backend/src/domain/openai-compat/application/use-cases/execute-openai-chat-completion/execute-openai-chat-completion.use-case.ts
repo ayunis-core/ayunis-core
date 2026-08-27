@@ -11,19 +11,22 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { GetPermittedLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.use-case';
 import { GetPermittedLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-language-models/get-permitted-language-models.query';
 import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
-import { OpenAIRequestMapper } from '../../mappers/openai-request.mapper';
-import { OpenAIResponseMapper } from '../../mappers/openai-response.mapper';
+import { OpenAIRequestMapper } from 'src/domain/openai-compat/application/mappers/openai-request.mapper';
+import { OpenAIResponseMapper } from 'src/domain/openai-compat/application/mappers/openai-response.mapper';
 import {
   OpenAIStreamMapper,
   OpenAIStreamSession,
-} from '../../mappers/openai-stream.mapper';
+} from 'src/domain/openai-compat/application/mappers/openai-stream.mapper';
 import {
   OpenAIModelNotFoundError,
   OpenAITokenLimitError,
-} from '../../openai-compat.errors';
+  OpenAIUnexpectedError,
+} from 'src/domain/openai-compat/application/openai-compat.errors';
 import { ExecuteOpenAIChatCompletionCommand } from './execute-openai-chat-completion.command';
-import type { ChatCompletionResponse } from '../../types/openai-response.types';
-import type { ChatCompletionChunk } from '../../types/openai-chunk.types';
+import { OpenAIFileContentService } from 'src/domain/openai-compat/application/services/openai-file-content.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import type { ChatCompletionResponse } from 'src/domain/openai-compat/application/types/openai-response.types';
+import type { ChatCompletionChunk } from 'src/domain/openai-compat/application/types/openai-chunk.types';
 
 /**
  * Sole orchestrator on the OpenAI-compat path. Wraps `Get/StreamInference`
@@ -45,29 +48,32 @@ export class ExecuteOpenAIChatCompletionUseCase {
     private readonly getInferenceUseCase: GetInferenceUseCase,
     private readonly streamInferenceUseCase: StreamInferenceUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
+    private readonly fileContentService: OpenAIFileContentService,
     private readonly requestMapper: OpenAIRequestMapper,
     private readonly responseMapper: OpenAIResponseMapper,
     private readonly streamMapper: OpenAIStreamMapper,
   ) {}
 
+  @HandleUnexpectedErrors(OpenAIUnexpectedError)
   async executeNonStreaming(
     command: ExecuteOpenAIChatCompletionCommand,
   ): Promise<ChatCompletionResponse> {
     const { model, threadId } = await this.prepare(command);
+    const request = await this.fileContentService.expand(command.request);
     const { systemPrompt, messages } = this.requestMapper.toDomainMessages(
-      command.request,
+      request,
       threadId,
     );
 
     const requestId = this.requestMapper.newRequestId();
-    const tools = this.requestMapper.toToolSchemas(command.request);
+    const tools = this.requestMapper.toToolSchemas(request);
 
     const response = await this.executeNonStreamingInference(
       new GetInferenceCommand({
         model,
         messages,
         tools,
-        toolChoice: this.requestMapper.toModelToolChoice(command.request),
+        toolChoice: this.requestMapper.toModelToolChoice(request),
         instructions: systemPrompt || undefined,
         acceptTokenLimitCompletion: true,
       }),
@@ -108,12 +114,14 @@ export class ExecuteOpenAIChatCompletionUseCase {
     }
   }
 
+  @HandleUnexpectedErrors(OpenAIUnexpectedError)
   async executeStreaming(
     command: ExecuteOpenAIChatCompletionCommand,
   ): Promise<Observable<ChatCompletionChunk>> {
     const { model, threadId } = await this.prepare(command);
+    const request = await this.fileContentService.expand(command.request);
     const { systemPrompt, messages } = this.requestMapper.toDomainMessages(
-      command.request,
+      request,
       threadId,
     );
 
@@ -125,8 +133,8 @@ export class ExecuteOpenAIChatCompletionUseCase {
         model,
         messages,
         systemPrompt,
-        tools: this.requestMapper.toToolSchemas(command.request),
-        toolChoice: this.requestMapper.toModelToolChoice(command.request),
+        tools: this.requestMapper.toToolSchemas(request),
+        toolChoice: this.requestMapper.toModelToolChoice(request),
         orgId: command.principal.orgId,
       }),
     );

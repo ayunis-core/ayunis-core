@@ -4,22 +4,22 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RetrieveFileContentUseCase } from './retrieve-file-content.use-case';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
-import type { FileRetrieverHandler } from '../../ports/file-retriever.handler';
-import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
+import type { FileRetrieverHandler } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
+import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/application/file-retriever-handler.registry';
 import {
   FileRetrieverResult,
   FileRetrieverPage,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { DocumentConverterPort } from '../../ports/document-converter.port';
+import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
 import {
   EmptyOcrResultError,
   FileRetrieverUnauthorizedError,
   UnprocessableDocumentError,
-} from '../../file-retriever.errors';
-import { FileRetrieverType } from '../../../domain/value-objects/file-retriever-type.enum';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
+import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 
 describe('RetrieveFileContentUseCase', () => {
   let useCase: RetrieveFileContentUseCase;
@@ -190,6 +190,28 @@ describe('RetrieveFileContentUseCase', () => {
     );
   });
 
+  it('limits the pages processed by Mistral when requested by the caller', async () => {
+    const command = new RetrieveFileContentCommand({
+      fileData: Buffer.from('test file content'),
+      fileName: 'test.pdf',
+      fileType: 'application/pdf',
+      pdfPageLimit: 51,
+    });
+    const expectedResult = new FileRetrieverResult([
+      new FileRetrieverPage('processed content', 1),
+    ]);
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockResolvedValue(expectedResult);
+
+    await useCase.execute(command);
+
+    expect(mockMistralHandler.processFile).toHaveBeenCalledWith(
+      expect.objectContaining({ filename: command.fileName }),
+      { pageLimit: 51 },
+    );
+  });
+
   it('falls back to local PDF parsing when Mistral returns zero pages', async () => {
     const fallbackResult = new FileRetrieverResult([
       new FileRetrieverPage('Locally extracted budget report', 1),
@@ -211,6 +233,25 @@ describe('RetrieveFileContentUseCase', () => {
 
     expect(result).toBe(fallbackResult);
     expect(mockPdfParseHandler.processFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not run local PDF parsing when the caller disables it', async () => {
+    const emptyOcrError = new EmptyOcrResultError();
+    jest
+      .spyOn(mockMistralHandler, 'processFile')
+      .mockRejectedValue(emptyOcrError);
+
+    await expect(
+      useCase.execute(
+        new RetrieveFileContentCommand({
+          fileData: Buffer.from('image-only pdf'),
+          fileName: 'inline-scanned-form.pdf',
+          fileType: 'application/pdf',
+          allowLocalPdfParsing: false,
+        }),
+      ),
+    ).rejects.toBe(emptyOcrError);
+    expect(mockPdfParseHandler.processFile).not.toHaveBeenCalled();
   });
 
   it('keeps an empty Mistral response terminal when local parsing also extracts no text', async () => {

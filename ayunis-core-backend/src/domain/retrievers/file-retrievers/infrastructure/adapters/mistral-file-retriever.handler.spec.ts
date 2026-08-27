@@ -144,6 +144,18 @@ describe('MistralFileRetrieverHandler', () => {
       expect(result.pages).toHaveLength(1);
     });
 
+    it('limits OCR to the requested page window', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [{ markdown: '# Content', index: 0 }],
+      });
+
+      await handler.processFile(testFile, { pageLimit: 51 });
+
+      expect(mockClient.ocr.process).toHaveBeenCalledWith(
+        expect.objectContaining({ pages: '0-50' }),
+      );
+    });
+
     // A zero-page OCR response is a property of the document, not a defect
     // of ours: it must surface as the shared "we cannot read this document"
     // classification (422, terminal in the queue, user-visible message)

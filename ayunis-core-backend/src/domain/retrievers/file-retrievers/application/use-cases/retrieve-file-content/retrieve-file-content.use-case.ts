@@ -6,15 +6,16 @@ import {
   FileRetrieverResult,
 } from 'src/domain/retrievers/file-retrievers/domain/file-retriever-result.entity';
 import { RetrieveFileContentCommand } from './retrieve-file-content.command';
-import { FileRetrieverRegistry } from '../../file-retriever-handler.registry';
+import { FileRetrieverRegistry } from 'src/domain/retrievers/file-retrievers/application/file-retriever-handler.registry';
 import { File } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
   EmptyOcrResultError,
+  FileRetrieverProviderNotAvailableError,
   FileRetrieverUnauthorizedError,
   FileRetrieverUnexpectedError,
   InvalidFileTypeError,
-} from '../../file-retriever.errors';
+} from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
   detectFileType,
   isAudioFile,
@@ -23,7 +24,7 @@ import {
 import { extractTextFromEml } from 'src/common/util/eml';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { DocumentConverterPort } from '../../ports/document-converter.port';
+import { DocumentConverterPort } from 'src/domain/retrievers/file-retrievers/application/ports/document-converter.port';
 import retrievalConfig from 'src/config/retrieval.config';
 import { TranscribeUseCase } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.use-case';
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
@@ -70,6 +71,8 @@ export class RetrieveFileContentUseCase {
         command.fileData,
         command.fileName,
         command.fileType,
+        command.allowLocalPdfParsing,
+        command.pdfPageLimit,
       );
     }
 
@@ -98,22 +101,37 @@ export class RetrieveFileContentUseCase {
     fileData: Buffer,
     fileName: string,
     mimeType: string,
+    allowLocalParsing = true,
+    pageLimit?: number,
   ): Promise<FileRetrieverResult> {
     const file = new File(fileData, fileName, mimeType);
     if (!this.config.mistral.apiKey) {
+      if (!allowLocalParsing) {
+        throw new FileRetrieverProviderNotAvailableError('Mistral OCR');
+      }
       return this.fileRetrieverRegistry
         .getHandler(FileRetrieverType.NPM_PDF_PARSE)
         .processFile(file);
     }
 
     try {
-      return await this.fileRetrieverRegistry
-        .getHandler(FileRetrieverType.MISTRAL)
-        .processFile(file);
+      return await this.processWithMistral(file, pageLimit);
     } catch (error) {
       if (!(error instanceof EmptyOcrResultError)) throw error;
+      if (!allowLocalParsing) throw error;
       return this.processEmptyOcrFallback(file, error);
     }
+  }
+
+  private processWithMistral(
+    file: File,
+    pageLimit?: number,
+  ): Promise<FileRetrieverResult> {
+    const handler = this.fileRetrieverRegistry.getHandler(
+      FileRetrieverType.MISTRAL,
+    );
+    if (pageLimit === undefined) return handler.processFile(file);
+    return handler.processFile(file, { pageLimit });
   }
 
   private async processEmptyOcrFallback(
