@@ -11568,6 +11568,49 @@
         "tags": ["Super Admin SSO Connections"]
       }
     },
+    "/super-admin/orgs/{orgId}/sso/idp": {
+      "patch": {
+        "operationId": "SuperAdminSsoConnectionsController_setIdp",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgSsoIdpRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Set or clear the identity provider users are sent straight to",
+        "tags": ["Super Admin SSO Connections"]
+      }
+    },
     "/auth/sso/discover": {
       "post": {
         "operationId": "SsoLoginController_discover",
@@ -20229,6 +20272,12 @@
             "example": "385820595704561666",
             "nullable": true
           },
+          "zitadelIdpId": {
+            "type": "string",
+            "example": "387952532174929922",
+            "nullable": true,
+            "description": "When set, login redirects straight to this broker identity provider"
+          },
           "enabled": {
             "type": "boolean"
           },
@@ -20242,6 +20291,7 @@
           "emailDomain",
           "domainVerifiedAt",
           "zitadelOrgId",
+          "zitadelIdpId",
           "enabled",
           "jitProvisioningEnabled"
         ]
@@ -20272,6 +20322,12 @@
             "type": "string",
             "example": "385820595704561666",
             "maxLength": 255
+          },
+          "zitadelIdpId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255,
+            "example": "388145187060187138"
           },
           "domainVerified": {
             "type": "boolean",
@@ -20309,6 +20365,18 @@
           }
         },
         "required": ["enabled"]
+      },
+      "SetOrgSsoIdpRequestDto": {
+        "type": "object",
+        "properties": {
+          "zitadelIdpId": {
+            "type": "string",
+            "nullable": true,
+            "example": "387952532174929922",
+            "description": "Broker identity provider ID, or null to show the broker login page"
+          }
+        },
+        "required": ["zitadelIdpId"]
       },
       "DiscoverSsoDto": {
         "type": "object",

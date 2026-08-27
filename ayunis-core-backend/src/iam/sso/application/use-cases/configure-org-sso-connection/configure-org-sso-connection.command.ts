@@ -5,5 +5,6 @@ export class ConfigureOrgSsoConnectionCommand {
     public readonly orgId: UUID,
     public readonly emailDomain: string,
     public readonly zitadelOrgId: string,
+    public readonly zitadelIdpId: string | null | undefined = undefined,
   ) {}
 }

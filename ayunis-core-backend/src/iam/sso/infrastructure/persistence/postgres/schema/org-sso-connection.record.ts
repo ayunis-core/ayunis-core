@@ -30,6 +30,9 @@ export class OrgSsoConnectionRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 255, nullable: true })
   zitadelOrgId: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  zitadelIdpId: string | null;
+
   @Column({ default: false })
   enabled: boolean;
 

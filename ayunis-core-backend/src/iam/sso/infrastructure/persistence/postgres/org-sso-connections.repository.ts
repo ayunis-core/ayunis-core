@@ -86,6 +86,7 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
           orgId: connection.orgId,
           emailDomain: expected.emailDomain,
           zitadelOrgId: expected.zitadelOrgId ?? IsNull(),
+          zitadelIdpId: expected.zitadelIdpId ?? IsNull(),
           enabled: false,
           jitProvisioningEnabled: expected.jitProvisioningEnabled,
         },
@@ -93,6 +94,7 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
           emailDomain: connection.emailDomain,
           domainVerifiedAt: connection.domainVerifiedAt,
           zitadelOrgId: connection.zitadelOrgId,
+          zitadelIdpId: connection.zitadelIdpId,
           jitProvisioningEnabled: connection.jitProvisioningEnabled,
           // repository.update() bypasses @UpdateDateColumn, so the audit
           // timestamp has to be advanced explicitly.
@@ -146,6 +148,21 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
         zitadelOrgId: expected.zitadelOrgId ?? IsNull(),
       },
       { jitProvisioningEnabled: enabled, updatedAt: new Date() },
+    );
+    return result.affected ? this.findByOrgId(expected.orgId) : null;
+  }
+
+  async setZitadelIdpIdIfMappingMatches(
+    expected: OrgSsoConnection,
+    zitadelIdpId: string | null,
+  ): Promise<OrgSsoConnection | null> {
+    const result = await this.repository.update(
+      {
+        orgId: expected.orgId,
+        emailDomain: expected.emailDomain,
+        zitadelOrgId: expected.zitadelOrgId ?? IsNull(),
+      },
+      { zitadelIdpId, updatedAt: new Date() },
     );
     return result.affected ? this.findByOrgId(expected.orgId) : null;
   }

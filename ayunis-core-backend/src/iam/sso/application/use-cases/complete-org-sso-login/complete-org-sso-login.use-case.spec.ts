@@ -286,6 +286,7 @@ function connectionRepository(connection = anEnabledSsoConnection()) {
     setEnabled: jest.fn(),
     setJitProvisioningEnabled: jest.fn(),
     setJitProvisioningEnabledIfMappingMatches: jest.fn(),
+    setZitadelIdpIdIfMappingMatches: jest.fn(),
   };
 }
 

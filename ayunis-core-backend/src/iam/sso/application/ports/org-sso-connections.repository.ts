@@ -35,4 +35,8 @@ export abstract class OrgSsoConnectionsRepository {
     expected: OrgSsoConnection,
     enabled: boolean,
   ): Promise<OrgSsoConnection | null>;
+  abstract setZitadelIdpIdIfMappingMatches(
+    expected: OrgSsoConnection,
+    zitadelIdpId: string | null,
+  ): Promise<OrgSsoConnection | null>;
 }

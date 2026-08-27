@@ -7,6 +7,7 @@ export interface OidcAuthorizationRequest {
 
 export interface CreateOidcAuthorizationRequest {
   zitadelOrgId: string;
+  zitadelIdpId: string | null;
 }
 
 export interface ValidateOidcCallback {

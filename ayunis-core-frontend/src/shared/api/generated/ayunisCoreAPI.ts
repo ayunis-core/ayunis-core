@@ -177,6 +177,7 @@ import type {
   SetImageFairUseLimitRequestDto,
   SetOrgDefaultModelDto,
   SetOrgSsoEnabledRequestDto,
+  SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
   SetTeamDefaultModelDto,
   SetUserConfigDto,
@@ -24195,6 +24196,71 @@ export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError =
       > => {
 
       const mutationOptions = getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set or clear the identity provider users are sent straight to
+ */
+export const superAdminSsoConnectionsControllerSetIdp = (
+    orgId: string,
+    setOrgSsoIdpRequestDto: SetOrgSsoIdpRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/idp`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgSsoIdpRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSsoConnectionsControllerSetIdpMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>, TError,{orgId: string;data: SetOrgSsoIdpRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>, TError,{orgId: string;data: SetOrgSsoIdpRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSsoConnectionsControllerSetIdp'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>, {orgId: string;data: SetOrgSsoIdpRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetIdp(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetIdpMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>>
+    export type SuperAdminSsoConnectionsControllerSetIdpMutationBody = SetOrgSsoIdpRequestDto
+    export type SuperAdminSsoConnectionsControllerSetIdpMutationError = void
+
+    /**
+ * @summary Set or clear the identity provider users are sent straight to
+ */
+export const useSuperAdminSsoConnectionsControllerSetIdp = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>, TError,{orgId: string;data: SetOrgSsoIdpRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetIdp>>,
+        TError,
+        {orgId: string;data: SetOrgSsoIdpRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSsoConnectionsControllerSetIdpMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

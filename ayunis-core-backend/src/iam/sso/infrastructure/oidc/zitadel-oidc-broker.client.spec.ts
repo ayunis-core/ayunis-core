@@ -68,7 +68,10 @@ describe('ZitadelOidcBrokerClient', () => {
     const client = buildClient(config);
 
     await expect(
-      client.createAuthorizationRequest({ zitadelOrgId: '385820595704561666' }),
+      client.createAuthorizationRequest({
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: null,
+      }),
     ).resolves.toEqual({
       authorizationUrl:
         'https://sso.ayunis.de/oauth/v2/authorize?request=created',
@@ -94,6 +97,25 @@ describe('ZitadelOidcBrokerClient', () => {
       config.clientSecret,
       'basic-client-auth',
       undefined,
+    );
+  });
+
+  it('adds the identity provider scope so the broker login page is skipped', async () => {
+    const client = buildClient(config);
+
+    await client.createAuthorizationRequest({
+      zitadelOrgId: '385820595704561666',
+      zitadelIdpId: '387952532174929922',
+    });
+
+    expect(oidc.buildAuthorizationUrl).toHaveBeenCalledWith(
+      discovered,
+      expect.objectContaining({
+        scope:
+          'openid profile email urn:zitadel:iam:user:resourceowner ' +
+          'urn:zitadel:iam:org:id:385820595704561666 ' +
+          'urn:zitadel:iam:org:idp:id:387952532174929922',
+      }),
     );
   });
 
@@ -254,7 +276,10 @@ describe('ZitadelOidcBrokerClient', () => {
     const client = buildClient({ ...config, clientSecret: undefined });
 
     await expect(
-      client.createAuthorizationRequest({ zitadelOrgId: '385820595704561666' }),
+      client.createAuthorizationRequest({
+        zitadelOrgId: '385820595704561666',
+        zitadelIdpId: null,
+      }),
     ).rejects.toThrow(SsoBrokerNotConfiguredError);
     expect(oidc.discovery).not.toHaveBeenCalled();
   });
@@ -348,6 +373,7 @@ describe('ZitadelOidcBrokerClient', () => {
     await expect(
       client.createAuthorizationRequest({
         zitadelOrgId: '385820595704561666',
+        zitadelIdpId: null,
       }),
     ).rejects.toBeInstanceOf(ProviderConnectionError);
   });
@@ -369,6 +395,7 @@ describe('ZitadelOidcBrokerClient', () => {
 
     await client.createAuthorizationRequest({
       zitadelOrgId: '385820595704561666',
+      zitadelIdpId: null,
     });
 
     expect(oidc.discovery).toHaveBeenCalledWith(

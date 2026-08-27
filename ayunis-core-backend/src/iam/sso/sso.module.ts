@@ -15,6 +15,7 @@ import { DiscoverOrgSsoUseCase } from 'src/iam/sso/application/use-cases/discove
 import { GetOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.use-case';
 import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
 import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
+import { SetOrgSsoIdpUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-idp/set-org-sso-idp.use-case';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { SsoLoginTransactionEncryptionService } from 'src/iam/sso/infrastructure/encryption/sso-login-transaction-encryption.service';
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
@@ -91,6 +92,7 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
     ConfigureOrgSsoConnectionUseCase,
     SetOrgSsoEnabledUseCase,
     SetOrgSsoJitProvisioningUseCase,
+    SetOrgSsoIdpUseCase,
     GetOrgSsoConnectionUseCase,
     DiscoverOrgSsoUseCase,
     StartOrgSsoLoginUseCase,
@@ -108,6 +110,7 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
     ConfigureOrgSsoConnectionUseCase,
     SetOrgSsoEnabledUseCase,
     SetOrgSsoJitProvisioningUseCase,
+    SetOrgSsoIdpUseCase,
     GetOrgSsoConnectionUseCase,
     DiscoverOrgSsoUseCase,
     StartOrgSsoLoginUseCase,
