@@ -5,7 +5,7 @@ export const EMAIL_DOMAIN_PATTERN =
 
 const emailDomainRegex = new RegExp(EMAIL_DOMAIN_PATTERN);
 const invalidEmailLocalPartPattern = /[\p{White_Space}\p{Cc}]/u;
-const invalidZitadelOrgIdPattern = /[\p{White_Space}\p{Cc}]/u;
+const invalidZitadelIdPattern = /[\p{White_Space}\p{Cc}]/u;
 
 export function normalizeEmailDomain(value: string): string {
   const normalized = value.trim().toLowerCase();
@@ -35,14 +35,25 @@ export function emailDomainFromAddress(value: string): string | null {
   }
 }
 
-export function normalizeZitadelOrgId(value: string): string {
+function normalizeZitadelId(
+  value: string,
+  field: 'zitadelOrgId' | 'zitadelIdpId',
+): string {
   const normalized = value.trim();
   if (
     normalized.length === 0 ||
     normalized.length > 255 ||
-    invalidZitadelOrgIdPattern.test(normalized)
+    invalidZitadelIdPattern.test(normalized)
   ) {
-    throw new InvalidSsoConnectionValueError('zitadelOrgId');
+    throw new InvalidSsoConnectionValueError(field);
   }
   return normalized;
+}
+
+export function normalizeZitadelOrgId(value: string): string {
+  return normalizeZitadelId(value, 'zitadelOrgId');
+}
+
+export function normalizeZitadelIdpId(value: string): string {
+  return normalizeZitadelId(value, 'zitadelIdpId');
 }

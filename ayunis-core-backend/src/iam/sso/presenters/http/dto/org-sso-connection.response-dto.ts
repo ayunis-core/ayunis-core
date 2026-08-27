@@ -17,6 +17,15 @@ export class OrgSsoConnectionResponseDto {
   @ApiProperty({ type: String, example: '385820595704561666', nullable: true })
   zitadelOrgId: string | null;
 
+  @ApiProperty({
+    type: String,
+    example: '387952532174929922',
+    nullable: true,
+    description:
+      'When set, login redirects straight to this broker identity provider',
+  })
+  zitadelIdpId: string | null;
+
   @ApiProperty()
   enabled: boolean;
 

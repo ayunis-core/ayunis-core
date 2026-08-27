@@ -32,6 +32,7 @@ export class StartSsoAccountLinkUseCase {
     return this.authorizationTransactions.start({
       orgId: connection.orgId,
       zitadelOrgId: connection.zitadelOrgId,
+      zitadelIdpId: connection.zitadelIdpId,
       purpose: SsoLoginPurpose.LINK,
       linkUserId: command.userId,
     });

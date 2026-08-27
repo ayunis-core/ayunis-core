@@ -5351,6 +5351,11 @@ export interface OrgSsoConnectionResponseDto {
   domainVerifiedAt: string;
   /** @nullable */
   zitadelOrgId: string | null;
+  /**
+   * When set, login redirects straight to this broker identity provider
+   * @nullable
+   */
+  zitadelIdpId: string | null;
   enabled: boolean;
   jitProvisioningEnabled: boolean;
 }
@@ -5369,6 +5374,11 @@ export interface ConfigureOrgSsoConnectionRequestDto {
   emailDomain: string;
   /** @maxLength 255 */
   zitadelOrgId: string;
+  /**
+   * @maxLength 255
+   * @nullable
+   */
+  zitadelIdpId?: string | null;
   /** Confirms the email domain was independently verified */
   domainVerified: boolean;
 }
@@ -5383,6 +5393,14 @@ export interface SetOrgSsoEnabledRequestDto {
 
 export interface SetOrgSsoStateRequestDto {
   enabled: boolean;
+}
+
+export interface SetOrgSsoIdpRequestDto {
+  /**
+   * Broker identity provider ID, or null to show the broker login page
+   * @nullable
+   */
+  zitadelIdpId: string | null;
 }
 
 export interface DiscoverSsoDto {

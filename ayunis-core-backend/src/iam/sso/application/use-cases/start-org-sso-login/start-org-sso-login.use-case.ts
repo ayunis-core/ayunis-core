@@ -34,6 +34,7 @@ export class StartOrgSsoLoginUseCase {
     return this.authorizationTransactions.start({
       orgId: connection.orgId,
       zitadelOrgId: connection.zitadelOrgId,
+      zitadelIdpId: connection.zitadelIdpId,
       purpose: SsoLoginPurpose.LOGIN,
       linkUserId: null,
     });

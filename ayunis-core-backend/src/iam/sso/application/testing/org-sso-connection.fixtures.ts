@@ -57,5 +57,11 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
           }),
         ),
       ),
+    setZitadelIdpIdIfMappingMatches: jest
+      .fn()
+      .mockImplementation(
+        (expected: OrgSsoConnection, zitadelIdpId: string | null) =>
+          Promise.resolve(anOrgSsoConnection({ ...expected, zitadelIdpId })),
+      ),
   };
 }
