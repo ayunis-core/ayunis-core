@@ -15,7 +15,10 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
-import { assistantMessageId, toolResultMessageId } from 'src/domain/runs/application/agent-runtime/message-id';
+import {
+  assistantMessageId,
+  toolResultMessageId,
+} from 'src/domain/runs/application/agent-runtime/message-id';
 import { toBackendAssistantMessage } from 'src/domain/runs/application/agent-runtime/inference-message.mapper';
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 

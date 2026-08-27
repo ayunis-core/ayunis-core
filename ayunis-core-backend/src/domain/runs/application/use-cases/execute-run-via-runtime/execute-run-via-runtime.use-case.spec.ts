@@ -36,6 +36,7 @@ import type { ResolveModelProviderUseCase } from 'src/domain/models/application/
 import type { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
+import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 import type { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
 import type { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
@@ -1280,6 +1281,23 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     );
 
     await expect(drain(generator)).rejects.toBe(inputTooLongError);
+    expect(createUser).not.toHaveBeenCalled();
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('preserves classified anonymization outages and sends no unanonymized text', async () => {
+    const { useCase, anonymize, createUser, provider } = buildHarness({
+      anonymous: true,
+    });
+    const timeout = new ProviderTimeoutError(
+      { provider: 'anonymize', underlyingCode: 'ETIMEDOUT' },
+      new Error('request timed out'),
+    );
+    anonymize.mockRejectedValue(timeout);
+
+    const generator = await useCase.execute(userCommand());
+
+    await expect(drain(generator)).rejects.toBe(timeout);
     expect(createUser).not.toHaveBeenCalled();
     expect(provider.requests).toHaveLength(0);
   });

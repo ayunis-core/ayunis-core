@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -406,7 +407,10 @@ export class ExecuteRunViaRuntimeUseCase {
       );
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
-      if (error instanceof AnonymizationInputTooLongError) {
+      if (
+        error instanceof AnonymizationInputTooLongError ||
+        error instanceof ProviderUnavailableError
+      ) {
         throw error;
       }
       throw new RunAnonymizationUnavailableError(

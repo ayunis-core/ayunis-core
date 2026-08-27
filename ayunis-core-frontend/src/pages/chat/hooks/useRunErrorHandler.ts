@@ -31,6 +31,10 @@ export function useRunErrorHandler(_threadId: string) {
           showError(t('chat.errorToolExecutionFailed'));
           break;
         case 'RUN_ANONYMIZATION_UNAVAILABLE':
+        case 'PROVIDER_UNAVAILABLE_CONNECTION_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE':
+        case 'PROVIDER_UNAVAILABLE_REJECTED_ANONYMIZE':
           showError(t('chat.errorAnonymizationUnavailable'));
           break;
         case 'ANONYMIZATION_INPUT_TOO_LONG':
