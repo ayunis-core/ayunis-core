@@ -5,5 +5,6 @@ export interface UpdateSubscriptionStartDateFormData {
 export interface SsoConnectionFormFields {
   emailDomain: string;
   zitadelOrgId: string;
+  zitadelIdpId: string;
   domainVerified: boolean;
 }

@@ -295,7 +295,11 @@
     },
     "configure": {
       "save": "Save connection",
-      "success": "SSO connection saved. It remains disabled until explicitly enabled."
+      "success": "SSO connection and identity provider saved."
+    },
+    "idp": {
+      "zitadelIdpId": "Zitadel identity provider ID",
+      "notConfigured": "Not configured — users will see the broker login"
     },
     "access": {
       "title": "Access and provisioning",
@@ -310,7 +314,7 @@
       "button": "Enable SSO",
       "title": "Enable this SSO connection?",
       "description": "Review the exact routing mapping that will become active.",
-      "confirm": "I reviewed this domain and Zitadel organization mapping.",
+      "confirm": "I reviewed the domain, Zitadel organization, and identity provider mapping.",
       "confirmButton": "Enable SSO",
       "success": "SSO enabled."
     },
@@ -330,6 +334,13 @@
         "maxLength": "The Zitadel organization ID is too long.",
         "matches": "The Zitadel organization ID cannot contain whitespace.",
         "invalid": "Enter a valid Zitadel organization ID."
+      },
+      "zitadelIdpId": {
+        "required": "Enter the Zitadel identity provider ID.",
+        "isNotEmpty": "Enter the Zitadel identity provider ID.",
+        "maxLength": "The Zitadel identity provider ID is too long.",
+        "matches": "The Zitadel identity provider ID cannot contain whitespace.",
+        "invalid": "Enter a valid Zitadel identity provider ID."
       },
       "domainVerified": {
         "required": "Confirm domain ownership and the Zitadel setup."
