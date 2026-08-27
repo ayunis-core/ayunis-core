@@ -42,6 +42,7 @@ export default function handleSourceUploadError(
         showError(t('sources.fileSourceTooManyPagesError'));
         break;
       case 'UNPROCESSABLE_DOCUMENT':
+      case 'UNPROCESSABLE_SPREADSHEET':
         showError(t('sources.fileSourceUnreadableError'));
         break;
       case 'SOURCE_LIMIT_EXCEEDED':
