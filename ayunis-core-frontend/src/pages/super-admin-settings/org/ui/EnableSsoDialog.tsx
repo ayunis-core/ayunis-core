@@ -49,7 +49,9 @@ export default function EnableSsoDialog({
   return (
     <AlertDialog onOpenChange={(open) => !open && setReviewed(false)}>
       <AlertDialogTrigger asChild>
-        <Button disabled={disabled}>{t('sso.enable.button')}</Button>
+        <Button data-testid="sso-enable" disabled={disabled}>
+          {t('sso.enable.button')}
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -67,9 +69,21 @@ export default function EnableSsoDialog({
             <dt className="text-muted-foreground">{t('sso.zitadelOrgId')}</dt>
             <dd className="font-mono text-xs">{connection.zitadelOrgId}</dd>
           </div>
+          <div>
+            <dt className="text-muted-foreground">
+              {t('sso.idp.zitadelIdpId')}
+            </dt>
+            <dd
+              className="font-mono text-xs"
+              data-testid="sso-reviewed-zitadel-idp-id"
+            >
+              {connection.zitadelIdpId ?? t('sso.idp.notConfigured')}
+            </dd>
+          </div>
         </dl>
         <div className="flex items-start gap-2">
           <Checkbox
+            data-testid="sso-enable-reviewed"
             id="confirm-sso-mapping"
             checked={reviewed}
             onCheckedChange={(value) => setReviewed(value === true)}
@@ -81,6 +95,7 @@ export default function EnableSsoDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>{t('sso.cancel')}</AlertDialogCancel>
           <AlertDialogAction
+            data-testid="sso-enable-confirm"
             disabled={!reviewed || mutation.isPending}
             onClick={enable}
           >

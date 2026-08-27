@@ -295,7 +295,11 @@
     },
     "configure": {
       "save": "Verbindung speichern",
-      "success": "SSO-Verbindung gespeichert. Sie bleibt deaktiviert, bis sie ausdrücklich aktiviert wird."
+      "success": "SSO-Verbindung und Identitätsanbieter gespeichert."
+    },
+    "idp": {
+      "zitadelIdpId": "Zitadel-Identitätsanbieter-ID",
+      "notConfigured": "Nicht konfiguriert — Benutzer sehen die Broker-Anmeldung"
     },
     "access": {
       "title": "Zugriff und Bereitstellung",
@@ -310,7 +314,7 @@
       "button": "SSO aktivieren",
       "title": "Diese SSO-Verbindung aktivieren?",
       "description": "Prüfen Sie die genaue Routing-Zuordnung, die aktiviert wird.",
-      "confirm": "Ich habe diese Domain- und Zitadel-Organisationszuordnung geprüft.",
+      "confirm": "Ich habe die Domain-, Zitadel-Organisations- und Identitätsanbieterzuordnung geprüft.",
       "confirmButton": "SSO aktivieren",
       "success": "SSO aktiviert."
     },
@@ -330,6 +334,13 @@
         "maxLength": "Die Zitadel-Organisations-ID ist zu lang.",
         "matches": "Die Zitadel-Organisations-ID darf keine Leerzeichen enthalten.",
         "invalid": "Geben Sie eine gültige Zitadel-Organisations-ID ein."
+      },
+      "zitadelIdpId": {
+        "required": "Geben Sie die Zitadel-Identitätsanbieter-ID ein.",
+        "isNotEmpty": "Geben Sie die Zitadel-Identitätsanbieter-ID ein.",
+        "maxLength": "Die Zitadel-Identitätsanbieter-ID ist zu lang.",
+        "matches": "Die Zitadel-Identitätsanbieter-ID darf keine Leerzeichen enthalten.",
+        "invalid": "Geben Sie eine gültige Zitadel-Identitätsanbieter-ID ein."
       },
       "domainVerified": {
         "required": "Bestätigen Sie Domain-Inhaberschaft und Zitadel-Einrichtung."

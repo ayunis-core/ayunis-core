@@ -47,7 +47,12 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { connection, isLoading, isError } = useSuperAdminSsoConnection(orgId);
   const form = useForm<SsoConnectionFormFields>({
-    defaultValues: { emailDomain: '', zitadelOrgId: '', domainVerified: false },
+    defaultValues: {
+      emailDomain: '',
+      zitadelOrgId: '',
+      zitadelIdpId: '',
+      domainVerified: false,
+    },
   });
   const configure = useConfigureSuperAdminSso(orgId, form);
   const setEnabled = useSetSuperAdminSsoEnabled(orgId);
@@ -63,15 +68,23 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
   // locked form could display unsaved edits instead of the activated mapping.
   const savedEmailDomain = connection?.emailDomain ?? '';
   const savedZitadelOrgId = connection?.zitadelOrgId ?? '';
+  const savedZitadelIdpId = connection?.zitadelIdpId ?? '';
   const savedEnabled = connection?.enabled ?? false;
 
   useEffect(() => {
     form.reset({
       emailDomain: savedEmailDomain,
       zitadelOrgId: savedZitadelOrgId,
+      zitadelIdpId: savedZitadelIdpId,
       domainVerified: false,
     });
-  }, [savedEmailDomain, savedZitadelOrgId, savedEnabled, form]);
+  }, [
+    savedEmailDomain,
+    savedZitadelOrgId,
+    savedZitadelIdpId,
+    savedEnabled,
+    form,
+  ]);
 
   if (isLoading) return <Skeleton className="h-80 w-full" />;
   if (isError) {
@@ -83,12 +96,11 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
 
   function submit(values: SsoConnectionFormFields) {
     configure.configure({
-      orgId,
-      data: {
-        emailDomain: values.emailDomain.trim(),
-        zitadelOrgId: values.zitadelOrgId.trim(),
-        domainVerified: values.domainVerified,
-      },
+      emailDomain: values.emailDomain.trim(),
+      zitadelOrgId: values.zitadelOrgId.trim(),
+      zitadelIdpId: values.zitadelIdpId.trim(),
+      domainVerified: values.domainVerified,
+      updateMapping: !mappingLocked,
     });
   }
 
@@ -118,7 +130,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
               className="space-y-4"
               onSubmit={(event) => void form.handleSubmit(submit)(event)}
             >
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="emailDomain"
@@ -128,6 +140,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
                       <FormLabel>{t('sso.emailDomain')}</FormLabel>
                       <FormControl>
                         <Input
+                          data-testid="sso-email-domain"
                           placeholder="stadt.example"
                           disabled={mappingLocked || busy}
                           {...field}
@@ -147,7 +160,31 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
                     <FormItem>
                       <FormLabel>{t('sso.zitadelOrgId')}</FormLabel>
                       <FormControl>
-                        <Input disabled={mappingLocked || busy} {...field} />
+                        <Input
+                          data-testid="sso-zitadel-org-id"
+                          disabled={mappingLocked || busy}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="zitadelIdpId"
+                  rules={{
+                    required: t('sso.validation.zitadelIdpId.required'),
+                  }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('sso.idp.zitadelIdpId')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          data-testid="sso-zitadel-idp-id"
+                          disabled={busy}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -158,13 +195,16 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
                 control={form.control}
                 name="domainVerified"
                 rules={{
-                  required: t('sso.validation.domainVerified.required'),
+                  required: mappingLocked
+                    ? false
+                    : t('sso.validation.domainVerified.required'),
                 }}
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-start gap-2">
                       <FormControl>
                         <Checkbox
+                          data-testid="sso-domain-verified"
                           checked={field.value}
                           onCheckedChange={field.onChange}
                           disabled={mappingLocked || busy}
@@ -180,8 +220,9 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
               />
               <div className="flex justify-end">
                 <Button
+                  data-testid="sso-connection-save"
                   type="submit"
-                  disabled={mappingLocked || busy || !domainVerified}
+                  disabled={busy || (!mappingLocked && !domainVerified)}
                 >
                   {t('sso.configure.save')}
                 </Button>
