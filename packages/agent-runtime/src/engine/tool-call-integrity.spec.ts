@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Hook, ModelCallInterruptedContext } from '../contracts/hook';
+import type { ProviderChunk, Usage } from '../contracts/provider';
 import type { Tool } from '../contracts/tool';
 import { MockProvider } from '../providers/mock/mock-provider';
 import { baseInput, collectEvents } from './test-helpers';
@@ -26,23 +27,90 @@ describe('tool-call argument integrity', () => {
     execute,
   });
 
+  const malformedDocumentTurn = (
+    options: {
+      prefix?: readonly ProviderChunk[];
+      id?: string;
+      argumentsDelta?: string;
+      finishReason?: 'tool_calls' | 'length';
+      usage?: Usage;
+    } = {},
+  ): ProviderChunk[] => [
+    ...(options.prefix ?? []),
+    {
+      toolCallDeltas: [
+        { index: 0, id: options.id ?? 'call_bad', name: 'create_document' },
+      ],
+    },
+    {
+      toolCallDeltas: [
+        { index: 0, argumentsDelta: options.argumentsDelta ?? '{"title":' },
+      ],
+    },
+    {
+      finishReason: options.finishReason ?? 'tool_calls',
+      usage: options.usage,
+    },
+  ];
+
   it('fails the run with MALFORMED_TOOL_CALL when final arguments are unparseable', async () => {
     const execute = vi.fn(() => 'created');
+    const malformedTurn = malformedDocumentTurn({
+      id: 'call_1',
+      argumentsDelta:
+        '{"title":"Parkraumkonzept","content":"<h1>Bericht</h1><p>Sehr geehrte Damen',
+    });
     const provider = new MockProvider([
+      malformedTurn,
+      malformedTurn,
+      malformedTurn,
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool(execute)] }),
+    );
+
+    const error = events.find((event) => event.type === 'error');
+    expect(error?.code).toBe('MALFORMED_TOOL_CALL');
+    expect(provider.requests).toHaveLength(3);
+    const end = events.find((event) => event.type === 'run_end');
+    expect(end?.status).toBe('error');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('retries a malformed tool-only turn before anything visible is emitted', async () => {
+    const execute = vi.fn(() => 'created');
+    const provider = new MockProvider([
+      malformedDocumentTurn({
+        argumentsDelta: '{"title":"Incomplete"',
+        usage: { inputTokens: 3, outputTokens: 2 },
+      }),
       [
         {
-          toolCallDeltas: [{ index: 0, id: 'call_1', name: 'create_document' }],
+          toolCallDeltas: [
+            { index: 0, id: 'call_good', name: 'create_document' },
+          ],
         },
         {
           toolCallDeltas: [
             {
               index: 0,
               argumentsDelta:
-                '{"title":"Parkraumkonzept","content":"<h1>Bericht</h1><p>Sehr geehrte Damen',
+                '{"title":"Parkraumkonzept","content":"Completed"}',
             },
           ],
         },
-        { finishReason: 'tool_calls' },
+        {
+          finishReason: 'tool_calls',
+          usage: { inputTokens: 5, outputTokens: 4 },
+        },
+      ],
+      [
+        { textDelta: 'Done.' },
+        {
+          finishReason: 'stop',
+          usage: { inputTokens: 7, outputTokens: 6 },
+        },
       ],
     ]);
 
@@ -50,30 +118,61 @@ describe('tool-call argument integrity', () => {
       baseInput(provider, { tools: [documentTool(execute)] }),
     );
 
-    const error = events.find((event) => event.type === 'error');
-    expect(error?.code).toBe('MALFORMED_TOOL_CALL');
-    const end = events.find((event) => event.type === 'run_end');
-    expect(end?.status).toBe('error');
-    expect(execute).not.toHaveBeenCalled();
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.find((event) => event.type === 'run_end')?.status).toBe(
+      'completed',
+    );
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(provider.requests).toHaveLength(3);
+    expect(events).not.toContainEqual(
+      expect.objectContaining({
+        type: 'tool_call_snapshot',
+        toolCall: expect.objectContaining({ id: 'call_bad' }),
+      }),
+    );
+    expect(events.find((event) => event.type === 'run_end')?.usage).toEqual({
+      inputTokens: 15,
+      outputTokens: 12,
+    });
+  });
+
+  it('shares one total budget across empty and malformed retries', async () => {
+    const malformedTurn = malformedDocumentTurn({
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+    const provider = new MockProvider([
+      malformedTurn,
+      [{ finishReason: 'stop', usage: { inputTokens: 1, outputTokens: 0 } }],
+      malformedTurn,
+      malformedTurn,
+      [{ textDelta: 'A fifth attempt must not run.' }],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()] }),
+    );
+
+    expect(events.find((event) => event.type === 'error')?.code).toBe(
+      'MALFORMED_TOOL_CALL',
+    );
+    expect(provider.requests).toHaveLength(4);
+    expect(events.find((event) => event.type === 'run_end')?.usage).toEqual({
+      inputTokens: 4,
+      outputTokens: 3,
+    });
   });
 
   it('fails the run when the token limit is reached while emitting a tool call', async () => {
     const execute = vi.fn(() => 'created');
+    const truncatedTurn = malformedDocumentTurn({
+      id: 'call_1',
+      argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1>"}',
+      finishReason: 'length',
+    });
     const provider = new MockProvider([
-      [
-        {
-          toolCallDeltas: [{ index: 0, id: 'call_1', name: 'create_document' }],
-        },
-        {
-          toolCallDeltas: [
-            {
-              index: 0,
-              argumentsDelta: '{"title":"Bericht","content":"<h1>Kurz</h1>"}',
-            },
-          ],
-        },
-        { finishReason: 'length' },
-      ],
+      truncatedTurn,
+      truncatedTurn,
+      truncatedTurn,
     ]);
 
     const events = await collectEvents(
@@ -82,6 +181,7 @@ describe('tool-call argument integrity', () => {
 
     const error = events.find((event) => event.type === 'error');
     expect(error?.code).toBe('MALFORMED_TOOL_CALL');
+    expect(provider.requests).toHaveLength(3);
     expect(execute).not.toHaveBeenCalled();
   });
 
@@ -98,18 +198,11 @@ describe('tool-call argument integrity', () => {
       },
     };
     const provider = new MockProvider([
-      [
-        { textDelta: 'Ich erstelle jetzt das Dokument.' },
-        {
-          toolCallDeltas: [{ index: 0, id: 'call_1', name: 'create_document' }],
-        },
-        {
-          toolCallDeltas: [
-            { index: 0, argumentsDelta: '{"title":"Bericht","content":"<h1>' },
-          ],
-        },
-        { finishReason: 'tool_calls' },
-      ],
+      malformedDocumentTurn({
+        prefix: [{ textDelta: 'Ich erstelle jetzt das Dokument.' }],
+        id: 'call_1',
+        argumentsDelta: '{"title":"Bericht","content":"<h1>',
+      }),
     ]);
 
     const events = await collectEvents(
@@ -121,8 +214,54 @@ describe('tool-call argument integrity', () => {
     expect(interruptions).toEqual([
       { reason: 'error', text: 'Ich erstelle jetzt das Dokument.' },
     ]);
+    expect(provider.requests).toHaveLength(1);
     const error = events.find((event) => event.type === 'error');
     expect(error?.code).toBe('MALFORMED_TOOL_CALL');
+  });
+
+  it('does not retry after visible thinking was emitted', async () => {
+    const provider = new MockProvider([
+      malformedDocumentTurn({
+        prefix: [{ thinkingDelta: 'I will create the document.' }],
+      }),
+      [{ textDelta: 'A retry must not run.' }],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()] }),
+    );
+
+    expect(provider.requests).toHaveLength(1);
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'thinking_delta',
+        delta: 'I will create the document.',
+      }),
+    );
+    expect(events.find((event) => event.type === 'error')?.code).toBe(
+      'MALFORMED_TOOL_CALL',
+    );
+  });
+
+  it('honors an abort requested by the interruption hook', async () => {
+    const abortingHook: Hook = {
+      name: 'abort-on-interruption',
+      modelCallInterrupted: (ctx) => ctx.abort('stop recovery'),
+    };
+    const provider = new MockProvider([
+      malformedDocumentTurn(),
+      [{ textDelta: 'A retry must not run.' }],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()], hooks: [abortingHook] }),
+    );
+
+    expect(provider.requests).toHaveLength(1);
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.find((event) => event.type === 'run_end')?.status).toBe(
+      'aborted',
+    );
   });
 
   it('still executes a tool call that streamed no arguments at all', async () => {

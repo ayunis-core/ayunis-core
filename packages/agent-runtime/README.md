@@ -47,10 +47,15 @@ instead. A stream that completes without assistant content is retried once.
 while assistant output is exposed only after a non-empty response. A repeated
 empty response ends as `PROVIDER_FAILED`. A completed model call whose
 tool-call arguments did not arrive intact — unparseable JSON, or a token-limit
-finish while tool calls were being
-emitted — ends the run with `MALFORMED_TOOL_CALL`; the turn still passes
-through `modelCallInterrupted`, so hosts can persist its intact text and
-thinking. Three consecutive tool _phases_ in which one tool fails with the
+finish while tool calls were being emitted — is retried up to twice when the
+failed turn emitted no visible text or thinking. Empty and malformed recovery
+share a four-attempt cap, preventing their individual budgets from multiplying.
+Tool snapshots from failed recovery attempts are withheld, while every
+attempt's reported token usage remains included in aggregate usage. Once
+content is visible, or all recovery attempts fail, the run ends with
+`MALFORMED_TOOL_CALL`; every failed turn still passes through
+`modelCallInterrupted`, so hosts can persist any intact text and thinking.
+Three consecutive tool _phases_ in which one tool fails with the
 identical error text end the run with `TOOL_REPEATEDLY_FAILING` after the
 failing phase's tool-result message is emitted — repetition across phases
 proves the model saw the error and did not adapt, whereas repeats inside a

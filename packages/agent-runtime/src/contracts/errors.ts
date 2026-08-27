@@ -1,3 +1,5 @@
+import type { Usage } from './provider';
+
 export class AgentRuntimeError extends Error {
   readonly code: string;
   readonly details?: Readonly<Record<string, unknown>>;
@@ -51,20 +53,26 @@ export class ProviderError extends AgentRuntimeError {
 
 /**
  * The model emitted a tool call whose arguments did not arrive intact —
- * unparseable JSON, or the token limit was reached mid-call. Executing such
- * a call with guessed input would fail identically on every retry, so the
- * run fails instead; surfaced as an `error` event.
+ * unparseable JSON, or the token limit was reached mid-call. The runtime may
+ * retry the model turn before visible output, but it never executes guessed
+ * tool input; surfaced as an `error` event when recovery is unsafe or exhausted.
  */
 export class MalformedToolCallError extends AgentRuntimeError {
-  constructor(details: {
-    toolNames: readonly (string | null)[];
-    reason: 'unparseable_arguments' | 'token_limit_reached';
-  }) {
+  readonly usage?: Usage;
+
+  constructor(
+    details: {
+      toolNames: readonly (string | null)[];
+      reason: 'unparseable_arguments' | 'token_limit_reached';
+    },
+    options?: { usage?: Usage },
+  ) {
     super(
       'MALFORMED_TOOL_CALL',
       'Model emitted a tool call whose arguments did not arrive intact',
       { details },
     );
+    this.usage = options?.usage;
   }
 }
 

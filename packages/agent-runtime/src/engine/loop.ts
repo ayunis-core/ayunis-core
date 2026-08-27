@@ -1,11 +1,7 @@
 import type { RunEventPayload } from '../contracts/event';
 import type { Message, ToolUseContent } from '../contracts/message';
 import type { ProviderRequest, Usage } from '../contracts/provider';
-import {
-  ProviderError,
-  RepeatedToolFailureError,
-  RunAbortedError,
-} from '../contracts/errors';
+import { ProviderError, RepeatedToolFailureError } from '../contracts/errors';
 import type { ModelCallResult } from './accumulator';
 import { drainEmits } from './event-queue';
 import {
@@ -13,6 +9,7 @@ import {
   hasExternallyHandledToolCall,
 } from './exit-conditions';
 import { streamModelCall } from './model-call';
+import { callModelWithRecovery } from './model-call-recovery';
 import type { RunState } from './run-state';
 import { isAborted, isHookAborted, isSignalAborted } from './run-state';
 import { executeToolCalls } from './tool-executor';
@@ -56,7 +53,7 @@ async function* runIteration(
     return { status: 'aborted' };
   }
   applyPendingMutations(state);
-  const result = yield* callModelWithEmptyRetry(state, iteration);
+  const result = yield* callModelRecovering(state, iteration);
   assertProviderReturnedContent(result);
   state.messages.push(result.message);
   const toolCalls = getToolUseContents(result.message);
@@ -75,24 +72,17 @@ async function* runIteration(
   return completionAfterToolPhase(state, exitAfterToolPhase);
 }
 
-const MAX_EMPTY_RESPONSE_ATTEMPTS = 2;
-
-async function* callModelWithEmptyRetry(
+function callModelRecovering(
   state: RunState,
   iteration: number,
 ): AsyncGenerator<RunEventPayload, ModelCallResult> {
-  for (let attempt = 1; ; attempt++) {
-    const result = yield* callModel(state, iteration);
-    addUsage(state, result.usage);
-    if (result.message.content.length > 0) {
-      await runAfterModelCall(state, iteration, result);
-      return result;
-    }
-    await runAfterModelCall(state, iteration, result);
-    if (isAborted(state)) throw new RunAbortedError();
-    if (attempt >= MAX_EMPTY_RESPONSE_ATTEMPTS) return result;
-    applyPendingMutations(state);
-  }
+  return callModelWithRecovery({
+    call: () => callModel(state, iteration),
+    afterCompleted: (result) => runAfterModelCall(state, iteration, result),
+    recordUsage: (usage) => addUsage(state, usage),
+    applyPendingMutations: () => applyPendingMutations(state),
+    isAborted: () => isAborted(state),
+  });
 }
 
 function runAfterModelCall(
