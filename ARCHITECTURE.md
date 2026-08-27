@@ -84,7 +84,7 @@ none of these packages implements the Agent Plugins standard.
 | [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md) | Voice | Audio transcription service |
 | [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md) | Metering | Token and credit usage tracking |
 | [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md) | Blueprints | Admin-managed skill templates with distribution modes |
-| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters and lessons managed by super admins |
+| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md) | Learning | Academy chapters, videos, learner confirmations, and completion |
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md) | Privacy | Per-thread PII mask dictionary for anonymous mode |
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md) | Favorites | User-owned ordered references resolved for navigation |
@@ -101,7 +101,7 @@ none of these packages implements the Agent Plugins standard.
 | [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md) | Tenants | Multi-tenant organization management |
 | [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md) | Billing | Package and subscription management |
 | [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
-| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md) | Access Gate | Per-org KI-Schulung nach EU AI Act certificate requirement for the chat surface |
+| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md) | Access Gate | Per-org KI-Schulung nach EU AI Act completion requirement for the chat surface |
 | [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
 | [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user, per-team, and per-API-key monthly credit allowances |
 | [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md) | Alerts | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |

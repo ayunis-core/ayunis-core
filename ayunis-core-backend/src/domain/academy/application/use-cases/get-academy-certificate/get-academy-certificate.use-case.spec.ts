@@ -79,7 +79,7 @@ describe('GetAcademyCertificateUseCase', () => {
     expect(certificateRenderer.render).not.toHaveBeenCalled();
   });
 
-  it('renders the certificate with the user name and German date line', async () => {
+  it('renders the participation confirmation with the user name and German date line', async () => {
     completionRepository.findByUser.mockResolvedValue(
       new AcademyCompletion({
         userId,
@@ -99,7 +99,7 @@ describe('GetAcademyCertificateUseCase', () => {
     });
     expect(result.buffer.toString()).toBe('%PDF-fake');
     expect(result.fileName).toBe(
-      'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf',
+      'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Teilnahmebestaetigung.pdf',
     );
     expect(result.mimeType).toBe('application/pdf');
   });

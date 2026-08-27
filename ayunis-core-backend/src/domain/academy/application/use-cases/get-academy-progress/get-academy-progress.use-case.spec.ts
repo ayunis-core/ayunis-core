@@ -1,19 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { getLoggerToken } from 'nestjs-pino';
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
-import { GetAcademyProgressUseCase } from './get-academy-progress.use-case';
-import { GetAcademyProgressQuery } from './get-academy-progress.query';
-import { AcademyChapterProgressRepository } from '../../ports/academy-chapter-progress.repository';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { AcademyChapterConfirmation } from 'src/domain/academy/domain/academy-chapter-confirmation.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
-import { certificateExpiresAt } from '../../util/certificate-validity';
+import { AcademyChapterConfirmationRepository } from 'src/domain/academy/application/ports/academy-chapter-confirmation.repository';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { certificateExpiresAt } from 'src/domain/academy/application/util/certificate-validity';
+import { GetAcademyProgressQuery } from './get-academy-progress.query';
+import { GetAcademyProgressUseCase } from './get-academy-progress.use-case';
 
 describe('GetAcademyProgressUseCase', () => {
   let useCase: GetAcademyProgressUseCase;
-  let progressRepository: jest.Mocked<AcademyChapterProgressRepository>;
+  let confirmationRepository: jest.Mocked<AcademyChapterConfirmationRepository>;
   let completionRepository: jest.Mocked<AcademyCompletionRepository>;
 
   const userId = randomUUID();
@@ -28,7 +28,7 @@ describe('GetAcademyProgressUseCase', () => {
         },
         GetAcademyProgressUseCase,
         {
-          provide: AcademyChapterProgressRepository,
+          provide: AcademyChapterConfirmationRepository,
           useValue: { findAllByUser: jest.fn() },
         },
         {
@@ -39,34 +39,20 @@ describe('GetAcademyProgressUseCase', () => {
     }).compile();
 
     useCase = module.get(GetAcademyProgressUseCase);
-    progressRepository = module.get(AcademyChapterProgressRepository);
+    confirmationRepository = module.get(AcademyChapterConfirmationRepository);
     completionRepository = module.get(AcademyCompletionRepository);
   });
 
-  afterEach(() => jest.clearAllMocks());
-
-  // Relative so the assertions don't start failing once a hardcoded date ages
-  // past the certificate validity period.
   function daysAgo(days: number): Date {
     return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   }
 
-  function mockProgress(passedAt: Date): void {
-    progressRepository.findAllByUser.mockResolvedValue([
-      new AcademyChapterProgress({
-        userId,
-        chapterId,
-        passedAt,
-        lastScore: 90,
-        lastAttemptAt: passedAt,
-      }),
-    ]);
-  }
-
-  it('maps progress rows and the completion snapshot', async () => {
-    const passedAt = daysAgo(30);
+  it('maps chapter confirmations and the completion snapshot', async () => {
+    const confirmedAt = daysAgo(30);
     const completedAt = daysAgo(29);
-    mockProgress(passedAt);
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      new AcademyChapterConfirmation({ userId, chapterId, confirmedAt }),
+    ]);
     completionRepository.findByUser.mockResolvedValue(
       new AcademyCompletion({ userId, completedAt }),
     );
@@ -75,50 +61,48 @@ describe('GetAcademyProgressUseCase', () => {
       new GetAcademyProgressQuery({ userId }),
     );
 
-    expect(result.academyCompletedAt).toEqual(completedAt);
-    expect(result.academyCompletionExpiresAt).toEqual(
-      certificateExpiresAt(completedAt),
-    );
-    expect(result.chapters).toEqual([
-      {
-        chapterId,
-        passed: true,
-        passValid: true,
-        lastScore: 90,
-        lastPassedAt: passedAt,
-      },
+    expect(result).toEqual({
+      chapters: [
+        {
+          chapterId,
+          confirmed: true,
+          confirmationValid: true,
+          confirmedAt,
+        },
+      ],
+      academyCompletedAt: completedAt,
+      academyCompletionExpiresAt: certificateExpiresAt(completedAt),
+    });
+  });
+
+  it('reports an aged-out confirmation as no longer valid', async () => {
+    const confirmedAt = daysAgo(400);
+    confirmationRepository.findAllByUser.mockResolvedValue([
+      new AcademyChapterConfirmation({ userId, chapterId, confirmedAt }),
     ]);
-  });
-
-  it('reports a pass that aged out of the validity window as no longer valid', async () => {
-    // 12 months is at most 366 days, so 400 days is unambiguously outside it.
-    const passedAt = daysAgo(400);
-    mockProgress(passedAt);
-    completionRepository.findByUser.mockResolvedValue(
-      new AcademyCompletion({ userId, completedAt: passedAt }),
-    );
-
-    const result = await useCase.execute(
-      new GetAcademyProgressQuery({ userId }),
-    );
-
-    expect(result.chapters[0].passed).toBe(true);
-    expect(result.chapters[0].passValid).toBe(false);
-    expect(result.academyCompletionExpiresAt!.getTime()).toBeLessThan(
-      Date.now(),
-    );
-  });
-
-  it('returns a null completion date when the academy is not completed', async () => {
-    progressRepository.findAllByUser.mockResolvedValue([]);
     completionRepository.findByUser.mockResolvedValue(null);
 
     const result = await useCase.execute(
       new GetAcademyProgressQuery({ userId }),
     );
 
+    expect(result.chapters[0]).toMatchObject({
+      confirmed: true,
+      confirmationValid: false,
+      confirmedAt,
+    });
+  });
+
+  it('returns empty progress when no chapter has been confirmed', async () => {
+    confirmationRepository.findAllByUser.mockResolvedValue([]);
+    completionRepository.findByUser.mockResolvedValue(null);
+
+    const result = await useCase.execute(
+      new GetAcademyProgressQuery({ userId }),
+    );
+
+    expect(result.chapters).toEqual([]);
     expect(result.academyCompletedAt).toBeNull();
     expect(result.academyCompletionExpiresAt).toBeNull();
-    expect(result.chapters).toEqual([]);
   });
 });

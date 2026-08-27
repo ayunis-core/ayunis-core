@@ -10,7 +10,7 @@ import { GetAcademyCompletionQuery } from './get-academy-completion.query';
 /**
  * Whether — and when — a user completed the KI-Schulung nach EU AI Act, with
  * the validity period already applied. This is the academy's read surface for
- * consumers that gate on the certificate; they never see the validity period itself.
+ * consumers that gate on Academy completion; they never see the validity period itself.
  */
 @Injectable()
 export class GetAcademyCompletionUseCase {

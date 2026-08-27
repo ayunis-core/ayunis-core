@@ -2,8 +2,8 @@
   "requirement": {
     "title": "Pflicht zur KI-Schulung nach EU AI Act",
     "description": "Legen Sie fest, ob Benutzer Ihrer Organisation die KI-Schulung nach EU AI Act in der Academy abschließen müssen, bevor sie den Ayunis Core Chat nutzen können. Das Lesen bestehender Chats wird nie blockiert.",
-    "saved": "Zertifikatspflicht aktualisiert",
-    "error": "Zertifikatspflicht konnte nicht aktualisiert werden",
+    "saved": "Academy-Pflicht aktualisiert",
+    "error": "Academy-Pflicht konnte nicht aktualisiert werden",
     "errorUnexpected": "Beim Speichern ist etwas schiefgelaufen. Bitte versuchen Sie es erneut.",
     "modes": {
       "unrestricted": {
@@ -21,8 +21,8 @@
     }
   },
   "overview": {
-    "title": "Zertifikatsstatus je Benutzer",
-    "description": "Wer die KI-Schulung nach EU AI Act abgeschlossen hat, wann sie abgeschlossen wurde und bei wem Handlungsbedarf besteht. Zertifikate, die innerhalb von 30 Tagen ablaufen, gelten als bald ablaufend.",
+    "title": "Academy-Status je Benutzer",
+    "description": "Wer die KI-Schulung nach EU AI Act abgeschlossen hat, wann sie abgeschlossen wurde und bei wem Handlungsbedarf besteht. Abschlüsse, die innerhalb von 30 Tagen ablaufen, gelten als bald ablaufend.",
     "searchPlaceholder": "Nach Name oder E-Mail suchen",
     "empty": "Keine Benutzer entsprechen diesen Filtern",
     "emptyDescription": "Setzen Sie die Suche oder den Statusfilter zurück, um alle Benutzer zu sehen.",
@@ -31,7 +31,7 @@
     },
     "column": {
       "member": "Benutzer",
-      "lastPassed": "Zuletzt bestanden",
+      "lastPassed": "Zuletzt abgeschlossen",
       "renewalDue": "Erneuerung fällig",
       "status": "Status"
     },
@@ -39,7 +39,7 @@
       "valid": "Gültig",
       "expiringSoon": "Läuft bald ab",
       "expired": "Abgelaufen",
-      "notPassed": "Noch nicht erworben"
+      "notPassed": "Noch nicht abgeschlossen"
     }
   }
 }

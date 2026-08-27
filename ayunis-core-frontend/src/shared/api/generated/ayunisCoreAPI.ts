@@ -49,6 +49,7 @@ import type {
   AssignThreadWorkspaceDto,
   BulkAddTeamMembersDto,
   ChangeSubscriptionRequestDto,
+  ChapterConfirmationResponseDto,
   ChatCompletionRequestDto,
   CompleteMcpOAuthDto,
   ConfigureOrgSsoConnectionRequestDto,
@@ -74,7 +75,6 @@ import type {
   CreateOrgRequestDto,
   CreatePermittedModelDto,
   CreatePredefinedIntegrationDto,
-  CreateQuizQuestionRequestDto,
   CreateSkillDto,
   CreateSkillShareDto,
   CreateSkillTemplateDto,
@@ -158,9 +158,6 @@ import type {
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
   ProviderUsageResponseDto,
-  QuizQuestionForTakingResponseDto,
-  QuizQuestionResponseDto,
-  QuizResultResponseDto,
   RecoveryCodesResponseDto,
   RegisterDto,
   ReorderChaptersRequestDto,
@@ -194,11 +191,9 @@ import type {
   SsoAuthorizationResponseDto,
   SsoBackchannelLogoutRequestDto,
   SsoDiscoveryResponseDto,
-  SubmitQuizRequestDto,
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
-  SuperAdminAcademyChapterResponseDto,
   SuperAdminCatalogModelsControllerGetAllCatalogModels200Item,
   SuperAdminCatalogModelsControllerGetCatalogModelById200,
   SuperAdminOrgListResponseDto,
@@ -248,7 +243,6 @@ import type {
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
-  UpdateQuizQuestionRequestDto,
   UpdateRetentionPolicyRequestDto,
   UpdateRolePermissionsDto,
   UpdateSeatsDto,
@@ -20904,125 +20898,28 @@ export function useAcademyChaptersControllerGetChapters<TData = Awaited<ReturnTy
 
 
 /**
- * Draw up to 10 random questions from the chapter pool (the whole pool if smaller). Correct answers are never included.
- * @summary Get a chapter quiz
+ * Confirm that the current user watched all videos in the chapter. Reconfirmation refreshes the confirmation date.
+ * @summary Confirm an academy chapter
  */
-export const academyQuizControllerGetChapterQuiz = (
+export const academyChaptersControllerConfirmChapter = (
     chapterId: string,
  signal?: AbortSignal
 ) => {
       
       
-      return customAxiosInstance<QuizQuestionForTakingResponseDto[]>(
-      {url: `/academy/chapters/${chapterId}/quiz`, method: 'GET', signal
+      return customAxiosInstance<ChapterConfirmationResponseDto>(
+      {url: `/academy/chapters/${chapterId}/confirm`, method: 'POST', signal
     },
       );
     }
   
 
 
+export const getAcademyChaptersControllerConfirmChapterMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,{chapterId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,{chapterId: string}, TContext> => {
 
-export const getAcademyQuizControllerGetChapterQuizQueryKey = (chapterId?: string,) => {
-    return [
-    `/academy/chapters/${chapterId}/quiz`
-    ] as const;
-    }
-
-    
-export const getAcademyQuizControllerGetChapterQuizQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetChapterQuizQueryKey(chapterId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>> = ({ signal }) => academyQuizControllerGetChapterQuiz(chapterId, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(chapterId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AcademyQuizControllerGetChapterQuizQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>>
-export type AcademyQuizControllerGetChapterQuizQueryError = void
-
-
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
-          TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>,
-          TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a chapter quiz
- */
-
-export function useAcademyQuizControllerGetChapterQuiz<TData = Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError = void>(
- chapterId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetChapterQuiz>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAcademyQuizControllerGetChapterQuizQueryOptions(chapterId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * Grade a quiz submission against the chapter pass threshold, record progress and, when the whole academy is passed, stamp completion. Unlimited retries.
- * @summary Submit a chapter quiz
- */
-export const academyQuizControllerSubmitChapterQuiz = (
-    chapterId: string,
-    submitQuizRequestDto: SubmitQuizRequestDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<QuizResultResponseDto>(
-      {url: `/academy/chapters/${chapterId}/quiz/submit`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: submitQuizRequestDto, signal
-    },
-      );
-    }
-  
-
-
-export const getAcademyQuizControllerSubmitChapterQuizMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext> => {
-
-const mutationKey = ['academyQuizControllerSubmitChapterQuiz'];
+const mutationKey = ['academyChaptersControllerConfirmChapter'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -21032,10 +20929,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, {chapterId: string;data: SubmitQuizRequestDto}> = (props) => {
-          const {chapterId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, {chapterId: string}> = (props) => {
+          const {chapterId} = props ?? {};
 
-          return  academyQuizControllerSubmitChapterQuiz(chapterId,data,)
+          return  academyChaptersControllerConfirmChapter(chapterId,)
         }
 
         
@@ -21043,32 +20940,32 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AcademyQuizControllerSubmitChapterQuizMutationResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>>
-    export type AcademyQuizControllerSubmitChapterQuizMutationBody = SubmitQuizRequestDto
-    export type AcademyQuizControllerSubmitChapterQuizMutationError = void
+    export type AcademyChaptersControllerConfirmChapterMutationResult = NonNullable<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>>
+    
+    export type AcademyChaptersControllerConfirmChapterMutationError = void
 
     /**
- * @summary Submit a chapter quiz
+ * @summary Confirm an academy chapter
  */
-export const useAcademyQuizControllerSubmitChapterQuiz = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>, TError,{chapterId: string;data: SubmitQuizRequestDto}, TContext>, }
+export const useAcademyChaptersControllerConfirmChapter = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>, TError,{chapterId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof academyQuizControllerSubmitChapterQuiz>>,
+        Awaited<ReturnType<typeof academyChaptersControllerConfirmChapter>>,
         TError,
-        {chapterId: string;data: SubmitQuizRequestDto},
+        {chapterId: string},
         TContext
       > => {
 
-      const mutationOptions = getAcademyQuizControllerSubmitChapterQuizMutationOptions(options);
+      const mutationOptions = getAcademyChaptersControllerConfirmChapterMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
     
 /**
- * Get the current user per-chapter pass state and the whole-academy completion date.
+ * Get the current user chapter confirmations and whole-academy completion date.
  * @summary Get academy progress
  */
-export const academyQuizControllerGetProgress = (
+export const academyProgressControllerGetProgress = (
     
  signal?: AbortSignal
 ) => {
@@ -21083,69 +20980,69 @@ export const academyQuizControllerGetProgress = (
 
 
 
-export const getAcademyQuizControllerGetProgressQueryKey = () => {
+export const getAcademyProgressControllerGetProgressQueryKey = () => {
     return [
     `/academy/progress`
     ] as const;
     }
 
     
-export const getAcademyQuizControllerGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export const getAcademyProgressControllerGetProgressQueryOptions = <TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAcademyQuizControllerGetProgressQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAcademyProgressControllerGetProgressQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>> = ({ signal }) => academyQuizControllerGetProgress(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>> = ({ signal }) => academyProgressControllerGetProgress(signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type AcademyQuizControllerGetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>>
-export type AcademyQuizControllerGetProgressQueryError = void
+export type AcademyProgressControllerGetProgressQueryResult = NonNullable<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>>
+export type AcademyProgressControllerGetProgressQueryError = void
 
 
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>,
           TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>> & Pick<
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>,
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>,
           TError,
-          Awaited<ReturnType<typeof academyQuizControllerGetProgress>>
+          Awaited<ReturnType<typeof academyProgressControllerGetProgress>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get academy progress
  */
 
-export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyQuizControllerGetProgress>>, TError, TData>>, }
+export function useAcademyProgressControllerGetProgress<TData = Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof academyProgressControllerGetProgress>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAcademyQuizControllerGetProgressQueryOptions(options)
+  const queryOptions = getAcademyProgressControllerGetProgressQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -21159,8 +21056,8 @@ export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<t
 
 
 /**
- * Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.
- * @summary Download the academy completion certificate
+ * Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.
+ * @summary Download the academy participation confirmation
  */
 export const academyCertificateControllerGetCertificate = (
     
@@ -21232,7 +21129,7 @@ export function useAcademyCertificateControllerGetCertificate<TData = Awaited<Re
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Download the academy completion certificate
+ * @summary Download the academy participation confirmation
  */
 
 export function useAcademyCertificateControllerGetCertificate<TData = Awaited<ReturnType<typeof academyCertificateControllerGetCertificate>>, TError = void>(
@@ -21263,7 +21160,7 @@ export const superAdminAcademyChaptersControllerGetChapters = (
 ) => {
       
       
-      return customAxiosInstance<SuperAdminAcademyChapterResponseDto[]>(
+      return customAxiosInstance<AcademyChapterResponseDto[]>(
       {url: `/super-admin/academy/chapters`, method: 'GET', signal
     },
       );
@@ -21865,202 +21762,6 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
       > => {
 
       const mutationOptions = getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Add a question to a chapter quiz pool, appended after the last position. Only accessible to super admins.
- * @summary Create a new academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerCreateQuizQuestion = (
-    chapterId: string,
-    createQuizQuestionRequestDto: CreateQuizQuestionRequestDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<QuizQuestionResponseDto>(
-      {url: `/super-admin/academy/chapters/${chapterId}/quiz-questions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createQuizQuestionRequestDto, signal
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext> => {
-
-const mutationKey = ['superAdminAcademyQuizQuestionsControllerCreateQuizQuestion'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, {chapterId: string;data: CreateQuizQuestionRequestDto}> = (props) => {
-          const {chapterId,data} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerCreateQuizQuestion(chapterId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>>
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationBody = CreateQuizQuestionRequestDto
-    export type SuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationError = void
-
-    /**
- * @summary Create a new academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>, TError,{chapterId: string;data: CreateQuizQuestionRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerCreateQuizQuestion>>,
-        TError,
-        {chapterId: string;data: CreateQuizQuestionRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerCreateQuizQuestionMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Replace the prompt and answer options of a quiz question. Only accessible to super admins.
- * @summary Update an academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = (
-    id: string,
-    updateQuizQuestionRequestDto: UpdateQuizQuestionRequestDto,
- ) => {
-      
-      
-      return customAxiosInstance<QuizQuestionResponseDto>(
-      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateQuizQuestionRequestDto
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext> => {
-
-const mutationKey = ['superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, {id: string;data: UpdateQuizQuestionRequestDto}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>>
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationBody = UpdateQuizQuestionRequestDto
-    export type SuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationError = void
-
-    /**
- * @summary Update an academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>, TError,{id: string;data: UpdateQuizQuestionRequestDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion>>,
-        TError,
-        {id: string;data: UpdateQuizQuestionRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerUpdateQuizQuestionMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * Delete a quiz question. Only accessible to super admins.
- * @summary Delete an academy quiz question
- */
-export const superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/super-admin/academy/quiz-questions/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>>
-    
-    export type SuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationError = void
-
-    /**
- * @summary Delete an academy quiz question
- */
-export const useSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestion = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getSuperAdminAcademyQuizQuestionsControllerDeleteQuizQuestionMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

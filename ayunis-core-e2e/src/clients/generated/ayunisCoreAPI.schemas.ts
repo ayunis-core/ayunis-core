@@ -4870,10 +4870,6 @@ export interface AcademyChapterResponseDto {
   description: string;
   /** The position of the chapter (0-based) */
   position: number;
-  /** Whether a quiz is activated for this chapter (shown at chapter end) */
-  quizEnabled: boolean;
-  /** Percentage of correct answers required to pass this chapter quiz */
-  passThreshold: number;
   /** The modules of the chapter, ordered by position */
   courseModules: CourseModuleResponseDto[];
   /** The date the chapter was created */
@@ -4882,65 +4878,25 @@ export interface AcademyChapterResponseDto {
   updatedAt: string;
 }
 
-export interface QuizAnswerOptionForTakingResponseDto {
-  /** The answer option text */
-  text: string;
-}
-
-export interface QuizQuestionForTakingResponseDto {
-  /** The unique identifier of the question */
-  id: string;
-  /** The question prompt */
-  text: string;
-  /** The answer options, without indicating the correct one */
-  options: QuizAnswerOptionForTakingResponseDto[];
-}
-
-export interface SubmitQuizAnswerDto {
-  /** The id of the answered question */
-  questionId: string;
-  /** The 0-based index of the selected answer option */
-  selectedOptionIndex: number;
-}
-
-export interface SubmitQuizRequestDto {
-  /** One answer per drawn question */
-  answers: SubmitQuizAnswerDto[];
-}
-
-export interface QuizResultResponseDto {
-  /** Whether the attempt met the chapter pass threshold */
-  passed: boolean;
-  /** Number of questions answered correctly */
-  correctCount: number;
-  /** Number of questions in the attempt */
-  totalCount: number;
-  /** Number of correct answers required to pass */
-  requiredCount: number;
-  /** Score as a percentage of correct answers */
-  score: number;
-  /** Whether passing this chapter completed the whole academy for the user */
+export interface ChapterConfirmationResponseDto {
+  chapterId: string;
+  confirmedAt: string;
+  /** Whether all configured academy chapters are now confirmed */
   academyCompleted: boolean;
 }
 
 export interface ChapterProgressResponseDto {
-  /** The chapter this progress refers to */
   chapterId: string;
-  /** Whether the learner has passed this chapter quiz */
-  passed: boolean;
-  /** Whether the pass is recent enough to still count toward a completion. False once it has aged out of the certificate validity period. */
-  passValid: boolean;
-  /** Score of the most recent attempt, as a percentage */
-  lastScore: number;
-  /**
-   * When the chapter was most recently passed, if ever
-   * @nullable
-   */
-  lastPassedAt: string | null;
+  /** Whether the learner has confirmed this chapter */
+  confirmed: boolean;
+  /** Whether the confirmation still counts toward annual renewal */
+  confirmationValid: boolean;
+  /** When the learner most recently confirmed the chapter */
+  confirmedAt: string;
 }
 
 export interface AcademyProgressResponseDto {
-  /** Per-chapter progress for the current user */
+  /** Per-chapter confirmations for the current user */
   chapters: ChapterProgressResponseDto[];
   /**
    * When the user last completed the whole academy, or null if never
@@ -4948,57 +4904,10 @@ export interface AcademyProgressResponseDto {
    */
   academyCompletedAt: string | null;
   /**
-   * When the completion stops being valid, or null if the academy was never completed. Only enforced by orgs requiring annual recertification.
+   * When the completion stops being valid, or null if never completed
    * @nullable
    */
   academyCompletionExpiresAt: string | null;
-}
-
-export interface QuizAnswerOptionResponseDto {
-  /** The answer option text */
-  text: string;
-  /** Whether this option is the correct answer */
-  isCorrect: boolean;
-}
-
-export interface QuizQuestionResponseDto {
-  /** The unique identifier of the quiz question */
-  id: string;
-  /** The id of the chapter the question belongs to */
-  chapterId: string;
-  /** The question prompt */
-  text: string;
-  /** The answer options with the correct one flagged */
-  options: QuizAnswerOptionResponseDto[];
-  /** The position of the question within its chapter (0-based) */
-  position: number;
-  /** The date the question was created */
-  createdAt: string;
-  /** The date the question was last updated */
-  updatedAt: string;
-}
-
-export interface SuperAdminAcademyChapterResponseDto {
-  /** The unique identifier of the chapter */
-  id: string;
-  /** The title of the chapter */
-  title: string;
-  /** A description of what the chapter covers */
-  description: string;
-  /** The position of the chapter (0-based) */
-  position: number;
-  /** Whether a quiz is activated for this chapter (shown at chapter end) */
-  quizEnabled: boolean;
-  /** Percentage of correct answers required to pass this chapter quiz */
-  passThreshold: number;
-  /** The modules of the chapter, ordered by position */
-  courseModules: CourseModuleResponseDto[];
-  /** The date the chapter was created */
-  createdAt: string;
-  /** The date the chapter was last updated */
-  updatedAt: string;
-  /** The quiz question pool of the chapter, ordered by position */
-  quizQuestions: QuizQuestionResponseDto[];
 }
 
 export interface CreateChapterRequestDto {
@@ -5030,14 +4939,6 @@ export interface UpdateChapterRequestDto {
    * @maxLength 2000
    */
   description: string;
-  /** Whether a quiz is activated for this chapter */
-  quizEnabled?: boolean;
-  /**
-   * Percentage of correct answers required to pass this chapter quiz
-   * @minimum 1
-   * @maximum 100
-   */
-  passThreshold?: number;
 }
 
 export interface CreateCourseModuleRequestDto {
@@ -5079,44 +4980,6 @@ export interface UpdateCourseModuleRequestDto {
    * @maxLength 500
    */
   loomUrl: string;
-}
-
-export interface QuizAnswerOptionRequestDto {
-  /**
-   * The answer option text
-   * @maxLength 500
-   */
-  text: string;
-  /** Whether this option is the correct answer */
-  isCorrect: boolean;
-}
-
-export interface CreateQuizQuestionRequestDto {
-  /**
-   * The question prompt
-   * @maxLength 2000
-   */
-  text: string;
-  /**
-   * The answer options. Between 2 and 6 options with exactly one marked correct.
-   * @minItems 2
-   * @maxItems 6
-   */
-  options: QuizAnswerOptionRequestDto[];
-}
-
-export interface UpdateQuizQuestionRequestDto {
-  /**
-   * The question prompt
-   * @maxLength 2000
-   */
-  text: string;
-  /**
-   * The answer options. Between 2 and 6 options with exactly one marked correct.
-   * @minItems 2
-   * @maxItems 6
-   */
-  options: QuizAnswerOptionRequestDto[];
 }
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }

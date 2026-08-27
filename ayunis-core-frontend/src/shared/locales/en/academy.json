@@ -15,85 +15,64 @@
     "letsGo": "Let's go!",
     "previous": "Previous",
     "next": "Next",
-    "finish": "Finish",
-    "startQuiz": "Start quiz",
+    "openConfirmation": "Complete chapter",
     "modulesTitle": "Modules",
     "noModules": {
       "title": "No modules yet",
       "description": "This chapter doesn't have any modules yet."
     }
   },
-  "quiz": {
-    "title": "Quiz",
-    "questionCounter": "Question {{current}} of {{total}}",
-    "submit": "Submit answers",
-    "answerAll": "Answer all questions to submit",
-    "retry": "Try again",
-    "backToAcademy": "Back to academy",
-    "passed": {
-      "title": "Chapter passed!"
-    },
-    "failed": {
-      "title": "Not quite yet"
-    },
-    "result": {
-      "score": "You scored {{correct}} of {{total}} ({{score}}%)",
-      "required": "You need {{required}} correct to pass."
-    },
-    "completed": {
-      "title": "Academy complete!",
-      "description": "You've passed every chapter. Congratulations!"
-    },
+  "confirmation": {
+    "title": "Complete chapter",
+    "description": "Confirm that you have watched all videos in this chapter.",
+    "watchedVideos": "I've watched the videos",
+    "completeChapter": "Complete chapter",
     "errors": {
-      "loadFailed": "Couldn't load the quiz.",
-      "loadFailedDescription": "Please try again.",
-      "notAvailable": "This quiz isn't available.",
-      "notAvailableDescription": "This chapter has no quiz to take right now.",
-      "invalidSubmission": "Your submission was invalid. Please try again.",
-      "submitFailed": "Couldn't submit your answers. Please try again."
+      "chapterNotFound": "The chapter could not be found.",
+      "submitFailed": "The chapter could not be completed. Please try again."
     }
   },
   "progress": {
-    "passed": "Passed",
+    "confirmed": "Completed",
     "completed": {
       "title": "Academy complete!",
-      "description": "You've passed every chapter."
+      "description": "You've completed every chapter."
     },
     "renewalDue": "Renewal due"
   },
-  "certificate": {
-    "downloadError": "The certificate could not be downloaded. Please try again.",
-    "download": "Download certificate"
+  "participationConfirmation": {
+    "downloadError": "The confirmation of participation could not be downloaded. Please try again.",
+    "download": "Download confirmation of participation"
   },
   "expiry": {
-    "title_one": "Your AI certificate expires in {{count}} day",
-    "title_other": "Your AI certificate expires in {{count}} days",
+    "title_one": "Your EU AI Act training must be renewed in {{count}} day",
+    "title_other": "Your EU AI Act training must be renewed in {{count}} days",
     "description": "Renew it in the Academy to keep using Ayunis Core chat without interruption.",
-    "urgentDescription": "Renew it now — once it expires, Ayunis Core chat is locked until you pass the certificate again.",
-    "banner_one": "Your AI certificate expires in {{count}} day. Chat will be locked afterwards.",
-    "banner_other": "Your AI certificate expires in {{count}} days. Chat will be locked afterwards.",
+    "urgentDescription": "Renew it now — once it expires, Ayunis Core chat is locked until you complete the training again.",
+    "banner_one": "Your EU AI Act training must be renewed in {{count}} day. Chat will be locked afterwards.",
+    "banner_other": "Your EU AI Act training must be renewed in {{count}} days. Chat will be locked afterwards.",
     "later": "Later",
     "action": "Go to the academy"
   },
   "account": {
     "title": "EU AI Act training",
-    "lastPassed": "Last passed:",
+    "lastPassed": "Last completed:",
     "nextRenewal": "Next renewal due:",
     "expiredOn": "Expired on:",
-    "notPassedDescription": "You haven't earned the certificate yet.",
+    "notPassedDescription": "You haven't completed the EU AI Act training yet.",
     "action": "Go to the academy",
     "status": {
       "valid": "Valid",
       "expiringSoon": "Expiring soon",
       "expired": "Expired",
-      "notPassed": "Not yet earned"
+      "notPassed": "Not yet completed"
     }
   },
   "gate": {
-    "title": "Certificate required",
+    "title": "Academy completion required",
     "description": "Your organization requires you to complete the EU AI Act training before you can use Ayunis Core chat. Complete the Academy to unlock chat — your existing chats stay readable in the meantime.",
     "action": "Go to the academy",
     "emptyTitle": "No academy content yet",
-    "emptyDescription": "Chat is locked until you pass the certificate, but no chapters have been published yet. Please contact your administrator."
+    "emptyDescription": "Chat is locked until you complete the Academy, but no chapters have been published yet. Please contact your administrator."
   }
 }

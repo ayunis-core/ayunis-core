@@ -19,7 +19,7 @@ import { Link } from '@tanstack/react-router';
 import {
   useAcademyAccessStatus,
   useAcademyProgress,
-  useDownloadCertificate,
+  useDownloadParticipationConfirmation,
 } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -32,33 +32,36 @@ interface AcademyPageProps {
 export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
   const { t } = useTranslation('academy');
   const { progress } = useAcademyProgress();
-  const { downloadCertificate, isDownloading } = useDownloadCertificate();
+  const { downloadParticipationConfirmation, isDownloading } =
+    useDownloadParticipationConfirmation();
   const { isGated, status } = useAcademyAccessStatus();
 
-  // Passes age out of the certificate's validity period platform-wide, but only
-  // an org on annual renewal actually has to redo anything. Surfacing expiry
-  // anywhere else would nag people about an obligation their org never set.
+  // Confirmations age out platform-wide, but only an org on annual renewal has
+  // to repeat them. Other modes should not show an irrelevant renewal warning.
   const renewalRequired = status?.mode === AcademyAccessMode.required_annually;
 
   const chapterProgress = progress?.chapters ?? [];
-  // `passed` stays true forever; `passValid` is what still counts toward the
-  // certificate, so an expired pass reads as "redo this" rather than "done".
-  const passedChapterIds = new Set(
+  const confirmedChapterIds = new Set(
     chapterProgress
-      .filter((c) => (renewalRequired ? c.passValid : c.passed))
-      .map((c) => c.chapterId),
+      .filter(({ confirmed, confirmationValid }) =>
+        renewalRequired ? confirmationValid : confirmed,
+      )
+      .map(({ chapterId }) => chapterId),
   );
   const expiredChapterIds = new Set(
     renewalRequired
       ? chapterProgress
-          .filter((c) => c.passed && !c.passValid)
-          .map((c) => c.chapterId)
+          .filter(
+            ({ confirmed, confirmationValid }) =>
+              confirmed && !confirmationValid,
+          )
+          .map(({ chapterId }) => chapterId)
       : [],
   );
 
   // A lapsed completion in an annual org must not still read as "Academy
   // complete!" right below the notice telling them chat is locked. In that mode
-  // `allowed` is precisely "holds a non-expired certificate", so lean on the
+  // `allowed` is precisely "holds a valid completion", so lean on the
   // server's answer rather than re-deriving expiry against the client clock.
   const showCompletion =
     Boolean(progress?.academyCompletedAt) &&
@@ -93,7 +96,7 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
           <div className="space-y-3">
             <AcademyGateNotice withAction={false} />
             {showCompletion && (
-              <Item variant="muted">
+              <Item variant="muted" data-testid="academy-completed">
                 <ItemMedia variant="icon" className="text-brand">
                   <Trophy />
                 </ItemMedia>
@@ -105,11 +108,11 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
                 </ItemContent>
                 <ItemActions>
                   <Button
-                    onClick={() => void downloadCertificate()}
+                    onClick={() => void downloadParticipationConfirmation()}
                     disabled={isDownloading}
                   >
                     <Download className="h-4 w-4" />
-                    {t('certificate.download')}
+                    {t('participationConfirmation.download')}
                   </Button>
                 </ItemActions>
               </Item>
@@ -120,14 +123,19 @@ export default function AcademyPage({ chapters }: Readonly<AcademyPageProps>) {
                   to="/academy/$chapterId"
                   params={{ chapterId: chapter.id }}
                   className="flex-1"
+                  data-testid={`academy-chapter-${chapter.id}`}
                 >
                   <ItemContent>
                     <ItemTitle className="flex items-center gap-2">
                       {chapter.title}
-                      {passedChapterIds.has(chapter.id) && (
-                        <Badge variant="secondary" className="gap-1">
+                      {confirmedChapterIds.has(chapter.id) && (
+                        <Badge
+                          variant="secondary"
+                          className="gap-1"
+                          data-testid={`academy-chapter-confirmed-${chapter.id}`}
+                        >
                           <CheckCircle2 className="h-3 w-3 text-green-600" />
-                          {t('progress.passed')}
+                          {t('progress.confirmed')}
                         </Badge>
                       )}
                       {expiredChapterIds.has(chapter.id) && (

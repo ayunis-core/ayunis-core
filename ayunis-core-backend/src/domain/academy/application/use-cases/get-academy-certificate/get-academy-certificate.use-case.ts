@@ -18,7 +18,7 @@ export interface AcademyCertificateFile {
 }
 
 export const CERTIFICATE_FILE_NAME =
-  'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf';
+  'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Teilnahmebestaetigung.pdf';
 
 const CERTIFICATE_DATE_FORMAT = new Intl.DateTimeFormat('de-DE', {
   timeZone: 'Europe/Berlin',
@@ -41,7 +41,10 @@ export class GetAcademyCertificateUseCase {
   async execute(
     query: GetAcademyCertificateQuery,
   ): Promise<AcademyCertificateFile> {
-    this.logger.info({ userId: query.userId }, 'Getting academy certificate');
+    this.logger.info(
+      { userId: query.userId },
+      'Getting academy participation confirmation',
+    );
 
     const completion = await this.completionRepository.findByUser(query.userId);
     if (!completion) {
