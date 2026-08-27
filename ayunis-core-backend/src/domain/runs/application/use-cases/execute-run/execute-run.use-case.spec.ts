@@ -220,6 +220,24 @@ describe('ExecuteRunUseCase', () => {
     );
   });
 
+  it('wraps unexpected execution-boundary failures in the runs error family', async () => {
+    configService.get.mockImplementation(() => {
+      throw new Error('configuration unavailable');
+    });
+
+    await expect(
+      useCase.execute(
+        new ExecuteRunCommand({
+          threadId,
+          input: new RunUserInput('Fasse die Sitzung zusammen', []),
+        }),
+      ),
+    ).rejects.toMatchObject({
+      code: RunErrorCode.UNEXPECTED_RUN_ERROR,
+      statusCode: 500,
+    });
+  });
+
   it('aborts when the thread disappears before the assistant message is persisted', async () => {
     const thread = createMockThread();
     findThreadUseCase.execute.mockResolvedValue({
@@ -300,6 +318,57 @@ describe('ExecuteRunUseCase', () => {
     expect(
       inferenceOrchestratorService.runInference.mock.invocationCallOrder[0],
     ).toBeLessThan(collector.collectToolResults.mock.invocationCallOrder[0]);
+  });
+
+  it('aborts a terminal tool phase when its thread disappears before persistence', async () => {
+    const thread = createMockThread();
+    findThreadUseCase.execute.mockResolvedValue({ thread, isLongChat: false });
+    const assistantMessage = {
+      id: randomUUID(),
+      content: [{ type: 'tool_use', name: ToolType.SEND_EMAIL }],
+    } as unknown as AssistantMessage;
+    const inference = (
+      useCase as unknown as {
+        inferenceOrchestratorService: jest.Mocked<InferenceOrchestratorService>;
+      }
+    ).inferenceOrchestratorService;
+    inference.runInference.mockReturnValue(
+      (async function* () {
+        yield assistantMessage;
+        return assistantMessage;
+      })(),
+    );
+    const collector = (
+      useCase as unknown as {
+        toolResultCollectorService: jest.Mocked<ToolResultCollectorService>;
+      }
+    ).toolResultCollectorService;
+    collector.collectToolResults.mockResolvedValue({
+      contents: [new ToolResultMessageContent('call-1', 'send_email', 'sent')],
+      outcomes: [],
+      piiMasks: null,
+    });
+    const createToolResult = (
+      useCase as unknown as {
+        createToolResultMessageUseCase: jest.Mocked<CreateToolResultMessageUseCase>;
+      }
+    ).createToolResultMessageUseCase;
+    createToolResult.execute.mockResolvedValue(null);
+
+    const generator = await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Draft an email', []),
+      }),
+    );
+    let next = await generator.next();
+    while (!next.done) next = await generator.next();
+
+    expect(next.value).toBe('aborted');
+    expect(inference.runInference).toHaveBeenCalledTimes(1);
+    expect(
+      messageCleanupService.cleanupTrailingNonAssistantMessages,
+    ).not.toHaveBeenCalled();
   });
 
   it('does not collect stale tool calls before a new user message is inferred', async () => {

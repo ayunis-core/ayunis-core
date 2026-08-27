@@ -3,12 +3,15 @@ import { getLoggerToken } from 'nestjs-pino';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateToolResultMessageUseCase } from './create-tool-result-message.use-case';
-import type { MessagesRepository } from '../../ports/messages.repository';
-import { MESSAGES_REPOSITORY } from '../../ports/messages.repository';
+import type { MessagesRepository } from 'src/domain/messages/application/ports/messages.repository';
+import { MESSAGES_REPOSITORY } from 'src/domain/messages/application/ports/messages.repository';
 import { CreateToolResultMessageCommand } from './create-tool-result-message.command';
 import { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
-import { MessageCreationError } from '../../messages.errors';
+import {
+  MessageThreadMissingError,
+  UnexpectedToolResultMessageError,
+} from 'src/domain/messages/application/messages.errors';
 import { randomUUID } from 'crypto';
 
 describe('CreateToolResultMessageUseCase', () => {
@@ -159,6 +162,23 @@ describe('CreateToolResultMessageUseCase', () => {
       expect(result).toBe(expectedMessage);
     });
 
+    it('returns null when the thread disappears before persistence', async () => {
+      const threadId = randomUUID();
+      const content = [
+        new ToolResultMessageContent(
+          randomUUID(),
+          'search_tool',
+          'Search completed successfully',
+        ),
+      ];
+      const command = new CreateToolResultMessageCommand(threadId, content);
+      jest
+        .spyOn(mockMessagesRepository, 'create')
+        .mockRejectedValue(new MessageThreadMissingError(threadId));
+
+      await expect(useCase.execute(command)).resolves.toBeNull();
+    });
+
     it('should handle repository errors', async () => {
       // Arrange
       const threadId = randomUUID();
@@ -179,7 +199,7 @@ describe('CreateToolResultMessageUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        MessageCreationError,
+        UnexpectedToolResultMessageError,
       );
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(ToolResultMessage),
@@ -205,7 +225,7 @@ describe('CreateToolResultMessageUseCase', () => {
 
       // Act & Assert
       await expect(useCase.execute(command)).rejects.toThrow(
-        MessageCreationError,
+        UnexpectedToolResultMessageError,
       );
       expect(mockMessagesRepository.create).toHaveBeenCalledWith(
         expect.any(ToolResultMessage),

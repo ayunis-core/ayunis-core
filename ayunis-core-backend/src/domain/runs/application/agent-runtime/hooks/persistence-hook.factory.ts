@@ -1,8 +1,9 @@
-import type {
-  AfterModelCallContext,
-  AssistantMessage as RuntimeAssistantMessage,
-  Hook,
-  RunContext,
+import {
+  RunAbortedError,
+  type AfterModelCallContext,
+  type AssistantMessage as RuntimeAssistantMessage,
+  type Hook,
+  type RunContext,
 } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
@@ -14,9 +15,9 @@ import { ToolResultMessageContent } from 'src/domain/messages/domain/message-con
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
-import { assistantMessageId, toolResultMessageId } from '../message-id';
-import { toBackendAssistantMessage } from '../inference-message.mapper';
-import type { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
+import { assistantMessageId, toolResultMessageId } from 'src/domain/runs/application/agent-runtime/message-id';
+import { toBackendAssistantMessage } from 'src/domain/runs/application/agent-runtime/inference-message.mapper';
+import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 
 /** Per-run RunContext key for tool results awaiting a grouped flush. */
 const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
@@ -142,6 +143,15 @@ export class PersistenceHookFactory {
         toolResultMessageId(context.runId, pending.iteration),
       ),
     );
+    if (!saved) {
+      context.set(PENDING_TOOL_RESULTS, {
+        iteration: pending.iteration,
+        contents: [],
+      });
+      throw new RunAbortedError(
+        'Run aborted because the thread no longer exists',
+      );
+    }
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(thread, saved),
     );

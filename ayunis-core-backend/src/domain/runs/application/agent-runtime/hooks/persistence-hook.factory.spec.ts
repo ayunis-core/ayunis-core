@@ -1,4 +1,4 @@
-import { RunContext, run } from '@ayunis/agent-runtime';
+import { RunAbortedError, RunContext, run } from '@ayunis/agent-runtime';
 import type { Hook, ModelProvider, ProviderChunk } from '@ayunis/agent-runtime';
 import { randomUUID } from 'crypto';
 import type { SaveAssistantMessageCommand } from 'src/domain/messages/application/use-cases/save-assistant-message/save-assistant-message.command';
@@ -7,8 +7,8 @@ import type { CreateToolResultMessageUseCase } from 'src/domain/messages/applica
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import type { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import { RuntimeToolIntegrationRegistry } from '../runtime-tool-integration.registry';
-import { assistantMessageId } from '../message-id';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { assistantMessageId } from 'src/domain/runs/application/agent-runtime/message-id';
 import { PersistenceHookFactory } from './persistence-hook.factory';
 
 describe('PersistenceHookFactory', () => {
@@ -80,6 +80,24 @@ describe('PersistenceHookFactory', () => {
     });
   });
 
+  it('aborts when the thread disappears before tool results are persisted', async () => {
+    const createToolResult = jest.fn().mockResolvedValue(null);
+    const { hook, addMessage } = buildHook(jest.fn(), createToolResult);
+    const context = RunContext.create();
+
+    await expect(
+      hook.afterToolCall?.({
+        context,
+        iteration: 0,
+        toolCall: { id: 'call-1', name: 'search', input: {} },
+        result: 'Search completed successfully',
+        isLastToolCall: true,
+      } as never),
+    ).rejects.toBeInstanceOf(RunAbortedError);
+    expect(createToolResult).toHaveBeenCalledTimes(1);
+    expect(addMessage).not.toHaveBeenCalled();
+  });
+
   it('does not persist an empty assistant message after interruption', async () => {
     const save = jest.fn().mockResolvedValue(undefined);
     const { hook, addMessage } = buildHook(save);
@@ -108,12 +126,15 @@ describe('PersistenceHookFactory', () => {
   });
 });
 
-function buildHook(save: jest.Mock): { hook: Hook; addMessage: jest.Mock } {
+function buildHook(
+  save: jest.Mock,
+  createToolResult: jest.Mock = jest.fn().mockResolvedValue(undefined),
+): { hook: Hook; addMessage: jest.Mock } {
   const addMessage = jest.fn();
   const factory = new PersistenceHookFactory(
     { execute: save } as unknown as SaveAssistantMessageUseCase,
     {
-      execute: jest.fn().mockResolvedValue(undefined),
+      execute: createToolResult,
     } as unknown as CreateToolResultMessageUseCase,
     { execute: addMessage } as unknown as AddMessageToThreadUseCase,
   );

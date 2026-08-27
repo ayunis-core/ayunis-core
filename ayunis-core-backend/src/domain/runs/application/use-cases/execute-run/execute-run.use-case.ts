@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { Message } from 'src/domain/messages/domain/message.entity';
 import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
@@ -17,6 +18,7 @@ import {
   RunMaxIterationsReachedError,
   RunNoModelFoundError,
   RunToolRepeatedlyFailingError,
+  UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
 import {
   RunUserInput,
@@ -79,6 +81,7 @@ export class ExecuteRunUseCase {
     private readonly logger: PinoLogger,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
@@ -219,20 +222,17 @@ export class ExecuteRunUseCase {
           return 'aborted';
         }
         if (this.shouldExitAfterResponse(assistantMessage, params)) {
-          yield* this.processToolResults(
+          const persisted = yield* this.processToolResults(
             params,
             null,
             breaker,
             assistantMessage,
           );
-          break;
-        }
-        if (i === iterations - 1) {
-          throw new RunMaxIterationsReachedError(iterations);
+          succeeded = true;
+          return persisted ? 'completed' : 'aborted';
         }
       }
-      succeeded = true;
-      return 'completed';
+      throw new RunMaxIterationsReachedError(iterations);
     } catch (error) {
       preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
       if (error instanceof ApplicationError) throw error;
@@ -265,7 +265,12 @@ export class ExecuteRunUseCase {
   ): AsyncGenerator<RunStreamItem, AssistantMessage | null, void> {
     const { userInput, toolResultInput } = parseRunInput(params.input);
     if (!firstIteration || toolResultInput) {
-      yield* this.processToolResults(params, toolResultInput, breaker);
+      const persisted = yield* this.processToolResults(
+        params,
+        toolResultInput,
+        breaker,
+      );
+      if (!persisted) return null;
     }
     if (firstIteration) {
       yield* this.handleFirstIteration(params, userInput);
@@ -298,7 +303,7 @@ export class ExecuteRunUseCase {
     toolResultInput: RunToolResultInput | null,
     breaker: ToolFailureBreaker,
     message?: AssistantMessage,
-  ): AsyncGenerator<RunStreamItem, void, void> {
+  ): AsyncGenerator<RunStreamItem, boolean, void> {
     const {
       contents: toolResultMessageContent,
       outcomes,
@@ -313,7 +318,7 @@ export class ExecuteRunUseCase {
       message,
     });
 
-    if (toolResultMessageContent.length === 0) return;
+    if (toolResultMessageContent.length === 0) return true;
 
     const toolResultMessage = await this.createToolResultMessageUseCase.execute(
       new CreateToolResultMessageCommand(
@@ -321,6 +326,7 @@ export class ExecuteRunUseCase {
         toolResultMessageContent,
       ),
     );
+    if (toolResultMessage === null) return false;
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(params.thread, toolResultMessage),
     );
@@ -330,8 +336,6 @@ export class ExecuteRunUseCase {
     }
     yield toolResultMessage;
 
-    // After the results are persisted and streamed, so the transcript stays
-    // intact when the breaker aborts the run.
     this.assertToolFailuresNotRepeating(breaker, outcomes);
 
     const skillWasActivated = toolResultMessageContent.some(
@@ -340,13 +344,9 @@ export class ExecuteRunUseCase {
     if (skillWasActivated) {
       await this.refreshRunContext(params);
     }
+    return true;
   }
 
-  /**
-   * The model repeating one failing tool call and receiving the identical
-   * error back is a feedback loop that is not converging (AYC-646) — abort
-   * with one clear error instead of burning the remaining iterations.
-   */
   private assertToolFailuresNotRepeating(
     breaker: ToolFailureBreaker,
     outcomes: ToolResultOutcome[],

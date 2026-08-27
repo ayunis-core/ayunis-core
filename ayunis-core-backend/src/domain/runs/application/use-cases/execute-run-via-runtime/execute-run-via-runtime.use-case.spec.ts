@@ -1172,6 +1172,42 @@ describe('ExecuteRunViaRuntimeUseCase', () => {
     );
   });
 
+  it('aborts without an error when the thread disappears while seeding a tool result', async () => {
+    const lastMessage = {
+      content: [
+        new ToolUseMessageContent('chart-1', 'bar_chart', { title: 'Budget' }),
+      ],
+    } as unknown as Message;
+    const collector = {
+      collectToolResults: jest.fn().mockResolvedValue({
+        contents: [
+          new ToolResultMessageContent(
+            'chart-1',
+            'bar_chart',
+            'Chart displayed',
+          ),
+        ],
+        piiMasks: null,
+      }),
+    } as unknown as ToolResultCollectorService;
+    const { useCase, createSeedToolResult, provider, cleanup } = buildHarness({
+      lastMessage,
+      toolResultCollector: collector,
+    });
+    createSeedToolResult.mockResolvedValue(null);
+    const command = new ExecuteRunCommand({
+      threadId,
+      input: new RunToolResultInput('chart-1', 'bar_chart', 'Chart displayed'),
+    });
+
+    const stream = await useCase.execute(command);
+    const result = await stream.next();
+
+    expect(result).toEqual({ done: true, value: 'aborted' });
+    expect(provider.requests).toHaveLength(0);
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
   it('anonymizes a display result and uses the pending tool name before persistence', async () => {
     const lastMessage = {
       content: [

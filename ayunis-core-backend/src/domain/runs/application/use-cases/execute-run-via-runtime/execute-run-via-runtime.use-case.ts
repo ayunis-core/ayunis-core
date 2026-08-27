@@ -236,6 +236,10 @@ export class ExecuteRunViaRuntimeUseCase {
     let cleanupRequired = true;
     try {
       const seeded = await this.seedInput(prepared, input);
+      if (seeded === null) {
+        cleanupRequired = false;
+        return 'aborted';
+      }
       // Masks first, so the client can resolve {{pii:…}} tokens in the message.
       if (seeded.masks) {
         yield new RunPiiMasksUpdate(seeded.masks);
@@ -276,7 +280,7 @@ export class ExecuteRunViaRuntimeUseCase {
   private async seedInput(
     prepared: PreparedRuntimeRun,
     input: RunInput,
-  ): Promise<SeededInput> {
+  ): Promise<SeededInput | null> {
     if (input instanceof RunUserInput) {
       return this.persistUserMessage(prepared, input);
     }
@@ -422,7 +426,7 @@ export class ExecuteRunViaRuntimeUseCase {
   private async persistToolResultSeed(
     prepared: PreparedRuntimeRun,
     input: RunToolResultInput,
-  ): Promise<SeededInput> {
+  ): Promise<SeededInput | null> {
     const safeInput = await this.prepareToolResultInput(prepared, input);
     const { contents, piiMasks } =
       await this.toolResultCollectorService.collectToolResults({
@@ -441,6 +445,7 @@ export class ExecuteRunViaRuntimeUseCase {
     const message = await this.createToolResultMessageUseCase.execute(
       new CreateToolResultMessageCommand(prepared.thread.id, contents),
     );
+    if (message === null) return null;
     this.addMessageToThreadUseCase.execute(
       new AddMessageCommand(prepared.thread, message),
     );
