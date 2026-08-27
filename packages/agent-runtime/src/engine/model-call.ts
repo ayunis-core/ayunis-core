@@ -84,19 +84,25 @@ async function* collectModelCall(
  */
 const assertToolCallsIntact = (result: ModelCallResult): void => {
   if (result.invalidToolCallSnapshots.length > 0) {
-    throw new MalformedToolCallError({
-      toolNames: result.invalidToolCallSnapshots.map((call) => call.name),
-      reason: 'unparseable_arguments',
-    });
+    throw new MalformedToolCallError(
+      {
+        toolNames: result.invalidToolCallSnapshots.map((call) => call.name),
+        reason: 'unparseable_arguments',
+      },
+      { usage: result.usage },
+    );
   }
   const toolNames = result.message.content
     .filter((content) => content.type === 'tool_use')
     .map((content) => content.name);
   if (result.finishReason === 'length' && toolNames.length > 0) {
-    throw new MalformedToolCallError({
-      toolNames,
-      reason: 'token_limit_reached',
-    });
+    throw new MalformedToolCallError(
+      {
+        toolNames,
+        reason: 'token_limit_reached',
+      },
+      { usage: result.usage },
+    );
   }
 };
 
