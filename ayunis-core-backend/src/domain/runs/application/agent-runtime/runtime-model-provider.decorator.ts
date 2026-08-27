@@ -98,7 +98,7 @@ export class RuntimeModelProviderDecorator {
       if (!reason) {
         throw error;
       }
-      if (reason === 'transient transport failure') {
+      if (reason !== 'stall') {
         await backoff(SETUP_RETRY_BACKOFF_MS);
         // Recheck after the wait — a cancellation during the backoff must
         // not start a second attempt either.
@@ -365,13 +365,25 @@ function isTransientSetupError(error: unknown): boolean {
   );
 }
 
+function isProviderServerError(error: unknown): boolean {
+  return (
+    error instanceof AgentRuntimeError &&
+    error.code.startsWith('PROVIDER_UNAVAILABLE_SERVER_')
+  );
+}
+
 function retryReason(
   error: unknown,
   streamedContent: boolean,
   signal: AbortSignal | undefined,
-): 'stall' | 'transient transport failure' | null {
+):
+  | 'stall'
+  | 'transient transport failure'
+  | 'transient provider server failure'
+  | null {
   if (streamedContent || signal?.aborted) return null;
   if (isStalledStreamError(error)) return 'stall';
   if (isTransientSetupError(error)) return 'transient transport failure';
+  if (isProviderServerError(error)) return 'transient provider server failure';
   return null;
 }
