@@ -17,6 +17,11 @@ import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
+import {
+  addToolResultTruncationNotice,
+  truncateToolResult,
+} from 'src/domain/runs/application/helpers/limit-tool-result.helper';
+import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
 import { serializeRuntimeModelError } from './runtime-model-error';
 import {
   isAcknowledgementOnlyTool,
@@ -24,7 +29,6 @@ import {
   isHybridArtifactTool,
 } from './runtime-tool-policy';
 
-const MAX_TOOL_RESULT_LENGTH = 20000;
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 
 interface ToolExecutionOutcome {
@@ -103,12 +107,13 @@ export class BackendToolAdapter {
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
     };
     const outcome = await this.runTool(tool, input, context);
-    let result =
-      outcome.result.length > MAX_TOOL_RESULT_LENGTH
-        ? truncate(outcome.result)
-        : outcome.result;
+    let result = outcome.result;
     if (context.isAnonymous && tool.returnsPii) {
-      result = await this.redact(result, context, ctx);
+      const limited = truncateToolResult(result, MAX_ANONYMIZATION_TEXT_LENGTH);
+      result = await this.redact(limited.result, context, ctx);
+      if (limited.truncated) {
+        result = addToolResultTruncationNotice(result);
+      }
     }
     return {
       result:
@@ -178,8 +183,4 @@ export class BackendToolAdapter {
       };
     }
   }
-}
-
-function truncate(result: string): string {
-  return `The tool result was too long to display. Please use the tool in a way that produces a shorter result. Here's the beginning of the result: ${result.substring(0, 200)}`;
 }

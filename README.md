@@ -197,8 +197,9 @@ See also:
 To skip manual setup locally, seed a demo org, a super admin, and standard models:
 
 ```bash
+./dev up --slot 2
 cd ayunis-core-backend
-npm run seed:minimal:ts
+pnpm seed
 ```
 
 This creates **Demo Org** with `admin@demo.local` / `admin` (super admin) and permits a default language + embedding model. Models only appear once a credential for their provider is set in `.env` (e.g. `AWS_BEDROCK_REGION` for the default Bedrock model, or `OPENAI_API_KEY`); restart the backend after setting it.

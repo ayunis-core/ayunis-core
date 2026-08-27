@@ -11,7 +11,7 @@ import { drainEmits } from './event-queue';
 import type { RunState } from './run-state';
 import { isAborted } from './run-state';
 
-export const MAX_TOOL_RESULT_LENGTH = 20_000;
+export const MAX_TOOL_RESULT_LENGTH = 200_000;
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
 interface ToolOutcome {
