@@ -2,11 +2,16 @@ import type { Page } from '@playwright/test';
 import type { PrMediaScene } from './types';
 import { login } from '../src/clients/api/auth.client';
 
-async function openSeededAcademy(page: Page) {
+async function openSeededConfirmation(page: Page): Promise<void> {
   await page.context().clearCookies();
   await login(page.request, 'admin@usage.local', 'admin');
   await page.goto('/academy');
-  await page.getByTestId(/^academy-chapter-/).first().waitFor();
+  const chapterLink = page.getByTestId(/^academy-chapter-/).first();
+  await chapterLink.waitFor();
+  const chapterPath = await chapterLink.getAttribute('href');
+  if (!chapterPath) throw new Error('Academy chapter link has no href');
+  await page.goto(`${chapterPath}/complete`);
+  await page.getByTestId('academy-confirmation-page').waitFor();
 }
 
 export default [
@@ -15,20 +20,17 @@ export default [
     path: '/academy',
     viewports: ['desktop', 'mobile'],
     waitFor: async ({ page }) => {
-      await openSeededAcademy(page);
-      return page.getByTestId(/^academy-chapter-/).first();
+      await openSeededConfirmation(page);
+      return page.getByTestId('academy-confirmation-page');
     },
     demos: [
       {
-        name: 'open-and-check',
-        action: async ({ page }) => {
-          const chapterLink = page.getByTestId(/^academy-chapter-/).first();
-          const chapterPath = await chapterLink.getAttribute('href');
-          if (!chapterPath) throw new Error('Academy chapter link has no href');
-          await page.goto(`${chapterPath}?module=0`);
-          await page.getByTestId('academy-chapter-complete-action').click();
-          await page.getByTestId('academy-confirmation-page').waitFor();
+        name: 'check-watched-videos',
+        action: async ({ page, expect }) => {
           await page.getByTestId('academy-confirmation-watched').click();
+          await expect(
+            page.getByTestId('academy-confirmation-submit'),
+          ).toBeEnabled();
         },
       },
     ],
