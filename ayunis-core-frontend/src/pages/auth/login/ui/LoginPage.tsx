@@ -15,7 +15,12 @@ import { useLogin } from '@/pages/auth/login/api/useLogin';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { useRedirectNotification } from '@/features/useRedirectNotification';
-import { beginSso, useDiscoverSso } from '@/features/sso';
+import {
+  beginSso,
+  forgetRememberedSsoOrgId,
+  getRememberedSsoOrgId,
+  useDiscoverSso,
+} from '@/features/sso';
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { LoginFormFields } from '@/pages/auth/login/model/login-form';
@@ -35,6 +40,10 @@ export function LoginPage({
   const { t } = useTranslation('auth');
   const [showMethods, setShowMethods] = useState(!ssoLoginEnabled);
   const [ssoOrgId, setSsoOrgId] = useState<string | null>(null);
+  const [rememberedSsoOrgId, setRememberedSsoOrgId] = useState(() =>
+    ssoLoginEnabled ? getRememberedSsoOrgId() : null,
+  );
+  const showRememberedSso = rememberedSsoOrgId !== null;
 
   useRedirectNotification({
     show: emailVerified ?? false,
@@ -65,10 +74,19 @@ export function LoginPage({
     setSsoOrgId(null);
   }
 
+  function useAnotherAccount() {
+    forgetRememberedSsoOrgId();
+    setRememberedSsoOrgId(null);
+  }
+
   return (
     <OnboardingLayout
       title={t('login.title')}
-      description={t('login.description')}
+      description={t(
+        showRememberedSso
+          ? 'login.rememberedSsoDescription'
+          : 'login.description',
+      )}
       footer={
         <>
           {t('login.noAccount')}{' '}
@@ -78,45 +96,86 @@ export function LoginPage({
         </>
       }
     >
-      <Form {...form}>
-        <form
-          onSubmit={(e) => {
-            if (ssoLoginEnabled && !showMethods) {
-              e.preventDefault();
-              void continueWithEmail();
-              return;
-            }
-            void form.handleSubmit(onSubmit)(e);
-          }}
-          className="space-y-4"
-        >
-          <EmailField
-            form={form}
-            disabled={ssoLoginEnabled && (showMethods || isDiscovering)}
-          />
-          {showMethods ? (
-            <LoginMethods
+      {showRememberedSso ? (
+        <RememberedSsoLogin
+          orgId={rememberedSsoOrgId}
+          redirect={redirect}
+          onUseAnotherAccount={useAnotherAccount}
+        />
+      ) : (
+        <Form {...form}>
+          <form
+            onSubmit={(e) => {
+              if (ssoLoginEnabled && !showMethods) {
+                e.preventDefault();
+                void continueWithEmail();
+                return;
+              }
+              void form.handleSubmit(onSubmit)(e);
+            }}
+            className="space-y-4"
+          >
+            <EmailField
               form={form}
-              ssoOrgId={ssoOrgId}
-              redirect={redirect}
-              isLoading={isLoading}
-              onChangeEmail={changeEmail}
-              showChangeEmail={ssoLoginEnabled}
+              disabled={ssoLoginEnabled && (showMethods || isDiscovering)}
             />
-          ) : (
-            <Button
-              type="button"
-              className="w-full"
-              disabled={isDiscovering}
-              onClick={() => void continueWithEmail()}
-              data-testid="login-continue"
-            >
-              {isDiscovering ? t('login.checkingEmail') : t('login.continue')}
-            </Button>
-          )}
-        </form>
-      </Form>
+            {showMethods ? (
+              <LoginMethods
+                form={form}
+                ssoOrgId={ssoOrgId}
+                redirect={redirect}
+                isLoading={isLoading}
+                onChangeEmail={changeEmail}
+                showChangeEmail={ssoLoginEnabled}
+              />
+            ) : (
+              <Button
+                type="button"
+                className="w-full"
+                disabled={isDiscovering}
+                onClick={() => void continueWithEmail()}
+                data-testid="login-continue"
+              >
+                {isDiscovering ? t('login.checkingEmail') : t('login.continue')}
+              </Button>
+            )}
+          </form>
+        </Form>
+      )}
     </OnboardingLayout>
+  );
+}
+
+function RememberedSsoLogin({
+  orgId,
+  redirect,
+  onUseAnotherAccount,
+}: Readonly<{
+  orgId: string;
+  redirect?: string;
+  onUseAnotherAccount: () => void;
+}>) {
+  const { t } = useTranslation('auth');
+  return (
+    <div className="space-y-2">
+      <Button
+        type="button"
+        className="w-full"
+        onClick={() => beginSso(orgId, redirect)}
+        data-testid="login-remembered-sso"
+      >
+        {t('login.signInWithSso')}
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full"
+        onClick={onUseAnotherAccount}
+        data-testid="login-use-another-account"
+      >
+        {t('login.useAnotherAccount')}
+      </Button>
+    </div>
   );
 }
 
