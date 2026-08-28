@@ -1,4 +1,5 @@
 import config from '@/shared/config';
+import { rememberSsoAttempt } from '@/features/sso/lib/sso-login-memory';
 import { z } from 'zod';
 
 const orgIdSchema = z.string().uuid();
@@ -19,6 +20,7 @@ export function buildSsoStartUrl(
 
 export function beginSso(orgId: string, postLoginPath?: string): void {
   rememberSsoPostLoginPath(postLoginPath);
+  rememberSsoAttempt(orgId);
   navigateToExternalUrl(
     resolveSsoStartUrl(config.api.baseUrl, orgId, window.location.origin),
   );
@@ -35,17 +37,25 @@ export function showSsoConnectionUnavailable(): void {
 
 export function rememberSsoPostLoginPath(path?: string): void {
   const safePath = normalizeInternalPath(path);
-  if (safePath) {
-    window.sessionStorage.setItem(postLoginPathKey, safePath);
+  try {
+    if (safePath) {
+      window.sessionStorage.setItem(postLoginPathKey, safePath);
+      return;
+    }
+    window.sessionStorage.removeItem(postLoginPathKey);
+  } catch {
     return;
   }
-  window.sessionStorage.removeItem(postLoginPathKey);
 }
 
 export function takeSsoPostLoginPath(): string {
-  const path = window.sessionStorage.getItem(postLoginPathKey);
-  window.sessionStorage.removeItem(postLoginPathKey);
-  return normalizeInternalPath(path ?? undefined) ?? '/chat';
+  try {
+    const path = window.sessionStorage.getItem(postLoginPathKey);
+    window.sessionStorage.removeItem(postLoginPathKey);
+    return normalizeInternalPath(path ?? undefined) ?? '/chat';
+  } catch {
+    return '/chat';
+  }
 }
 
 export function resolveSsoStartUrl(

@@ -8,6 +8,7 @@ import {
 import type { MfaSetupResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { rememberSuccessfulSsoLogin } from '@/features/sso';
 
 /**
  * Forced enrollment during login: starts TOTP setup on mount, confirms the
@@ -55,7 +56,10 @@ export function useMfaLoginEnroll() {
   });
   const confirmMutation = useMfaLoginControllerConfirmSetup({
     mutation: {
-      onSuccess: (data) => setRecoveryCodes(data.recoveryCodes),
+      onSuccess: (data) => {
+        rememberSuccessfulSsoLogin();
+        setRecoveryCodes(data.recoveryCodes);
+      },
       onError: handlePendingError,
     },
   });

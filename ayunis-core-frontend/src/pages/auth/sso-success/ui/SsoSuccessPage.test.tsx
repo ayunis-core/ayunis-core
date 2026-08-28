@@ -3,12 +3,17 @@ import { StrictMode, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SsoSuccessPage } from '@/pages/auth/sso-success/ui/SsoSuccessPage';
 
-const { navigate, takeSsoPostLoginPath } = vi.hoisted(() => ({
-  navigate: vi.fn(),
-  takeSsoPostLoginPath: vi.fn(() => '/settings/account'),
-}));
+const { navigate, rememberSuccessfulSsoLogin, takeSsoPostLoginPath } =
+  vi.hoisted(() => ({
+    navigate: vi.fn(),
+    rememberSuccessfulSsoLogin: vi.fn(),
+    takeSsoPostLoginPath: vi.fn(() => '/settings/account'),
+  }));
 
-vi.mock('@/features/sso', () => ({ takeSsoPostLoginPath }));
+vi.mock('@/features/sso', () => ({
+  rememberSuccessfulSsoLogin,
+  takeSsoPostLoginPath,
+}));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -19,6 +24,7 @@ vi.mock('@/layouts/onboarding-layout', () => ({
 
 describe(SsoSuccessPage.name, () => {
   beforeEach(() => {
+    rememberSuccessfulSsoLogin.mockClear();
     navigate.mockClear();
     takeSsoPostLoginPath.mockReset();
     takeSsoPostLoginPath
@@ -37,6 +43,7 @@ describe(SsoSuccessPage.name, () => {
       expect(navigate).toHaveBeenCalledTimes(2);
     });
     expect(takeSsoPostLoginPath).toHaveBeenCalledOnce();
+    expect(rememberSuccessfulSsoLogin).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenNthCalledWith(1, {
       to: '/settings/account',
       replace: true,
