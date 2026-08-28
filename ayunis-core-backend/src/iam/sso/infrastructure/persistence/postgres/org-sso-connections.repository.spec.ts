@@ -1,122 +1,113 @@
+import type { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { Repository } from 'typeorm';
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
 } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
+import { SsoConnectionUniqueConstraintError } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/org-sso-connection.mapper';
 import { PostgresOrgSsoConnectionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/org-sso-connections.repository';
-import type { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
-import { SsoConnectionUniqueConstraintError } from 'src/iam/sso/application/ports/org-sso-connections.repository';
+import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
+import type { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 
 describe(PostgresOrgSsoConnectionsRepository.name, () => {
-  let typeOrmRepository: jest.Mocked<
+  let connectionRecords: jest.Mocked<
     Pick<Repository<OrgSsoConnectionRecord>, 'findOne' | 'save' | 'update'>
+  >;
+  let domainRecords: jest.Mocked<
+    Pick<Repository<OrgSsoEmailDomainRecord>, 'delete' | 'insert'>
   >;
   let repository: PostgresOrgSsoConnectionsRepository;
 
   beforeEach(() => {
     const mapper = new OrgSsoConnectionMapper();
     const record = mapper.toRecord(anOrgSsoConnection());
-    typeOrmRepository = {
+    connectionRecords = {
       findOne: jest.fn().mockResolvedValue(record),
       save: jest.fn().mockResolvedValue(record),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
     };
-    repository = new PostgresOrgSsoConnectionsRepository(
-      typeOrmRepository as unknown as Repository<OrgSsoConnectionRecord>,
-      mapper,
-    );
+    domainRecords = {
+      delete: jest.fn().mockResolvedValue({ affected: 1, raw: [] }),
+      insert: jest
+        .fn()
+        .mockResolvedValue({ identifiers: [], generatedMaps: [], raw: [] }),
+    };
+    const txHost = {
+      tx: {
+        getRepository: jest.fn((target) =>
+          target === OrgSsoConnectionRecord ? connectionRecords : domainRecords,
+        ),
+      },
+    } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
+    repository = new PostgresOrgSsoConnectionsRepository(txHost, mapper);
   });
 
-  it('queries with the canonical identifiers supplied by the application', async () => {
-    await repository.findByEmailDomain(' STADT.EXAMPLE ');
-    await repository.findByZitadelOrgId(' zitadel-org-1 ');
-
-    expect(typeOrmRepository.findOne).toHaveBeenNthCalledWith(1, {
-      where: { emailDomain: ' STADT.EXAMPLE ' },
-    });
-    expect(typeOrmRepository.findOne).toHaveBeenNthCalledWith(2, {
-      where: { zitadelOrgId: ' zitadel-org-1 ' },
-    });
-  });
-
-  it('clears the IdP hint when a disabled connection is remapped', async () => {
+  it('replaces all domains only after the disabled mapping CAS succeeds', async () => {
+    const verifiedAt = new Date('2026-08-27T12:00:00.000Z');
+    const expected = anOrgSsoConnection({ emailDomain: 'old.example' });
     const connection = anOrgSsoConnection({
-      emailDomain: 'new.example',
-      zitadelOrgId: 'new-zitadel-org',
-      zitadelIdpId: null,
-      jitProvisioningEnabled: true,
-    });
-
-    const expected = anOrgSsoConnection({
-      emailDomain: 'old.example',
-      zitadelOrgId: 'old-zitadel-org',
-      zitadelIdpId: 'old-zitadel-idp',
+      emailDomains: [
+        { emailDomain: 'bit.bremerhaven.de', verifiedAt },
+        { emailDomain: 'vhs.bremerhaven.de', verifiedAt },
+      ],
     });
 
     await repository.updateConfigurationIfDisabled(connection, expected);
 
-    expect(typeOrmRepository.update).toHaveBeenCalledWith(
-      {
+    expect(connectionRecords.update).toHaveBeenCalledWith(
+      expect.objectContaining({
         orgId: TEST_ORG_ID,
         emailDomain: 'old.example',
-        zitadelOrgId: 'old-zitadel-org',
-        zitadelIdpId: 'old-zitadel-idp',
         enabled: false,
-        jitProvisioningEnabled: false,
-      },
-      {
-        emailDomain: 'new.example',
-        domainVerifiedAt: connection.domainVerifiedAt,
-        zitadelOrgId: 'new-zitadel-org',
-        zitadelIdpId: null,
-        jitProvisioningEnabled: true,
-        updatedAt: expect.any(Date),
-      },
+        updatedAt: expected.updatedAt,
+      }),
+      expect.objectContaining({ emailDomain: 'bit.bremerhaven.de' }),
     );
+    expect(domainRecords.delete).toHaveBeenCalledWith({
+      orgSsoConnectionId: connection.id,
+    });
+    expect(domainRecords.insert).toHaveBeenCalledWith([
+      expect.objectContaining({ emailDomain: 'bit.bremerhaven.de' }),
+      expect.objectContaining({ emailDomain: 'vhs.bremerhaven.de' }),
+    ]);
   });
 
-  it('updates only the runtime enabled field', async () => {
-    const connection = anOrgSsoConnection();
-
-    await repository.setEnabled(connection, true);
-
-    expect(typeOrmRepository.update).toHaveBeenCalledWith(
-      {
-        orgId: TEST_ORG_ID,
-        emailDomain: connection.emailDomain,
-        zitadelOrgId: connection.zitadelOrgId,
-      },
-      { enabled: true, updatedAt: expect.any(Date) },
+  it('returns canonical domain state from the same stored aggregate', async () => {
+    const mapper = new OrgSsoConnectionMapper();
+    const record = mapper.toRecord(
+      anOrgSsoConnection({ emailDomain: 'legacy.example' }),
     );
+    record.emailDomains = mapper.toRecord(
+      anOrgSsoConnection({ emailDomain: 'canonical.example' }),
+    ).emailDomains;
+    connectionRecords.findOne.mockResolvedValue(record);
+
+    const state = await repository.findByOrgIdWithDomainState(TEST_ORG_ID);
+
+    expect(state).toMatchObject({
+      connection: { emailDomain: 'canonical.example' },
+      hasCanonicalEmailDomains: true,
+    });
   });
 
-  it('updates only the JIT provisioning field', async () => {
-    await repository.setJitProvisioningEnabled(TEST_ORG_ID, true);
+  it('identifies a legacy fallback without canonical domain rows', async () => {
+    const mapper = new OrgSsoConnectionMapper();
+    const record = mapper.toRecord(anOrgSsoConnection());
+    record.emailDomains = [];
+    connectionRecords.findOne.mockResolvedValue(record);
 
-    expect(typeOrmRepository.update).toHaveBeenCalledWith(
-      { orgId: TEST_ORG_ID },
-      { jitProvisioningEnabled: true, updatedAt: expect.any(Date) },
-    );
+    const state = await repository.findByOrgIdWithDomainState(TEST_ORG_ID);
+
+    expect(state).toMatchObject({
+      connection: { emailDomain: 'stadt.example' },
+      hasCanonicalEmailDomains: false,
+    });
   });
 
-  it('updates JIT only when the expected mapping still matches', async () => {
-    const expected = anOrgSsoConnection();
-
-    await repository.setJitProvisioningEnabledIfMappingMatches(expected, true);
-
-    expect(typeOrmRepository.update).toHaveBeenCalledWith(
-      {
-        orgId: TEST_ORG_ID,
-        emailDomain: expected.emailDomain,
-        zitadelOrgId: expected.zitadelOrgId,
-      },
-      { jitProvisioningEnabled: true, updatedAt: expect.any(Date) },
-    );
-  });
-
-  it('does not re-read a row when a conditional update changed nothing', async () => {
-    typeOrmRepository.update.mockResolvedValue({
+  it('does not replace domains when the mapping CAS misses', async () => {
+    connectionRecords.update.mockResolvedValue({
       affected: 0,
       raw: [],
       generatedMaps: [],
@@ -128,53 +119,44 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
         anOrgSsoConnection(),
       ),
     ).resolves.toBeNull();
-    expect(typeOrmRepository.findOne).not.toHaveBeenCalled();
+    expect(domainRecords.delete).not.toHaveBeenCalled();
+    expect(domainRecords.insert).not.toHaveBeenCalled();
   });
 
-  it('reports the violated organization constraint on concurrent insert', async () => {
-    typeOrmRepository.save.mockRejectedValue({
-      driverError: {
-        code: '23505',
-        constraint: 'REL_62c35b470ecd255934b5d600f2',
-      },
-    });
+  it('enables only the exact connection version that was reviewed', async () => {
+    const connection = anOrgSsoConnection();
 
-    await expect(repository.save(anOrgSsoConnection())).rejects.toMatchObject({
-      constructor: SsoConnectionUniqueConstraintError,
-      field: 'orgId',
-    });
-    expect(typeOrmRepository.findOne).not.toHaveBeenCalled();
+    await repository.setEnabled(connection, true);
+
+    expect(connectionRecords.update).toHaveBeenCalledWith(
+      { orgId: TEST_ORG_ID, updatedAt: connection.updatedAt },
+      { enabled: true, updatedAt: expect.any(Date) },
+    );
   });
 
-  it('maps a concurrent domain collision to a deterministic conflict', async () => {
-    typeOrmRepository.save.mockRejectedValue({
+  it('returns the exact update without reloading concurrently changed state', async () => {
+    const connection = anOrgSsoConnection({ zitadelIdpId: 'idp-1' });
+
+    const updated = await repository.setZitadelIdpIdIfMappingMatches(
+      connection,
+      null,
+    );
+
+    expect(updated?.zitadelIdpId).toBeNull();
+    expect(connectionRecords.findOne).not.toHaveBeenCalled();
+  });
+
+  it('maps a legacy-domain collision to the multi-domain field', async () => {
+    connectionRecords.save.mockRejectedValue({
       driverError: {
         code: '23505',
         constraint: 'UQ_f77aa036bc1422c9ce84a9a13ac',
       },
     });
-    typeOrmRepository.findOne.mockResolvedValue(null);
 
     await expect(repository.save(anOrgSsoConnection())).rejects.toMatchObject({
       constructor: SsoConnectionUniqueConstraintError,
-      field: 'emailDomain',
-    });
-  });
-
-  it('maps a concurrent update collision to a deterministic conflict', async () => {
-    typeOrmRepository.update.mockRejectedValue({
-      code: '23505',
-      constraint: 'UQ_4f11a98a3183992bf0ac0090ac2',
-    });
-
-    await expect(
-      repository.updateConfigurationIfDisabled(
-        anOrgSsoConnection({ zitadelOrgId: 'changed-zitadel-org' }),
-        anOrgSsoConnection(),
-      ),
-    ).rejects.toMatchObject({
-      constructor: SsoConnectionUniqueConstraintError,
-      field: 'zitadelOrgId',
+      field: 'emailDomains',
     });
   });
 });

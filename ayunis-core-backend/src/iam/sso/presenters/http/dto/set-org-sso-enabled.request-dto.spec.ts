@@ -14,7 +14,7 @@ describe(SetOrgSsoEnabledRequestDto.name, () => {
       errors
         .map(({ property }) => property)
         .sort((left, right) => left.localeCompare(right)),
-    ).toEqual(['reviewedEmailDomain', 'reviewedZitadelOrgId']);
+    ).toEqual(['reviewedEmailDomains', 'reviewedZitadelOrgId']);
   });
 
   it('does not require a reviewed mapping when disabling SSO', async () => {
@@ -23,5 +23,16 @@ describe(SetOrgSsoEnabledRequestDto.name, () => {
     });
 
     await expect(validate(dto)).resolves.toEqual([]);
+  });
+
+  it('rejects non-string reviewed domains without throwing', async () => {
+    const dto = Object.assign(new SetOrgSsoEnabledRequestDto(), {
+      enabled: true,
+      confirmed: true,
+      reviewedEmailDomains: ['stadt.example', 42],
+      reviewedZitadelOrgId: '385820595704561666',
+    });
+
+    await expect(validate(dto)).resolves.not.toHaveLength(0);
   });
 });

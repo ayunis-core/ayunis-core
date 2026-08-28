@@ -67,7 +67,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
     const result = await controller.configure(
       TEST_ORG_ID,
       {
-        emailDomain: 'stadt.example',
+        emailDomains: ['stadt.example', 'vhs.example'],
         zitadelOrgId: 'zitadel-org-1',
         zitadelIdpId: 'zitadel-idp-1',
         domainVerified: true,
@@ -78,7 +78,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
     expect(configureConnection.execute).toHaveBeenCalledWith(
       new ConfigureOrgSsoConnectionCommand(
         TEST_ORG_ID,
-        'stadt.example',
+        ['stadt.example', 'vhs.example'],
         'zitadel-org-1',
         'zitadel-idp-1',
       ),
@@ -87,18 +87,12 @@ describe(SuperAdminSsoConnectionsController.name, () => {
     expect(logger.info).toHaveBeenCalledWith(
       expect.objectContaining({
         connection: expect.objectContaining({
-          domain: 'stadt.example',
+          emailDomains: connection.emailDomains,
           zitadelOrgId: 'zitadel-org-1',
         }),
         confirmation: { domainVerified: true },
       }),
       'Superadmin changed SSO connection',
-    );
-    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
-      'connection.emailDomain',
-    );
-    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
-      'confirmation.domain',
     );
   });
 
@@ -111,7 +105,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       {
         enabled: true,
         confirmed: true,
-        reviewedEmailDomain: 'stadt.example',
+        reviewedEmailDomains: ['stadt.example', 'vhs.example'],
         reviewedZitadelOrgId: 'zitadel-org-1',
       },
       SUPER_ADMIN_ID,
@@ -119,7 +113,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
 
     expect(setEnabled.execute).toHaveBeenCalledWith(
       new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-        emailDomain: 'stadt.example',
+        emailDomains: ['stadt.example', 'vhs.example'],
         zitadelOrgId: 'zitadel-org-1',
       }),
     );
@@ -128,14 +122,11 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       expect.objectContaining({
         confirmation: {
           confirmed: true,
-          domain: 'stadt.example',
+          emailDomains: ['stadt.example', 'vhs.example'],
           reviewedZitadelOrgId: 'zitadel-org-1',
         },
       }),
       'Superadmin changed SSO connection',
-    );
-    expect(logger.info.mock.calls[0]?.[0]).not.toHaveProperty(
-      'confirmation.reviewedEmailDomain',
     );
   });
 

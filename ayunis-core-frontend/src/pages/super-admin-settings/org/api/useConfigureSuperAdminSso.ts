@@ -26,7 +26,7 @@ export function useConfigureSuperAdminSso(
     mutationFn: async (values: SaveSsoConnectionInput) => {
       if (values.updateMapping) {
         return superAdminSsoConnectionsControllerConfigure(orgId, {
-          emailDomain: values.emailDomain,
+          emailDomains: values.emailDomains.map(({ value }) => value),
           zitadelOrgId: values.zitadelOrgId,
           zitadelIdpId: values.zitadelIdpId,
           domainVerified: values.domainVerified,

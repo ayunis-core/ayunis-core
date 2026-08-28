@@ -1,7 +1,7 @@
 import { trace } from '@opentelemetry/api';
 import type { Params } from 'nestjs-pino';
 import { ClsServiceManager } from 'nestjs-cls';
-import type { MyClsStore } from '../context/services/context.service';
+import type { MyClsStore } from 'src/common/context/services/context.service';
 
 const REDACTED_KEYS = [
   'messages',
@@ -26,6 +26,9 @@ const REDACTED_KEYS = [
   'fileName',
   'url',
   'domain',
+  'emailDomain',
+  'emailDomains',
+  'reviewedEmailDomains',
   'password',
   'token',
   'secret',

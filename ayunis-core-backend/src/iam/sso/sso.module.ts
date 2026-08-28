@@ -25,6 +25,7 @@ import { PostgresFederatedIdentitiesRepository } from 'src/iam/sso/infrastructur
 import { FederatedIdentityMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/federated-identity.mapper';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
+import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
 import { PostgresSsoLoginTransactionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-login-transactions.repository';
 import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-login-transaction-cleanup.task';
@@ -48,6 +49,7 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
   imports: [
     TypeOrmModule.forFeature([
       OrgSsoConnectionRecord,
+      OrgSsoEmailDomainRecord,
       FederatedIdentityRecord,
       SsoLoginTransactionRecord,
     ]),

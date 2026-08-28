@@ -282,10 +282,10 @@
   "sso": {
     "title": "Single sign-on",
     "description": "Connect this organization to its verified Zitadel broker organization.",
-    "emailDomain": "Verified email domain",
+    "emailDomains": "Verified email domains",
     "zitadelOrgId": "Zitadel organization ID",
-    "domainVerified": "I verified ownership of this domain and completed the Zitadel setup.",
-    "mappingLocked": "Disable SSO before changing the domain or Zitadel organization mapping.",
+    "domainVerified": "I verified ownership of every domain and completed the Zitadel setup.",
+    "mappingLocked": "Disable SSO before changing the domains or Zitadel organization mapping.",
     "loadError": "The SSO connection could not be loaded.",
     "cancel": "Cancel",
     "status": {
@@ -301,6 +301,10 @@
       "zitadelIdpId": "Zitadel identity provider ID",
       "notConfigured": "Not configured — users will see the broker login"
     },
+    "domains": {
+      "add": "Add domain",
+      "remove": "Remove domain"
+    },
     "access": {
       "title": "Access and provisioning",
       "description": "Control runtime login and JIT account creation independently. Invitations remain available."
@@ -314,7 +318,7 @@
       "button": "Enable SSO",
       "title": "Enable this SSO connection?",
       "description": "Review the exact routing mapping that will become active.",
-      "confirm": "I reviewed the domain, Zitadel organization, and identity provider mapping.",
+      "confirm": "I reviewed the domains, Zitadel organization, and identity provider mapping.",
       "confirmButton": "Enable SSO",
       "success": "SSO enabled."
     },
@@ -323,10 +327,13 @@
       "success": "SSO disabled. Local login remains available."
     },
     "validation": {
-      "emailDomain": {
-        "required": "Enter the verified email domain.",
-        "matches": "Enter a valid email domain.",
-        "invalid": "Enter a valid email domain."
+      "emailDomains": {
+        "required": "Enter at least one verified email domain.",
+        "arrayMinSize": "Enter at least one verified email domain.",
+        "arrayMaxSize": "You can configure up to 50 email domains.",
+        "arrayUnique": "Each email domain can only be entered once.",
+        "matches": "Enter valid email domains.",
+        "invalid": "Enter valid email domains."
       },
       "zitadelOrgId": {
         "required": "Enter the Zitadel organization ID.",
@@ -348,7 +355,7 @@
       "invalid": "Review the entered SSO connection."
     },
     "errors": {
-      "conflict": "This domain or Zitadel organization is already assigned to another organization.",
+      "conflict": "One of these domains or the Zitadel organization is already assigned to another organization.",
       "mustDisable": "Disable SSO before changing its routing mapping.",
       "changed": "The connection changed while you were reviewing it. Reload and try again.",
       "notFound": "No SSO connection exists for this organization.",

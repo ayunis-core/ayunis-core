@@ -1,11 +1,13 @@
 import { getMetadataArgsStorage } from 'typeorm';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
 import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
+import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
 type SsoRecord =
   | typeof OrgSsoConnectionRecord
+  | typeof OrgSsoEmailDomainRecord
   | typeof FederatedIdentityRecord
   | typeof SsoLoginTransactionRecord;
 
@@ -36,6 +38,24 @@ function checksFor(target: SsoRecord): string[] {
 }
 
 describe('SSO persistence schema', () => {
+  it('stores globally unique verified domains under one SSO connection', () => {
+    expect(uniqueColumnsFor(OrgSsoEmailDomainRecord)).toContainEqual([
+      'emailDomain',
+    ]);
+    expect(
+      relationFor(OrgSsoEmailDomainRecord, 'connection')?.options,
+    ).toMatchObject({ nullable: false, onDelete: 'CASCADE' });
+    expect(
+      columnFor(OrgSsoEmailDomainRecord, 'verifiedAt')?.options,
+    ).toMatchObject({ nullable: false, type: 'timestamptz' });
+    expect(checksFor(OrgSsoEmailDomainRecord)).toEqual(
+      expect.arrayContaining([
+        '"emailDomain" = lower(btrim("emailDomain"))',
+        expect.stringContaining('"emailDomain" ~'),
+      ]),
+    );
+  });
+
   it('stores one unique verified domain per organization', () => {
     expect(uniqueColumnsFor(OrgSsoConnectionRecord)).toEqual(
       expect.arrayContaining([['emailDomain'], ['zitadelOrgId']]),

@@ -1,7 +1,7 @@
 import type { UUID } from 'crypto';
 
 export interface ReviewedSsoMapping {
-  emailDomain: string;
+  emailDomains: string[];
   zitadelOrgId: string;
 }
 

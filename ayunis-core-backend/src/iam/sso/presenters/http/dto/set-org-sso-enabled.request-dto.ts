@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  ArrayUnique,
+  IsArray,
   IsBoolean,
   IsDefined,
   IsNotEmpty,
@@ -9,7 +13,10 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-import { EMAIL_DOMAIN_PATTERN } from 'src/iam/sso/domain/sso-connection-values';
+import {
+  EMAIL_DOMAIN_PATTERN,
+  MAX_SSO_EMAIL_DOMAINS,
+} from 'src/iam/sso/domain/sso-connection-values';
 
 export class SetOrgSsoEnabledRequestDto {
   @ApiProperty()
@@ -24,12 +31,23 @@ export class SetOrgSsoEnabledRequestDto {
   @IsBoolean()
   confirmed?: boolean;
 
-  @ApiProperty({ required: false, example: 'stadt.example' })
+  @ApiProperty({
+    required: false,
+    type: [String],
+    example: ['stadt.example', 'vhs.example'],
+  })
   @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled)
   @IsDefined()
-  @IsString()
-  @Matches(new RegExp(EMAIL_DOMAIN_PATTERN, 'i'))
-  reviewedEmailDomain?: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(MAX_SSO_EMAIL_DOMAINS)
+  @ArrayUnique((value: unknown) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsString({ each: true })
+  @MaxLength(253, { each: true })
+  @Matches(new RegExp(EMAIL_DOMAIN_PATTERN, 'i'), { each: true })
+  reviewedEmailDomains?: string[];
 
   @ApiProperty({ required: false, example: '385820595704561666' })
   @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled)

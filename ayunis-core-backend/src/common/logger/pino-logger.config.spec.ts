@@ -6,7 +6,7 @@ import type { Options as PinoHttpOptions } from 'pino-http';
 import { ClsServiceManager } from 'nestjs-cls';
 import type { ClsService } from 'nestjs-cls';
 import { PinoLogger } from 'nestjs-pino';
-import type { MyClsStore } from '../context/services/context.service';
+import type { MyClsStore } from 'src/common/context/services/context.service';
 import { createPinoLoggerConfig } from './pino-logger.config';
 
 function getOptions(environment: NodeJS.ProcessEnv): PinoHttpOptions {
@@ -120,6 +120,14 @@ describe('createPinoLoggerConfig', () => {
         authorization: 'Bearer private-token',
         email: 'nested@example.org',
       },
+      connection: {
+        emailDomains: [
+          { emailDomain: 'resident.example', verifiedAt: '2026-08-28' },
+        ],
+      },
+      confirmation: {
+        reviewedEmailDomains: ['resident.example'],
+      },
       userId: 'user-123',
       orgId: 'org-456',
       model: 'gpt-5',
@@ -134,6 +142,8 @@ describe('createPinoLoggerConfig', () => {
         authorization: '[Redacted]',
         email: '[Redacted]',
       },
+      connection: { emailDomains: '[Redacted]' },
+      confirmation: { reviewedEmailDomains: '[Redacted]' },
       userId: 'user-123',
       orgId: 'org-456',
       model: 'gpt-5',

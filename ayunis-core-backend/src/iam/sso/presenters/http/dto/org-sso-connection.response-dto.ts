@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 
+export class SsoEmailDomainResponseDto {
+  @ApiProperty({ example: 'stadt.example' })
+  emailDomain: string;
+
+  @ApiProperty({ type: Date })
+  verifiedAt: Date;
+}
+
 export class OrgSsoConnectionResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: UUID;
@@ -8,11 +16,8 @@ export class OrgSsoConnectionResponseDto {
   @ApiProperty({ format: 'uuid' })
   orgId: UUID;
 
-  @ApiProperty({ example: 'stadt.example' })
-  emailDomain: string;
-
-  @ApiProperty({ type: Date })
-  domainVerifiedAt: Date;
+  @ApiProperty({ type: [SsoEmailDomainResponseDto] })
+  emailDomains: SsoEmailDomainResponseDto[];
 
   @ApiProperty({ type: String, example: '385820595704561666', nullable: true })
   zitadelOrgId: string | null;

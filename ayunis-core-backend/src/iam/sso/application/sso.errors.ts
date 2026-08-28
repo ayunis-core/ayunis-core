@@ -48,7 +48,7 @@ export class InvalidSsoConfigurationError extends SsoError {
 }
 
 export class SsoConnectionConflictError extends SsoError {
-  constructor(field: 'orgId' | 'emailDomain' | 'zitadelOrgId') {
+  constructor(field: 'orgId' | 'emailDomains' | 'zitadelOrgId') {
     super(
       field === 'orgId'
         ? 'Organization already has an SSO connection'

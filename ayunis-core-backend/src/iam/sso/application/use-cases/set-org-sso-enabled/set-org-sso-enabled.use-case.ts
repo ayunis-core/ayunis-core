@@ -9,10 +9,8 @@ import {
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
 import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
-import {
-  normalizeEmailDomain,
-  normalizeZitadelOrgId,
-} from 'src/iam/sso/domain/sso-connection-values';
+import { InvalidSsoConnectionValueError } from 'src/iam/sso/domain/invalid-sso-connection-value.error';
+import { normalizeZitadelOrgId } from 'src/iam/sso/domain/sso-connection-values';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 
 @Injectable()
@@ -32,18 +30,24 @@ export class SetOrgSsoEnabledUseCase {
       },
       'Setting organization SSO state',
     );
-    const existing = await this.repository.findByOrgId(command.orgId);
-    if (!existing) {
+    const existingState = await this.repository.findByOrgIdWithDomainState(
+      command.orgId,
+    );
+    if (!existingState) {
       throw new SsoConnectionNotFoundError(command.orgId);
     }
+    const existing = existingState.connection;
     if (!this.matchesReviewedMapping(existing, command.reviewedMapping)) {
       throw new SsoConnectionChangedError(command.orgId);
     }
-    if (existing.enabled === command.enabled) {
-      return existing;
-    }
     if (command.enabled && !existing.zitadelOrgId) {
       throw new InvalidSsoConfigurationError('zitadelOrgId');
+    }
+    if (command.enabled && !existingState.hasCanonicalEmailDomains) {
+      throw new InvalidSsoConfigurationError('emailDomains');
+    }
+    if (existing.enabled === command.enabled) {
+      return existing;
     }
 
     const updated = await this.repository.setEnabled(existing, command.enabled);
@@ -62,9 +66,16 @@ export class SetOrgSsoEnabledUseCase {
     reviewed: SetOrgSsoEnabledCommand['reviewedMapping'],
   ): boolean {
     if (!reviewed) return true;
-    return (
-      normalizeEmailDomain(reviewed.emailDomain) === existing.emailDomain &&
-      normalizeZitadelOrgId(reviewed.zitadelOrgId) === existing.zitadelOrgId
-    );
+    try {
+      return (
+        existing.matchesEmailDomains(reviewed.emailDomains) &&
+        normalizeZitadelOrgId(reviewed.zitadelOrgId) === existing.zitadelOrgId
+      );
+    } catch (error: unknown) {
+      if (error instanceof InvalidSsoConnectionValueError) {
+        throw new InvalidSsoConfigurationError(error.field);
+      }
+      throw error;
+    }
   }
 }

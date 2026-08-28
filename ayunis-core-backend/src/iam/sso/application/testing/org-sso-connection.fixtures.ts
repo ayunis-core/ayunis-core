@@ -1,6 +1,9 @@
 import type { UUID } from 'crypto';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import type { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
+import type {
+  OrgSsoConnectionDomainState,
+  OrgSsoConnectionsRepository,
+} from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
 
 export const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111' as UUID;
@@ -22,11 +25,27 @@ export function anOrg(id: UUID = TEST_ORG_ID): Org {
   return new Org({ id, name: 'Test Municipality' });
 }
 
+export function anOrgSsoConnectionDomainState(
+  connection: OrgSsoConnection,
+  hasCanonicalEmailDomains = true,
+): OrgSsoConnectionDomainState {
+  return { connection, hasCanonicalEmailDomains };
+}
+
 export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConnectionsRepository> {
+  const findByOrgId: jest.MockedFunction<
+    OrgSsoConnectionsRepository['findByOrgId']
+  > = jest.fn().mockResolvedValue(null);
   return {
-    findByOrgId: jest.fn().mockResolvedValue(null),
+    findByOrgId,
+    findByOrgIdWithDomainState: jest
+      .fn()
+      .mockImplementation(async (orgId: UUID) => {
+        const connection = await findByOrgId(orgId);
+        return connection ? anOrgSsoConnectionDomainState(connection) : null;
+      }),
     findByEmailDomain: jest.fn().mockResolvedValue(null),
-    findByZitadelOrgId: jest.fn().mockResolvedValue(null),
+    findOwnerOrgIdsByEmailDomains: jest.fn().mockResolvedValue([]),
     save: jest
       .fn()
       .mockImplementation((connection) => Promise.resolve(connection)),
@@ -39,13 +58,6 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
       .fn()
       .mockImplementation((connection: OrgSsoConnection, enabled: boolean) =>
         Promise.resolve(anOrgSsoConnection({ ...connection, enabled })),
-      ),
-    setJitProvisioningEnabled: jest
-      .fn()
-      .mockImplementation((orgId: UUID, enabled: boolean) =>
-        Promise.resolve(
-          anOrgSsoConnection({ orgId, jitProvisioningEnabled: enabled }),
-        ),
       ),
     setJitProvisioningEnabledIfMappingMatches: jest
       .fn()

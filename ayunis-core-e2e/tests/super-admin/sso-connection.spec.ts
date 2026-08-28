@@ -1,4 +1,5 @@
 import {
+  discoverSso,
   login,
   markWelcomeVideoSeen,
 } from '../../src/clients/api/auth.client';
@@ -7,7 +8,7 @@ import { test, expect } from '../../src/fixtures/test';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test('updates the direct IdP without rewriting an enabled SSO mapping', async ({
+test('configures multiple domains and updates the direct IdP independently', async ({
   page,
   publicApi,
 }) => {
@@ -18,9 +19,13 @@ test('updates the direct IdP without rewriting an enabled SSO mapping', async ({
   const org = await createSuperAdminOrg(publicApi, `SSO E2E ${key}`);
   const mappingPath = `/api/super-admin/orgs/${org.id}/sso`;
   const idpPath = `${mappingPath}/idp`;
+  const firstDomain = `sso-${key}.example`;
+  const secondDomain = `sso-alt-${key}.example`;
 
   await page.goto(`/super-admin-settings/orgs/${org.id}?tab=sso`);
-  await page.getByTestId('sso-email-domain').fill(`sso-${key}.example`);
+  await page.getByTestId('sso-email-domain-0').fill(firstDomain);
+  await page.getByTestId('sso-add-email-domain').click();
+  await page.getByTestId('sso-email-domain-1').fill(secondDomain);
   await page.getByTestId('sso-zitadel-org-id').fill(`zitadel-org-${key}`);
   const initialIdp = `zitadel-idp-${key}`;
   await page.getByTestId('sso-zitadel-idp-id').fill(initialIdp);
@@ -35,7 +40,13 @@ test('updates the direct IdP without rewriting an enabled SSO mapping', async ({
   const configuredResponse = await configured;
   expect(configuredResponse.ok()).toBe(true);
   await expect(configuredResponse.json()).resolves.toMatchObject({
-    connection: { zitadelIdpId: initialIdp },
+    connection: {
+      emailDomains: [
+        { emailDomain: firstDomain },
+        { emailDomain: secondDomain },
+      ],
+      zitadelIdpId: initialIdp,
+    },
   });
 
   await page.getByTestId('sso-enable').click();
@@ -47,7 +58,8 @@ test('updates the direct IdP without rewriting an enabled SSO mapping', async ({
   );
   await page.getByTestId('sso-enable-confirm').click();
   expect((await enabledConnectionLoaded).ok()).toBe(true);
-  await expect(page.getByTestId('sso-email-domain')).toBeDisabled();
+  await expect(page.getByTestId('sso-email-domain-0')).toBeDisabled();
+  await expect(page.getByTestId('sso-email-domain-1')).toBeDisabled();
   await expect(page.getByTestId('sso-zitadel-idp-id')).toBeEnabled();
   await expect(page.getByTestId('sso-zitadel-idp-id')).toHaveValue(initialIdp);
   await expect(page.getByTestId('sso-connection-save')).toBeEnabled();
@@ -68,6 +80,14 @@ test('updates the direct IdP without rewriting an enabled SSO mapping', async ({
   await page.getByTestId('sso-connection-save').click();
   expect((await idpUpdated).ok()).toBe(true);
   expect(mappingWrites).toBe(0);
+
+  await expect(discoverSso(publicApi, `first@${firstDomain}`)).resolves.toEqual({
+    available: true,
+    orgId: org.id,
+  });
+  await expect(
+    discoverSso(publicApi, `second@${secondDomain}`),
+  ).resolves.toEqual({ available: true, orgId: org.id });
 
   await page.reload();
   await expect(page.getByTestId('sso-zitadel-idp-id')).toHaveValue(updatedIdp);

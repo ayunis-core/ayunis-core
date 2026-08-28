@@ -74,7 +74,7 @@ export class CompleteOrgSsoLoginUseCase {
     if (!identityEmailDomain) {
       throw new InvalidSsoBrokerResponseError('email');
     }
-    if (identityEmailDomain !== connection.emailDomain) {
+    if (!connection.hasEmailDomain(identityEmailDomain)) {
       throw new SsoOrganizationMismatchError();
     }
     return {
