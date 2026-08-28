@@ -6,11 +6,21 @@ import {
   AnonymizationInputTooLongError,
 } from 'src/common/anonymization/application/anonymization.errors';
 import { wrapProviderFailure } from 'src/common/errors/wrap-provider-failure.helper';
+import {
+  isRetryableProviderTimeoutFailure,
+  SETUP_RETRY_BACKOFF_MS,
+} from 'src/common/errors/provider-transport-error.classifier';
 import { PiiDetection } from 'src/common/anonymization/domain/pii-detection';
 import { mapPresidioEntityToCategory } from './presidio-entity-category.mapper';
 import { getMSPresidioPIIDetectionAPI } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
 import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/application/anonymization.constants';
+
+const MAX_DETECTION_ATTEMPTS = 2;
+
+function backoff(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function countCodePoints(text: string): number {
   let count = 0;
@@ -45,16 +55,8 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
     const startedAt = performance.now();
 
     try {
-      const client = getMSPresidioPIIDetectionAPI();
-
-      const response = await client.analyzeTextAnalyzePost({
-        text,
-        entities: entities ?? null,
-      });
-
-      const nonOverlappingResults = this.dropOverlappingResults(
-        response.results,
-      );
+      const results = await this.detectWithRetry(text, entities, textLength);
+      const nonOverlappingResults = this.dropOverlappingResults(results);
       const detections = nonOverlappingResults.map((result) =>
         this.toDetection(text, result),
       );
@@ -80,6 +82,35 @@ export class PresidioAnonymizationProvider extends AnonymizationPort {
         error instanceof Error ? error.message : 'Unknown error',
         { error: error as Error },
       );
+    }
+  }
+
+  private async detectWithRetry(
+    text: string,
+    entities: string[] | undefined,
+    textLength: number,
+  ): Promise<RecognizerResult[]> {
+    const client = getMSPresidioPIIDetectionAPI();
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const response = await client.analyzeTextAnalyzePost({
+          text,
+          entities: entities ?? null,
+        });
+        return response.results;
+      } catch (error) {
+        if (
+          attempt >= MAX_DETECTION_ATTEMPTS ||
+          !isRetryableProviderTimeoutFailure(error)
+        ) {
+          throw error;
+        }
+        this.logger.warn(
+          { textLength, attempt, maxAttempts: MAX_DETECTION_ATTEMPTS },
+          'PII detection timed out before a response; retrying once',
+        );
+        await backoff(SETUP_RETRY_BACKOFF_MS);
+      }
     }
   }
 
