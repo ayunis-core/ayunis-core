@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.33.0](https://github.com/ayunis-core/ayunis-core/compare/v2.32.0...v2.33.0) (2026-08-28)
+
+
+### Features
+
+* **auth:** show returning SSO sign-in (AYC-856) ([#1561](https://github.com/ayunis-core/ayunis-core/issues/1561)) ([210ca27](https://github.com/ayunis-core/ayunis-core/commit/210ca27ba8d24e8a5ffac0bae313c2ca4ee25de1))
+* **sso:** remember successful SSO organization (AYC-856) ([#1560](https://github.com/ayunis-core/ayunis-core/issues/1560)) ([6cefdbe](https://github.com/ayunis-core/ayunis-core/commit/6cefdbeea2baf36350e8678901886d7a740e6ec2))
+
+
+### Bug Fixes
+
+* **anonymization:** retry transient provider timeouts (AYC-852) ([#1551](https://github.com/ayunis-core/ayunis-core/issues/1551)) ([91b25ec](https://github.com/ayunis-core/ayunis-core/commit/91b25ec0677da79f1a84111a9d54d82affdd37f5))
+* **runs:** bound exhausted provider server retries (AYC-849) ([#1549](https://github.com/ayunis-core/ayunis-core/issues/1549)) ([0311823](https://github.com/ayunis-core/ayunis-core/commit/031182367a06c7e1d600eb479b093e433cbf237a))
+* **runs:** fall back after malformed tool retries (AYC-851) ([#1552](https://github.com/ayunis-core/ayunis-core/issues/1552)) ([10f3d71](https://github.com/ayunis-core/ayunis-core/commit/10f3d71a072211d729574e0f473d7db2617865a8))
+* **runs:** retry bounded provider timeouts (AYC-850) ([#1550](https://github.com/ayunis-core/ayunis-core/issues/1550)) ([61df6d9](https://github.com/ayunis-core/ayunis-core/commit/61df6d9336964aad5b3c71ac907b4bd766bf607a))
+* **sso:** skip broker logout screen (AYC-854) ([#1559](https://github.com/ayunis-core/ayunis-core/issues/1559)) ([cf8bd02](https://github.com/ayunis-core/ayunis-core/commit/cf8bd02fa73307cd3c6034b58ca44f4ba58a5d04))
+
+
+### CI/CD
+
+* **deploy:** retire legacy internal deployment (AYC-591) ([#1557](https://github.com/ayunis-core/ayunis-core/issues/1557)) ([a0911b5](https://github.com/ayunis-core/ayunis-core/commit/a0911b5b88cddba8b9e91af5272a5e4860948363))
+
 ## [2.32.0](https://github.com/ayunis-core/ayunis-core/compare/v2.31.0...v2.32.0) (2026-08-28)
 
 
