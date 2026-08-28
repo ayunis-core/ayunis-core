@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RunAbortedError } from '../contracts/errors';
 import type { Hook, ModelCallInterruptedContext } from '../contracts/hook';
-import type { ProviderChunk, Usage } from '../contracts/provider';
+import type {
+  ModelProvider,
+  ProviderChunk,
+  Usage,
+} from '../contracts/provider';
 import type { Tool } from '../contracts/tool';
 import { MockProvider } from '../providers/mock/mock-provider';
 import { baseInput, collectEvents } from './test-helpers';
@@ -72,7 +77,8 @@ describe('tool-call argument integrity', () => {
 
     const error = events.find((event) => event.type === 'error');
     expect(error?.code).toBe('MALFORMED_TOOL_CALL');
-    expect(provider.requests).toHaveLength(3);
+    expect(provider.requests).toHaveLength(4);
+    expect(provider.requests[3].tools).toEqual([]);
     const end = events.find((event) => event.type === 'run_end');
     expect(end?.status).toBe('error');
     expect(execute).not.toHaveBeenCalled();
@@ -136,6 +142,132 @@ describe('tool-call argument integrity', () => {
     });
   });
 
+  it('falls back to a tool-disabled answer after malformed retries are exhausted', async () => {
+    const execute = vi.fn(() => 'created');
+    const malformedTurn = malformedDocumentTurn({
+      usage: { inputTokens: 2, outputTokens: 1 },
+    });
+    const provider = new MockProvider([
+      malformedTurn,
+      malformedTurn,
+      malformedTurn,
+      [
+        { textDelta: 'I could not complete the requested tool action.' },
+        {
+          finishReason: 'stop',
+          usage: { inputTokens: 5, outputTokens: 3 },
+        },
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool(execute)] }),
+    );
+
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.find((event) => event.type === 'run_end')).toMatchObject({
+      status: 'completed',
+      usage: { inputTokens: 11, outputTokens: 6 },
+    });
+    expect(provider.requests).toHaveLength(4);
+    expect(provider.requests[3]).toMatchObject({
+      tools: [],
+      instructions: expect.stringContaining('Do not call tools'),
+    });
+    expect(provider.requests[3].toolChoice).toBeUndefined();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects tool calls hallucinated by the tool-disabled fallback', async () => {
+    const execute = vi.fn(() => 'created');
+    const afterModelCall = vi.fn();
+    const interruptions: string[] = [];
+    const observer: Hook = {
+      name: 'fallback-observer',
+      afterModelCall,
+      modelCallInterrupted: (ctx) => {
+        interruptions.push(
+          ctx.message.content
+            .filter((content) => content.type === 'text')
+            .map((content) => content.text)
+            .join(''),
+        );
+      },
+    };
+    const malformedTurn = malformedDocumentTurn();
+    const provider = new MockProvider([
+      malformedTurn,
+      malformedTurn,
+      malformedTurn,
+      [
+        { textDelta: 'I cannot safely complete this action.' },
+        {
+          toolCallDeltas: [
+            { index: 0, id: 'fallback_call', name: 'create_document' },
+          ],
+        },
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              argumentsDelta: '{"title":"Unsafe","content":"Do not run"}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+    ]);
+
+    const events = await collectEvents(
+      baseInput(provider, {
+        tools: [documentTool(execute)],
+        hooks: [observer],
+      }),
+    );
+
+    expect(events.find((event) => event.type === 'error')?.code).toBe(
+      'MALFORMED_TOOL_CALL',
+    );
+    expect(events).not.toContainEqual(
+      expect.objectContaining({
+        type: 'tool_call_snapshot',
+        toolCall: expect.objectContaining({ id: 'fallback_call' }),
+      }),
+    );
+    expect(afterModelCall).not.toHaveBeenCalled();
+    expect(interruptions).toHaveLength(4);
+    expect(interruptions.at(-1)).toBe('I cannot safely complete this action.');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('preserves cancellation during the tool-disabled fallback', async () => {
+    const malformedTurn = malformedDocumentTurn();
+    const scripted = new MockProvider([
+      malformedTurn,
+      malformedTurn,
+      malformedTurn,
+    ]);
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'abort-fallback',
+      async *stream(request) {
+        calls += 1;
+        if (calls === 4) throw new RunAbortedError();
+        yield* scripted.stream(request);
+      },
+    };
+
+    const events = await collectEvents(
+      baseInput(provider, { tools: [documentTool()] }),
+    );
+
+    expect(calls).toBe(4);
+    expect(events.find((event) => event.type === 'error')).toBeUndefined();
+    expect(events.find((event) => event.type === 'run_end')?.status).toBe(
+      'aborted',
+    );
+  });
+
   it('shares one total budget across empty and malformed retries', async () => {
     const malformedTurn = malformedDocumentTurn({
       usage: { inputTokens: 1, outputTokens: 1 },
@@ -181,7 +313,8 @@ describe('tool-call argument integrity', () => {
 
     const error = events.find((event) => event.type === 'error');
     expect(error?.code).toBe('MALFORMED_TOOL_CALL');
-    expect(provider.requests).toHaveLength(3);
+    expect(provider.requests).toHaveLength(4);
+    expect(provider.requests[3].tools).toEqual([]);
     expect(execute).not.toHaveBeenCalled();
   });
 
