@@ -208,7 +208,7 @@ describe('RuntimeModelProviderDecorator', () => {
       Object.assign(new Error('request timed out'), { code: 'ETIMEDOUT' }),
       'PROVIDER_UNAVAILABLE_TIMEOUT_ANTHROPIC',
       'provider_timeout',
-      1,
+      2,
     ],
     [
       'upstream server failure',

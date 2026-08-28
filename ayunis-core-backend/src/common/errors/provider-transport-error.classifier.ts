@@ -114,6 +114,17 @@ export function isRetryableSetupFailure(error: unknown): boolean {
   );
 }
 
+/** Provider timeouts safe for one host-owned retry before any output. */
+export function isRetryableProviderTimeoutFailure(error: unknown): boolean {
+  const transportClass = classifyTransportError(error)?.failureClass;
+  const upstreamStatus = extractUpstreamStatus(error);
+  return (
+    transportClass === ProviderFailureClass.TIMEOUT ||
+    upstreamStatus === 408 ||
+    upstreamStatus === 504
+  );
+}
+
 /** Upstream 5xx responses safe to retry before any response content exists. */
 export function isRetryableProviderServerFailure(error: unknown): boolean {
   const status = extractUpstreamStatus(error);

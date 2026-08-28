@@ -1,6 +1,7 @@
 import {
   classifyTransportError,
   isRetryableProviderServerFailure,
+  isRetryableProviderTimeoutFailure,
   isRetryableSetupFailure,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
@@ -178,6 +179,32 @@ describe('classifyTransportError', () => {
       expect(
         isRetryableSetupFailure(
           new DOMException('The operation was aborted', 'AbortError'),
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe('provider timeout failures', () => {
+    it('accepts classified timeout errors', () => {
+      expect(
+        isRetryableProviderTimeoutFailure(
+          errorWithCode('request timed out', 'ETIMEDOUT'),
+        ),
+      ).toBe(true);
+    });
+
+    it.each([408, 504])('accepts upstream timeout status %s', (status) => {
+      expect(
+        isRetryableProviderTimeoutFailure(
+          Object.assign(new Error('upstream timed out'), { status }),
+        ),
+      ).toBe(true);
+    });
+
+    it('rejects connection failures', () => {
+      expect(
+        isRetryableProviderTimeoutFailure(
+          errorWithCode('connection refused', 'ECONNREFUSED'),
         ),
       ).toBe(false);
     });
