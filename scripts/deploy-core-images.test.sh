@@ -154,9 +154,8 @@ fi
 
 workflow_expectations=(
   'deploy-staging.yml:1'
-  'deploy-internal-manual.yml:1'
   'deploy-production-manual.yml:1'
-  'release-please.yml:2'
+  'release-please.yml:1'
 )
 
 for expectation in "${workflow_expectations[@]}"; do
@@ -176,19 +175,9 @@ if ! grep -Fq 'MIN_FREE_GB=9 PRUNE_BUILD_CACHE=true bash scripts/deploy-core-ima
   "$REPO_DIR/.github/workflows/deploy-staging.yml"; then
   fail "Expected staging to reclaim the obsolete host build cache before its disk check."
 fi
-if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq 'DEPLOY_SCRIPT=$(git show "$DEPLOY_WORKFLOW_SHA":scripts/deploy-core-images.sh)' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq "printf '%s\n' \"\$DEPLOY_SCRIPT\" | MIN_FREE_GB=6 PRUNE_BUILD_CACHE=true bash" \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml"; then
-  fail "Expected the internal manual workflow to execute the workflow commit's shared script."
-fi
-if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml" \
-  || ! grep -Fq 'git checkout -f --detach "origin/$RELEASE_TAG"' \
-  "$REPO_DIR/.github/workflows/deploy-internal-manual.yml"; then
-  fail "Expected the internal manual workflow to use explicit tag and remote branch refs."
+if grep -Fq 'deploy-internal:' "$REPO_DIR/.github/workflows/release-please.yml" \
+  || grep -Fq 'INTERNAL_HOST' "$REPO_DIR/.github/workflows/release-please.yml"; then
+  fail "Expected releases to leave Internal deployment to ayunis-infra."
 fi
 if ! grep -Fq 'DEPLOY_WORKFLOW_SHA: ${{ github.sha }}' \
   "$REPO_DIR/.github/workflows/deploy-production-manual.yml" \
@@ -206,8 +195,8 @@ if ! grep -Fq 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
 fi
 release_tag_checkouts=$(grep -Fc 'git checkout -f --detach "refs/tags/$RELEASE_TAG"' \
   "$REPO_DIR/.github/workflows/release-please.yml" || true)
-if [[ "$release_tag_checkouts" -ne 2 ]]; then
-  fail "Expected both automated release deploys to use explicit tag refs."
+if [[ "$release_tag_checkouts" -ne 1 ]]; then
+  fail "Expected the automated production release deploy to use an explicit tag ref."
 fi
 if ! grep -Fq 'bash scripts/deploy-core-images.test.sh' \
   "$REPO_DIR/.github/workflows/deploy-script-tests.yml" 2>/dev/null; then
