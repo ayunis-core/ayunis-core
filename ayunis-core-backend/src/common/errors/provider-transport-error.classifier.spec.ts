@@ -1,5 +1,6 @@
 import {
   classifyTransportError,
+  isRetryableProviderServerFailure,
   isRetryableSetupFailure,
 } from './provider-transport-error.classifier';
 import { ProviderFailureClass } from './provider.errors';
@@ -177,6 +178,24 @@ describe('classifyTransportError', () => {
       expect(
         isRetryableSetupFailure(
           new DOMException('The operation was aborted', 'AbortError'),
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe('provider server failures', () => {
+    it('accepts upstream 5xx status shapes', () => {
+      expect(
+        isRetryableProviderServerFailure(
+          Object.assign(new Error('service unavailable'), { status: 503 }),
+        ),
+      ).toBe(true);
+    });
+
+    it.each([429, 504])('rejects non-server status %s', (status) => {
+      expect(
+        isRetryableProviderServerFailure(
+          Object.assign(new Error('not a server retry'), { status }),
         ),
       ).toBe(false);
     });

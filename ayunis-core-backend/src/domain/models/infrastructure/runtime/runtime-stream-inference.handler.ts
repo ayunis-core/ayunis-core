@@ -4,10 +4,10 @@ import type { ModelProvider } from '@ayunis/inference';
 import type {
   StreamInferenceInput,
   StreamInferenceResponseChunk,
-} from '../../application/ports/stream-inference.handler';
-import { StreamInferenceHandler } from '../../application/ports/stream-inference.handler';
+} from 'src/domain/models/application/ports/stream-inference.handler';
+import { StreamInferenceHandler } from 'src/domain/models/application/ports/stream-inference.handler';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { Model } from '../../domain/model.entity';
+import type { Model } from 'src/domain/models/domain/model.entity';
 import { toProviderRequest } from './request.mapper';
 import { toStreamChunk } from './chunk.mapper';
 import type { ChunkTransform } from './chunk-transform';
@@ -18,19 +18,27 @@ import {
 } from 'src/common/streaming/stream-idle-watchdog';
 import type { PinoLogger } from 'nestjs-pino';
 import {
+  isRetryableProviderServerFailure,
   isRetryableSetupFailure,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
-import { InferenceStreamStalledError } from '../../application/models.errors';
+import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 
 /**
- * One retry, and only when the failed attempt emitted nothing: once a chunk
- * has reached the subscriber it may already be persisted downstream, so a
- * second attempt would duplicate content.
+ * Bounded retries, and only when the failed attempt emitted nothing: once a
+ * chunk reaches the subscriber it may already be persisted downstream, so
+ * another attempt would duplicate content.
  */
-const MAX_STREAM_ATTEMPTS = 2;
+const MAX_SETUP_ATTEMPTS = 2;
+const MAX_SERVER_ATTEMPTS = 3;
 
 type ProviderStreamRequest = Parameters<ModelProvider['stream']>[0];
+
+interface RetryableStreamFailure {
+  readonly error: Error;
+  readonly maxAttempts: number;
+  readonly reason: 'transport' | 'server';
+}
 
 function backoff(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -130,21 +138,22 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
         if (!setupFailure) {
           return;
         }
-        if (attempt >= MAX_STREAM_ATTEMPTS) {
-          throw setupFailure;
+        if (attempt >= setupFailure.maxAttempts) {
+          throw setupFailure.error;
         }
-        await backoff(SETUP_RETRY_BACKOFF_MS);
+        await backoff(SETUP_RETRY_BACKOFF_MS * attempt);
         // No retry once the caller has cancelled — the subscriber is gone,
         // so a second attempt would only bill tokens nobody reads.
         if (controller.signal.aborted) {
-          throw setupFailure;
+          throw setupFailure.error;
         }
         this.logger.warn(
           {
             model: input.model.name,
             provider: input.model.provider,
             attempt,
-            err: setupFailure,
+            reason: setupFailure.reason,
+            err: setupFailure.error,
           },
           'Provider stream failed before the first chunk',
         );
@@ -163,10 +172,10 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
   }
 
   /**
-   * Runs one provider attempt. Returns the error when the attempt died of a
-   * transient transport failure before the first chunk (the one case worth a
-   * retry — stall retries live upstream in the run loops, AYC-652); completes
-   * the subscriber and returns null on success; rethrows everything else.
+   * Runs one provider attempt. Returns a bounded retry decision for transient
+   * transport or upstream server failures before the first chunk; stall
+   * retries live upstream in the run loops (AYC-652). Completes the subscriber
+   * and returns null on success; rethrows everything else.
    */
   private async streamAttempt(
     provider: ModelProvider,
@@ -174,7 +183,7 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
     subscriber: Subscriber<StreamInferenceResponseChunk>,
     controller: AbortController,
     watchdog: StreamIdleWatchdog,
-  ): Promise<Error | null> {
+  ): Promise<RetryableStreamFailure | null> {
     const transform = this.createChunkTransform();
     let chunksEmitted = 0;
     try {
@@ -192,10 +201,22 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
       if (
         chunksEmitted === 0 &&
         !controller.signal.aborted &&
-        error instanceof Error &&
-        isRetryableSetupFailure(error)
+        error instanceof Error
       ) {
-        return error;
+        if (isRetryableSetupFailure(error)) {
+          return {
+            error,
+            maxAttempts: MAX_SETUP_ATTEMPTS,
+            reason: 'transport',
+          };
+        }
+        if (isRetryableProviderServerFailure(error)) {
+          return {
+            error,
+            maxAttempts: MAX_SERVER_ATTEMPTS,
+            reason: 'server',
+          };
+        }
       }
       throw error;
     }

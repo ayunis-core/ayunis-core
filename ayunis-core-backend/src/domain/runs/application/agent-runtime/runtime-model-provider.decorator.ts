@@ -51,6 +51,9 @@ interface CallState {
   readonly stopRelayingAbort: () => void;
 }
 
+const MAX_DEFAULT_ATTEMPTS = 2;
+const MAX_SERVER_ATTEMPTS = 3;
+
 function backoff(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -75,8 +78,9 @@ export class RuntimeModelProviderDecorator {
 
   /**
    * A failure before any visible content is safe to retry: nothing reached
-   * the accumulator or the client, so a second attempt is indistinguishable
-   * from a slow first one (usage chunks merge last-wins). After content, a
+   * the accumulator or the client, so another bounded attempt is
+   * indistinguishable from a slow first one (usage chunks merge last-wins).
+   * After content, a
    * retry would duplicate what the user already watched arrive. Covers both
    * stalled streams (AYC-652) and transient transport failures raised before
    * the first chunk (AYC-653) — the latter get a short backoff first.
@@ -86,32 +90,29 @@ export class RuntimeModelProviderDecorator {
     request: ProviderRequest,
     context: RuntimeModelCallContext,
   ): AsyncIterable<ProviderChunk> {
-    let streamedContent = false;
-    try {
-      for await (const chunk of this.stream(provider, request, context)) {
-        streamedContent ||= isContentChunk(chunk);
-        yield chunk;
-      }
-      return;
-    } catch (error) {
-      const reason = retryReason(error, streamedContent, request.signal);
-      if (!reason) {
-        throw error;
-      }
-      if (reason !== 'stall') {
-        await backoff(SETUP_RETRY_BACKOFF_MS);
-        // Recheck after the wait — a cancellation during the backoff must
-        // not start a second attempt either.
-        if (request.signal?.aborted) {
-          throw error;
+    for (let attempt = 1; ; attempt++) {
+      let streamedContent = false;
+      try {
+        for await (const chunk of this.stream(provider, request, context)) {
+          streamedContent ||= isContentChunk(chunk);
+          yield chunk;
         }
+        return;
+      } catch (error) {
+        const decision = retryDecision(
+          error,
+          streamedContent,
+          request.signal,
+          attempt,
+        );
+        if (!decision) throw error;
+        await waitBeforeRetry(decision.reason, attempt, request.signal, error);
+        this.logger.warn(
+          { model: context.model.name, ...decision, attempt },
+          'Provider stream failed before producing output; retrying',
+        );
       }
-      this.logger.warn(
-        { model: context.model.name, reason },
-        'Provider stream failed before producing output; retrying once',
-      );
     }
-    yield* this.stream(provider, request, context);
   }
 
   private async *stream(
@@ -372,15 +373,47 @@ function isProviderServerError(error: unknown): boolean {
   );
 }
 
+type RetryReason =
+  'stall' | 'transient transport failure' | 'transient provider server failure';
+
+interface RetryDecision {
+  readonly reason: RetryReason;
+  readonly maxAttempts: number;
+}
+
+function retryDecision(
+  error: unknown,
+  streamedContent: boolean,
+  signal: AbortSignal | undefined,
+  attempt: number,
+): RetryDecision | null {
+  const reason = retryReason(error, streamedContent, signal);
+  if (!reason) return null;
+  const maxAttempts =
+    reason === 'transient provider server failure'
+      ? MAX_SERVER_ATTEMPTS
+      : MAX_DEFAULT_ATTEMPTS;
+  return attempt < maxAttempts ? { reason, maxAttempts } : null;
+}
+
+async function waitBeforeRetry(
+  reason: RetryReason,
+  attempt: number,
+  signal: AbortSignal | undefined,
+  originalError: unknown,
+): Promise<void> {
+  if (reason === 'stall') return;
+  await backoff(SETUP_RETRY_BACKOFF_MS * attempt);
+  // Recheck after the wait — cancellation during backoff must not start
+  // another billable provider attempt.
+  if (signal?.aborted) throw originalError;
+}
+
 function retryReason(
   error: unknown,
   streamedContent: boolean,
   signal: AbortSignal | undefined,
-):
-  | 'stall'
-  | 'transient transport failure'
-  | 'transient provider server failure'
-  | null {
+): RetryReason | null {
   if (streamedContent || signal?.aborted) return null;
   if (isStalledStreamError(error)) return 'stall';
   if (isTransientSetupError(error)) return 'transient transport failure';

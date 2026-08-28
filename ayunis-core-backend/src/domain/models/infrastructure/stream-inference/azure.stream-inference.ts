@@ -6,7 +6,6 @@ import type { ModelProvider } from '@ayunis/inference';
 import { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
 import { RuntimeStreamInferenceHandler } from 'src/domain/models/infrastructure/runtime/runtime-stream-inference.handler';
 import type { Model } from 'src/domain/models/domain/model.entity';
-import { INFERENCE_MAX_RETRIES } from 'src/domain/models/infrastructure/runtime/inference-config';
 
 @Injectable()
 export class AzureStreamInferenceHandler extends RuntimeStreamInferenceHandler {
@@ -25,7 +24,10 @@ export class AzureStreamInferenceHandler extends RuntimeStreamInferenceHandler {
       apiKey: this.configService.get<string>('models.azure.apiKey') ?? '',
       endpoint: this.configService.get<string>('models.azure.endpoint') ?? '',
       model: model.name,
-      maxRetries: INFERENCE_MAX_RETRIES,
+      // Azure retries are owned by the host streaming boundaries. Leaving
+      // OpenAI SDK retries enabled multiplies each explicit attempt and made
+      // exhausted incidents perform up to eight provider requests (AYC-849).
+      maxRetries: 0,
     });
   }
 }
