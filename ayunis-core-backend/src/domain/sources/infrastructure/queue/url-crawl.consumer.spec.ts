@@ -154,6 +154,18 @@ describe('UrlCrawlConsumer', () => {
     );
   });
 
+  it('hands the content write a refreshed processingStartedAt', async () => {
+    const source = makeSource();
+    // A queued crawl carries no timestamp until a worker picks it up.
+    source.processingStartedAt = null;
+    sourceRepository.findById.mockResolvedValue(source);
+
+    await consumer.process(makeJob());
+
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.processingStartedAt).toBeInstanceOf(Date);
+  });
+
   it('never resurrects a source deleted between load and heartbeat', async () => {
     sourceRepository.findById.mockResolvedValue(makeSource());
     // The guarded UPDATE affects zero rows — the source row is gone.

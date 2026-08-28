@@ -140,6 +140,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
       await this.cleanupMinioFile(minioPath);
       return null;
     }
+    // saveTextSource persists the whole entity later on, so mirror the
+    // refreshed timestamp here — otherwise that write puts the stale value
+    // back and re-exposes the in-flight job to the stale-cleanup cron.
+    source.processingStartedAt = new Date();
 
     return source;
   }

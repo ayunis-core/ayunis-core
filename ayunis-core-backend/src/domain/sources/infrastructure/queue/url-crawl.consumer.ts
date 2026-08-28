@@ -113,6 +113,11 @@ export class UrlCrawlConsumer extends WorkerHost {
       this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
       return null;
     }
+    // saveTextSource persists the whole entity later on, so mirror the
+    // refreshed timestamp here — otherwise that write puts back the value the
+    // source was loaded with (null until the worker picks the job up) and
+    // re-exposes the in-flight crawl to the stale-cleanup cron.
+    source.processingStartedAt = new Date();
 
     return source;
   }

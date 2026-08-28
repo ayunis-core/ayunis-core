@@ -160,6 +160,22 @@ describe('DocumentProcessingConsumer', () => {
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
+  it('hands the content write a refreshed processingStartedAt', async () => {
+    const loadedAt = new Date('2026-01-01T00:00:00.000Z');
+    const source = makeSource();
+    source.processingStartedAt = loadedAt;
+    sourceRepository.findById.mockResolvedValue(source);
+
+    await consumer.process(makeJob());
+
+    // A stale timestamp written back here would let the cleanup cron reap the
+    // job right after its content landed.
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.processingStartedAt?.getTime()).toBeGreaterThan(
+      loadedAt.getTime(),
+    );
+  });
+
   it('never resurrects a source deleted between load and heartbeat', async () => {
     sourceRepository.findById.mockResolvedValue(makeSource());
     // The guarded UPDATE affects zero rows — the source row is gone.
