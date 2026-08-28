@@ -58,6 +58,7 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     super();
     this.client = new Mistral({
       apiKey: this.configService.get('retrieval.mistral.apiKey'),
+      serverURL: this.configService.get('retrieval.mistral.serverUrl'),
       timeoutMs: this.TIMEOUT_MS,
     });
   }

@@ -240,6 +240,10 @@ jobs:
           # but the app still hides providers without configured credentials.
           AWS_BEDROCK_REGION=eu-central-1
 
+          # Deterministic Mistral OCR contract server
+          MISTRAL_API_KEY=e2e-ci-mistral-key
+          MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
+
           # MinIO
           MINIO_ENDPOINT=localhost
           MINIO_PORT=9000
@@ -263,6 +267,12 @@ jobs:
           MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           EOF
+
+      - name: Start Mistral OCR contract server
+        run: |
+          nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \
+            || { cat mistral-ocr-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend

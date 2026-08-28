@@ -100,7 +100,9 @@ describe('MistralFileRetrieverHandler', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockReturnValue('test-api-key'),
+            get: jest.fn((key: string) =>
+              key === 'retrieval.mistral.apiKey' ? 'test-api-key' : undefined,
+            ),
           },
         },
       ],

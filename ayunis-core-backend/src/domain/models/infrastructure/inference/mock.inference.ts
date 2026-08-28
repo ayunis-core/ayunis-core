@@ -3,7 +3,7 @@ import {
   InferenceHandler,
   InferenceInput,
   InferenceResponse,
-} from '../../application/ports/inference.handler';
+} from 'src/domain/models/application/ports/inference.handler';
 import { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
 import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
 import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
@@ -24,6 +24,8 @@ import { MessageRole } from 'src/domain/messages/domain/value-objects/message-ro
  *
  * For chat naming requests (containing "Name this chat"), includes the
  * requested name in the response to simulate proper chat naming behavior.
+ * The E2E inline-document trigger echoes extracted file content so retrieval
+ * journeys can assert what reached inference without a real model.
  *
  * @see InferenceHandlerRegistry.getHandler() - Routing logic
  * @see MockStreamInferenceHandler - Streaming equivalent
@@ -38,22 +40,24 @@ export class MockInferenceHandler extends InferenceHandler {
 
     let responseText = `${input.model.provider}::${input.model.name}`;
 
-    // Handle chat naming requests for tests
     if (lastUserMessage?.content && lastUserMessage.content.length > 0) {
-      const firstContent = lastUserMessage.content[0];
-      let textContent = '';
-
-      // Check if it's a TextMessageContent
-      if (firstContent.type === MessageContentType.TEXT) {
-        textContent = (firstContent as TextMessageContent).text;
-      }
-
-      // Check if this is a naming request
-      const namingMatch = textContent.match(/Name this chat (\S+)/i);
+      const textContents = lastUserMessage.content
+        .filter(
+          (content): content is TextMessageContent =>
+            content.type === MessageContentType.TEXT,
+        )
+        .map((content) => content.text);
+      const namingMatch = /Name this chat (\S+)/i.exec(textContents[0] ?? '');
       if (namingMatch) {
-        // Include the requested name in the response
         const requestedName = namingMatch[1];
         responseText = `I'll name this chat ${requestedName}. You're talking to ${input.model.provider}::${input.model.name}`;
+      }
+      if (
+        textContents.some((text) => text.includes(ECHO_INLINE_DOCUMENT_PROMPT))
+      ) {
+        responseText =
+          textContents.find((text) => text.startsWith('[Document:')) ??
+          responseText;
       }
     }
 
@@ -66,3 +70,5 @@ export class MockInferenceHandler extends InferenceHandler {
     );
   }
 }
+
+const ECHO_INLINE_DOCUMENT_PROMPT = 'E2E echo extracted inline document';
