@@ -9,7 +9,10 @@ import {
   hasExternallyHandledToolCall,
 } from './exit-conditions';
 import { streamModelCall } from './model-call';
-import { callModelWithRecovery } from './model-call-recovery';
+import {
+  callModelWithRecovery,
+  type ModelCallMode,
+} from './model-call-recovery';
 import type { RunState } from './run-state';
 import { isAborted, isHookAborted, isSignalAborted } from './run-state';
 import { executeToolCalls } from './tool-executor';
@@ -77,8 +80,10 @@ function callModelRecovering(
   iteration: number,
 ): AsyncGenerator<RunEventPayload, ModelCallResult> {
   return callModelWithRecovery({
-    call: () => callModel(state, iteration),
+    call: (mode) => callModel(state, iteration, mode),
     afterCompleted: (result) => runAfterModelCall(state, iteration, result),
+    onRejectedCompleted: (result) =>
+      runRejectedModelCall(state, iteration, result),
     recordUsage: (usage) => addUsage(state, usage),
     applyPendingMutations: () => applyPendingMutations(state),
     isAborted: () => isAborted(state),
@@ -98,13 +103,31 @@ function runAfterModelCall(
   });
 }
 
+function runRejectedModelCall(
+  state: RunState,
+  iteration: number,
+  result: ModelCallResult,
+): Promise<void> {
+  return state.hookRunner.modelCallInterrupted({
+    iteration,
+    message: {
+      ...result.message,
+      content: result.message.content.filter(
+        (content) => content.type === 'text' || content.type === 'thinking',
+      ),
+    },
+    reason: 'error',
+  });
+}
+
 function callModel(
   state: RunState,
   iteration: number,
+  mode: ModelCallMode,
 ): AsyncGenerator<RunEventPayload, ModelCallResult> {
   return streamModelCall({
     model: state.model,
-    request: assembleRequest(state),
+    request: assembleRequest(state, mode),
     onInterrupted: (interruption) =>
       state.hookRunner.modelCallInterrupted({ iteration, ...interruption }),
   });
@@ -177,16 +200,31 @@ const applyPendingMutations = (state: RunState): void => {
   state.instructions = applied.instructions;
 };
 
-const assembleRequest = (state: RunState): ProviderRequest => {
+const TOOL_DISABLED_FALLBACK_INSTRUCTION =
+  'Previous attempts produced malformed tool calls. Do not call tools. ' +
+  'Respond directly with the most useful explanation or answer you can provide.';
+
+const assembleRequest = (
+  state: RunState,
+  mode: ModelCallMode,
+): ProviderRequest => {
+  const tools =
+    mode === 'normal'
+      ? state.tools.map(({ name, description, parameters }) => ({
+          name,
+          description,
+          parameters,
+        }))
+      : [];
+  const instructions =
+    mode === 'normal'
+      ? state.instructions
+      : `${state.instructions}\n\n${TOOL_DISABLED_FALLBACK_INSTRUCTION}`;
   return {
-    instructions: state.instructions,
+    instructions,
     messages: state.messages,
-    tools: state.tools.map(({ name, description, parameters }) => ({
-      name,
-      description,
-      parameters,
-    })),
-    ...(state.toolChoice !== undefined && state.tools.length > 0
+    tools,
+    ...(state.toolChoice !== undefined && tools.length > 0
       ? { toolChoice: state.toolChoice }
       : {}),
     ...(state.signal ? { signal: state.signal } : {}),

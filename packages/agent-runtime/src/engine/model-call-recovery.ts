@@ -7,9 +7,14 @@ const MAX_MALFORMED_ATTEMPTS = 3;
 const MAX_EMPTY_ATTEMPTS = 2;
 const MAX_TOTAL_ATTEMPTS = MAX_MALFORMED_ATTEMPTS + MAX_EMPTY_ATTEMPTS - 1;
 
+export type ModelCallMode = 'normal' | 'tool_disabled_fallback';
+
 export interface ModelCallRecoveryOptions {
-  call: () => AsyncGenerator<RunEventPayload, ModelCallResult>;
+  call: (
+    mode: ModelCallMode,
+  ) => AsyncGenerator<RunEventPayload, ModelCallResult, void>;
   afterCompleted: (result: ModelCallResult) => Promise<void>;
+  onRejectedCompleted: (result: ModelCallResult) => Promise<void>;
   recordUsage: (usage: Usage) => void;
   applyPendingMutations: () => void;
   isAborted: () => boolean;
@@ -21,35 +26,38 @@ export interface ModelCallRecoveryOptions {
  */
 export async function* callModelWithRecovery(
   options: ModelCallRecoveryOptions,
-): AsyncGenerator<RunEventPayload, ModelCallResult> {
+): AsyncGenerator<RunEventPayload, ModelCallResult, void> {
   let emptyAttempts = 0;
   let malformedAttempts = 0;
+  let mode: ModelCallMode = 'normal';
+  let fallbackError: MalformedToolCallError | undefined;
 
   for (
     let totalAttempt = 1;
     totalAttempt <= MAX_TOTAL_ATTEMPTS;
     totalAttempt++
   ) {
-    const outcome = yield* runAttempt(options.call());
+    const outcome: ModelAttemptOutcome = yield* runAttempt(
+      options.call(mode),
+      mode,
+    );
     if (outcome.type === 'failed') {
-      malformedAttempts = recordMalformedAttempt(
-        outcome.error,
+      const retry: FailedAttemptRetry = yield* recoverFailedAttempt({
+        outcome,
+        mode,
+        fallbackError,
         malformedAttempts,
-        options.recordUsage,
-      );
-      if (isAbortedMalformed(outcome.error, options)) {
-        throw new RunAbortedError();
-      }
-      if (canRetryMalformed(outcome, malformedAttempts, totalAttempt)) {
-        continue;
-      }
-      yield* outcome.state.bufferedToolSnapshots;
-      throw outcome.error;
+        totalAttempt,
+        options,
+      });
+      malformedAttempts = retry.malformedAttempts;
+      mode = retry.mode;
+      fallbackError = retry.fallbackError;
+      continue;
     }
 
     const { result } = outcome;
-    options.recordUsage(result.usage);
-    await options.afterCompleted(result);
+    await processCompletedAttempt(options, mode, fallbackError, result);
     if (result.message.content.length > 0) return result;
 
     emptyAttempts++;
@@ -59,6 +67,39 @@ export async function* callModelWithRecovery(
   }
 
   throw new Error('Model-call recovery exhausted without an outcome');
+}
+
+async function processCompletedAttempt(
+  options: ModelCallRecoveryOptions,
+  mode: ModelCallMode,
+  fallbackError: MalformedToolCallError | undefined,
+  result: ModelCallResult,
+): Promise<void> {
+  options.recordUsage(result.usage);
+  const rejectedFallback = fallbackToolCallError(mode, fallbackError, result);
+  if (rejectedFallback) {
+    await options.onRejectedCompleted(result);
+    throw rejectedFallback;
+  }
+  await options.afterCompleted(result);
+  if (
+    mode === 'tool_disabled_fallback' &&
+    fallbackError &&
+    result.message.content.length === 0
+  ) {
+    throw fallbackError;
+  }
+}
+
+function fallbackToolCallError(
+  mode: ModelCallMode,
+  fallbackError: MalformedToolCallError | undefined,
+  result: ModelCallResult,
+): MalformedToolCallError | undefined {
+  if (mode !== 'tool_disabled_fallback' || !fallbackError) return undefined;
+  return result.message.content.some((content) => content.type === 'tool_use')
+    ? fallbackError
+    : undefined;
 }
 
 type ToolSnapshotEvent = Extract<
@@ -75,9 +116,107 @@ type ModelAttemptOutcome =
   | { type: 'completed'; result: ModelCallResult }
   | { type: 'failed'; error: unknown; state: ModelAttemptState };
 
+type FailedOutcome = Extract<ModelAttemptOutcome, { type: 'failed' }>;
+
+type FailedAttemptAction =
+  | { type: 'retry'; malformedAttempts: number }
+  | {
+      type: 'fallback';
+      error: MalformedToolCallError;
+      malformedAttempts: number;
+    }
+  | { type: 'abort'; malformedAttempts: number }
+  | {
+      type: 'fail';
+      error: unknown;
+      bufferedToolSnapshots: readonly ToolSnapshotEvent[];
+      malformedAttempts: number;
+    };
+
+interface FailedAttemptParams {
+  readonly outcome: FailedOutcome;
+  readonly mode: ModelCallMode;
+  readonly fallbackError: MalformedToolCallError | undefined;
+  readonly malformedAttempts: number;
+  readonly totalAttempt: number;
+  readonly options: ModelCallRecoveryOptions;
+}
+
+interface FailedAttemptRetry {
+  readonly malformedAttempts: number;
+  readonly mode: ModelCallMode;
+  readonly fallbackError: MalformedToolCallError | undefined;
+}
+
+function* recoverFailedAttempt(
+  params: FailedAttemptParams,
+): Generator<RunEventPayload, FailedAttemptRetry, void> {
+  const action = failedAttemptAction(params);
+  switch (action.type) {
+    case 'retry':
+      return {
+        malformedAttempts: action.malformedAttempts,
+        mode: params.mode,
+        fallbackError: params.fallbackError,
+      };
+    case 'fallback':
+      return {
+        malformedAttempts: action.malformedAttempts,
+        mode: 'tool_disabled_fallback',
+        fallbackError: action.error,
+      };
+    case 'abort':
+      throw new RunAbortedError();
+    case 'fail':
+      yield* action.bufferedToolSnapshots;
+      throw action.error;
+  }
+}
+
+function failedAttemptAction(params: FailedAttemptParams): FailedAttemptAction {
+  const malformedAttempts = recordMalformedAttempt(
+    params.outcome.error,
+    params.malformedAttempts,
+    params.options.recordUsage,
+  );
+  if (
+    params.outcome.error instanceof RunAbortedError ||
+    isAbortedMalformed(params.outcome.error, params.options)
+  ) {
+    return { type: 'abort', malformedAttempts };
+  }
+  if (params.mode === 'tool_disabled_fallback' && params.fallbackError) {
+    return {
+      type: 'fail',
+      error: params.fallbackError,
+      bufferedToolSnapshots: [],
+      malformedAttempts,
+    };
+  }
+  if (
+    canRetryMalformed(params.outcome, malformedAttempts, params.totalAttempt)
+  ) {
+    return { type: 'retry', malformedAttempts };
+  }
+  if (canUseToolDisabledFallback(params.outcome, params.totalAttempt)) {
+    return {
+      type: 'fallback',
+      error: params.outcome.error,
+      malformedAttempts,
+    };
+  }
+  return {
+    type: 'fail',
+    error: params.outcome.error,
+    bufferedToolSnapshots: params.outcome.state.bufferedToolSnapshots,
+    malformedAttempts,
+  };
+}
+
 async function* runAttempt(
-  generator: AsyncGenerator<RunEventPayload, ModelCallResult>,
-): AsyncGenerator<RunEventPayload, ModelAttemptOutcome> {
+  generator: AsyncGenerator<RunEventPayload, ModelCallResult, void>,
+  mode: ModelCallMode,
+): AsyncGenerator<RunEventPayload, ModelAttemptOutcome, void> {
   const state: ModelAttemptState = {
     bufferedToolSnapshots: [],
     emittedVisibleContent: false,
@@ -85,7 +224,7 @@ async function* runAttempt(
   const iterator: AsyncIterator<RunEventPayload, ModelCallResult> = generator;
   let completed = false;
   try {
-    const result = yield* forwardAttempt(iterator, state);
+    const result = yield* forwardAttempt(iterator, state, mode === 'normal');
     completed = true;
     return { type: 'completed', result };
   } catch (error) {
@@ -98,25 +237,30 @@ async function* runAttempt(
 async function* forwardAttempt(
   iterator: AsyncIterator<RunEventPayload, ModelCallResult>,
   state: ModelAttemptState,
-): AsyncGenerator<RunEventPayload, ModelCallResult> {
+  exposeToolSnapshots: boolean,
+): AsyncGenerator<RunEventPayload, ModelCallResult, void> {
   for (;;) {
     const next = await iterator.next();
     if (next.done) {
-      yield* state.bufferedToolSnapshots;
+      if (exposeToolSnapshots) yield* state.bufferedToolSnapshots;
       state.bufferedToolSnapshots.length = 0;
       return next.value;
     }
-    yield* forwardAttemptEvent(next.value, state);
+    yield* forwardAttemptEvent(next.value, state, exposeToolSnapshots);
   }
 }
 
 function* forwardAttemptEvent(
   event: RunEventPayload,
   state: ModelAttemptState,
+  exposeToolSnapshots: boolean,
 ): Generator<RunEventPayload> {
-  if (event.type === 'tool_call_snapshot' && !state.emittedVisibleContent) {
-    state.bufferedToolSnapshots.push(event);
-    return;
+  if (event.type === 'tool_call_snapshot') {
+    if (!exposeToolSnapshots) return;
+    if (!state.emittedVisibleContent) {
+      state.bufferedToolSnapshots.push(event);
+      return;
+    }
   }
   if (!state.emittedVisibleContent) {
     state.emittedVisibleContent = true;
@@ -152,6 +296,19 @@ function canRetryMalformed(
     outcome.error instanceof MalformedToolCallError &&
     !outcome.state.emittedVisibleContent &&
     malformedAttempts < MAX_MALFORMED_ATTEMPTS &&
+    totalAttempt < MAX_TOTAL_ATTEMPTS
+  );
+}
+
+function canUseToolDisabledFallback(
+  outcome: Extract<ModelAttemptOutcome, { type: 'failed' }>,
+  totalAttempt: number,
+): outcome is Extract<ModelAttemptOutcome, { type: 'failed' }> & {
+  error: MalformedToolCallError;
+} {
+  return (
+    outcome.error instanceof MalformedToolCallError &&
+    !outcome.state.emittedVisibleContent &&
     totalAttempt < MAX_TOTAL_ATTEMPTS
   );
 }
