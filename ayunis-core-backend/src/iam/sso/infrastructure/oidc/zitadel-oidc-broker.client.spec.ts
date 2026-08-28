@@ -122,6 +122,7 @@ describe('ZitadelOidcBrokerClient', () => {
   it('validates the callback against the exact state, nonce and PKCE verifier', async () => {
     const tokenResponse = {
       access_token: 'server-side-access-token',
+      id_token: 'signed-id-token',
       claims: () => ({
         sub: 'zitadel-user',
         sid: 'zitadel-session',
@@ -152,14 +153,17 @@ describe('ZitadelOidcBrokerClient', () => {
         expectedNonce: 'oidc-nonce',
       }),
     ).resolves.toEqual({
-      issuer: config.issuer,
-      subject: 'zitadel-user',
-      email: 'staff@demo.com',
-      name: 'Erika Mustermann',
-      emailVerified: true,
-      zitadelOrgId: '385820595704561666',
-      sessionId: 'zitadel-session',
-      authenticationMethods: ['pwd', 'otp', 'mfa'],
+      identity: {
+        issuer: config.issuer,
+        subject: 'zitadel-user',
+        email: 'staff@demo.com',
+        name: 'Erika Mustermann',
+        emailVerified: true,
+        zitadelOrgId: '385820595704561666',
+        sessionId: 'zitadel-session',
+        authenticationMethods: ['pwd', 'otp', 'mfa'],
+      },
+      idToken: 'signed-id-token',
     });
     const expectedCallbackUrl = new URL(config.callbackUrl);
     expectedCallbackUrl.search = callbackParameters.toString();
@@ -184,9 +188,10 @@ describe('ZitadelOidcBrokerClient', () => {
   it('builds the registered Zitadel end-session URL without a provider roundtrip', () => {
     const client = buildClient(config);
 
-    expect(client.createEndSessionUrl()).toBe(
+    expect(client.createEndSessionUrl('signed-id-token')).toBe(
       'https://sso.ayunis.de/oidc/v1/end_session?' +
         'client_id=ayunis-core-client&' +
+        'id_token_hint=signed-id-token&' +
         'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2Flogin',
     );
     expect(oidc.discovery).not.toHaveBeenCalled();
@@ -198,6 +203,12 @@ describe('ZitadelOidcBrokerClient', () => {
     expect(client.createEndSessionUrl()).toContain(
       'post_logout_redirect_uri=https%3A%2F%2Fcore.ayunis.de%2Fapp%2Flogin',
     );
+  });
+
+  it('keeps the broker UI fallback when no ID-token hint is available', () => {
+    const client = buildClient(config);
+
+    expect(client.createEndSessionUrl()).not.toContain('id_token_hint');
   });
 
   it('validates a signed back-channel logout token for this relying party', async () => {
@@ -306,6 +317,7 @@ describe('ZitadelOidcBrokerClient', () => {
   it('treats a malformed authentication-method claim as no MFA assurance', async () => {
     jest.mocked(oidc.authorizationCodeGrant).mockResolvedValue({
       access_token: 'server-side-access-token',
+      id_token: 'signed-id-token',
       claims: () => ({ sub: 'zitadel-user', amr: 'mfa' }),
     } as never);
     jest.mocked(oidc.fetchUserInfo).mockResolvedValue({
@@ -326,7 +338,9 @@ describe('ZitadelOidcBrokerClient', () => {
         expectedState: 'oauth-state',
         expectedNonce: 'oidc-nonce',
       }),
-    ).resolves.toMatchObject({ authenticationMethods: [] });
+    ).resolves.toMatchObject({
+      identity: { authenticationMethods: [] },
+    });
   });
 
   it.each([null, '', '   '])(
@@ -334,6 +348,7 @@ describe('ZitadelOidcBrokerClient', () => {
     async (name) => {
       const tokenResponse = {
         access_token: 'server-side-access-token',
+        id_token: 'signed-id-token',
         claims: () => ({ sub: 'zitadel-user', sid: 'zitadel-session' }),
       };
       jest
@@ -358,7 +373,7 @@ describe('ZitadelOidcBrokerClient', () => {
         expectedNonce: 'oidc-nonce',
       });
 
-      expect(result.name).toBe('staff@demo.com');
+      expect(result.identity.name).toBe('staff@demo.com');
     },
   );
 

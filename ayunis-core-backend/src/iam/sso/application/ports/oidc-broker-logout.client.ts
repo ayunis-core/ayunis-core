@@ -5,7 +5,7 @@ export interface ValidatedBackchannelLogout {
 }
 
 export abstract class OidcBrokerLogoutClient {
-  abstract createEndSessionUrl(): string;
+  abstract createEndSessionUrl(idTokenHint?: string): string;
 
   abstract validateBackchannelLogoutToken(
     logoutToken: string,

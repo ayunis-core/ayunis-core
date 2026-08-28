@@ -29,12 +29,15 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
     const broker = {
       createAuthorizationRequest: jest.fn(),
       validateCallback: jest.fn().mockResolvedValue({
-        issuer: 'https://sso.ayunis.de',
-        subject: 'zitadel-user',
-        email: 'staff@demo.com',
-        name: 'Erika Mustermann',
-        emailVerified: true,
-        zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+        identity: {
+          issuer: 'https://sso.ayunis.de',
+          subject: 'zitadel-user',
+          email: 'staff@demo.com',
+          name: 'Erika Mustermann',
+          emailVerified: true,
+          zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+        },
+        idToken: 'signed-id-token',
       }),
     };
     const useCase = new CompleteOrgSsoLoginUseCase(
@@ -59,9 +62,12 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
         ),
       ),
     ).resolves.toMatchObject({
-      orgId: SSO_TEST_ORG_ID,
-      subject: 'zitadel-user',
-      zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+      identity: {
+        orgId: SSO_TEST_ORG_ID,
+        subject: 'zitadel-user',
+        zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+      },
+      idToken: 'signed-id-token',
       postLoginPath: '/',
       purpose: SsoLoginPurpose.LOGIN,
       linkUserId: null,
@@ -144,11 +150,14 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
     const broker = {
       createAuthorizationRequest: jest.fn(),
       validateCallback: jest.fn().mockResolvedValue({
-        issuer: 'https://sso.ayunis.de',
-        subject: 'zitadel-user',
-        email: 'staff@other.example',
-        emailVerified: true,
-        zitadelOrgId: 'different-zitadel-org',
+        identity: {
+          issuer: 'https://sso.ayunis.de',
+          subject: 'zitadel-user',
+          email: 'staff@other.example',
+          emailVerified: true,
+          zitadelOrgId: 'different-zitadel-org',
+        },
+        idToken: 'signed-id-token',
       }),
     };
     const useCase = new CompleteOrgSsoLoginUseCase(
@@ -230,7 +239,9 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
           TEST_BROWSER_BINDING,
         ),
       ),
-    ).resolves.toMatchObject({ email: 'staff@vhs.bremerhaven.de' });
+    ).resolves.toMatchObject({
+      identity: { email: 'staff@vhs.bremerhaven.de' },
+    });
   });
 
   it.each([
@@ -328,13 +339,16 @@ function useCaseWithIdentity(
     {
       createAuthorizationRequest: jest.fn(),
       validateCallback: jest.fn().mockResolvedValue({
-        issuer: 'https://sso.ayunis.de',
-        subject: 'zitadel-user',
-        email: 'staff@demo.com',
-        name: 'Erika Mustermann',
-        emailVerified: true,
-        zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
-        ...identityOverrides,
+        identity: {
+          issuer: 'https://sso.ayunis.de',
+          subject: 'zitadel-user',
+          email: 'staff@demo.com',
+          name: 'Erika Mustermann',
+          emailVerified: true,
+          zitadelOrgId: SSO_TEST_ZITADEL_ORG_ID,
+          ...identityOverrides,
+        },
+        idToken: 'signed-id-token',
       }),
     },
     {

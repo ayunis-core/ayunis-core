@@ -5,7 +5,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
 import type { ValidatedOrgOidcIdentity } from 'src/iam/sso/application/models/validated-org-oidc-identity';
-import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
+import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
 import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import {
@@ -19,7 +19,9 @@ import { CompleteOrgSsoLoginCommand } from 'src/iam/sso/application/use-cases/co
 import { emailDomainFromAddress } from 'src/iam/sso/domain/sso-connection-values';
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 
-export interface CompletedOrgSsoLogin extends ValidatedOrgOidcIdentity {
+export interface CompletedOrgSsoLogin {
+  identity: ValidatedOrgOidcIdentity;
+  idToken: string;
   postLoginPath: string;
   purpose: SsoLoginPurpose;
   linkUserId: UUID | null;
@@ -32,7 +34,7 @@ export class CompleteOrgSsoLoginUseCase {
     private readonly logger: PinoLogger,
     private readonly transactions: SsoLoginTransactionsRepository,
     private readonly broker: OidcBrokerClient,
-    private readonly encryption: SsoLoginTransactionEncryptionPort,
+    private readonly encryption: SsoEncryptionPort,
     private readonly connections: OrgSsoConnectionsRepository,
   ) {}
 
@@ -58,12 +60,13 @@ export class CompleteOrgSsoLoginUseCase {
     ) {
       throw new SsoConnectionNotAvailableError();
     }
-    const identity = await this.broker.validateCallback({
+    const callback = await this.broker.validateCallback({
       callbackParameters: command.callbackParameters,
       codeVerifier: this.encryption.decrypt(transaction.encryptedCodeVerifier),
       expectedState: state,
       expectedNonce: this.encryption.decrypt(transaction.encryptedNonce),
     });
+    const { identity } = callback;
     if (identity.zitadelOrgId !== transaction.zitadelOrgId) {
       throw new SsoOrganizationMismatchError();
     }
@@ -78,8 +81,8 @@ export class CompleteOrgSsoLoginUseCase {
       throw new SsoOrganizationMismatchError();
     }
     return {
-      ...identity,
-      orgId: transaction.orgId,
+      identity: { ...identity, orgId: transaction.orgId },
+      idToken: callback.idToken,
       postLoginPath: transaction.postLoginPath,
       purpose: transaction.purpose,
       linkUserId: transaction.linkUserId,

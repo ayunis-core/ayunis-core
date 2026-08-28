@@ -10,36 +10,49 @@ import type { LinkFederatedIdentityUseCase } from 'src/iam/sso/application/use-c
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import type { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-broker-session.service';
+import {
+  SSO_TEST_ORG_ID,
+  SSO_TEST_USER_ID,
+} from 'src/iam/sso/application/testing/sso-provisioning.fixtures';
 
 describe(CompleteSsoAuthenticationUseCase.name, () => {
+  const logger = createPinoLoggerMock();
   const completeLogin = { execute: jest.fn() };
   const provisionUser = { execute: jest.fn() };
   const startSession = { execute: jest.fn() };
   const linkIdentity = { execute: jest.fn() };
+  const brokerSessions = { store: jest.fn() };
   const useCase = new CompleteSsoAuthenticationUseCase(
-    createPinoLoggerMock(),
+    logger,
     completeLogin as unknown as CompleteOrgSsoLoginUseCase,
     provisionUser as unknown as ProvisionOrgSsoUserUseCase,
     startSession as unknown as StartAuthenticatedSessionUseCase,
     linkIdentity as unknown as LinkFederatedIdentityUseCase,
+    brokerSessions as unknown as SsoBrokerSessionService,
   );
 
   beforeEach(() => {
     jest.clearAllMocks();
+    brokerSessions.store.mockResolvedValue(undefined);
     completeLogin.execute.mockResolvedValue({
       postLoginPath: '/',
-      sessionId: 'zitadel-session',
-      authenticationMethods: ['pwd', 'otp', 'mfa'],
+      identity: {
+        sessionId: 'zitadel-session',
+        authenticationMethods: ['pwd', 'otp', 'mfa'],
+      },
+      idToken: 'signed-id-token',
       purpose: SsoLoginPurpose.LOGIN,
       linkUserId: null,
     });
     provisionUser.execute.mockResolvedValue(
       new User({
+        id: SSO_TEST_USER_ID,
         email: 'staff@demo.com',
         emailVerified: true,
         passwordHash: null,
         role: UserRole.USER,
-        orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+        orgId: SSO_TEST_ORG_ID,
         name: 'Erika Mustermann',
         hasAcceptedMarketing: false,
       }),
@@ -78,18 +91,47 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
         brokerMfaSatisfied: true,
       }),
     );
+    expect(brokerSessions.store).toHaveBeenCalledWith(
+      SSO_TEST_USER_ID,
+      'zitadel-session',
+      'signed-id-token',
+    );
+  });
+
+  it('continues login when the optional logout hint cannot be stored', async () => {
+    brokerSessions.store.mockRejectedValue(new Error('database unavailable'));
+
+    await expect(
+      useCase.execute(
+        new CompleteSsoAuthenticationCommand(
+          new URLSearchParams({ state: 'state' }),
+          'browser-binding',
+        ),
+      ),
+    ).resolves.toMatchObject({
+      kind: 'authenticated',
+      session: { status: 'authenticated' },
+    });
+    expect(startSession.execute).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      { failureType: 'Error' },
+      'Broker logout hint could not be stored; interactive logout remains available',
+    );
   });
 
   it('links the broker identity without provisioning a user or issuing a session', async () => {
     completeLogin.execute.mockResolvedValue({
-      issuer: 'https://sso.ayunis.de',
-      subject: 'zitadel-user',
-      email: 'staff@demo.com',
-      emailVerified: true,
-      name: 'Erika Mustermann',
-      zitadelOrgId: '385820595704561666',
-      authenticationMethods: ['pwd'],
-      orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      identity: {
+        issuer: 'https://sso.ayunis.de',
+        subject: 'zitadel-user',
+        email: 'staff@demo.com',
+        emailVerified: true,
+        name: 'Erika Mustermann',
+        zitadelOrgId: '385820595704561666',
+        authenticationMethods: ['pwd'],
+        orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      },
+      idToken: 'signed-id-token',
       postLoginPath: '/',
       purpose: SsoLoginPurpose.LINK,
       linkUserId: '1972fa3b-a4e9-4a1b-8b2c-10323d376b80',
@@ -110,6 +152,7 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
     );
     expect(provisionUser.execute).not.toHaveBeenCalled();
     expect(startSession.execute).not.toHaveBeenCalled();
+    expect(brokerSessions.store).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -121,7 +164,8 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
     async ({ authenticationMethods }) => {
       completeLogin.execute.mockResolvedValue({
         postLoginPath: '/',
-        authenticationMethods,
+        identity: { authenticationMethods },
+        idToken: 'signed-id-token',
         purpose: SsoLoginPurpose.LOGIN,
         linkUserId: null,
       });
@@ -156,7 +200,8 @@ describe(CompleteSsoAuthenticationUseCase.name, () => {
     async ({ enrollmentRequired, redirectPath }) => {
       completeLogin.execute.mockResolvedValue({
         postLoginPath: '/sso/success',
-        authenticationMethods: ['pwd'],
+        identity: { authenticationMethods: ['pwd'] },
+        idToken: 'signed-id-token',
         purpose: SsoLoginPurpose.LOGIN,
         linkUserId: null,
       });
