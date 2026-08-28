@@ -215,7 +215,7 @@ describe('RuntimeModelProviderDecorator', () => {
       Object.assign(new Error('service unavailable'), { status: 503 }),
       'PROVIDER_UNAVAILABLE_SERVER_ANTHROPIC',
       'provider_server',
-      2,
+      3,
     ],
     [
       'oversized image',
@@ -246,7 +246,7 @@ describe('RuntimeModelProviderDecorator', () => {
           },
         }),
       );
-      await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+      await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
       await failure;
 
       expect(emitAsync).toHaveBeenCalledTimes(attempts);
@@ -258,7 +258,7 @@ describe('RuntimeModelProviderDecorator', () => {
     },
   );
 
-  it('recovers when an upstream server failure happens before output', async () => {
+  it('recovers on the third attempt after repeated upstream server failures', async () => {
     jest.useFakeTimers();
     let attempts = 0;
     const upstream = Object.assign(new Error('internal server error'), {
@@ -268,7 +268,7 @@ describe('RuntimeModelProviderDecorator', () => {
       name: 'test:bedrock-recovery',
       async *stream() {
         attempts += 1;
-        if (attempts === 1) {
+        if (attempts < 3) {
           yield await Promise.reject(upstream);
         }
         yield { textDelta: 'Recovered response' };
@@ -281,12 +281,12 @@ describe('RuntimeModelProviderDecorator', () => {
     const { decorate } = buildHarness(bedrockModel);
 
     const collected = collect(decorate(provider));
-    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
 
     await expect(collected).resolves.toEqual([
       { textDelta: 'Recovered response' },
     ]);
-    expect(attempts).toBe(2);
+    expect(attempts).toBe(3);
     jest.useRealTimers();
   });
 

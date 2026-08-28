@@ -1,3 +1,4 @@
+import { extractUpstreamStatus } from './extract-upstream-status.helper';
 import { ProviderFailureClass } from './provider.errors';
 
 export interface TransportFailure {
@@ -110,6 +111,14 @@ export function isRetryableSetupFailure(error: unknown): boolean {
   return (
     classifyTransportError(error)?.failureClass ===
     ProviderFailureClass.CONNECTION
+  );
+}
+
+/** Upstream 5xx responses safe to retry before any response content exists. */
+export function isRetryableProviderServerFailure(error: unknown): boolean {
+  const status = extractUpstreamStatus(error);
+  return (
+    status !== undefined && status >= 500 && status <= 599 && status !== 504
   );
 }
 

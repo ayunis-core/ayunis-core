@@ -1,8 +1,8 @@
 import type { ModelProvider } from '@ayunis/inference';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { ImageContentService } from 'src/domain/messages/application/services/image-content.service';
-import type { StreamInferenceInput } from '../../application/ports/stream-inference.handler';
-import { InferenceStreamStalledError } from '../../application/models.errors';
+import type { StreamInferenceInput } from 'src/domain/models/application/ports/stream-inference.handler';
+import { InferenceStreamStalledError } from 'src/domain/models/application/models.errors';
 import { RuntimeStreamInferenceHandler } from './runtime-stream-inference.handler';
 import { STREAM_IDLE_TIMEOUT_MS } from 'src/common/streaming/stream-idle-watchdog';
 import { SETUP_RETRY_BACKOFF_MS } from 'src/common/errors/provider-transport-error.classifier';
@@ -170,6 +170,36 @@ describe('RuntimeStreamInferenceHandler', () => {
     await completed;
     expect(deltas).toEqual(['recovered']);
     expect(calls).toBe(2);
+  });
+
+  it('recovers on the third attempt after repeated provider server failures', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:server-recovery',
+      async *stream() {
+        calls += 1;
+        if (calls < 3) {
+          yield await Promise.reject(
+            Object.assign(new Error('service unavailable'), { status: 503 }),
+          );
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS * 3);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(3);
   });
 
   it('does not retry a transient failure when the subscriber unsubscribes during the backoff', async () => {
