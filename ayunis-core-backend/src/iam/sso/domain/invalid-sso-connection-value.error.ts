@@ -1,4 +1,5 @@
-export type SsoConnectionValueField = 'emailDomain' | 'zitadelOrgId';
+export type SsoConnectionValueField =
+  'emailDomain' | 'zitadelOrgId' | 'zitadelIdpId';
 
 export class InvalidSsoConnectionValueError extends Error {
   constructor(public readonly field: SsoConnectionValueField) {

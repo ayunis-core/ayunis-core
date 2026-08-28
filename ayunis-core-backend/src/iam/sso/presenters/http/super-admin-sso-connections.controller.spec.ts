@@ -20,6 +20,7 @@ function createController() {
   const configureConnection = { execute: jest.fn() };
   const setEnabled = { execute: jest.fn() };
   const setJit = { execute: jest.fn() };
+  const setIdp = { execute: jest.fn() };
   return {
     controller: new SuperAdminSsoConnectionsController(
       logger,
@@ -27,6 +28,7 @@ function createController() {
       configureConnection as never,
       setEnabled as never,
       setJit as never,
+      setIdp as never,
       new OrgSsoConnectionResponseDtoMapper(),
     ),
     logger,
@@ -34,6 +36,7 @@ function createController() {
     configureConnection,
     setEnabled,
     setJit,
+    setIdp,
   };
 }
 
@@ -66,6 +69,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
       {
         emailDomain: 'stadt.example',
         zitadelOrgId: 'zitadel-org-1',
+        zitadelIdpId: 'zitadel-idp-1',
         domainVerified: true,
       },
       SUPER_ADMIN_ID,
@@ -76,6 +80,7 @@ describe(SuperAdminSsoConnectionsController.name, () => {
         TEST_ORG_ID,
         'stadt.example',
         'zitadel-org-1',
+        'zitadel-idp-1',
       ),
     );
     expect(result.connection).toMatchObject({ orgId: TEST_ORG_ID });

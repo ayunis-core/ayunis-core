@@ -25,6 +25,12 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     ' Stadt.Example ',
     ' zitadel-org-1 ',
   );
+  const commandWithIdp = new ConfigureOrgSsoConnectionCommand(
+    TEST_ORG_ID,
+    ' Stadt.Example ',
+    ' zitadel-org-1 ',
+    ' zitadel-idp-1 ',
+  );
   let repository: ReturnType<typeof createMockOrgSsoConnectionsRepository>;
   let findOrgById: jest.Mocked<Pick<FindOrgByIdUseCase, 'execute'>>;
   let useCase: ConfigureOrgSsoConnectionUseCase;
@@ -58,6 +64,36 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     );
     expect(result.domainVerifiedAt.getTime()).toBeGreaterThanOrEqual(
       before.getTime(),
+    );
+  });
+
+  it('persists the direct IdP with the mapping in one write', async () => {
+    await useCase.execute(commandWithIdp);
+
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailDomain: 'stadt.example',
+        zitadelOrgId: 'zitadel-org-1',
+        zitadelIdpId: 'zitadel-idp-1',
+      }),
+    );
+  });
+
+  it('updates the direct IdP atomically on a disabled mapping', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgId.mockResolvedValue(existing);
+    repository.findByEmailDomain.mockResolvedValue(existing);
+    repository.findByZitadelOrgId.mockResolvedValue(existing);
+
+    await useCase.execute(commandWithIdp);
+
+    expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailDomain: 'stadt.example',
+        zitadelOrgId: 'zitadel-org-1',
+        zitadelIdpId: 'zitadel-idp-1',
+      }),
+      existing,
     );
   });
 
@@ -110,6 +146,43 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
+  it.each([false, true])(
+    'preserves an existing IdP when an unchanged configuration omits it (enabled: %s)',
+    async (enabled) => {
+      const existing = anOrgSsoConnection({
+        zitadelIdpId: 'zitadel-idp-1',
+        enabled,
+      });
+      repository.findByOrgId.mockResolvedValue(existing);
+      repository.findByEmailDomain.mockResolvedValue(existing);
+      repository.findByZitadelOrgId.mockResolvedValue(existing);
+
+      await expect(useCase.execute(command)).resolves.toBe(existing);
+      expect(repository.updateConfigurationIfDisabled).not.toHaveBeenCalled();
+    },
+  );
+
+  it('clears an existing IdP only when null is explicit', async () => {
+    const existing = anOrgSsoConnection({ zitadelIdpId: 'zitadel-idp-1' });
+    repository.findByOrgId.mockResolvedValue(existing);
+    repository.findByEmailDomain.mockResolvedValue(existing);
+    repository.findByZitadelOrgId.mockResolvedValue(existing);
+
+    await useCase.execute(
+      new ConfigureOrgSsoConnectionCommand(
+        TEST_ORG_ID,
+        'stadt.example',
+        'zitadel-org-1',
+        null,
+      ),
+    );
+
+    expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
+      expect.objectContaining({ zitadelIdpId: null }),
+      existing,
+    );
+  });
+
   it('returns an identical connection created concurrently', async () => {
     const concurrent = anOrgSsoConnection();
     repository.findByOrgId
@@ -153,6 +226,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     const existing = anOrgSsoConnection({
       emailDomain: 'old.example',
       zitadelOrgId: 'old-zitadel-org',
+      zitadelIdpId: 'old-zitadel-idp',
       jitProvisioningEnabled: true,
     });
     repository.findByOrgId.mockResolvedValue(existing);
@@ -163,6 +237,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
       id: existing.id,
       emailDomain: 'stadt.example',
       zitadelOrgId: 'zitadel-org-1',
+      zitadelIdpId: null,
       enabled: false,
       jitProvisioningEnabled: true,
     });

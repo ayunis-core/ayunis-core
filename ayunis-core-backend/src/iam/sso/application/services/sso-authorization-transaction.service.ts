@@ -16,6 +16,7 @@ const LOGIN_TRANSACTION_TTL_MS = 10 * 60 * 1000;
 interface StartSsoAuthorizationTransaction {
   orgId: UUID;
   zitadelOrgId: string;
+  zitadelIdpId: string | null;
   purpose: SsoLoginPurpose;
   linkUserId: UUID | null;
 }
@@ -38,6 +39,7 @@ export class SsoAuthorizationTransactionService {
   ): Promise<StartedSsoAuthorizationTransaction> {
     const request = await this.broker.createAuthorizationRequest({
       zitadelOrgId: input.zitadelOrgId,
+      zitadelIdpId: input.zitadelIdpId,
     });
     const browserBinding = randomBytes(32).toString('base64url');
     await this.transactions.save(

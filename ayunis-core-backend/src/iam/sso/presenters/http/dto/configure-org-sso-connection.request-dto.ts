@@ -3,6 +3,7 @@ import {
   Equals,
   IsBoolean,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
@@ -21,6 +22,20 @@ export class ConfigureOrgSsoConnectionRequestDto {
   @MaxLength(255)
   @Matches(/^\S+$/u)
   zitadelOrgId: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    nullable: true,
+    maxLength: 255,
+    example: '388145187060187138',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  @Matches(/^\S+$/u)
+  zitadelIdpId?: string | null;
 
   @ApiProperty({
     description: 'Confirms the email domain was independently verified',

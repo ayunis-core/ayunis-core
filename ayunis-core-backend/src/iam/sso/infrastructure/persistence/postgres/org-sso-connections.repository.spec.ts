@@ -40,16 +40,18 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
     });
   });
 
-  it('updates configuration only while the connection is disabled', async () => {
+  it('clears the IdP hint when a disabled connection is remapped', async () => {
     const connection = anOrgSsoConnection({
       emailDomain: 'new.example',
       zitadelOrgId: 'new-zitadel-org',
+      zitadelIdpId: null,
       jitProvisioningEnabled: true,
     });
 
     const expected = anOrgSsoConnection({
       emailDomain: 'old.example',
       zitadelOrgId: 'old-zitadel-org',
+      zitadelIdpId: 'old-zitadel-idp',
     });
 
     await repository.updateConfigurationIfDisabled(connection, expected);
@@ -59,6 +61,7 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
         orgId: TEST_ORG_ID,
         emailDomain: 'old.example',
         zitadelOrgId: 'old-zitadel-org',
+        zitadelIdpId: 'old-zitadel-idp',
         enabled: false,
         jitProvisioningEnabled: false,
       },
@@ -66,6 +69,7 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
         emailDomain: 'new.example',
         domainVerifiedAt: connection.domainVerifiedAt,
         zitadelOrgId: 'new-zitadel-org',
+        zitadelIdpId: null,
         jitProvisioningEnabled: true,
         updatedAt: expect.any(Date),
       },

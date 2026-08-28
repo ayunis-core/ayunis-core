@@ -11,6 +11,7 @@ export class OrgSsoConnectionMapper {
       emailDomain: record.emailDomain,
       domainVerifiedAt: record.domainVerifiedAt,
       zitadelOrgId: record.zitadelOrgId,
+      zitadelIdpId: record.zitadelIdpId,
       enabled: record.enabled,
       jitProvisioningEnabled: record.jitProvisioningEnabled,
       createdAt: record.createdAt,
@@ -25,6 +26,7 @@ export class OrgSsoConnectionMapper {
     record.emailDomain = connection.emailDomain;
     record.domainVerifiedAt = connection.domainVerifiedAt;
     record.zitadelOrgId = connection.zitadelOrgId;
+    record.zitadelIdpId = connection.zitadelIdpId;
     record.enabled = connection.enabled;
     record.jitProvisioningEnabled = connection.jitProvisioningEnabled;
     record.createdAt = connection.createdAt;

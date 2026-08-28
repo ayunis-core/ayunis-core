@@ -69,7 +69,7 @@ export class ZitadelOidcBrokerClient
     const nonce = oidc.randomNonce();
     const authorizationUrl = oidc.buildAuthorizationUrl(configuration, {
       redirect_uri: config.callbackUrl,
-      scope: this.scopesFor(input.zitadelOrgId),
+      scope: this.scopesFor(input.zitadelOrgId, input.zitadelIdpId),
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
       state,
@@ -302,14 +302,21 @@ export class ZitadelOidcBrokerClient
     return { execute: [oidc.allowInsecureRequests] };
   }
 
-  private scopesFor(zitadelOrgId: string): string {
-    return [
+  private scopesFor(zitadelOrgId: string, zitadelIdpId: string | null): string {
+    const scopes = [
       'openid',
       'profile',
       'email',
       RESOURCE_OWNER_SCOPE,
       `urn:zitadel:iam:org:id:${zitadelOrgId}`,
-    ].join(' ');
+    ];
+    // Skips the broker's own login page and redirects straight to the
+    // organization's provider. Omitted when unset, which keeps the broker
+    // login page available as a diagnostic fallback.
+    if (zitadelIdpId) {
+      scopes.push(`urn:zitadel:iam:org:idp:id:${zitadelIdpId}`);
+    }
+    return scopes.join(' ');
   }
 
   private requiredString(value: unknown, field: string): string {

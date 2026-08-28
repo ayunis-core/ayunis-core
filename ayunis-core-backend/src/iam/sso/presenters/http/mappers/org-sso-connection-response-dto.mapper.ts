@@ -14,6 +14,7 @@ export class OrgSsoConnectionResponseDtoMapper {
       emailDomain: connection.emailDomain,
       domainVerifiedAt: connection.domainVerifiedAt,
       zitadelOrgId: connection.zitadelOrgId,
+      zitadelIdpId: connection.zitadelIdpId,
       enabled: connection.enabled,
       jitProvisioningEnabled: connection.jitProvisioningEnabled,
     };
