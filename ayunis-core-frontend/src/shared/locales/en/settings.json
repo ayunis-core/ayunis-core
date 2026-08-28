@@ -67,14 +67,6 @@
     "accountActions": "Account Actions",
     "deleteAccount": "Delete Account",
     "deleteAccountDescription": "Permanently delete your account and all associated data.",
-    "sso": {
-      "title": "Organization sign-in",
-      "description": "Connect your existing Ayunis account to your organization's identity provider. Your Ayunis password remains available.",
-      "linkButton": "Connect organization sign-in",
-      "linking": "Opening organization sign-in...",
-      "linkSuccess": "Organization sign-in connected successfully.",
-      "linkError": "Organization sign-in could not be started. Please try again."
-    },
     "error": {
       "invalidName": "Invalid name provided",
       "updateFailed": "Failed to update. Please try again.",
