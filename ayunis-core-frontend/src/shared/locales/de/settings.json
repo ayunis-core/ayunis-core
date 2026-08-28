@@ -67,14 +67,6 @@
     "accountActions": "Kontoaktionen",
     "deleteAccount": "Konto löschen",
     "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft.",
-    "sso": {
-      "title": "Anmeldung über Ihre Organisation",
-      "description": "Verknüpfen Sie Ihr bestehendes Ayunis-Konto mit dem Identitätsanbieter Ihrer Organisation. Ihr Ayunis-Passwort bleibt weiterhin verfügbar.",
-      "linkButton": "Organisationsanmeldung verknüpfen",
-      "linking": "Organisationsanmeldung wird geöffnet...",
-      "linkSuccess": "Die Organisationsanmeldung wurde erfolgreich verknüpft.",
-      "linkError": "Die Organisationsanmeldung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
-    },
     "error": {
       "invalidName": "Ungültiger Name angegeben",
       "updateFailed": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",

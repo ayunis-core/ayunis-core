@@ -12,16 +12,11 @@ import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import PasswordSettingsPage from '@/pages/settings/account-settings/ui/PasswordSettingsPage';
 import { TwoFactorCard } from '@/pages/settings/account-settings/ui/TwoFactorCard';
 import { AcademyCertificateCard } from '@/pages/settings/account-settings/ui/AcademyCertificateCard';
-import { SsoAccountCard } from '@/pages/settings/account-settings/ui/SsoAccountCard';
 
 export default function AccountSettingsPage({
   user,
-  ssoAvailable,
-  ssoLinked,
 }: Readonly<{
   user: { name: string; email: string };
-  ssoAvailable: boolean;
-  ssoLinked: boolean;
 }>) {
   const { t } = useTranslation('settings');
 
@@ -30,9 +25,8 @@ export default function AccountSettingsPage({
       title={t('account.title')}
       action={<HelpLink path="settings/account/account/" />}
     >
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="account-settings-page">
         <ProfileInformationCard user={user} />
-        {ssoAvailable && <SsoAccountCard linked={ssoLinked} />}
         <PasswordSettingsPage />
         <TwoFactorCard />
         <AcademyCertificateCard />
