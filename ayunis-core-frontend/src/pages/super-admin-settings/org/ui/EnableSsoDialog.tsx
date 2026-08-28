@@ -40,7 +40,9 @@ export default function EnableSsoDialog({
       data: {
         enabled: true,
         confirmed: true,
-        reviewedEmailDomain: connection.emailDomain,
+        reviewedEmailDomains: connection.emailDomains.map(
+          ({ emailDomain }) => emailDomain,
+        ),
         reviewedZitadelOrgId: connection.zitadelOrgId ?? undefined,
       },
     });
@@ -62,8 +64,14 @@ export default function EnableSsoDialog({
         </AlertDialogHeader>
         <dl className="grid gap-3 rounded-lg border p-4 text-sm">
           <div>
-            <dt className="text-muted-foreground">{t('sso.emailDomain')}</dt>
-            <dd className="font-medium">{connection.emailDomain}</dd>
+            <dt className="text-muted-foreground">{t('sso.emailDomains')}</dt>
+            <dd>
+              <ul className="list-inside list-disc font-medium">
+                {connection.emailDomains.map(({ emailDomain }) => (
+                  <li key={emailDomain}>{emailDomain}</li>
+                ))}
+              </ul>
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t('sso.zitadelOrgId')}</dt>

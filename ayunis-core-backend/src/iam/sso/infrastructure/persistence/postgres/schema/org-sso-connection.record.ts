@@ -1,8 +1,17 @@
 import type { UUID } from 'crypto';
-import { Check, Column, Entity, JoinColumn, OneToOne, Unique } from 'typeorm';
+import {
+  Check,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  Unique,
+} from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { EMAIL_DOMAIN_PATTERN } from 'src/iam/sso/domain/sso-connection-values';
+import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 
 @Entity({ name: 'org_sso_connections' })
 @Unique(['emailDomain'])
@@ -26,6 +35,13 @@ export class OrgSsoConnectionRecord extends BaseRecord {
 
   @Column({ type: 'timestamptz', nullable: false })
   domainVerifiedAt: Date;
+
+  @OneToMany(
+    () => OrgSsoEmailDomainRecord,
+    (emailDomain) => emailDomain.connection,
+    { cascade: ['insert'] },
+  )
+  emailDomains: OrgSsoEmailDomainRecord[];
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   zitadelOrgId: string | null;

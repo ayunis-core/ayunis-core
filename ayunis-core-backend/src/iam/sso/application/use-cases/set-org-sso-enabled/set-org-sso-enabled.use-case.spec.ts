@@ -2,6 +2,7 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
+  anOrgSsoConnectionDomainState,
   createMockOrgSsoConnectionsRepository,
 } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
 import {
@@ -51,6 +52,23 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
+  it.each([false, true])(
+    'rejects enablement without canonical email domains (currently enabled: %s)',
+    async (enabled) => {
+      repository.findByOrgIdWithDomainState.mockResolvedValue(
+        anOrgSsoConnectionDomainState(anOrgSsoConnection({ enabled }), false),
+      );
+
+      await expect(
+        useCase.execute(new SetOrgSsoEnabledCommand(TEST_ORG_ID, true)),
+      ).rejects.toMatchObject({
+        constructor: InvalidSsoConfigurationError,
+        metadata: { field: 'emailDomains' },
+      });
+      expect(repository.setEnabled).not.toHaveBeenCalled();
+    },
+  );
+
   it('does not write when the requested state is already set', async () => {
     const existing = anOrgSsoConnection({ enabled: true });
     repository.findByOrgId.mockResolvedValue(existing);
@@ -67,7 +85,9 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
 
     await useCase.execute(
       new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-        emailDomain: existing.emailDomain,
+        emailDomains: existing.emailDomains.map(
+          ({ emailDomain }) => emailDomain,
+        ),
         zitadelOrgId: existing.zitadelOrgId!,
       }),
     );
@@ -81,12 +101,25 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
     await expect(
       useCase.execute(
         new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-          emailDomain: 'old.stadt.example',
+          emailDomains: ['old.stadt.example'],
           zitadelOrgId: 'old-zitadel-org',
         }),
       ),
     ).rejects.toBeInstanceOf(SsoConnectionChangedError);
     expect(repository.setEnabled).not.toHaveBeenCalled();
+  });
+
+  it('reports an invalid reviewed domain as configuration input', async () => {
+    repository.findByOrgId.mockResolvedValue(anOrgSsoConnection());
+
+    await expect(
+      useCase.execute(
+        new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
+          emailDomains: ['not-a-domain'],
+          zitadelOrgId: 'zitadel-org-1',
+        }),
+      ),
+    ).rejects.toBeInstanceOf(InvalidSsoConfigurationError);
   });
 
   it('reports a concurrently removed connection as not found', async () => {

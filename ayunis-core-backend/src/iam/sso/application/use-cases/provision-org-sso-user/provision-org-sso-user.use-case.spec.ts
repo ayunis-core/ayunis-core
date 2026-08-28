@@ -203,6 +203,29 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     expect(createFederatedUser.execute).not.toHaveBeenCalled();
   });
 
+  it('admits an exact email from any configured domain', async () => {
+    const verifiedAt = new Date('2026-08-27T12:00:00.000Z');
+    connections.findByOrgId.mockResolvedValue(
+      anOrgSsoConnection({
+        orgId: ORG_ID,
+        enabled: true,
+        jitProvisioningEnabled: true,
+        emailDomains: [
+          { emailDomain: 'stadt.example', verifiedAt },
+          { emailDomain: 'vhs.bremerhaven.de', verifiedAt },
+        ],
+      }),
+    );
+    const alternateLogin = {
+      ...login(),
+      email: 'staff@vhs.bremerhaven.de',
+    };
+
+    await expect(
+      useCase().execute(new ProvisionOrgSsoUserCommand(alternateLogin)),
+    ).resolves.toMatchObject({ id: USER_ID });
+  });
+
   it('requires explicit linking for an existing local account', async () => {
     findUserByEmail.execute.mockResolvedValue(user());
 

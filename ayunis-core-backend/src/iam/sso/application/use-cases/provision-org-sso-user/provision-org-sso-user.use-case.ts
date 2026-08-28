@@ -100,11 +100,19 @@ export class ProvisionOrgSsoUserUseCase {
     if (!connection?.enabled) throw new SsoConnectionNotAvailableError();
     if (
       connection.zitadelOrgId !== login.zitadelOrgId ||
-      emailDomainFromAddress(login.email) !== connection.emailDomain
+      !this.connectionAllowsEmail(connection, login.email)
     ) {
       throw new SsoOrganizationMismatchError();
     }
     return connection;
+  }
+
+  private connectionAllowsEmail(
+    connection: OrgSsoConnection,
+    email: string,
+  ): boolean {
+    const emailDomain = emailDomainFromAddress(email);
+    return emailDomain !== null && connection.hasEmailDomain(emailDomain);
   }
 
   private existingResult(user: User | null): ProvisioningResult | null {

@@ -44,6 +44,10 @@ export async function markWelcomeVideoSeen(
   await generatedApi.onboardingControllerMarkWelcomeVideoSeen({ api });
 }
 
+export async function discoverSso(api: APIRequestContext, email: string) {
+  return generatedApi.ssoLoginControllerDiscover({ email }, { api });
+}
+
 export async function confirmEmail(
   api: APIRequestContext,
   token: string,

@@ -49,7 +49,7 @@ interface SsoAuditEvent {
   actorId: UUID;
   orgId: UUID;
   connection: OrgSsoConnection;
-  confirmation?: Record<string, boolean | string>;
+  confirmation?: Record<string, boolean | string | string[]>;
 }
 
 @ApiTags('Super Admin SSO Connections')
@@ -90,7 +90,7 @@ export class SuperAdminSsoConnectionsController {
     const connection = await this.configureConnectionUseCase.execute(
       new ConfigureOrgSsoConnectionCommand(
         orgId,
-        dto.emailDomain,
+        dto.emailDomains,
         dto.zitadelOrgId,
         dto.zitadelIdpId,
       ),
@@ -125,7 +125,7 @@ export class SuperAdminSsoConnectionsController {
       confirmation: reviewedMapping
         ? {
             confirmed: true,
-            emailDomain: reviewedMapping.emailDomain,
+            emailDomains: reviewedMapping.emailDomains,
             reviewedZitadelOrgId: reviewedMapping.zitadelOrgId,
           }
         : undefined,
@@ -187,7 +187,7 @@ export class SuperAdminSsoConnectionsController {
     if (!dto.enabled) return undefined;
     if (
       dto.confirmed !== true ||
-      !dto.reviewedEmailDomain ||
+      !dto.reviewedEmailDomains ||
       !dto.reviewedZitadelOrgId
     ) {
       throw new BadRequestException(
@@ -195,30 +195,21 @@ export class SuperAdminSsoConnectionsController {
       );
     }
     return {
-      emailDomain: dto.reviewedEmailDomain,
+      emailDomains: dto.reviewedEmailDomains,
       zitadelOrgId: dto.reviewedZitadelOrgId,
     };
   }
 
   private audit(event: SsoAuditEvent): void {
-    const { emailDomain: domain, ...connection } = this.responseMapper.toDto(
-      event.connection,
-    );
-    const { emailDomain: confirmedDomain, ...confirmation } =
-      event.confirmation ?? {};
+    const connection = this.responseMapper.toDto(event.connection);
 
     this.logger.info(
       {
         operation: event.operation,
         actorId: event.actorId,
         orgId: event.orgId,
-        connection: { ...connection, domain },
-        confirmation: event.confirmation
-          ? {
-              ...confirmation,
-              ...(confirmedDomain ? { domain: confirmedDomain } : {}),
-            }
-          : undefined,
+        connection,
+        confirmation: event.confirmation,
       },
       'Superadmin changed SSO connection',
     );

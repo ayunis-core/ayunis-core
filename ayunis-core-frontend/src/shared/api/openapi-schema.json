@@ -20248,6 +20248,20 @@
         },
         "required": ["required"]
       },
+      "SsoEmailDomainResponseDto": {
+        "type": "object",
+        "properties": {
+          "emailDomain": {
+            "type": "string",
+            "example": "stadt.example"
+          },
+          "verifiedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["emailDomain", "verifiedAt"]
+      },
       "OrgSsoConnectionResponseDto": {
         "type": "object",
         "properties": {
@@ -20259,13 +20273,11 @@
             "type": "string",
             "format": "uuid"
           },
-          "emailDomain": {
-            "type": "string",
-            "example": "stadt.example"
-          },
-          "domainVerifiedAt": {
-            "format": "date-time",
-            "type": "string"
+          "emailDomains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SsoEmailDomainResponseDto"
+            }
           },
           "zitadelOrgId": {
             "type": "string",
@@ -20288,8 +20300,7 @@
         "required": [
           "id",
           "orgId",
-          "emailDomain",
-          "domainVerifiedAt",
+          "emailDomains",
           "zitadelOrgId",
           "zitadelIdpId",
           "enabled",
@@ -20314,9 +20325,12 @@
       "ConfigureOrgSsoConnectionRequestDto": {
         "type": "object",
         "properties": {
-          "emailDomain": {
-            "type": "string",
-            "example": "stadt.example"
+          "emailDomains": {
+            "example": ["stadt.example", "vhs.example"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "zitadelOrgId": {
             "type": "string",
@@ -20331,10 +20345,10 @@
           },
           "domainVerified": {
             "type": "boolean",
-            "description": "Confirms the email domain was independently verified"
+            "description": "Confirms every email domain was independently verified"
           }
         },
-        "required": ["emailDomain", "zitadelOrgId", "domainVerified"]
+        "required": ["emailDomains", "zitadelOrgId", "domainVerified"]
       },
       "SetOrgSsoEnabledRequestDto": {
         "type": "object",
@@ -20346,9 +20360,12 @@
             "type": "boolean",
             "description": "Confirms the broker mapping was reviewed before enablement"
           },
-          "reviewedEmailDomain": {
-            "type": "string",
-            "example": "stadt.example"
+          "reviewedEmailDomains": {
+            "example": ["stadt.example", "vhs.example"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "reviewedZitadelOrgId": {
             "type": "string",

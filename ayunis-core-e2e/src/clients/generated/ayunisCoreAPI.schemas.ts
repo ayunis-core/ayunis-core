@@ -5344,11 +5344,15 @@ export interface UpdateOrgMfaRequirementRequestDto {
   required: boolean;
 }
 
+export interface SsoEmailDomainResponseDto {
+  emailDomain: string;
+  verifiedAt: string;
+}
+
 export interface OrgSsoConnectionResponseDto {
   id: string;
   orgId: string;
-  emailDomain: string;
-  domainVerifiedAt: string;
+  emailDomains: SsoEmailDomainResponseDto[];
   /** @nullable */
   zitadelOrgId: string | null;
   /**
@@ -5371,7 +5375,7 @@ export interface OrgSsoConnectionResourceDto {
 }
 
 export interface ConfigureOrgSsoConnectionRequestDto {
-  emailDomain: string;
+  emailDomains: string[];
   /** @maxLength 255 */
   zitadelOrgId: string;
   /**
@@ -5379,7 +5383,7 @@ export interface ConfigureOrgSsoConnectionRequestDto {
    * @nullable
    */
   zitadelIdpId?: string | null;
-  /** Confirms the email domain was independently verified */
+  /** Confirms every email domain was independently verified */
   domainVerified: boolean;
 }
 
@@ -5387,7 +5391,7 @@ export interface SetOrgSsoEnabledRequestDto {
   enabled: boolean;
   /** Confirms the broker mapping was reviewed before enablement */
   confirmed?: boolean;
-  reviewedEmailDomain?: string;
+  reviewedEmailDomains?: string[];
   reviewedZitadelOrgId?: string;
 }
 

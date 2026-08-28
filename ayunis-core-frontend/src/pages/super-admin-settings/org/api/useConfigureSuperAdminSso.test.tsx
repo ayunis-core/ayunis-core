@@ -46,7 +46,7 @@ describe(useConfigureSuperAdminSso.name, () => {
 
     act(() =>
       result.current.configure({
-        emailDomain: 'example.com',
+        emailDomains: [{ value: 'example.com' }],
         zitadelOrgId: '385820595704561666',
         zitadelIdpId: '388145187060187138',
         domainVerified: false,
@@ -76,7 +76,7 @@ describe(useConfigureSuperAdminSso.name, () => {
 
     act(() =>
       result.current.configure({
-        emailDomain: 'example.com',
+        emailDomains: [{ value: 'example.com' }, { value: 'other.example' }],
         zitadelOrgId: '385820595704561666',
         zitadelIdpId: '388145187060187138',
         domainVerified: true,
@@ -86,7 +86,7 @@ describe(useConfigureSuperAdminSso.name, () => {
 
     await waitFor(() => expect(configureConnection).toHaveBeenCalledOnce());
     expect(configureConnection).toHaveBeenCalledWith('org-id', {
-      emailDomain: 'example.com',
+      emailDomains: ['example.com', 'other.example'],
       zitadelOrgId: '385820595704561666',
       zitadelIdpId: '388145187060187138',
       domainVerified: true,

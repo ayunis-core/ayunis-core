@@ -210,6 +210,29 @@ describe(CompleteOrgSsoLoginUseCase.name, () => {
     ).rejects.toMatchObject({ code: 'SSO_ORGANIZATION_MISMATCH' });
   });
 
+  it('accepts a verified broker email from any configured domain', async () => {
+    const verifiedAt = new Date('2026-08-27T12:00:00.000Z');
+    const connection = anEnabledSsoConnection({
+      emailDomains: [
+        { emailDomain: 'demo.com', verifiedAt },
+        { emailDomain: 'vhs.bremerhaven.de', verifiedAt },
+      ],
+    });
+    const useCase = useCaseWithIdentity(
+      { email: 'staff@vhs.bremerhaven.de' },
+      connection,
+    );
+
+    await expect(
+      useCase.execute(
+        new CompleteOrgSsoLoginCommand(
+          callbackParameters,
+          TEST_BROWSER_BINDING,
+        ),
+      ),
+    ).resolves.toMatchObject({ email: 'staff@vhs.bremerhaven.de' });
+  });
+
   it.each([
     ['disabled', anEnabledSsoConnection({ enabled: false })],
     [
@@ -279,12 +302,12 @@ function pendingTransaction(
 function connectionRepository(connection = anEnabledSsoConnection()) {
   return {
     findByOrgId: jest.fn().mockResolvedValue(connection),
+    findByOrgIdWithDomainState: jest.fn(),
     findByEmailDomain: jest.fn(),
-    findByZitadelOrgId: jest.fn(),
+    findOwnerOrgIdsByEmailDomains: jest.fn(),
     save: jest.fn(),
     updateConfigurationIfDisabled: jest.fn(),
     setEnabled: jest.fn(),
-    setJitProvisioningEnabled: jest.fn(),
     setJitProvisioningEnabledIfMappingMatches: jest.fn(),
     setZitadelIdpIdIfMappingMatches: jest.fn(),
   };

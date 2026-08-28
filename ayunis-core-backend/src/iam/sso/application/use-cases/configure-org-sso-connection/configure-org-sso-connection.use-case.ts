@@ -1,3 +1,4 @@
+import { Transactional } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -6,6 +7,7 @@ import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-
 import {
   OrgSsoConnectionsRepository,
   SsoConnectionUniqueConstraintError,
+  type OrgSsoConnectionDomainState,
 } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import {
   InvalidSsoConfigurationError,
@@ -15,20 +17,24 @@ import {
   SsoConnectionNotFoundError,
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
-import { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
+import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
+import {
+  OrgSsoConnection,
+  type SsoEmailDomain,
+} from 'src/iam/sso/domain/org-sso-connection.entity';
 import { InvalidSsoConnectionValueError } from 'src/iam/sso/domain/invalid-sso-connection-value.error';
 import {
-  normalizeEmailDomain,
+  normalizeEmailDomains,
   normalizeZitadelIdpId,
   normalizeZitadelOrgId,
 } from 'src/iam/sso/domain/sso-connection-values';
-import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
 
-type SsoRoutingState = Pick<
-  OrgSsoConnection,
-  'emailDomain' | 'zitadelOrgId' | 'zitadelIdpId'
->;
-type SsoRoutingConfiguration = SsoRoutingState & { zitadelOrgId: string };
+interface SsoRoutingConfiguration {
+  emailDomains: string[];
+  zitadelOrgId: string;
+  zitadelIdpId: string | null;
+}
+
 type SsoRoutingConfigurationInput = Omit<
   SsoRoutingConfiguration,
   'zitadelIdpId'
@@ -48,48 +54,68 @@ export class ConfigureOrgSsoConnectionUseCase {
     command: ConfigureOrgSsoConnectionCommand,
   ): Promise<OrgSsoConnection> {
     const input = this.normalizeConfiguration(command);
-    const { emailDomain, zitadelOrgId } = input;
     this.logger.info(
-      {
-        orgId: command.orgId,
-        domain: emailDomain,
-      },
+      { orgId: command.orgId, domainCount: input.emailDomains.length },
       'Configuring organization SSO connection',
     );
-
     await this.findOrgById.execute(new FindOrgByIdQuery(command.orgId));
-    const [existing, domainOwner, zitadelOrgOwner] = await Promise.all([
-      this.repository.findByOrgId(command.orgId),
-      this.repository.findByEmailDomain(emailDomain),
-      this.repository.findByZitadelOrgId(zitadelOrgId),
+    const [existingState, domainOwnerOrgIds] = await Promise.all([
+      this.repository.findByOrgIdWithDomainState(command.orgId),
+      this.repository.findOwnerOrgIdsByEmailDomains(input.emailDomains),
     ]);
-    this.assertMappingAvailable(command, domainOwner, zitadelOrgOwner);
+    const existing = existingState?.connection ?? null;
+    this.assertDomainsAvailable(command.orgId, domainOwnerOrgIds);
     const configuration = this.resolveConfiguration(existing, input);
-
-    if (existing && this.matches(existing, configuration)) {
-      return existing;
-    }
+    const current = this.currentConfiguration(existingState, configuration);
+    if (current) return current;
     if (existing?.enabled) {
       throw new SsoConnectionMustBeDisabledError(command.orgId);
     }
-
-    if (!existing) {
-      return this.createConnection(
-        this.updatedConnection(null, command, configuration),
-      );
-    }
-
-    const updated = await this.updateConnection(
-      this.updatedConnection(existing, command, configuration),
+    const connection = this.updatedConnection(
       existing,
+      command.orgId,
+      configuration,
     );
-    if (!updated) {
-      return this.handleConcurrentConfigurationChange(
-        command.orgId,
+    return this.persistConfiguration(
+      connection,
+      existing,
+      configuration,
+      this.requiresDomainRepair(existingState),
+    );
+  }
+
+  private currentConfiguration(
+    state: OrgSsoConnectionDomainState | null,
+    configuration: SsoRoutingConfiguration,
+  ): OrgSsoConnection | null {
+    if (!state?.hasCanonicalEmailDomains) return null;
+    return this.matches(state.connection, configuration)
+      ? state.connection
+      : null;
+  }
+
+  private requiresDomainRepair(
+    state: OrgSsoConnectionDomainState | null,
+  ): boolean {
+    return state !== null && !state.hasCanonicalEmailDomains;
+  }
+
+  private async persistConfiguration(
+    connection: OrgSsoConnection,
+    existing: OrgSsoConnection | null,
+    configuration: SsoRoutingConfiguration,
+    requiresDomainRepair: boolean,
+  ): Promise<OrgSsoConnection> {
+    if (!existing) return this.createConnection(connection);
+    const updated = await this.updateConnection(connection, existing);
+    return (
+      updated ??
+      this.handleConcurrentChange(
+        connection.orgId,
         configuration,
-      );
-    }
-    return updated;
+        requiresDomainRepair,
+      )
+    );
   }
 
   private async createConnection(
@@ -99,12 +125,31 @@ export class ConfigureOrgSsoConnectionUseCase {
       return await this.repository.save(connection);
     } catch (error: unknown) {
       if (!(error instanceof SsoConnectionUniqueConstraintError)) throw error;
-      const current = await this.repository.findByOrgId(connection.orgId);
-      if (current && this.matches(current, connection)) {
-        return current;
+      const currentState = await this.repository.findByOrgIdWithDomainState(
+        connection.orgId,
+      );
+      if (currentState && this.matches(currentState.connection, connection)) {
+        return this.resolveConcurrentCreate(currentState, connection);
       }
-      throw new SsoConnectionConflictError(current ? 'orgId' : error.field);
+      throw new SsoConnectionConflictError(
+        currentState ? 'orgId' : error.field,
+      );
     }
+  }
+
+  private async resolveConcurrentCreate(
+    observed: OrgSsoConnectionDomainState,
+    expected: OrgSsoConnection,
+  ): Promise<OrgSsoConnection> {
+    const current = observed.connection;
+    if (observed.hasCanonicalEmailDomains) return current;
+    if (current.enabled) {
+      throw new SsoConnectionMustBeDisabledError(current.orgId);
+    }
+    const repaired = await this.updateConnection(current, current);
+    return (
+      repaired ?? this.handleConcurrentChange(current.orgId, expected, true)
+    );
   }
 
   private async updateConnection(
@@ -112,10 +157,7 @@ export class ConfigureOrgSsoConnectionUseCase {
     expected: OrgSsoConnection,
   ): Promise<OrgSsoConnection | null> {
     try {
-      return await this.repository.updateConfigurationIfDisabled(
-        connection,
-        expected,
-      );
+      return await this.persistUpdate(connection, expected);
     } catch (error: unknown) {
       if (error instanceof SsoConnectionUniqueConstraintError) {
         throw new SsoConnectionConflictError(error.field);
@@ -124,18 +166,29 @@ export class ConfigureOrgSsoConnectionUseCase {
     }
   }
 
-  private async handleConcurrentConfigurationChange(
+  @Transactional()
+  private persistUpdate(
+    connection: OrgSsoConnection,
+    expected: OrgSsoConnection,
+  ): Promise<OrgSsoConnection | null> {
+    return this.repository.updateConfigurationIfDisabled(connection, expected);
+  }
+
+  private async handleConcurrentChange(
     orgId: ConfigureOrgSsoConnectionCommand['orgId'],
-    configuration: SsoRoutingConfiguration,
+    configuration: SsoRoutingConfiguration | OrgSsoConnection,
+    requiresDomainRepair: boolean,
   ): Promise<OrgSsoConnection> {
-    const current = await this.repository.findByOrgId(orgId);
-    if (!current) {
-      throw new SsoConnectionNotFoundError(orgId);
+    const currentState =
+      await this.repository.findByOrgIdWithDomainState(orgId);
+    if (!currentState) throw new SsoConnectionNotFoundError(orgId);
+    if (
+      this.matches(currentState.connection, configuration) &&
+      (!requiresDomainRepair || currentState.hasCanonicalEmailDomains)
+    ) {
+      return currentState.connection;
     }
-    if (this.matches(current, configuration)) {
-      return current;
-    }
-    if (current.enabled) {
+    if (currentState.connection.enabled) {
       throw new SsoConnectionMustBeDisabledError(orgId);
     }
     throw new SsoConnectionChangedError(orgId);
@@ -146,7 +199,7 @@ export class ConfigureOrgSsoConnectionUseCase {
   ): SsoRoutingConfigurationInput {
     try {
       return {
-        emailDomain: normalizeEmailDomain(command.emailDomain),
+        emailDomains: normalizeEmailDomains(command.emailDomains),
         zitadelOrgId: normalizeZitadelOrgId(command.zitadelOrgId),
         zitadelIdpId:
           command.zitadelIdpId === null || command.zitadelIdpId === undefined
@@ -165,38 +218,38 @@ export class ConfigureOrgSsoConnectionUseCase {
     existing: OrgSsoConnection | null,
     input: SsoRoutingConfigurationInput,
   ): SsoRoutingConfiguration {
-    const mappingUnchanged =
-      existing !== null &&
-      existing.emailDomain === input.emailDomain &&
-      existing.zitadelOrgId === input.zitadelOrgId;
     if (input.zitadelIdpId !== undefined) {
       return { ...input, zitadelIdpId: input.zitadelIdpId };
     }
+    const mappingUnchanged =
+      existing !== null &&
+      existing.matchesEmailDomains(input.emailDomains) &&
+      existing.zitadelOrgId === input.zitadelOrgId;
     return {
       ...input,
       zitadelIdpId: mappingUnchanged ? existing.zitadelIdpId : null,
     };
   }
 
-  private assertMappingAvailable(
-    command: ConfigureOrgSsoConnectionCommand,
-    domainOwner: OrgSsoConnection | null,
-    zitadelOrgOwner: OrgSsoConnection | null,
+  private assertDomainsAvailable(
+    orgId: ConfigureOrgSsoConnectionCommand['orgId'],
+    domainOwnerOrgIds: ConfigureOrgSsoConnectionCommand['orgId'][],
   ): void {
-    if (domainOwner && domainOwner.orgId !== command.orgId) {
-      throw new SsoConnectionConflictError('emailDomain');
-    }
-    if (zitadelOrgOwner && zitadelOrgOwner.orgId !== command.orgId) {
-      throw new SsoConnectionConflictError('zitadelOrgId');
+    if (domainOwnerOrgIds.some((ownerOrgId) => ownerOrgId !== orgId)) {
+      throw new SsoConnectionConflictError('emailDomains');
     }
   }
 
   private matches(
     existing: OrgSsoConnection,
-    configuration: SsoRoutingState,
+    configuration: SsoRoutingConfiguration | OrgSsoConnection,
   ): boolean {
     return (
-      existing.emailDomain === configuration.emailDomain &&
+      existing.matchesEmailDomains(
+        configuration instanceof OrgSsoConnection
+          ? configuration.emailDomains.map(({ emailDomain }) => emailDomain)
+          : configuration.emailDomains,
+      ) &&
       existing.zitadelOrgId === configuration.zitadelOrgId &&
       existing.zitadelIdpId === configuration.zitadelIdpId
     );
@@ -204,24 +257,35 @@ export class ConfigureOrgSsoConnectionUseCase {
 
   private updatedConnection(
     existing: OrgSsoConnection | null,
-    command: ConfigureOrgSsoConnectionCommand,
+    orgId: ConfigureOrgSsoConnectionCommand['orgId'],
     configuration: SsoRoutingConfiguration,
   ): OrgSsoConnection {
-    const { emailDomain, zitadelOrgId, zitadelIdpId } = configuration;
-    const domainVerifiedAt =
-      existing?.emailDomain === emailDomain
-        ? existing.domainVerifiedAt
-        : new Date();
     return new OrgSsoConnection({
       id: existing?.id,
-      orgId: command.orgId,
-      emailDomain,
-      domainVerifiedAt,
-      zitadelOrgId,
-      zitadelIdpId,
+      orgId,
+      emailDomains: this.verifiedDomains(existing, configuration.emailDomains),
+      zitadelOrgId: configuration.zitadelOrgId,
+      zitadelIdpId: configuration.zitadelIdpId,
       enabled: existing?.enabled ?? false,
       jitProvisioningEnabled: existing?.jitProvisioningEnabled ?? false,
       createdAt: existing?.createdAt,
     });
+  }
+
+  private verifiedDomains(
+    existing: OrgSsoConnection | null,
+    emailDomains: string[],
+  ): SsoEmailDomain[] {
+    const existingVerification = new Map(
+      existing?.emailDomains.map(({ emailDomain, verifiedAt }) => [
+        emailDomain,
+        verifiedAt,
+      ]),
+    );
+    const verifiedAt = new Date();
+    return emailDomains.map((emailDomain) => ({
+      emailDomain,
+      verifiedAt: existingVerification.get(emailDomain) ?? verifiedAt,
+    }));
   }
 }

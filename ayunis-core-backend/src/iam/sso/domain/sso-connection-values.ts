@@ -2,6 +2,7 @@ import { InvalidSsoConnectionValueError } from 'src/iam/sso/domain/invalid-sso-c
 
 export const EMAIL_DOMAIN_PATTERN =
   '^([a-z0-9]|[a-z0-9][a-z0-9-]{0,61}[a-z0-9])([.]([a-z0-9]|[a-z0-9][a-z0-9-]{0,61}[a-z0-9]))+$';
+export const MAX_SSO_EMAIL_DOMAINS = 50;
 
 const emailDomainRegex = new RegExp(EMAIL_DOMAIN_PATTERN);
 const invalidEmailLocalPartPattern = /[\p{White_Space}\p{Cc}]/u;
@@ -11,6 +12,27 @@ export function normalizeEmailDomain(value: string): string {
   const normalized = value.trim().toLowerCase();
   if (normalized.length > 253 || !emailDomainRegex.test(normalized)) {
     throw new InvalidSsoConnectionValueError('emailDomain');
+  }
+  return normalized;
+}
+
+export function normalizeEmailDomains(values: string[]): string[] {
+  if (values.length === 0 || values.length > MAX_SSO_EMAIL_DOMAINS) {
+    throw new InvalidSsoConnectionValueError('emailDomains');
+  }
+  let normalized: string[];
+  try {
+    normalized = values
+      .map(normalizeEmailDomain)
+      .sort((left, right) => left.localeCompare(right, 'en'));
+  } catch (error: unknown) {
+    if (error instanceof InvalidSsoConnectionValueError) {
+      throw new InvalidSsoConnectionValueError('emailDomains');
+    }
+    throw error;
+  }
+  if (new Set(normalized).size !== normalized.length) {
+    throw new InvalidSsoConnectionValueError('emailDomains');
   }
   return normalized;
 }

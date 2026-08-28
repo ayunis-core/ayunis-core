@@ -1,15 +1,15 @@
 # Municipal SSO V1 onboarding and rollout
 
 Use this operator-run procedure for every municipal SSO connection. Ayunis Core
-owns the verified-domain-to-organization mapping, enablement, JIT policy, user
+owns the verified-domain-to-organization mappings, enablement, JIT policy, user
 roles, and seat admission. Zitadel owns customer IdP credentials and metadata.
 Never copy IdP secrets into Core, source control, Linear, or QA evidence.
 
 ## Collect and verify inputs
 
 - Confirm the requester is authorized to configure SSO for the municipality.
-- Verify control of the email domain independently of the supplied user account.
-- Record the Ayunis organization UUID, verified domain, Zitadel organization
+- Verify control of every email domain independently of the supplied user account.
+- Record the Ayunis organization UUID, verified domains, Zitadel organization
   ID, IdP type, named test users, and requested JIT policy in the onboarding
   record. IdP type is operational context and is not stored in Core.
 - Receive OIDC credentials or SAML metadata and certificates only through the
@@ -46,13 +46,18 @@ against `SSO_REAUTH_MAX_AGE_SECONDS`.
 
 ## Configure Core
 
+During the first deployment of multi-domain support, pause SSO mapping changes
+until every Core backend replica runs the new version. The migration backfills
+existing mappings, and the new version keeps the legacy primary-domain column
+in sync for rollback compatibility.
+
 1. Sign in to Core as `SUPER_ADMIN`.
 2. Open **Superadmin → Organizations → municipality → SSO**.
-3. Enter the verified domain and Zitadel organization ID.
-4. Confirm the domain and broker setup were reviewed, then save.
+3. Enter every verified domain and the Zitadel organization ID.
+4. Confirm the domains and broker setup were reviewed, then save.
 5. Set JIT independently. Invitations remain available whether JIT is on or
    off.
-6. Review the saved mapping, choose **Enable SSO**, and confirm the exact domain
+6. Review the saved mapping, choose **Enable SSO**, and confirm the exact domains
    and Zitadel organization ID shown in the dialog.
 
 New connections are disabled. Controlled Core login while disabled is not part
@@ -65,30 +70,30 @@ available throughout.
 Capture a pass or fail for every applicable row without recording credentials,
 tokens, cookie values, or IdP secrets.
 
-| Scenario | Expected result |
-| --- | --- |
-| Email-first login | The verified domain offers SSO and still offers Ayunis password login. |
-| Direct link | `/sso/{orgId}` starts the same organization-pinned broker flow. |
-| Disabled or unknown connection | SSO is unavailable and the user can return to local login. |
-| Invited `USER` | SSO signs in the existing user and preserves `USER`. |
-| Invited `MANAGER` | SSO signs in the existing user and preserves `MANAGER`. |
-| Invited `ADMIN` | SSO signs in the existing user and preserves `ADMIN`. |
-| Uninvited user, JIT off | Login is rejected; no Core user or federated identity is created. |
-| Uninvited user, JIT on | One verified, passwordless Core `USER` and one federated identity are created. |
-| No seat available | Login is rejected; no Core user or federated identity is created. |
-| Invitation while JIT is on | The invitation can still be created and accepted. |
-| Core MFA required | The user verifies or enrolls MFA unless the validated broker claim contains `mfa`. |
-| Local password user | Existing local login and MFA behavior are unchanged. |
-| Logout | The Core session is revoked; SSO sessions continue through broker logout. |
+| Scenario                       | Expected result                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------- |
+| Email-first login              | Every verified domain offers SSO and still offers Ayunis password login.           |
+| Direct link                    | `/sso/{orgId}` starts the same organization-pinned broker flow.                    |
+| Disabled or unknown connection | SSO is unavailable and the user can return to local login.                         |
+| Invited `USER`                 | SSO signs in the existing user and preserves `USER`.                               |
+| Invited `MANAGER`              | SSO signs in the existing user and preserves `MANAGER`.                            |
+| Invited `ADMIN`                | SSO signs in the existing user and preserves `ADMIN`.                              |
+| Uninvited user, JIT off        | Login is rejected; no Core user or federated identity is created.                  |
+| Uninvited user, JIT on         | One verified, passwordless Core `USER` and one federated identity are created.     |
+| No seat available              | Login is rejected; no Core user or federated identity is created.                  |
+| Invitation while JIT is on     | The invitation can still be created and accepted.                                  |
+| Core MFA required              | The user verifies or enrolls MFA unless the validated broker claim contains `mfa`. |
+| Local password user            | Existing local login and MFA behavior are unchanged.                               |
+| Logout                         | The Core session is revoked; SSO sessions continue through broker logout.          |
 
 For the first production municipality, record the operator, date, environment,
-Core organization ID, Zitadel organization ID, verified domain, IdP type, JIT
+Core organization ID, Zitadel organization ID, verified domains, IdP type, JIT
 setting, seat state, test users' roles, and outcome of each row. Attach only
 non-secret screenshots or logs to the reviewed change record.
 
 ## Rotation and mapping changes
 
-1. Disable the Core connection before changing the domain, Zitadel organization
+1. Disable the Core connection before changing the domains, Zitadel organization
    mapping, OIDC client secret, SAML metadata, or signing certificate.
 2. Rotate credentials through the approved secret channel and update Zitadel.
 3. Verify the external IdP at Zitadel, review the Core mapping, and repeat the

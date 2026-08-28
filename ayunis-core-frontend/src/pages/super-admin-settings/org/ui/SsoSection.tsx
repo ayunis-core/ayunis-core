@@ -26,9 +26,14 @@ import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { Switch } from '@ayunis/ui/components/switch';
-import { InfoIcon } from 'lucide-react';
+import { InfoIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import {
+  useFieldArray,
+  useForm,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import EnableSsoDialog from '@/pages/super-admin-settings/org/ui/EnableSsoDialog';
 
@@ -43,12 +48,90 @@ function connectionStatusKey(
   return connection.enabled ? 'sso.status.enabled' : 'sso.status.disabled';
 }
 
+interface EmailDomainsFieldsProps {
+  disabled: boolean;
+}
+
+function EmailDomainsFields({ disabled }: Readonly<EmailDomainsFieldsProps>) {
+  const { t } = useTranslation('super-admin-settings-org');
+  const { clearErrors, control, formState } =
+    useFormContext<SsoConnectionFormFields>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'emailDomains',
+  });
+  const arrayError = formState.errors.emailDomains?.message;
+
+  return (
+    <div className="space-y-3 md:col-span-3">
+      <FormLabel>{t('sso.emailDomains')}</FormLabel>
+      {fields.map((item, index) => (
+        <div className="flex items-start gap-2" key={item.id}>
+          <FormField
+            control={control}
+            name={`emailDomains.${index}.value`}
+            rules={{ required: t('sso.validation.emailDomains.required') }}
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormControl>
+                  <Input
+                    data-testid={`sso-email-domain-${index}`}
+                    placeholder="stadt.example"
+                    disabled={disabled}
+                    {...field}
+                    onChange={(event) => {
+                      clearErrors('emailDomains');
+                      field.onChange(event);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t('sso.domains.remove')}
+            data-testid={`sso-remove-email-domain-${index}`}
+            disabled={disabled || fields.length === 1}
+            onClick={() => {
+              clearErrors('emailDomains');
+              remove(index);
+            }}
+          >
+            <Trash2Icon />
+          </Button>
+        </div>
+      ))}
+      {typeof arrayError === 'string' && (
+        <p className="text-destructive text-sm font-medium">{arrayError}</p>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        data-testid="sso-add-email-domain"
+        disabled={disabled || fields.length >= 50}
+        onClick={() => {
+          clearErrors('emailDomains');
+          append({ value: '' });
+        }}
+      >
+        <PlusIcon />
+        {t('sso.domains.add')}
+      </Button>
+    </div>
+  );
+}
+
 export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
   const { t } = useTranslation('super-admin-settings-org');
   const { connection, isLoading, isError } = useSuperAdminSsoConnection(orgId);
   const form = useForm<SsoConnectionFormFields>({
     defaultValues: {
-      emailDomain: '',
+      emailDomains: [{ value: '' }],
       zitadelOrgId: '',
       zitadelIdpId: '',
       domainVerified: false,
@@ -66,20 +149,25 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
   // refetch does not reset the form under an operator who is still typing.
   // `savedEnabled` is included because enabling locks the fields: without it a
   // locked form could display unsaved edits instead of the activated mapping.
-  const savedEmailDomain = connection?.emailDomain ?? '';
+  const savedEmailDomainsKey =
+    connection?.emailDomains.map(({ emailDomain }) => emailDomain).join(',') ??
+    '';
   const savedZitadelOrgId = connection?.zitadelOrgId ?? '';
   const savedZitadelIdpId = connection?.zitadelIdpId ?? '';
   const savedEnabled = connection?.enabled ?? false;
 
   useEffect(() => {
     form.reset({
-      emailDomain: savedEmailDomain,
+      emailDomains:
+        savedEmailDomainsKey.length > 0
+          ? savedEmailDomainsKey.split(',').map((value) => ({ value }))
+          : [{ value: '' }],
       zitadelOrgId: savedZitadelOrgId,
       zitadelIdpId: savedZitadelIdpId,
       domainVerified: false,
     });
   }, [
-    savedEmailDomain,
+    savedEmailDomainsKey,
     savedZitadelOrgId,
     savedZitadelIdpId,
     savedEnabled,
@@ -96,7 +184,9 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
 
   function submit(values: SsoConnectionFormFields) {
     configure.configure({
-      emailDomain: values.emailDomain.trim(),
+      emailDomains: values.emailDomains.map(({ value }) => ({
+        value: value.trim(),
+      })),
       zitadelOrgId: values.zitadelOrgId.trim(),
       zitadelIdpId: values.zitadelIdpId.trim(),
       domainVerified: values.domainVerified,
@@ -131,25 +221,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
               onSubmit={(event) => void form.handleSubmit(submit)(event)}
             >
               <div className="grid gap-4 md:grid-cols-3">
-                <FormField
-                  control={form.control}
-                  name="emailDomain"
-                  rules={{ required: t('sso.validation.emailDomain.required') }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sso.emailDomain')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          data-testid="sso-email-domain"
-                          placeholder="stadt.example"
-                          disabled={mappingLocked || busy}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <EmailDomainsFields disabled={mappingLocked || busy} />
                 <FormField
                   control={form.control}
                   name="zitadelOrgId"

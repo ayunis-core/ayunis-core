@@ -3,7 +3,7 @@ export interface UpdateSubscriptionStartDateFormData {
 }
 
 export interface SsoConnectionFormFields {
-  emailDomain: string;
+  emailDomains: Array<{ value: string }>;
   zitadelOrgId: string;
   zitadelIdpId: string;
   domainVerified: boolean;

@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import type { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
 import { SsoConnectionUniqueConstraintError } from 'src/iam/sso/application/ports/org-sso-connections.repository';
@@ -8,6 +15,7 @@ import {
   TEST_ORG_ID,
   anOrg,
   anOrgSsoConnection,
+  anOrgSsoConnectionDomainState,
   createMockOrgSsoConnectionsRepository,
 } from 'src/iam/sso/application/testing/org-sso-connection.fixtures';
 import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
@@ -22,12 +30,12 @@ import {
 describe(ConfigureOrgSsoConnectionUseCase.name, () => {
   const command = new ConfigureOrgSsoConnectionCommand(
     TEST_ORG_ID,
-    ' Stadt.Example ',
+    [' Stadt.Example '],
     ' zitadel-org-1 ',
   );
   const commandWithIdp = new ConfigureOrgSsoConnectionCommand(
     TEST_ORG_ID,
-    ' Stadt.Example ',
+    [' Stadt.Example '],
     ' zitadel-org-1 ',
     ' zitadel-idp-1 ',
   );
@@ -56,7 +64,9 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     expect(repository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         orgId: TEST_ORG_ID,
-        emailDomain: 'stadt.example',
+        emailDomains: [
+          expect.objectContaining({ emailDomain: 'stadt.example' }),
+        ],
         zitadelOrgId: 'zitadel-org-1',
         enabled: false,
         jitProvisioningEnabled: false,
@@ -72,9 +82,34 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
 
     expect(repository.save).toHaveBeenCalledWith(
       expect.objectContaining({
-        emailDomain: 'stadt.example',
+        emailDomains: [
+          expect.objectContaining({ emailDomain: 'stadt.example' }),
+        ],
         zitadelOrgId: 'zitadel-org-1',
         zitadelIdpId: 'zitadel-idp-1',
+      }),
+    );
+  });
+
+  it('persists all verified domains in canonical order', async () => {
+    await useCase.execute(
+      new ConfigureOrgSsoConnectionCommand(
+        TEST_ORG_ID,
+        [' VHS.Bremerhaven.DE ', 'bit.bremerhaven.de'],
+        'zitadel-org-1',
+      ),
+    );
+
+    expect(repository.findOwnerOrgIdsByEmailDomains).toHaveBeenCalledWith([
+      'bit.bremerhaven.de',
+      'vhs.bremerhaven.de',
+    ]);
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailDomains: [
+          expect.objectContaining({ emailDomain: 'bit.bremerhaven.de' }),
+          expect.objectContaining({ emailDomain: 'vhs.bremerhaven.de' }),
+        ],
       }),
     );
   });
@@ -82,14 +117,15 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
   it('updates the direct IdP atomically on a disabled mapping', async () => {
     const existing = anOrgSsoConnection();
     repository.findByOrgId.mockResolvedValue(existing);
-    repository.findByEmailDomain.mockResolvedValue(existing);
-    repository.findByZitadelOrgId.mockResolvedValue(existing);
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
 
     await useCase.execute(commandWithIdp);
 
     expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
       expect.objectContaining({
-        emailDomain: 'stadt.example',
+        emailDomains: [
+          expect.objectContaining({ emailDomain: 'stadt.example' }),
+        ],
         zitadelOrgId: 'zitadel-org-1',
         zitadelIdpId: 'zitadel-idp-1',
       }),
@@ -111,7 +147,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
       useCase.execute(
         new ConfigureOrgSsoConnectionCommand(
           TEST_ORG_ID,
-          'not-a-domain',
+          ['not-a-domain'],
           'zitadel-org-1',
         ),
       ),
@@ -119,31 +155,107 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     expect(repository.save).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['email domain', 'findByEmailDomain'],
-    ['Zitadel organization', 'findByZitadelOrgId'],
-  ] as const)(
-    'rejects a %s already mapped to another organization',
-    async (_, finder) => {
-      repository[finder].mockResolvedValue(
-        anOrgSsoConnection({ orgId: OTHER_ORG_ID }),
-      );
+  it('rejects an email domain mapped to another organization', async () => {
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([OTHER_ORG_ID]);
 
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-        SsoConnectionConflictError,
-      );
-      expect(repository.save).not.toHaveBeenCalled();
-    },
-  );
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      SsoConnectionConflictError,
+    );
+    expect(repository.save).not.toHaveBeenCalled();
+  });
 
   it('returns the existing connection without writing when configuration is unchanged', async () => {
     const existing = anOrgSsoConnection({ jitProvisioningEnabled: true });
     repository.findByOrgId.mockResolvedValue(existing);
-    repository.findByEmailDomain.mockResolvedValue(existing);
-    repository.findByZitadelOrgId.mockResolvedValue(existing);
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
 
     await expect(useCase.execute(command)).resolves.toBe(existing);
     expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('uses the canonical mapping instead of returning stale legacy fallback', async () => {
+    const canonical = anOrgSsoConnection({ emailDomain: 'changed.example' });
+    repository.findByOrgIdWithDomainState.mockResolvedValue(
+      anOrgSsoConnectionDomainState(canonical),
+    );
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
+
+    await useCase.execute(command);
+
+    expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
+      expect.objectContaining({ emailDomain: 'stadt.example' }),
+      canonical,
+    );
+  });
+
+  it('repersists an unchanged disabled mapping when canonical domains are missing', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgIdWithDomainState.mockResolvedValue(
+      anOrgSsoConnectionDomainState(existing, false),
+    );
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
+
+    await useCase.execute(command);
+
+    expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: existing.id,
+        orgId: existing.orgId,
+        emailDomains: existing.emailDomains,
+      }),
+      existing,
+    );
+  });
+
+  it('does not report a successful repair after a concurrent state change', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgIdWithDomainState.mockResolvedValue(
+      anOrgSsoConnectionDomainState(existing, false),
+    );
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
+    repository.updateConfigurationIfDisabled.mockResolvedValue(null);
+
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      SsoConnectionChangedError,
+    );
+  });
+
+  it('does not accept a concurrent legacy-only mapping change', async () => {
+    const existing = anOrgSsoConnection({ emailDomain: 'old.example' });
+    const changed = anOrgSsoConnection({ emailDomain: 'stadt.example' });
+    repository.findByOrgIdWithDomainState
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(existing, false))
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(changed, false));
+    repository.updateConfigurationIfDisabled.mockResolvedValue(null);
+
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      SsoConnectionChangedError,
+    );
+  });
+
+  it('returns a mapping repaired concurrently', async () => {
+    const existing = anOrgSsoConnection();
+    repository.findByOrgIdWithDomainState
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(existing, false))
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(existing));
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
+    repository.updateConfigurationIfDisabled.mockResolvedValue(null);
+
+    await expect(useCase.execute(command)).resolves.toBe(existing);
+  });
+
+  it('does not return stale fallback data when canonical domains change during repair validation', async () => {
+    const existing = anOrgSsoConnection();
+    const changed = anOrgSsoConnection({ emailDomain: 'changed.example' });
+    repository.findByOrgIdWithDomainState
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(existing, false))
+      .mockResolvedValueOnce(anOrgSsoConnectionDomainState(changed));
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
+    repository.updateConfigurationIfDisabled.mockResolvedValue(null);
+
+    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      SsoConnectionChangedError,
+    );
   });
 
   it.each([false, true])(
@@ -154,8 +266,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
         enabled,
       });
       repository.findByOrgId.mockResolvedValue(existing);
-      repository.findByEmailDomain.mockResolvedValue(existing);
-      repository.findByZitadelOrgId.mockResolvedValue(existing);
+      repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
 
       await expect(useCase.execute(command)).resolves.toBe(existing);
       expect(repository.updateConfigurationIfDisabled).not.toHaveBeenCalled();
@@ -165,13 +276,12 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
   it('clears an existing IdP only when null is explicit', async () => {
     const existing = anOrgSsoConnection({ zitadelIdpId: 'zitadel-idp-1' });
     repository.findByOrgId.mockResolvedValue(existing);
-    repository.findByEmailDomain.mockResolvedValue(existing);
-    repository.findByZitadelOrgId.mockResolvedValue(existing);
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
 
     await useCase.execute(
       new ConfigureOrgSsoConnectionCommand(
         TEST_ORG_ID,
-        'stadt.example',
+        ['stadt.example'],
         'zitadel-org-1',
         null,
       ),
@@ -187,12 +297,29 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
     const concurrent = anOrgSsoConnection();
     repository.findByOrgId
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(concurrent);
+      .mockResolvedValue(concurrent);
     repository.save.mockRejectedValue(
       new SsoConnectionUniqueConstraintError('orgId'),
     );
 
     await expect(useCase.execute(command)).resolves.toBe(concurrent);
+  });
+
+  it('repairs an identical legacy connection created concurrently', async () => {
+    const concurrent = anOrgSsoConnection();
+    repository.findByOrgIdWithDomainState
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue(anOrgSsoConnectionDomainState(concurrent, false));
+    repository.save.mockRejectedValue(
+      new SsoConnectionUniqueConstraintError('orgId'),
+    );
+
+    await useCase.execute(command);
+
+    expect(repository.updateConfigurationIfDisabled).toHaveBeenCalledWith(
+      concurrent,
+      concurrent,
+    );
   });
 
   it('reports a concurrent insert with different configuration as an organization conflict', async () => {
@@ -202,7 +329,7 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
         anOrgSsoConnection({ emailDomain: 'anders.example' }),
       );
     repository.save.mockRejectedValue(
-      new SsoConnectionUniqueConstraintError('emailDomain'),
+      new SsoConnectionUniqueConstraintError('emailDomains'),
     );
 
     await expect(useCase.execute(command)).rejects.toMatchObject({
@@ -213,12 +340,12 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
 
   it('reports a concurrent insert owned by another organization as a field conflict', async () => {
     repository.save.mockRejectedValue(
-      new SsoConnectionUniqueConstraintError('emailDomain'),
+      new SsoConnectionUniqueConstraintError('emailDomains'),
     );
 
     await expect(useCase.execute(command)).rejects.toMatchObject({
       constructor: SsoConnectionConflictError,
-      metadata: { field: 'emailDomain' },
+      metadata: { field: 'emailDomains' },
     });
   });
 
@@ -254,11 +381,12 @@ describe(ConfigureOrgSsoConnectionUseCase.name, () => {
   it('does not change JIT when the mapping is unchanged', async () => {
     const existing = anOrgSsoConnection({ jitProvisioningEnabled: true });
     repository.findByOrgId.mockResolvedValue(existing);
-    repository.findByEmailDomain.mockResolvedValue(existing);
-    repository.findByZitadelOrgId.mockResolvedValue(existing);
+    repository.findOwnerOrgIdsByEmailDomains.mockResolvedValue([TEST_ORG_ID]);
 
     await expect(useCase.execute(command)).resolves.toBe(existing);
-    expect(repository.setJitProvisioningEnabled).not.toHaveBeenCalled();
+    expect(
+      repository.setJitProvisioningEnabledIfMappingMatches,
+    ).not.toHaveBeenCalled();
   });
 
   it('requires an enabled connection to be disabled before changing its mapping', async () => {
