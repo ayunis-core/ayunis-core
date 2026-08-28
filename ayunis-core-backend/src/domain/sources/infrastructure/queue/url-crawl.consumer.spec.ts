@@ -23,7 +23,9 @@ import {
   UrlRetrieverTimeoutError,
   UrlRetrieverUnsupportedContentTypeError,
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
-import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { UrlCrawlConsumer } from './url-crawl.consumer';
 
 const SOURCE_ID = '00000000-0000-0000-0000-000000000001' as UUID;
@@ -84,15 +86,6 @@ const splitTextUseCase = {
   })),
 };
 
-const sourceRepository = {
-  findById: jest.fn(),
-  save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
-  saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
-  updateStatusConditionally: jest.fn(),
-};
-
 const indexer = {
   index: jest.fn().mockResolvedValue(undefined),
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
@@ -101,15 +94,17 @@ const indexer = {
 
 describe('UrlCrawlConsumer', () => {
   let consumer: UrlCrawlConsumer;
+  let sourceRepository: jest.Mocked<SourceRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    sourceRepository = createMockSourceRepository();
     consumer = new UrlCrawlConsumer(
       createPinoLoggerMock(),
       contextService as never,
       crawlUrlUseCase as never,
       splitTextUseCase as never,
-      sourceRepository as never,
+      sourceRepository,
       indexer as never,
     );
   });
@@ -123,9 +118,10 @@ describe('UrlCrawlConsumer', () => {
 
     const [, content] = sourceRepository.saveTextSource.mock.calls[0];
     expect(content.text).toBe('root content\n\nabout content');
-    expect(
-      content.chunks.map((c: { meta: { url: string } }) => c.meta.url),
-    ).toEqual(['https://acme.test/', 'https://acme.test/about']);
+    expect(content.chunks.map((chunk) => chunk.meta.url)).toEqual([
+      'https://acme.test/',
+      'https://acme.test/about',
+    ]);
   });
 
   it("updates the source name to the root page's title", async () => {
@@ -146,12 +142,29 @@ describe('UrlCrawlConsumer', () => {
 
     await consumer.process(makeJob());
 
+    expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
+      SOURCE_ID,
+    );
+    expect(sourceRepository.save).not.toHaveBeenCalled();
     expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
       SOURCE_ID,
       SourceStatus.PROCESSING,
       SourceStatus.READY,
       { processingError: null },
     );
+  });
+
+  it('never resurrects a source deleted between load and heartbeat', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    // The guarded UPDATE affects zero rows — the source row is gone.
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.save).not.toHaveBeenCalled();
+    expect(crawlUrlUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
   });
 
   it('skips writing content when the source is deleted mid-crawl', async () => {
