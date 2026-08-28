@@ -57,9 +57,9 @@ Do the work. This is deliberately open-ended — the ticket may ask for a code c
 - Follow the ticket's instructions and referenced patterns
 - Use the right skills/tools for the job (e.g. `ayunis-core-backend`, `typeorm-migrations`, `code-review`, etc.)
 - Run validation (tests, build, lint, manual check) when applicable
-- User-facing feature or behaviour change? Load the `e2e` skill — done means
-  the journey spec in `ayunis-core-e2e/` exists/is updated and runs green
-  (`pnpm --filter ayunis-core-e2e test --grep "<feature>"`)
+- If the `e2e` skill is available, a user-facing feature or behaviour change
+  is done only when its journey spec exists/is updated and runs green. Follow
+  that skill's project-specific test command.
 - If execution surfaces a blocker, a wrong premise, or a decision that needs Daniel, stop and surface it — don't plow through
 
 ### 5. Summarize

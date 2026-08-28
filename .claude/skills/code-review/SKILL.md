@@ -45,7 +45,7 @@ In parallel, collect:
 - Any `CLAUDE.md` files in the repo root and in affected directories
 - A short summary of what the changes do (read the diff)
 
-If the diff changes repositories, finders, QueryBuilder code, or database calls in loops, load the `persistence-query-review` skill. Trace the affected call paths and include the resulting SQL statements and round-trip count in the review context.
+If the `persistence-query-review` skill is available and the diff changes repositories, finders, QueryBuilder code, or database calls in loops, load it. Trace the affected call paths and include the resulting SQL statements and round-trip count in the review context.
 
 ### 3. Launch review agents
 
@@ -84,7 +84,7 @@ Check for unnecessary complexity in the changes:
 - Over-engineering (abstractions for single use, premature generalization)
 - Code that could be simplified without losing clarity
 - Dead code or unused imports introduced by the change
-- For persistence changes, apply `persistence-query-review`: flag avoidable reads or reloads, check-then-act races, N+1 access, and writes that could use one atomic database operation
+- When `persistence-query-review` is available, apply it to persistence changes: flag avoidable reads or reloads, check-then-act races, N+1 access, and writes that could use one atomic database operation
 
 #### Agent 5 — Security & Data Integrity
 
@@ -99,11 +99,11 @@ Check the changes for security and data concerns:
 
 For each issue found across all agents, assign a confidence score (0–100):
 
-| Score | Meaning |
-|-------|---------|
-| 0–25  | Likely false positive or pre-existing issue |
-| 26–50 | Might be real but could be a nitpick |
-| 51–75 | Probably real, worth a look |
+| Score  | Meaning                                           |
+| ------ | ------------------------------------------------- |
+| 0–25   | Likely false positive or pre-existing issue       |
+| 26–50  | Might be real but could be a nitpick              |
+| 51–75  | Probably real, worth a look                       |
 | 76–100 | High confidence — real issue that should be fixed |
 
 **Discard anything scoring below 60.**
