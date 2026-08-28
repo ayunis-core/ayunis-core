@@ -19,6 +19,7 @@ import {
 import type { PinoLogger } from 'nestjs-pino';
 import {
   isRetryableProviderServerFailure,
+  isRetryableProviderTimeoutFailure,
   isRetryableSetupFailure,
   SETUP_RETRY_BACKOFF_MS,
 } from 'src/common/errors/provider-transport-error.classifier';
@@ -37,7 +38,20 @@ type ProviderStreamRequest = Parameters<ModelProvider['stream']>[0];
 interface RetryableStreamFailure {
   readonly error: Error;
   readonly maxAttempts: number;
-  readonly reason: 'transport' | 'server';
+  readonly reason: 'transport' | 'timeout' | 'server';
+}
+
+function retryableStreamFailure(error: Error): RetryableStreamFailure | null {
+  if (isRetryableSetupFailure(error)) {
+    return { error, maxAttempts: MAX_SETUP_ATTEMPTS, reason: 'transport' };
+  }
+  if (isRetryableProviderTimeoutFailure(error)) {
+    return { error, maxAttempts: MAX_SETUP_ATTEMPTS, reason: 'timeout' };
+  }
+  if (isRetryableProviderServerFailure(error)) {
+    return { error, maxAttempts: MAX_SERVER_ATTEMPTS, reason: 'server' };
+  }
+  return null;
 }
 
 function backoff(ms: number): Promise<void> {
@@ -203,20 +217,8 @@ export abstract class RuntimeStreamInferenceHandler extends StreamInferenceHandl
         !controller.signal.aborted &&
         error instanceof Error
       ) {
-        if (isRetryableSetupFailure(error)) {
-          return {
-            error,
-            maxAttempts: MAX_SETUP_ATTEMPTS,
-            reason: 'transport',
-          };
-        }
-        if (isRetryableProviderServerFailure(error)) {
-          return {
-            error,
-            maxAttempts: MAX_SERVER_ATTEMPTS,
-            reason: 'server',
-          };
-        }
+        const retryable = retryableStreamFailure(error);
+        if (retryable) return retryable;
       }
       throw error;
     }

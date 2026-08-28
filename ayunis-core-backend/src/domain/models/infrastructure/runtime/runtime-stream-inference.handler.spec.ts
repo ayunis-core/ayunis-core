@@ -172,6 +172,38 @@ describe('RuntimeStreamInferenceHandler', () => {
     expect(calls).toBe(2);
   });
 
+  it('retries once when a provider timeout happens before the first chunk', async () => {
+    let calls = 0;
+    const provider: ModelProvider = {
+      name: 'test:timeout-recovery',
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield await Promise.reject(
+            Object.assign(new Error('request timed out'), {
+              code: 'ETIMEDOUT',
+            }),
+          );
+        }
+        yield { textDelta: 'recovered' };
+      },
+    };
+
+    const deltas: (string | null)[] = [];
+    const completed = new Promise<void>((resolve, reject) => {
+      new TestHandler(provider).answer(makeInput()).subscribe({
+        next: (chunk) => deltas.push(chunk.textContentDelta),
+        complete: resolve,
+        error: reject,
+      });
+    });
+    await jest.advanceTimersByTimeAsync(SETUP_RETRY_BACKOFF_MS);
+
+    await completed;
+    expect(deltas).toEqual(['recovered']);
+    expect(calls).toBe(2);
+  });
+
   it('recovers on the third attempt after repeated provider server failures', async () => {
     let calls = 0;
     const provider: ModelProvider = {

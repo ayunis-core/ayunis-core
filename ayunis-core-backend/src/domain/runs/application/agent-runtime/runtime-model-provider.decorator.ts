@@ -366,6 +366,13 @@ function isTransientSetupError(error: unknown): boolean {
   );
 }
 
+function isProviderTimeoutError(error: unknown): boolean {
+  return (
+    error instanceof AgentRuntimeError &&
+    error.code.startsWith('PROVIDER_UNAVAILABLE_TIMEOUT_')
+  );
+}
+
 function isProviderServerError(error: unknown): boolean {
   return (
     error instanceof AgentRuntimeError &&
@@ -374,7 +381,10 @@ function isProviderServerError(error: unknown): boolean {
 }
 
 type RetryReason =
-  'stall' | 'transient transport failure' | 'transient provider server failure';
+  | 'stall'
+  | 'transient transport failure'
+  | 'transient provider timeout'
+  | 'transient provider server failure';
 
 interface RetryDecision {
   readonly reason: RetryReason;
@@ -417,6 +427,7 @@ function retryReason(
   if (streamedContent || signal?.aborted) return null;
   if (isStalledStreamError(error)) return 'stall';
   if (isTransientSetupError(error)) return 'transient transport failure';
+  if (isProviderTimeoutError(error)) return 'transient provider timeout';
   if (isProviderServerError(error)) return 'transient provider server failure';
   return null;
 }
