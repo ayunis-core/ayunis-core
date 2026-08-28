@@ -20,7 +20,7 @@ import {
   type CreateOidcAuthorizationRequest,
   type OidcAuthorizationRequest,
   type ValidateOidcCallback,
-  type ValidatedOidcIdentity,
+  type ValidatedOidcCallback,
 } from 'src/iam/sso/application/ports/oidc-broker.client';
 import {
   OidcBrokerLogoutClient,
@@ -86,7 +86,7 @@ export class ZitadelOidcBrokerClient
 
   async validateCallback(
     input: ValidateOidcCallback,
-  ): Promise<ValidatedOidcIdentity> {
+  ): Promise<ValidatedOidcCallback> {
     const config = this.requireConfig();
     const configuration = await this.getConfiguration(config);
     const callbackUrl = new URL(config.callbackUrl);
@@ -112,10 +112,13 @@ export class ZitadelOidcBrokerClient
     }
   }
 
-  createEndSessionUrl(): string {
+  createEndSessionUrl(idTokenHint?: string): string {
     const config = this.requireConfig();
     const url = new URL('/oidc/v1/end_session', config.issuer);
     url.searchParams.set('client_id', config.clientId);
+    if (idTokenHint) {
+      url.searchParams.set('id_token_hint', idTokenHint);
+    }
     url.searchParams.set(
       'post_logout_redirect_uri',
       config.postLogoutRedirectUrl,
@@ -156,7 +159,7 @@ export class ZitadelOidcBrokerClient
     issuer: string,
     callbackUrl: URL,
     input: ValidateOidcCallback,
-  ): Promise<ValidatedOidcIdentity> {
+  ): Promise<ValidatedOidcCallback> {
     const tokens = await oidc.authorizationCodeGrant(
       configuration,
       callbackUrl,
@@ -180,20 +183,23 @@ export class ZitadelOidcBrokerClient
       subject,
     );
     return {
-      issuer,
-      subject,
-      email: this.requiredString(userInfo.email, 'email'),
-      name: this.displayName(userInfo),
-      emailVerified: this.requiredBoolean(
-        userInfo.email_verified,
-        'email_verified',
-      ),
-      zitadelOrgId: this.requiredString(
-        userInfo[RESOURCE_OWNER_ID_CLAIM],
-        RESOURCE_OWNER_ID_CLAIM,
-      ),
-      sessionId: this.optionalString(claims?.sid, 'sid'),
-      authenticationMethods: this.optionalStringArray(claims?.amr),
+      identity: {
+        issuer,
+        subject,
+        email: this.requiredString(userInfo.email, 'email'),
+        name: this.displayName(userInfo),
+        emailVerified: this.requiredBoolean(
+          userInfo.email_verified,
+          'email_verified',
+        ),
+        zitadelOrgId: this.requiredString(
+          userInfo[RESOURCE_OWNER_ID_CLAIM],
+          RESOURCE_OWNER_ID_CLAIM,
+        ),
+        sessionId: this.optionalString(claims?.sid, 'sid'),
+        authenticationMethods: this.optionalStringArray(claims?.amr),
+      },
+      idToken: this.requiredString(tokens.id_token, 'id_token'),
     };
   }
 

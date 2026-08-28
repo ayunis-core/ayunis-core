@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import type { UUID } from 'crypto';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
-import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
+import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
 import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
 import { SsoLoginTransaction } from 'src/iam/sso/domain/sso-login-transaction.entity';
@@ -31,7 +31,7 @@ export class SsoAuthorizationTransactionService {
   constructor(
     private readonly transactions: SsoLoginTransactionsRepository,
     private readonly broker: OidcBrokerClient,
-    private readonly encryption: SsoLoginTransactionEncryptionPort,
+    private readonly encryption: SsoEncryptionPort,
   ) {}
 
   async start(

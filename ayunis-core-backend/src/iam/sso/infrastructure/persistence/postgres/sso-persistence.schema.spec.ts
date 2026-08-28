@@ -4,12 +4,14 @@ import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/p
 import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
 import { SsoLoginPurpose } from 'src/iam/sso/domain/sso-login-purpose.enum';
+import { SsoBrokerSessionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-broker-session.record';
 
 type SsoRecord =
   | typeof OrgSsoConnectionRecord
   | typeof OrgSsoEmailDomainRecord
   | typeof FederatedIdentityRecord
-  | typeof SsoLoginTransactionRecord;
+  | typeof SsoLoginTransactionRecord
+  | typeof SsoBrokerSessionRecord;
 
 function uniqueColumnsFor(target: SsoRecord): string[][] {
   return getMetadataArgsStorage()
@@ -135,5 +137,21 @@ describe('SSO persistence schema', () => {
     expect(checksFor(SsoLoginTransactionRecord)).toContain(
       `(purpose = 'login' AND link_user_id IS NULL) OR (purpose = 'link' AND link_user_id IS NOT NULL)`,
     );
+  });
+
+  it('stores encrypted logout hints under the Zitadel session ID', () => {
+    expect(
+      columnFor(SsoBrokerSessionRecord, 'zitadelSessionId')?.options,
+    ).toMatchObject({ primary: true, type: 'varchar', length: 255 });
+    expect(
+      columnFor(SsoBrokerSessionRecord, 'encryptedIdToken')?.options,
+    ).toMatchObject({ type: 'text' });
+    expect(
+      columnFor(SsoBrokerSessionRecord, 'expiresAt')?.options,
+    ).toMatchObject({ type: 'timestamptz' });
+    expect(relationFor(SsoBrokerSessionRecord, 'user')?.options).toMatchObject({
+      nullable: false,
+      onDelete: 'CASCADE',
+    });
   });
 });

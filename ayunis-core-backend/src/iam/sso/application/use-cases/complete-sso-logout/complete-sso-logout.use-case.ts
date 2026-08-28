@@ -7,6 +7,7 @@ import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objec
 import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broker-logout.client';
 import { UnexpectedSsoError } from 'src/iam/sso/application/sso.errors';
 import { CompleteSsoLogoutCommand } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.command';
+import { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-broker-session.service';
 
 export interface CompleteSsoLogoutResult {
   brokerLogoutUrl: string | null;
@@ -19,6 +20,7 @@ export class CompleteSsoLogoutUseCase {
     private readonly logger: PinoLogger,
     private readonly revokeSessionFamily: RevokeSessionFamilyUseCase,
     private readonly broker: OidcBrokerLogoutClient,
+    private readonly brokerSessions: SsoBrokerSessionService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
@@ -33,6 +35,22 @@ export class CompleteSsoLogoutUseCase {
     if (session?.authenticationMethod !== SessionAuthenticationMethod.SSO) {
       return { brokerLogoutUrl: null };
     }
-    return { brokerLogoutUrl: this.broker.createEndSessionUrl() };
+    const idTokenHint = await this.idTokenHintFor(session.zitadelSessionId);
+    return { brokerLogoutUrl: this.broker.createEndSessionUrl(idTokenHint) };
+  }
+
+  private async idTokenHintFor(
+    zitadelSessionId: string | null,
+  ): Promise<string | undefined> {
+    if (!zitadelSessionId) return undefined;
+    try {
+      return await this.brokerSessions.idTokenFor(zitadelSessionId);
+    } catch (error) {
+      this.logger.warn(
+        { failureType: error instanceof Error ? error.name : typeof error },
+        'Stored broker logout hint unavailable; using interactive fallback',
+      );
+      return undefined;
+    }
   }
 }

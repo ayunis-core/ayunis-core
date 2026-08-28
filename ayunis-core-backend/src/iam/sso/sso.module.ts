@@ -7,7 +7,7 @@ import { UsersModule } from 'src/iam/users/users.module';
 import { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
 import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
-import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
+import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
 import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
 import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
 import { ConfigureOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.use-case';
@@ -17,7 +17,7 @@ import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-o
 import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
 import { SetOrgSsoIdpUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-idp/set-org-sso-idp.use-case';
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
-import { SsoLoginTransactionEncryptionService } from 'src/iam/sso/infrastructure/encryption/sso-login-transaction-encryption.service';
+import { SsoEncryptionService } from 'src/iam/sso/infrastructure/encryption/sso-encryption.service';
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
 import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/org-sso-connection.mapper';
 import { PostgresOrgSsoConnectionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/org-sso-connections.repository';
@@ -44,6 +44,11 @@ import { SessionsModule } from 'src/iam/sessions/sessions.module';
 import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
 import { HandleSsoBackchannelLogoutUseCase } from 'src/iam/sso/application/use-cases/handle-sso-backchannel-logout/handle-sso-backchannel-logout.use-case';
 import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broker-logout.client';
+import { SsoBrokerSessionsRepository } from 'src/iam/sso/application/ports/sso-broker-sessions.repository';
+import { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-broker-session.service';
+import { PostgresSsoBrokerSessionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-broker-sessions.repository';
+import { SsoBrokerSessionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-broker-session.record';
+import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-broker-session-cleanup.task';
 
 @Module({
   imports: [
@@ -52,6 +57,7 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
       OrgSsoEmailDomainRecord,
       FederatedIdentityRecord,
       SsoLoginTransactionRecord,
+      SsoBrokerSessionRecord,
     ]),
     OrgsModule,
     InvitesModule,
@@ -84,8 +90,12 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
       useClass: PostgresSsoLoginTransactionsRepository,
     },
     {
-      provide: SsoLoginTransactionEncryptionPort,
-      useClass: SsoLoginTransactionEncryptionService,
+      provide: SsoEncryptionPort,
+      useClass: SsoEncryptionService,
+    },
+    {
+      provide: SsoBrokerSessionsRepository,
+      useClass: PostgresSsoBrokerSessionsRepository,
     },
     {
       provide: SsoProvisioningLock,
@@ -104,9 +114,11 @@ import { OidcBrokerLogoutClient } from 'src/iam/sso/application/ports/oidc-broke
     LinkFederatedIdentityUseCase,
     CompleteSsoAuthenticationUseCase,
     SsoAuthorizationTransactionService,
+    SsoBrokerSessionService,
     CompleteSsoLogoutUseCase,
     HandleSsoBackchannelLogoutUseCase,
     SsoLoginTransactionCleanupTask,
+    SsoBrokerSessionCleanupTask,
   ],
   exports: [
     ConfigureOrgSsoConnectionUseCase,

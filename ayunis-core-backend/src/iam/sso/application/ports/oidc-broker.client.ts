@@ -28,6 +28,11 @@ export interface ValidatedOidcIdentity {
   authenticationMethods: string[];
 }
 
+export interface ValidatedOidcCallback {
+  identity: ValidatedOidcIdentity;
+  idToken: string;
+}
+
 export abstract class OidcBrokerClient {
   abstract createAuthorizationRequest(
     input: CreateOidcAuthorizationRequest,
@@ -35,5 +40,5 @@ export abstract class OidcBrokerClient {
 
   abstract validateCallback(
     input: ValidateOidcCallback,
-  ): Promise<ValidatedOidcIdentity>;
+  ): Promise<ValidatedOidcCallback>;
 }

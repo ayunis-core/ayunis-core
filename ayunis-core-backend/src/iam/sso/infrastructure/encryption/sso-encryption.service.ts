@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
 import { SsoBrokerNotConfiguredError } from 'src/iam/sso/application/sso.errors';
-import { SsoLoginTransactionEncryptionPort } from 'src/iam/sso/application/ports/sso-login-transaction-encryption.port';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_BYTES = 12;
 const AUTH_TAG_BYTES = 16;
 
 @Injectable()
-export class SsoLoginTransactionEncryptionService extends SsoLoginTransactionEncryptionPort {
+export class SsoEncryptionService extends SsoEncryptionPort {
   constructor(private readonly configService: ConfigService) {
     super();
   }
