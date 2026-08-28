@@ -1,7 +1,7 @@
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { PresidioAnonymizationProvider } from './presidio-anonymization.provider';
-import { PiiCategory } from '../../domain/pii-category.enum';
-import { AnonymizationFailedError } from '../../application/anonymization.errors';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import { AnonymizationFailedError } from 'src/common/anonymization/application/anonymization.errors';
 import type { RecognizerResult } from 'src/common/clients/anonymize/generated/mSPresidioPIIDetectionAPI.schemas';
 
 const mockAnalyzeTextAnalyzePost = jest.fn();
@@ -164,20 +164,45 @@ describe('PresidioAnonymizationProvider', () => {
     );
   });
 
+  it('recovers when the first anonymization request times out', async () => {
+    jest.useFakeTimers();
+    mockAnalyzeTextAnalyzePost
+      .mockRejectedValueOnce(
+        Object.assign(new Error('timeout of 60000ms exceeded'), {
+          code: 'ETIMEDOUT',
+        }),
+      )
+      .mockResolvedValueOnce({ results: [] });
+
+    const result = provider.detect('Ich bin der Dani');
+    await jest.runAllTimersAsync();
+
+    await expect(result).resolves.toEqual([]);
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
+  });
+
   // The axios deadline (ETIMEDOUT with clarifyTimeoutError) must group
   // under the stable provider taxonomy instead of a raw axios error, so
   // anonymize outages get one incident with rate alerting (AYC-654).
-  it('classifies a client timeout under the provider timeout taxonomy', async () => {
+  it('preserves the provider timeout taxonomy after retry exhaustion', async () => {
+    jest.useFakeTimers();
     mockAnalyzeTextAnalyzePost.mockRejectedValue(
       Object.assign(new Error('timeout of 60000ms exceeded'), {
         code: 'ETIMEDOUT',
       }),
     );
 
-    await expect(provider.detect('Ich bin der Dani')).rejects.toMatchObject({
+    const result = provider.detect('Ich bin der Dani');
+    const failure = expect(result).rejects.toMatchObject({
       code: 'PROVIDER_UNAVAILABLE_TIMEOUT_ANONYMIZE',
       statusCode: 504,
     });
+    await jest.runAllTimersAsync();
+
+    await failure;
+    expect(mockAnalyzeTextAnalyzePost).toHaveBeenCalledTimes(2);
+    jest.useRealTimers();
   });
 
   it('classifies a refused connection under the provider connection taxonomy', async () => {
