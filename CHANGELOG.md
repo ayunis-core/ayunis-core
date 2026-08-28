@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.32.0](https://github.com/ayunis-core/ayunis-core/compare/v2.31.0...v2.32.0) (2026-08-28)
+
+
+### Features
+
+* **sso:** allow multiple verified domains (AYC-841) ([#1546](https://github.com/ayunis-core/ayunis-core/issues/1546)) ([b39cf12](https://github.com/ayunis-core/ayunis-core/commit/b39cf12e5d2abd1ebf8c629dce0a94a5ee25e728))
+* **sso:** redirect directly to the org IdP (AYC-842) ([#1543](https://github.com/ayunis-core/ayunis-core/issues/1543)) ([854c355](https://github.com/ayunis-core/ayunis-core/commit/854c35501f025fb7d43e288947418fb569be3d48))
+
+
+### Bug Fixes
+
+* **sso:** remove organization linking widget (AYC-844) ([#1548](https://github.com/ayunis-core/ayunis-core/issues/1548)) ([506046b](https://github.com/ayunis-core/ayunis-core/commit/506046b4af7e8558fa20ca18ad712b8d296f2067))
+
 ## [2.31.0](https://github.com/ayunis-core/ayunis-core/compare/v2.30.3...v2.31.0) (2026-08-27)
 
 
