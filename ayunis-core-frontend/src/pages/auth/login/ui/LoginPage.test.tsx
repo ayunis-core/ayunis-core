@@ -7,6 +7,8 @@ const {
   beginSso,
   discover,
   discoveryState,
+  forgetRememberedSsoOrgId,
+  getRememberedSsoOrgId,
   login,
   loginState,
   navigate,
@@ -15,6 +17,8 @@ const {
   beginSso: vi.fn(),
   discover: vi.fn(),
   discoveryState: { isPending: false },
+  forgetRememberedSsoOrgId: vi.fn(),
+  getRememberedSsoOrgId: vi.fn(),
   login: vi.fn(),
   loginState: { isPending: false },
   navigate: vi.fn(),
@@ -23,6 +27,8 @@ const {
 
 vi.mock('@/features/sso', () => ({
   beginSso,
+  forgetRememberedSsoOrgId,
+  getRememberedSsoOrgId,
   useDiscoverSso: () => ({ discover, isPending: discoveryState.isPending }),
 }));
 
@@ -56,7 +62,50 @@ describe(LoginPage.name, () => {
   beforeEach(() => {
     vi.clearAllMocks();
     discoveryState.isPending = false;
+    getRememberedSsoOrgId.mockReturnValue(null);
     loginState.isPending = false;
+  });
+
+  it('offers the remembered organization before asking for an email', () => {
+    getRememberedSsoOrgId.mockReturnValue(
+      'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+    );
+
+    render(<LoginPage redirect="/settings/account" ssoLoginEnabled />);
+
+    expect(screen.queryByTestId('email')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('login-remembered-sso'));
+
+    expect(beginSso).toHaveBeenCalledWith(
+      'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+      '/settings/account',
+    );
+  });
+
+  it('forgets the organization when another account is chosen', () => {
+    getRememberedSsoOrgId.mockReturnValue(
+      'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+    );
+    render(<LoginPage ssoLoginEnabled />);
+
+    fireEvent.click(screen.getByTestId('login-use-another-account'));
+
+    expect(forgetRememberedSsoOrgId).toHaveBeenCalledOnce();
+    expect(screen.getByTestId('email')).toBeTruthy();
+    expect(screen.getByTestId('login-continue')).toBeTruthy();
+  });
+
+  it('ignores remembered SSO when SSO login is disabled', () => {
+    getRememberedSsoOrgId.mockReturnValue(
+      'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+    );
+
+    render(<LoginPage ssoLoginEnabled={false} />);
+
+    expect(screen.getByTestId('email')).toBeTruthy();
+    expect(screen.getByTestId('password')).toBeTruthy();
+    expect(screen.queryByTestId('login-remembered-sso')).toBeNull();
   });
 
   it('keeps the existing password login when SSO login is disabled', async () => {
