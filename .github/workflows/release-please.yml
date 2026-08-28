@@ -26,7 +26,7 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   # Tags created with GITHUB_TOKEN don't trigger push-tag workflows, so the
-  # image build is invoked explicitly. Since AYC-589 the deploys below pull
+  # image build is invoked explicitly. Since AYC-589 the deployment below pulls
   # these images, so this has to be a real dependency: a reusable-workflow
   # call, not the fire-and-forget dispatch it used to be. secrets: inherit is
   # required — build-images' notify-infra job mints the ayunis-infra app token.
@@ -41,35 +41,8 @@ jobs:
       packages: write
     secrets: inherit
 
-  deploy-internal:
-    needs: [release-please, build-release-images]
-    if: ${{ needs.release-please.outputs.releases_created == 'true' }}
-    runs-on: ubuntu-latest
-    environment: internal
-    concurrency:
-      group: deploy-internal
-      cancel-in-progress: false
-    steps:
-      - name: Deploy to Internal
-        uses: appleboy/ssh-action@v1.2.5
-        env:
-          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
-        with:
-          host: ${{ secrets.INTERNAL_HOST }}
-          username: ${{ secrets.INTERNAL_USER }}
-          key: ${{ secrets.INTERNAL_SSH_KEY }}
-          envs: RELEASE_TAG
-          script: |
-            set -e
-            cd /home/ayunis/apps/ayunis-core
-            git fetch --all --tags
-            git checkout -f --detach "refs/tags/$RELEASE_TAG"
-            export CORE_TAG="$RELEASE_TAG"
-            echo "Deploying $CORE_TAG"
-            MIN_FREE_GB=6 PRUNE_BUILD_CACHE=true bash scripts/deploy-core-images.sh
-
   deploy-production:
-    needs: [release-please, build-release-images, deploy-internal]
+    needs: [release-please, build-release-images]
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     runs-on: ubuntu-latest
     environment: production
@@ -98,7 +71,7 @@ jobs:
   notify-slack:
     name: Notify Slack
     runs-on: ubuntu-latest
-    needs: [release-please, deploy-internal, deploy-production]
+    needs: [release-please, deploy-production]
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     steps:
       - name: Post to Slack
@@ -191,7 +164,7 @@ jobs:
   linear-release:
     name: Linear Release
     runs-on: ubuntu-latest
-    needs: [release-please, deploy-internal, deploy-production]
+    needs: [release-please, deploy-production]
     if: ${{ needs.release-please.outputs.releases_created == 'true' }}
     steps:
       - uses: actions/checkout@v7
