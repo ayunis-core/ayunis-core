@@ -3,7 +3,10 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import OnboardingLayout from '@/layouts/onboarding-layout';
-import { takeSsoPostLoginPath } from '@/features/sso';
+import {
+  rememberSuccessfulSsoLogin,
+  takeSsoPostLoginPath,
+} from '@/features/sso';
 
 export function SsoSuccessPage() {
   const { t } = useTranslation('auth');
@@ -11,7 +14,10 @@ export function SsoSuccessPage() {
   const postLoginPath = useRef<string | null>(null);
 
   useEffect(() => {
-    postLoginPath.current ??= takeSsoPostLoginPath();
+    if (postLoginPath.current === null) {
+      rememberSuccessfulSsoLogin();
+      postLoginPath.current = takeSsoPostLoginPath();
+    }
     void navigate({ to: postLoginPath.current, replace: true });
   }, [navigate]);
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildSsoStartUrl,
   rememberSsoPostLoginPath,
@@ -48,4 +48,34 @@ describe('buildSsoStartUrl', () => {
       expect(takeSsoPostLoginPath()).toBe('/chat');
     },
   );
+
+  it('continues when storing the post-login path is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('storage unavailable');
+    });
+
+    expect(() => rememberSsoPostLoginPath('/settings/account')).not.toThrow();
+  });
+
+  it('falls back to chat when reading the post-login path is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage unavailable');
+    });
+
+    expect(takeSsoPostLoginPath()).toBe('/chat');
+  });
+
+  it('continues when clearing the post-login path is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('storage unavailable');
+    });
+
+    expect(() => rememberSsoPostLoginPath()).not.toThrow();
+    expect(takeSsoPostLoginPath()).toBe('/chat');
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  window.sessionStorage.clear();
 });

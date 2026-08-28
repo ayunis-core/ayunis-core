@@ -10,6 +10,7 @@ import {
   createLoginFormSchema,
   type LoginFormFields,
 } from '@/pages/auth/login/model/login-form';
+import { forgetRememberedSsoOrgId } from '@/features/sso';
 
 export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
@@ -39,6 +40,7 @@ export function useLogin({ redirect }: { redirect?: string }) {
       },
       {
         onSuccess: (data) => {
+          forgetRememberedSsoOrgId();
           if (data.mfaRequired) {
             // No session yet — only the short-lived MFA pending cookie is
             // set. The two-factor page completes the login.

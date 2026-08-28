@@ -5,6 +5,7 @@ import { useMfaLoginControllerVerify } from '@/shared/api/generated/ayunisCoreAP
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
+import { rememberSuccessfulSsoLogin } from '@/features/sso';
 
 export function useVerifyMfa({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
@@ -18,6 +19,7 @@ export function useVerifyMfa({ redirect }: { redirect?: string }) {
       { data: { code } },
       {
         onSuccess: () => {
+          rememberSuccessfulSsoLogin();
           void navigate({ to: safeRedirectPath(redirect) });
         },
         onError: (error) => {
