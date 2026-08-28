@@ -252,10 +252,11 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
             type: 'file',
             fileId,
           },
-          // parseResponse consumes markdown only; image payloads inflate the
-          // response body enough to push large documents into the 120s
-          // body-read deadline (AYC-655).
+          // Text annotations do not require the image bytes; returning those
+          // bytes pushed large documents into the 120s body-read deadline
+          // (AYC-655).
           includeImageBase64: false,
+          bboxAnnotationFormat: IMAGE_TEXT_ANNOTATION_FORMAT,
           ...(pageLimit === undefined ? {} : { pages: `0-${pageLimit - 1}` }),
         }),
       maxRetries: 3,
@@ -289,8 +290,12 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
 
   private parseResponse(response: OCRResponse): FileRetrieverResult {
     // Extract the text content from the response
-    const pages = response.pages.map((p) => {
-      return new FileRetrieverPage(p.markdown, p.index + 1);
+    const pages = response.pages.map((page) => {
+      const imageText = extractImageTextAnnotations(page.images);
+      const text = [page.markdown, ...imageText]
+        .filter((part) => part.trim().length > 0)
+        .join('\n\n');
+      return new FileRetrieverPage(text, page.index + 1);
     });
 
     if (pages.length === 0) {
@@ -306,6 +311,53 @@ export class MistralFileRetrieverHandler extends FileRetrieverHandler {
     return new FileRetrieverResult(pages, {
       model: this.MODEL_NAME,
     });
+  }
+}
+
+const IMAGE_TEXT_ANNOTATION_FORMAT = {
+  type: 'json_schema' as const,
+  jsonSchema: {
+    name: 'image_text',
+    description: 'Extract text visible inside an image embedded in a document',
+    schemaDefinition: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description:
+            'A verbatim transcription of all visible text in reading order',
+        },
+      },
+      required: ['text'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+};
+
+function extractImageTextAnnotations(
+  images: Array<{ imageAnnotation?: string | null }> | undefined,
+): string[] {
+  return (images ?? [])
+    .map((image) => parseImageTextAnnotation(image.imageAnnotation))
+    .filter((text): text is string => text !== undefined);
+}
+
+function parseImageTextAnnotation(
+  annotation?: string | null,
+): string | undefined {
+  if (!annotation) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(annotation);
+    if (typeof parsed !== 'object' || parsed === null || !('text' in parsed)) {
+      return undefined;
+    }
+    const text = (parsed as { text?: unknown }).text;
+    return typeof text === 'string' && text.trim().length > 0
+      ? text.trim()
+      : undefined;
+  } catch {
+    return undefined;
   }
 }
 

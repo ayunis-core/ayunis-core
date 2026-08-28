@@ -188,15 +188,46 @@ describe('MistralFileRetrieverHandler', () => {
     // The OCR result is consumed markdown-only; requesting image payloads
     // inflates the response body Mistral streams back, which is what pushed
     // large documents into the 120s body-read deadline (AYC-655).
-    it('requests OCR without image payloads', async () => {
+    it('requests image text annotations without returning image payloads', async () => {
       mockClient.ocr.process.mockResolvedValue({
-        pages: [{ markdown: '# Content', index: 0 }],
+        pages: [{ markdown: '# Content', index: 0, images: [] }],
       });
 
       await handler.processFile(testFile);
 
       expect(mockClient.ocr.process).toHaveBeenCalledWith(
-        expect.objectContaining({ includeImageBase64: false }),
+        expect.objectContaining({
+          includeImageBase64: false,
+          bboxAnnotationFormat: expect.objectContaining({
+            type: 'json_schema',
+            jsonSchema: expect.objectContaining({ name: 'image_text' }),
+          }),
+        }),
+      );
+    });
+
+    it('includes visible text extracted from screenshots embedded in a PDF', async () => {
+      mockClient.ocr.process.mockResolvedValue({
+        pages: [
+          {
+            markdown: '![img-0.jpeg](img-0.jpeg)',
+            index: 0,
+            images: [
+              {
+                id: 'img-0.jpeg',
+                imageAnnotation: JSON.stringify({
+                  text: 'Case 417: inspection completed on 14 March',
+                }),
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = await handler.processFile(testFile);
+
+      expect(result.pages[0].text).toContain(
+        'Case 417: inspection completed on 14 March',
       );
     });
 
