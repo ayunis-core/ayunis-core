@@ -5390,6 +5390,7 @@ export interface OrgSsoConnectionResponseDto {
   zitadelIdpId: string | null;
   enabled: boolean;
   jitProvisioningEnabled: boolean;
+  localPasswordLoginEnabled: boolean;
 }
 
 /**
@@ -5427,6 +5428,16 @@ export interface SetOrgSsoStateRequestDto {
   enabled: boolean;
 }
 
+export interface SetOrgLocalPasswordLoginEnabledRequestDto {
+  enabled: boolean;
+  /** Confirms the SSO-only lockout impact was reviewed */
+  confirmed?: boolean;
+  reviewedEmailDomains?: string[];
+  reviewedZitadelOrgId?: string;
+  /** @nullable */
+  reviewedZitadelIdpId?: string | null;
+}
+
 export interface SetOrgSsoIdpRequestDto {
   /**
    * Broker identity provider ID, or null to show the broker login page
@@ -5442,6 +5453,7 @@ export interface DiscoverSsoDto {
 export interface SsoDiscoveryResponseDto {
   available: boolean;
   orgId?: string;
+  localPasswordLoginEnabled?: boolean;
 }
 
 export interface SsoAuthorizationResponseDto {

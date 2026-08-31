@@ -18,16 +18,18 @@ import {
   MAX_SSO_EMAIL_DOMAINS,
 } from 'src/iam/sso/domain/sso-connection-values';
 
-export class SetOrgSsoEnabledRequestDto {
+export class SetOrgLocalPasswordLoginEnabledRequestDto {
   @ApiProperty()
   @IsBoolean()
   enabled: boolean;
 
   @ApiProperty({
     required: false,
-    description: 'Confirms the broker mapping was reviewed before enablement',
+    description: 'Confirms the SSO-only lockout impact was reviewed',
   })
-  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
+  @ValidateIf(
+    (dto: SetOrgLocalPasswordLoginEnabledRequestDto) => dto.enabled === false,
+  )
   @IsDefined()
   @Equals(true)
   confirmed?: boolean;
@@ -37,7 +39,9 @@ export class SetOrgSsoEnabledRequestDto {
     type: [String],
     example: ['stadt.example', 'vhs.example'],
   })
-  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
+  @ValidateIf(
+    (dto: SetOrgLocalPasswordLoginEnabledRequestDto) => dto.enabled === false,
+  )
   @IsDefined()
   @IsArray()
   @ArrayMinSize(1)
@@ -51,11 +55,30 @@ export class SetOrgSsoEnabledRequestDto {
   reviewedEmailDomains?: string[];
 
   @ApiProperty({ required: false, example: '385820595704561666' })
-  @ValidateIf((dto: SetOrgSsoEnabledRequestDto) => dto.enabled === true)
+  @ValidateIf(
+    (dto: SetOrgLocalPasswordLoginEnabledRequestDto) => dto.enabled === false,
+  )
   @IsDefined()
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   @Matches(/^\S+$/u)
   reviewedZitadelOrgId?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    type: String,
+    example: '388145187060187138',
+  })
+  @ValidateIf(
+    (dto: SetOrgLocalPasswordLoginEnabledRequestDto) =>
+      dto.enabled === false && dto.reviewedZitadelIdpId !== null,
+  )
+  @IsDefined()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  @Matches(/^\S+$/u)
+  reviewedZitadelIdpId?: string | null;
 }

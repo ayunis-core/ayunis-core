@@ -9,7 +9,12 @@ import { DiscoverOrgSsoQuery } from 'src/iam/sso/application/use-cases/discover-
 import { emailDomainFromAddress } from 'src/iam/sso/domain/sso-connection-values';
 
 export type SsoDiscoveryResult =
-  { available: false } | { available: true; orgId: string };
+  | { available: false }
+  | {
+      available: true;
+      orgId: string;
+      localPasswordLoginEnabled: boolean;
+    };
 
 @Injectable()
 export class DiscoverOrgSsoUseCase {
@@ -25,7 +30,11 @@ export class DiscoverOrgSsoUseCase {
     if (!connection?.enabled || !connection.zitadelOrgId) {
       return { available: false };
     }
-    return { available: true, orgId: connection.orgId };
+    return {
+      available: true,
+      orgId: connection.orgId,
+      localPasswordLoginEnabled: connection.localPasswordLoginEnabled,
+    };
   }
 
   private emailDomain(email: string): string {

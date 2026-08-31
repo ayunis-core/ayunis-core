@@ -14,6 +14,9 @@ import {
   UserNotFoundError,
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class SuperAdminTriggerPasswordResetUseCase {
@@ -26,6 +29,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase,
     private readonly configService: ConfigService,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   async execute(
@@ -48,6 +52,7 @@ export class SuperAdminTriggerPasswordResetUseCase {
           'Password reset is unavailable for users without a local password',
         );
       }
+      await this.assertLocalPasswordLoginEnabled(user);
 
       const resetUrl = await this.sendResetEmail(user);
 
@@ -71,6 +76,17 @@ export class SuperAdminTriggerPasswordResetUseCase {
       throw new UserUnexpectedError(
         error instanceof Error ? error : new Error('Unknown error'),
         'super admin trigger password reset email',
+      );
+    }
+  }
+
+  private async assertLocalPasswordLoginEnabled(user: User): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(user.orgId),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new UserInvalidInputError(
+        'Password reset is unavailable while the organization requires SSO',
       );
     }
   }

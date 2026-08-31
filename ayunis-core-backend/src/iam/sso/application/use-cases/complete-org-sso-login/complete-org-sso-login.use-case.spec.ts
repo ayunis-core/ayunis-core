@@ -306,6 +306,7 @@ function pendingTransaction(
 
 function connectionRepository(connection = anEnabledSsoConnection()) {
   return {
+    acquireMutationLock: jest.fn(),
     findByOrgId: jest.fn().mockResolvedValue(connection),
     findLocalPasswordLoginEnabledByOrgId: jest.fn(),
     findLocalPasswordLoginEnabledByOrgIdForSessionIssuance: jest.fn(),
@@ -313,7 +314,7 @@ function connectionRepository(connection = anEnabledSsoConnection()) {
     findByEmailDomain: jest.fn(),
     findOwnerOrgIdsByEmailDomains: jest.fn(),
     save: jest.fn(),
-    updateConfigurationIfDisabled: jest.fn(),
+    updateConfigurationIfUnchanged: jest.fn(),
     setEnabled: jest.fn(),
     setJitProvisioningEnabledIfMappingMatches: jest.fn(),
     setLocalPasswordLoginEnabledIfMappingMatches: jest.fn(),

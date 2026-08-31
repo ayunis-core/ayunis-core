@@ -36,6 +36,9 @@ export class OrgSsoConnectionResponseDto {
 
   @ApiProperty()
   jitProvisioningEnabled: boolean;
+
+  @ApiProperty()
+  localPasswordLoginEnabled: boolean;
 }
 
 export class OrgSsoConnectionResourceDto {

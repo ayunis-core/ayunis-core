@@ -8,6 +8,8 @@ import { PasswordSetTokenService } from 'src/iam/users/application/services/pass
 import { PasswordSetTokenPurpose } from 'src/iam/users/domain/value-objects/password-set-token-purpose.enum';
 import { UserNotFoundError } from 'src/iam/users/application/users.errors';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 @Injectable()
 export class TriggerSetInitialPasswordUseCase {
@@ -17,6 +19,7 @@ export class TriggerSetInitialPasswordUseCase {
     private readonly sendSetInitialPasswordEmailUseCase: SendSetInitialPasswordEmailUseCase,
     private readonly passwordSetTokenService: PasswordSetTokenService,
     private readonly usersRepository: UsersRepository,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   async execute(command: TriggerSetInitialPasswordCommand): Promise<void> {
@@ -26,6 +29,16 @@ export class TriggerSetInitialPasswordUseCase {
       const user = await this.usersRepository.findOneByEmail(command.email);
       if (!user) {
         this.logger.debug({ email: command.email }, 'User not found');
+        return;
+      }
+      const policy = await this.getOrgAuthenticationPolicy.execute(
+        new GetOrgAuthenticationPolicyQuery(user.orgId),
+      );
+      if (!policy.localPasswordLoginEnabled) {
+        this.logger.debug(
+          { userId: user.id },
+          'Initial password is unavailable for organization',
+        );
         return;
       }
 

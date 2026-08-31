@@ -14,6 +14,7 @@ import {
   UserNotFoundError,
 } from 'src/iam/users/application/users.errors';
 import type { UUID } from 'crypto';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 describe('SuperAdminTriggerPasswordResetUseCase', () => {
   let useCase: SuperAdminTriggerPasswordResetUseCase;
@@ -21,6 +22,7 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
   let mockPasswordSetTokenService: Partial<PasswordSetTokenService>;
   let mockSendPasswordResetEmailUseCase: Partial<SendPasswordResetEmailUseCase>;
   let mockConfigService: Partial<ConfigService>;
+  let mockGetOrgAuthenticationPolicy: { execute: jest.Mock };
 
   const userId = '550e8400-e29b-41d4-a716-446655440000' as UUID;
   const userEmail = 'maria.mueller@gemeinde.de';
@@ -58,6 +60,7 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     mockConfigService = {
       get: jest.fn(),
     };
+    mockGetOrgAuthenticationPolicy = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -72,6 +75,10 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
           useValue: mockSendPasswordResetEmailUseCase,
         },
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: GetOrgAuthenticationPolicyUseCase,
+          useValue: mockGetOrgAuthenticationPolicy,
+        },
       ],
     }).compile();
 
@@ -82,6 +89,9 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: true,
+    });
 
     jest
       .spyOn(mockPasswordSetTokenService, 'issue')
@@ -134,6 +144,22 @@ describe('SuperAdminTriggerPasswordResetUseCase', () => {
     jest
       .spyOn(mockUsersRepository, 'findOneById')
       .mockResolvedValue(buildUser(null));
+
+    await expect(
+      useCase.execute(new SuperAdminTriggerPasswordResetCommand(userId)),
+    ).rejects.toThrow(UserInvalidInputError);
+
+    expect(mockPasswordSetTokenService.issue).not.toHaveBeenCalled();
+    expect(mockSendPasswordResetEmailUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects password reset when the organization requires SSO', async () => {
+    jest
+      .spyOn(mockUsersRepository, 'findOneById')
+      .mockResolvedValue(buildUser());
+    mockGetOrgAuthenticationPolicy.execute.mockResolvedValue({
+      localPasswordLoginEnabled: false,
+    });
 
     await expect(
       useCase.execute(new SuperAdminTriggerPasswordResetCommand(userId)),
