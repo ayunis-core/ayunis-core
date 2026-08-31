@@ -11,6 +11,7 @@ import {
 } from 'src/iam/sso/application/sso.errors';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
+import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
 
 describe(SetOrgSsoEnabledUseCase.name, () => {
   let repository: ReturnType<typeof createMockOrgSsoConnectionsRepository>;
@@ -83,12 +84,14 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
     repository.findByOrgId.mockResolvedValue(existing);
 
     await useCase.execute(
-      new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-        emailDomains: existing.emailDomains.map(
-          ({ emailDomain }) => emailDomain,
+      new SetOrgSsoEnabledCommand(
+        TEST_ORG_ID,
+        true,
+        new ReviewedSsoMapping(
+          existing.emailDomains.map(({ emailDomain }) => emailDomain),
+          existing.zitadelOrgId!,
         ),
-        zitadelOrgId: existing.zitadelOrgId!,
-      }),
+      ),
     );
 
     expect(repository.setEnabled).toHaveBeenCalledWith(existing, true);
@@ -99,10 +102,11 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
 
     await expect(
       useCase.execute(
-        new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-          emailDomains: ['old.stadt.example'],
-          zitadelOrgId: 'old-zitadel-org',
-        }),
+        new SetOrgSsoEnabledCommand(
+          TEST_ORG_ID,
+          true,
+          new ReviewedSsoMapping(['old.stadt.example'], 'old-zitadel-org'),
+        ),
       ),
     ).rejects.toBeInstanceOf(SsoConnectionChangedError);
     expect(repository.setEnabled).not.toHaveBeenCalled();
@@ -113,10 +117,11 @@ describe(SetOrgSsoEnabledUseCase.name, () => {
 
     await expect(
       useCase.execute(
-        new SetOrgSsoEnabledCommand(TEST_ORG_ID, true, {
-          emailDomains: ['not-a-domain'],
-          zitadelOrgId: 'zitadel-org-1',
-        }),
+        new SetOrgSsoEnabledCommand(
+          TEST_ORG_ID,
+          true,
+          new ReviewedSsoMapping(['not-a-domain'], 'zitadel-org-1'),
+        ),
       ),
     ).rejects.toBeInstanceOf(InvalidSsoConfigurationError);
   });

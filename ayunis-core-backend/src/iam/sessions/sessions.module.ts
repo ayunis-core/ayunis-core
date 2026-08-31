@@ -12,12 +12,14 @@ import { RevokeOtherSessionsForUserUseCase } from './application/use-cases/revok
 import { SessionsCleanupTask } from './infrastructure/tasks/sessions-cleanup.task';
 import { RevokeSessionsByZitadelSessionUseCase } from 'src/iam/sessions/application/use-cases/revoke-sessions-by-zitadel-session/revoke-sessions-by-zitadel-session.use-case';
 import { RevokeSsoSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-sso-sessions-for-user/revoke-sso-sessions-for-user.use-case';
+import { RevokePasswordSessionsForOrgUseCase } from 'src/iam/sessions/application/use-cases/revoke-password-sessions-for-org/revoke-password-sessions-for-org.use-case';
+import { PrepareSessionRotationUseCase } from 'src/iam/sessions/application/use-cases/prepare-session-rotation/prepare-session-rotation.use-case';
 
 /**
  * Owns server-side refresh-token session state. Imports nothing from the users
- * or authentication modules (the record's `ManyToOne(UserRecord)` is a
- * type-only import), so both of those modules can depend on this one without a
- * cycle.
+ * or authentication Nest modules, so both can depend on this one without a
+ * cycle. Session persistence may reference their TypeORM records for foreign
+ * keys and set-based organization queries.
  */
 @Module({
   imports: [TypeOrmModule.forFeature([RefreshTokenRecord])],
@@ -28,22 +30,26 @@ import { RevokeSsoSessionsForUserUseCase } from 'src/iam/sessions/application/us
     },
     RefreshTokenFactory,
     CreateSessionUseCase,
+    PrepareSessionRotationUseCase,
     RotateSessionUseCase,
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,
     RevokeSessionsByZitadelSessionUseCase,
     RevokeSsoSessionsForUserUseCase,
+    RevokePasswordSessionsForOrgUseCase,
     SessionsCleanupTask,
   ],
   exports: [
     CreateSessionUseCase,
+    PrepareSessionRotationUseCase,
     RotateSessionUseCase,
     RevokeSessionFamilyUseCase,
     RevokeAllSessionsForUserUseCase,
     RevokeOtherSessionsForUserUseCase,
     RevokeSessionsByZitadelSessionUseCase,
     RevokeSsoSessionsForUserUseCase,
+    RevokePasswordSessionsForOrgUseCase,
   ],
 })
 export class SessionsModule {}
