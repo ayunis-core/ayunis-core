@@ -2299,6 +2299,8 @@ export const FileSourceResponseDtoFileType = {
   pdf: 'pdf',
   docx: 'docx',
   pptx: 'pptx',
+  odt: 'odt',
+  odp: 'odp',
   txt: 'txt',
   eml: 'eml',
   audio: 'audio',
@@ -2651,6 +2653,8 @@ export interface KnowledgeBaseResponseDto {
   createdAt: string;
   /** The date and time when the knowledge base was last updated */
   updatedAt: string;
+  /** Whether the knowledge base is active for the current user */
+  isActive: boolean;
   /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
   isShared?: boolean;
 }
@@ -2672,6 +2676,11 @@ export interface UpdateKnowledgeBaseDto {
    * @maxLength 2000
    */
   description?: string;
+}
+
+export interface SetKnowledgeBaseActivationRequestDto {
+  /** Whether the knowledge base is available to the current user during chats */
+  isActive: boolean;
 }
 
 /**
@@ -5610,7 +5619,7 @@ export type ThreadSourcesControllerAddFileSourceBody = {
 export type ThreadSourcesControllerAddFileSource201Item = FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
 
 export type KnowledgeBasesControllerAddDocumentBody = {
-  /** The file to upload (PDF, DOCX, PPTX, TXT, max 25 MB) */
+  /** The file to upload (PDF, DOCX, PPTX, ODT, ODP, TXT, max 25 MB) */
   file: Blob;
 };
 

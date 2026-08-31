@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { StartUrlCrawlUseCase } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.use-case';
 import { StartUrlCrawlCommand } from 'src/domain/sources/application/use-cases/start-url-crawl/start-url-crawl.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import {
   KnowledgeBaseNotFoundError,
@@ -24,6 +24,7 @@ export class AddUrlToKnowledgeBaseUseCase {
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(command: AddUrlToKnowledgeBaseCommand): Promise<TextSource> {
     this.logger.log(
       {
@@ -34,38 +35,22 @@ export class AddUrlToKnowledgeBaseUseCase {
       'Adding URL to knowledge base (async)',
     );
 
-    try {
-      await this.assertSourceCapacity(command);
+    await this.assertSourceCapacity(command);
 
-      // Start async crawl (creates PROCESSING source, enqueues job)
-      const source = await this.startUrlCrawlUseCase.execute(
-        new StartUrlCrawlCommand({
-          url: command.url,
-          maxDepth: command.maxDepth,
-        }),
-      );
+    // Start async crawl (creates PROCESSING source, enqueues job)
+    const source = await this.startUrlCrawlUseCase.execute(
+      new StartUrlCrawlCommand({
+        url: command.url,
+        maxDepth: command.maxDepth,
+      }),
+    );
 
-      await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
-        source.id,
-        command.knowledgeBaseId,
-      );
+    await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
+      source.id,
+      command.knowledgeBaseId,
+    );
 
-      return source;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error adding URL to knowledge base',
-      );
-      throw new UnexpectedKnowledgeBaseError(
-        'Error adding URL to knowledge base',
-        { err: error as Error },
-      );
-    }
+    return source;
   }
 
   private async assertSourceCapacity(

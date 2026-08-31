@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { StartDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.use-case';
 import { StartDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/start-document-processing/start-document-processing.command';
@@ -24,6 +24,7 @@ export class AddDocumentToKnowledgeBaseUseCase {
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(
     command: AddDocumentToKnowledgeBaseCommand,
   ): Promise<FileSource> {
@@ -35,39 +36,23 @@ export class AddDocumentToKnowledgeBaseUseCase {
       'Adding document to knowledge base (async)',
     );
 
-    try {
-      await this.assertSourceCapacity(command);
+    await this.assertSourceCapacity(command);
 
-      // Start async document processing (creates PROCESSING source, uploads to MinIO, enqueues job)
-      const savedSource = await this.startDocumentProcessingUseCase.execute(
-        new StartDocumentProcessingCommand({
-          fileData: command.fileData,
-          fileName: command.fileName,
-          fileType: command.fileType,
-        }),
-      );
+    // Start async document processing (creates PROCESSING source, uploads to MinIO, enqueues job)
+    const savedSource = await this.startDocumentProcessingUseCase.execute(
+      new StartDocumentProcessingCommand({
+        fileData: command.fileData,
+        fileName: command.fileName,
+        fileType: command.fileType,
+      }),
+    );
 
-      await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
-        savedSource.id,
-        command.knowledgeBaseId,
-      );
+    await this.knowledgeBaseRepository.assignSourceToKnowledgeBase(
+      savedSource.id,
+      command.knowledgeBaseId,
+    );
 
-      return savedSource;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error adding document to knowledge base',
-      );
-      throw new UnexpectedKnowledgeBaseError(
-        'Error adding document to knowledge base',
-        { err: error as Error },
-      );
-    }
+    return savedSource;
   }
 
   private async assertSourceCapacity(

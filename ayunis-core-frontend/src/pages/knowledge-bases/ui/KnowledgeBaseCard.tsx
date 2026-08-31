@@ -7,6 +7,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useTranslation } from 'react-i18next';
 import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useRouter } from '@tanstack/react-router';
+import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 import {
   Item,
   ItemActions,
@@ -73,27 +74,29 @@ export default function KnowledgeBaseCard({
           <ItemDescription>{knowledgeBase.description}</ItemDescription>
         )}
       </ItemContent>
-      {/* The gate wraps ItemActions rather than the button: delete is the only
-          action here, so gating inside would leave an empty flex sibling and a
-          trailing gap that shared cards don't have. */}
-      {!isShared && (
-        <PermissionGate permission="manage_knowledge_bases">
-          <ItemActions>
+      <ItemActions>
+        <KnowledgeBaseActivationToggle
+          knowledgeBaseId={knowledgeBase.id}
+          isActive={knowledgeBase.isActive}
+          testId={`knowledge-base-active-toggle-${knowledgeBase.id}`}
+        />
+        {!isShared && (
+          <PermissionGate permission="manage_knowledge_bases">
             <Button
               variant="ghost"
               size="icon"
               className="text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
                 handleDelete();
               }}
               disabled={deleteKnowledgeBase.isPending}
             >
               <Trash2 />
             </Button>
-          </ItemActions>
-        </PermissionGate>
-      )}
+          </PermissionGate>
+        )}
+      </ItemActions>
     </Item>
   );
 }
