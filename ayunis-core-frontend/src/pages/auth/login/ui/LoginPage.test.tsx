@@ -71,7 +71,7 @@ describe(LoginPage.name, () => {
       'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
     );
 
-    render(<LoginPage redirect="/settings/account" ssoLoginEnabled />);
+    render(<LoginPage redirect="/settings/account" />);
 
     expect(screen.queryByTestId('email')).toBeNull();
 
@@ -87,7 +87,7 @@ describe(LoginPage.name, () => {
     getRememberedSsoOrgId.mockReturnValue(
       'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
     );
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.click(screen.getByTestId('login-use-another-account'));
 
@@ -96,38 +96,17 @@ describe(LoginPage.name, () => {
     expect(screen.getByTestId('login-continue')).toBeTruthy();
   });
 
-  it('ignores remembered SSO when SSO login is disabled', () => {
-    getRememberedSsoOrgId.mockReturnValue(
-      'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
-    );
+  it('starts with SSO discovery before showing login methods', () => {
+    render(<LoginPage />);
 
-    render(<LoginPage ssoLoginEnabled={false} />);
-
-    expect(screen.getByTestId('email')).toBeTruthy();
-    expect(screen.getByTestId('password')).toBeTruthy();
-    expect(screen.queryByTestId('login-remembered-sso')).toBeNull();
-  });
-
-  it('keeps the existing password login when SSO login is disabled', async () => {
-    render(<LoginPage ssoLoginEnabled={false} />);
-
-    fireEvent.change(screen.getByTestId('email'), {
-      target: { value: 'local@example.com' },
-    });
-    fireEvent.change(screen.getByTestId('password'), {
-      target: { value: 'LocalPassword01!' },
-    });
-    fireEvent.click(screen.getByTestId('submit'));
-
-    await waitFor(() => expect(login).toHaveBeenCalledOnce());
-    expect(discover).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: 'login.continue' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'login.continue' })).toBeTruthy();
+    expect(screen.queryByTestId('password')).toBeNull();
   });
 
   it('locks the email while SSO discovery is pending', () => {
     discoveryState.isPending = true;
 
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     expect(screen.getByTestId('email').hasAttribute('disabled')).toBe(true);
     expect(
@@ -140,7 +119,7 @@ describe(LoginPage.name, () => {
   });
 
   it('validates the email before discovery', async () => {
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'not-an-email' },
@@ -156,7 +135,7 @@ describe(LoginPage.name, () => {
       available: true,
       orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
     });
-    render(<LoginPage redirect="/settings/account" ssoLoginEnabled />);
+    render(<LoginPage redirect="/settings/account" />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'siro@qa-stadt.local' },
@@ -177,7 +156,7 @@ describe(LoginPage.name, () => {
 
   it('clears the password when the email is changed', async () => {
     discover.mockResolvedValue({ available: false });
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'first@example.com' },
@@ -203,7 +182,7 @@ describe(LoginPage.name, () => {
       available: true,
       orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
     });
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'siro@qa-stadt.local' },
@@ -224,7 +203,7 @@ describe(LoginPage.name, () => {
 
   it('treats Enter on the email step as continue', async () => {
     discover.mockResolvedValue({ available: false });
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     const email = screen.getByTestId('email');
     fireEvent.change(email, { target: { value: 'local@example.com' } });
@@ -238,7 +217,7 @@ describe(LoginPage.name, () => {
 
   it('keeps local login available when no SSO connection is found', async () => {
     discover.mockResolvedValue({ available: false });
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'local@example.com' },
@@ -252,7 +231,7 @@ describe(LoginPage.name, () => {
 
   it('keeps local login available when discovery fails', async () => {
     discover.mockRejectedValue(new Error('network unavailable'));
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'local@example.com' },
@@ -269,7 +248,7 @@ describe(LoginPage.name, () => {
   it('preserves password login after email discovery', async () => {
     const passwordValue = ['Local', 'Password', '01!'].join('');
     discover.mockResolvedValue({ available: false });
-    render(<LoginPage ssoLoginEnabled />);
+    render(<LoginPage />);
 
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'local@example.com' },

@@ -29,19 +29,17 @@ import { showError } from '@/shared/lib/toast';
 export function LoginPage({
   redirect,
   emailVerified,
-  ssoLoginEnabled,
 }: Readonly<{
   redirect?: string;
   emailVerified?: boolean;
-  ssoLoginEnabled: boolean;
 }>) {
   const { form, onSubmit, isLoading } = useLogin({ redirect });
   const { discover, isPending: isDiscovering } = useDiscoverSso();
   const { t } = useTranslation('auth');
-  const [showMethods, setShowMethods] = useState(!ssoLoginEnabled);
+  const [showMethods, setShowMethods] = useState(false);
   const [ssoOrgId, setSsoOrgId] = useState<string | null>(null);
-  const [rememberedSsoOrgId, setRememberedSsoOrgId] = useState(() =>
-    ssoLoginEnabled ? getRememberedSsoOrgId() : null,
+  const [rememberedSsoOrgId, setRememberedSsoOrgId] = useState(
+    getRememberedSsoOrgId,
   );
   const showRememberedSso = rememberedSsoOrgId !== null;
 
@@ -106,7 +104,7 @@ export function LoginPage({
         <Form {...form}>
           <form
             onSubmit={(e) => {
-              if (ssoLoginEnabled && !showMethods) {
+              if (!showMethods) {
                 e.preventDefault();
                 void continueWithEmail();
                 return;
@@ -115,10 +113,7 @@ export function LoginPage({
             }}
             className="space-y-4"
           >
-            <EmailField
-              form={form}
-              disabled={ssoLoginEnabled && (showMethods || isDiscovering)}
-            />
+            <EmailField form={form} disabled={showMethods || isDiscovering} />
             {showMethods ? (
               <LoginMethods
                 form={form}
@@ -126,7 +121,6 @@ export function LoginPage({
                 redirect={redirect}
                 isLoading={isLoading}
                 onChangeEmail={changeEmail}
-                showChangeEmail={ssoLoginEnabled}
               />
             ) : (
               <Button
@@ -213,7 +207,6 @@ interface LoginMethodsProps {
   redirect?: string;
   isLoading: boolean;
   onChangeEmail: () => void;
-  showChangeEmail: boolean;
 }
 
 function LoginMethods({
@@ -222,21 +215,18 @@ function LoginMethods({
   redirect,
   isLoading,
   onChangeEmail,
-  showChangeEmail,
 }: Readonly<LoginMethodsProps>) {
   const { t } = useTranslation('auth');
   return (
     <>
-      {showChangeEmail && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onChangeEmail}
-          disabled={isLoading}
-        >
-          {t('login.changeEmail')}
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onChangeEmail}
+        disabled={isLoading}
+      >
+        {t('login.changeEmail')}
+      </Button>
       {ssoOrgId && (
         <>
           <Button
