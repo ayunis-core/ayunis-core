@@ -26,10 +26,8 @@ import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-ca
 import { ConfigureOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.use-case';
 import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
 import { GetOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.use-case';
-import {
-  type ReviewedSsoMapping,
-  SetOrgSsoEnabledCommand,
-} from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
 import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
 import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.command';
 import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
@@ -60,6 +58,7 @@ interface SsoAuditEvent {
 export class SuperAdminSsoConnectionsController {
   private readonly logger = new Logger(SuperAdminSsoConnectionsController.name);
 
+  // eslint-disable-next-line max-params -- NestJS dependency injection
   constructor(
     private readonly getConnectionUseCase: GetOrgSsoConnectionUseCase,
     private readonly configureConnectionUseCase: ConfigureOrgSsoConnectionUseCase,
@@ -194,10 +193,10 @@ export class SuperAdminSsoConnectionsController {
         'Enabling SSO requires confirmation of the reviewed broker mapping',
       );
     }
-    return {
-      emailDomains: dto.reviewedEmailDomains,
-      zitadelOrgId: dto.reviewedZitadelOrgId,
-    };
+    return new ReviewedSsoMapping(
+      dto.reviewedEmailDomains,
+      dto.reviewedZitadelOrgId,
+    );
   }
 
   private audit(event: SsoAuditEvent): void {

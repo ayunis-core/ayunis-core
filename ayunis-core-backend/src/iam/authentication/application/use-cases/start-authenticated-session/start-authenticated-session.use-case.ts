@@ -11,6 +11,7 @@ import { CheckMfaLoginRequirementUseCase } from 'src/iam/mfa/application/use-cas
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { AuthorizeUserLoginCommand } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.command';
 import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
+import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
 
 export type StartAuthenticatedSessionResult =
   | { status: 'authenticated'; tokens: AuthTokens }
@@ -29,6 +30,7 @@ export class StartAuthenticatedSessionUseCase {
     private readonly mfaPendingTokens: MfaPendingJwtService,
     private readonly login: LoginUseCase,
     private readonly authorizeUserLogin: AuthorizeUserLoginUseCase,
+    private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
@@ -65,6 +67,10 @@ export class StartAuthenticatedSessionUseCase {
     }
     await this.authorizeUserLogin.execute(
       new AuthorizeUserLoginCommand(command.user.id),
+    );
+    await this.localPasswordLoginPolicy.assertAllowedForOrg(
+      command.user.orgId,
+      command.authenticationMethod,
     );
     return {
       status: 'mfa_required',
