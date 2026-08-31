@@ -14,29 +14,38 @@ import { ConfigService } from '@nestjs/config';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { setCookies, clearMfaPendingCookie } from 'src/common/util/cookie.util';
-import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
-import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
-import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
-import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import {
   MfaPendingJwtService,
   type MfaPendingJwtPayload,
 } from 'src/iam/authentication/application/services/mfa-pending-jwt.service';
-import { VerifyMfaCodeUseCase } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.use-case';
-import { VerifyMfaCodeCommand } from 'src/iam/mfa/application/use-cases/verify-mfa-code/verify-mfa-code.command';
 import { SetupTotpUseCase } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.use-case';
 import { SetupTotpCommand } from 'src/iam/mfa/application/use-cases/setup-totp/setup-totp.command';
-import { ConfirmTotpUseCase } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.use-case';
-import { ConfirmTotpCommand } from 'src/iam/mfa/application/use-cases/confirm-totp/confirm-totp.command';
 import { MfaEnrollmentNotAllowedError } from 'src/iam/mfa/application/mfa.errors';
-import { InvalidMfaPendingTokenError } from 'src/iam/authentication/application/authentication.errors';
+import {
+  InvalidMfaPendingTokenError,
+  LocalPasswordLoginDisabledError,
+} from 'src/iam/authentication/application/authentication.errors';
 import { MfaCodeRequestDto } from 'src/iam/mfa/presenters/http/dtos/mfa-code-request.dto';
 import { MfaSetupResponseDto } from 'src/iam/mfa/presenters/http/dtos/mfa-setup-response.dto';
 import {
   SuccessResponseDto,
   MfaLoginConfirmResponseDto,
 } from 'src/iam/authentication/presenters/http/dtos/auth-response.dto';
+import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
+import type { User } from 'src/iam/users/domain/user.entity';
+import {
+  CompleteMfaLoginCommand,
+  type CompleteMfaLoginOperation,
+} from 'src/iam/authentication/application/use-cases/complete-mfa-login/complete-mfa-login.command';
+import {
+  CompleteMfaLoginUseCase,
+  type CompleteMfaLoginResult,
+} from 'src/iam/authentication/application/use-cases/complete-mfa-login/complete-mfa-login.use-case';
+import {
+  UserAccountLockedError,
+  UserAuthenticationFailedError,
+  UserNotFoundError,
+} from 'src/iam/users/application/users.errors';
 
 /**
  * Completes a login that entered the MFA pending state. All routes are
@@ -50,11 +59,9 @@ export class MfaLoginController {
 
   constructor(
     private readonly mfaPendingJwtService: MfaPendingJwtService,
-    private readonly verifyMfaCodeUseCase: VerifyMfaCodeUseCase,
     private readonly setupTotpUseCase: SetupTotpUseCase,
-    private readonly confirmTotpUseCase: ConfirmTotpUseCase,
-    private readonly findUserByIdUseCase: FindUserByIdUseCase,
-    private readonly loginUseCase: LoginUseCase,
+    private readonly completeMfaLoginUseCase: CompleteMfaLoginUseCase,
+    private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -76,10 +83,7 @@ export class MfaLoginController {
     const payload = this.readPendingToken(req);
     this.logger.log({ userId: payload.sub }, 'verify');
 
-    await this.verifyMfaCodeUseCase.execute(
-      new VerifyMfaCodeCommand(payload.sub, dto.code),
-    );
-    await this.completeLogin(res, payload);
+    await this.completeLogin(res, payload, dto.code, 'verify');
     return res.json({ success: true });
   }
 
@@ -94,16 +98,17 @@ export class MfaLoginController {
       'org mandates MFA and the user is not enrolled).',
   })
   @ApiResponse({ status: HttpStatus.OK, type: MfaSetupResponseDto })
-  async setup(@Req() req: Request): Promise<MfaSetupResponseDto> {
+  async setup(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MfaSetupResponseDto> {
     const payload = this.readPendingToken(req);
+    const user = await this.authorizePendingLogin(res, payload);
     if (!payload.enrollmentRequired) {
       throw new MfaEnrollmentNotAllowedError();
     }
     this.logger.log({ userId: payload.sub }, 'setup');
 
-    const user = await this.findUserByIdUseCase.execute(
-      new FindUserByIdQuery(payload.sub),
-    );
     return this.setupTotpUseCase.execute(
       new SetupTotpCommand(user.id, user.email),
     );
@@ -131,10 +136,12 @@ export class MfaLoginController {
     }
     this.logger.log({ userId: payload.sub }, 'confirmSetup');
 
-    const recoveryCodes = await this.confirmTotpUseCase.execute(
-      new ConfirmTotpCommand(payload.sub, dto.code),
+    const recoveryCodes = await this.completeLogin(
+      res,
+      payload,
+      dto.code,
+      'confirmEnrollment',
     );
-    await this.completeLogin(res, payload);
     return res.json({ success: true, recoveryCodes });
   }
 
@@ -150,30 +157,56 @@ export class MfaLoginController {
     return this.mfaPendingJwtService.verify(token);
   }
 
+  private async authorizePendingLogin(
+    res: Response,
+    payload: MfaPendingJwtPayload,
+  ): Promise<User> {
+    try {
+      return await this.localPasswordLoginPolicy.assertAllowedForUser(
+        payload.sub,
+        payload.authenticationMethod,
+      );
+    } catch (error: unknown) {
+      clearMfaPendingCookie(res, this.configService);
+      throw error;
+    }
+  }
+
   private async completeLogin(
     res: Response,
     payload: MfaPendingJwtPayload,
-  ): Promise<void> {
-    const user = await this.findUserByIdUseCase.execute(
-      new FindUserByIdQuery(payload.sub),
-    );
-    const tokens = await this.loginUseCase.execute(
-      new LoginCommand(
-        new ActiveUser({
-          id: user.id,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          role: user.role,
-          systemRole: user.systemRole,
-          orgId: user.orgId,
-          name: user.name,
+    code: string,
+    operation: CompleteMfaLoginOperation,
+  ): Promise<string[] | null> {
+    let result: CompleteMfaLoginResult;
+    try {
+      result = await this.completeMfaLoginUseCase.execute(
+        new CompleteMfaLoginCommand({
+          userId: payload.sub,
+          code,
+          operation,
+          authenticationMethod: payload.authenticationMethod,
+          zitadelSessionId: payload.zitadelSessionId,
         }),
-        payload.authenticationMethod,
-        payload.zitadelSessionId,
-      ),
-    );
+      );
+    } catch (error: unknown) {
+      if (isTerminalMfaLoginError(error)) {
+        clearMfaPendingCookie(res, this.configService);
+      }
+      throw error;
+    }
 
     clearMfaPendingCookie(res, this.configService);
-    setCookies(res, tokens, this.configService, true);
+    setCookies(res, result.tokens, this.configService, true);
+    return result.recoveryCodes;
   }
+}
+
+function isTerminalMfaLoginError(error: unknown): boolean {
+  return (
+    error instanceof LocalPasswordLoginDisabledError ||
+    error instanceof UserAccountLockedError ||
+    error instanceof UserAuthenticationFailedError ||
+    error instanceof UserNotFoundError
+  );
 }

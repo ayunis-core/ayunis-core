@@ -9,6 +9,10 @@ import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/cre
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { AuthorizeUserLoginCommand } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.command';
 import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
+import { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class LoginUseCase {
@@ -19,9 +23,11 @@ export class LoginUseCase {
     private readonly authRepository: AuthenticationRepository,
     private readonly createSessionUseCase: CreateSessionUseCase,
     private readonly authorizeUserLoginUseCase: AuthorizeUserLoginUseCase,
+    private readonly localPasswordLoginPolicy: LocalPasswordLoginPolicyService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
+  @Transactional()
   async execute(command: LoginCommand): Promise<AuthTokens> {
     this.logger.log(
       {
@@ -30,21 +36,35 @@ export class LoginUseCase {
       },
       'login',
     );
-    await this.authorizeUserLoginUseCase.execute(
+    const user = await this.authorizeUserLoginUseCase.execute(
       new AuthorizeUserLoginCommand(command.user.id),
     );
-
-    const accessToken = await this.authRepository.generateAccessToken(
-      command.user,
+    await this.localPasswordLoginPolicy.assertSessionIssuanceAllowed(
+      user.orgId,
+      command.authenticationMethod,
     );
     const session = await this.createSessionUseCase.execute(
       new CreateSessionCommand(
-        command.user.id,
+        user.id,
         command.authenticationMethod,
         command.zitadelSessionId,
       ),
     );
-
+    const accessToken = await this.authRepository.generateAccessToken(
+      this.toActiveUser(user),
+    );
     return new AuthTokens(accessToken, session.refreshToken);
+  }
+
+  private toActiveUser(user: User): ActiveUser {
+    return new ActiveUser({
+      id: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      role: user.role,
+      systemRole: user.systemRole,
+      orgId: user.orgId,
+      name: user.name,
+    });
   }
 }

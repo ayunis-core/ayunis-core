@@ -7,6 +7,7 @@ import {
   UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
 import { AuthorizeUserLoginCommand } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.command';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class AuthorizeUserLoginUseCase {
@@ -15,7 +16,7 @@ export class AuthorizeUserLoginUseCase {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
-  async execute(command: AuthorizeUserLoginCommand): Promise<void> {
+  async execute(command: AuthorizeUserLoginCommand): Promise<User> {
     this.logger.log({ userId: command.userId }, 'authorizeUserLogin');
     const user = await this.usersRepository.findOneById(command.userId);
     if (!user) {
@@ -36,6 +37,7 @@ export class AuthorizeUserLoginUseCase {
       this.rejectLogin(command.userId);
     }
     this.logger.log({ userId: command.userId }, 'User login authorized');
+    return user;
   }
 
   private rejectLogin(userId: AuthorizeUserLoginCommand['userId']): never {

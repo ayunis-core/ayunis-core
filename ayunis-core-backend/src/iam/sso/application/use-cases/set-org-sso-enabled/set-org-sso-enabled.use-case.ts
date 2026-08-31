@@ -7,10 +7,9 @@ import {
   SsoConnectionNotFoundError,
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
-import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
-import { InvalidSsoConnectionValueError } from 'src/iam/sso/domain/invalid-sso-connection-value.error';
-import { normalizeZitadelOrgId } from 'src/iam/sso/domain/sso-connection-values';
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import type { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
+import type { OrgSsoConnection } from 'src/iam/sso/domain/org-sso-connection.entity';
 
 @Injectable()
 export class SetOrgSsoEnabledUseCase {
@@ -34,9 +33,11 @@ export class SetOrgSsoEnabledUseCase {
       throw new SsoConnectionNotFoundError(command.orgId);
     }
     const existing = existingState.connection;
-    if (!this.matchesReviewedMapping(existing, command.reviewedMapping)) {
-      throw new SsoConnectionChangedError(command.orgId);
-    }
+    this.assertReviewedMappingMatches(
+      existing,
+      command.reviewedMapping,
+      command.orgId,
+    );
     if (command.enabled && !existing.zitadelOrgId) {
       throw new InvalidSsoConfigurationError('zitadelOrgId');
     }
@@ -58,21 +59,13 @@ export class SetOrgSsoEnabledUseCase {
     return updated;
   }
 
-  private matchesReviewedMapping(
-    existing: OrgSsoConnection,
-    reviewed: SetOrgSsoEnabledCommand['reviewedMapping'],
-  ): boolean {
-    if (!reviewed) return true;
-    try {
-      return (
-        existing.matchesEmailDomains(reviewed.emailDomains) &&
-        normalizeZitadelOrgId(reviewed.zitadelOrgId) === existing.zitadelOrgId
-      );
-    } catch (error: unknown) {
-      if (error instanceof InvalidSsoConnectionValueError) {
-        throw new InvalidSsoConfigurationError(error.field);
-      }
-      throw error;
+  private assertReviewedMappingMatches(
+    connection: OrgSsoConnection,
+    reviewedMapping: ReviewedSsoMapping | undefined,
+    orgId: SetOrgSsoEnabledCommand['orgId'],
+  ): void {
+    if (reviewedMapping && !reviewedMapping.matches(connection)) {
+      throw new SsoConnectionChangedError(orgId);
     }
   }
 }

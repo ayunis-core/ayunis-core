@@ -10,6 +10,8 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
 import { UserAuthenticationFailedError } from 'src/iam/users/application/users.errors';
+import type { LocalPasswordLoginPolicyService } from 'src/iam/authentication/application/services/local-password-login-policy.service';
+import { LocalPasswordLoginDisabledError } from 'src/iam/authentication/application/authentication.errors';
 
 describe(StartAuthenticatedSessionUseCase.name, () => {
   const user = new ActiveUser({
@@ -25,14 +27,20 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
   const checkMfa = { execute: jest.fn() };
   const pendingTokens = { generate: jest.fn() };
   const authorizeUserLogin = { execute: jest.fn() };
+  const passwordPolicy = { assertAllowedForOrg: jest.fn() };
   const useCase = new StartAuthenticatedSessionUseCase(
     checkMfa as unknown as CheckMfaLoginRequirementUseCase,
     pendingTokens as unknown as MfaPendingJwtService,
     login as unknown as LoginUseCase,
     authorizeUserLogin as unknown as AuthorizeUserLoginUseCase,
+    passwordPolicy as unknown as LocalPasswordLoginPolicyService,
   );
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authorizeUserLogin.execute.mockResolvedValue(undefined);
+    passwordPolicy.assertAllowedForOrg.mockReset().mockResolvedValue(undefined);
+  });
 
   it('creates the SSO session immediately when Core MFA is not required', async () => {
     checkMfa.execute.mockResolvedValue('none');
@@ -108,6 +116,18 @@ describe(StartAuthenticatedSessionUseCase.name, () => {
       authenticationMethod: SessionAuthenticationMethod.PASSWORD,
       zitadelSessionId: null,
     });
+  });
+
+  it('does not issue a pending MFA token when password login is disabled', async () => {
+    checkMfa.execute.mockResolvedValue('verify');
+    passwordPolicy.assertAllowedForOrg.mockRejectedValue(
+      new LocalPasswordLoginDisabledError(),
+    );
+
+    await expect(useCase.execute(passwordCommand())).rejects.toBeInstanceOf(
+      LocalPasswordLoginDisabledError,
+    );
+    expect(pendingTokens.generate).not.toHaveBeenCalled();
   });
 
   it('does not repeat Core MFA when the broker verified multiple factors', async () => {
