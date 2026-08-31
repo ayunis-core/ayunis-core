@@ -10,7 +10,8 @@
       "expiresAt": "Expires {{date}}",
       "neverExpires": "Never expires",
       "revokedAt": "Revoked {{date}}",
-      "revokedBadge": "Revoked"
+      "revokedBadge": "Revoked",
+      "actionsAriaLabel": "Actions for {{name}}"
     },
     "createDialog": {
       "title": "Create API Key",
@@ -54,6 +55,36 @@
       "success": "API key revoked",
       "error": "Failed to revoke API key",
       "notFound": "API key not found"
+    },
+    "creditLimit": {
+      "title": "API key credit limit",
+      "description": "Set the monthly credit allowance for {{name}}.",
+      "manageAriaLabel": "Manage credit limit for {{name}}",
+      "usage": "{{used}} of {{limit}} credits used this month",
+      "unlimited": "No API key credit limit",
+      "creditsLabel": "Monthly credits",
+      "creditsHint": "Set 0 to pause paid-model usage. Remove the limit to make the key unlimited within the organization budget.",
+      "creditsRequired": "Enter a monthly credit limit",
+      "creditsMin": "The credit limit cannot be negative",
+      "save": "Save limit",
+      "set": "Set credit limit",
+      "edit": "Edit credit limit",
+      "remove": "Remove credit limit",
+      "cancel": "Cancel",
+      "setSuccess": "API key credit limit saved",
+      "setError": "Failed to save the API key credit limit",
+      "removeSuccess": "API key credit limit removed",
+      "removeError": "Failed to remove the API key credit limit",
+      "notFound": "API key not found",
+      "invalid": "Enter a valid credit limit",
+      "validation": {
+        "monthlyCredits": {
+          "isNumber": "Enter a valid credit limit",
+          "min": "The credit limit cannot be negative",
+          "invalid": "Enter a valid credit limit"
+        },
+        "invalid": "Invalid credit limit"
+      }
     },
     "validation": {
       "name": {

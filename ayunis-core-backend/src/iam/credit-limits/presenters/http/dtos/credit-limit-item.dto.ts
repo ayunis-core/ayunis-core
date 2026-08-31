@@ -24,6 +24,26 @@ export class UserCreditLimitItemDto {
   creditsUsed: number;
 }
 
+export class ApiKeyCreditLimitItemDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440003' })
+  apiKeyId: UUID;
+
+  @ApiProperty({ example: 'Finance export' })
+  name: string;
+
+  @ApiProperty({
+    description: 'Configured monthly credit limit',
+    example: 5000,
+  })
+  monthlyCredits: number;
+
+  @ApiProperty({
+    description: 'Credits consumed in the current calendar month',
+    example: 1240,
+  })
+  creditsUsed: number;
+}
+
 export class TeamCreditLimitItemDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440002' })
   teamId: UUID;

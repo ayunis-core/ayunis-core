@@ -7,6 +7,7 @@ export enum CreditLimitErrorCode {
   TARGET_NOT_FOUND = 'CREDIT_LIMIT_TARGET_NOT_FOUND',
   USER_CREDIT_LIMIT_EXCEEDED = 'USER_CREDIT_LIMIT_EXCEEDED',
   TEAM_CREDIT_LIMIT_EXCEEDED = 'TEAM_CREDIT_LIMIT_EXCEEDED',
+  API_KEY_CREDIT_LIMIT_EXCEEDED = 'API_KEY_CREDIT_LIMIT_EXCEEDED',
   UNEXPECTED_ERROR = 'UNEXPECTED_CREDIT_LIMIT_ERROR',
 }
 
@@ -66,6 +67,17 @@ export class TeamCreditLimitExceededError extends CreditLimitError {
     super(
       'Your team monthly credit limit has been reached',
       CreditLimitErrorCode.TEAM_CREDIT_LIMIT_EXCEEDED,
+      429,
+      metadata,
+    );
+  }
+}
+
+export class ApiKeyCreditLimitExceededError extends CreditLimitError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The API key monthly credit limit has been reached',
+      CreditLimitErrorCode.API_KEY_CREDIT_LIMIT_EXCEEDED,
       429,
       metadata,
     );

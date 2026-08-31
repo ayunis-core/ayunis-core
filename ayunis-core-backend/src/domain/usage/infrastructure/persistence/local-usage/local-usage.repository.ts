@@ -353,6 +353,46 @@ export class LocalUsageRepository extends UsageRepository {
     return new Map(rows.map((row) => [row.userId, parseFloat(row.total) || 0]));
   }
 
+  async getTotalMonthlyCreditUsageForApiKey(
+    organizationId: UUID,
+    apiKeyId: UUID,
+    monthStart: Date,
+  ): Promise<number> {
+    const result = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.apiKeyId = :apiKeyId', { apiKeyId })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .getRawOne<{ total: string }>();
+
+    return parseFloat(result?.total ?? '0') || 0;
+  }
+
+  async getMonthlyCreditUsagePerApiKey(
+    organizationId: UUID,
+    apiKeyIds: UUID[],
+    monthStart: Date,
+  ): Promise<Map<UUID, number>> {
+    if (apiKeyIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.usageRepository
+      .createQueryBuilder('usage')
+      .select('usage.apiKeyId', 'apiKeyId')
+      .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'total')
+      .where('usage.organizationId = :organizationId', { organizationId })
+      .andWhere('usage.apiKeyId IN (:...apiKeyIds)', { apiKeyIds })
+      .andWhere('usage.createdAt >= :monthStart', { monthStart })
+      .groupBy('usage.apiKeyId')
+      .getRawMany<{ apiKeyId: UUID; total: string }>();
+
+    return new Map(
+      rows.map((row) => [row.apiKeyId, parseFloat(row.total) || 0]),
+    );
+  }
+
   private mapUsageRow(row: {
     credits?: string | null;
     requests?: string | null;
