@@ -8,6 +8,8 @@ import { UnexpectedAuthenticationError } from 'src/iam/authentication/applicatio
 import { CreateSessionUseCase } from 'src/iam/sessions/application/use-cases/create-session/create-session.use-case';
 import { CreateSessionCommand } from 'src/iam/sessions/application/use-cases/create-session/create-session.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { AuthorizeUserLoginCommand } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.command';
+import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
 
 @Injectable()
 export class LoginUseCase {
@@ -17,6 +19,7 @@ export class LoginUseCase {
     @Inject(AUTHENTICATION_REPOSITORY)
     private readonly authRepository: AuthenticationRepository,
     private readonly createSessionUseCase: CreateSessionUseCase,
+    private readonly authorizeUserLoginUseCase: AuthorizeUserLoginUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedAuthenticationError)
@@ -27,6 +30,9 @@ export class LoginUseCase {
         email: command.user.email,
       },
       'login',
+    );
+    await this.authorizeUserLoginUseCase.execute(
+      new AuthorizeUserLoginCommand(command.user.id),
     );
 
     const accessToken = await this.authRepository.generateAccessToken(

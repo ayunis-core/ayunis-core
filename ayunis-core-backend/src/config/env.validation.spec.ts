@@ -84,6 +84,17 @@ describe('validateEnv', () => {
       ).toThrow(/URL_RETRIEVER_MAX_DOWNLOAD_BYTES/);
     });
 
+    it.each([
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '0'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '1.5'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '1e2'],
+      ['AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS', '0x10'],
+      ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', '0'],
+      ['AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES', 'not-a-number'],
+    ])('rejects invalid %s values', (key, value) => {
+      expect(() => validateEnv(baseEnv({ [key]: value }))).toThrow(key);
+    });
+
     it('accepts a valid integer var', () => {
       expect(() =>
         validateEnv(baseEnv({ URL_RETRIEVER_MAX_DOWNLOAD_BYTES: '1048576' })),

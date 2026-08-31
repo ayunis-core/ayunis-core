@@ -1,29 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
-import { UsersRepository } from '../../ports/users.repository';
+import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { UpdatePasswordCommand } from './update-password.command';
 import {
+  UserAuthenticationFailedError,
   UserInvalidInputError,
   UserNotFoundError,
   UserUnexpectedError,
-} from '../../users.errors';
+} from 'src/iam/users/application/users.errors';
 import { HashTextCommand } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.command';
 import { HashTextUseCase } from 'src/iam/hashing/application/use-cases/hash-text/hash-text.use-case';
-import { ValidateUserUseCase } from '../validate-user/validate-user.use-case';
-import { ValidateUserQuery } from '../validate-user/validate-user.query';
 import { InvalidPasswordError } from 'src/iam/authentication/application/authentication.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RevokeOtherSessionsForUserUseCase } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.use-case';
 import { RevokeOtherSessionsForUserCommand } from 'src/iam/sessions/application/use-cases/revoke-other-sessions-for-user/revoke-other-sessions-for-user.command';
 import { ContextService } from 'src/common/context/services/context.service';
+import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
+import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
+import type { User } from 'src/iam/users/domain/user.entity';
 
 @Injectable()
 export class UpdatePasswordUseCase {
+  // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
     @InjectPinoLogger(UpdatePasswordUseCase.name)
     private readonly logger: PinoLogger,
-    private readonly validateUserUseCase: ValidateUserUseCase,
+    private readonly compareHashUseCase: CompareHashUseCase,
     private readonly usersRepository: UsersRepository,
     private readonly hashTextUseCase: HashTextUseCase,
     private readonly revokeOtherSessionsForUserUseCase: RevokeOtherSessionsForUserUseCase,
@@ -43,9 +46,7 @@ export class UpdatePasswordUseCase {
       throw new UserNotFoundError(command.userId);
     }
 
-    await this.validateUserUseCase.execute(
-      new ValidateUserQuery(user.email, command.currentPassword),
-    );
+    await this.assertCurrentPassword(user, command.currentPassword);
 
     const isValidPassword = await this.usersRepository.isValidPassword(
       command.newPassword,
@@ -63,6 +64,21 @@ export class UpdatePasswordUseCase {
     await this.usersRepository.update(user);
 
     await this.revokeOtherSessions(command.userId);
+  }
+
+  private async assertCurrentPassword(
+    user: User,
+    currentPassword: string,
+  ): Promise<void> {
+    if (user.passwordHash === null) {
+      throw new UserAuthenticationFailedError('Invalid password');
+    }
+    const isValid = await this.compareHashUseCase.execute(
+      new CompareHashCommand(currentPassword, user.passwordHash),
+    );
+    if (!isValid) {
+      throw new UserAuthenticationFailedError('Invalid password');
+    }
   }
 
   /**

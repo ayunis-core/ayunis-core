@@ -16,6 +16,7 @@ describe('SuperAdminUserListItemResponseDtoMapper', () => {
       orgId: '36899a8a-bc67-4456-b824-19874f76b87b',
       name: 'Alex Meier',
       hasAcceptedMarketing: false,
+      lockedAt: new Date('2026-08-24T10:00:00.000Z'),
       createdAt: new Date('2026-08-18T10:00:00.000Z'),
     });
     const mapper = new SuperAdminUserListItemResponseDtoMapper(
@@ -38,6 +39,7 @@ describe('SuperAdminUserListItemResponseDtoMapper', () => {
         email: 'alex.meier@example.de',
         orgId: user.orgId,
         orgName: 'Stadt Beispiel',
+        isLocked: true,
       }),
     ]);
     expect(result.pagination).toEqual({ limit: 25, offset: 0, total: 1 });

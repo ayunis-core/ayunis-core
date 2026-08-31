@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ValidateUserUseCase } from 'src/iam/users/application/use-cases/validate-user/validate-user.use-case';
 import { ValidateUserQuery } from 'src/iam/users/application/use-cases/validate-user/validate-user.query';
 import { Strategy } from 'passport-local';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   UserAuthenticationFailedError,
   UserNotFoundError,
