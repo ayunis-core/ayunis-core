@@ -10,10 +10,10 @@ vi.mock('@/pages/settings/account-settings/ui/ProfileInformationCard', () => ({
   ProfileInformationCard: () => null,
 }));
 vi.mock('@/pages/settings/account-settings/ui/PasswordSettingsPage', () => ({
-  default: () => null,
+  default: () => <div data-testid="password-settings" />,
 }));
 vi.mock('@/pages/settings/account-settings/ui/TwoFactorCard', () => ({
-  TwoFactorCard: () => null,
+  TwoFactorCard: () => <div data-testid="two-factor-settings" />,
 }));
 vi.mock('@/pages/settings/account-settings/ui/AcademyCertificateCard', () => ({
   AcademyCertificateCard: () => null,
@@ -24,10 +24,35 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe(AccountSettingsPage.name, () => {
+  it('shows password and two-factor settings for local users', () => {
+    render(
+      <AccountSettingsPage
+        user={{ name: 'Admin', email: 'admin@stadt.example' }}
+        isSsoEnabled={false}
+      />,
+    );
+
+    expect(screen.getByTestId('password-settings')).toBeTruthy();
+    expect(screen.getByTestId('two-factor-settings')).toBeTruthy();
+  });
+
+  it('hides password and two-factor settings for SSO users', () => {
+    render(
+      <AccountSettingsPage
+        user={{ name: 'Admin', email: 'admin@stadt.example' }}
+        isSsoEnabled
+      />,
+    );
+
+    expect(screen.queryByTestId('password-settings')).toBeNull();
+    expect(screen.queryByTestId('two-factor-settings')).toBeNull();
+  });
+
   it('does not offer organization SSO account linking', () => {
     render(
       <AccountSettingsPage
         user={{ name: 'Admin', email: 'admin@stadt.example' }}
+        isSsoEnabled
       />,
     );
 
