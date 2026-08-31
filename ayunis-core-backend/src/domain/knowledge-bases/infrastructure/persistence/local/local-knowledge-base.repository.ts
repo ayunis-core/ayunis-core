@@ -1,7 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
-import type { UUID } from 'crypto';
+import {
+  Brackets,
+  Repository,
+  SelectQueryBuilder,
+  type EntityManager,
+} from 'typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { randomUUID, type UUID } from 'crypto';
 import {
   KnowledgeBaseRepository,
   type KnowledgeBaseListOptions,
@@ -13,6 +20,10 @@ import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/loca
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
+import { ShareScopeType } from 'src/domain/shares/domain/value-objects/share-scope-type.enum';
+import { SharedEntityType } from 'src/domain/shares/domain/value-objects/shared-entity-type.enum';
+import { buildActiveKnowledgeBaseAccessQueries } from './queries/active-knowledge-base-access.query';
 
 @Injectable()
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
@@ -20,18 +31,47 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
 
   constructor(
     @InjectRepository(KnowledgeBaseRecord)
-    private readonly repository: Repository<KnowledgeBaseRecord>,
+    private readonly defaultKnowledgeBaseRepository: Repository<KnowledgeBaseRecord>,
     @InjectRepository(SourceRecord)
-    private readonly sourceRepository: Repository<SourceRecord>,
+    private readonly defaultSourceRepository: Repository<SourceRecord>,
+    @InjectRepository(KnowledgeBaseActivationRecord)
+    private readonly defaultActivationRepository: Repository<KnowledgeBaseActivationRecord>,
     private readonly mapper: KnowledgeBaseMapper,
     private readonly sourceMapper: SourceMapper,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
   }
 
+  private get knowledgeBaseRepository(): Repository<KnowledgeBaseRecord> {
+    const transactionManager = this.txHost.tx as EntityManager | undefined;
+    return (
+      transactionManager?.getRepository(KnowledgeBaseRecord) ??
+      this.defaultKnowledgeBaseRepository
+    );
+  }
+
+  private get sourceRepository(): Repository<SourceRecord> {
+    const transactionManager = this.txHost.tx as EntityManager | undefined;
+    return (
+      transactionManager?.getRepository(SourceRecord) ??
+      this.defaultSourceRepository
+    );
+  }
+
+  private get activationRepository(): Repository<KnowledgeBaseActivationRecord> {
+    const transactionManager = this.txHost.tx as EntityManager | undefined;
+    return (
+      transactionManager?.getRepository(KnowledgeBaseActivationRecord) ??
+      this.defaultActivationRepository
+    );
+  }
+
   async findById(id: UUID): Promise<KnowledgeBase | null> {
     this.logger.debug({ id }, 'findById');
-    const record = await this.repository.findOne({ where: { id } });
+    const record = await this.knowledgeBaseRepository.findOne({
+      where: { id },
+    });
     if (!record) {
       return null;
     }
@@ -43,7 +83,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     if (ids.length === 0) {
       return [];
     }
-    const records = await this.repository.find({
+    const records = await this.knowledgeBaseRepository.find({
       where: ids.map((id) => ({ id })),
     });
     return records.map((record) => this.mapper.toDomain(record));
@@ -51,10 +91,70 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
 
   async findAllByUserId(userId: UUID): Promise<KnowledgeBase[]> {
     this.logger.debug({ userId }, 'findAllByUserId');
-    const records = await this.repository.find({
+    const records = await this.knowledgeBaseRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
     });
+    return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async activate(knowledgeBaseId: UUID, userId: UUID): Promise<void> {
+    await this.activationRepository
+      .createQueryBuilder()
+      .insert()
+      .into(KnowledgeBaseActivationRecord)
+      .values({ id: randomUUID(), knowledgeBaseId, userId })
+      .orIgnore()
+      .execute();
+  }
+
+  async deactivate(knowledgeBaseId: UUID, userId: UUID): Promise<void> {
+    await this.activationRepository.delete({ knowledgeBaseId, userId });
+  }
+
+  async isActive(knowledgeBaseId: UUID, userId: UUID): Promise<boolean> {
+    return this.activationRepository.existsBy({ knowledgeBaseId, userId });
+  }
+
+  async getActiveIds(userId: UUID): Promise<Set<UUID>> {
+    const activations = await this.activationRepository.find({
+      select: { knowledgeBaseId: true },
+      where: { userId },
+    });
+    return new Set(activations.map(({ knowledgeBaseId }) => knowledgeBaseId));
+  }
+
+  async findActiveAccessible(
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<KnowledgeBase[]> {
+    const query =
+      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
+    const access = buildActiveKnowledgeBaseAccessQueries(query);
+    const records = await query
+      .innerJoin(
+        KnowledgeBaseActivationRecord,
+        'activation',
+        'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
+      )
+      .where(
+        new Brackets((accessQuery) => {
+          accessQuery
+            .where('knowledgeBase.userId = :userId')
+            .orWhere(`EXISTS ${access.directShare}`)
+            .orWhere(`EXISTS ${access.sharedSkill}`);
+        }),
+      )
+      .setParameters({
+        userId,
+        orgId,
+        skillEntityType: SharedEntityType.SKILL,
+        orgScopeType: ShareScopeType.ORG,
+        teamScopeType: ShareScopeType.TEAM,
+      })
+      .orderBy('LOWER(knowledgeBase.name)', 'ASC')
+      .addOrderBy('knowledgeBase.id', 'ASC')
+      .getMany();
     return records.map((record) => this.mapper.toDomain(record));
   }
 
@@ -101,7 +201,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const queryBuilder = this.repository
+    const queryBuilder = this.knowledgeBaseRepository
       .createQueryBuilder('knowledgeBase')
       .where(
         new Brackets((accessQuery) => {
@@ -139,14 +239,14 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   async save(knowledgeBase: KnowledgeBase): Promise<KnowledgeBase> {
     this.logger.debug({ id: knowledgeBase.id }, 'save');
     const record = this.mapper.toRecord(knowledgeBase);
-    const saved = await this.repository.save(record);
+    const saved = await this.knowledgeBaseRepository.save(record);
     return this.mapper.toDomain(saved);
   }
 
   async delete(knowledgeBase: KnowledgeBase): Promise<void> {
     this.logger.debug({ id: knowledgeBase.id }, 'delete');
     const record = this.mapper.toRecord(knowledgeBase);
-    await this.repository.remove(record);
+    await this.knowledgeBaseRepository.remove(record);
   }
 
   async assignSourceToKnowledgeBase(

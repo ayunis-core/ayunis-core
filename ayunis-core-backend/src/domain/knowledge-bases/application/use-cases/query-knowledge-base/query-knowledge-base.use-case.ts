@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { QueryKnowledgeBaseQuery } from './query-knowledge-base.query';
 import {
@@ -11,7 +12,6 @@ import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-ty
 import type { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { ContextService } from 'src/common/context/services/context.service';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
@@ -34,25 +34,11 @@ export class QueryKnowledgeBaseUseCase {
     private readonly knowledgeBaseAccessService: KnowledgeBaseAccessService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(
     query: QueryKnowledgeBaseQuery,
   ): Promise<KnowledgeBaseQueryResult[]> {
-    try {
-      return await this.executeInternal(query);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error querying knowledge base',
-      );
-      throw new UnexpectedKnowledgeBaseError('Error querying knowledge base', {
-        err: error as Error,
-      });
-    }
+    return await this.executeInternal(query);
   }
 
   private async executeInternal(

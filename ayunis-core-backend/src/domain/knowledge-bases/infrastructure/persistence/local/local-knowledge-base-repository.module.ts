@@ -6,10 +6,15 @@ import { LocalKnowledgeBaseRepository } from './local-knowledge-base.repository'
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { LocalSourceRepositoryModule } from 'src/domain/sources/infrastructure/persistence/local/local-source-repository.module';
+import { KnowledgeBaseActivationRecord } from './schema/knowledge-base-activation.record';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([KnowledgeBaseRecord, SourceRecord]),
+    TypeOrmModule.forFeature([
+      KnowledgeBaseRecord,
+      KnowledgeBaseActivationRecord,
+      SourceRecord,
+    ]),
     LocalSourceRepositoryModule,
   ],
   providers: [

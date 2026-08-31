@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { GetKnowledgeBasesByIdsQuery } from './get-knowledge-bases-by-ids.query';
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { ContextService } from 'src/common/context/services/context.service';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 
 /**
@@ -27,6 +27,7 @@ export class GetKnowledgeBasesByIdsUseCase {
    * @param query Query containing the knowledge base IDs
    * @returns Array of KnowledgeBase entities (missing/unauthorized IDs omitted)
    */
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: GetKnowledgeBasesByIdsQuery): Promise<KnowledgeBase[]> {
     this.logger.log(
       {
@@ -35,32 +36,19 @@ export class GetKnowledgeBasesByIdsUseCase {
       'getKnowledgeBasesByIds',
     );
 
-    try {
-      const orgId = this.contextService.get('orgId');
-      if (!orgId) {
-        throw new UnauthorizedAccessError();
-      }
-
-      if (query.knowledgeBaseIds.length === 0) {
-        return [];
-      }
-
-      const knowledgeBases = await this.knowledgeBaseRepository.findByIds(
-        query.knowledgeBaseIds,
-      );
-
-      return knowledgeBases.filter((kb) => kb.orgId === orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Unexpected error getting knowledge bases by IDs',
-      );
-      throw new UnexpectedKnowledgeBaseError('Unexpected error occurred');
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) {
+      throw new UnauthorizedAccessError();
     }
+
+    if (query.knowledgeBaseIds.length === 0) {
+      return [];
+    }
+
+    const knowledgeBases = await this.knowledgeBaseRepository.findByIds(
+      query.knowledgeBaseIds,
+    );
+
+    return knowledgeBases.filter((kb) => kb.orgId === orgId);
   }
 }

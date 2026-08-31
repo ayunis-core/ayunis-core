@@ -178,6 +178,7 @@ import type {
   SetCreditsPerEuroRequestDto,
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
+  SetKnowledgeBaseActivationRequestDto,
   SetOrgDefaultModelDto,
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
@@ -10088,6 +10089,71 @@ export const useKnowledgeBasesControllerDelete = <TError = void,
       > => {
 
       const mutationOptions = getKnowledgeBasesControllerDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set knowledge base activation for the user
+ */
+export const knowledgeBasesControllerSetActivation = (
+    id: string,
+    setKnowledgeBaseActivationRequestDto: SetKnowledgeBaseActivationRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<KnowledgeBaseResponseDto>(
+      {url: `/knowledge-bases/${id}/activation`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setKnowledgeBaseActivationRequestDto
+    },
+      );
+    }
+  
+
+
+export const getKnowledgeBasesControllerSetActivationMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>, TError,{id: string;data: SetKnowledgeBaseActivationRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>, TError,{id: string;data: SetKnowledgeBaseActivationRequestDto}, TContext> => {
+
+const mutationKey = ['knowledgeBasesControllerSetActivation'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>, {id: string;data: SetKnowledgeBaseActivationRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBasesControllerSetActivation(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerSetActivationMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>>
+    export type KnowledgeBasesControllerSetActivationMutationBody = SetKnowledgeBaseActivationRequestDto
+    export type KnowledgeBasesControllerSetActivationMutationError = void
+
+    /**
+ * @summary Set knowledge base activation for the user
+ */
+export const useKnowledgeBasesControllerSetActivation = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>, TError,{id: string;data: SetKnowledgeBaseActivationRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerSetActivation>>,
+        TError,
+        {id: string;data: SetKnowledgeBaseActivationRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeBasesControllerSetActivationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
