@@ -181,6 +181,22 @@
       "ollama": "Selbst gehostet über Ollama."
     }
   },
+  "accountLock": {
+    "status": {
+      "active": "Aktiv",
+      "locked": "Gesperrt"
+    },
+    "unlock": {
+      "menuItem": "Konto entsperren",
+      "confirmTitle": "Konto entsperren?",
+      "confirmDescription": "{{name}} darf sich wieder anmelden und die fehlgeschlagenen Anmeldeversuche werden zurückgesetzt.",
+      "confirmText": "Entsperren",
+      "cancelText": "Abbrechen",
+      "success": "Konto wurde entsperrt.",
+      "notFound": "Benutzer wurde nicht gefunden.",
+      "error": "Das Konto konnte nicht entsperrt werden."
+    }
+  },
   "mfa": {
     "enroll": {
       "scanInstruction": "Scannen Sie den QR-Code mit Ihrer Authenticator-App (z. B. Google Authenticator) und geben Sie den 6-stelligen Code zur Bestätigung ein.",

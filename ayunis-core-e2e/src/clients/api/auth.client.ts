@@ -1,5 +1,6 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, APIResponse } from '@playwright/test';
 import type { SsoDiscoveryResponseDto } from '../generated/ayunisCoreAPI.schemas';
+import { config } from '../../config';
 import { generatedApi } from './generated-api';
 
 export interface RegisterOrgInput {
@@ -27,7 +28,20 @@ export async function login(
   email: string,
   password: string,
 ): Promise<void> {
-  await generatedApi.authenticationControllerLogin({ email, password }, { api });
+  await generatedApi.authenticationControllerLogin(
+    { email, password },
+    { api },
+  );
+}
+
+export function submitLoginAttempt(
+  api: APIRequestContext,
+  email: string,
+  password: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/auth/login`, {
+    data: { email, password },
+  });
 }
 
 export async function isLoggedIn(api: APIRequestContext): Promise<boolean> {

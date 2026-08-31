@@ -54,6 +54,8 @@ export interface UserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
 }
@@ -218,6 +220,8 @@ export interface SuperAdminUserListItemResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
   /** Name of the organization the user belongs to */
@@ -272,6 +276,8 @@ export interface SuperAdminUserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
   /** System-level role of the user */

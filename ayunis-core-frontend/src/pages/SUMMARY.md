@@ -8,7 +8,7 @@ The workspace page also includes the Erstellte Inhalte tab for project artifacts
 
 The `workspace/` page slice also includes context tabs for Wissen, Skills and Anweisungen. Its route loader fetches workspace context and attachable skill/knowledge-base candidates, while `api/useWorkspaceContextActions.ts` owns context mutations and invalidates the workspace context queries after changes.
 
-The `super-admin-settings/users/` page provides a searchable cross-organization user directory with password reset, organization navigation, deletion, and CSV export controls.
+The `super-admin-settings/users/` page provides a searchable cross-organization user directory with account lock status, account recovery, password reset, organization navigation, deletion, and CSV export controls. Organization admins see the same lock status and recovery action in their user settings.
 
 Municipal SSO uses separate auth route slices for direct organization links, successful completion, and actionable failures. Every broker callback lands on one of these fixed application routes. SSO connections are managed by Superadmins rather than organization admins from Account Settings.
 
