@@ -164,7 +164,7 @@ For schema changes, use the `typeorm-migrations` skill. Never write migrations b
 
 ## Persistence Queries
 
-When creating or modifying repositories, finders, QueryBuilder code, or database calls in loops, load the `persistence-query-review` skill. Count the complete call path's database round trips and prefer an atomic database operation when it preserves the same behavior.
+When creating or modifying repositories, finders, QueryBuilder code, or database calls in loops, load the `persistence-query-review` skill when it is available. Count the complete call path's database round trips and prefer an atomic database operation when it preserves the same behavior.
 
 ## Completion Checklist
 

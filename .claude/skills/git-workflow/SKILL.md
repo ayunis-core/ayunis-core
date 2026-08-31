@@ -9,7 +9,7 @@ This project uses **Graphite** for stacked PRs. Always use `gt`, never raw `git 
 
 | Situation | Read first |
 | --- | --- |
-| New PR, new branch, "based on main", or a follow-up that depends on unmerged work | `references/starting-work.md` — verify the base **before** the first edit |
+| Starting or resuming any work in a stacked-PR context—including amendments—or choosing a base for a new/follow-up PR | `references/starting-work.md` — sync and verify the base **before** the first edit |
 | A `gt` command aborted, warned, or no-op'd (untracked branch, must-restack, worktree collision, remote divergence) | `references/submit-troubleshooting.md` |
 
 ## Commit Message Format
@@ -70,6 +70,10 @@ Only the last PR uses `feat:` — that's the single changelog entry. Use a seman
 
 The worktree branch (if using worktrees) is the **base branch**; Graphite stacks are built on top of it. Being clean is not the same as being on `main`, and the default base is **not** always `main` — verify per `references/starting-work.md` before editing.
 
+### Working-tree hygiene
+
+Before staging for `gt create` or `gt modify`, and again before `gt submit`, run `git status --short` and review the working tree. If files you didn't touch in this session are modified (formatter passes, watcher artifacts, removed comments, or other unrelated changes), surface them to the user explicitly before staging. Restore them or get explicit confirmation that they belong in the commit; never bundle them silently.
+
 ### New commit → new stacked branch
 
 Each logical unit of work gets its own `gt create`:
@@ -101,13 +105,10 @@ gt modify              # amends, keeps the message, restacks descendants
 Pre-flight, every time — `--force` overwrites remote commits, and under `--no-interactive` the warning does not halt:
 
 ```bash
-git status --short                            # unrelated modified files? surface them, never bundle silently
 git fetch origin
 gt log short                                  # list every branch in the stack
 git log --oneline HEAD..origin/<branch>       # remote-only commits — for EACH branch, not just the edited ones
 ```
-
-Modified files you didn't touch this session (formatter passes, watcher artifacts) → `git restore` them or get explicit confirmation they belong in the commit; never bundle them silently.
 
 Any commits in `HEAD..origin/<branch>` → **stop and reconcile** (`git pull --rebase` or `gt restack`). Never `--force` past them: Cursor agent autofixes, CI commits, and teammate pushes routinely land on branches you didn't touch this session.
 

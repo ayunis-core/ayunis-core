@@ -21,11 +21,33 @@ Use the remote `headRefOid` as the revision under verification. If the remote he
 
 ## 2. Wait for CI and Bugbot
 
-Wait for all checks on every submitted PR:
+Wait for all checks on every submitted PR. For an ordinary PR:
 
 ```bash
 gh pr checks <pr-number> --watch --interval 30
 ```
+
+### Graphite downstack sentinel — do not use `--watch`
+
+On a stacked PR, Graphite deliberately keeps `Graphite / mergeability_check` in progress until every downstack PR merges. `gh pr checks --watch` waits for that sentinel forever even after all real verification has passed.
+
+Before watching a stacked PR, inspect the check run on the recorded head SHA:
+
+```bash
+gh api repos/{owner}/{repo}/commits/<head-sha>/check-runs \
+  --jq '.check_runs[] | select(.name == "Graphite / mergeability_check") |
+    {status, conclusion, title: .output.title, summary: .output.summary}'
+```
+
+Treat it as an intentional pending sentinel **only** when its current-SHA output explicitly says that it will pass when downstack PRs merge (and names the downstack dependency). Do not ignore the check merely because its name contains `Graphite`; any other output or a failed conclusion requires investigation.
+
+When the sentinel is confirmed, do not run `gh pr checks --watch` for that PR. Poll the JSON state instead and evaluate every check except that exact sentinel:
+
+```bash
+gh pr checks <pr-number> --json name,bucket,state,link
+```
+
+Continue while any non-sentinel check is pending; handle any non-sentinel failure or cancellation normally. Once all non-sentinel checks have passed or intentionally skipped, record the sentinel and its downstack PR in the verification report and continue to Bugbot comment triage. The sentinel is expected stack state, not a blocker and not evidence that CI is still running.
 
 If no checks are visible immediately after submission, wait 30 seconds and query again. Do not interpret absent checks as success.
 
@@ -99,7 +121,7 @@ For valid findings, amend the existing PR rather than creating a separate fix PR
 Do not declare the task complete until all of these are true for every submitted PR:
 
 - The recorded remote head SHA is still the PR's current head.
-- Every CI check has completed successfully, or was intentionally skipped with a documented reason.
+- Every CI check has completed successfully or was intentionally skipped with a documented reason; a current-SHA Graphite downstack sentinel verified as described in §2 is also acceptable and must be documented.
 - Cursor Bugbot completed on the current head.
 - All Bugbot comments across the submitted stack were triaged and no actionable finding remains.
 - The local worktree is clean and the submitted branches contain every fix.
