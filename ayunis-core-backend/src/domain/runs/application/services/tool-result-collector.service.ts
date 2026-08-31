@@ -4,8 +4,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
 import { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
-import { MessageContentType } from 'src/domain/messages/domain/value-objects/message-content-type.object';
-import { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ExecuteToolUseCase } from 'src/domain/tools/application/use-cases/execute-tool/execute-tool.use-case';
@@ -43,23 +41,20 @@ import { MAX_ANONYMIZATION_TEXT_LENGTH } from 'src/common/anonymization/applicat
 const DISPLAY_ACK = 'Tool has been displayed successfully';
 const EXTERNAL_TOOL_RESULT = 'Tool execution is handled externally';
 
-export interface ToolResultOutcome {
-  toolName: string;
-  result: string;
-  succeeded: boolean;
-}
-
 interface ProcessedToolResult {
   content: ToolResultMessageContent;
   succeeded: boolean;
   piiMasks: ThreadPiiMask[] | null;
 }
 
-export interface CollectedToolResults {
+interface ToolProcessingContext {
+  orgId: UUID;
+  threadId: UUID;
+  isAnonymous: boolean;
+}
+
+interface CollectedToolResults {
   contents: ToolResultMessageContent[];
-  /** Per-result success flags, in content order — feeds the run loop's repeated-failure breaker (AYC-646). */
-  outcomes: ToolResultOutcome[];
-  /** Latest full mask dictionary when any result was anonymized, else null. */
   piiMasks: ThreadPiiMask[] | null;
 }
 
@@ -77,16 +72,15 @@ export class ToolResultCollectorService {
   async collectToolResults(params: {
     thread: Thread;
     tools: Tool[];
-    input: RunToolResultInput | null;
+    input: RunToolResultInput;
     orgId: UUID;
     isAnonymous: boolean;
     executionPath: RunExecutionPath;
-    message?: AssistantMessage;
   }): Promise<CollectedToolResults> {
     this.logger.debug('collectToolResults');
     const { thread, tools, input, orgId, isAnonymous } = params;
 
-    const lastMessage = params.message ?? thread.getLastMessage();
+    const lastMessage = thread.getLastMessage();
     const toolUseMessageContent = lastMessage
       ? lastMessage.content.filter(
           (content) => content instanceof ToolUseMessageContent,
@@ -94,20 +88,16 @@ export class ToolResultCollectorService {
       : [];
 
     const contents: ToolResultMessageContent[] = [];
-    const outcomes: ToolResultOutcome[] = [];
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of toolUseMessageContent) {
       let result: ProcessedToolResult;
       try {
-        result = await this.processToolUse(
-          content,
-          tools,
-          input,
+        result = await this.processToolUse(content, tools, input, {
           orgId,
-          thread.id,
+          threadId: thread.id,
           isAnonymous,
-        );
+        });
       } catch (error) {
         this.emitToolCompleted(params.executionPath, 'error', content.name);
         throw error;
@@ -115,16 +105,11 @@ export class ToolResultCollectorService {
       const outcome = result.succeeded ? 'success' : 'error';
       this.emitToolCompleted(params.executionPath, outcome, content.name);
       contents.push(result.content);
-      outcomes.push({
-        toolName: result.content.toolName,
-        result: result.content.result,
-        succeeded: result.succeeded,
-      });
       // Each anonymization returns the full dictionary — the latest wins.
       piiMasks = result.piiMasks ?? piiMasks;
     }
 
-    return { contents, outcomes, piiMasks };
+    return { contents, piiMasks };
   }
 
   private emitToolCompleted(
@@ -154,10 +139,8 @@ export class ToolResultCollectorService {
   private async processToolUse(
     content: ToolUseMessageContent,
     tools: Tool[],
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     const tool = tools.find((t) => t.name === content.name);
     if (!tool) {
@@ -172,17 +155,10 @@ export class ToolResultCollectorService {
       };
     }
 
-    this.emitToolUsedEvent(orgId, content);
+    this.emitToolUsedEvent(context.orgId, content);
 
     try {
-      return await this.executeByRuntimePolicy(
-        tool,
-        content,
-        input,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+      return await this.executeByRuntimePolicy(tool, content, input, context);
     } catch (error) {
       if (error instanceof ApplicationError) {
         throw error;
@@ -227,20 +203,11 @@ export class ToolResultCollectorService {
   private async executeByRuntimePolicy(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     if (isHybridArtifactTool(tool)) {
-      return this.processHybridTool(
-        tool,
-        content,
-        input,
-        orgId,
-        threadId,
-        isAnonymous,
-      );
+      return this.processHybridTool(tool, content, input, context);
     }
     if (isAcknowledgementOnlyTool(tool)) {
       return {
@@ -259,23 +226,27 @@ export class ToolResultCollectorService {
         piiMasks: null,
       };
     }
-    return this.executeBackendTool(tool, content, orgId, threadId, isAnonymous);
+    return this.executeBackendTool(
+      tool,
+      content,
+      context.orgId,
+      context.threadId,
+      context.isAnonymous,
+    );
   }
 
   private async processHybridTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
-    orgId: UUID,
-    threadId: UUID,
-    isAnonymous: boolean,
+    input: RunToolResultInput,
+    context: ToolProcessingContext,
   ): Promise<ProcessedToolResult> {
     const executionResult = await this.executeBackendTool(
       tool,
       content,
-      orgId,
-      threadId,
-      isAnonymous,
+      context.orgId,
+      context.threadId,
+      context.isAnonymous,
     );
     if (executionResult.succeeded) {
       // No re-validation here: the handler already validated the
@@ -293,75 +264,16 @@ export class ToolResultCollectorService {
     };
   }
 
-  exitLoopAfterAgentResponse(
-    agentResponseMessage: AssistantMessage,
-    tools: Tool[],
-  ): boolean {
-    const responseDoesNotContainToolCalls = agentResponseMessage.content.every(
-      (content) => content.type !== MessageContentType.TOOL_USE,
-    );
-    if (responseDoesNotContainToolCalls) return true;
-
-    try {
-      const calls = agentResponseMessage.content
-        .filter((content) => content instanceof ToolUseMessageContent)
-        .map((content) => ({
-          content,
-          tool: this.findTool(content, tools),
-        }));
-      const hasExternalCall = calls.some(
-        ({ tool }) => tool !== undefined && isExternallyHandledTool(tool),
-      );
-      const allCallsValid = calls.every(({ content, tool }) =>
-        this.isValidForTerminalPhase(content, tool),
-      );
-      if (hasExternalCall && allCallsValid) return true;
-    } catch (error) {
-      this.logger.error(
-        { err: error instanceof Error ? error : new Error(String(error)) },
-        'Error checking for display tools',
-      );
-    }
-
-    return false;
-  }
-
-  private findTool(
-    content: ToolUseMessageContent,
-    tools: Tool[],
-  ): Tool | undefined {
-    const tool = tools.find((candidate) => candidate.name === content.name);
-    if (!tool) {
-      this.logger.warn(
-        { toolName: content.name },
-        'Tool mentioned in response but not found',
-      );
-      return undefined;
-    }
-    return tool;
-  }
-
-  private isValidForTerminalPhase(
-    content: ToolUseMessageContent,
-    tool: Tool | undefined,
-  ): boolean {
-    if (!tool) return false;
-    if (!isAcknowledgementOnlyTool(tool) && !isExternallyHandledTool(tool)) {
-      return true;
-    }
-    return this.validateClientRenderedParams(tool, content) === null;
-  }
-
   private processClientRenderedTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
+    input: RunToolResultInput,
     defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
     // An explicit frontend-supplied result means the user already interacted
     // with the rendered widget — never block it on (possibly historical)
     // invalid params.
-    if (input?.toolId !== content.id) {
+    if (input.toolId !== content.id) {
       const validationError = this.validateClientRenderedParams(tool, content);
       if (validationError !== null) {
         return {
@@ -379,10 +291,10 @@ export class ToolResultCollectorService {
 
   private handleClientRenderedTool(
     content: ToolUseMessageContent,
-    input: RunToolResultInput | null,
+    input: RunToolResultInput,
     defaultResult: string,
   ): { content: ToolResultMessageContent; succeeded: boolean } {
-    if (input?.toolId === content.id) {
+    if (input.toolId === content.id) {
       return {
         content: new ToolResultMessageContent(
           input.toolId,

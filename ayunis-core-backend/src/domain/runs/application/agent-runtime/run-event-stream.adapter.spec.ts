@@ -18,14 +18,14 @@ import {
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
-} from '../runs.errors';
-import type { RunExecutionFailedError } from '../runs.errors';
+  type RunExecutionFailedError,
+} from 'src/domain/runs/application/runs.errors';
 import { adaptRunEventsToStream } from './run-event-stream.adapter';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 
@@ -528,8 +528,7 @@ describe('adaptRunEventsToStream', () => {
 
   it('maps a malformed tool call to the inference-failed error', async () => {
     // Truncated/unparseable tool-call arguments must surface as one clear
-    // inference failure — matching the legacy loop — instead of a generic
-    // runtime error (AYC-646).
+    // inference failure instead of a generic runtime error (AYC-646).
     await expect(
       collect(
         eventsFrom([

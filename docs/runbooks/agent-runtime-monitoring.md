@@ -1,27 +1,8 @@
-# Agent runtime rollout
+# Agent runtime monitoring
 
-`FEATURE_AGENT_RUNTIME_ENABLED` routes chat runs through `@ayunis/agent-runtime`. It defaults to `false`; changing it requires a deployment. Do not enable production before the earlier environments are verified.
+All chat runs use `@ayunis/agent-runtime`. The run, tool, and usage metrics retain the bounded `execution_path` and `outcome` labels so dashboards remain continuous with rollout-era data. Existing inference metrics also retain provider, configurable model name, error class, and streaming labels. None of these metrics includes user, organization, thread, run, or model IDs.
 
-## Rollout and rollback
-
-Enable and verify in this order:
-
-1. staging
-2. internal
-3. production
-
-For rollback, set `FEATURE_AGENT_RUNTIME_ENABLED=false`, redeploy, and repeat the verification request below. A rollback is not verified merely because the deployment configuration says `false`; check the effective application value.
-
-```bash
-curl -fsS https://<backend>/api/feature-toggles \
-  | jq '.agentRuntimeEnabled'
-```
-
-The response must be `true` after enablement and `false` after rollback.
-
-## Prometheus rollout queries
-
-The new run, tool, and usage rollout metrics use only bounded `execution_path` and `outcome` labels. Existing inference metrics retain provider, configurable model name, error class, and streaming labels and gain `execution_path`. None of these changes adds user, organization, thread, run, or model IDs.
+## Prometheus queries
 
 ### Run count by execution path
 
@@ -106,9 +87,9 @@ or on (execution_path)
 )
 ```
 
-## AppSignal rollout queries
+## AppSignal queries
 
-Use these named structured-log searches and filter or group on the JSON attribute `execution_path` (`legacy` or `agent_runtime`):
+Use these named structured-log searches and filter or group on the JSON attribute `execution_path` (`agent_runtime` for all new runs):
 
 - **Terminal outcomes:** `message:"Run reached terminal outcome"`
 - **Tool failures:** `message:"Run tool call failed"`
@@ -116,6 +97,6 @@ Use these named structured-log searches and filter or group on the JSON attribut
 - **Critical runtime finalization failures:** `message:"Critical agent runtime finalization hook failed"`
 - **Best-effort runtime finalization failures:** `message:"Best-effort agent runtime finalization hook failed"`
 
-Terminal logs also carry `outcome`, `duration_ms`, and a safe `error_code` when available. Finalization logs carry `execution_path=agent_runtime`, hook name, criticality, and the original outcome. Provider incidents inherit the request trace; compare their Prometheus inference-error series by execution path for the rollout decision.
+Terminal logs also carry `outcome`, `duration_ms`, and a safe `error_code` when available. Finalization logs carry `execution_path=agent_runtime`, hook name, criticality, and the original outcome. Provider incidents inherit the request trace; correlate them with the Prometheus inference-error series by execution path.
 
 Modern AppSignal structured attributes are returned under the log line's `.json` field. An empty legacy `attributes` field in `appsignal-cli` does not mean these fields are absent.

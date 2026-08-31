@@ -11987,9 +11987,9 @@
             "description": "Whether the workspaces feature is enabled",
             "example": false
           },
-          "agentRuntimeEnabled": {
+          "ssoLoginEnabled": {
             "type": "boolean",
-            "description": "Whether runs use the independent agent runtime",
+            "description": "Whether employee-facing SSO login is enabled",
             "example": false
           }
         },
@@ -11998,7 +11998,7 @@
           "letterheadsEnabled",
           "skillsEnabled",
           "workspacesEnabled",
-          "agentRuntimeEnabled"
+          "ssoLoginEnabled"
         ]
       },
       "UserResponseDto": {

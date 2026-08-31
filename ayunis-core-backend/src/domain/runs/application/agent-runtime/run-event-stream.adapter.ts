@@ -11,14 +11,14 @@ import { ToolUseMessageContent } from 'src/domain/messages/domain/message-conten
 import {
   RunPiiMasksUpdate,
   type RunStreamItem,
-} from '../../domain/run-pii-masks-update.entity';
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunContextBudgetExceededError,
   RunExecutionFailedError,
   RunMaxIterationsReachedError,
   RunToolRepeatedlyFailingError,
-} from '../runs.errors';
+} from 'src/domain/runs/application/runs.errors';
 import { assistantMessageId, toolResultMessageId } from './message-id';
 import {
   toBackendAssistantMessage,
@@ -28,7 +28,7 @@ import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import type { RuntimeToolIntegrationRegistry } from './runtime-tool-integration.registry';
 import { reconstructRuntimeModelError } from './runtime-model-error';
 import { InferenceFailedError } from 'src/domain/models/application/models.errors';
-import type { RunExecutionOutcome } from '../run-execution-outcome';
+import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 
 /** Accumulates one assistant turn's streamed text/thinking for live display. */
 interface StreamingTurn {
@@ -51,7 +51,7 @@ interface StreamingTurn {
  *   carrying the tokens, as the client expects);
  * - `error` is captured and thrown only once the stream drains, so the
  *   runtime's `runEnd` hooks still fire before the error surfaces as an SSE
- *   error frame (matching the legacy loop's throw-then-cleanup order).
+ *   error frame.
  */
 export async function* adaptRunEventsToStream(
   events: AsyncIterable<RunEvent>,

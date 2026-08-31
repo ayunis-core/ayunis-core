@@ -2,19 +2,17 @@ import { Module, forwardRef } from '@nestjs/common';
 import { MESSAGES_REPOSITORY } from './application/ports/messages.repository';
 import { LocalMessagesRepository } from './infrastructure/persistence/local/local-messages.repository';
 import { LocalMessagesRepositoryModule } from './infrastructure/persistence/local/local-messages-repository.module';
-import { StorageModule } from '../storage/storage.module';
+import { StorageModule } from 'src/domain/storage/storage.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 
 // Use Cases
 import { CreateUserMessageUseCase } from './application/use-cases/create-user-message/create-user-message.use-case';
 import { CreateSystemMessageUseCase } from './application/use-cases/create-system-message/create-system-message.use-case';
-import { CreateAssistantMessageUseCase } from './application/use-cases/create-assistant-message/create-assistant-message.use-case';
 import { SaveAssistantMessageUseCase } from './application/use-cases/save-assistant-message/save-assistant-message.use-case';
 import { CreateToolResultMessageUseCase } from './application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { DeleteMessageUseCase } from './application/use-cases/delete-message/delete-message.use-case';
 import { CleanupOrphanedImagesUseCase } from './application/use-cases/cleanup-orphaned-images/cleanup-orphaned-images.use-case';
 import { CountMessagesTokensUseCase } from './application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
-import { TrimMessagesForContextUseCase } from './application/use-cases/trim-messages-for-context/trim-messages-for-context.use-case';
 
 // Services
 import { ImageContentService } from './application/services/image-content.service';
@@ -36,13 +34,11 @@ import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-image
     // Use Cases
     CreateUserMessageUseCase,
     CreateSystemMessageUseCase,
-    CreateAssistantMessageUseCase,
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
     DeleteMessageUseCase,
     CleanupOrphanedImagesUseCase,
     CountMessagesTokensUseCase,
-    TrimMessagesForContextUseCase,
     // Services
     ImageContentService,
     // Tasks
@@ -53,13 +49,11 @@ import { OrphanedImagesCleanupTask } from './infrastructure/tasks/orphaned-image
     // Use Cases
     CreateUserMessageUseCase,
     CreateSystemMessageUseCase,
-    CreateAssistantMessageUseCase,
     SaveAssistantMessageUseCase,
     CreateToolResultMessageUseCase,
     DeleteMessageUseCase,
     CleanupOrphanedImagesUseCase,
     CountMessagesTokensUseCase,
-    TrimMessagesForContextUseCase,
     // Services
     ImageContentService,
   ],

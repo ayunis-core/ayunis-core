@@ -89,7 +89,7 @@ export class AppController {
       letterheadsEnabled: this.features.letterheadsEnabled,
       skillsEnabled: this.features.skillsEnabled,
       workspacesEnabled: this.features.workspacesEnabled,
-      agentRuntimeEnabled: this.features.agentRuntimeEnabled,
+      ssoLoginEnabled: this.features.ssoLoginEnabled,
     };
   }
 }

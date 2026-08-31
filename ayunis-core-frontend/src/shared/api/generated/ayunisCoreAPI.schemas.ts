@@ -21,8 +21,8 @@ export interface FeatureTogglesResponseDto {
   skillsEnabled: boolean;
   /** Whether the workspaces feature is enabled */
   workspacesEnabled: boolean;
-  /** Whether runs use the independent agent runtime */
-  agentRuntimeEnabled: boolean;
+  /** Whether employee-facing SSO login is enabled */
+  ssoLoginEnabled: boolean;
 }
 
 /**

@@ -64,24 +64,6 @@
   },
   {
     "type": "dependency",
-    "from": "src/domain/runs/application/services/non-streaming-inference.service.ts",
-    "to": "src/domain/models/application/ports/inference.handler.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "src/domain/runs/application/services/streaming-inference.service.ts",
-    "to": "src/domain/models/application/ports/stream-inference.handler.ts",
-    "rule": {
-      "severity": "error",
-      "name": "no-cross-module-port-imports"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "src/domain/skills/application/services/marketplace-skill-installation.service.ts",
     "to": "src/domain/marketplace/application/ports/marketplace-client.port.ts",
     "rule": {
