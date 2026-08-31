@@ -20,17 +20,16 @@ import type { ModelActions } from '@/widgets/model-type-card';
 import { TriangleAlert } from 'lucide-react';
 import type {
   ModelWithConfigResponseDto,
-  PermittedImageGenerationModelResponseDto,
-  PermittedLanguageModelResponseDto,
   TeamResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { getTeamsControllerGetTeamQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { useTeamPermittedModels } from '../api/useTeamPermittedModels';
-import { useTeamPermittedImageGenerationModels } from '../api/useTeamPermittedImageGenerationModels';
-import { useCreateTeamPermittedModel } from '../api/useCreateTeamPermittedModel';
-import { useDeleteTeamPermittedModel } from '../api/useDeleteTeamPermittedModel';
-import { useUpdateTeamPermittedModel } from '../api/useUpdateTeamPermittedModel';
-import { useToggleModelOverride } from '../api/useToggleModelOverride';
+import { useTeamPermittedModels } from '@/pages/admin-settings/team-detail/api/useTeamPermittedModels';
+import { useTeamPermittedImageGenerationModels } from '@/pages/admin-settings/team-detail/api/useTeamPermittedImageGenerationModels';
+import { useCreateTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useCreateTeamPermittedModel';
+import { useDeleteTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useDeleteTeamPermittedModel';
+import { useUpdateTeamPermittedModel } from '@/pages/admin-settings/team-detail/api/useUpdateTeamPermittedModel';
+import { useToggleModelOverride } from '@/pages/admin-settings/team-detail/api/useToggleModelOverride';
+import { buildTeamModelsForCard } from '@/pages/admin-settings/team-detail/lib/buildTeamModelsForCard';
 import { TeamDefaultModelCard } from './TeamDefaultModelCard';
 
 interface TeamModelsTabProps {
@@ -39,38 +38,6 @@ interface TeamModelsTabProps {
   readonly modelOverrideEnabled: boolean;
 }
 
-type TeamPermittedModel =
-  PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto;
-
-/**
- * Merges the org-permitted models with the team's overrides into the shape the
- * shared ModelTypeCard expects, flagging which models the team has enabled.
- */
-function buildModelsForCard(
-  orgModels: ModelWithConfigResponseDto[],
-  teamPermittedModels: TeamPermittedModel[],
-): ModelWithConfigResponseDto[] {
-  const permittedByModelId = new Map(
-    teamPermittedModels.map((m) => [m.modelId, m]),
-  );
-  return orgModels
-    .filter((model) => model.isPermitted)
-    .map((model) => {
-      const teamModel = permittedByModelId.get(model.modelId);
-      return {
-        ...model,
-        isPermitted: permittedByModelId.has(model.modelId),
-        isDefault: false,
-        permittedModelId: teamModel?.id ?? null,
-        anonymousOnly: teamModel?.anonymousOnly ?? null,
-      };
-    });
-}
-
-/**
- * Destructive alert shown when a model list fails to load, so a transient API
- * error is never mistaken for "no models configured".
- */
 function ModelLoadError() {
   const { t: tModels } = useTranslation('admin-settings-models');
   return (
@@ -117,19 +84,16 @@ export function TeamModelsTab({
     useDeleteTeamPermittedModel(teamId);
   const { updateTeamPermittedModel } = useUpdateTeamPermittedModel(teamId);
 
-  const languageModelsForCard = buildModelsForCard(
+  const languageModelsForCard = buildTeamModelsForCard(
     languageModels,
     teamPermittedModels,
-  ).map((model) => {
-    const teamModel = teamPermittedModels.find(
-      (m) => m.modelId === model.modelId,
-    );
-    return { ...model, isDefault: teamModel?.isDefault ?? false };
-  });
-
-  const imageModelsForCard = buildModelsForCard(
+  );
+  const imageModelsForCard = buildTeamModelsForCard(
     imageGenerationModels,
     teamPermittedImageModels,
+  );
+  const hasSelectedImageModel = imageModelsForCard.some(
+    (model) => model.isPermitted,
   );
 
   const languageActions: ModelActions = {
@@ -172,6 +136,7 @@ export function TeamModelsTab({
           <div className="flex items-center gap-3">
             <Switch
               id="model-override-toggle"
+              data-testid="team-model-override-toggle"
               checked={effectiveOverrideEnabled}
               disabled={isToggling}
               onCheckedChange={toggleModelOverride}
@@ -185,8 +150,6 @@ export function TeamModelsTab({
 
       {effectiveOverrideEnabled ? (
         <>
-          {/* Team default model card kept on top for consistency with the
-              organization model settings view. */}
           <TeamDefaultModelCard
             teamId={teamId}
             models={languageModelsForCard}
@@ -199,10 +162,9 @@ export function TeamModelsTab({
               type="language"
               models={languageModelsForCard}
               actions={languageActions}
+              testIdPrefix="team-model"
             />
           )}
-          {/* Surface a load failure like language models do; only stay hidden
-              when the list genuinely has no image-generation models. */}
           {hasImageGenerationError || hasTeamImageError ? (
             <ModelLoadError />
           ) : (
@@ -211,6 +173,10 @@ export function TeamModelsTab({
                 type="image-generation"
                 models={imageModelsForCard}
                 actions={imageActions}
+                testIdPrefix="team-model"
+                isToggleDisabled={(model) =>
+                  hasSelectedImageModel && !model.isPermitted
+                }
               />
             )
           )}

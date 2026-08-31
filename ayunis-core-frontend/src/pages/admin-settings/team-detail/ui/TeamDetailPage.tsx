@@ -20,10 +20,13 @@ import { TeamMembersList } from './TeamMembersList';
 import { AddTeamMemberDialog } from './AddTeamMemberDialog';
 import { TeamModelsTab } from './TeamModelsTab';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useHasCreditBudget } from '@/features/credit-limits';
 import { MeResponseDtoRole } from '@/shared/api';
-import type { TeamDetail, PaginatedTeamMembers } from '../model/types';
+import type {
+  TeamDetail,
+  PaginatedTeamMembers,
+} from '@/pages/admin-settings/team-detail/model/types';
 import { PermissionGate, useAuthorization } from '@/features/permissions';
 
 interface TeamDetailPageProps {
@@ -64,7 +67,7 @@ export function TeamDetailPage({
             {t('teamDetail.tabs.members')}
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="models">
+            <TabsTrigger value="models" data-testid="team-models-tab">
               {t('teamDetail.tabs.models')}
             </TabsTrigger>
           )}

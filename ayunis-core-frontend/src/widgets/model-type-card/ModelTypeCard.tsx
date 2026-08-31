@@ -96,6 +96,8 @@ interface ModelTypeCardProps {
   readonly type: 'language' | 'embedding' | 'image-generation';
   readonly models: ModelWithConfigResponseDto[];
   readonly actions: ModelActions;
+  readonly testIdPrefix?: string;
+  readonly isToggleDisabled?: (model: ModelWithConfigResponseDto) => boolean;
 }
 
 const MODEL_TYPE_CONFIG = {
@@ -123,6 +125,8 @@ export default function ModelTypeCard({
   type,
   models,
   actions,
+  testIdPrefix,
+  isToggleDisabled,
 }: ModelTypeCardProps) {
   const { t } = useTranslation('admin-settings-models');
   const {
@@ -171,7 +175,9 @@ export default function ModelTypeCard({
 
   if (models.length === 0) {
     return (
-      <Card>
+      <Card
+        data-testid={testIdPrefix ? `${testIdPrefix}-${type}-card` : undefined}
+      >
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
@@ -185,7 +191,9 @@ export default function ModelTypeCard({
   }
 
   return (
-    <Card>
+    <Card
+      data-testid={testIdPrefix ? `${testIdPrefix}-${type}-card` : undefined}
+    >
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
@@ -248,7 +256,16 @@ export default function ModelTypeCard({
                       </Label>
                       <Switch
                         id={modelKey}
-                        disabled={isEnabling || isDisabling}
+                        data-testid={
+                          testIdPrefix
+                            ? `${testIdPrefix}-${model.modelId}-toggle`
+                            : undefined
+                        }
+                        disabled={
+                          isEnabling ||
+                          isDisabling ||
+                          (isToggleDisabled?.(model) ?? false)
+                        }
                         checked={model.isPermitted}
                         onCheckedChange={(isPermitted) =>
                           handleModelToggle(model, isPermitted)

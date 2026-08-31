@@ -1,18 +1,22 @@
 import type { APIRequestContext } from '@playwright/test';
 import type {
   LanguageModelResponseDto,
+  LanguageModelResponseDtoProvider,
+  ModelWithConfigResponseDto,
+  PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
 } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
 export interface DefaultModel {
   name: string;
-  provider: string;
+  provider: LanguageModelResponseDtoProvider;
 }
 
 interface CreateLanguageCatalogModelInput {
   name: string;
   displayName: string;
+  provider?: LanguageModelResponseDtoProvider;
 }
 
 export async function createLanguageCatalogModel(
@@ -22,7 +26,7 @@ export async function createLanguageCatalogModel(
   return generatedApi.superAdminLanguageCatalogModelsControllerCreateLanguageModel(
     {
       ...input,
-      provider: 'openai',
+      provider: input.provider ?? 'openai',
       canStream: true,
       canUseTools: false,
       isReasoning: false,
@@ -65,6 +69,52 @@ export async function removePermittedModel(
   await generatedApi.modelsControllerDeletePermittedModel(permittedModelId, {
     api,
   });
+}
+
+export function getConfiguredLanguageCandidates(
+  api: APIRequestContext,
+): Promise<ModelWithConfigResponseDto[]> {
+  return generatedApi.modelsControllerGetAvailableLanguageModels({ api });
+}
+
+export function getConfiguredImageCandidates(
+  api: APIRequestContext,
+): Promise<ModelWithConfigResponseDto[]> {
+  return generatedApi.modelsControllerGetAvailableImageGenerationModels({ api });
+}
+
+export function getEffectiveLanguageModels(
+  api: APIRequestContext,
+): Promise<PermittedLanguageModelResponseDto[]> {
+  return generatedApi.modelsControllerGetPermittedLanguageModels({ api });
+}
+
+export function getEffectiveDefaultModel(
+  api: APIRequestContext,
+): Promise<PermittedLanguageModelResponseDto | null> {
+  return generatedApi
+    .modelsDefaultsControllerGetEffectiveDefaultModel({ api })
+    .then((response) => response.permittedLanguageModel);
+}
+
+export function getTeamLanguageGrants(
+  api: APIRequestContext,
+  teamId: string,
+): Promise<PermittedLanguageModelResponseDto[]> {
+  return generatedApi.teamPermittedModelsControllerListTeamPermittedModels(
+    teamId,
+    { api },
+  );
+}
+
+export function getTeamImageGrants(
+  api: APIRequestContext,
+  teamId: string,
+): Promise<PermittedImageGenerationModelResponseDto[]> {
+  return generatedApi.teamPermittedModelsControllerListTeamImageGenerationModels(
+    teamId,
+    { api },
+  );
 }
 
 export async function permitFirstLanguageModelAsDefault(

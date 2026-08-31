@@ -94,9 +94,9 @@
     },
     "models": {
       "overrideTitle": "Model Access Override",
-      "overrideDescription": "When enabled, this team's members will only see the models you select below instead of the organization's default model set.",
+      "overrideDescription": "When enabled, team members can use only the models explicitly selected below. An empty selection removes language and image-generation access.",
       "overrideLabel": "Override model access",
-      "overrideDisabledMessage": "This team uses the organization's model settings. Enable the override to restrict which models this team can access.",
+      "overrideDisabledMessage": "This team uses the organization's model settings. Enable the override to define an explicit team model allowlist.",
       "overrideToggleSuccess": "Model override setting updated",
       "overrideToggleError": "Failed to update model override setting",
       "overrideToggleNotFound": "Team not found",
@@ -105,11 +105,16 @@
       "enableAlreadyEnabled": "This model is already enabled for the team",
       "enableModelNotFound": "Model not found",
       "enableModelInvalid": "This model cannot be enabled for the team",
+      "enableModelNotRestrictable": "This model type cannot be granted to a team",
+      "enableModelNotConfigured": "This model's provider is not configured",
+      "enableModelArchived": "Archived models cannot be enabled for a team",
+      "enableImageAlreadySelected": "Remove the selected image model before enabling another one",
       "disableSuccess": "Model disabled for team",
       "disableError": "Failed to disable model for team",
       "disableModelNotFound": "Model not found",
       "disableModelInvalid": "This model cannot be disabled for the team",
-      "updateError": "Failed to update model setting"
+      "updateError": "Failed to update model setting",
+      "updateModelNotFound": "The team model setting no longer exists"
     },
     "removeMember": {
       "confirmTitle": "Remove Member",

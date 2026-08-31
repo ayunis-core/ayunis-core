@@ -44,6 +44,12 @@ export function submitLoginAttempt(
   });
 }
 
+export async function getAuthenticatedPrincipalId(
+  api: APIRequestContext,
+): Promise<string> {
+  return (await generatedApi.authenticationControllerMe({ api })).id;
+}
+
 export async function isLoggedIn(api: APIRequestContext): Promise<boolean> {
   try {
     await generatedApi.authenticationControllerMe({ api });

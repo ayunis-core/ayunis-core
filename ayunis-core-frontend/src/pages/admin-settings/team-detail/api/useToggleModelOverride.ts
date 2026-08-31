@@ -6,7 +6,9 @@ import {
   getTeamsControllerGetTeamQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { TeamResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
 
 export function useToggleModelOverride(teamId: string, teamName: string) {
   const { t } = useTranslation('admin-settings-teams');
@@ -35,22 +37,27 @@ export function useToggleModelOverride(teamId: string, teamName: string) {
       onSuccess: () => {
         showSuccess(t('teamDetail.models.overrideToggleSuccess'));
       },
-      onError: (error: unknown, _variables, context) => {
+      onError: (error, _variables, context) => {
         if (context?.previous) {
           queryClient.setQueryData<TeamResponseDto>(queryKey, context.previous);
         }
 
-        const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj.response?.data?.code;
-
-        if (errorCode === 'TEAM_NOT_FOUND') {
-          showError(t('teamDetail.models.overrideToggleNotFound'));
-        } else {
+        try {
+          const { code } = extractErrorData(error);
+          if (code === 'TEAM_NOT_FOUND') {
+            showError(t('teamDetail.models.overrideToggleNotFound'));
+          } else {
+            showError(t('teamDetail.models.overrideToggleError'));
+          }
+        } catch {
           showError(t('teamDetail.models.overrideToggleError'));
         }
       },
-      onSettled: () => {
-        void queryClient.invalidateQueries({ queryKey });
+      onSettled: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey }),
+          invalidateTeamModelAccessQueries(queryClient, teamId),
+        ]);
         void router.invalidate();
       },
     },

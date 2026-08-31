@@ -13,6 +13,7 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import { LocalPermittedModelsRepository } from './local-permitted-models.repository';
 import type { PermittedModelMapper } from './mappers/permitted-model.mapper';
@@ -215,6 +216,50 @@ describe('LocalPermittedModelsRepository', () => {
       MultipleTeamImageGenerationModelsNotAllowedError,
     );
     expect(transactionRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('loads language grants for deduplicated team IDs in one query', async () => {
+    permittedModelRepository.find.mockResolvedValue([]);
+
+    await repository.findManyLanguageByTeams([teamId, teamId], orgId);
+
+    expect(permittedModelRepository.find).toHaveBeenCalledTimes(1);
+    expect(permittedModelRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          orgId,
+          scope: PermittedModelScope.TEAM,
+          scopeId: expect.objectContaining({ _value: [teamId] }),
+          model: expect.objectContaining({ type: ModelType.LANGUAGE }),
+        }),
+      }),
+    );
+  });
+
+  it('loads image grants for all team IDs in one type-filtered query', async () => {
+    const secondTeamId = '123e4567-e89b-12d3-a456-426614174098' as UUID;
+    permittedModelRepository.find.mockResolvedValue([]);
+
+    await repository.findManyImageGenerationByTeams(
+      [teamId, secondTeamId],
+      orgId,
+    );
+
+    expect(permittedModelRepository.find).toHaveBeenCalledTimes(1);
+    expect(permittedModelRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          orgId,
+          scope: PermittedModelScope.TEAM,
+          scopeId: expect.objectContaining({
+            _value: [teamId, secondTeamId],
+          }),
+          model: expect.objectContaining({
+            type: ModelType.IMAGE_GENERATION,
+          }),
+        }),
+      }),
+    );
   });
 
   it('queries every image grant when enforcing the team singleton', async () => {

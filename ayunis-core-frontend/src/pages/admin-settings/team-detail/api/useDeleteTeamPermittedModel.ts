@@ -1,11 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  useTeamPermittedModelsControllerDeleteTeamPermittedModel,
-  getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
-  getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamPermittedModelsControllerDeleteTeamPermittedModel } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
+
+const ERROR_KEYS: Record<string, string> = {
+  MODEL_NOT_FOUND: 'teamDetail.models.disableModelNotFound',
+  MODEL_INVALID: 'teamDetail.models.disableModelInvalid',
+};
 
 export function useDeleteTeamPermittedModel(teamId: string) {
   const { t } = useTranslation('admin-settings-teams');
@@ -16,31 +19,16 @@ export function useDeleteTeamPermittedModel(teamId: string) {
       onSuccess: () => {
         showSuccess(t('teamDetail.models.disableSuccess'));
       },
-      onError: (error: unknown) => {
-        const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj.response?.data?.code;
-
-        if (errorCode === 'MODEL_NOT_FOUND') {
-          showError(t('teamDetail.models.disableModelNotFound'));
-        } else if (errorCode === 'MODEL_INVALID') {
-          showError(t('teamDetail.models.disableModelInvalid'));
-        } else {
+      onError: (error) => {
+        try {
+          const { code } = extractErrorData(error);
+          showError(t(ERROR_KEYS[code] ?? 'teamDetail.models.disableError'));
+        } catch {
           showError(t('teamDetail.models.disableError'));
         }
       },
-      onSettled: () => {
-        void queryClient.invalidateQueries({
-          queryKey:
-            getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(
-              teamId,
-            ),
-        });
-        void queryClient.invalidateQueries({
-          queryKey:
-            getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey(
-              teamId,
-            ),
-        });
+      onSettled: async () => {
+        await invalidateTeamModelAccessQueries(queryClient, teamId);
       },
     },
   });
