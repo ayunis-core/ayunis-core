@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.34.0](https://github.com/ayunis-core/ayunis-core/compare/v2.33.0...v2.34.0) (2026-08-31)
+
+
+### Features
+
+* **auth:** add account lockout management UI (AYC-377) ([#1512](https://github.com/ayunis-core/ayunis-core/issues/1512)) ([1ce7a1c](https://github.com/ayunis-core/ayunis-core/commit/1ce7a1cccdf5da8feb3aa1c39fe825dc703157ee))
+* **auth:** enforce configurable account lockout and recovery (AYC-377) ([#1511](https://github.com/ayunis-core/ayunis-core/issues/1511)) ([0ca0786](https://github.com/ayunis-core/ayunis-core/commit/0ca0786cf5726b6aaa984e5547c61c608fedfca8))
+* **auth:** inform users when their account is locked (AYC-377) ([#1525](https://github.com/ayunis-core/ayunis-core/issues/1525)) ([ac187e1](https://github.com/ayunis-core/ayunis-core/commit/ac187e15fb7388df9d691af4978897438d070298))
+* **auth:** make SSO login generally available (AYC-367) ([#1534](https://github.com/ayunis-core/ayunis-core/issues/1534)) ([341ebad](https://github.com/ayunis-core/ayunis-core/commit/341ebad52fa6f287f764db652668cc62989895e6))
+* **auth:** persist account lockout state (AYC-377) ([#1510](https://github.com/ayunis-core/ayunis-core/issues/1510)) ([d2be72e](https://github.com/ayunis-core/ayunis-core/commit/d2be72efe07b9d7b80eb38246c8b3aac30e1c153))
+* **chat:** allow manual unmasking of pii terms within a chat (AYC-807) ([#1466](https://github.com/ayunis-core/ayunis-core/issues/1466)) ([5abf5bb](https://github.com/ayunis-core/ayunis-core/commit/5abf5bb0e80d9834d7b62f3b4626f68b60c381b6))
+* **credit-limits:** add monthly API key credit limits (AYC-867) ([#1571](https://github.com/ayunis-core/ayunis-core/issues/1571)) ([6566d99](https://github.com/ayunis-core/ayunis-core/commit/6566d99950adbd2ebd9920d18cc969c2c1454c92))
+* **models:** extend team model overrides (AYC-870) ([#1572](https://github.com/ayunis-core/ayunis-core/issues/1572)) ([12dd343](https://github.com/ayunis-core/ayunis-core/commit/12dd343d3694a8182e8bef8dc02173a9fdd9308d))
+
+
+### Bug Fixes
+
+* **retrievers:** extract text from embedded PDF screenshots (AYC-815) ([#1553](https://github.com/ayunis-core/ayunis-core/issues/1553)) ([5c2768c](https://github.com/ayunis-core/ayunis-core/commit/5c2768c5ac052437b47c759034ce2e5348d60356))
+* **sso:** hide local auth settings for SSO users (AYC-861) ([#1568](https://github.com/ayunis-core/ayunis-core/issues/1568)) ([2b6c794](https://github.com/ayunis-core/ayunis-core/commit/2b6c794ad1d1dd6855727dc3d1a04850550a3e04))
+
+
+### Tests
+
+* **e2e:** cover screenshot PDF extraction (AYC-815) ([#1554](https://github.com/ayunis-core/ayunis-core/issues/1554)) ([3edbdda](https://github.com/ayunis-core/ayunis-core/commit/3edbdda7777a42c9479741d8e7b882583b26b378))
+
 ## [2.33.0](https://github.com/ayunis-core/ayunis-core/compare/v2.32.0...v2.33.0) (2026-08-28)
 
 
