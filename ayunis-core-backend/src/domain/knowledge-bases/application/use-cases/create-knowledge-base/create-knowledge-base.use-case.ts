@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class CreateKnowledgeBaseUseCase {
@@ -14,6 +15,8 @@ export class CreateKnowledgeBaseUseCase {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
+  @Transactional()
   async execute(command: CreateKnowledgeBaseCommand): Promise<KnowledgeBase> {
     this.logger.info(
       {
@@ -23,28 +26,15 @@ export class CreateKnowledgeBaseUseCase {
       'Creating knowledge base',
     );
 
-    try {
-      const knowledgeBase = new KnowledgeBase({
-        name: command.name,
-        description: command.description,
-        orgId: command.orgId,
-        userId: command.userId,
-      });
+    const knowledgeBase = new KnowledgeBase({
+      name: command.name,
+      description: command.description,
+      orgId: command.orgId,
+      userId: command.userId,
+    });
 
-      return await this.knowledgeBaseRepository.save(knowledgeBase);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error creating knowledge base',
-      );
-      throw new UnexpectedKnowledgeBaseError('Error creating knowledge base', {
-        err: error as Error,
-      });
-    }
+    const created = await this.knowledgeBaseRepository.save(knowledgeBase);
+    await this.knowledgeBaseRepository.activate(created.id, command.userId);
+    return created;
   }
 }

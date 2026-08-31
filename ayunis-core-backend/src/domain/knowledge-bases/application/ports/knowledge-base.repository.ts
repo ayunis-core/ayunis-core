@@ -13,6 +13,14 @@ export abstract class KnowledgeBaseRepository {
   abstract findById(id: UUID): Promise<KnowledgeBase | null>;
   abstract findByIds(ids: UUID[]): Promise<KnowledgeBase[]>;
   abstract findAllByUserId(userId: UUID): Promise<KnowledgeBase[]>;
+  abstract activate(knowledgeBaseId: UUID, userId: UUID): Promise<void>;
+  abstract deactivate(knowledgeBaseId: UUID, userId: UUID): Promise<void>;
+  abstract isActive(knowledgeBaseId: UUID, userId: UUID): Promise<boolean>;
+  abstract getActiveIds(userId: UUID): Promise<Set<UUID>>;
+  abstract findActiveAccessible(
+    userId: UUID,
+    orgId: UUID,
+  ): Promise<KnowledgeBase[]>;
   abstract findPaginatedAccessible(
     userId: UUID,
     workspaceId: UUID | undefined,

@@ -54,6 +54,11 @@ describe('KnowledgeBaseAccessService', () => {
             findById: jest.fn(),
             findByIds: jest.fn(),
             findAllByUserId: jest.fn(),
+            activate: jest.fn(),
+            deactivate: jest.fn(),
+            isActive: jest.fn().mockResolvedValue(false),
+            getActiveIds: jest.fn().mockResolvedValue(new Set()),
+            findActiveAccessible: jest.fn(),
             findPaginatedAccessible: jest.fn(),
             save: jest.fn(),
             delete: jest.fn(),
@@ -84,6 +89,7 @@ describe('KnowledgeBaseAccessService', () => {
           useValue: {
             get: jest.fn((key: string) => {
               if (key === 'userId') return userId;
+              if (key === 'orgId') return orgId;
               return undefined;
             }),
           },
@@ -151,7 +157,7 @@ describe('KnowledgeBaseAccessService', () => {
       });
 
       expect(result.data).toEqual([
-        { knowledgeBase: sharedKb, isShared: true },
+        { knowledgeBase: sharedKb, isShared: true, isActive: false },
       ]);
       expect(result.total).toBe(5);
       expect(
@@ -184,7 +190,7 @@ describe('KnowledgeBaseAccessService', () => {
       });
 
       expect(result.data).toEqual([
-        { knowledgeBase: sharedKb, isShared: true },
+        { knowledgeBase: sharedKb, isShared: true, isActive: false },
       ]);
       expect(
         knowledgeBaseRepository.findPaginatedAccessible,
@@ -303,6 +309,20 @@ describe('KnowledgeBaseAccessService', () => {
       expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
     });
 
+    it('should return the current user active status', async () => {
+      const kb = makeKb();
+      knowledgeBaseRepository.findById.mockResolvedValue(kb);
+      knowledgeBaseRepository.isActive.mockResolvedValue(true);
+
+      const result = await service.findOneAccessible(kbId);
+
+      expect(result.isActive).toBe(true);
+      expect(knowledgeBaseRepository.isActive).toHaveBeenCalledWith(
+        kbId,
+        userId,
+      );
+    });
+
     it('should return shared KB with isShared=true', async () => {
       const sharedKb = makeKb(kbId, otherUserId);
       knowledgeBaseRepository.findById.mockResolvedValue(sharedKb);
@@ -322,7 +342,11 @@ describe('KnowledgeBaseAccessService', () => {
 
       const result = await service.findOneAccessible(kbId);
 
-      expect(result).toEqual({ knowledgeBase: sharedKb, isShared: true });
+      expect(result).toEqual({
+        knowledgeBase: sharedKb,
+        isShared: true,
+        isActive: false,
+      });
     });
 
     it('should throw KnowledgeBaseNotFoundError when KB does not exist', async () => {
@@ -358,6 +382,27 @@ describe('KnowledgeBaseAccessService', () => {
       await service.findOneAccessible(kbId);
 
       expect(knowledgeBaseRepository.findById).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('findActiveAccessible', () => {
+    it('delegates active and shared access resolution to one repository query', async () => {
+      const activeKnowledgeBase = makeKb();
+      knowledgeBaseRepository.findActiveAccessible.mockResolvedValue([
+        activeKnowledgeBase,
+      ]);
+
+      const result = await service.findActiveAccessible();
+
+      expect(result).toEqual([activeKnowledgeBase]);
+      expect(knowledgeBaseRepository.findActiveAccessible).toHaveBeenCalledWith(
+        userId,
+        orgId,
+      );
+      expect(findSharesByScopeUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        findKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase.execute,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -437,7 +482,9 @@ describe('KnowledgeBaseAccessService', () => {
 
       const result = await service.findAllAccessible();
 
-      expect(result).toEqual([{ knowledgeBase: sharedKb, isShared: true }]);
+      expect(result).toEqual([
+        { knowledgeBase: sharedKb, isShared: true, isActive: false },
+      ]);
       expect(knowledgeBaseRepository.findByIds).toHaveBeenCalledWith([
         sharedKbId,
       ]);

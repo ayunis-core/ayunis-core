@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { ListKnowledgeBasesQuery } from './list-knowledge-bases.query';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnexpectedKnowledgeBaseError } from '../../knowledge-bases.errors';
+import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 @Injectable()
 export class ListKnowledgeBasesUseCase {
@@ -14,24 +14,10 @@ export class ListKnowledgeBasesUseCase {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: ListKnowledgeBasesQuery): Promise<KnowledgeBase[]> {
     this.logger.info({ userId: query.userId }, 'Listing knowledge bases');
 
-    try {
-      return await this.knowledgeBaseRepository.findAllByUserId(query.userId);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error listing knowledge bases',
-      );
-      throw new UnexpectedKnowledgeBaseError('Error listing knowledge bases', {
-        err: error as Error,
-      });
-    }
+    return await this.knowledgeBaseRepository.findAllByUserId(query.userId);
   }
 }

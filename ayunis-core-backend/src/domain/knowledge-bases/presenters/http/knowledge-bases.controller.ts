@@ -39,6 +39,8 @@ import {
 import { KnowledgeBaseAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-access.service';
 import { CreateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.use-case';
 import { CreateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/create-knowledge-base/create-knowledge-base.command';
+import { SetKnowledgeBaseActivationUseCase } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
+import { SetKnowledgeBaseActivationCommand } from 'src/domain/knowledge-bases/application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.command';
 import { UpdateKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.use-case';
 import { UpdateKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/update-knowledge-base/update-knowledge-base.command';
 import { DeleteKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.use-case';
@@ -57,6 +59,7 @@ import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowl
 import { CreateKnowledgeBaseDto } from './dto/create-knowledge-base.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
 import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
+import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
 import {
   KnowledgeBaseResponseDto,
   KnowledgeBaseListResponseDto,
@@ -104,6 +107,7 @@ export class KnowledgeBasesController {
     @InjectPinoLogger(KnowledgeBasesController.name)
     private readonly logger: PinoLogger,
     private readonly createKnowledgeBaseUseCase: CreateKnowledgeBaseUseCase,
+    private readonly setKnowledgeBaseActivationUseCase: SetKnowledgeBaseActivationUseCase,
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
@@ -138,7 +142,10 @@ export class KnowledgeBasesController {
         orgId,
       }),
     );
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+      isActive: true,
+      isShared: false,
+    });
   }
 
   @Get()
@@ -156,8 +163,11 @@ export class KnowledgeBasesController {
     this.logger.info({ userId }, 'findAll');
     const results = await this.knowledgeBaseAccessService.findAllAccessible();
     return {
-      data: results.map((r) =>
-        this.knowledgeBaseDtoMapper.toDto(r.knowledgeBase, r.isShared),
+      data: results.map(({ knowledgeBase, isActive, isShared }) =>
+        this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+          isActive,
+          isShared,
+        }),
       ),
     };
   }
@@ -180,9 +190,12 @@ export class KnowledgeBasesController {
     @Param('id', ParseUUIDPipe) id: UUID,
   ): Promise<KnowledgeBaseResponseDto> {
     this.logger.info({ id }, 'findOne');
-    const { knowledgeBase, isShared } =
+    const { knowledgeBase, isActive, isShared } =
       await this.knowledgeBaseAccessService.findOneAccessible(id);
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, isShared);
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+      isActive,
+      isShared,
+    });
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)
@@ -216,7 +229,36 @@ export class KnowledgeBasesController {
         description: dto.description,
       }),
     );
-    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase);
+    const { isActive } =
+      await this.knowledgeBaseAccessService.findOneAccessible(id);
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+      isActive,
+      isShared: false,
+    });
+  }
+
+  @Patch(':id/activation')
+  @ApiOperation({ summary: 'Set knowledge base activation for the user' })
+  @ApiParam(KB_ID_PARAM)
+  @ApiBody({ type: SetKnowledgeBaseActivationRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'The knowledge base activation has been set',
+    type: KnowledgeBaseResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  async setActivation(
+    @CurrentUser(UserProperty.ID) userId: UUID,
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: SetKnowledgeBaseActivationRequestDto,
+  ): Promise<KnowledgeBaseResponseDto> {
+    const knowledgeBase = await this.setKnowledgeBaseActivationUseCase.execute(
+      new SetKnowledgeBaseActivationCommand(id, dto.isActive),
+    );
+    return this.knowledgeBaseDtoMapper.toDto(knowledgeBase, {
+      isActive: dto.isActive,
+      isShared: knowledgeBase.userId !== userId,
+    });
   }
 
   @RequirePermission(Permission.MANAGE_KNOWLEDGE_BASES)

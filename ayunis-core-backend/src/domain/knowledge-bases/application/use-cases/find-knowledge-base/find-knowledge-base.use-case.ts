@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { KnowledgeBaseRepository } from '../../ports/knowledge-base.repository';
+import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { FindKnowledgeBaseQuery } from './find-knowledge-base.query';
 import {
   KnowledgeBaseNotFoundError,
   UnexpectedKnowledgeBaseError,
-} from '../../knowledge-bases.errors';
-import { ApplicationError } from 'src/common/errors/base.error';
+} from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 @Injectable()
 export class FindKnowledgeBaseUseCase {
@@ -17,6 +17,7 @@ export class FindKnowledgeBaseUseCase {
     private readonly knowledgeBaseRepository: KnowledgeBaseRepository,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedKnowledgeBaseError)
   async execute(query: FindKnowledgeBaseQuery): Promise<KnowledgeBase> {
     this.logger.info(
       {
@@ -26,28 +27,11 @@ export class FindKnowledgeBaseUseCase {
       'Finding knowledge base',
     );
 
-    try {
-      const knowledgeBase = await this.knowledgeBaseRepository.findById(
-        query.id,
-      );
-      if (knowledgeBase?.userId !== query.userId) {
-        throw new KnowledgeBaseNotFoundError(query.id);
-      }
-
-      return knowledgeBase;
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Error finding knowledge base',
-      );
-      throw new UnexpectedKnowledgeBaseError('Error finding knowledge base', {
-        err: error as Error,
-      });
+    const knowledgeBase = await this.knowledgeBaseRepository.findById(query.id);
+    if (knowledgeBase?.userId !== query.userId) {
+      throw new KnowledgeBaseNotFoundError(query.id);
     }
+
+    return knowledgeBase;
   }
 }

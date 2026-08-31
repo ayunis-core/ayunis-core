@@ -2646,6 +2646,8 @@ export interface KnowledgeBaseResponseDto {
   createdAt: string;
   /** The date and time when the knowledge base was last updated */
   updatedAt: string;
+  /** Whether the knowledge base is active for the current user */
+  isActive: boolean;
   /** Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases). */
   isShared?: boolean;
 }
@@ -2667,6 +2669,11 @@ export interface UpdateKnowledgeBaseDto {
    * @maxLength 2000
    */
   description?: string;
+}
+
+export interface SetKnowledgeBaseActivationRequestDto {
+  /** Whether the knowledge base is available to the current user during chats */
+  isActive: boolean;
 }
 
 /**

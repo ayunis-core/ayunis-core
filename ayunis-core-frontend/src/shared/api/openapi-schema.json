@@ -4983,6 +4983,50 @@
         "tags": ["knowledge-bases"]
       }
     },
+    "/knowledge-bases/{id}/activation": {
+      "patch": {
+        "operationId": "KnowledgeBasesController_setActivation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetKnowledgeBaseActivationRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The knowledge base activation has been set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Set knowledge base activation for the user",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/knowledge-bases/{id}/documents": {
       "get": {
         "operationId": "KnowledgeBasesController_listDocuments",
@@ -15739,13 +15783,25 @@
             "example": "2025-01-15T10:00:00.000Z",
             "format": "date-time"
           },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the knowledge base is active for the current user",
+            "example": true
+          },
           "isShared": {
             "type": "boolean",
             "description": "Whether the knowledge base is shared with the current user (not owned). Only present when relevant (e.g., listing user knowledge bases).",
             "example": false
           }
         },
-        "required": ["id", "name", "description", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "name",
+          "description",
+          "createdAt",
+          "updatedAt",
+          "isActive"
+        ]
       },
       "KnowledgeBaseListResponseDto": {
         "type": "object",
@@ -15777,6 +15833,17 @@
             "maxLength": 2000
           }
         }
+      },
+      "SetKnowledgeBaseActivationRequestDto": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the knowledge base is available to the current user during chats",
+            "example": true
+          }
+        },
+        "required": ["isActive"]
       },
       "KnowledgeBaseDocumentResponseDto": {
         "type": "object",

@@ -9,6 +9,13 @@ import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.
 import { UnexpectedKnowledgeBaseError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import type { UUID } from 'crypto';
 
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: object, _propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 describe('CreateKnowledgeBaseUseCase', () => {
   let useCase: CreateKnowledgeBaseUseCase;
   let mockRepository: jest.Mocked<KnowledgeBaseRepository>;
@@ -28,6 +35,11 @@ describe('CreateKnowledgeBaseUseCase', () => {
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
+      activate: jest.fn(),
+      deactivate: jest.fn(),
+      isActive: jest.fn(),
+      getActiveIds: jest.fn(),
+      findActiveAccessible: jest.fn(),
       findPaginatedAccessible: jest.fn(),
     };
 
@@ -63,6 +75,7 @@ describe('CreateKnowledgeBaseUseCase', () => {
     expect(result.orgId).toBe(orgId);
     expect(result.userId).toBe(userId);
     expect(mockRepository.save).toHaveBeenCalledTimes(1);
+    expect(mockRepository.activate).toHaveBeenCalledWith(result.id, userId);
   });
 
   it('should create a knowledge base with empty description when not provided', async () => {

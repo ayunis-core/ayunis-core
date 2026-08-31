@@ -53,6 +53,7 @@ import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { TokenCounterModule } from 'src/common/token-counter/token-counter.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
     LetterheadsModule,
     TokenCounterModule,
     WorkspacesModule,
+    KnowledgeBasesModule,
   ],
   controllers: [RunsController],
   providers: [

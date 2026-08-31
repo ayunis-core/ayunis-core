@@ -12,6 +12,7 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { SystemPromptBuilderService } from './system-prompt-builder.service';
 import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.use-case';
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
+import { FindActiveKnowledgeBasesUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { GetUserSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-user-system-prompt/get-user-system-prompt.use-case';
 import { GetOrgSystemPromptUseCase } from 'src/domain/chat-settings/application/use-cases/get-org-system-prompt/get-org-system-prompt.use-case';
@@ -36,6 +37,7 @@ import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import type { Source } from 'src/domain/sources/domain/source.entity';
+import { mergeRunKnowledgeBases } from './merge-run-knowledge-bases';
 
 @Injectable()
 export class ToolAssemblyService {
@@ -45,6 +47,7 @@ export class ToolAssemblyService {
     private readonly mcpToolAssembler: McpToolAssemblerService,
     private readonly systemPromptBuilderService: SystemPromptBuilderService,
     private readonly findActiveSkillsUseCase: FindActiveSkillsUseCase,
+    private readonly findActiveKnowledgeBasesUseCase: FindActiveKnowledgeBasesUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
     private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly findActiveAlwaysOnTemplatesUseCase: FindActiveAlwaysOnTemplatesUseCase,
@@ -69,10 +72,10 @@ export class ToolAssemblyService {
     isAnonymous: boolean,
     workspaceContext?: WorkspaceRunContext,
   ): Promise<{ tools: Tool[]; instructions: string }> {
-    const skillContext = await this.prepareRunSkillContext(
-      activeSkills,
-      workspaceContext,
-    );
+    const [skillContext, activeKnowledgeBases] = await Promise.all([
+      this.prepareRunSkillContext(activeSkills, workspaceContext),
+      this.findActiveKnowledgeBasesUseCase.execute(),
+    ]);
 
     const tools = canUseTools
       ? await this.assembleTools(
@@ -80,6 +83,7 @@ export class ToolAssemblyService {
           skillContext.slugMap,
           skillContext.workspaceContext,
           skillContext.editableSkillSlugs,
+          activeKnowledgeBases,
         )
       : [];
 
@@ -96,11 +100,13 @@ export class ToolAssemblyService {
       currentTime: new Date(),
       sources: allSources,
       skills: this.resolvePromptSkills(skillContext.skillEntries, canUseTools),
-      knowledgeBases: this.resolvePromptKnowledgeBases(
-        thread,
-        skillContext.workspaceContext,
-        canUseTools,
-      ),
+      knowledgeBases: canUseTools
+        ? mergeRunKnowledgeBases(
+            thread.getUniqueKnowledgeBases(),
+            skillContext.workspaceContext?.runtimeKnowledgeBases ?? [],
+            activeKnowledgeBases,
+          )
+        : [],
       projectInstruction: skillContext.workspaceContext?.instruction,
       projectSkills: skillContext.projectSkills,
       orgSystemPrompt,
@@ -183,18 +189,6 @@ export class ToolAssemblyService {
   ): Skill[] {
     const projectSkillIds = new Set(projectSkills.map((skill) => skill.id));
     return activeSkills.filter((skill) => !projectSkillIds.has(skill.id));
-  }
-
-  private resolvePromptKnowledgeBases(
-    thread: Thread,
-    workspaceContext: WorkspaceRunContext | undefined,
-    canUseTools: boolean,
-  ): KnowledgeBaseSummary[] {
-    if (!canUseTools) return [];
-    return this.mergeById(
-      thread.getUniqueKnowledgeBases(),
-      workspaceContext?.runtimeKnowledgeBases ?? [],
-    );
   }
 
   private mergeById<T extends { id: string }>(base: T[], additional: T[]): T[] {
@@ -302,6 +296,7 @@ export class ToolAssemblyService {
     slugMap: Map<string, string>,
     workspaceContext?: WorkspaceRunContext,
     editableSkillSlugs: Map<string, string> = slugMap,
+    activeKnowledgeBases: KnowledgeBaseSummary[] = [],
   ): Promise<Tool[]> {
     const tools: Tool[] = [];
 
@@ -331,28 +326,20 @@ export class ToolAssemblyService {
       ...(await this.assembleSkillManagementTools(editableSkillSlugs)),
     );
 
-    // Internet tools (website content + search) — gated by the org chat setting
     tools.push(...(await this.assembleInternetTools()));
 
-    // Image generation tool — available when org has a permitted image model
-    tools.push(
-      ...(await assembleImageGenerationTools({
-        orgId: this.contextService.get('orgId'),
-        getPermittedImageGenerationModelUseCase:
-          this.getPermittedImageGenerationModelUseCase,
-        assembleToolsUseCase: this.assembleToolsUseCase,
-        logger: this.logger,
-      })),
-    );
+    tools.push(...(await this.assembleImageTools()));
 
     tools.push(...(await this.assembleSourceTools(thread, workspaceContext)));
     tools.push(
-      ...(await this.assembleKnowledgeTools(thread, workspaceContext)),
+      ...(await this.assembleKnowledgeTools(
+        thread,
+        workspaceContext,
+        activeKnowledgeBases,
+      )),
     );
     tools.push(...(await this.assembleActivateSkillTool(slugMap)));
 
-    // MCP tools/resources go last: their names are third-party and must not
-    // shadow a built-in tool of the same name.
     const reservedNames = new Set(tools.map((tool) => tool.name));
     tools.push(
       ...(await this.mcpToolAssembler.assemble(
@@ -363,6 +350,16 @@ export class ToolAssemblyService {
     );
 
     return tools;
+  }
+
+  private assembleImageTools(): Promise<Tool[]> {
+    return assembleImageGenerationTools({
+      orgId: this.contextService.get('orgId'),
+      getPermittedImageGenerationModelUseCase:
+        this.getPermittedImageGenerationModelUseCase,
+      assembleToolsUseCase: this.assembleToolsUseCase,
+      logger: this.logger,
+    });
   }
 
   private async assembleCodeExecutionTool(
@@ -466,10 +463,12 @@ export class ToolAssemblyService {
   private async assembleKnowledgeTools(
     thread: Thread,
     workspaceContext?: WorkspaceRunContext,
+    activeKnowledgeBases: KnowledgeBaseSummary[] = [],
   ): Promise<Tool[]> {
-    const knowledgeBases = this.mergeById(
+    const knowledgeBases = mergeRunKnowledgeBases(
       thread.getUniqueKnowledgeBases(),
       workspaceContext?.runtimeKnowledgeBases ?? [],
+      activeKnowledgeBases,
     );
     if (knowledgeBases.length === 0) return [];
 

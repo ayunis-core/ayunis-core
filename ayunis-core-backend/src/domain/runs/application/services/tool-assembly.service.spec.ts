@@ -28,14 +28,14 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
 
   /**
    * Build a ToolAssemblyService with mocked dependencies.
-   * Constructor order (13 params):
+   * Constructor order (15 params):
    *  0 configService, 1 assembleToolsUseCase, 2 mcpToolAssembler,
    *  3 systemPromptBuilderService, 4 findActiveSkillsUseCase,
-   *  5 getUserSystemPromptUseCase, 6 getOrgSystemPromptUseCase,
-   *  7 findActiveAlwaysOnTemplatesUseCase,
-   *  8 features, 9 contextService,
-   *  10 getPermittedImageGenerationModelUseCase, 11 artifactToolAssembler,
-   *  12 getOrgChatSettingsUseCase
+   *  5 findActiveKnowledgeBasesUseCase, 6 getUserSystemPromptUseCase,
+   *  7 getOrgSystemPromptUseCase, 8 findActiveAlwaysOnTemplatesUseCase,
+   *  9 features, 10 contextService,
+   *  11 getPermittedImageGenerationModelUseCase, 12 artifactToolAssembler,
+   *  13 getOrgChatSettingsUseCase, 14 logger
    */
   async function buildService(overrides: {
     contextServiceGet?: jest.Mock;
@@ -48,6 +48,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     systemPromptBuild?: jest.Mock;
     alwaysOnTemplatesExecute?: jest.Mock;
     skillsEnabled?: boolean;
+    activeKnowledgeBasesExecute?: jest.Mock;
   }) {
     const configService = {
       get: jest
@@ -70,6 +71,11 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       build: overrides.systemPromptBuild ?? jest.fn().mockReturnValue('prompt'),
     };
     const findActiveSkillsUseCase = null;
+    const findActiveKnowledgeBasesUseCase = {
+      execute:
+        overrides.activeKnowledgeBasesExecute ??
+        jest.fn().mockResolvedValue([]),
+    };
     const getUserSystemPromptUseCase = {
       execute: jest.fn().mockResolvedValue(null),
     };
@@ -112,6 +118,7 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
       mcpToolAssembler,
       systemPromptBuilderService,
       findActiveSkillsUseCase,
+      findActiveKnowledgeBasesUseCase,
       getUserSystemPromptUseCase,
       getOrgSystemPromptUseCase,
       findActiveAlwaysOnTemplatesUseCase,
@@ -386,6 +393,31 @@ describe('ToolAssemblyService — image generation tool assembly', () => {
     expect(editSkillCall?.[0].context).toEqual(
       expect.arrayContaining(['user__project-skill', 'user__user-skill']),
     );
+  });
+
+  it('makes active knowledge bases available without attaching them to the thread', async () => {
+    const activeKnowledgeBase = {
+      id: randomUUID(),
+      name: 'Municipal regulations',
+    };
+    const systemPromptBuild = jest.fn().mockReturnValue('prompt');
+    const { service, assembleToolsUseCase } = await buildService({
+      systemPromptBuild,
+      activeKnowledgeBasesExecute: jest
+        .fn()
+        .mockResolvedValue([activeKnowledgeBase]),
+    });
+
+    await service.buildRunContext(createMockThread(), [], true, false);
+
+    expect(systemPromptBuild).toHaveBeenCalledWith(
+      expect.objectContaining({ knowledgeBases: [activeKnowledgeBase] }),
+    );
+    const knowledgeQueryCall = assembleToolsUseCase.execute.mock.calls.find(
+      ([command]: [{ type: ToolType }]) =>
+        command.type === ToolType.KNOWLEDGE_QUERY,
+    );
+    expect(knowledgeQueryCall?.[0].context).toEqual([activeKnowledgeBase]);
   });
 
   it('does not apply project skills when the skills feature is disabled', async () => {
