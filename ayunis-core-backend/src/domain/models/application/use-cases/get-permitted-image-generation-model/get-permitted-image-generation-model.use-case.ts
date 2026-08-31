@@ -11,17 +11,16 @@ import { FindTeamsByUserIdQuery } from 'src/iam/teams/application/use-cases/find
 import {
   PermittedImageGenerationModelNotFoundForOrgError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelPolicyService } from '../../services/model-policy.service';
+} from 'src/domain/models/application/models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelPolicyService } from 'src/domain/models/application/services/model-policy.service';
 import { GetPermittedImageGenerationModelQuery } from './get-permitted-image-generation-model.query';
 
 /**
  * Resolves the image-generation model effectively available to the current
- * user. Image generation is team-restrictable: when the user belongs to one or
- * more teams with model overrides enabled, image generation is only available
- * if the org's image-generation model has been assigned to one of those teams.
- * Users in no override team fall back to the org-level permitted model.
+ * user. A user in an override-enabled team receives an explicit team image
+ * grant, independent of organization grants. Users in no override team fall
+ * back to the organization grant.
  */
 @Injectable()
 export class GetPermittedImageGenerationModelUseCase {

@@ -13,8 +13,9 @@ import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enu
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import type { UUID } from 'crypto';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { ModelsRepository } from '../../ports/models.repository';
-import { ModelProviderInfoRegistry } from '../../registry/model-provider-info.registry';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { ModelProviderInfoRegistry } from 'src/domain/models/application/registry/model-provider-info.registry';
+import { ModelConfigurationService } from 'src/domain/models/application/services/model-configuration.service';
 import { GetConfiguredModelsByTypeQuery } from './get-configured-models-by-type.query';
 import { GetConfiguredModelsByTypeUseCase } from './get-configured-models-by-type.use-case';
 
@@ -75,6 +76,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
           useValue: logger,
         },
         GetConfiguredModelsByTypeUseCase,
+        ModelConfigurationService,
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: ContextService, useValue: mockContextService },

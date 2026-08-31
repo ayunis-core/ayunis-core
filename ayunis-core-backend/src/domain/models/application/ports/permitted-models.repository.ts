@@ -4,8 +4,8 @@ import type {
   PermittedImageGenerationModel,
   PermittedLanguageModel,
   PermittedModel,
-} from '../../domain/permitted-model.entity';
-import type { ModelProvider } from '../../domain/value-objects/model-provider.enum';
+} from 'src/domain/models/domain/permitted-model.entity';
+import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 
 export type FindOneParams =
   | {
@@ -52,17 +52,11 @@ export abstract class PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]>;
-  abstract findByTeamAndModelId(
-    teamId: UUID,
-    modelId: UUID,
-    orgId: UUID,
-  ): Promise<PermittedModel | null>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;
+  abstract createTeamScoped(
+    permittedModel: PermittedModel,
+  ): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
-  abstract deleteTeamScopedByOrgAndModelId(
-    orgId: UUID,
-    modelId: UUID,
-  ): Promise<void>;
   abstract setAsDefault(params: {
     id: UUID;
     orgId: UUID;

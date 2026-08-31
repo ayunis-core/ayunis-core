@@ -1,30 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelsRepository } from '../../ports/models.repository';
-import { CreateTeamPermittedModelCommand } from './create-team-permitted-model.command';
-import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import {
-  DuplicateTeamPermittedModelError,
   ModelNotFoundError,
   ModelNotRestrictableForTeamError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+} from 'src/domain/models/application/models.errors';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelConfigurationService } from 'src/domain/models/application/services/model-configuration.service';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { PermittedModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import { CreateTeamPermittedModelCommand } from './create-team-permitted-model.command';
 
 @Injectable()
 export class CreateTeamPermittedModelUseCase {
   constructor(
     @InjectPinoLogger(CreateTeamPermittedModelUseCase.name)
     private readonly logger: PinoLogger,
-
     private readonly permittedModelsRepository: PermittedModelsRepository,
     private readonly modelsRepository: ModelsRepository,
     private readonly validator: TeamPermittedModelValidator,
+    private readonly modelConfiguration: ModelConfigurationService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedModelError)
@@ -42,65 +42,26 @@ export class CreateTeamPermittedModelUseCase {
 
     this.validator.validateAdminAccess(command.orgId);
     await this.validator.validateTeamInOrg(command.teamId, command.orgId);
-    await this.validateModelIsOrgPermitted(command.modelId, command.orgId);
-    await this.validateNoDuplicate(command);
-
-    const model = await this.modelsRepository.findOne({
-      id: command.modelId,
-    });
+    const model = await this.modelsRepository.findOne({ id: command.modelId });
     if (!model) {
       throw new ModelNotFoundError(command.modelId);
     }
-
-    // Only language and image-generation models are restrictable per team.
-    // Embedding models are intentionally excluded so document processing
-    // stays available to every team.
     if (
       !(model instanceof LanguageModel) &&
       !(model instanceof ImageGenerationModel)
     ) {
       throw new ModelNotRestrictableForTeamError(command.modelId);
     }
+    this.modelConfiguration.assertConfiguredAndActive(model);
 
-    const permittedModel = new PermittedModel({
-      model,
-      orgId: command.orgId,
-      anonymousOnly: command.anonymousOnly,
-      scope: PermittedModelScope.TEAM,
-      scopeId: command.teamId,
-    });
-
-    return this.permittedModelsRepository.create(permittedModel);
-  }
-
-  private async validateModelIsOrgPermitted(
-    modelId: CreateTeamPermittedModelCommand['modelId'],
-    orgId: CreateTeamPermittedModelCommand['orgId'],
-  ): Promise<void> {
-    const orgPermittedModels = await this.permittedModelsRepository.findAll(
-      orgId,
-      { modelId },
+    return this.permittedModelsRepository.createTeamScoped(
+      new PermittedModel({
+        model,
+        orgId: command.orgId,
+        anonymousOnly: command.anonymousOnly,
+        scope: PermittedModelScope.TEAM,
+        scopeId: command.teamId,
+      }),
     );
-    if (orgPermittedModels.length === 0) {
-      throw new ModelNotFoundError(modelId, {
-        reason: 'Model is not permitted at the organization level',
-      });
-    }
-  }
-
-  private async validateNoDuplicate(
-    command: CreateTeamPermittedModelCommand,
-  ): Promise<void> {
-    const existing = await this.permittedModelsRepository.findByTeamAndModelId(
-      command.teamId,
-      command.modelId,
-      command.orgId,
-    );
-    if (existing) {
-      throw new DuplicateTeamPermittedModelError(
-        command.teamId,
-        command.modelId,
-      );
-    }
   }
 }

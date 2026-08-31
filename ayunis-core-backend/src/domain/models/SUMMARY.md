@@ -19,6 +19,7 @@ The models module is the central registry for AI model configuration. The abstra
 ## Application Services
 
 - **ModelPolicyService** (`application/services/model-policy.service.ts`): Enforces permitted-model policy invariants. Validates that image-generation models only use supported providers (Azure), and enforces at most one org-scoped permitted embedding model and one org-scoped image-generation model per org via `assertSingleModelPerOrg` (invoked by `CreatePermittedModelUseCase` before persisting; team-scoped grants are exempt).
+- **ModelConfigurationService** (`application/services/model-configuration.service.ts`): Centralizes whether a catalog model is active and its provider credentials are configured. Configured-model candidate listing and team-grant creation use the same policy.
 - **TeamPermittedModelValidatorService** (`application/services/team-permitted-model-validator.service.ts`): Validates team ownership and org-scoping for team-scoped permitted model operations.
 
 ## Domain Value Objects
@@ -42,7 +43,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.
 - **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves a language-model permit by ID only when it belongs to the current user's effective org/team model set.
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
-- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. Image generation is team-restrictable: when the user belongs to one or more teams with model overrides enabled, image generation is only available if the org's image-generation model has been assigned to one of those override teams; users in no override team fall back to the org-level permitted model (mirrors `GetEffectiveLanguageModelsUseCase`).
+- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. A user in an override-enabled team receives an explicit, independently stored team image grant; no team image grant means image generation is unavailable. Users in no override team fall back to the organization grant.
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
 - **GetAllModelsUseCase** (`application/use-cases/get-all-models`): Retrieves all models from the catalog.
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
@@ -51,8 +52,8 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective set of language models for a user, combining org and team scopes.
 - **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted language models.
 - **GetTeamPermittedImageGenerationModelsUseCase** (`application/use-cases/get-team-permitted-image-generation-models`): Retrieves team-scoped permitted image-generation models.
-- **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates a team-scoped permitted model entry.
-- **DeleteTeamPermittedModelUseCase** (`application/use-cases/delete-team-permitted-model`): Removes a team-scoped permitted model entry.
+- **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates an independent team-scoped grant directly from an active, configured catalog language or image-generation model. Organization permission is not required, embedding models are rejected, duplicate grants are translated to a typed conflict, and each team may hold at most one image-generation grant.
+- **DeleteTeamPermittedModelUseCase** (`application/use-cases/delete-team-permitted-model`): Removes a team-scoped permitted model entry. Removing an organization grant leaves an independent matching team grant intact; deleting a team still cascades its grants through the existing foreign key.
 - **SetTeamDefaultModelUseCase** (`application/use-cases/set-team-default-model`): Sets the default model for a team.
 - **SetOrgDefaultLanguageModelUseCase** (`application/use-cases/set-org-default-language-model`): Sets the org-level default language model.
 - **SetUserDefaultLanguageModelUseCase** (`application/use-cases/set-user-default-language-model`): Sets a user's default language model.
