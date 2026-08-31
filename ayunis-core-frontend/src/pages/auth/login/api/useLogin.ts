@@ -15,7 +15,9 @@ import { forgetRememberedSsoOrgId } from '@/features/sso';
 export function useLogin({ redirect }: { redirect?: string }) {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const loginMutation = useAuthenticationControllerLogin();
+  const loginMutation = useAuthenticationControllerLogin({
+    mutation: { retry: false },
+  });
 
   const loginFormSchema = createLoginFormSchema({
     emailInvalid: t('login.emailInvalid'),
@@ -62,6 +64,8 @@ export function useLogin({ redirect }: { redirect?: string }) {
             if (code === 'IP_NOT_ALLOWED') {
               void navigate({ to: '/ip-blocked' });
               return;
+            } else if (code === 'USER_ACCOUNT_LOCKED') {
+              showError(t('login.error.accountLocked'));
             } else if (status === 401 || status === 403) {
               showError(t('login.error.invalidCredentials'));
             } else if (code === 'RATE_LIMIT_EXCEEDED') {

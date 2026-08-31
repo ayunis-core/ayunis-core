@@ -1,5 +1,5 @@
-import type { ErrorMetadata } from '../../../common/errors/base.error';
-import { ApplicationError } from '../../../common/errors/base.error';
+import type { ErrorMetadata } from 'src/common/errors/base.error';
+import { ApplicationError } from 'src/common/errors/base.error';
 
 /**
  * Error codes specific to the Users domain
@@ -8,6 +8,7 @@ export enum UserErrorCode {
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   USER_ALREADY_EXISTS = 'USER_ALREADY_EXISTS',
   USER_AUTHENTICATION_FAILED = 'USER_AUTHENTICATION_FAILED',
+  USER_ACCOUNT_LOCKED = 'USER_ACCOUNT_LOCKED',
   USER_UNAUTHORIZED = 'USER_UNAUTHORIZED',
   USER_INVALID_INPUT = 'USER_INVALID_INPUT',
   USER_UNEXPECTED_ERROR = 'USER_UNEXPECTED_ERROR',
@@ -93,6 +94,16 @@ export class UserAuthenticationFailedError extends UserError {
   }
 }
 
+export class UserAccountLockedError extends UserError {
+  constructor() {
+    super(
+      'Account locked. Contact your administrator.',
+      UserErrorCode.USER_ACCOUNT_LOCKED,
+      401,
+    );
+  }
+}
+
 /**
  * Error thrown when a user is unauthorized
  */
@@ -141,7 +152,9 @@ export class UserEmailMismatchError extends UserError {
 export class InvalidEmailConfirmationTokenError extends UserError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Invalid email confirmation token${reason ? `: ${reason}` : ''}`,
+      reason
+        ? `Invalid email confirmation token: ${reason}`
+        : 'Invalid email confirmation token',
       UserErrorCode.INVALID_EMAIL_CONFIRMATION_TOKEN,
       400,
       metadata,
@@ -155,7 +168,7 @@ export class InvalidEmailConfirmationTokenError extends UserError {
 export class UserEmailAlreadyVerifiedError extends UserError {
   constructor(reason?: string, metadata?: ErrorMetadata) {
     super(
-      `Email already verified${reason ? `: ${reason}` : ''}`,
+      reason ? `Email already verified: ${reason}` : 'Email already verified',
       UserErrorCode.EMAIL_ALREADY_VERIFIED,
       400,
       metadata,

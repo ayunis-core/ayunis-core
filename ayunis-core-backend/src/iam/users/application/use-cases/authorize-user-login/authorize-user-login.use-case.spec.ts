@@ -41,7 +41,11 @@ describe(AuthorizeUserLoginUseCase.name, () => {
 
     await expect(
       useCase.execute(new AuthorizeUserLoginCommand(user.id)),
-    ).rejects.toThrow(UserAuthenticationFailedError);
+    ).rejects.toMatchObject({
+      code: 'USER_ACCOUNT_LOCKED',
+      statusCode: 401,
+      message: 'Account locked. Contact your administrator.',
+    });
     expect(usersRepository.resetFailedLoginAttempts).not.toHaveBeenCalled();
   });
 

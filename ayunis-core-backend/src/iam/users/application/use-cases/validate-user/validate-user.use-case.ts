@@ -7,6 +7,7 @@ import { User } from 'src/iam/users/domain/user.entity';
 import { CompareHashUseCase } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.use-case';
 import { CompareHashCommand } from 'src/iam/hashing/application/use-cases/compare-hash/compare-hash.command';
 import {
+  UserAccountLockedError,
   UserNotFoundError,
   UserAuthenticationFailedError,
   UserUnexpectedError,
@@ -55,7 +56,10 @@ export class ValidateUserUseCase {
       new CompareHashCommand(query.password, user.passwordHash!),
     );
     if (!isPasswordValid) {
-      await this.registerFailedLoginAttempt(user);
+      const accountLocked = await this.registerFailedLoginAttempt(user);
+      if (accountLocked) {
+        throw new UserAccountLockedError();
+      }
       throw new UserAuthenticationFailedError('Invalid password');
     }
 
@@ -65,7 +69,7 @@ export class ValidateUserUseCase {
 
   private assertLocalLoginAllowed(user: User): void {
     if (user.lockedAt !== null) {
-      throw new UserAuthenticationFailedError('Invalid credentials');
+      throw new UserAccountLockedError();
     }
     if (user.passwordHash === null) {
       throw new UserAuthenticationFailedError(
@@ -74,7 +78,7 @@ export class ValidateUserUseCase {
     }
   }
 
-  private async registerFailedLoginAttempt(user: User): Promise<void> {
+  private async registerFailedLoginAttempt(user: User): Promise<boolean> {
     const maxAttempts = this.configService.get<number>(
       'auth.accountLockout.maxAttempts',
       DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS,
@@ -97,9 +101,10 @@ export class ValidateUserUseCase {
       {
         userId: user.id,
         failedLoginAttempts: failures,
-        accountLocked: failures === null || failures >= maxAttempts,
+        accountLocked: failures !== null && failures >= maxAttempts,
       },
       'Invalid password during validation',
     );
+    return failures !== null && failures >= maxAttempts;
   }
 }
