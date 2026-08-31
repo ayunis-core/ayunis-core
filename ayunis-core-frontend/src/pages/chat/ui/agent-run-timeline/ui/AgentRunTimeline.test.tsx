@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { AgentRunUnit } from '../model/types';
-import { renderRichToolCard } from '../lib/render-rich-tool-card';
+import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline/model/types';
+import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import AgentRunTimeline from './AgentRunTimeline';
 
 vi.mock('react-i18next', () => ({
@@ -11,8 +11,19 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/widgets/markdown', () => ({
-  Markdown: ({ children }: { children: string }) => (
-    <div data-testid={`text-${children}`}>{children}</div>
+  Markdown: ({
+    children,
+    renderLegalReferences,
+  }: {
+    children: string;
+    renderLegalReferences?: boolean;
+  }) => (
+    <div
+      data-testid={`text-${children}`}
+      data-legal-references={renderLegalReferences ? 'true' : 'false'}
+    >
+      {children}
+    </div>
   ),
 }));
 
@@ -83,6 +94,17 @@ const unit: AgentRunUnit = {
 };
 
 describe('AgentRunTimeline', () => {
+  it('enables legal references for assistant text blocks', () => {
+    render(<AgentRunTimeline unit={unit} />);
+
+    expect(
+      screen.getByTestId('text-before').getAttribute('data-legal-references'),
+    ).toBe('true');
+    expect(
+      screen.getByTestId('text-after').getAttribute('data-legal-references'),
+    ).toBe('true');
+  });
+
   it('renders a rich tool row and card inline between surrounding text', () => {
     render(<AgentRunTimeline unit={unit} />);
 

@@ -13,11 +13,11 @@ import type {
   AgentRunBlock,
   AgentRunUnit,
   InlineToolRunBlock,
-} from '../model/types';
+} from '@/pages/chat/ui/agent-run-timeline/model/types';
 import ResponseStartOrb from '@/pages/chat/ui/ResponseStartOrb';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
-import { renderRichToolCard } from '../lib/render-rich-tool-card';
-import { getArtifactToolTarget } from '../lib/tool-classification';
+import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
+import { getArtifactToolTarget } from '@/pages/chat/ui/agent-run-timeline/lib/tool-classification';
 
 interface AgentRunTimelineProps {
   unit: AgentRunUnit;
@@ -96,7 +96,7 @@ function RunBlock({
   }
   return (
     <div data-copyable="true">
-      <Markdown>{block.content.text}</Markdown>
+      <Markdown renderLegalReferences>{block.content.text}</Markdown>
     </div>
   );
 }
