@@ -14,6 +14,7 @@ import {
   SsoConnectionConflictError,
   SsoConnectionMustBeDisabledError,
   SsoConnectionNotFoundError,
+  SsoDomainAccountConflictError,
   UnexpectedSsoError,
 } from 'src/iam/sso/application/sso.errors';
 import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.command';
@@ -27,6 +28,8 @@ import {
   normalizeZitadelIdpId,
   normalizeZitadelOrgId,
 } from 'src/iam/sso/domain/sso-connection-values';
+import { HasUsersOutsideOrgWithEmailDomainsUseCase } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.use-case';
+import { HasUsersOutsideOrgWithEmailDomainsQuery } from 'src/iam/users/application/use-cases/has-users-outside-org-with-email-domains/has-users-outside-org-with-email-domains.query';
 
 interface SsoRoutingConfiguration {
   emailDomains: string[];
@@ -46,6 +49,7 @@ export class ConfigureOrgSsoConnectionUseCase {
   constructor(
     private readonly repository: OrgSsoConnectionsRepository,
     private readonly findOrgById: FindOrgByIdUseCase,
+    private readonly domainAccounts: HasUsersOutsideOrgWithEmailDomainsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSsoError)
@@ -67,9 +71,7 @@ export class ConfigureOrgSsoConnectionUseCase {
     const configuration = this.resolveConfiguration(existing, input);
     const current = this.currentConfiguration(existingState, configuration);
     if (current) return current;
-    if (existing?.enabled) {
-      throw new SsoConnectionMustBeDisabledError(command.orgId);
-    }
+    await this.assertChangeAllowed(existing, configuration);
     const connection = this.updatedConnection(
       existing,
       command.orgId,
@@ -83,6 +85,26 @@ export class ConfigureOrgSsoConnectionUseCase {
     );
   }
 
+  private async assertChangeAllowed(
+    existing: OrgSsoConnection | null,
+    configuration: SsoRoutingConfiguration,
+  ): Promise<void> {
+    if (!existing) return;
+    if (existing.enabled && !this.isDomainAddition(existing, configuration)) {
+      throw new SsoConnectionMustBeDisabledError(existing.orgId);
+    }
+    if (
+      !existing.localPasswordLoginEnabled &&
+      (await this.domainAccounts.execute(
+        new HasUsersOutsideOrgWithEmailDomainsQuery(
+          existing.orgId,
+          configuration.emailDomains,
+        ),
+      ))
+    )
+      throw new SsoDomainAccountConflictError(existing.orgId);
+  }
+
   private currentConfiguration(
     state: OrgSsoConnectionDomainState | null,
     configuration: SsoRoutingConfiguration,
@@ -91,6 +113,19 @@ export class ConfigureOrgSsoConnectionUseCase {
     return this.matches(state.connection, configuration)
       ? state.connection
       : null;
+  }
+
+  private isDomainAddition(
+    existing: OrgSsoConnection,
+    configuration: SsoRoutingConfiguration,
+  ): boolean {
+    return (
+      existing.zitadelOrgId === configuration.zitadelOrgId &&
+      existing.zitadelIdpId === configuration.zitadelIdpId &&
+      existing.emailDomains.every(({ emailDomain }) =>
+        configuration.emailDomains.includes(emailDomain),
+      )
+    );
   }
 
   private requiresDomainRepair(
@@ -170,7 +205,7 @@ export class ConfigureOrgSsoConnectionUseCase {
     connection: OrgSsoConnection,
     expected: OrgSsoConnection,
   ): Promise<OrgSsoConnection | null> {
-    return this.repository.updateConfigurationIfDisabled(connection, expected);
+    return this.repository.updateConfigurationIfUnchanged(connection, expected);
   }
 
   private async handleConcurrentChange(
@@ -186,9 +221,6 @@ export class ConfigureOrgSsoConnectionUseCase {
       (!requiresDomainRepair || currentState.hasCanonicalEmailDomains)
     ) {
       return currentState.connection;
-    }
-    if (currentState.connection.enabled) {
-      throw new SsoConnectionMustBeDisabledError(orgId);
     }
     throw new SsoConnectionChangedError(orgId);
   }
@@ -222,7 +254,7 @@ export class ConfigureOrgSsoConnectionUseCase {
     }
     const mappingUnchanged =
       existing !== null &&
-      existing.matchesEmailDomains(input.emailDomains) &&
+      (existing.enabled || existing.matchesEmailDomains(input.emailDomains)) &&
       existing.zitadelOrgId === input.zitadelOrgId;
     return {
       ...input,
@@ -267,6 +299,7 @@ export class ConfigureOrgSsoConnectionUseCase {
       zitadelIdpId: configuration.zitadelIdpId,
       enabled: existing?.enabled ?? false,
       jitProvisioningEnabled: existing?.jitProvisioningEnabled ?? false,
+      localPasswordLoginEnabled: existing?.localPasswordLoginEnabled ?? true,
       createdAt: existing?.createdAt,
     });
   }

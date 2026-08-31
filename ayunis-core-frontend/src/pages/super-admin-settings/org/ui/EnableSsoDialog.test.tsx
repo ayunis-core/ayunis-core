@@ -27,6 +27,7 @@ describe(EnableSsoDialog.name, () => {
       zitadelIdpId: '388145187060187138',
       enabled: false,
       jitProvisioningEnabled: false,
+      localPasswordLoginEnabled: true,
     };
     const mutation = {
       mutate: vi.fn(),

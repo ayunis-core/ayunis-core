@@ -186,6 +186,7 @@ import type {
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
   SetOrgDefaultModelDto,
+  SetOrgLocalPasswordLoginEnabledRequestDto,
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
@@ -24578,6 +24579,75 @@ export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError =
         TContext
       > => {
       return useMutation(getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Allow or disallow local password login
+ */
+export const superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = (
+    orgId: string,
+    setOrgLocalPasswordLoginEnabledRequestDto: SetOrgLocalPasswordLoginEnabledRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/local-password-login`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgLocalPasswordLoginEnabledRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationKey = () => ['superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled'] as const;
+
+export const getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled(orgId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>>
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationBody = SetOrgLocalPasswordLoginEnabledRequestDto
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationError = void
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables = {orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}
+
+    /**
+ * @summary Allow or disallow local password login
+ */
+export const useSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>,
+        TError,
+        SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions(options), queryClient);
     }
 
 /**

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AdminTriggerPasswordResetCommand } from './admin-trigger-password-reset.command';
 import { ContextService } from 'src/common/context/services/context.service';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { TriggerPasswordResetUseCase } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.use-case';
 import { TriggerPasswordResetCommand } from 'src/iam/users/application/use-cases/trigger-password-reset/trigger-password-reset.command';
@@ -8,6 +9,7 @@ import {
   UserInvalidInputError,
   UserNotFoundError,
   UserUnauthorizedError,
+  UserUnexpectedError,
 } from 'src/iam/users/application/users.errors';
 
 @Injectable()
@@ -20,6 +22,7 @@ export class AdminTriggerPasswordResetUseCase {
     private readonly triggerPasswordResetUseCase: TriggerPasswordResetUseCase,
   ) {}
 
+  @HandleUnexpectedErrors(UserUnexpectedError)
   async execute(command: AdminTriggerPasswordResetCommand): Promise<void> {
     this.logger.log({ userId: command.userId }, 'adminTriggerPasswordReset');
 
@@ -44,10 +47,12 @@ export class AdminTriggerPasswordResetUseCase {
         'Password reset is unavailable for users without a local password',
       );
     }
-
-    await this.triggerPasswordResetUseCase.execute(
+    const resetSent = await this.triggerPasswordResetUseCase.execute(
       new TriggerPasswordResetCommand(targetUser.email),
     );
+    if (!resetSent) {
+      throw new UserInvalidInputError('Password reset is unavailable');
+    }
 
     this.logger.log(
       {

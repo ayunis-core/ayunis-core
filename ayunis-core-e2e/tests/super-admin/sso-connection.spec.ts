@@ -84,10 +84,15 @@ test('configures multiple domains and updates the direct IdP independently', asy
   await expect(discoverSso(publicApi, `first@${firstDomain}`)).resolves.toEqual({
     available: true,
     orgId: org.id,
+    localPasswordLoginEnabled: true,
   });
   await expect(
     discoverSso(publicApi, `second@${secondDomain}`),
-  ).resolves.toEqual({ available: true, orgId: org.id });
+  ).resolves.toEqual({
+    available: true,
+    orgId: org.id,
+    localPasswordLoginEnabled: true,
+  });
 
   await page.reload();
   await expect(page.getByTestId('sso-zitadel-idp-id')).toHaveValue(updatedIdp);

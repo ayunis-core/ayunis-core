@@ -54,7 +54,7 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
       ],
     });
 
-    await repository.updateConfigurationIfDisabled(connection, expected);
+    await repository.updateConfigurationIfUnchanged(connection, expected);
 
     expect(connectionRecords.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -122,6 +122,18 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
     });
   });
 
+  it('takes an exclusive row lock before mutating authentication state', async () => {
+    await expect(repository.acquireMutationLock(TEST_ORG_ID)).resolves.toBe(
+      true,
+    );
+
+    expect(connectionRecords.findOne).toHaveBeenCalledWith({
+      where: { orgId: TEST_ORG_ID },
+      select: { id: true },
+      lock: { mode: 'pessimistic_write' },
+    });
+  });
+
   it('identifies a legacy fallback without canonical domain rows', async () => {
     const mapper = new OrgSsoConnectionMapper();
     const record = mapper.toRecord(anOrgSsoConnection());
@@ -144,7 +156,7 @@ describe(PostgresOrgSsoConnectionsRepository.name, () => {
     });
 
     await expect(
-      repository.updateConfigurationIfDisabled(
+      repository.updateConfigurationIfUnchanged(
         anOrgSsoConnection(),
         anOrgSsoConnection(),
       ),

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -26,8 +25,10 @@ import { ConfigureOrgSsoConnectionCommand } from 'src/iam/sso/application/use-ca
 import { ConfigureOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/configure-org-sso-connection/configure-org-sso-connection.use-case';
 import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.query';
 import { GetOrgSsoConnectionUseCase } from 'src/iam/sso/application/use-cases/get-org-sso-connection/get-org-sso-connection.use-case';
-import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
+import { SetOrgLocalPasswordLoginEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.command';
+import { SetOrgLocalPasswordLoginEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.use-case';
 import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
+import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 import { SetOrgSsoEnabledUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.use-case';
 import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.command';
 import { SetOrgSsoJitProvisioningUseCase } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.use-case';
@@ -41,13 +42,14 @@ import { OrgSsoConnectionResponseDtoMapper } from 'src/iam/sso/presenters/http/m
 import { SetOrgSsoIdpRequestDto } from 'src/iam/sso/presenters/http/dto/set-org-sso-idp.request-dto';
 import { SetOrgSsoStateRequestDto } from 'src/iam/sso/presenters/http/dto/set-org-sso-state.request-dto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { SetOrgLocalPasswordLoginEnabledRequestDto } from 'src/iam/sso/presenters/http/dto/set-org-local-password-login-enabled.request-dto';
 
 interface SsoAuditEvent {
   operation: string;
   actorId: UUID;
   orgId: UUID;
   connection: OrgSsoConnection;
-  confirmation?: Record<string, boolean | string | string[]>;
+  confirmation?: Record<string, boolean | string | string[] | null>;
 }
 
 @ApiTags('Super Admin SSO Connections')
@@ -64,6 +66,7 @@ export class SuperAdminSsoConnectionsController {
     private readonly configureConnectionUseCase: ConfigureOrgSsoConnectionUseCase,
     private readonly setEnabledUseCase: SetOrgSsoEnabledUseCase,
     private readonly setJitUseCase: SetOrgSsoJitProvisioningUseCase,
+    private readonly setLocalPasswordLoginEnabledUseCase: SetOrgLocalPasswordLoginEnabledUseCase,
     private readonly setIdpUseCase: SetOrgSsoIdpUseCase,
     private readonly responseMapper: OrgSsoConnectionResponseDtoMapper,
   ) {}
@@ -152,6 +155,45 @@ export class SuperAdminSsoConnectionsController {
     return this.responseMapper.toResource(connection);
   }
 
+  @Patch('local-password-login')
+  @ApiOperation({ summary: 'Allow or disallow local password login' })
+  @ApiOkResponse({ type: OrgSsoConnectionResourceDto })
+  async setLocalPasswordLoginEnabled(
+    @Param('orgId', ParseUUIDPipe) orgId: UUID,
+    @Body() dto: SetOrgLocalPasswordLoginEnabledRequestDto,
+    @CurrentUser(UserProperty.ID) actorId: UUID,
+  ): Promise<OrgSsoConnectionResourceDto> {
+    const reviewedMapping = this.getSsoOnlyReviewedMapping(dto);
+    const result = await this.setLocalPasswordLoginEnabledUseCase.execute(
+      new SetOrgLocalPasswordLoginEnabledCommand(
+        orgId,
+        dto.enabled,
+        reviewedMapping,
+      ),
+    );
+    this.audit({
+      operation: 'set-local-password-login',
+      actorId,
+      orgId,
+      connection: result.connection,
+      confirmation: {
+        localPasswordLoginEnabledBefore:
+          result.previousLocalPasswordLoginEnabled,
+        localPasswordLoginEnabledAfter:
+          result.connection.localPasswordLoginEnabled,
+        ...(reviewedMapping
+          ? {
+              confirmed: true,
+              reviewedEmailDomains: reviewedMapping.emailDomains,
+              reviewedZitadelOrgId: reviewedMapping.zitadelOrgId,
+              reviewedZitadelIdpId: reviewedMapping.zitadelIdpId,
+            }
+          : {}),
+      },
+    });
+    return this.responseMapper.toResource(result.connection);
+  }
+
   @Patch('idp')
   @ApiOperation({
     summary: 'Set or clear the identity provider users are sent straight to',
@@ -184,18 +226,20 @@ export class SuperAdminSsoConnectionsController {
     dto: SetOrgSsoEnabledRequestDto,
   ): ReviewedSsoMapping | undefined {
     if (!dto.enabled) return undefined;
-    if (
-      dto.confirmed !== true ||
-      !dto.reviewedEmailDomains ||
-      !dto.reviewedZitadelOrgId
-    ) {
-      throw new BadRequestException(
-        'Enabling SSO requires confirmation of the reviewed broker mapping',
-      );
-    }
     return new ReviewedSsoMapping(
-      dto.reviewedEmailDomains,
-      dto.reviewedZitadelOrgId,
+      dto.reviewedEmailDomains!,
+      dto.reviewedZitadelOrgId!,
+    );
+  }
+
+  private getSsoOnlyReviewedMapping(
+    dto: SetOrgLocalPasswordLoginEnabledRequestDto,
+  ): ReviewedSsoMapping | undefined {
+    if (dto.enabled) return undefined;
+    return new ReviewedSsoMapping(
+      dto.reviewedEmailDomains!,
+      dto.reviewedZitadelOrgId!,
+      dto.reviewedZitadelIdpId,
     );
   }
 

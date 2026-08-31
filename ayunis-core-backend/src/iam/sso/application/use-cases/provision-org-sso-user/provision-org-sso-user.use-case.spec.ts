@@ -21,7 +21,10 @@ const OTHER_ORG_ID = randomUUID();
 const USER_ID = randomUUID();
 
 describe(ProvisionOrgSsoUserUseCase.name, () => {
-  const connections = { findByOrgId: jest.fn() };
+  const connections = {
+    findByOrgId: jest.fn(),
+    findLocalPasswordLoginEnabledByOrgIdForSessionIssuance: jest.fn(),
+  };
   const identities = {
     findByIssuerAndSubject: jest.fn(),
     create: jest.fn(),
@@ -29,18 +32,24 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
   const lock = { acquireIdentity: jest.fn(), acquireEmail: jest.fn() };
   const findUserById = { execute: jest.fn() };
   const findUserByEmail = { execute: jest.fn() };
+  const verifyUserEmail = { execute: jest.fn() };
   const createFederatedUser = { execute: jest.fn() };
   const findInvite = { execute: jest.fn() };
   const acceptInvite = { execute: jest.fn() };
   const assertSeat = { execute: jest.fn() };
   const publishUserCreated = { publish: jest.fn() };
+  const publishUserUpdated = { publish: jest.fn() };
   const acquireAllocationLock = { execute: jest.fn() };
 
   beforeEach(() => {
     jest.clearAllMocks();
     connections.findByOrgId.mockResolvedValue(connection(true));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      true,
+    );
     identities.findByIssuerAndSubject.mockResolvedValue(null);
     findUserByEmail.execute.mockResolvedValue(null);
+    verifyUserEmail.execute.mockResolvedValue({ user: user(), changed: false });
     findInvite.execute.mockResolvedValue(null);
     acceptInvite.execute.mockResolvedValue(undefined);
     createFederatedUser.execute.mockResolvedValue(user());
@@ -123,6 +132,10 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     expect(identities.create).toHaveBeenCalledWith(
       expect.objectContaining({ userId: USER_ID }),
     );
+    expect(
+      connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mock
+        .invocationCallOrder[0],
+    ).toBeLessThan(acquireAllocationLock.execute.mock.invocationCallOrder[0]);
   });
 
   it('honors an invite that commits while SSO waits for the organization lock', async () => {
@@ -233,6 +246,139 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
     });
   });
 
+  it('links an existing account on first SSO login when SSO-only is enforced', async () => {
+    const invite = pendingInvite(UserRole.USER);
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user());
+    findInvite.execute.mockResolvedValue(invite);
+
+    await expect(useCase().execute(command())).resolves.toMatchObject({
+      id: USER_ID,
+    });
+
+    expect(identities.create).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID }),
+    );
+    expect(verifyUserEmail.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID, email: login().email }),
+    );
+    expect(verifyUserEmail.execute.mock.invocationCallOrder[0]).toBeLessThan(
+      identities.create.mock.invocationCallOrder[0],
+    );
+    expect(acceptInvite.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ inviteId: invite.id }),
+    );
+    expect(acceptInvite.execute.mock.invocationCallOrder[0]).toBeLessThan(
+      identities.create.mock.invocationCallOrder[0],
+    );
+    expect(acquireAllocationLock.execute).not.toHaveBeenCalled();
+    expect(createFederatedUser.execute).not.toHaveBeenCalled();
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
+  });
+
+  it('returns the broker-verified state when auto-linking an unverified account', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user(ORG_ID, false));
+    verifyUserEmail.execute.mockResolvedValue({
+      user: user(ORG_ID, true),
+      changed: true,
+    });
+
+    await expect(useCase().execute(command())).resolves.toMatchObject({
+      id: USER_ID,
+      emailVerified: true,
+    });
+    expect(publishUserUpdated.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ id: USER_ID, emailVerified: true }),
+    );
+  });
+
+  it('does not publish an update when auto-linking an already verified account', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user(ORG_ID, true));
+    verifyUserEmail.execute.mockResolvedValue({
+      user: user(ORG_ID, true),
+      changed: false,
+    });
+
+    await useCase().execute(command());
+
+    expect(publishUserUpdated.publish).not.toHaveBeenCalled();
+  });
+
+  it('does not link an account whose email changed during verification', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user());
+    verifyUserEmail.execute.mockResolvedValue(null);
+
+    await expect(useCase().execute(command())).rejects.toMatchObject({
+      code: 'SSO_ACCOUNT_LINK_REQUIRED',
+    });
+    expect(identities.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects provisioning when SSO is disabled while it waits for the policy lock', async () => {
+    connections.findByOrgId
+      .mockResolvedValueOnce(connection(true))
+      .mockResolvedValueOnce(
+        anOrgSsoConnection({ orgId: ORG_ID, enabled: false }),
+      );
+
+    await expect(useCase().execute(command())).rejects.toMatchObject({
+      code: 'SSO_CONNECTION_NOT_AVAILABLE',
+    });
+    expect(createFederatedUser.execute).not.toHaveBeenCalled();
+    expect(identities.create).not.toHaveBeenCalled();
+  });
+
+  it('links an existing account when its pending invite was concurrently closed', async () => {
+    const invite = pendingInvite(UserRole.USER);
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    findUserByEmail.execute.mockResolvedValue(user());
+    findInvite.execute.mockResolvedValue(invite);
+    acceptInvite.execute.mockRejectedValue(new InviteAlreadyAcceptedError());
+
+    await expect(useCase().execute(command())).resolves.toMatchObject({
+      id: USER_ID,
+    });
+
+    expect(acceptInvite.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ inviteId: invite.id }),
+    );
+    expect(identities.create).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID }),
+    );
+  });
+
+  it('uses the locked current policy before first-login account linking', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      true,
+    );
+    findUserByEmail.execute.mockResolvedValue(user());
+
+    await expect(useCase().execute(command())).rejects.toMatchObject({
+      code: 'SSO_ACCOUNT_LINK_REQUIRED',
+    });
+
+    expect(identities.create).not.toHaveBeenCalled();
+  });
+
   it('requires explicit linking when concurrent user creation wins the email race', async () => {
     createFederatedUser.execute.mockRejectedValue(
       new UserAlreadyExistsError(login().email),
@@ -242,6 +388,27 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
       code: 'SSO_ACCOUNT_LINK_REQUIRED',
     });
     expect(identities.create).not.toHaveBeenCalled();
+    expect(publishUserCreated.publish).not.toHaveBeenCalled();
+  });
+
+  it('auto-links after concurrent user creation wins under SSO-only', async () => {
+    connections.findByOrgId.mockResolvedValue(connection(true, false));
+    connections.findLocalPasswordLoginEnabledByOrgIdForSessionIssuance.mockResolvedValue(
+      false,
+    );
+    createFederatedUser.execute.mockImplementation(async () => {
+      findUserByEmail.execute.mockResolvedValue(user());
+      throw new UserAlreadyExistsError(login().email);
+    });
+
+    await expect(useCase().execute(command())).resolves.toMatchObject({
+      id: USER_ID,
+    });
+
+    expect(createFederatedUser.execute).toHaveBeenCalledTimes(1);
+    expect(identities.create).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: USER_ID }),
+    );
     expect(publishUserCreated.publish).not.toHaveBeenCalled();
   });
 
@@ -270,11 +437,13 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
       lock,
       findUserById as never,
       findUserByEmail as never,
+      verifyUserEmail as never,
       createFederatedUser as never,
       findInvite as never,
       acceptInvite as never,
       assertSeat as never,
       publishUserCreated as never,
+      publishUserUpdated as never,
       acquireAllocationLock as never,
     );
   }
@@ -298,19 +467,23 @@ function login() {
   };
 }
 
-function connection(jitProvisioningEnabled: boolean) {
+function connection(
+  jitProvisioningEnabled: boolean,
+  localPasswordLoginEnabled = true,
+) {
   return anOrgSsoConnection({
     orgId: ORG_ID,
     enabled: true,
     jitProvisioningEnabled,
+    localPasswordLoginEnabled,
   });
 }
 
-function user(orgId = ORG_ID): User {
+function user(orgId = ORG_ID, emailVerified = true): User {
   return new User({
     id: USER_ID,
     email: 'staff@stadt.example',
-    emailVerified: true,
+    emailVerified,
     passwordHash: null,
     role: UserRole.USER,
     orgId,
