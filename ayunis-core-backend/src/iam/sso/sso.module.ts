@@ -6,7 +6,6 @@ import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module'
 import { UsersModule } from 'src/iam/users/users.module';
 import { FederatedIdentitiesRepository } from 'src/iam/sso/application/ports/federated-identities.repository';
 import { OidcBrokerClient } from 'src/iam/sso/application/ports/oidc-broker.client';
-import { OrgSsoConnectionsRepository } from 'src/iam/sso/application/ports/org-sso-connections.repository';
 import { SsoEncryptionPort } from 'src/iam/sso/application/ports/sso-encryption.port';
 import { SsoLoginTransactionsRepository } from 'src/iam/sso/application/ports/sso-login-transactions.repository';
 import { CompleteOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/complete-org-sso-login/complete-org-sso-login.use-case';
@@ -19,13 +18,9 @@ import { SetOrgSsoIdpUseCase } from 'src/iam/sso/application/use-cases/set-org-s
 import { StartOrgSsoLoginUseCase } from 'src/iam/sso/application/use-cases/start-org-sso-login/start-org-sso-login.use-case';
 import { SsoEncryptionService } from 'src/iam/sso/infrastructure/encryption/sso-encryption.service';
 import { ZitadelOidcBrokerClient } from 'src/iam/sso/infrastructure/oidc/zitadel-oidc-broker.client';
-import { OrgSsoConnectionMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/org-sso-connection.mapper';
-import { PostgresOrgSsoConnectionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/org-sso-connections.repository';
 import { PostgresFederatedIdentitiesRepository } from 'src/iam/sso/infrastructure/persistence/postgres/federated-identities.repository';
 import { FederatedIdentityMapper } from 'src/iam/sso/infrastructure/persistence/postgres/mappers/federated-identity.mapper';
 import { FederatedIdentityRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/federated-identity.record';
-import { OrgSsoConnectionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-connection.record';
-import { OrgSsoEmailDomainRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/org-sso-email-domain.record';
 import { SsoLoginTransactionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-login-transaction.record';
 import { PostgresSsoLoginTransactionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-login-transactions.repository';
 import { SsoLoginTransactionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-login-transaction-cleanup.task';
@@ -49,12 +44,11 @@ import { SsoBrokerSessionService } from 'src/iam/sso/application/services/sso-br
 import { PostgresSsoBrokerSessionsRepository } from 'src/iam/sso/infrastructure/persistence/postgres/sso-broker-sessions.repository';
 import { SsoBrokerSessionRecord } from 'src/iam/sso/infrastructure/persistence/postgres/schema/sso-broker-session.record';
 import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/sso-broker-session-cleanup.task';
+import { SsoConnectionPolicyModule } from 'src/iam/sso/sso-connection-policy.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      OrgSsoConnectionRecord,
-      OrgSsoEmailDomainRecord,
       FederatedIdentityRecord,
       SsoLoginTransactionRecord,
       SsoBrokerSessionRecord,
@@ -64,6 +58,7 @@ import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/ss
     SubscriptionsModule,
     UsersModule,
     SessionsModule,
+    SsoConnectionPolicyModule,
   ],
   controllers: [
     SuperAdminSsoConnectionsController,
@@ -71,13 +66,8 @@ import { SsoBrokerSessionCleanupTask } from 'src/iam/sso/infrastructure/tasks/ss
     LogoutController,
   ],
   providers: [
-    OrgSsoConnectionMapper,
     FederatedIdentityMapper,
     OrgSsoConnectionResponseDtoMapper,
-    {
-      provide: OrgSsoConnectionsRepository,
-      useClass: PostgresOrgSsoConnectionsRepository,
-    },
     {
       provide: FederatedIdentitiesRepository,
       useClass: PostgresFederatedIdentitiesRepository,

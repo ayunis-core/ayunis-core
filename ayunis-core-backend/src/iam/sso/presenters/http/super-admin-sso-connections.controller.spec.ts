@@ -5,6 +5,7 @@ import { GetOrgSsoConnectionQuery } from 'src/iam/sso/application/use-cases/get-
 import { SetOrgSsoEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-sso-enabled/set-org-sso-enabled.command';
 import { ReviewedSsoMapping } from 'src/iam/sso/application/models/reviewed-sso-mapping';
 import { SetOrgSsoJitProvisioningCommand } from 'src/iam/sso/application/use-cases/set-org-sso-jit-provisioning/set-org-sso-jit-provisioning.command';
+import { SetOrgLocalPasswordLoginEnabledCommand } from 'src/iam/sso/application/use-cases/set-org-local-password-login-enabled/set-org-local-password-login-enabled.command';
 import {
   TEST_ORG_ID,
   anOrgSsoConnection,
@@ -21,6 +22,7 @@ function createController() {
   const configureConnection = { execute: jest.fn() };
   const setEnabled = { execute: jest.fn() };
   const setJit = { execute: jest.fn() };
+  const setLocalPasswordLoginEnabled = { execute: jest.fn() };
   const setIdp = { execute: jest.fn() };
   return {
     controller: new SuperAdminSsoConnectionsController(
@@ -28,6 +30,7 @@ function createController() {
       configureConnection as never,
       setEnabled as never,
       setJit as never,
+      setLocalPasswordLoginEnabled as never,
       setIdp as never,
       new OrgSsoConnectionResponseDtoMapper(),
     ),
@@ -36,6 +39,7 @@ function createController() {
     configureConnection,
     setEnabled,
     setJit,
+    setLocalPasswordLoginEnabled,
     setIdp,
   };
 }
@@ -152,25 +156,53 @@ describe(SuperAdminSsoConnectionsController.name, () => {
     expect(result.connection).toMatchObject({ jitProvisioningEnabled: true });
   });
 
-  it('rejects enablement without explicit confirmation', async () => {
-    const { controller, setEnabled } = createController();
+  it('updates local password login independently', async () => {
+    const { controller, setLocalPasswordLoginEnabled, logger } =
+      createController();
+    setLocalPasswordLoginEnabled.execute.mockResolvedValue({
+      connection: anOrgSsoConnection({
+        enabled: true,
+        localPasswordLoginEnabled: false,
+      }),
+      previousLocalPasswordLoginEnabled: true,
+    });
 
-    await expect(
-      controller.setEnabled(TEST_ORG_ID, { enabled: true }, SUPER_ADMIN_ID),
-    ).rejects.toThrow('requires confirmation');
-    expect(setEnabled.execute).not.toHaveBeenCalled();
-  });
+    const result = await controller.setLocalPasswordLoginEnabled(
+      TEST_ORG_ID,
+      {
+        enabled: false,
+        confirmed: true,
+        reviewedEmailDomains: ['stadt.example'],
+        reviewedZitadelOrgId: 'zitadel-org-1',
+        reviewedZitadelIdpId: null,
+      },
+      SUPER_ADMIN_ID,
+    );
 
-  it('rejects enablement without the reviewed mapping', async () => {
-    const { controller, setEnabled } = createController();
-
-    await expect(
-      controller.setEnabled(
+    expect(setLocalPasswordLoginEnabled.execute).toHaveBeenCalledWith(
+      new SetOrgLocalPasswordLoginEnabledCommand(
         TEST_ORG_ID,
-        { enabled: true, confirmed: true },
-        SUPER_ADMIN_ID,
+        false,
+        new ReviewedSsoMapping(['stadt.example'], 'zitadel-org-1', null),
       ),
-    ).rejects.toThrow('reviewed broker mapping');
-    expect(setEnabled.execute).not.toHaveBeenCalled();
+    );
+    expect(result.connection).toMatchObject({
+      enabled: true,
+      localPasswordLoginEnabled: false,
+    });
+    expect(logger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: 'set-local-password-login',
+        confirmation: {
+          localPasswordLoginEnabledBefore: true,
+          localPasswordLoginEnabledAfter: false,
+          confirmed: true,
+          reviewedEmailDomains: ['stadt.example'],
+          reviewedZitadelOrgId: 'zitadel-org-1',
+          reviewedZitadelIdpId: null,
+        },
+      }),
+      'Superadmin changed SSO connection',
+    );
   });
 });

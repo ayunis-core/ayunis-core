@@ -14,10 +14,20 @@ export interface UsersFilters {
   search?: string;
 }
 
+export interface EmailVerificationResult {
+  user: User;
+  changed: boolean;
+}
+
 export abstract class UsersRepository {
   abstract findOneById(id: UUID): Promise<User | null>;
   abstract findManyByIdsAndOrgId(ids: UUID[], orgId: UUID): Promise<User[]>;
   abstract findOneByEmail(email: string): Promise<User | null>;
+  abstract verifyEmailIfMatches(
+    id: UUID,
+    email: string,
+  ): Promise<EmailVerificationResult | null>;
+  abstract hasPasswordlessUsers(orgId: UUID): Promise<boolean>;
   abstract findManyByEmails(emails: string[]): Promise<User[]>;
   abstract findManyBySystemRole(role: SystemRole): Promise<User[]>;
   abstract findAdminsByOrgId(orgId: UUID): Promise<User[]>;

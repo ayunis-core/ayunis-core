@@ -11810,6 +11810,49 @@
         "tags": ["Super Admin SSO Connections"]
       }
     },
+    "/super-admin/orgs/{orgId}/sso/local-password-login": {
+      "patch": {
+        "operationId": "SuperAdminSsoConnectionsController_setLocalPasswordLoginEnabled",
+        "parameters": [
+          {
+            "name": "orgId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrgLocalPasswordLoginEnabledRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSsoConnectionResourceDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The requester is not a super admin"
+          }
+        },
+        "summary": "Allow or disallow local password login",
+        "tags": ["Super Admin SSO Connections"]
+      }
+    },
     "/super-admin/orgs/{orgId}/sso/idp": {
       "patch": {
         "operationId": "SuperAdminSsoConnectionsController_setIdp",
@@ -20610,6 +20653,9 @@
           },
           "jitProvisioningEnabled": {
             "type": "boolean"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -20619,7 +20665,8 @@
           "zitadelOrgId",
           "zitadelIdpId",
           "enabled",
-          "jitProvisioningEnabled"
+          "jitProvisioningEnabled",
+          "localPasswordLoginEnabled"
         ]
       },
       "OrgSsoConnectionResourceDto": {
@@ -20698,6 +20745,35 @@
         },
         "required": ["enabled"]
       },
+      "SetOrgLocalPasswordLoginEnabledRequestDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "description": "Confirms the SSO-only lockout impact was reviewed"
+          },
+          "reviewedEmailDomains": {
+            "example": ["stadt.example", "vhs.example"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewedZitadelOrgId": {
+            "type": "string",
+            "example": "385820595704561666"
+          },
+          "reviewedZitadelIdpId": {
+            "type": "string",
+            "nullable": true,
+            "example": "388145187060187138"
+          }
+        },
+        "required": ["enabled"]
+      },
       "SetOrgSsoIdpRequestDto": {
         "type": "object",
         "properties": {
@@ -20729,6 +20805,9 @@
           "orgId": {
             "type": "string",
             "format": "uuid"
+          },
+          "localPasswordLoginEnabled": {
+            "type": "boolean"
           }
         },
         "required": ["available"]

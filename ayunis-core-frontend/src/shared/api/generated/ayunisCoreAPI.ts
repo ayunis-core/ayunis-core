@@ -179,6 +179,7 @@ import type {
   SetFairUseLimitRequestDto,
   SetImageFairUseLimitRequestDto,
   SetOrgDefaultModelDto,
+  SetOrgLocalPasswordLoginEnabledRequestDto,
   SetOrgSsoEnabledRequestDto,
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
@@ -24674,6 +24675,71 @@ export const useSuperAdminSsoConnectionsControllerSetJitProvisioning = <TError =
       > => {
 
       const mutationOptions = getSuperAdminSsoConnectionsControllerSetJitProvisioningMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Allow or disallow local password login
+ */
+export const superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = (
+    orgId: string,
+    setOrgLocalPasswordLoginEnabledRequestDto: SetOrgLocalPasswordLoginEnabledRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<OrgSsoConnectionResourceDto>(
+      {url: `/super-admin/orgs/${orgId}/sso/local-password-login`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: setOrgLocalPasswordLoginEnabledRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,{orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,{orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, {orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}> = (props) => {
+          const {orgId,data} = props ?? {};
+
+          return  superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled(orgId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>>
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationBody = SetOrgLocalPasswordLoginEnabledRequestDto
+    export type SuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationError = void
+
+    /**
+ * @summary Allow or disallow local password login
+ */
+export const useSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>, TError,{orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled>>,
+        TError,
+        {orgId: string;data: SetOrgLocalPasswordLoginEnabledRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminSsoConnectionsControllerSetLocalPasswordLoginEnabledMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

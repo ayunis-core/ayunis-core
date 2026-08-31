@@ -53,6 +53,15 @@ export class PostgresOrgSsoConnectionsRepository extends OrgSsoConnectionsReposi
     super();
   }
 
+  async acquireMutationLock(orgId: UUID): Promise<boolean> {
+    const record = await this.records.findOne({
+      where: { orgId },
+      select: { id: true },
+      lock: { mode: 'pessimistic_write' },
+    });
+    return record !== null;
+  }
+
   findByOrgId(orgId: UUID): Promise<OrgSsoConnection | null> {
     return this.findOne({ orgId });
   }

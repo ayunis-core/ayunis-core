@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Transactional } from '@nestjs-cls/transactional';
 import { UsersRepository } from 'src/iam/users/application/ports/users.repository';
 import { ValidateUserQuery } from './validate-user.query';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -16,6 +17,8 @@ import {
   DEFAULT_ACCOUNT_LOCKOUT_WINDOW_MINUTES,
 } from 'src/config/authentication.config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { GetOrgAuthenticationPolicyQuery } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.query';
+import { GetOrgAuthenticationPolicyUseCase } from 'src/iam/sso/application/use-cases/get-org-authentication-policy/get-org-authentication-policy.use-case';
 
 @Injectable()
 export class ValidateUserUseCase {
@@ -25,6 +28,7 @@ export class ValidateUserUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly compareHashUseCase: CompareHashUseCase,
     private readonly configService: ConfigService,
+    private readonly getOrgAuthenticationPolicy: GetOrgAuthenticationPolicyUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UserUnexpectedError)
@@ -42,8 +46,21 @@ export class ValidateUserUseCase {
       throw new UserNotFoundError('unknown');
     }
     this.assertLocalLoginAllowed(user);
+    await this.assertLocalPasswordLoginEnabled(user);
 
     return await this.validatePassword(user, query);
+  }
+
+  private async assertLocalPasswordLoginEnabled(
+    user: User,
+    lockForSessionIssuance = false,
+  ): Promise<void> {
+    const policy = await this.getOrgAuthenticationPolicy.execute(
+      new GetOrgAuthenticationPolicyQuery(user.orgId, lockForSessionIssuance),
+    );
+    if (!policy.localPasswordLoginEnabled) {
+      throw new UserAuthenticationFailedError('Invalid credentials');
+    }
   }
 
   private async validatePassword(
@@ -77,7 +94,9 @@ export class ValidateUserUseCase {
     }
   }
 
+  @Transactional()
   private async registerFailedLoginAttempt(user: User): Promise<boolean> {
+    await this.assertLocalPasswordLoginEnabled(user, true);
     const maxAttempts = this.configService.get<number>(
       'auth.accountLockout.maxAttempts',
       DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS,
