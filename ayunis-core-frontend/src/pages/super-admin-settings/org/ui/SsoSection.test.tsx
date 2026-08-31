@@ -18,16 +18,23 @@ import type { UseFormReturn } from 'react-hook-form';
 import type { SsoConnectionFormFields } from '@/pages/super-admin-settings/org/model/types';
 import SsoSection from '@/pages/super-admin-settings/org/ui/SsoSection';
 
-const { configure, setEnabled, setJit, connectionState, formState } =
-  vi.hoisted(() => ({
-    configure: vi.fn(),
-    setEnabled: vi.fn(),
-    setJit: vi.fn(),
-    connectionState: { enabled: true },
-    formState: {
-      form: null as UseFormReturn<SsoConnectionFormFields> | null,
-    },
-  }));
+const {
+  configure,
+  setEnabled,
+  setJit,
+  setLocalPasswordLogin,
+  connectionState,
+  formState,
+} = vi.hoisted(() => ({
+  configure: vi.fn(),
+  setEnabled: vi.fn(),
+  setJit: vi.fn(),
+  setLocalPasswordLogin: vi.fn(),
+  connectionState: { enabled: true, localPasswordLoginEnabled: true },
+  formState: {
+    form: null as UseFormReturn<SsoConnectionFormFields> | null,
+  },
+}));
 
 vi.mock(
   '@/pages/super-admin-settings/org/api/useConfigureSuperAdminSso',
@@ -54,6 +61,15 @@ vi.mock('@/pages/super-admin-settings/org/api/useSetSuperAdminSsoJit', () => ({
   useSetSuperAdminSsoJit: () => ({ mutate: setJit, isPending: false }),
 }));
 vi.mock(
+  '@/pages/super-admin-settings/org/api/useSetSuperAdminLocalPasswordLogin',
+  () => ({
+    useSetSuperAdminLocalPasswordLogin: () => ({
+      mutate: setLocalPasswordLogin,
+      isPending: false,
+    }),
+  }),
+);
+vi.mock(
   '@/pages/super-admin-settings/org/api/useSuperAdminSsoConnection',
   () => ({
     useSuperAdminSsoConnection: () => ({
@@ -69,6 +85,7 @@ vi.mock(
         zitadelIdpId: null,
         enabled: connectionState.enabled,
         jitProvisioningEnabled: false,
+        localPasswordLoginEnabled: connectionState.localPasswordLoginEnabled,
       },
       isLoading: false,
       isError: false,
@@ -97,6 +114,7 @@ describe(SsoSection.name, () => {
   beforeEach(() => {
     vi.clearAllMocks();
     connectionState.enabled = true;
+    connectionState.localPasswordLoginEnabled = true;
     formState.form = null;
   });
 
@@ -104,6 +122,59 @@ describe(SsoSection.name, () => {
     render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
 
     expect(screen.getByTestId('sso-zitadel-idp-id')).toBeTruthy();
+  });
+
+  it('requires explicit review before enforcing SSO-only login', async () => {
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    fireEvent.click(screen.getByTestId('sso-required'));
+    const confirm = await screen.findByTestId('sso-required-confirm');
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+
+    fireEvent.click(screen.getByTestId('sso-required-reviewed'));
+    fireEvent.click(confirm);
+
+    await waitFor(() => {
+      expect(setLocalPasswordLogin).toHaveBeenCalledWith({
+        orgId: 'f4fcdc42-176e-4d32-bd5b-6dad8d2426b4',
+        data: {
+          enabled: false,
+          confirmed: true,
+          reviewedEmailDomains: ['example.com'],
+          reviewedZitadelOrgId: '385820595704561666',
+          reviewedZitadelIdpId: null,
+        },
+      });
+    });
+  });
+
+  it('locks identity provider changes while SSO-only is enforced', () => {
+    connectionState.localPasswordLoginEnabled = false;
+
+    render(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    expect(
+      screen.getByTestId('sso-zitadel-idp-id').hasAttribute('disabled'),
+    ).toBe(true);
+    expect(
+      screen.getByTestId('sso-connection-save').hasAttribute('disabled'),
+    ).toBe(true);
+  });
+
+  it('discards unsaved identity provider changes when SSO becomes required', async () => {
+    const { rerender } = render(
+      <SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />,
+    );
+    const idpInput = screen.getByTestId('sso-zitadel-idp-id');
+
+    fireEvent.change(idpInput, { target: { value: 'unsaved-idp' } });
+    connectionState.localPasswordLoginEnabled = false;
+    rerender(<SsoSection orgId="f4fcdc42-176e-4d32-bd5b-6dad8d2426b4" />);
+
+    await waitFor(() => {
+      expect(idpInput).toHaveProperty('value', '');
+      expect(idpInput.hasAttribute('disabled')).toBe(true);
+    });
   });
 
   it('requires an identity provider before saving direct routing', async () => {

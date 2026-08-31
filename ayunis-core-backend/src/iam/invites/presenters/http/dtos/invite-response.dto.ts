@@ -56,10 +56,22 @@ export class InviteResponseDto {
 
 export class InviteDetailResponseDto extends InviteResponseDto {
   @ApiProperty({
+    description: 'Organization the invitation belongs to',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
+  })
+  orgId: UUID;
+
+  @ApiProperty({
     description: 'Name of the organization',
     example: 'Acme Corporation',
   })
   organizationName: string;
+
+  @ApiProperty({
+    description: 'Whether this organization accepts local password login',
+  })
+  localPasswordLoginEnabled: boolean;
 }
 
 export class AcceptInviteResponseDto {

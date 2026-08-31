@@ -315,6 +315,19 @@
       "description": "Beim ersten gültigen kommunalen SSO-Login einen Ayunis-Benutzer erstellen.",
       "success": "JIT-Bereitstellung aktualisiert."
     },
+    "passwordLogin": {
+      "requireSsoLabel": "SSO für diese Organisation verpflichtend machen",
+      "requireSsoDescription": "Wenn aktiviert, können sich Benutzer nur über das konfigurierte Organisations-SSO anmelden.",
+      "confirmTitle": "SSO für alle Benutzer verpflichtend machen?",
+      "confirmDescription": "Bestätigen Sie, dass der Kunde SSO erfolgreich getestet hat und die aktive Zuordnung vollständig ist.",
+      "passwordImpact": "Passwort-Anmeldung und Passwort-Zurücksetzung sind für diese Organisation nicht mehr verfügbar.",
+      "sessionImpact": "Bestehende Passwort-Sitzungen können nicht mehr verlängert werden; bereits ausgestellte Zugriffe bleiben bis zum Ablauf gültig.",
+      "domainImpact": "Benutzer außerhalb der konfigurierten Domains können sich nicht mit einem Passwort anmelden.",
+      "confirm": "Ich habe Domains und Identitätsanbieter geprüft, und der Kunde hat SSO erfolgreich getestet.",
+      "confirmButton": "SSO verpflichtend machen",
+      "requireSsoSuccess": "SSO ist jetzt für diese Organisation verpflichtend.",
+      "restoreSuccess": "Lokale Passwort-Anmeldung wiederhergestellt."
+    },
     "enable": {
       "button": "SSO aktivieren",
       "title": "Diese SSO-Verbindung aktivieren?",
@@ -325,7 +338,8 @@
     },
     "disable": {
       "button": "SSO deaktivieren",
-      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar."
+      "success": "SSO deaktiviert. Die lokale Anmeldung bleibt verfügbar.",
+      "requiresPasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren."
     },
     "validation": {
       "emailDomains": {
@@ -361,6 +375,8 @@
       "changed": "Die Verbindung wurde während der Prüfung geändert. Laden Sie neu und versuchen Sie es erneut.",
       "notFound": "Für diese Organisation ist keine SSO-Verbindung vorhanden.",
       "invalid": "Die SSO-Verbindung ist unvollständig oder ungültig.",
+      "mustRestorePasswordLogin": "Stellen Sie die lokale Passwort-Anmeldung wieder her, bevor Sie SSO deaktivieren.",
+      "passwordlessUsersExist": "SSO kann nicht deaktiviert werden, da mindestens ein Benutzer kein Passwort hat. Legen Sie Passwörter fest oder lassen Sie SSO aktiviert.",
       "unexpected": "Die SSO-Verbindung konnte nicht aktualisiert werden."
     }
   },

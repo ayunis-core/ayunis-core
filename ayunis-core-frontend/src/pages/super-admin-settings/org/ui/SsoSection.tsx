@@ -36,6 +36,8 @@ import {
 } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import EnableSsoDialog from '@/pages/super-admin-settings/org/ui/EnableSsoDialog';
+import { useSetSuperAdminLocalPasswordLogin } from '@/pages/super-admin-settings/org/api/useSetSuperAdminLocalPasswordLogin';
+import RequireSsoControl from '@/pages/super-admin-settings/org/ui/RequireSsoControl';
 
 interface SsoSectionProps {
   orgId: string;
@@ -140,6 +142,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
   const configure = useConfigureSuperAdminSso(orgId, form);
   const setEnabled = useSetSuperAdminSsoEnabled(orgId);
   const setJit = useSetSuperAdminSsoJit(orgId);
+  const setLocalPasswordLogin = useSetSuperAdminLocalPasswordLogin(orgId);
   const domainVerified = useWatch({
     control: form.control,
     name: 'domainVerified',
@@ -147,14 +150,16 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
 
   // Keyed on the saved values rather than the connection object, so a JIT
   // refetch does not reset the form under an operator who is still typing.
-  // `savedEnabled` is included because enabling locks the fields: without it a
-  // locked form could display unsaved edits instead of the activated mapping.
+  // Saved policy values are included because locking must discard unsaved
+  // edits instead of displaying them as the active mapping.
   const savedEmailDomainsKey =
     connection?.emailDomains.map(({ emailDomain }) => emailDomain).join(',') ??
     '';
   const savedZitadelOrgId = connection?.zitadelOrgId ?? '';
   const savedZitadelIdpId = connection?.zitadelIdpId ?? '';
   const savedEnabled = connection?.enabled ?? false;
+  const savedLocalPasswordLoginEnabled =
+    connection?.localPasswordLoginEnabled ?? true;
 
   useEffect(() => {
     form.reset({
@@ -171,6 +176,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
     savedZitadelOrgId,
     savedZitadelIdpId,
     savedEnabled,
+    savedLocalPasswordLoginEnabled,
     form,
   ]);
 
@@ -179,8 +185,13 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
     return <p className="text-destructive text-sm">{t('sso.loadError')}</p>;
   }
 
-  const busy = configure.isPending || setEnabled.isPending || setJit.isPending;
+  const busy =
+    configure.isPending ||
+    setEnabled.isPending ||
+    setJit.isPending ||
+    setLocalPasswordLogin.isPending;
   const mappingLocked = connection?.enabled === true;
+  const idpLocked = connection?.localPasswordLoginEnabled === false;
 
   function submit(values: SsoConnectionFormFields) {
     configure.configure({
@@ -254,7 +265,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
                       <FormControl>
                         <Input
                           data-testid="sso-zitadel-idp-id"
-                          disabled={busy}
+                          disabled={busy || idpLocked}
                           {...field}
                         />
                       </FormControl>
@@ -294,7 +305,9 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
                 <Button
                   data-testid="sso-connection-save"
                   type="submit"
-                  disabled={busy || (!mappingLocked && !domainVerified)}
+                  disabled={
+                    busy || idpLocked || (!mappingLocked && !domainVerified)
+                  }
                 >
                   {t('sso.configure.save')}
                 </Button>
@@ -311,6 +324,12 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
             <CardDescription>{t('sso.access.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            <RequireSsoControl
+              orgId={orgId}
+              connection={connection}
+              mutation={setLocalPasswordLogin}
+              disabled={busy}
+            />
             <div className="flex items-center justify-between gap-4">
               <div>
                 <Label htmlFor="sso-jit">{t('sso.jit.label')}</Label>
@@ -320,6 +339,7 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
               </div>
               <Switch
                 id="sso-jit"
+                data-testid="sso-jit"
                 checked={connection.jitProvisioningEnabled}
                 disabled={busy}
                 onCheckedChange={(enabled) =>
@@ -331,7 +351,12 @@ export default function SsoSection({ orgId }: Readonly<SsoSectionProps>) {
               {connection.enabled ? (
                 <Button
                   variant="destructive"
-                  disabled={busy}
+                  disabled={busy || !connection.localPasswordLoginEnabled}
+                  title={
+                    connection.localPasswordLoginEnabled
+                      ? undefined
+                      : t('sso.disable.requiresPasswordLogin')
+                  }
                   onClick={() =>
                     setEnabled.mutate({ orgId, data: { enabled: false } })
                   }

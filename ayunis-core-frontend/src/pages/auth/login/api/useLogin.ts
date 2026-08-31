@@ -66,6 +66,8 @@ export function useLogin({ redirect }: { redirect?: string }) {
               return;
             } else if (code === 'USER_ACCOUNT_LOCKED') {
               showError(t('login.error.accountLocked'));
+            } else if (code === 'LOCAL_PASSWORD_LOGIN_DISABLED') {
+              showError(t('login.error.ssoRequired'));
             } else if (status === 401 || status === 403) {
               showError(t('login.error.invalidCredentials'));
             } else if (code === 'RATE_LIMIT_EXCEEDED') {
