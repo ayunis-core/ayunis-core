@@ -1,5 +1,8 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
-import type { SsoDiscoveryResponseDto } from '../generated/ayunisCoreAPI.schemas';
+import type {
+  MeResponseDto,
+  SsoDiscoveryResponseDto,
+} from '../generated/ayunisCoreAPI.schemas';
 import { config } from '../../config';
 import { generatedApi } from './generated-api';
 
@@ -57,6 +60,14 @@ export async function isLoggedIn(api: APIRequestContext): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export function getCurrentUser(api: APIRequestContext): Promise<MeResponseDto> {
+  return generatedApi.authenticationControllerMe({ api });
+}
+
+export async function refreshSession(api: APIRequestContext): Promise<void> {
+  await generatedApi.authenticationControllerRefresh({ api });
 }
 
 export async function markWelcomeVideoSeen(
