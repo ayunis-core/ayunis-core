@@ -11,7 +11,7 @@ import { AnonymizationWhitelistEntry } from 'src/domain/anonymization-settings/d
 import { GlobalAnonymizationWhitelistWord } from 'src/domain/anonymization-settings/domain/global-anonymization-whitelist-word.entity';
 import type { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
+import { UnexpectedThreadPiiMasksError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 
 describe('AnonymizeTextForThreadUseCase', () => {
   const orgId = '0d4f9c5e-7a36-4b34-9c1b-2f8d6a1e5b3c' as UUID;
@@ -108,6 +108,37 @@ describe('AnonymizeTextForThreadUseCase', () => {
           new PiiWhitelistEntry(PiiCategory.LOCATION, null),
           new PiiWhitelistEntry(PiiCategory.PERSON_NAME, 'Mitarbeitende'),
         ],
+      }),
+    );
+  });
+
+  it('whitelists manually unmasked values while keeping their masks for numbering', async () => {
+    const unmasked = new ThreadPiiMask({
+      threadId,
+      category: PiiCategory.PERSON_NAME,
+      maskIndex: 1,
+      value: 'Dr. Moritz (Chef)',
+      unmasked: true,
+    });
+    const active = new ThreadPiiMask({
+      threadId,
+      category: PiiCategory.EMAIL_ADDRESS,
+      maskIndex: 1,
+      value: 'a@b.de',
+    });
+    findByThreadId.mockResolvedValue([unmasked, active]);
+
+    await useCase.execute(command());
+
+    expect(anonymizeExecute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        whitelist: [
+          new PiiWhitelistEntry(
+            PiiCategory.PERSON_NAME,
+            'Dr\\. Moritz \\(Chef\\)',
+          ),
+        ],
+        existingMasks: [unmasked.toPiiMask(), active.toPiiMask()],
       }),
     );
   });
