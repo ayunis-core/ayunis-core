@@ -70,6 +70,7 @@ import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.c
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
+import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
 
 const RUNTIME_MAX_ITERATIONS = 50;
 
@@ -92,9 +93,11 @@ interface PreparedToolResultInput {
  */
 @Injectable()
 export class ExecuteRunViaRuntimeUseCase {
+  // eslint-disable-next-line max-params
   constructor(
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
+    private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
     private readonly backendToolAdapter: BackendToolAdapter,
@@ -136,22 +139,21 @@ export class ExecuteRunViaRuntimeUseCase {
   ): Promise<PreparedRuntimeRun> {
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
-    if (!userId || !orgId) {
-      throw new UnauthorizedAccessError();
-    }
+    if (!userId || !orgId) throw new UnauthorizedAccessError();
     this.runTelemetryService.recordAttempt(userId, orgId);
-
     const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const permittedModel = found.thread.model;
-    if (!permittedModel) {
+    const storedPermit = found.thread.model;
+    if (!storedPermit)
       throw new RunNoModelFoundError({ threadId: found.thread.id });
-    }
-    await this.inferenceUsageGuard.preflight(
-      { userId, orgId },
-      permittedModel.model,
-    );
+    const permittedModel = await this.effectiveRunModelResolver.resolve({
+      storedPermit,
+      userId,
+      orgId,
+    });
+    const model = permittedModel.model;
+    await this.inferenceUsageGuard.preflight({ userId, orgId }, model);
     const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
     const workspaceContext = await this.buildWorkspaceContext(found.thread);
@@ -164,21 +166,20 @@ export class ExecuteRunViaRuntimeUseCase {
       await this.toolAssemblyService.buildRunContext(
         activated.thread,
         activeSkills,
-        permittedModel.model.canUseTools,
+        model.canUseTools,
         anonymous,
         workspaceContext,
       );
-
     return {
       thread: activated.thread,
-      model: permittedModel.model,
+      model,
       orgId,
       userId,
       isAnonymous: anonymous,
       instructions: appendSkillActivatedNote(instructions, activated.skillName),
       ...this.prepareTools(tools),
       activeSkills,
-      canUseTools: permittedModel.model.canUseTools,
+      canUseTools: model.canUseTools,
       skillInstructions: activated.skillInstructions,
       activatedSkillName: activated.skillName,
     };

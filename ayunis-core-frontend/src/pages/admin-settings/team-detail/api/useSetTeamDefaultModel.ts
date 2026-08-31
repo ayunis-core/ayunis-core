@@ -1,10 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  useTeamPermittedModelsControllerSetTeamDefaultModel,
-  getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamPermittedModelsControllerSetTeamDefaultModel } from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
+
+const ERROR_KEYS: Record<string, string> = {
+  MODEL_NOT_FOUND: 'models.defaultModel.modelNotFound',
+  MODEL_INVALID: 'models.defaultModel.modelInvalid',
+};
 
 export function useSetTeamDefaultModel(teamId: string) {
   const { t } = useTranslation('admin-settings-teams');
@@ -15,25 +19,16 @@ export function useSetTeamDefaultModel(teamId: string) {
       onSuccess: () => {
         showSuccess(t('models.defaultModel.success'));
       },
-      onError: (error: unknown) => {
-        const errorObj = error as { response?: { data?: { code?: string } } };
-        const errorCode = errorObj.response?.data?.code;
-
-        if (errorCode === 'MODEL_NOT_FOUND') {
-          showError(t('models.defaultModel.modelNotFound'));
-        } else if (errorCode === 'MODEL_INVALID') {
-          showError(t('models.defaultModel.modelInvalid'));
-        } else {
+      onError: (error) => {
+        try {
+          const { code } = extractErrorData(error);
+          showError(t(ERROR_KEYS[code] ?? 'models.defaultModel.error'));
+        } catch {
           showError(t('models.defaultModel.error'));
         }
       },
-      onSettled: () => {
-        void queryClient.invalidateQueries({
-          queryKey:
-            getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey(
-              teamId,
-            ),
-        });
+      onSettled: async () => {
+        await invalidateTeamModelAccessQueries(queryClient, teamId);
       },
     },
   });

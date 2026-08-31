@@ -238,6 +238,7 @@ jobs:
           # Deterministic model availability. MOCK_INFERENCE handles requests,
           # but the app still hides providers without configured credentials.
           AWS_BEDROCK_REGION=eu-central-1
+          AZURE_OPENAI_API_KEY=e2e-ci-dummy
 
           # Deterministic Mistral OCR contract server
           MISTRAL_API_KEY=e2e-ci-mistral-key

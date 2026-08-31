@@ -21,6 +21,7 @@ The models module is the central registry for AI model configuration. The abstra
 - **ModelPolicyService** (`application/services/model-policy.service.ts`): Enforces permitted-model policy invariants. Validates that image-generation models only use supported providers (Azure), and enforces at most one org-scoped permitted embedding model and one org-scoped image-generation model per org via `assertSingleModelPerOrg` (invoked by `CreatePermittedModelUseCase` before persisting; team-scoped grants are exempt).
 - **ModelConfigurationService** (`application/services/model-configuration.service.ts`): Centralizes whether a catalog model is active and its provider credentials are configured. Configured-model candidate listing and team-grant creation use the same policy.
 - **TeamPermittedModelValidatorService** (`application/services/team-permitted-model-validator.service.ts`): Validates team ownership and org-scoping for team-scoped permitted model operations.
+- **EffectiveModelScopeResolverService** (`application/services/effective-model-scope-resolver.service.ts`): Resolves the current user's model-policy scope once: organization grants when no enabled team override exists, otherwise the complete set of enabled team IDs.
 
 ## Domain Value Objects
 
@@ -43,13 +44,13 @@ The models module is the central registry for AI model configuration. The abstra
 - **GetPermittedLanguageModelsUseCase** (`application/use-cases/get-permitted-language-models`): Retrieves permitted language models for an org.
 - **GetPermittedLanguageModelUseCase** (`application/use-cases/get-permitted-language-model`): Retrieves a language-model permit by ID only when it belongs to the current user's effective org/team model set.
 - **GetPermittedEmbeddingModelUseCase** (`application/use-cases/get-permitted-embedding-model`): Retrieves the single permitted embedding model for an org.
-- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. A user in an override-enabled team receives an explicit, independently stored team image grant; no team image grant means image generation is unavailable. Users in no override team fall back to the organization grant.
+- **GetPermittedImageGenerationModelUseCase** (`application/use-cases/get-permitted-image-generation-model`): Resolves the image-generation model effectively available to the current user. Without an enabled override it uses the organization grant. With enabled overrides it uses the union of explicit team grants: zero grants means unavailable, repeated grants of one catalog model deduplicate, and different catalog models raise a typed conflict.
 - **GetConfiguredModelsByTypeUseCase** (`application/use-cases/get-configured-models-by-type`): Retrieves all catalog models of a given type, used for populating model selection dropdowns.
 - **GetAllModelsUseCase** (`application/use-cases/get-all-models`): Retrieves all models from the catalog.
 - **GetModelUseCase** (`application/use-cases/get-model`): Retrieves a single model by slug.
 - **GetModelByIdUseCase** (`application/use-cases/get-model-by-id`): Retrieves a single model by ID.
 - **GetModelProviderInfoUseCase** (`application/use-cases/get-model-provider-info`): Retrieves provider metadata for a model.
-- **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective set of language models for a user, combining org and team scopes.
+- **GetEffectiveLanguageModelsUseCase** (`application/use-cases/get-effective-language-models`): Computes the effective language set. Without an enabled override it returns organization grants; with any enabled override it returns only the catalog-model union of explicit grants across all enabled teams, including an intentionally empty set. When several teams grant the same catalog model, `anonymousOnly` is enforced if any matching grant requires it.
 - **GetTeamPermittedModelsUseCase** (`application/use-cases/get-team-permitted-models`): Retrieves team-scoped permitted language models.
 - **GetTeamPermittedImageGenerationModelsUseCase** (`application/use-cases/get-team-permitted-image-generation-models`): Retrieves team-scoped permitted image-generation models.
 - **CreateTeamPermittedModelUseCase** (`application/use-cases/create-team-permitted-model`): Creates an independent team-scoped grant directly from an active, configured catalog language or image-generation model. Organization permission is not required, embedding models are rejected, duplicate grants are translated to a typed conflict, and each team may hold at most one image-generation grant.
@@ -77,7 +78,7 @@ Legacy and SDK runtime streams use the same `StreamIdleWatchdog` from `src/commo
 
 ## Infrastructure Services
 
-- **PermittedModelFinder** (`infrastructure/persistence/local-permitted-models/permitted-model-finder.ts`): Read-only collaborator of `LocalPermittedModelsRepository` that centralizes permitted-model lookups with type-safe filtering by model type (language, embedding, image-generation) and scope (org, team). Handles both org-scoped and team-scoped reads.
+- **PermittedModelFinder** (`infrastructure/persistence/local-permitted-models/permitted-model-finder.ts`): Read-only collaborator of `LocalPermittedModelsRepository` that centralizes permitted-model lookups with type-safe filtering by model type (language, embedding, image-generation) and scope (org, team). Enabled-team grants and defaults are loaded with bulk team-ID queries rather than per-team reads. Embedding resolution remains organization-wide.
 
 ## Image Generation
 

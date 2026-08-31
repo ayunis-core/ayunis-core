@@ -94,9 +94,9 @@
     },
     "models": {
       "overrideTitle": "Modellzugriff überschreiben",
-      "overrideDescription": "Wenn aktiviert, sehen die Mitglieder dieses Teams nur die unten ausgewählten Modelle anstelle der Standard-Modelle der Organisation.",
+      "overrideDescription": "Wenn aktiviert, können Teammitglieder nur die unten ausdrücklich ausgewählten Modelle verwenden. Ohne Auswahl besteht kein Zugriff auf Sprach- oder Bildgenerierungsmodelle.",
       "overrideLabel": "Modellzugriff überschreiben",
-      "overrideDisabledMessage": "Dieses Team verwendet die Modelleinstellungen der Organisation. Aktivieren Sie die Überschreibung, um einzuschränken, auf welche Modelle dieses Team zugreifen kann.",
+      "overrideDisabledMessage": "Dieses Team verwendet die Modelleinstellungen der Organisation. Aktivieren Sie die Überschreibung, um eine ausdrückliche Modellfreigabeliste für das Team festzulegen.",
       "overrideToggleSuccess": "Modellüberschreibung aktualisiert",
       "overrideToggleError": "Modellüberschreibung konnte nicht aktualisiert werden",
       "overrideToggleNotFound": "Team nicht gefunden",
@@ -105,11 +105,16 @@
       "enableAlreadyEnabled": "Dieses Modell ist bereits für das Team aktiviert",
       "enableModelNotFound": "Modell nicht gefunden",
       "enableModelInvalid": "Dieses Modell kann nicht für das Team aktiviert werden",
+      "enableModelNotRestrictable": "Dieser Modelltyp kann keinem Team zugewiesen werden",
+      "enableModelNotConfigured": "Der Anbieter dieses Modells ist nicht konfiguriert",
+      "enableModelArchived": "Archivierte Modelle können nicht für Teams aktiviert werden",
+      "enableImageAlreadySelected": "Entfernen Sie das ausgewählte Bildmodell, bevor Sie ein anderes aktivieren",
       "disableSuccess": "Modell für Team deaktiviert",
       "disableError": "Modell konnte nicht für Team deaktiviert werden",
       "disableModelNotFound": "Modell nicht gefunden",
       "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden",
-      "updateError": "Modelleinstellung konnte nicht aktualisiert werden"
+      "updateError": "Modelleinstellung konnte nicht aktualisiert werden",
+      "updateModelNotFound": "Die Team-Modelleinstellung existiert nicht mehr"
     },
     "removeMember": {
       "confirmTitle": "Mitglied entfernen",

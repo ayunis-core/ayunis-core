@@ -6,11 +6,11 @@ import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model
 import {
   DefaultModelNotFoundError,
   UnexpectedModelError,
-} from '../../models.errors';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UserDefaultModelsRepository } from '../../ports/user-default-models.repository';
-import { GetEffectiveLanguageModelsQuery } from '../get-effective-language-models/get-effective-language-models.query';
-import { GetEffectiveLanguageModelsUseCase } from '../get-effective-language-models/get-effective-language-models.use-case';
+} from 'src/domain/models/application/models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { UserDefaultModelsRepository } from 'src/domain/models/application/ports/user-default-models.repository';
+import { GetEffectiveLanguageModelsQuery } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.query';
+import { GetEffectiveLanguageModelsUseCase } from 'src/domain/models/application/use-cases/get-effective-language-models/get-effective-language-models.use-case';
 import { GetDefaultModelQuery } from './get-default-model.query';
 
 @Injectable()
@@ -42,6 +42,9 @@ export class GetDefaultModelUseCase {
       models,
       query.blacklistedModelIds,
     );
+    if (effectiveModels.size === 0) {
+      throw new DefaultModelNotFoundError(query.orgId);
+    }
 
     const userDefault = await this.resolveUserDefault(
       query.userId,
@@ -62,9 +65,6 @@ export class GetDefaultModelUseCase {
     );
     if (orgDefault) return orgDefault;
 
-    if (effectiveModels.size === 0) {
-      throw new DefaultModelNotFoundError(query.orgId);
-    }
     return [...effectiveModels.values()].sort((a, b) =>
       a.model.name.localeCompare(b.model.name),
     )[0];
@@ -96,11 +96,12 @@ export class GetDefaultModelUseCase {
     orgId: UUID,
     effectiveModels: Map<UUID, PermittedLanguageModel>,
   ): Promise<PermittedLanguageModel | null> {
-    const defaults = await Promise.all(
-      teamIds.map((teamId) =>
-        this.permittedModelsRepository.findTeamDefaultLanguage(teamId, orgId),
-      ),
-    );
+    if (teamIds.length === 0) return null;
+    const defaults =
+      await this.permittedModelsRepository.findManyTeamDefaultLanguage(
+        teamIds,
+        orgId,
+      );
     const effectiveDefaults = defaults
       .map((model) => this.toEffectiveModel(model, effectiveModels))
       .filter((model): model is PermittedLanguageModel => model !== null)

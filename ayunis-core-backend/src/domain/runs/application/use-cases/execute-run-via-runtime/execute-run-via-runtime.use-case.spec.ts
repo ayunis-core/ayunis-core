@@ -68,6 +68,8 @@ import {
 import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
 import { RunContextBudgetExceededError } from 'src/domain/runs/application/runs.errors';
 import { ExecuteRunViaRuntimeUseCase } from './execute-run-via-runtime.use-case';
+import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
+import { RunNoModelFoundError } from 'src/domain/runs/application/runs.errors';
 
 const threadId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 const userId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -90,6 +92,7 @@ interface Harness {
   provider: MockProvider;
   providerSignal: () => AbortSignal | undefined;
   countTokens: jest.Mock;
+  resolveModelAccess: jest.Mock;
 }
 
 interface HarnessOptions {
@@ -107,6 +110,7 @@ interface HarnessOptions {
   tokensPerMessage?: number;
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
+  effectiveAnonymousOnly?: boolean;
 }
 
 function buildHarness(overrides: HarnessOptions = {}): Harness {
@@ -148,6 +152,14 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const findThreadUseCase = {
     execute: findThread,
   } as unknown as FindThreadUseCase;
+  const effectivePermit = {
+    ...permitted,
+    anonymousOnly: overrides.effectiveAnonymousOnly ?? permitted.anonymousOnly,
+  } as PermittedLanguageModel;
+  const resolveModelAccess = jest.fn().mockResolvedValue(effectivePermit);
+  const effectiveRunModelResolver = {
+    resolve: resolveModelAccess,
+  } as unknown as EffectiveRunModelResolverService;
   const inferenceUsageGuard = {
     preflight: jest.fn().mockResolvedValue(undefined),
     collectUsage: jest.fn(),
@@ -310,6 +322,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const useCase = new ExecuteRunViaRuntimeUseCase(
     contextService,
     findThreadUseCase,
+    effectiveRunModelResolver,
     inferenceUsageGuard,
     toolAssemblyService,
     backendToolAdapter,
@@ -351,6 +364,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     provider,
     providerSignal: () => providerSignal,
     countTokens,
+    resolveModelAccess,
   };
 }
 
@@ -376,6 +390,26 @@ function userCommand(input = new RunUserInput('Hi there')): ExecuteRunCommand {
 }
 
 describe('ExecuteRunViaRuntimeUseCase', () => {
+  it('denies an existing thread before provider inference after revocation', async () => {
+    const { useCase, resolveModelAccess, provider } = buildHarness();
+    resolveModelAccess.mockRejectedValue(new RunNoModelFoundError());
+
+    await expect(useCase.execute(userCommand())).rejects.toThrow(
+      RunNoModelFoundError,
+    );
+    expect(provider.requests).toHaveLength(0);
+  });
+
+  it('uses the current effective grant anonymous policy', async () => {
+    const { useCase, anonymize } = buildHarness({
+      effectiveAnonymousOnly: true,
+    });
+
+    await drain(await useCase.execute(userCommand()));
+
+    expect(anonymize).toHaveBeenCalled();
+  });
+
   it('wraps unexpected preparation failures in the runs error family', async () => {
     const { useCase, findThread } = buildHarness();
     findThread.mockRejectedValueOnce(new Error('database connection lost'));

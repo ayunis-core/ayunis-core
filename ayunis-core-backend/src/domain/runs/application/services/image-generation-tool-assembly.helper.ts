@@ -6,7 +6,10 @@ import type { AssembleToolUseCase } from 'src/domain/tools/application/use-cases
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import type { GetPermittedImageGenerationModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { GetPermittedImageGenerationModelQuery } from 'src/domain/models/application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.query';
-import { PermittedImageGenerationModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import {
+  EffectiveImageGenerationModelConflictError,
+  PermittedImageGenerationModelNotFoundForOrgError,
+} from 'src/domain/models/application/models.errors';
 
 export async function assembleImageGenerationTools(args: {
   orgId: UUID | undefined;
@@ -30,6 +33,13 @@ export async function assembleImageGenerationTools(args: {
       logger.debug(
         { orgId },
         'No permitted image-generation model; dropping generate_image tool',
+      );
+      return [];
+    }
+    if (error instanceof EffectiveImageGenerationModelConflictError) {
+      logger.warn(
+        { orgId },
+        'Conflicting team image-generation grants; dropping generate_image tool',
       );
       return [];
     }

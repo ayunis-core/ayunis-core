@@ -140,7 +140,9 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       permittedModel,
     ) as PermittedLanguageModel;
   }
-
+  async findManyTeamDefaultLanguage(teamIds: UUID[], orgId: UUID) {
+    return this.finder.findManyTeamDefaultLanguage(teamIds, orgId);
+  }
   async findOne(params: FindOneParams): Promise<PermittedModel | null> {
     const where =
       'id' in params
@@ -161,7 +163,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     }
     return this.permittedModelMapper.toDomain(permittedModel);
   }
-
   async findOneLanguage(
     params: FindOneParams,
   ): Promise<PermittedLanguageModel | null> {
@@ -197,35 +198,35 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       permittedModel,
     ) as PermittedLanguageModel;
   }
-
   async findOneEmbedding(orgId: UUID): Promise<PermittedEmbeddingModel | null> {
     return this.finder.findOneEmbedding(orgId);
   }
-
   async findOneImageGeneration(
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel | null> {
     return this.finder.findOneImageGeneration(orgId);
   }
-
   async findManyLanguage(orgId: UUID): Promise<PermittedLanguageModel[]> {
     return this.finder.findManyLanguage(orgId);
   }
-
   async findManyLanguageByTeam(
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]> {
     return this.finder.findManyLanguageByTeam(teamId, orgId);
   }
-
+  async findManyLanguageByTeams(teamIds: UUID[], orgId: UUID) {
+    return this.finder.findManyLanguageByTeams(teamIds, orgId);
+  }
   async findManyImageGenerationByTeam(
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]> {
     return this.finder.findManyImageGenerationByTeam(teamId, orgId);
   }
-
+  async findManyImageGenerationByTeams(teamIds: UUID[], orgId: UUID) {
+    return this.finder.findManyImageGenerationByTeams(teamIds, orgId);
+  }
   async create(permittedModel: PermittedModel): Promise<PermittedModel> {
     return this.persist(permittedModel, this.permittedModelRepository);
   }

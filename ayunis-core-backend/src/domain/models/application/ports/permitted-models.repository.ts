@@ -33,6 +33,10 @@ export abstract class PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel | null>;
+  abstract findManyTeamDefaultLanguage(
+    teamIds: UUID[],
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]>;
   abstract findOne(params: FindOneParams): Promise<PermittedModel | null>;
   abstract findOneLanguage(
     params: FindOneParams,
@@ -48,8 +52,16 @@ export abstract class PermittedModelsRepository {
     teamId: UUID,
     orgId: UUID,
   ): Promise<PermittedLanguageModel[]>;
+  abstract findManyLanguageByTeams(
+    teamIds: UUID[],
+    orgId: UUID,
+  ): Promise<PermittedLanguageModel[]>;
   abstract findManyImageGenerationByTeam(
     teamId: UUID,
+    orgId: UUID,
+  ): Promise<PermittedImageGenerationModel[]>;
+  abstract findManyImageGenerationByTeams(
+    teamIds: UUID[],
     orgId: UUID,
   ): Promise<PermittedImageGenerationModel[]>;
   abstract create(permittedModel: PermittedModel): Promise<PermittedModel>;

@@ -57,15 +57,18 @@ import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/applicati
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
 import { parseRunInput } from 'src/domain/runs/application/helpers/parse-run-input';
+import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
 
 @Injectable()
 export class ExecuteRunUseCase {
+  // eslint-disable-next-line max-params
   constructor(
     private readonly createUserMessageUseCase: CreateUserMessageUseCase,
     private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
+    private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
@@ -150,14 +153,16 @@ export class ExecuteRunUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
     this.runTelemetryService.recordAttempt(userId, orgId);
-
     const { thread } = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const model = this.pickModel(thread);
-
+    const storedPermit = this.pickModel(thread);
+    const model = await this.effectiveRunModelResolver.resolve({
+      storedPermit,
+      userId,
+      orgId,
+    });
     await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
-
     const isAnonymous = thread.isAnonymous || model.anonymousOnly;
     const workspaceContext = await this.buildWorkspaceContext(thread);
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
@@ -169,7 +174,6 @@ export class ExecuteRunUseCase {
         isAnonymous,
         workspaceContext,
       );
-
     return {
       userId,
       orgId,
@@ -182,7 +186,6 @@ export class ExecuteRunUseCase {
       workspaceContext,
     };
   }
-
   private async buildWorkspaceContext(
     thread: Thread,
   ): Promise<WorkspaceRunContext | undefined> {
@@ -191,7 +194,6 @@ export class ExecuteRunUseCase {
       new BuildWorkspaceRunContextQuery(thread.workspaceId),
     );
   }
-
   private pickModel(thread: Thread): PermittedLanguageModel {
     if (thread.model) {
       return thread.model;
@@ -201,7 +203,6 @@ export class ExecuteRunUseCase {
       userId: thread.userId,
     });
   }
-
   private async *orchestrateRun(
     params: RunParams,
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
@@ -277,7 +278,6 @@ export class ExecuteRunUseCase {
     }
     return yield* this.inferenceOrchestratorService.runInference(params);
   }
-
   private async *handleFirstIteration(
     params: RunParams,
     userInput: RunUserInput | null,

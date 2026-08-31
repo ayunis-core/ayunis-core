@@ -37,6 +37,7 @@ export enum ModelErrorCode {
   MODEL_NOT_CONFIGURED = 'MODEL_NOT_CONFIGURED',
   MODEL_ARCHIVED = 'MODEL_ARCHIVED',
   MULTIPLE_TEAM_IMAGE_GENERATION_MODELS_NOT_ALLOWED = 'MULTIPLE_TEAM_IMAGE_GENERATION_MODELS_NOT_ALLOWED',
+  EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT = 'EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT',
 }
 
 export abstract class ModelError extends ApplicationError {
@@ -363,7 +364,6 @@ export class ModelStillPermittedError extends ModelError {
     );
   }
 }
-
 export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -374,7 +374,6 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
     );
   }
 }
-
 export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -385,7 +384,6 @@ export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
     );
   }
 }
-
 export class ImageGenerationModelProviderNotSupportedError extends ModelError {
   constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -396,7 +394,6 @@ export class ImageGenerationModelProviderNotSupportedError extends ModelError {
     );
   }
 }
-
 export class DuplicateTeamPermittedModelError extends ModelError {
   constructor(teamId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -407,7 +404,6 @@ export class DuplicateTeamPermittedModelError extends ModelError {
     );
   }
 }
-
 export class MultipleTeamImageGenerationModelsNotAllowedError extends ModelError {
   constructor(teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -418,7 +414,16 @@ export class MultipleTeamImageGenerationModelsNotAllowedError extends ModelError
     );
   }
 }
-
+export class EffectiveImageGenerationModelConflictError extends ModelError {
+  constructor(orgId: UUID, modelIds: UUID[], metadata?: ErrorMetadata) {
+    super(
+      `Enabled teams in organization '${orgId}' grant conflicting image-generation models`,
+      ModelErrorCode.EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT,
+      409,
+      { ...metadata, orgId, modelIds },
+    );
+  }
+}
 export class TeamNotFoundInOrgError extends ModelError {
   constructor(teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -429,7 +434,6 @@ export class TeamNotFoundInOrgError extends ModelError {
     );
   }
 }
-
 export class PermittedModelNotInTeamError extends ModelError {
   constructor(permittedModelId: UUID, teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -440,7 +444,6 @@ export class PermittedModelNotInTeamError extends ModelError {
     );
   }
 }
-
 export class ImageGenerationFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(

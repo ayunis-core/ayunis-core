@@ -102,6 +102,7 @@ import { TeamPermittedModelsController } from './presenters/http/team-permitted-
 import { TeamPermittedModelValidator } from './application/services/team-permitted-model-validator.service';
 import { ModelPolicyService } from './application/services/model-policy.service';
 import { ModelConfigurationService } from './application/services/model-configuration.service';
+import { EffectiveModelScopeResolverService } from './application/services/effective-model-scope-resolver.service';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
 import { UsageReferencesModule } from 'src/domain/usage/usage-references.module';
@@ -168,6 +169,8 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     MockImageGenerationHandler,
     {
       provide: StreamInferenceHandlerRegistry,
+      // Registry factories mirror Nest's explicit injection list.
+      // eslint-disable-next-line max-params
       useFactory: (
         anthropicHandler: AnthropicStreamInferenceHandler,
         openaiHandler: OpenAIStreamInferenceHandler,
@@ -224,6 +227,8 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     },
     {
       provide: InferenceHandlerRegistry,
+      // Registry factories mirror Nest's explicit injection list.
+      // eslint-disable-next-line max-params
       useFactory: (
         mistralHandler: MistralInferenceHandler,
         openaiHandler: OpenAIInferenceHandler,
@@ -301,6 +306,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     // Services
     ModelPolicyService,
     ModelConfigurationService,
+    EffectiveModelScopeResolverService,
     TeamPermittedModelValidator,
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
@@ -365,6 +371,7 @@ import { UsageReferencesModule } from 'src/domain/usage/usage-references.module'
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetEffectiveLanguageModelsUseCase,
+    EffectiveModelScopeResolverService,
     // Use Cases
     GetInferenceUseCase,
     GenerateImageUseCase,

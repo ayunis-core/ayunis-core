@@ -40,6 +40,8 @@ import type { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/appl
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { randomUUID } from 'crypto';
 import type { RunParams } from './run-params.interface';
+import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
+import { RunNoModelFoundError } from 'src/domain/runs/application/runs.errors';
 
 describe('ExecuteRunUseCase', () => {
   let useCase: ExecuteRunUseCase;
@@ -53,6 +55,7 @@ describe('ExecuteRunUseCase', () => {
   let configService: jest.Mocked<ConfigService>;
   let executeRunViaRuntimeUseCase: jest.Mocked<ExecuteRunViaRuntimeUseCase>;
   let runTelemetryService: jest.Mocked<RunTelemetryService>;
+  let effectiveRunModelResolver: jest.Mocked<EffectiveRunModelResolverService>;
 
   const userId = randomUUID();
   const orgId = randomUUID();
@@ -144,6 +147,9 @@ describe('ExecuteRunUseCase', () => {
       recordAttempt: jest.fn(),
       track: jest.fn((_, createStream) => createStream()),
     } as unknown as jest.Mocked<RunTelemetryService>;
+    effectiveRunModelResolver = {
+      resolve: jest.fn().mockImplementation(({ storedPermit }) => storedPermit),
+    } as unknown as jest.Mocked<EffectiveRunModelResolverService>;
 
     useCase = new ExecuteRunUseCase(
       { execute: jest.fn() } as unknown as CreateUserMessageUseCase,
@@ -151,6 +157,7 @@ describe('ExecuteRunUseCase', () => {
       findThreadUseCase,
       { execute: jest.fn() } as unknown as AddMessageToThreadUseCase,
       contextService,
+      effectiveRunModelResolver,
       anonymizeTextForThreadUseCase,
       inferenceUsageGuard,
       toolAssemblyService,
@@ -174,6 +181,51 @@ describe('ExecuteRunUseCase', () => {
         execute: jest.fn().mockResolvedValue(undefined),
       } as unknown as BuildWorkspaceRunContextUseCase,
       createPinoLoggerMock(),
+    );
+  });
+
+  it('denies an existing thread before inference after model access is revoked', async () => {
+    findThreadUseCase.execute.mockResolvedValue({
+      thread: createMockThread(),
+      isLongChat: false,
+    });
+    effectiveRunModelResolver.resolve.mockRejectedValue(
+      new RunNoModelFoundError(),
+    );
+
+    await expect(
+      useCase.execute(
+        new ExecuteRunCommand({
+          threadId,
+          input: new RunUserInput('Fasse die Sitzung zusammen', []),
+        }),
+      ),
+    ).rejects.toThrow(RunNoModelFoundError);
+    expect(checkQuotaUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('uses the current effective grant anonymous policy', async () => {
+    const thread = createMockThread();
+    const effectivePermit = {
+      ...thread.model,
+      anonymousOnly: true,
+    } as PermittedLanguageModel;
+    findThreadUseCase.execute.mockResolvedValue({ thread, isLongChat: false });
+    effectiveRunModelResolver.resolve.mockResolvedValue(effectivePermit);
+
+    await useCase.execute(
+      new ExecuteRunCommand({
+        threadId,
+        input: new RunUserInput('Fasse die Sitzung zusammen', []),
+      }),
+    );
+
+    expect(toolAssemblyService.buildRunContext).toHaveBeenCalledWith(
+      thread,
+      [],
+      effectivePermit.model.canUseTools,
+      true,
+      undefined,
     );
   });
 

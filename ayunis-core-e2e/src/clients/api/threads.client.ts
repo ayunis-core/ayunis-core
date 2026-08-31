@@ -1,6 +1,7 @@
-import type { APIRequestContext } from '@playwright/test';
+import type { APIRequestContext, APIResponse } from '@playwright/test';
 import type { GetThreadResponseDto } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
+import { config } from '../../config';
 
 export async function createEmptyThread(
   api: APIRequestContext,
@@ -10,6 +11,16 @@ export async function createEmptyThread(
     { modelId: permittedModelId, isAnonymous: false },
     { api },
   );
+}
+
+export function sendThreadMessage(
+  api: APIRequestContext,
+  threadId: string,
+  text: string,
+): Promise<APIResponse> {
+  return api.post(`${config.apiURL}/api/runs/send-message`, {
+    multipart: { threadId, text, streaming: 'true' },
+  });
 }
 
 export async function deleteThread(
