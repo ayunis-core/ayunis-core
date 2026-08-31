@@ -106,9 +106,9 @@ pnpm test <path-or-pattern>    # a subset
 
 **Those failures are an artifact of the wrong invocation, not a real regression.** Do not report them as "pre-existing failures on main" or hang caveats on a PR summary because of them — re-run with `pnpm test` and they pass. A suite that fails under `pnpm test` is a genuine signal worth investigating.
 
-## Health Check
+## Runtime Health Check
 
-After changes, verify the service responds:
+When runtime validation is required by the repository's Proportional Workflow, verify the service responds before exercising the changed behavior:
 
 ```bash
 curl http://localhost:PORT/api/health
