@@ -15,8 +15,10 @@ import { AcademyCertificateCard } from '@/pages/settings/account-settings/ui/Aca
 
 export default function AccountSettingsPage({
   user,
+  isSsoEnabled,
 }: Readonly<{
   user: { name: string; email: string };
+  isSsoEnabled: boolean;
 }>) {
   const { t } = useTranslation('settings');
 
@@ -27,8 +29,16 @@ export default function AccountSettingsPage({
     >
       <div className="space-y-4" data-testid="account-settings-page">
         <ProfileInformationCard user={user} />
-        <PasswordSettingsPage />
-        <TwoFactorCard />
+        {!isSsoEnabled && (
+          <>
+            <div data-testid="account-password-settings">
+              <PasswordSettingsPage />
+            </div>
+            <div data-testid="account-two-factor-settings">
+              <TwoFactorCard />
+            </div>
+          </>
+        )}
         <AcademyCertificateCard />
         {/* Account Actions */}
         <Card>
