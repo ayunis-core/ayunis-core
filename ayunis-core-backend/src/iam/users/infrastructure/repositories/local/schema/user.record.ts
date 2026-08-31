@@ -43,4 +43,13 @@ export class UserRecord extends BaseRecord {
 
   @Column({ nullable: true })
   department?: string;
+
+  @Column({ type: 'integer', default: 0 })
+  failedLoginAttempts: number;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  failedLoginWindowStartedAt: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lockedAt: Date | null;
 }

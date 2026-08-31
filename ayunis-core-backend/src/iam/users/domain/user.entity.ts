@@ -15,6 +15,7 @@ export class User {
   public name: string;
   public hasAcceptedMarketing: boolean;
   public department?: string;
+  public lockedAt: Date | null;
   public createdAt: Date;
   public updatedAt: Date;
 
@@ -30,6 +31,7 @@ export class User {
     name: string;
     hasAcceptedMarketing: boolean;
     department?: string;
+    lockedAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -43,6 +45,7 @@ export class User {
     this.name = params.name;
     this.hasAcceptedMarketing = params.hasAcceptedMarketing;
     this.department = params.department;
+    this.lockedAt = params.lockedAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

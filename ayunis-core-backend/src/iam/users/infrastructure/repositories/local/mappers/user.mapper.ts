@@ -1,5 +1,5 @@
 import { User } from 'src/iam/users/domain/user.entity';
-import { UserRecord } from '../schema/user.record';
+import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 
 export class UserMapper {
   static toDomain(entity: UserRecord): User {
@@ -14,6 +14,7 @@ export class UserMapper {
       name: entity.name,
       hasAcceptedMarketing: entity.hasAcceptedMarketing,
       department: entity.department,
+      lockedAt: entity.lockedAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });

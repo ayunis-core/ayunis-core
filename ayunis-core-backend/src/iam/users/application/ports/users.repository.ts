@@ -37,6 +37,14 @@ export abstract class UsersRepository {
   ): Promise<UserSummary[]>;
   abstract create(user: User): Promise<User>;
   abstract update(user: User): Promise<User>;
+  abstract registerFailedLoginAttempt(
+    userId: UUID,
+    attemptedAt: Date,
+    windowStartedAfter: Date,
+    lockThreshold: number,
+  ): Promise<number | null>;
+  abstract resetFailedLoginAttempts(userId: UUID): Promise<boolean>;
+  abstract clearLoginLock(userId: UUID): Promise<boolean>;
   abstract delete(id: UUID): Promise<void>;
   abstract isValidPassword(password: string): Promise<boolean>;
 }
