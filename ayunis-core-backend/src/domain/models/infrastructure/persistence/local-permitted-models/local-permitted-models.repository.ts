@@ -19,12 +19,24 @@ import { PermittedModelMapper } from './mappers/permitted-model.mapper';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { LanguageModelRecord } from '../local-models/schema/model.record';
+import { LanguageModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import {
+  DuplicateTeamPermittedModelError,
+  MultipleTeamImageGenerationModelsNotAllowedError,
   NotALanguageModelError,
   PermittedModelNotFoundError,
 } from 'src/domain/models/application/models.errors';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { PermittedModelFinder } from './permitted-model-finder';
+
+const PG_UNIQUE_VIOLATION = '23505';
+
+function isUniqueViolation(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const record = error as Record<string, unknown>;
+  const driverError = record.driverError as Record<string, unknown> | undefined;
+  return (driverError?.code ?? record.code) === PG_UNIQUE_VIOLATION;
+}
 
 @Injectable()
 export class LocalPermittedModelsRepository extends PermittedModelsRepository {
@@ -214,39 +226,77 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     return this.finder.findManyImageGenerationByTeam(teamId, orgId);
   }
 
-  async findByTeamAndModelId(
-    teamId: UUID,
-    modelId: UUID,
-    orgId: UUID,
-  ): Promise<PermittedModel | null> {
-    const record = await this.permittedModelRepository.findOne({
-      where: {
-        scopeId: teamId,
-        modelId,
-        orgId,
-        scope: PermittedModelScope.TEAM,
-      },
-      relations: { model: true },
-    });
-    if (!record) {
-      return null;
-    }
-    return this.permittedModelMapper.toDomain(record);
+  async create(permittedModel: PermittedModel): Promise<PermittedModel> {
+    return this.persist(permittedModel, this.permittedModelRepository);
   }
 
-  async create(permittedModel: PermittedModel): Promise<PermittedModel> {
-    const permittedModelEntity =
-      this.permittedModelMapper.toRecord(permittedModel);
-    const savedPermittedModel =
-      await this.permittedModelRepository.save(permittedModelEntity);
-    const reloadedPermittedModel =
-      await this.permittedModelRepository.findOneOrFail({
-        where: { id: savedPermittedModel.id },
-        relations: {
-          model: true,
-        },
-      });
-    return this.permittedModelMapper.toDomain(reloadedPermittedModel);
+  async createTeamScoped(
+    permittedModel: PermittedModel,
+  ): Promise<PermittedModel> {
+    if (
+      permittedModel.scope !== PermittedModelScope.TEAM ||
+      !permittedModel.scopeId
+    ) {
+      throw new Error('Team-scoped grant requires a team scope');
+    }
+
+    try {
+      if (permittedModel.model instanceof ImageGenerationModel) {
+        return await this.permittedModelRepository.manager.transaction(
+          async (manager) => this.createTeamImageGrant(manager, permittedModel),
+        );
+      }
+      return await this.persist(permittedModel, this.permittedModelRepository);
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateTeamPermittedModelError(
+          permittedModel.scopeId,
+          permittedModel.model.id,
+        );
+      }
+      throw error;
+    }
+  }
+
+  private async createTeamImageGrant(
+    manager: EntityManager,
+    permittedModel: PermittedModel,
+  ): Promise<PermittedModel> {
+    const teamId = permittedModel.scopeId;
+    if (!teamId) throw new Error('Team-scoped grant requires a team ID');
+    await manager.query(
+      'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+      [`team-image-grant:${teamId}`],
+    );
+    const repository = manager.getRepository(PermittedModelRecord);
+    const existing = await repository.findOne({
+      where: {
+        orgId: permittedModel.orgId,
+        scope: PermittedModelScope.TEAM,
+        scopeId: teamId,
+        model: { type: ModelType.IMAGE_GENERATION },
+      } as FindOptionsWhere<PermittedModelRecord>,
+      relations: { model: true },
+    });
+    if (existing?.modelId === permittedModel.model.id) {
+      throw new DuplicateTeamPermittedModelError(
+        teamId,
+        permittedModel.model.id,
+      );
+    }
+    if (existing) {
+      throw new MultipleTeamImageGenerationModelsNotAllowedError(teamId);
+    }
+    return this.persist(permittedModel, repository);
+  }
+
+  private async persist(
+    permittedModel: PermittedModel,
+    repository: Repository<PermittedModelRecord>,
+  ): Promise<PermittedModel> {
+    const record = this.permittedModelMapper.toRecord(permittedModel);
+    const saved = await repository.save(record);
+    return this.permittedModelMapper.toDomain(saved);
   }
 
   async delete(params: { id: UUID; orgId: UUID }): Promise<void> {
@@ -256,26 +306,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
         `Permitted model with id ${params.id} and orgId ${params.orgId} not found`,
       );
     }
-  }
-
-  async deleteTeamScopedByOrgAndModelId(
-    orgId: UUID,
-    modelId: UUID,
-  ): Promise<void> {
-    this.logger.info({ orgId, modelId }, 'deleteTeamScopedByOrgAndModelId');
-    const result = await this.permittedModelRepository.delete({
-      orgId,
-      modelId,
-      scope: PermittedModelScope.TEAM,
-    });
-    this.logger.debug(
-      {
-        orgId,
-        modelId,
-        affected: result.affected,
-      },
-      'Deleted team-scoped permitted models',
-    );
   }
 
   async setAsDefault(params: {
@@ -311,7 +341,6 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
       throw new NotALanguageModelError(targetModel.model.id);
     }
 
-    // Start a transaction to ensure consistency
     return await this.permittedModelRepository.manager.transaction((manager) =>
       this.applyDefaultInTransaction(manager, params, unsetWhere, setWhere),
     );

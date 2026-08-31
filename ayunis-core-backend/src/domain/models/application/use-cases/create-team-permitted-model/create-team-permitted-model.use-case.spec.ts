@@ -1,38 +1,68 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
+import { ConfigService } from '@nestjs/config';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { randomUUID } from 'crypto';
 import { getLoggerToken } from 'nestjs-pino';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import { CreateTeamPermittedModelUseCase } from './create-team-permitted-model.use-case';
-import { CreateTeamPermittedModelCommand } from './create-team-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { ModelsRepository } from '../../ports/models.repository';
-import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
-import { Team } from 'src/iam/teams/domain/team.entity';
-import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import {
   DuplicateTeamPermittedModelError,
+  ModelArchivedError,
+  ModelNotConfiguredError,
   ModelNotFoundError,
   ModelNotRestrictableForTeamError,
+  MultipleTeamImageGenerationModelsNotAllowedError,
   TeamNotFoundInOrgError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
+import { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { ModelProviderInfoRegistry } from 'src/domain/models/application/registry/model-provider-info.registry';
+import { ModelConfigurationService } from 'src/domain/models/application/services/model-configuration.service';
+import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
+import { CreateTeamPermittedModelCommand } from 'src/domain/models/application/use-cases/create-team-permitted-model/create-team-permitted-model.command';
+import { CreateTeamPermittedModelUseCase } from 'src/domain/models/application/use-cases/create-team-permitted-model/create-team-permitted-model.use-case';
+import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
+import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import {
   PermittedImageGenerationModel,
   PermittedLanguageModel,
-  PermittedModel,
 } from 'src/domain/models/domain/permitted-model.entity';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
+import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
-import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
-import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
-import { randomUUID } from 'crypto';
-import { TeamPermittedModelValidator } from '../../services/team-permitted-model-validator.service';
+import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
+import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
+import { Team } from 'src/iam/teams/domain/team.entity';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+
+const orgId = randomUUID();
+const teamId = randomUUID();
+const modelId = randomUUID();
+
+const createLanguageModel = (isArchived = false): LanguageModel =>
+  new LanguageModel({
+    id: modelId,
+    name: 'municipal-assistant',
+    provider: ModelProvider.OPENAI,
+    displayName: 'Municipal Assistant',
+    canStream: true,
+    canUseTools: true,
+    isReasoning: false,
+    canVision: true,
+    isArchived,
+  });
+
+const createImageModel = (): ImageGenerationModel =>
+  new ImageGenerationModel({
+    id: modelId,
+    name: 'municipal-image-generator',
+    provider: ModelProvider.AZURE,
+    displayName: 'Municipal Image Generator',
+    isArchived: false,
+  });
 
 describe('CreateTeamPermittedModelUseCase', () => {
   let useCase: CreateTeamPermittedModelUseCase;
@@ -40,45 +70,30 @@ describe('CreateTeamPermittedModelUseCase', () => {
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let getTeamUseCase: jest.Mocked<GetTeamUseCase>;
   let contextService: jest.Mocked<ContextService>;
-
-  const orgId = randomUUID();
-  const teamId = randomUUID();
-  const modelId = randomUUID();
-
-  const languageModel = new LanguageModel({
-    id: modelId,
-    name: 'gpt-4o',
-    provider: ModelProvider.OPENAI,
-    displayName: 'GPT-4o',
-    canStream: true,
-    canUseTools: true,
-    isReasoning: false,
-    canVision: true,
-    isArchived: false,
-  });
+  let configService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
     permittedModelsRepository = {
-      findAll: jest.fn(),
-      findByTeamAndModelId: jest.fn(),
-      create: jest.fn(),
+      createTeamScoped: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
-
     modelsRepository = {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<ModelsRepository>;
-
     getTeamUseCase = {
-      execute: jest
-        .fn()
-        .mockResolvedValue(
-          new Team({ name: 'test-team', orgId, modelOverrideEnabled: false }),
-        ),
+      execute: jest.fn().mockResolvedValue(
+        new Team({
+          name: 'Public Services',
+          orgId,
+          modelOverrideEnabled: false,
+        }),
+      ),
     } as unknown as jest.Mocked<GetTeamUseCase>;
-
     contextService = {
       get: jest.fn(),
     } as unknown as jest.Mocked<ContextService>;
+    configService = {
+      get: jest.fn().mockReturnValue('configured-provider-key'),
+    } as unknown as jest.Mocked<ConfigService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -88,6 +103,7 @@ describe('CreateTeamPermittedModelUseCase', () => {
         },
         CreateTeamPermittedModelUseCase,
         TeamPermittedModelValidator,
+        ModelConfigurationService,
         {
           provide: PermittedModelsRepository,
           useValue: permittedModelsRepository,
@@ -95,10 +111,22 @@ describe('CreateTeamPermittedModelUseCase', () => {
         { provide: ModelsRepository, useValue: modelsRepository },
         { provide: GetTeamUseCase, useValue: getTeamUseCase },
         { provide: ContextService, useValue: contextService },
+        { provide: ConfigService, useValue: configService },
+        {
+          provide: ModelProviderInfoRegistry,
+          useValue: {
+            getConfigKey: jest
+              .fn()
+              .mockImplementation(
+                (provider: ModelProvider) => `models.${provider}.apiKey`,
+              ),
+          },
+        },
       ],
     }).compile();
 
     useCase = module.get(CreateTeamPermittedModelUseCase);
+    setAdminContext();
   });
 
   function setAdminContext(): void {
@@ -110,36 +138,119 @@ describe('CreateTeamPermittedModelUseCase', () => {
     });
   }
 
-  function setupOrgPermitted(): void {
-    const orgPermittedModel = new PermittedModel({
-      model: languageModel,
-      orgId,
-      scope: PermittedModelScope.ORG,
-    });
-    permittedModelsRepository.findAll.mockResolvedValue([orgPermittedModel]);
-  }
-
-  it('should create a team permitted model successfully', async () => {
-    setAdminContext();
-    setupOrgPermitted();
-    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
-    modelsRepository.findOne.mockResolvedValue(languageModel);
+  it('creates a team-only language grant without an organization permit', async () => {
+    const languageModel = createLanguageModel();
     const created = new PermittedLanguageModel({
       model: languageModel,
       orgId,
       scope: PermittedModelScope.TEAM,
       scopeId: teamId,
     });
-    permittedModelsRepository.create.mockResolvedValue(created);
+    modelsRepository.findOne.mockResolvedValue(languageModel);
+    permittedModelsRepository.createTeamScoped.mockResolvedValue(created);
 
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    const result = await useCase.execute(command);
+    const result = await useCase.execute(
+      new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+    );
 
     expect(result).toBe(created);
-    expect(getTeamUseCase.execute).toHaveBeenCalled();
+    expect(permittedModelsRepository.createTeamScoped).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: languageModel,
+        orgId,
+        scope: PermittedModelScope.TEAM,
+        scopeId: teamId,
+      }),
+    );
   });
 
-  it('should throw UnauthorizedAccessError for non-admin users', async () => {
+  it('creates a team-only image-generation grant without an organization permit', async () => {
+    const imageModel = createImageModel();
+    const created = new PermittedImageGenerationModel({
+      model: imageModel,
+      orgId,
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamId,
+    });
+    modelsRepository.findOne.mockResolvedValue(imageModel);
+    permittedModelsRepository.createTeamScoped.mockResolvedValue(created);
+
+    const result = await useCase.execute(
+      new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+    );
+
+    expect(result).toBe(created);
+  });
+
+  it('rejects embedding model grants', async () => {
+    const embeddingModel = new EmbeddingModel({
+      id: modelId,
+      name: 'municipal-document-embeddings',
+      provider: ModelProvider.OPENAI,
+      displayName: 'Municipal Document Embeddings',
+      isArchived: false,
+      dimensions: EmbeddingDimensions.DIMENSION_1536,
+    });
+    modelsRepository.findOne.mockResolvedValue(embeddingModel);
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(ModelNotRestrictableForTeamError);
+    expect(permittedModelsRepository.createTeamScoped).not.toHaveBeenCalled();
+  });
+
+  it('rejects archived catalog models', async () => {
+    modelsRepository.findOne.mockResolvedValue(createLanguageModel(true));
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(ModelArchivedError);
+    expect(permittedModelsRepository.createTeamScoped).not.toHaveBeenCalled();
+  });
+
+  it('rejects catalog models whose provider is not configured', async () => {
+    modelsRepository.findOne.mockResolvedValue(createLanguageModel());
+    configService.get.mockReturnValue(undefined);
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(ModelNotConfiguredError);
+    expect(permittedModelsRepository.createTeamScoped).not.toHaveBeenCalled();
+  });
+
+  it('preserves duplicate-grant persistence conflicts as typed errors', async () => {
+    modelsRepository.findOne.mockResolvedValue(createLanguageModel());
+    permittedModelsRepository.createTeamScoped.mockRejectedValue(
+      new DuplicateTeamPermittedModelError(teamId, modelId),
+    );
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(DuplicateTeamPermittedModelError);
+  });
+
+  it('preserves second-image persistence conflicts as typed errors', async () => {
+    modelsRepository.findOne.mockResolvedValue(createImageModel());
+    permittedModelsRepository.createTeamScoped.mockRejectedValue(
+      new MultipleTeamImageGenerationModelsNotAllowedError(teamId),
+    );
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(MultipleTeamImageGenerationModelsNotAllowedError);
+  });
+
+  it('rejects non-admin users', async () => {
     contextService.get.mockImplementation((key) => {
       if (key === 'orgId') return orgId;
       if (key === 'role') return UserRole.USER;
@@ -147,108 +258,42 @@ describe('CreateTeamPermittedModelUseCase', () => {
       return undefined;
     });
 
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnauthorizedAccessError,
-    );
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(UnauthorizedAccessError);
   });
 
-  it('should throw TeamNotFoundInOrgError when team does not exist in org', async () => {
-    setAdminContext();
+  it('rejects teams outside the target organization', async () => {
     getTeamUseCase.execute.mockRejectedValue(new TeamNotFoundError(teamId));
 
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(
-      TeamNotFoundInOrgError,
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(TeamNotFoundInOrgError);
+  });
+
+  it('rejects missing catalog models', async () => {
+    modelsRepository.findOne.mockResolvedValue(undefined);
+
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(ModelNotFoundError);
+  });
+
+  it('wraps unexpected catalog persistence failures', async () => {
+    modelsRepository.findOne.mockRejectedValue(
+      new Error('catalog database unavailable'),
     );
-  });
 
-  it('should throw DuplicateTeamPermittedModelError when model already permitted for team', async () => {
-    setAdminContext();
-    setupOrgPermitted();
-    const existing = new PermittedLanguageModel({
-      model: languageModel,
-      orgId,
-      scope: PermittedModelScope.TEAM,
-      scopeId: teamId,
-    });
-    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(existing);
-
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(
-      DuplicateTeamPermittedModelError,
-    );
-  });
-
-  it('should throw ModelNotFoundError when model is not org-permitted', async () => {
-    setAdminContext();
-    permittedModelsRepository.findAll.mockResolvedValue([]);
-
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(ModelNotFoundError);
-  });
-
-  it('should wrap unexpected errors in UnexpectedModelError', async () => {
-    setAdminContext();
-    setupOrgPermitted();
-    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
-    modelsRepository.findOne.mockRejectedValue(new Error('DB connection lost'));
-
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(
-      UnexpectedModelError,
-    );
-  });
-
-  it('should throw ModelNotRestrictableForTeamError when model is an embedding model', async () => {
-    setAdminContext();
-    setupOrgPermitted();
-    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
-    const embeddingModel = new EmbeddingModel({
-      id: modelId,
-      name: 'text-embedding-3-large',
-      provider: ModelProvider.OPENAI,
-      displayName: 'Text Embedding 3 Large',
-      isArchived: false,
-      dimensions: EmbeddingDimensions.DIMENSION_1536,
-    });
-    modelsRepository.findOne.mockResolvedValue(embeddingModel);
-
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    await expect(useCase.execute(command)).rejects.toThrow(
-      ModelNotRestrictableForTeamError,
-    );
-  });
-
-  it('should create a team permitted image-generation model successfully', async () => {
-    setAdminContext();
-    const imageModel = new ImageGenerationModel({
-      id: modelId,
-      name: 'gpt-image-1',
-      provider: ModelProvider.AZURE,
-      displayName: 'GPT Image 1',
-      isArchived: false,
-    });
-    permittedModelsRepository.findAll.mockResolvedValue([
-      new PermittedModel({
-        model: imageModel,
-        orgId,
-        scope: PermittedModelScope.ORG,
-      }),
-    ]);
-    permittedModelsRepository.findByTeamAndModelId.mockResolvedValue(null);
-    modelsRepository.findOne.mockResolvedValue(imageModel);
-    const created = new PermittedImageGenerationModel({
-      model: imageModel,
-      orgId,
-      scope: PermittedModelScope.TEAM,
-      scopeId: teamId,
-    });
-    permittedModelsRepository.create.mockResolvedValue(created);
-
-    const command = new CreateTeamPermittedModelCommand(modelId, orgId, teamId);
-    const result = await useCase.execute(command);
-
-    expect(result).toBe(created);
+    await expect(
+      useCase.execute(
+        new CreateTeamPermittedModelCommand(modelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(UnexpectedModelError);
   });
 });
