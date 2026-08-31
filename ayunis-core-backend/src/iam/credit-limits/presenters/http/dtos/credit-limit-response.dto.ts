@@ -14,6 +14,11 @@ export class UserCreditLimitResponseDto extends BaseCreditLimitResponseDto {
   userId: UUID;
 }
 
+export class ApiKeyCreditLimitResponseDto extends BaseCreditLimitResponseDto {
+  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440003' })
+  apiKeyId: UUID;
+}
+
 export class TeamCreditLimitResponseDto extends BaseCreditLimitResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440002' })
   teamId: UUID;

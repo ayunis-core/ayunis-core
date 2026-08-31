@@ -4,10 +4,11 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { CheckQuotaUseCase } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.use-case';
 import { CheckQuotaQuery } from 'src/iam/quotas/application/use-cases/check-quota/check-quota.query';
 import { tierToFairUseQuotaType } from 'src/iam/quotas/domain/tier-to-quota-type';
+import { ApiKeyCreditLimitGuardService } from './api-key-credit-limit-guard.service';
 import { CreditBudgetGuardService } from './credit-budget-guard.service';
 import { CreditLimitGuardService } from './credit-limit-guard.service';
 import { CollectUsageAsyncService } from './collect-usage-async.service';
-import type { RunExecutionPath } from '../run-execution-path';
+import type { RunExecutionPath } from 'src/domain/runs/application/run-execution-path';
 
 /**
  * Flat principal shape passed to the guard. Either `userId` or `apiKeyId`
@@ -33,6 +34,7 @@ export class InferenceUsageGuard {
     private readonly checkQuotaUseCase: CheckQuotaUseCase,
     private readonly creditBudgetGuardService: CreditBudgetGuardService,
     private readonly creditLimitGuardService: CreditLimitGuardService,
+    private readonly apiKeyCreditLimitGuardService: ApiKeyCreditLimitGuardService,
     private readonly collectUsageAsyncService: CollectUsageAsyncService,
   ) {}
 
@@ -66,6 +68,11 @@ export class InferenceUsageGuard {
       await this.creditLimitGuardService.ensureWithinLimits(
         principal.orgId,
         principal.userId,
+      );
+    } else if (principal.apiKeyId) {
+      await this.apiKeyCreditLimitGuardService.ensureWithinLimit(
+        principal.orgId,
+        principal.apiKeyId,
       );
     }
   }

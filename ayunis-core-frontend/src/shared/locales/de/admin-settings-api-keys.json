@@ -10,7 +10,8 @@
       "expiresAt": "Läuft ab am {{date}}",
       "neverExpires": "Läuft nie ab",
       "revokedAt": "Widerrufen am {{date}}",
-      "revokedBadge": "Widerrufen"
+      "revokedBadge": "Widerrufen",
+      "actionsAriaLabel": "Aktionen für {{name}}"
     },
     "createDialog": {
       "title": "API-Schlüssel erstellen",
@@ -54,6 +55,36 @@
       "success": "API-Schlüssel widerrufen",
       "error": "API-Schlüssel konnte nicht widerrufen werden",
       "notFound": "API-Schlüssel nicht gefunden"
+    },
+    "creditLimit": {
+      "title": "Credit-Limit für API-Schlüssel",
+      "description": "Legen Sie das monatliche Credit-Limit für {{name}} fest.",
+      "manageAriaLabel": "Credit-Limit für {{name}} verwalten",
+      "usage": "{{used}} von {{limit}} Credits in diesem Monat verbraucht",
+      "unlimited": "Kein Credit-Limit für diesen API-Schlüssel",
+      "creditsLabel": "Monatliche Credits",
+      "creditsHint": "Mit 0 pausieren Sie die Nutzung kostenpflichtiger Modelle. Entfernen Sie das Limit, um den Schlüssel innerhalb des Organisationsbudgets unbegrenzt zu nutzen.",
+      "creditsRequired": "Geben Sie ein monatliches Credit-Limit ein",
+      "creditsMin": "Das Credit-Limit darf nicht negativ sein",
+      "save": "Limit speichern",
+      "set": "Credit-Limit festlegen",
+      "edit": "Credit-Limit bearbeiten",
+      "remove": "Credit-Limit entfernen",
+      "cancel": "Abbrechen",
+      "setSuccess": "Credit-Limit für API-Schlüssel gespeichert",
+      "setError": "Credit-Limit für API-Schlüssel konnte nicht gespeichert werden",
+      "removeSuccess": "Credit-Limit für API-Schlüssel entfernt",
+      "removeError": "Credit-Limit für API-Schlüssel konnte nicht entfernt werden",
+      "notFound": "API-Schlüssel nicht gefunden",
+      "invalid": "Geben Sie ein gültiges Credit-Limit ein",
+      "validation": {
+        "monthlyCredits": {
+          "isNumber": "Geben Sie ein gültiges Credit-Limit ein",
+          "min": "Das Credit-Limit darf nicht negativ sein",
+          "invalid": "Geben Sie ein gültiges Credit-Limit ein"
+        },
+        "invalid": "Ungültiges Credit-Limit"
+      }
     },
     "validation": {
       "name": {

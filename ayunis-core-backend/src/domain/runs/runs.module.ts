@@ -28,6 +28,7 @@ import { ToolResultCollectorService } from './application/services/tool-result-c
 import { MessageCleanupService } from './application/services/message-cleanup.service';
 import { StreamingInferenceService } from './application/services/streaming-inference.service';
 import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
+import { ApiKeyCreditLimitGuardService } from './application/services/api-key-credit-limit-guard.service';
 import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
 import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
 import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
@@ -104,6 +105,7 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
     NonStreamingInferenceService,
     CreditBudgetGuardService,
     CreditLimitGuardService,
+    ApiKeyCreditLimitGuardService,
     InferenceOrchestratorService,
     InferenceUsageGuard,
     RunTelemetryService,

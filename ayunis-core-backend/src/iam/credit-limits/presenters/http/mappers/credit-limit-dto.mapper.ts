@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
-import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
-import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
+import type { ApiKeyCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-api-key-credit-limits-overview/api-key-credit-limit.view';
 import type { TeamCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-team-credit-limits-overview/team-credit-limit.view';
+import type { UserCreditLimitOverviewItem } from 'src/iam/credit-limits/application/use-cases/get-user-credit-limits-overview/user-credit-limit.view';
+import type { ApiKeyCreditLimit } from 'src/iam/credit-limits/domain/api-key-credit-limit.entity';
+import type { TeamCreditLimit } from 'src/iam/credit-limits/domain/team-credit-limit.entity';
+import type { UserCreditLimit } from 'src/iam/credit-limits/domain/user-credit-limit.entity';
 import {
-  UserCreditLimitResponseDto,
-  TeamCreditLimitResponseDto,
-} from '../dtos/credit-limit-response.dto';
-import {
-  UserCreditLimitItemDto,
+  ApiKeyCreditLimitItemDto,
   TeamCreditLimitItemDto,
-} from '../dtos/credit-limit-item.dto';
+  UserCreditLimitItemDto,
+} from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-item.dto';
+import {
+  ApiKeyCreditLimitResponseDto,
+  TeamCreditLimitResponseDto,
+  UserCreditLimitResponseDto,
+} from 'src/iam/credit-limits/presenters/http/dtos/credit-limit-response.dto';
 
 @Injectable()
 export class CreditLimitDtoMapper {
@@ -18,6 +22,14 @@ export class CreditLimitDtoMapper {
     return {
       id: limit.id,
       userId: limit.userId,
+      monthlyCredits: limit.monthlyCredits,
+    };
+  }
+
+  toApiKeyDto(limit: ApiKeyCreditLimit): ApiKeyCreditLimitResponseDto {
+    return {
+      id: limit.id,
+      apiKeyId: limit.apiKeyId,
       monthlyCredits: limit.monthlyCredits,
     };
   }
@@ -31,6 +43,12 @@ export class CreditLimitDtoMapper {
   }
 
   toUserItems(items: UserCreditLimitOverviewItem[]): UserCreditLimitItemDto[] {
+    return items.map((item) => ({ ...item }));
+  }
+
+  toApiKeyItems(
+    items: ApiKeyCreditLimitOverviewItem[],
+  ): ApiKeyCreditLimitItemDto[] {
     return items.map((item) => ({ ...item }));
   }
 
