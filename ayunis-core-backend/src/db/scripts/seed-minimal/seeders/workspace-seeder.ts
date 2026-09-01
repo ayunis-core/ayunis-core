@@ -32,14 +32,13 @@ import type {
 
 interface WorkspaceResourceFixtures {
   skills: Map<string, SkillRecord>;
-  knowledgeBases: Map<string, KnowledgeBaseRecord>;
   knowledgeBaseFixtures: Map<string, KnowledgeBaseFixture>;
 }
 
 /**
  * Seeds the org's workspaces ("Projekte"), owned by the org admin, plus demo
- * context for AYC-701: project instructions, assigned skills, assigned
- * knowledge bases and direct project documents. The rows are invisible until
+ * context for AYC-701: project instructions, workspace-owned skills and
+ * knowledge bases, and direct project documents. The rows are invisible until
  * FEATURE_WORKSPACES_ENABLED is on.
  *
  * Sidebar pin state and order are favorites rows, not workspace columns. The
@@ -55,16 +54,11 @@ export class WorkspaceSeeder extends OrgSeeder {
     const adminId = ctx.getAdmin(org.key).id;
     const skills = await this.seedSkills(adminId, org.skills ?? []);
     const knowledgeBaseFixtures = org.knowledgeBases ?? [];
-    const knowledgeBases = await this.seedKnowledgeBases(
-      orgId,
-      adminId,
-      knowledgeBaseFixtures,
-    );
+    await this.seedKnowledgeBases(orgId, adminId, knowledgeBaseFixtures);
 
     for (const workspace of workspaces) {
       await this.seedWorkspace(orgId, adminId, workspace, {
         skills,
-        knowledgeBases,
         knowledgeBaseFixtures: new Map(
           knowledgeBaseFixtures.map((fixture) => [fixture.name, fixture]),
         ),
@@ -175,9 +169,9 @@ export class WorkspaceSeeder extends OrgSeeder {
     await this.seedWorkspaceFavorites(userId, record, workspace);
     await this.seedWorkspaceSkills(record.id, workspace, resources.skills);
     await this.seedWorkspaceKnowledgeBases(
+      orgId,
       record.id,
       workspace,
-      resources.knowledgeBases,
       resources.knowledgeBaseFixtures,
     );
     await this.seedWorkspaceDocuments(record.id, workspace.documents ?? []);
@@ -262,8 +256,6 @@ export class WorkspaceSeeder extends OrgSeeder {
           shortDescription: origin.shortDescription,
           instructions: origin.instructions,
           marketplaceIdentifier: null,
-          originSkillId: origin.id,
-          importedOriginVersion: origin.version,
         }),
         { entity: 'WorkspaceSkill', name },
       );
@@ -271,17 +263,12 @@ export class WorkspaceSeeder extends OrgSeeder {
   }
 
   private async seedWorkspaceKnowledgeBases(
+    orgId: UUID,
     workspaceId: UUID,
     workspace: WorkspaceFixture,
-    knowledgeBases: Map<string, KnowledgeBaseRecord>,
     fixtures: Map<string, KnowledgeBaseFixture>,
   ): Promise<void> {
     for (const name of workspace.knowledgeBaseNames ?? []) {
-      const origin = this.requireFixtureRecord(
-        knowledgeBases,
-        name,
-        'knowledge base',
-      );
       const fixture = this.requireFixtureRecord(
         fixtures,
         name,
@@ -292,13 +279,11 @@ export class WorkspaceSeeder extends OrgSeeder {
         { workspaceId, name },
         () => ({
           id: randomUUID(),
-          orgId: origin.orgId,
+          orgId,
           userId: null,
           workspaceId,
-          name: origin.name,
-          description: origin.description,
-          originKnowledgeBaseId: origin.id,
-          importedOriginVersion: origin.version,
+          name: fixture.name,
+          description: fixture.description,
         }),
         { entity: 'WorkspaceKnowledgeBase', name },
       );

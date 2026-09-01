@@ -9,7 +9,7 @@ function uniqueSuffix(): string {
   return `${Date.now()}`;
 }
 
-test("attaches skills, knowledge bases, and instructions to a project", async ({
+test("adds skills, knowledge bases, and instructions to a project", async ({
   page,
   api,
 }) => {
@@ -50,22 +50,57 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
     .getByTestId(`workspace-add-dialog-item-${fixture.skill.id}`)
     .click();
   await page.getByTestId("workspace-add-dialog-confirm").click();
-  await expect(
-    page.getByTestId(`workspace-skill-${fixture.skill.id}`),
-  ).toBeVisible();
+  let copiedSkillId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceSkills =
+        await generatedApi.workspaceContextControllerListSkills(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      copiedSkillId = workspaceSkills.data.find(
+        ({ name }) => name === fixture.skill.name,
+      )?.id;
+      return copiedSkillId;
+    })
+    .toBeTruthy();
+  await expect(page.getByTestId(`workspace-skill-${copiedSkillId}`)).toBeVisible();
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
   await expect(page.getByTestId("workspace-documents-search")).toHaveCount(0);
-  await page.getByTestId("workspace-knowledge-add").first().click();
-  await expect(page.getByTestId("workspace-add-dialog")).toBeVisible();
-  await expect(page.getByTestId("workspace-add-dialog-search")).toHaveCount(0);
-  await page
-    .getByTestId(`workspace-add-dialog-item-${fixture.knowledgeBase.id}`)
+  await page.getByTestId("workspace-knowledge-create").first().click();
+  const createKnowledgeBaseDialog = page.getByRole("dialog");
+  await expect(createKnowledgeBaseDialog).toBeVisible();
+  await createKnowledgeBaseDialog
+    .getByRole("textbox")
+    .nth(0)
+    .fill(fixture.knowledgeBase.name);
+  await createKnowledgeBaseDialog
+    .getByRole("textbox")
+    .nth(1)
+    .fill("Projektbezogene Bauordnung");
+  await createKnowledgeBaseDialog
+    .getByRole("button", { name: "Wissensdatenbank erstellen" })
     .click();
-  await page.getByTestId("workspace-add-dialog-confirm").click();
+  let createdKnowledgeBaseId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceKnowledgeBases =
+        await generatedApi.workspaceContextControllerListKnowledgeBases(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      createdKnowledgeBaseId = workspaceKnowledgeBases.data.find(
+        ({ name }) => name === fixture.knowledgeBase.name,
+      )?.id;
+      return createdKnowledgeBaseId;
+    })
+    .toBeTruthy();
   await expect(
-    page.getByTestId(`workspace-knowledge-base-${fixture.knowledgeBase.id}`),
+    page.getByTestId(`workspace-knowledge-base-${createdKnowledgeBaseId}`),
   ).toBeVisible();
 
   await page.getByTestId("workspace-tab-instructions").click();

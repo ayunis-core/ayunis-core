@@ -36,7 +36,10 @@ export class DeleteKnowledgeBaseUseCase {
     const existing = await this.knowledgeBaseRepository.findById(
       command.knowledgeBaseId,
     );
-    if (existing?.userId !== command.userId) {
+    const hasExpectedOwner = command.workspaceId
+      ? existing?.workspaceId === command.workspaceId
+      : existing?.userId === command.userId;
+    if (!existing || !hasExpectedOwner) {
       throw new KnowledgeBaseNotFoundError(command.knowledgeBaseId);
     }
 

@@ -4,7 +4,8 @@ import { Test } from '@nestjs/testing';
 // Mock the Transactional decorator
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
-    () => (target: any, propertyName: string, descriptor: PropertyDescriptor) =>
+    () =>
+    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
       descriptor,
 }));
 
@@ -26,7 +27,9 @@ describe('DeleteSkillUseCase', () => {
   beforeAll(async () => {
     const mockSkillRepository = {
       findOne: jest.fn(),
+      findByIds: jest.fn(),
       delete: jest.fn(),
+      deleteByWorkspace: jest.fn(),
     };
 
     const mockContextService = {
@@ -74,6 +77,29 @@ describe('DeleteSkillUseCase', () => {
       mockSkillId,
       mockUserId,
     );
+  });
+
+  it('deletes a skill owned by the requested workspace', async () => {
+    const workspaceId = '650e8400-e29b-41d4-a716-446655440001' as UUID;
+    const existingSkill = new Skill({
+      id: mockSkillId,
+      name: 'Workspace legal research',
+      shortDescription: 'Research legal topics.',
+      instructions: 'Use workspace legal sources.',
+      workspaceId,
+    });
+    skillRepository.findByIds.mockResolvedValue([existingSkill]);
+    skillRepository.deleteByWorkspace.mockResolvedValue();
+
+    await useCase.execute(
+      new DeleteSkillCommand({ skillId: mockSkillId, workspaceId }),
+    );
+
+    expect(skillRepository.deleteByWorkspace).toHaveBeenCalledWith(
+      mockSkillId,
+      workspaceId,
+    );
+    expect(skillRepository.delete).not.toHaveBeenCalled();
   });
 
   it('should throw SkillNotFoundError when skill does not exist', async () => {

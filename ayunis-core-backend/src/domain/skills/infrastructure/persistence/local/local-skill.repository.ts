@@ -15,6 +15,7 @@ import { SkillActivationRecord } from './schema/skill-activation.record';
 import { SkillMapper } from './mappers/skill.mapper';
 import { LocalSkillAccessiblePageFinder } from './local-skill-accessible-page.finder';
 import { LocalSkillKnowledgeBaseIdsFinder } from './local-skill-knowledge-base-ids.finder';
+import { togglePinnedSkill } from './local-skill-pinning.repository-helper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import {
   SkillNotActiveError,
@@ -31,7 +32,6 @@ const SKILL_RELATIONS = [
 export class LocalSkillRepository implements SkillRepository {
   private readonly logger = new Logger(LocalSkillRepository.name);
 
-  // eslint-disable-next-line max-params -- NestJS injects the repository's collaborators.
   constructor(
     @InjectRepository(SkillRecord)
     private readonly defaultSkillRepository: Repository<SkillRecord>,
@@ -188,6 +188,14 @@ export class LocalSkillRepository implements SkillRepository {
     }
   }
 
+  async deleteByWorkspace(skillId: UUID, workspaceId: UUID): Promise<void> {
+    const result = await this.skillRepository.delete({
+      id: skillId,
+      workspaceId,
+    });
+    if (result.affected === 0) throw new SkillNotFoundError(skillId);
+  }
+
   async findOne(id: UUID, userId: UUID): Promise<Skill | null> {
     this.logger.log({ id, userId }, 'findOne');
 
@@ -275,12 +283,20 @@ export class LocalSkillRepository implements SkillRepository {
     return this.skillMapper.toDomain(record);
   }
 
+  async findByNameAndWorkspace(
+    name: string,
+    workspaceId: UUID,
+  ): Promise<Skill | null> {
+    const record = await this.skillRepository.findOne({
+      where: { name, workspaceId },
+      relations: [...SKILL_RELATIONS],
+    });
+    return record ? this.skillMapper.toDomain(record) : null;
+  }
+
   async activateSkill(skillId: UUID, userId: UUID): Promise<void> {
     this.logger.log({ skillId, userId }, 'activateSkill');
 
-    // Use upsert to atomically insert or ignore if already exists.
-    // This avoids race conditions where concurrent requests both pass
-    // an existence check and then one fails on the unique constraint.
     await this.skillActivationRepository
       .createQueryBuilder()
       .insert()
@@ -391,20 +407,7 @@ export class LocalSkillRepository implements SkillRepository {
 
   async toggleSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {
     this.logger.log({ skillId, userId }, 'toggleSkillPinned');
-
-    const rows: Array<{ isPinned: boolean }> =
-      await this.skillActivationRepository.query(
-        `UPDATE skill_activations SET "isPinned" = NOT "isPinned"
-       WHERE "skillId" = $1 AND "userId" = $2
-       RETURNING "isPinned"`,
-        [skillId, userId],
-      );
-
-    if (rows.length === 0) {
-      throw new SkillNotActiveError(skillId);
-    }
-
-    return rows[0].isPinned;
+    return togglePinnedSkill(this.skillActivationRepository, skillId, userId);
   }
 
   async isSkillPinned(skillId: UUID, userId: UUID): Promise<boolean> {

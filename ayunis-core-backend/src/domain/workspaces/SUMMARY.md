@@ -12,8 +12,9 @@ filed under the workspace. User-specific favorites and their order are owned by 
 User-facing copy calls them "Projekte"; the code, tables and routes say
 `workspace` throughout. See AYC-700 / AYC-701 in the Workspaces/Projects plan.
 Workspace skills and knowledge bases are isolated from personal resources.
-Personal resources can only enter a workspace through an explicit independent
-copy; they are never linked or synchronized automatically.
+Skills can enter a workspace through an explicit independent copy. Personal
+knowledge bases cannot be copied or attached; workspace knowledge bases must be
+created directly in the workspace.
 
 The whole module sits behind the `workspacesEnabled` feature flag
 (`FEATURE_WORKSPACES_ENABLED`, off by default), applied at the controller.
@@ -90,20 +91,25 @@ workspaces/
 
 ## HTTP API
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| POST | `/workspaces` | Create a workspace |
-| GET | `/workspaces` | List by most recently updated |
-| GET | `/workspaces/:id` | Read one |
-| PATCH | `/workspaces/:id` | Update name / description / icon / colour |
-| DELETE | `/workspaces/:id` | Delete the workspace and its chats |
-| GET | `/workspaces/:id/context` | Read the full runtime context |
-| GET | `/workspaces/:id/context/skills` | List workspace-owned skills |
-| GET | `/workspaces/:id/context/knowledge-bases` | List workspace-owned knowledge bases |
-| GET | `/workspaces/:id/context/documents` | List workspace documents |
-| POST | `/workspaces/:id/context/documents` | Upload and attach a document |
-| DELETE | `/workspaces/:id/context/documents/:documentId` | Remove an attached document |
-| PATCH | `/workspaces/:id/context/instruction` | Update the workspace instruction |
+| Method | Route                                                      | Purpose                                                |
+| ------ | ---------------------------------------------------------- | ------------------------------------------------------ |
+| POST   | `/workspaces`                                              | Create a workspace                                     |
+| GET    | `/workspaces`                                              | List by most recently updated                          |
+| GET    | `/workspaces/:id`                                          | Read one                                               |
+| PATCH  | `/workspaces/:id`                                          | Update name / description / icon / colour              |
+| DELETE | `/workspaces/:id`                                          | Delete the workspace and its chats                     |
+| GET    | `/workspaces/:id/context`                                  | Read the full runtime context                          |
+| POST   | `/workspaces/:id/context/skills`                           | Create a workspace-owned skill                         |
+| GET    | `/workspaces/:id/context/skills`                           | List workspace-owned skills                            |
+| POST   | `/workspaces/:id/context/skills/copies`                    | Independently copy a personal skill into the workspace |
+| DELETE | `/workspaces/:id/context/skills/:skillId`                  | Delete a workspace-owned skill                         |
+| POST   | `/workspaces/:id/context/knowledge-bases`                  | Create a workspace-owned knowledge base                |
+| GET    | `/workspaces/:id/context/knowledge-bases`                  | List workspace-owned knowledge bases                   |
+| DELETE | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId` | Delete a workspace-owned knowledge base                |
+| GET    | `/workspaces/:id/context/documents`                        | List workspace documents                               |
+| POST   | `/workspaces/:id/context/documents`                        | Upload and attach a document                           |
+| DELETE | `/workspaces/:id/context/documents/:documentId`            | Remove an attached document                            |
+| PATCH  | `/workspaces/:id/context/instruction`                      | Update the workspace instruction                       |
 
 ## Cross-Module Boundaries
 

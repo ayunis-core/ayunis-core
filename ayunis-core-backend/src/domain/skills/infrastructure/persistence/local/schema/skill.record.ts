@@ -53,23 +53,6 @@ export class SkillRecord extends BaseRecord {
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
 
-  @Index()
-  @Column({ type: 'uuid', nullable: true })
-  originSkillId: UUID | null;
-
-  @ManyToOne(() => SkillRecord, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'originSkillId' })
-  originSkill: SkillRecord | null;
-
-  @Column({ type: 'integer', default: 1 })
-  version: number;
-
-  @Column({ type: 'integer', nullable: true })
-  importedOriginVersion: number | null;
-
-  @Column({ type: 'integer', nullable: true })
-  dismissedOriginVersion: number | null;
-
   @ManyToMany(() => SourceRecord)
   @JoinTable({ name: 'skill_sources' })
   sources?: SourceRecord[];

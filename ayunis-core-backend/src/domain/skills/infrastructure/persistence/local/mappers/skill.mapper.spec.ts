@@ -6,18 +6,13 @@ import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/
 describe(SkillMapper.name, () => {
   const mapper = new SkillMapper();
 
-  it('preserves workspace ownership and copy provenance', () => {
+  it('preserves exclusive workspace ownership', () => {
     const workspaceId = randomUUID();
-    const originSkillId = randomUUID();
     const skill = new Skill({
       name: 'Workspace procurement review',
       shortDescription: 'Reviews procurement documents.',
       instructions: 'Check the procurement requirements.',
       workspaceId,
-      originSkillId,
-      version: 4,
-      importedOriginVersion: 3,
-      dismissedOriginVersion: 5,
     });
 
     const record = mapper.toRecord(skill);
@@ -30,10 +25,6 @@ describe(SkillMapper.name, () => {
     expect(mapper.toDomain(record)).toMatchObject({
       userId: null,
       workspaceId,
-      originSkillId,
-      version: 4,
-      importedOriginVersion: 3,
-      dismissedOriginVersion: 5,
     });
   });
 
@@ -46,10 +37,6 @@ describe(SkillMapper.name, () => {
       marketplaceIdentifier: null,
       userId: randomUUID(),
       workspaceId: null,
-      originSkillId: null,
-      version: 1,
-      importedOriginVersion: null,
-      dismissedOriginVersion: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

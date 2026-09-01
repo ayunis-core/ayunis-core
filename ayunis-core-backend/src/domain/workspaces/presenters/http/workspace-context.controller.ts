@@ -41,8 +41,17 @@ import { RemoveDocumentFromWorkspaceUseCase } from 'src/domain/workspaces/applic
 import { RemoveDocumentFromWorkspaceCommand } from 'src/domain/workspaces/application/use-cases/remove-document-from-workspace/remove-document-from-workspace.command';
 import { UpdateWorkspaceInstructionUseCase } from 'src/domain/workspaces/application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { UpdateWorkspaceInstructionCommand } from 'src/domain/workspaces/application/use-cases/update-workspace-instruction/update-workspace-instruction.command';
+import { CreateWorkspaceSkillUseCase } from 'src/domain/workspaces/application/use-cases/create-workspace-skill/create-workspace-skill.use-case';
+import { CreateWorkspaceSkillCommand } from 'src/domain/workspaces/application/use-cases/create-workspace-skill/create-workspace-skill.command';
+import { CopyPersonalSkillToWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.use-case';
+import { CopyPersonalSkillToWorkspaceCommand } from 'src/domain/workspaces/application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.command';
+import { DeleteWorkspaceSkillUseCase } from 'src/domain/workspaces/application/use-cases/delete-workspace-skill/delete-workspace-skill.use-case';
+import { DeleteWorkspaceSkillCommand } from 'src/domain/workspaces/application/use-cases/delete-workspace-skill/delete-workspace-skill.command';
 import { ListWorkspaceSkillsUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
 import { ListWorkspaceSkillsQuery } from 'src/domain/workspaces/application/use-cases/list-workspace-skills/list-workspace-skills.query';
+import { CreateWorkspaceKnowledgeBaseUseCase } from 'src/domain/workspaces/application/use-cases/create-workspace-knowledge-base/create-workspace-knowledge-base.use-case';
+import { CreateWorkspaceKnowledgeBaseCommand } from 'src/domain/workspaces/application/use-cases/create-workspace-knowledge-base/create-workspace-knowledge-base.command';
+import { DeleteWorkspaceKnowledgeBaseUseCase } from 'src/domain/workspaces/application/use-cases/delete-workspace-knowledge-base/delete-workspace-knowledge-base.use-case';
 import { ListWorkspaceKnowledgeBasesUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-bases/list-workspace-knowledge-bases.use-case';
 import { ListWorkspaceKnowledgeBasesQuery } from 'src/domain/workspaces/application/use-cases/list-workspace-knowledge-bases/list-workspace-knowledge-bases.query';
 import { ListWorkspaceDocumentsUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-documents/list-workspace-documents.use-case';
@@ -51,11 +60,16 @@ import { WorkspaceContextDtoMapper } from 'src/domain/workspaces/presenters/http
 import { WorkspaceDtoMapper } from 'src/domain/workspaces/presenters/http/mappers/workspace-dto.mapper';
 import { UpdateWorkspaceInstructionDto } from 'src/domain/workspaces/presenters/http/dtos/update-workspace-instruction.dto';
 import { WorkspaceContextListQueryDto } from 'src/domain/workspaces/presenters/http/dtos/workspace-context-list-query.dto';
+import { CreateWorkspaceSkillDto } from 'src/domain/workspaces/presenters/http/dtos/create-workspace-skill.dto';
+import { CopyPersonalSkillDto } from 'src/domain/workspaces/presenters/http/dtos/copy-personal-skill.dto';
+import { CreateWorkspaceKnowledgeBaseDto } from 'src/domain/workspaces/presenters/http/dtos/create-workspace-knowledge-base.dto';
 import {
   WorkspaceContextResponseDto,
   WorkspaceDocumentListResponseDto,
   WorkspaceKnowledgeBaseListResponseDto,
+  WorkspaceKnowledgeBaseResponseDto,
   WorkspaceSkillListResponseDto,
+  WorkspaceSkillResponseDto,
   WorkspaceDocumentResponseDto,
 } from 'src/domain/workspaces/presenters/http/dtos/workspace-context-response.dto';
 import { WorkspaceResponseDto } from 'src/domain/workspaces/presenters/http/dtos/workspace-response.dto';
@@ -75,6 +89,11 @@ export class WorkspaceContextController {
     private readonly addDocumentToWorkspaceUseCase: AddDocumentToWorkspaceUseCase,
     private readonly removeDocumentFromWorkspaceUseCase: RemoveDocumentFromWorkspaceUseCase,
     private readonly updateWorkspaceInstructionUseCase: UpdateWorkspaceInstructionUseCase,
+    private readonly createWorkspaceSkillUseCase: CreateWorkspaceSkillUseCase,
+    private readonly copyPersonalSkillToWorkspaceUseCase: CopyPersonalSkillToWorkspaceUseCase,
+    private readonly deleteWorkspaceSkillUseCase: DeleteWorkspaceSkillUseCase,
+    private readonly createWorkspaceKnowledgeBaseUseCase: CreateWorkspaceKnowledgeBaseUseCase,
+    private readonly deleteWorkspaceKnowledgeBaseUseCase: DeleteWorkspaceKnowledgeBaseUseCase,
     private readonly listWorkspaceSkillsUseCase: ListWorkspaceSkillsUseCase,
     private readonly listWorkspaceKnowledgeBasesUseCase: ListWorkspaceKnowledgeBasesUseCase,
     private readonly listWorkspaceDocumentsUseCase: ListWorkspaceDocumentsUseCase,
@@ -94,6 +113,46 @@ export class WorkspaceContextController {
     return this.contextDtoMapper.toContextDto(context);
   }
 
+  @Post('skills')
+  @ApiResponse({ status: 201, type: WorkspaceSkillResponseDto })
+  async createSkill(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: CreateWorkspaceSkillDto,
+  ): Promise<WorkspaceSkillResponseDto> {
+    const skill = await this.createWorkspaceSkillUseCase.execute(
+      new CreateWorkspaceSkillCommand(
+        id,
+        dto.name,
+        dto.shortDescription,
+        dto.instructions,
+      ),
+    );
+    return this.contextDtoMapper.toSkillDto(skill);
+  }
+
+  @Post('skills/copies')
+  @ApiResponse({ status: 201, type: WorkspaceSkillResponseDto })
+  async copyPersonalSkill(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: CopyPersonalSkillDto,
+  ): Promise<WorkspaceSkillResponseDto> {
+    const skill = await this.copyPersonalSkillToWorkspaceUseCase.execute(
+      new CopyPersonalSkillToWorkspaceCommand(id, dto.skillId),
+    );
+    return this.contextDtoMapper.toSkillDto(skill);
+  }
+
+  @Delete('skills/:skillId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteSkill(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Param('skillId', ParseUUIDPipe) skillId: UUID,
+  ): Promise<void> {
+    await this.deleteWorkspaceSkillUseCase.execute(
+      new DeleteWorkspaceSkillCommand(id, skillId),
+    );
+  }
+
   @Get('skills')
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'limit', required: false, type: Number, default: 20 })
@@ -110,6 +169,31 @@ export class WorkspaceContextController {
       }),
     );
     return this.contextDtoMapper.toSkillListDto(page);
+  }
+
+  @Post('knowledge-bases')
+  @ApiResponse({ status: 201, type: WorkspaceKnowledgeBaseResponseDto })
+  async createKnowledgeBase(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: CreateWorkspaceKnowledgeBaseDto,
+  ): Promise<WorkspaceKnowledgeBaseResponseDto> {
+    const knowledgeBase =
+      await this.createWorkspaceKnowledgeBaseUseCase.execute(
+        new CreateWorkspaceKnowledgeBaseCommand(id, dto.name, dto.description),
+      );
+    return this.contextDtoMapper.toKnowledgeBaseDto({
+      ...knowledgeBase,
+      documentCount: 0,
+    });
+  }
+
+  @Delete('knowledge-bases/:knowledgeBaseId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteKnowledgeBase(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Param('knowledgeBaseId', ParseUUIDPipe) knowledgeBaseId: UUID,
+  ): Promise<void> {
+    await this.deleteWorkspaceKnowledgeBaseUseCase.execute(id, knowledgeBaseId);
   }
 
   @Get('knowledge-bases')

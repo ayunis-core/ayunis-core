@@ -47,7 +47,6 @@ export class UpdateSkillUseCase {
       name: command.name,
       shortDescription: command.shortDescription,
       instructions: command.instructions,
-      version: existingSkill.version + 1,
       updatedAt: new Date(),
     });
 

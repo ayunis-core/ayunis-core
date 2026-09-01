@@ -15,10 +15,6 @@ export class KnowledgeBase {
   orgId: UUID;
   userId: UUID | null;
   workspaceId: UUID | null;
-  originKnowledgeBaseId: UUID | null;
-  version: number;
-  importedOriginVersion: number | null;
-  dismissedOriginVersion: number | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -29,10 +25,6 @@ export class KnowledgeBase {
     orgId: UUID;
     userId?: UUID | null;
     workspaceId?: UUID | null;
-    originKnowledgeBaseId?: UUID | null;
-    version?: number;
-    importedOriginVersion?: number | null;
-    dismissedOriginVersion?: number | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -45,10 +37,6 @@ export class KnowledgeBase {
     if ((this.userId === null) === (this.workspaceId === null)) {
       throw new InvalidKnowledgeBaseOwnershipError();
     }
-    this.originKnowledgeBaseId = params.originKnowledgeBaseId ?? null;
-    this.version = params.version ?? 1;
-    this.importedOriginVersion = params.importedOriginVersion ?? null;
-    this.dismissedOriginVersion = params.dismissedOriginVersion ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

@@ -8,7 +8,6 @@ import type { UUID } from 'crypto';
 describe('Skill Entity', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const workspaceId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
-  const originSkillId = '323e4567-e89b-12d3-a456-426614174002' as UUID;
 
   it('should create a skill with required fields and generate id', () => {
     const skill = new Skill({
@@ -31,30 +30,18 @@ describe('Skill Entity', () => {
     expect(skill.createdAt).toBeInstanceOf(Date);
     expect(skill.updatedAt).toBeInstanceOf(Date);
     expect(skill.workspaceId).toBeNull();
-    expect(skill.originSkillId).toBeNull();
-    expect(skill.version).toBe(1);
-    expect(skill.importedOriginVersion).toBeNull();
-    expect(skill.dismissedOriginVersion).toBeNull();
   });
 
-  it('preserves workspace ownership and copy provenance', () => {
+  it('preserves exclusive workspace ownership', () => {
     const skill = new Skill({
       name: 'Workspace procurement review',
       shortDescription: 'Reviews procurement documents.',
       instructions: 'Check the procurement requirements.',
       workspaceId,
-      originSkillId,
-      version: 4,
-      importedOriginVersion: 3,
-      dismissedOriginVersion: 5,
     });
 
     expect(skill.userId).toBeNull();
     expect(skill.workspaceId).toBe(workspaceId);
-    expect(skill.originSkillId).toBe(originSkillId);
-    expect(skill.version).toBe(4);
-    expect(skill.importedOriginVersion).toBe(3);
-    expect(skill.dismissedOriginVersion).toBe(5);
   });
 
   it.each([
