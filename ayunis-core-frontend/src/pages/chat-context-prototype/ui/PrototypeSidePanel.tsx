@@ -76,10 +76,7 @@ export function PrototypeSidePanel({
           <div className="px-4 pb-10 pt-2">
             <TabsContent value="results">
               {openArtifactId ? (
-                <ArtifactPreviewBody
-                  artifactId={openArtifactId}
-                  onBack={onBackToResults}
-                />
+                <ArtifactPreviewBody onBack={onBackToResults} />
               ) : (
                 <ResultsPanelBody
                   artifactIds={artifactIds}

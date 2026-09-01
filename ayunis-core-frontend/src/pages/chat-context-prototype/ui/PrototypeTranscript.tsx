@@ -1,13 +1,6 @@
 import { FileText, Globe, Sparkles } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemMedia,
-  ItemTitle,
-} from '@ayunis/ui/components/item';
+import { DocumentWidgetCard } from '@/pages/chat/ui/chat-widgets/DocumentWidgetCard';
 import {
   ARTIFACTS,
   CONTEXT_ITEMS,
@@ -136,18 +129,14 @@ function ArtifactCard({
 }: Readonly<{ artifactId: string; onOpen: (artifactId: string) => void }>) {
   const artifact = ARTIFACTS[artifactId];
   return (
-    <Item variant="outline" className="max-w-md">
-      <ItemMedia variant="icon">
-        <FileText />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>{artifact.name}</ItemTitle>
-      </ItemContent>
-      <ItemActions>
-        <Button variant="outline" size="sm" onClick={() => onOpen(artifactId)}>
-          Öffnen
-        </Button>
-      </ItemActions>
-    </Item>
+    <DocumentWidgetCard
+      contentKey="prototype"
+      contentId={artifactId}
+      title={artifact.name}
+      statusLabel="Dokument erstellt"
+      buttonLabel="Öffnen"
+      artifactId={artifactId}
+      onOpen={() => onOpen(artifactId)}
+    />
   );
 }

@@ -68,6 +68,13 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     detail: 'Integration',
     origin: 'assistant',
   },
+  'skill-pressemitteilung': {
+    id: 'skill-pressemitteilung',
+    kind: 'skill',
+    name: 'Pressemitteilung erstellen',
+    detail: 'Aufbau, Tonfall und Freigabehinweise für Pressetexte',
+    origin: 'assistant',
+  },
   'skill-aktenzeichen': {
     id: 'skill-aktenzeichen',
     kind: 'skill',
@@ -98,6 +105,12 @@ export const ARTIFACTS: Record<string, ArtifactItem> = {
     type: 'document',
     preview:
       'Beschlussvorschlag\n\nDer Rat der Stadt beschließt die Änderung der Stellplatzsatzung in der vorliegenden Fassung.\n\nSachverhalt\n\nDie geltende Stellplatzsatzung stammt aus dem Jahr 2014 und bildet die veränderte Mobilitätslage im Innenstadtbereich nicht mehr ab. Die Verwaltung schlägt vor, den Stellplatzschlüssel für Wohnnutzungen abzusenken und Abstellflächen für Fahrräder verbindlich festzuschreiben.',
+  },
+  'artifact-pressemitteilung': {
+    id: 'artifact-pressemitteilung',
+    name: 'Pressemitteilung Bürgerbüro',
+    type: 'document',
+    preview: '',
   },
   'artifact-fristen': {
     id: 'artifact-fristen',
@@ -167,6 +180,26 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
 };
 
 export const TRANSCRIPT: Record<string, TranscriptEntry> = {
+  'msg-presse-frage': {
+    id: 'msg-presse-frage',
+    kind: 'user',
+    text: 'Erstelle mir eine Pressemitteilung zur Eröffnung des neuen Bürgerbüros in der Marktstraße.',
+  },
+  'entry-presse-aktivierung': {
+    id: 'entry-presse-aktivierung',
+    kind: 'activation',
+    contextItemId: 'skill-pressemitteilung',
+  },
+  'msg-presse-antwort': {
+    id: 'msg-presse-antwort',
+    kind: 'assistant',
+    text: 'Ich habe die Eckdaten aus der Vorlage übernommen und den Text nach dem üblichen Aufbau gegliedert: Kernbotschaft zuerst, dann Öffnungszeiten und Barrierefreiheit, am Ende der Rückfragehinweis.',
+  },
+  'entry-presse-artefakt': {
+    id: 'entry-presse-artefakt',
+    kind: 'artifact',
+    artifactId: 'artifact-pressemitteilung',
+  },
   'msg-frage': {
     id: 'msg-frage',
     kind: 'user',

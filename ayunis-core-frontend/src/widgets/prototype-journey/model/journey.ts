@@ -37,7 +37,7 @@ const EMPTY: PrototypeState = {
   highlight: null,
 };
 
-export const JOURNEY: JourneyStep[] = [
+const ARCHIVED_STEPS: JourneyStep[] = [
   {
     id: 'neuer-chat',
     label: 'Neuer Chat',
@@ -330,6 +330,53 @@ export const JOURNEY: JourneyStep[] = [
         'entry-artefakt',
       ],
       panel: 'context',
+    },
+  },
+];
+
+export const ARCHIVE = ARCHIVED_STEPS;
+
+export const JOURNEY: JourneyStep[] = [
+  {
+    id: 'presse-frage',
+    label: 'Frage stellen',
+    hint: 'Der Chat startet leer — weder Kontext noch Ergebnisse, der Seitenbereich ist zu.',
+    state: {
+      ...EMPTY,
+      transcriptIds: ['msg-presse-frage'],
+    },
+  },
+  {
+    id: 'presse-aktivierung',
+    label: 'Fähigkeit wird aktiviert',
+    hint: 'Ayunis Core holt sich die passende Fähigkeit selbst und sagt es im Verlauf an.',
+    state: {
+      ...EMPTY,
+      contextIds: ['skill-pressemitteilung'],
+      transcriptIds: [
+        'msg-presse-frage',
+        'entry-presse-aktivierung',
+        'msg-presse-antwort',
+      ],
+      highlight: 'context',
+    },
+  },
+  {
+    id: 'presse-ergebnis',
+    label: 'Ergebnis entsteht',
+    hint: 'Das Dokument erscheint im Verlauf und öffnet sich rechts im Editor — dort ist es direkt bearbeitbar.',
+    state: {
+      ...EMPTY,
+      contextIds: ['skill-pressemitteilung'],
+      artifactIds: ['artifact-pressemitteilung'],
+      transcriptIds: [
+        'msg-presse-frage',
+        'entry-presse-aktivierung',
+        'msg-presse-antwort',
+        'entry-presse-artefakt',
+      ],
+      panel: 'results',
+      openArtifactId: 'artifact-pressemitteilung',
     },
   },
 ];
