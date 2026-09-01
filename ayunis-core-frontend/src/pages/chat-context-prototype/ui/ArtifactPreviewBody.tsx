@@ -12,8 +12,8 @@ export function ArtifactPreviewBody({
   onBack,
 }: Readonly<ArtifactPreviewBodyProps>) {
   return (
-    <div className="flex animate-in flex-col gap-2 fade-in-0 slide-in-from-right-2 duration-200">
-      <Button variant="ghost" size="sm" className="w-fit" onClick={onBack}>
+    <div className="flex animate-in flex-col gap-2 fade-in-0 slide-in-from-right-2 duration-200 [&_>_div:last-child]:border-l-0">
+      <Button variant="ghost" size="sm" className="ml-2 w-fit" onClick={onBack}>
         <ChevronLeft />
         Alle Ergebnisse
       </Button>

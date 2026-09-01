@@ -12,6 +12,7 @@ interface PrototypeChatLayoutProps {
   chatContent: ReactNode;
   chatInput: ReactNode;
   sidePanel?: ReactNode;
+  panelSize?: number;
   resetKey?: unknown;
 }
 
@@ -20,6 +21,7 @@ export function PrototypeChatLayout({
   chatContent,
   chatInput,
   sidePanel,
+  panelSize = 38,
   resetKey,
 }: Readonly<PrototypeChatLayoutProps>) {
   const { scrollRef: autoScrollRef, handleScroll } = useAutoScroll(
@@ -49,8 +51,12 @@ export function PrototypeChatLayout({
   );
 
   return (
-    <PanelGroup orientation="horizontal" className="absolute inset-0">
-      <Panel defaultSize={sidePanel ? 62 : 100} minSize={40}>
+    <PanelGroup
+      key={panelSize}
+      orientation="horizontal"
+      className="absolute inset-0"
+    >
+      <Panel defaultSize={sidePanel ? 100 - panelSize : 100} minSize={30}>
         <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl pb-4">
           <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
             <div
@@ -78,7 +84,7 @@ export function PrototypeChatLayout({
           <PanelResizeHandle className="group flex w-2 shrink-0 items-stretch justify-center bg-transparent">
             <div className="w-px bg-border transition-all group-hover:w-0.5 group-hover:bg-brand group-hover:shadow-sm" />
           </PanelResizeHandle>
-          <Panel defaultSize={38} minSize={24}>
+          <Panel defaultSize={panelSize} minSize={24}>
             {sidePanel}
           </Panel>
         </>
