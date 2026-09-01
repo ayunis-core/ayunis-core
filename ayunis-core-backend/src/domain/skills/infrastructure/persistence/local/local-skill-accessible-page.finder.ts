@@ -18,29 +18,23 @@ export class LocalSkillAccessiblePageFinder {
     sharedSkillIds: UUID[],
     options: SkillListOptions,
   ): SelectQueryBuilder<SkillRecord> {
-    const queryBuilder = this.skillRepository.createQueryBuilder('skill').where(
-      new Brackets((accessQuery) => {
-        accessQuery.where('skill.userId = :userId', { userId });
-        if (sharedSkillIds.length > 0) {
-          accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
-            sharedSkillIds,
-          });
-        }
-      }),
-    );
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
 
     if (workspaceId) {
-      queryBuilder.andWhere(
-        `EXISTS (
-          SELECT 1
-          FROM workspace_skill_assignments assignment
-          WHERE assignment."workspaceId" = :workspaceId
-            AND assignment."skillId" = skill.id
-        )`,
-        { workspaceId },
-      );
+      queryBuilder.where('skill.workspaceId = :workspaceId', { workspaceId });
     } else {
-      queryBuilder.andWhere('skill.workspaceId IS NULL');
+      queryBuilder
+        .where(
+          new Brackets((accessQuery) => {
+            accessQuery.where('skill.userId = :userId', { userId });
+            if (sharedSkillIds.length > 0) {
+              accessQuery.orWhere('skill.id IN (:...sharedSkillIds)', {
+                sharedSkillIds,
+              });
+            }
+          }),
+        )
+        .andWhere('skill.workspaceId IS NULL');
     }
 
     if (options.search) {
