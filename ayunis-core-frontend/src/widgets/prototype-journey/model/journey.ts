@@ -13,6 +13,7 @@ export interface PrototypeState {
   panel: PanelKey | null;
   openArtifactId: string | null;
   openSourceId: string | null;
+  openContextId: string | null;
   highlight: PanelKey | null;
 }
 
@@ -34,6 +35,7 @@ const EMPTY: PrototypeState = {
   panel: null,
   openArtifactId: null,
   openSourceId: null,
+  openContextId: null,
   highlight: null,
 };
 

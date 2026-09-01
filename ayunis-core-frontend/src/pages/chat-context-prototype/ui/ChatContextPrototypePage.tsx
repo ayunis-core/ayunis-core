@@ -37,11 +37,21 @@ export function ChatContextPrototypePage() {
     }));
   }
 
+  function openContextDetail(contextId: string) {
+    setState((current) => ({
+      ...current,
+      panel: 'context',
+      openContextId: contextId,
+      openSourceId: null,
+    }));
+  }
+
   function openSource(sourceId: string) {
     setState((current) => ({
       ...current,
       panel: 'context',
       openSourceId: sourceId,
+      openContextId: null,
       openArtifactId: null,
       highlight: null,
     }));
@@ -150,6 +160,7 @@ export function ChatContextPrototypePage() {
                   artifactIds={state.artifactIds}
                   openArtifactId={state.openArtifactId}
                   openSourceId={state.openSourceId}
+                  openContextId={state.openContextId}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,
@@ -169,8 +180,10 @@ export function ChatContextPrototypePage() {
                     setState((current) => ({
                       ...current,
                       openSourceId: null,
+                      openContextId: null,
                     }))
                   }
+                  onOpenContextDetail={openContextDetail}
                   onClose={() =>
                     setState((current) => ({ ...current, panel: null }))
                   }

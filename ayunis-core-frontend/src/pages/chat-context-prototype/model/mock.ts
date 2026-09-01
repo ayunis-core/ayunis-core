@@ -8,6 +8,8 @@ export interface ContextItem {
   name: string;
   detail: string;
   origin: ContextOrigin;
+  purpose?: string;
+  brings?: string[];
 }
 
 export type ArtifactType = 'document' | 'spreadsheet' | 'diagram';
@@ -74,6 +76,13 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     name: 'Pressemitteilung erstellen',
     detail: 'Aufbau, Tonfall und Freigabehinweise für Pressetexte',
     origin: 'assistant',
+    purpose:
+      'Gliedert Pressetexte nach dem Aufbau der Stadtverwaltung: Kernbotschaft zuerst, dann Details, am Ende der Rückfragehinweis. Formuliert in verständlicher Sprache und ohne Werbeton.',
+    brings: [
+      'Musterpressemitteilung.pdf',
+      'Pressearchiv der Stadt',
+      'Freigabehinweise der Pressestelle',
+    ],
   },
   'kb-presse': {
     id: 'kb-presse',
@@ -81,6 +90,8 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     name: 'Pressearchiv der Stadt',
     detail: '312 Dokumente',
     origin: 'always',
+    purpose:
+      'Alle veröffentlichten Pressemitteilungen seit 2019. In diesem Chat wurde darin nach vergleichbaren Eröffnungsmeldungen gesucht.',
   },
   'skill-aktenzeichen': {
     id: 'skill-aktenzeichen',

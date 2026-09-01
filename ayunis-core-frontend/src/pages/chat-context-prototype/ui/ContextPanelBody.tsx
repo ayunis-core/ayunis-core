@@ -14,7 +14,6 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { cn } from '@ayunis/ui/lib/cn';
-import { showInfo } from '@/shared/lib/toast';
 import {
   AVAILABLE_COUNTS,
   CONTEXT_ITEMS,
@@ -33,11 +32,13 @@ const GROUPS: { kinds: ContextKind[]; label: string }[] = [
 interface ContextPanelBodyProps {
   contextIds: string[];
   processingIds: string[];
+  onOpenDetail: (contextId: string) => void;
 }
 
 export function ContextPanelBody({
   contextIds,
   processingIds,
+  onOpenDetail,
 }: Readonly<ContextPanelBodyProps>) {
   const items = contextIds.map((id) => CONTEXT_ITEMS[id]);
   if (items.length === 0) {
@@ -74,6 +75,7 @@ export function ContextPanelBody({
                   key={item.id}
                   item={item}
                   isProcessing={processingIds.includes(item.id)}
+                  onOpen={() => onOpenDetail(item.id)}
                 />
               ))}
             </ItemGroup>
@@ -87,7 +89,12 @@ export function ContextPanelBody({
 function ContextRow({
   item,
   isProcessing,
-}: Readonly<{ item: ContextItem; isProcessing: boolean }>) {
+  onOpen,
+}: Readonly<{
+  item: ContextItem;
+  isProcessing: boolean;
+  onOpen: () => void;
+}>) {
   const originLabel = ORIGIN_LABELS[item.origin];
   return (
     <Item
@@ -95,10 +102,7 @@ function ContextRow({
       size="sm"
       className="-mx-2 cursor-pointer px-2 py-2 hover:bg-accent"
     >
-      <button
-        type="button"
-        onClick={() => showInfo(`Detailseite von „${item.name}“`)}
-      >
+      <button type="button" onClick={onOpen}>
         <ItemMedia
           className={cn(
             '[&_svg]:size-4',

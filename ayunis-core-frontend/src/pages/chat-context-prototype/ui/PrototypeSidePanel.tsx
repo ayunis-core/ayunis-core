@@ -9,6 +9,7 @@ import {
 } from '@ayunis/ui/components/tabs';
 import type { PanelKey } from '@/widgets/prototype-journey/model/journey';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
+import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
 import { ResultsPanelBody } from './ResultsPanelBody';
 import { SourcePanelBody } from './SourcePanelBody';
@@ -20,10 +21,12 @@ interface PrototypeSidePanelProps {
   artifactIds: string[];
   openArtifactId: string | null;
   openSourceId: string | null;
+  openContextId: string | null;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
   onBackToContext: () => void;
+  onOpenContextDetail: (contextId: string) => void;
   onExpandSource: () => void;
   onClose: () => void;
 }
@@ -35,10 +38,12 @@ export function PrototypeSidePanel({
   artifactIds,
   openArtifactId,
   openSourceId,
+  openContextId,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
   onBackToContext,
+  onOpenContextDetail,
   onExpandSource,
   onClose,
 }: Readonly<PrototypeSidePanelProps>) {
@@ -85,16 +90,24 @@ export function PrototypeSidePanel({
               )}
             </TabsContent>
             <TabsContent value="context">
-              {openSourceId ? (
+              {openSourceId && (
                 <SourcePanelBody
                   sourceId={openSourceId}
                   onBack={onBackToContext}
                   onExpand={onExpandSource}
                 />
-              ) : (
+              )}
+              {!openSourceId && openContextId && (
+                <ContextDetailBody
+                  contextId={openContextId}
+                  onBack={onBackToContext}
+                />
+              )}
+              {!openSourceId && !openContextId && (
                 <ContextPanelBody
                   contextIds={contextIds}
                   processingIds={processingIds}
+                  onOpenDetail={onOpenContextDetail}
                 />
               )}
             </TabsContent>
