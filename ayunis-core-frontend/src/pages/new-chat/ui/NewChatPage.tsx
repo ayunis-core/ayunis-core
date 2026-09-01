@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { AvailabilityChips } from '@/pages/new-chat/ui/AvailabilityChips';
+import { AvailabilityHint } from '@/pages/new-chat/ui/AvailabilityHint';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -289,14 +289,17 @@ export default function NewChatPage({
               onSkillRemove={handleSkillRemove}
             />
 
-            {isWorkspacesEnabled && (
-              <div className="mt-1.5 flex justify-start">
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              {isWorkspacesEnabled ? (
                 <WorkspacePicker
                   workspaceId={workspaceId}
                   onWorkspaceChange={setWorkspaceId}
                 />
-              </div>
-            )}
+              ) : (
+                <span />
+              )}
+              <AvailabilityHint workspaceId={workspaceId} />
+            </div>
           </div>
 
           <div
@@ -306,7 +309,6 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
-            <AvailabilityChips />
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>
