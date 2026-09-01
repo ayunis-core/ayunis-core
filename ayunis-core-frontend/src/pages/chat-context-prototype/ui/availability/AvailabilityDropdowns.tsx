@@ -3,6 +3,11 @@ import { Link } from '@tanstack/react-router';
 import { ChevronDown, Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -70,12 +75,10 @@ function AvailabilityNote({
   children,
 }: Readonly<{ title: string; children: ReactNode }>) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-brand/8 p-3">
-      <span className="text-sm font-medium">{title}</span>
-      <span className="text-sm leading-relaxed text-muted-foreground">
-        {children}
-      </span>
-    </div>
+    <Alert className="border-transparent bg-brand/8">
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>{children}</AlertDescription>
+    </Alert>
   );
 }
 
@@ -116,8 +119,8 @@ export function AvailabilityDropdowns({
       <EntryPopover
         icon="skill"
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
-        eyebrow="Immer dabei"
-        hint="Alle Ihre Fähigkeiten stehen in jedem Chat bereit. Ayunis Core aktiviert die passende, sobald Ihre Nachricht dazu passt."
+        eyebrow="Wird automatisch aktiviert"
+        hint="Sobald Ihre Nachricht dazu passt — ohne Auswahl."
         entries={skills}
         manageTo="/skills"
         manageLabel="Fähigkeiten verwalten"
@@ -129,8 +132,8 @@ export function AvailabilityDropdowns({
           'Wissensdatenbank',
           'Wissensdatenbanken',
         )}
-        eyebrow="Immer dabei"
-        hint="Alle Ihre Wissensdatenbanken sind in jedem Chat verfügbar. Ayunis Core durchsucht sie, wenn die Frage dazu passt."
+        eyebrow="Wird bei Bedarf durchsucht"
+        hint="Ayunis Core sucht selbst, wenn die Frage dazu passt."
         entries={knowledgeBases}
         manageTo="/knowledge-bases"
         manageLabel="Wissen verwalten"

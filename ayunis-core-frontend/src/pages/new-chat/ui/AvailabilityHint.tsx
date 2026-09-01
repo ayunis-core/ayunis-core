@@ -3,6 +3,11 @@ import type { ReactNode } from 'react';
 import { Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ayunis/ui/components/alert';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -125,12 +130,10 @@ function AvailabilityNote({
   children,
 }: Readonly<{ title: string; children: ReactNode }>) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-brand/8 p-3">
-      <span className="text-sm font-medium">{title}</span>
-      <span className="text-sm leading-relaxed text-muted-foreground">
-        {children}
-      </span>
-    </div>
+    <Alert className="border-transparent bg-brand/8">
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>{children}</AlertDescription>
+    </Alert>
   );
 }
 
