@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.34.1](https://github.com/ayunis-core/ayunis-core/compare/v2.34.0...v2.34.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **auth:** stop the login rate limit from masking the account lockout error (AYC-377) ([#1573](https://github.com/ayunis-core/ayunis-core/issues/1573)) ([2c05c8d](https://github.com/ayunis-core/ayunis-core/commit/2c05c8d08ff61a982da1ed27115119dcd7f2ff8f))
+* **chat:** temporarily disable map runtime tool (AYC-827) ([#1584](https://github.com/ayunis-core/ayunis-core/issues/1584)) ([9a8054a](https://github.com/ayunis-core/ayunis-core/commit/9a8054a084bd4e79de38c4fd6ab2fa5924a1f142))
+* **super-admin:** guard every super admin route at the layout (AYC-000) ([#1583](https://github.com/ayunis-core/ayunis-core/issues/1583)) ([1b3338b](https://github.com/ayunis-core/ayunis-core/commit/1b3338b3e0f4e09193f5299ebc34f5a2ef5ecde2))
+
+
+### Code Refactoring
+
+* **runs:** remove legacy agent orchestration path (AYC-769) ([#1565](https://github.com/ayunis-core/ayunis-core/issues/1565)) ([1bd9740](https://github.com/ayunis-core/ayunis-core/commit/1bd9740d7e3561ceb68aecd82fc30187e449b489))
+
+
+### Documentation
+
+* **workflow:** place backend responsibilities before coding (AYC-000) ([#1579](https://github.com/ayunis-core/ayunis-core/issues/1579)) ([44fbfd9](https://github.com/ayunis-core/ayunis-core/commit/44fbfd945c6320af889d314c246fe7f0bd69ecd0))
+
 ## [2.34.0](https://github.com/ayunis-core/ayunis-core/compare/v2.33.0...v2.34.0) (2026-08-31)
 
 
