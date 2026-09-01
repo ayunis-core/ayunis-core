@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -22,17 +21,16 @@ import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
-import { useTimeBasedGreeting } from '../model/useTimeBasedGreeting';
+import { useTimeBasedGreeting } from '@/pages/new-chat/model/useTimeBasedGreeting';
 import { useFileFromUrl } from '@/shared/hooks/useFileFromUrl';
 import { useChatContext } from '@/shared/contexts/chat/useChatContext';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-import { PinnedSkills } from './PinnedSkills';
 import { PersonalizationCard } from './PersonalizationCard';
-import { useUserSystemPromptStatus } from '../api/useUserSystemPromptStatus';
-import { useSkipPersonalization } from '../api/useSkipPersonalization';
+import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
+import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
 import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
@@ -151,16 +149,6 @@ export default function NewChatPage({
 
   function handleModelChange(modelId: string) {
     setModelId(modelId);
-  }
-
-  function handleSkillSelect(skillId: string, skillName: string) {
-    if (selectedSkillId === skillId) {
-      setSelectedSkillId(undefined);
-      setSelectedSkillName(undefined);
-    } else {
-      setSelectedSkillId(skillId);
-      setSelectedSkillName(skillName);
-    }
   }
 
   function handleSkillRemove() {
@@ -327,15 +315,6 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>
