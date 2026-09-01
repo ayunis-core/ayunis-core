@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronDown, Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -15,6 +16,7 @@ import {
 
 interface EntryPopoverProps {
   label: string;
+  eyebrow: string;
   hint: string;
   entries: AvailabilityEntry[];
   manageTo: '/skills' | '/knowledge-bases';
@@ -24,6 +26,7 @@ interface EntryPopoverProps {
 
 function EntryPopover({
   label,
+  eyebrow,
   hint,
   entries,
   manageTo,
@@ -46,7 +49,7 @@ function EntryPopover({
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium">{hint}</p>
+          <AvailabilityNote title={eyebrow}>{hint}</AvailabilityNote>
           <Separator />
           <AvailabilityEntryList entries={entries} />
           <Separator />
@@ -59,6 +62,20 @@ function EntryPopover({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function AvailabilityNote({
+  title,
+  children,
+}: Readonly<{ title: string; children: ReactNode }>) {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-brand/8 p-3">
+      <span className="text-sm font-medium">{title}</span>
+      <span className="text-sm leading-relaxed text-muted-foreground">
+        {children}
+      </span>
+    </div>
   );
 }
 
@@ -99,7 +116,8 @@ export function AvailabilityDropdowns({
       <EntryPopover
         icon="skill"
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
-        hint="Ayunis Core wählt selbst aus."
+        eyebrow="Immer dabei"
+        hint="Alle Ihre Fähigkeiten stehen in jedem Chat bereit. Ayunis Core aktiviert die passende, sobald Ihre Nachricht dazu passt."
         entries={skills}
         manageTo="/skills"
         manageLabel="Fähigkeiten verwalten"
@@ -111,7 +129,8 @@ export function AvailabilityDropdowns({
           'Wissensdatenbank',
           'Wissensdatenbanken',
         )}
-        hint="Ayunis Core durchsucht bei Bedarf."
+        eyebrow="Immer dabei"
+        hint="Alle Ihre Wissensdatenbanken sind in jedem Chat verfügbar. Ayunis Core durchsucht sie, wenn die Frage dazu passt."
         entries={knowledgeBases}
         manageTo="/knowledge-bases"
         manageLabel="Wissen verwalten"

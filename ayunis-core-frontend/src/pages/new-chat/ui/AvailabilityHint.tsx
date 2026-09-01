@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 import { Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -68,7 +69,11 @@ export function AvailabilityHint({
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div className="flex flex-col gap-3 text-sm">
-          <p className="font-medium">Ayunis Core wählt selbst aus.</p>
+          <AvailabilityNote title="Immer dabei">
+            Alle Fähigkeiten und Wissensdatenbanken stehen in jedem Chat bereit.
+            Ayunis Core aktiviert eine Fähigkeit, sobald Ihre Nachricht dazu
+            passt, und durchsucht Wissen bei Bedarf. Sie müssen nichts anhängen.
+          </AvailabilityNote>
           <Separator />
           <Section
             title="Fähigkeiten"
@@ -112,6 +117,20 @@ export function AvailabilityHint({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function AvailabilityNote({
+  title,
+  children,
+}: Readonly<{ title: string; children: ReactNode }>) {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-brand/8 p-3">
+      <span className="text-sm font-medium">{title}</span>
+      <span className="text-sm leading-relaxed text-muted-foreground">
+        {children}
+      </span>
+    </div>
   );
 }
 

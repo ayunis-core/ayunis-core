@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import ChatInput from '@/widgets/chat-input';
+import { usePermittedModels } from '@/features/usePermittedModels';
 import {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
@@ -24,6 +25,9 @@ export function PrototypeChatInput({
   selectedSkillName,
   onSkillRemove,
 }: Readonly<PrototypeChatInputProps>) {
+  const { models } = usePermittedModels();
+  const defaultModel: { id: string } | undefined =
+    models.find((model) => model.isDefault) ?? models.at(0);
   const attached = attachedIds.map((id) => CONTEXT_ITEMS[id]);
   const sources = useMemo(
     () =>
@@ -41,7 +45,7 @@ export function PrototypeChatInput({
   );
   return (
     <ChatInput
-      modelId={undefined}
+      modelId={defaultModel?.id}
       sources={sources}
       knowledgeBases={[]}
       mcpIntegrations={[]}
