@@ -81,6 +81,7 @@ export function ChatContextPrototypePage() {
         <div className="relative min-h-0 flex-1">
           <PrototypeChatLayout
             resetKey={stepIndex}
+            panelSize={state.openArtifactId ? 62 : 38}
             chatHeader={
               <ContentAreaHeader
                 breadcrumbs={[
