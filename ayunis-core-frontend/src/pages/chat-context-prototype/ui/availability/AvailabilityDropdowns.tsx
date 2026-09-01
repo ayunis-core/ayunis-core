@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronDown, Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
+import { cn } from '@ayunis/ui/lib/cn';
 import {
   Alert,
   AlertDescription,
@@ -22,6 +23,7 @@ import {
 interface EntryPopoverProps {
   label: string;
   withChevron: boolean;
+  compact: boolean;
   eyebrow: string;
   hint: string;
   entries: AvailabilityEntry[];
@@ -33,6 +35,7 @@ interface EntryPopoverProps {
 function EntryPopover({
   label,
   withChevron,
+  compact,
   eyebrow,
   hint,
   entries,
@@ -44,7 +47,14 @@ function EntryPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'text-muted-foreground',
+            compact && 'h-7 gap-1.5 px-2 text-xs [&_svg]:size-3.5',
+          )}
+        >
           {icon === 'skill' ? <Sparkles /> : <Database />}
           {label}
           {withChevron && <ChevronDown />}
@@ -118,10 +128,12 @@ export function AvailabilityDropdowns({
   knowledgeBases: AvailabilityEntry[];
   withChevron?: boolean;
 }>) {
+  const compact = !withChevron;
   return (
     <div className="flex items-center gap-1">
       <EntryPopover
         withChevron={withChevron}
+        compact={compact}
         icon="skill"
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
         eyebrow="Wird automatisch aktiviert"
@@ -132,6 +144,7 @@ export function AvailabilityDropdowns({
       />
       <EntryPopover
         withChevron={withChevron}
+        compact={compact}
         icon="knowledge"
         label={plural(
           knowledgeBases.length,
