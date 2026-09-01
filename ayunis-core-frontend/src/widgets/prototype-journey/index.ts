@@ -1,5 +1,6 @@
 export { JourneyCard } from './ui/JourneyCard';
-export { useJourneyControls } from './model/journey-store';
+export { JourneyProvider } from './ui/JourneyProvider';
+export { useJourneyControls } from './model/use-journey-controls';
 export {
   JOURNEY,
   type AvailabilityVariant,

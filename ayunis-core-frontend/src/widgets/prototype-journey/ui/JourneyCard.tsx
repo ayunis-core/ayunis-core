@@ -14,12 +14,7 @@ import {
   type AvailabilityVariant,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
-import {
-  setAvailabilityVariant,
-  setJourneyStep,
-  setJourneyVariant,
-  useJourneyControls,
-} from '@/widgets/prototype-journey/model/journey-store';
+import { useJourneyControls } from '@/widgets/prototype-journey/model/use-journey-controls';
 
 const PROTOTYPE_PATH = '/prototype/chat-context';
 
@@ -29,9 +24,6 @@ const AVAILABILITY_VARIANTS: {
 }[] = [
   { value: 'row', label: 'Zeile' },
   { value: 'dropdowns', label: 'Menüs' },
-  { value: 'banner', label: 'Karte' },
-  { value: 'cabinets', label: 'Kacheln' },
-  { value: 'above', label: 'Über Gruß' },
   { value: 'underInput', label: 'Unter Feld' },
 ];
 
@@ -43,18 +35,25 @@ const VARIANTS: { value: EntryVariant; label: string }[] = [
 
 export function JourneyCard() {
   const [isOpen, setIsOpen] = useState(true);
-  const { stepIndex, variant, availabilityVariant } = useJourneyControls();
+  const {
+    stepIndex,
+    variant,
+    availabilityVariant,
+    setStepIndex,
+    setVariant,
+    setAvailabilityVariant,
+  } = useJourneyControls();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const step = JOURNEY[stepIndex];
 
   function onStepChange(index: number) {
-    setJourneyStep(index);
+    setStepIndex(index);
     if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
   }
 
   function onVariantChange(next: EntryVariant) {
-    setJourneyVariant(next);
+    setVariant(next);
     if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
   }
 

@@ -16,6 +16,7 @@ import {
   useSkillsControllerFindAll,
   useWorkspaceContextControllerFindContext,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { AvailabilityEntryList } from '@/pages/chat-context-prototype/ui/availability/AvailabilityDropdowns';
 
 function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
@@ -68,6 +69,23 @@ export function AvailabilityHint({
             Wissensdatenbanken durchsucht es im Hintergrund, wenn sie zur Frage
             passen. Sie müssen nichts anhängen.
           </p>
+          <Separator />
+          <Section
+            title="Fähigkeiten"
+            entries={(skills ?? []).map((skill) => ({
+              id: skill.id,
+              name: skill.name,
+              description: skill.shortDescription,
+            }))}
+          />
+          <Section
+            title="Wissensdatenbanken"
+            entries={(knowledgeBases?.data ?? []).map((base) => ({
+              id: base.id,
+              name: base.name,
+              description: base.description,
+            }))}
+          />
           {workspaceId && (
             <>
               <Separator />
@@ -92,6 +110,22 @@ export function AvailabilityHint({
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+function Section({
+  title,
+  entries,
+}: Readonly<{
+  title: string;
+  entries: { id: string; name: string; description: string }[];
+}>) {
+  if (entries.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-1">
+      <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+      <AvailabilityEntryList entries={entries} />
+    </section>
   );
 }
 

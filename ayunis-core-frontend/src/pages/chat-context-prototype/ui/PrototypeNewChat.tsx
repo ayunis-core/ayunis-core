@@ -8,8 +8,6 @@ import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
 import { useJourneyControls } from '@/widgets/prototype-journey';
 import { useAvailability } from '@/pages/chat-context-prototype/model/useAvailability';
 import { PrototypeChatInput } from '@/pages/chat-context-prototype/ui/PrototypeChatInput';
-import { AvailabilityBanner } from '@/pages/chat-context-prototype/ui/availability/AvailabilityBanner';
-import { AvailabilityCabinets } from '@/pages/chat-context-prototype/ui/availability/AvailabilityCabinets';
 import { AvailabilityDropdowns } from '@/pages/chat-context-prototype/ui/availability/AvailabilityDropdowns';
 import { AvailabilityInline } from '@/pages/chat-context-prototype/ui/availability/AvailabilityInline';
 import { AvailabilityHint } from '@/pages/new-chat/ui/AvailabilityHint';
@@ -47,27 +45,11 @@ export function PrototypeNewChat() {
       }
       compose={
         <>
-          {availabilityVariant === 'above' && (
-            <AvailabilityInline
-              skillCount={skillCount}
-              knowledgeCount={knowledgeCount}
-              align="center"
-            />
-          )}
           <h1 className="new-chat-greeting text-center text-2xl font-bold">
             {greeting}
           </h1>
           <div className="new-chat-input-stack relative w-full">
             <PrototypeChatInput attachedIds={[]} processingIds={[]} />
-            {availabilityVariant === 'underInput' && (
-              <div className="mt-2">
-                <AvailabilityInline
-                  skillCount={skillCount}
-                  knowledgeCount={knowledgeCount}
-                  align="start"
-                />
-              </div>
-            )}
             <div className="mt-1.5 flex items-center justify-between gap-2">
               {isWorkspacesEnabled ? (
                 <WorkspacePicker
@@ -77,22 +59,16 @@ export function PrototypeNewChat() {
               ) : (
                 <span />
               )}
-              {renderRowVariant()}
+              {availabilityVariant === 'underInput' ? (
+                <AvailabilityInline
+                  skillCount={skillCount}
+                  knowledgeCount={knowledgeCount}
+                />
+              ) : (
+                renderRowVariant()
+              )}
             </div>
           </div>
-          {availabilityVariant === 'banner' && (
-            <div className="mt-4">
-              <AvailabilityBanner availability={availability} />
-            </div>
-          )}
-          {availabilityVariant === 'cabinets' && (
-            <div className="mt-4">
-              <AvailabilityCabinets
-                skillCount={skillCount}
-                knowledgeCount={knowledgeCount}
-              />
-            </div>
-          )}
         </>
       }
     />

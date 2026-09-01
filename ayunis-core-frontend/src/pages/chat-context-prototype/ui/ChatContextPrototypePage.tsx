@@ -8,7 +8,7 @@ import {
   type PanelKey,
   type PrototypeState,
 } from '@/widgets/prototype-journey/model/journey';
-import { useJourneyControls } from '@/widgets/prototype-journey/model/journey-store';
+import { useJourneyControls } from '@/widgets/prototype-journey';
 import { EntryControls } from './EntryControls';
 import { PrototypeChatInput } from './PrototypeChatInput';
 import { PrototypeChatLayout } from './PrototypeChatLayout';
