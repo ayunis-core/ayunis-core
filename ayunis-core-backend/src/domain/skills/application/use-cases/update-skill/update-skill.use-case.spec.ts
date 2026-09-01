@@ -12,14 +12,14 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import { UpdateSkillUseCase } from './update-skill.use-case';
 import { UpdateSkillCommand } from './update-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
 import {
   SkillNotFoundError,
   DuplicateSkillNameError,
-} from '../../skills.errors';
+} from 'src/domain/skills/application/skills.errors';
 
 describe('UpdateSkillUseCase', () => {
   let useCase: UpdateSkillUseCase;
@@ -158,6 +158,42 @@ describe('UpdateSkillUseCase', () => {
 
     expect(result.name).toBe('Legal Research');
     expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
+  });
+
+  it('preserves workspace ownership and advances its version', async () => {
+    const workspaceId = '777e8400-e29b-41d4-a716-446655440000' as UUID;
+    const originSkillId = '888e8400-e29b-41d4-a716-446655440000' as UUID;
+    const existingSkill = new Skill({
+      id: mockSkillId,
+      name: 'Legal Research',
+      shortDescription: 'Research legal topics.',
+      instructions: 'Original instructions.',
+      userId: mockUserId,
+      workspaceId,
+      originSkillId,
+      version: 3,
+      importedOriginVersion: 2,
+      dismissedOriginVersion: 4,
+    });
+    skillRepository.findOne.mockResolvedValue(existingSkill);
+    skillRepository.update.mockImplementation(async (skill: Skill) => skill);
+
+    const result = await useCase.execute(
+      new UpdateSkillCommand({
+        skillId: mockSkillId,
+        name: 'Legal Research',
+        shortDescription: 'Updated description.',
+        instructions: 'Updated instructions.',
+      }),
+    );
+
+    expect(result).toMatchObject({
+      workspaceId,
+      originSkillId,
+      version: 4,
+      importedOriginVersion: 2,
+      dismissedOriginVersion: 4,
+    });
   });
 
   it('should preserve knowledgeBaseIds on update', async () => {

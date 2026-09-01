@@ -4,6 +4,8 @@ import { KnowledgeBase } from './knowledge-base.entity';
 describe('KnowledgeBase Entity', () => {
   const orgId = randomUUID();
   const userId = randomUUID();
+  const workspaceId = randomUUID();
+  const originKnowledgeBaseId = randomUUID();
 
   it('should generate a UUID when id is not provided', () => {
     const kb = new KnowledgeBase({
@@ -38,6 +40,30 @@ describe('KnowledgeBase Entity', () => {
     });
 
     expect(kb.description).toBe('');
+    expect(kb.workspaceId).toBeNull();
+    expect(kb.originKnowledgeBaseId).toBeNull();
+    expect(kb.version).toBe(1);
+    expect(kb.importedOriginVersion).toBeNull();
+    expect(kb.dismissedOriginVersion).toBeNull();
+  });
+
+  it('preserves workspace ownership and copy provenance', () => {
+    const kb = new KnowledgeBase({
+      name: 'Workspace procurement rules',
+      orgId,
+      userId,
+      workspaceId,
+      originKnowledgeBaseId,
+      version: 4,
+      importedOriginVersion: 3,
+      dismissedOriginVersion: 5,
+    });
+
+    expect(kb.workspaceId).toBe(workspaceId);
+    expect(kb.originKnowledgeBaseId).toBe(originKnowledgeBaseId);
+    expect(kb.version).toBe(4);
+    expect(kb.importedOriginVersion).toBe(3);
+    expect(kb.dismissedOriginVersion).toBe(5);
   });
 
   it('should use the provided description when given', () => {
