@@ -45,7 +45,7 @@ export default [
     waitFor: async ({ page }) => {
       await createWorkspace(page);
       await page.getByTestId('workspace-tab-knowledge').click();
-      return page.getByTestId('workspace-knowledge-add').first();
+      return page.getByTestId('workspace-knowledge-create').first();
     },
   },
 ] satisfies PrMediaScene[];
