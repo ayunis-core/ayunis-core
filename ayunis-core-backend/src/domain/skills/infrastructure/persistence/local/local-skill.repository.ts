@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 import { randomUUID, UUID } from 'crypto';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
@@ -31,6 +31,7 @@ const SKILL_RELATIONS = [
 export class LocalSkillRepository implements SkillRepository {
   private readonly logger = new Logger(LocalSkillRepository.name);
 
+  // eslint-disable-next-line max-params -- NestJS injects the repository's collaborators.
   constructor(
     @InjectRepository(SkillRecord)
     private readonly defaultSkillRepository: Repository<SkillRecord>,
@@ -203,7 +204,7 @@ export class LocalSkillRepository implements SkillRepository {
     this.logger.log({ userId }, 'findAllByOwner');
 
     const records = await this.skillRepository.find({
-      where: { userId },
+      where: { userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 
@@ -255,7 +256,7 @@ export class LocalSkillRepository implements SkillRepository {
 
     const activeSkillIds = activations.map((a) => a.skillId);
     const records = await this.skillRepository.find({
-      where: { id: In(activeSkillIds), userId },
+      where: { id: In(activeSkillIds), userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 
@@ -266,7 +267,7 @@ export class LocalSkillRepository implements SkillRepository {
     this.logger.log({ name, userId }, 'findByNameAndOwner');
 
     const record = await this.skillRepository.findOne({
-      where: { name, userId },
+      where: { name, userId, workspaceId: IsNull() },
       relations: [...SKILL_RELATIONS],
     });
 

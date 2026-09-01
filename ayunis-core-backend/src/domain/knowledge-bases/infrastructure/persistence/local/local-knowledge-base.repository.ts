@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
+  IsNull,
   Repository,
   SelectQueryBuilder,
   type EntityManager,
@@ -29,6 +30,7 @@ import { buildActiveKnowledgeBaseAccessQueries } from './queries/active-knowledg
 export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   private readonly logger = new Logger(LocalKnowledgeBaseRepository.name);
 
+  // eslint-disable-next-line max-params -- NestJS injects the repository's collaborators.
   constructor(
     @InjectRepository(KnowledgeBaseRecord)
     private readonly defaultKnowledgeBaseRepository: Repository<KnowledgeBaseRecord>,
@@ -92,7 +94,7 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
   async findAllByUserId(userId: UUID): Promise<KnowledgeBase[]> {
     this.logger.debug({ userId }, 'findAllByUserId');
     const records = await this.knowledgeBaseRepository.find({
-      where: { userId },
+      where: { userId, workspaceId: IsNull() },
       order: { createdAt: 'DESC' },
     });
     return records.map((record) => this.mapper.toDomain(record));
@@ -137,7 +139,8 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
         'activation',
         'activation.knowledgeBaseId = knowledgeBase.id AND activation.userId = :userId',
       )
-      .where(
+      .where('knowledgeBase.workspaceId IS NULL')
+      .andWhere(
         new Brackets((accessQuery) => {
           accessQuery
             .where('knowledgeBase.userId = :userId')
@@ -225,6 +228,8 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
         )`,
         { workspaceId },
       );
+    } else {
+      queryBuilder.andWhere('knowledgeBase.workspaceId IS NULL');
     }
 
     if (options.search) {

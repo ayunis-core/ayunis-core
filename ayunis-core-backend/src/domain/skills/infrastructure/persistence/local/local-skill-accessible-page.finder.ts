@@ -39,6 +39,8 @@ export class LocalSkillAccessiblePageFinder {
         )`,
         { workspaceId },
       );
+    } else {
+      queryBuilder.andWhere('skill.workspaceId IS NULL');
     }
 
     if (options.search) {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
-import { KnowledgeBaseRecord } from '../schema/knowledge-base.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 
 @Injectable()
 export class KnowledgeBaseMapper {
@@ -11,6 +11,11 @@ export class KnowledgeBaseMapper {
       description: record.description,
       orgId: record.orgId,
       userId: record.userId,
+      workspaceId: record.workspaceId,
+      originKnowledgeBaseId: record.originKnowledgeBaseId,
+      version: record.version,
+      importedOriginVersion: record.importedOriginVersion,
+      dismissedOriginVersion: record.dismissedOriginVersion,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -23,6 +28,11 @@ export class KnowledgeBaseMapper {
     record.description = entity.description;
     record.orgId = entity.orgId;
     record.userId = entity.userId;
+    record.workspaceId = entity.workspaceId;
+    record.originKnowledgeBaseId = entity.originKnowledgeBaseId;
+    record.version = entity.version;
+    record.importedOriginVersion = entity.importedOriginVersion;
+    record.dismissedOriginVersion = entity.dismissedOriginVersion;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;
