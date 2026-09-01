@@ -18,6 +18,7 @@ import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { HttpStatus } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { RATE_LIMIT_KEY } from 'src/common/decorators/rate-limit.decorator';
+import { DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS } from 'src/config/authentication.config';
 import type { RateLimitOptions } from 'src/common/decorators/rate-limit.decorator';
 import { SessionAuthenticationMethod } from 'src/iam/sessions/domain/value-objects/session-authentication-method.enum';
 import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/application/use-cases/start-authenticated-session/start-authenticated-session.use-case';
@@ -106,8 +107,17 @@ describe('AuthenticationController', () => {
         RateLimitOptions | undefined;
 
       expect(options).toBeDefined();
-      expect(options?.limit).toBe(10);
+      expect(options?.limit).toBe(20);
       expect(options?.windowMs).toBe(15 * 60 * 1000);
+    });
+
+    it('should allow more login attempts than the account lockout threshold so the lockout error is not masked by a 429', () => {
+      const options = Reflect.getMetadata(RATE_LIMIT_KEY, controller.login) as
+        RateLimitOptions | undefined;
+
+      expect(options?.limit).toBeGreaterThan(
+        DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS,
+      );
     });
   });
 
