@@ -11,15 +11,29 @@ import { Card } from '@ayunis/ui/components/card';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
   JOURNEY,
+  type AvailabilityVariant,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
 import {
+  setAvailabilityVariant,
   setJourneyStep,
   setJourneyVariant,
   useJourneyControls,
 } from '@/widgets/prototype-journey/model/journey-store';
 
 const PROTOTYPE_PATH = '/prototype/chat-context';
+
+const AVAILABILITY_VARIANTS: {
+  value: AvailabilityVariant;
+  label: string;
+}[] = [
+  { value: 'row', label: 'Zeile' },
+  { value: 'dropdowns', label: 'Menüs' },
+  { value: 'banner', label: 'Karte' },
+  { value: 'cabinets', label: 'Kacheln' },
+  { value: 'above', label: 'Über Gruß' },
+  { value: 'underInput', label: 'Unter Feld' },
+];
 
 const VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'single', label: 'Icon' },
@@ -29,7 +43,7 @@ const VARIANTS: { value: EntryVariant; label: string }[] = [
 
 export function JourneyCard() {
   const [isOpen, setIsOpen] = useState(true);
-  const { stepIndex, variant } = useJourneyControls();
+  const { stepIndex, variant, availabilityVariant } = useJourneyControls();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const step = JOURNEY[stepIndex];
@@ -91,18 +105,35 @@ export function JourneyCard() {
               </Button>
             </div>
           </div>
-          <div className="mt-2 flex items-center gap-1">
-            {VARIANTS.map((entry) => (
-              <Button
-                key={entry.value}
-                variant={variant === entry.value ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => onVariantChange(entry.value)}
-              >
-                {entry.label}
-              </Button>
-            ))}
-          </div>
+          {step.id === 'startseite' ? (
+            <div className="mt-2 flex flex-wrap items-center gap-1">
+              {AVAILABILITY_VARIANTS.map((entry) => (
+                <Button
+                  key={entry.value}
+                  variant={
+                    availabilityVariant === entry.value ? 'secondary' : 'ghost'
+                  }
+                  size="sm"
+                  onClick={() => setAvailabilityVariant(entry.value)}
+                >
+                  {entry.label}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-2 flex items-center gap-1">
+              {VARIANTS.map((entry) => (
+                <Button
+                  key={entry.value}
+                  variant={variant === entry.value ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => onVariantChange(entry.value)}
+                >
+                  {entry.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </>
       )}
     </Card>

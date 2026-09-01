@@ -1,12 +1,20 @@
 import { useSyncExternalStore } from 'react';
-import type { EntryVariant } from '@/widgets/prototype-journey/model/journey';
+import type {
+  AvailabilityVariant,
+  EntryVariant,
+} from '@/widgets/prototype-journey/model/journey';
 
 interface JourneyControls {
   stepIndex: number;
   variant: EntryVariant;
+  availabilityVariant: AvailabilityVariant;
 }
 
-let controls: JourneyControls = { stepIndex: 0, variant: 'single' };
+let controls: JourneyControls = {
+  stepIndex: 0,
+  variant: 'single',
+  availabilityVariant: 'row',
+};
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -27,6 +35,11 @@ export function setJourneyStep(stepIndex: number): void {
 
 export function setJourneyVariant(variant: EntryVariant): void {
   controls = { ...controls, variant };
+  emit();
+}
+
+export function setAvailabilityVariant(variant: AvailabilityVariant): void {
+  controls = { ...controls, availabilityVariant: variant };
   emit();
 }
 

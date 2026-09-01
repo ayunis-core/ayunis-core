@@ -2,6 +2,9 @@ export type PanelKey = 'context' | 'results';
 
 export type EntryVariant = 'single' | 'menu' | 'header';
 
+export type AvailabilityVariant =
+  'row' | 'dropdowns' | 'banner' | 'above' | 'cabinets' | 'underInput';
+
 export interface PrototypeState {
   view: 'new' | 'chat';
   scope: 'chat' | 'project';
@@ -339,6 +342,12 @@ const ARCHIVED_STEPS: JourneyStep[] = [
 export const ARCHIVE = ARCHIVED_STEPS;
 
 export const JOURNEY: JourneyStep[] = [
+  {
+    id: 'startseite',
+    label: 'Startseite',
+    hint: 'Vor der ersten Nachricht: Womit kann Ayunis Core überhaupt arbeiten? Varianten unten umschaltbar.',
+    state: { ...EMPTY, view: 'new' },
+  },
   {
     id: 'presse-frage',
     label: 'Frage stellen',
