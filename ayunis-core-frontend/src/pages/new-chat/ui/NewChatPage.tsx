@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import { AvailabilityChips } from '@/pages/new-chat/ui/AvailabilityChips';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
 import {
@@ -113,9 +114,7 @@ export default function NewChatPage({
       processingError: undefined,
     };
   }
-  const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
-    KnowledgeBaseSummary[]
-  >([]);
+  const [selectedKnowledgeBases] = useState<KnowledgeBaseSummary[]>([]);
   const [selectedIntegrations, setSelectedIntegrations] = useState<
     IntegrationSummary[]
   >([]);
@@ -270,14 +269,6 @@ export default function NewChatPage({
               onFileUpload={handleFileUpload}
               onRemoveSource={handleRemoveSource}
               onDownloadSource={() => null}
-              onAddKnowledgeBase={(kb) => {
-                setSelectedKnowledgeBases((prev) => [...prev, kb]);
-              }}
-              onRemoveKnowledgeBase={(kbId) => {
-                setSelectedKnowledgeBases((prev) =>
-                  prev.filter((kb) => kb.id !== kbId),
-                );
-              }}
               onAddIntegration={(integration) => {
                 setSelectedIntegrations((prev) => [...prev, integration]);
               }}
@@ -315,6 +306,7 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
+            <AvailabilityChips />
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>

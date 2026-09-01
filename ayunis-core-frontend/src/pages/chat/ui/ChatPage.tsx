@@ -47,7 +47,6 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
@@ -189,9 +188,6 @@ export default function ChatPage({
     threadId: thread.id,
   });
 
-  const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
-    threadId: thread.id,
-  });
   const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
     threadId: thread.id,
   });
@@ -445,8 +441,6 @@ export default function ChatPage({
         onFileUpload={handleFileUpload}
         onRemoveSource={deleteFileSource}
         onDownloadSource={(sourceId) => void downloadSource(sourceId)}
-        onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
-        onRemoveKnowledgeBase={removeKnowledgeBase}
         onAddIntegration={(integration) => addIntegration(integration.id)}
         onRemoveIntegration={removeIntegration}
         onSend={(m, imageFiles) => void handleSend(m, imageFiles)}
