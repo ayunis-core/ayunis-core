@@ -46,7 +46,7 @@ function EntryPopover({
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-muted-foreground">{hint}</p>
+          <p className="text-sm font-medium">{hint}</p>
           <Separator />
           <AvailabilityEntryList entries={entries} />
           <Separator />
@@ -99,7 +99,7 @@ export function AvailabilityDropdowns({
       <EntryPopover
         icon="skill"
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
-        hint="Ayunis Core wählt passend zu Ihrer Nachricht aus — Sie müssen nichts auswählen."
+        hint="Ayunis Core wählt selbst aus."
         entries={skills}
         manageTo="/skills"
         manageLabel="Fähigkeiten verwalten"
@@ -111,7 +111,7 @@ export function AvailabilityDropdowns({
           'Wissensdatenbank',
           'Wissensdatenbanken',
         )}
-        hint="Wird im Hintergrund durchsucht, wenn es zur Frage passt."
+        hint="Ayunis Core durchsucht bei Bedarf."
         entries={knowledgeBases}
         manageTo="/knowledge-bases"
         manageLabel="Wissen verwalten"

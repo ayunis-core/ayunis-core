@@ -62,16 +62,17 @@ export function AvailabilityHint({
           {plural(knowledgeCount, 'Wissensdatenbank', 'Wissensdatenbanken')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
+      <PopoverContent
+        align="end"
+        className="w-80"
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
         <div className="flex flex-col gap-3 text-sm">
-          <p className="text-muted-foreground">
-            Fähigkeiten wählt Ayunis Core passend zu Ihrer Nachricht aus.
-            Wissensdatenbanken durchsucht es im Hintergrund, wenn sie zur Frage
-            passen. Sie müssen nichts anhängen.
-          </p>
+          <p className="font-medium">Ayunis Core wählt selbst aus.</p>
           <Separator />
           <Section
             title="Fähigkeiten"
+            qualifier="automatisch aktiviert"
             entries={(skills ?? []).map((skill) => ({
               id: skill.id,
               name: skill.name,
@@ -80,6 +81,7 @@ export function AvailabilityHint({
           />
           <Section
             title="Wissensdatenbanken"
+            qualifier="bei Bedarf durchsucht"
             entries={(knowledgeBases?.data ?? []).map((base) => ({
               id: base.id,
               name: base.name,
@@ -115,15 +117,19 @@ export function AvailabilityHint({
 
 function Section({
   title,
+  qualifier,
   entries,
 }: Readonly<{
   title: string;
+  qualifier: string;
   entries: { id: string; name: string; description: string }[];
 }>) {
   if (entries.length === 0) return null;
   return (
     <section className="flex flex-col gap-1">
-      <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+      <h4 className="text-xs text-muted-foreground">
+        <span className="font-medium">{title}</span> · {qualifier}
+      </h4>
       <AvailabilityEntryList entries={entries} />
     </section>
   );
