@@ -12,10 +12,6 @@ export class KnowledgeBaseMapper {
       orgId: record.orgId,
       userId: record.userId,
       workspaceId: record.workspaceId,
-      originKnowledgeBaseId: record.originKnowledgeBaseId,
-      version: record.version,
-      importedOriginVersion: record.importedOriginVersion,
-      dismissedOriginVersion: record.dismissedOriginVersion,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -29,10 +25,6 @@ export class KnowledgeBaseMapper {
     record.orgId = entity.orgId;
     record.userId = entity.userId;
     record.workspaceId = entity.workspaceId;
-    record.originKnowledgeBaseId = entity.originKnowledgeBaseId;
-    record.version = entity.version;
-    record.importedOriginVersion = entity.importedOriginVersion;
-    record.dismissedOriginVersion = entity.dismissedOriginVersion;
     record.createdAt = entity.createdAt;
     record.updatedAt = entity.updatedAt;
     return record;

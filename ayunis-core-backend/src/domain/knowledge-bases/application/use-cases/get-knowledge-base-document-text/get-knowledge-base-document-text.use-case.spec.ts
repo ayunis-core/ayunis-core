@@ -28,6 +28,7 @@ describe('GetKnowledgeBaseDocumentTextUseCase', () => {
   beforeAll(async () => {
     mockRepository = {
       findById: jest.fn(),
+      duplicateDocumentsIntoKnowledgeBase: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),

@@ -10,7 +10,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import {
   useWorkspaceContextControllerListDocuments,
-  useWorkspaceContextControllerListKnowledgeBaseCandidates,
+  useKnowledgeBasesControllerFindAll,
   useWorkspaceContextControllerListKnowledgeBases,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { WorkspaceDocumentStatus } from '@/widgets/workspace-document-status';
@@ -24,6 +24,10 @@ import {
 } from './WorkspaceContextList';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
+import {
+  CreateWorkspaceResourceDialog,
+  type WorkspaceResourceFormData,
+} from './CreateWorkspaceResourceDialog';
 
 const ACCEPTED_DOCUMENT_FILE_TYPES =
   '.pdf,.docx,.pptx,.txt,.md,.eml,.mp3,.m4a,.wav,.webm';
@@ -36,7 +40,6 @@ export function WorkspaceKnowledgeTab({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [knowledgePage, setKnowledgePage] = useState(1);
   const [documentPage, setDocumentPage] = useState(1);
-  const [candidatePage, setCandidatePage] = useState(1);
   const knowledgeParams = {
     limit: CONTEXT_PAGE_SIZE,
     offset: (knowledgePage - 1) * CONTEXT_PAGE_SIZE,
@@ -44,10 +47,6 @@ export function WorkspaceKnowledgeTab({
   const documentParams = {
     limit: CONTEXT_PAGE_SIZE,
     offset: (documentPage - 1) * CONTEXT_PAGE_SIZE,
-  };
-  const candidateParams = {
-    limit: CONTEXT_PAGE_SIZE,
-    offset: (candidatePage - 1) * CONTEXT_PAGE_SIZE,
   };
   const { data: knowledgePageData, isLoading: isKnowledgeLoading } =
     useWorkspaceContextControllerListKnowledgeBases(
@@ -66,15 +65,14 @@ export function WorkspaceKnowledgeTab({
             : false,
       },
     });
-  const { data: knowledgeBaseCandidates, isLoading: areCandidatesLoading } =
-    useWorkspaceContextControllerListKnowledgeBaseCandidates(
-      workspaceId,
-      candidateParams,
-      { query: { enabled: isDialogOpen } },
-    );
+  const { data: personalKnowledgeBases, isLoading: areCandidatesLoading } =
+    useKnowledgeBasesControllerFindAll({
+      query: { enabled: isDialogOpen },
+    });
   const {
-    attachKnowledgeBases,
-    detachKnowledgeBase,
+    createKnowledgeBase,
+    copyKnowledgeBases,
+    deleteKnowledgeBase,
     removeDocument,
     uploadDocument,
     isUploadingDocument,
@@ -88,8 +86,14 @@ export function WorkspaceKnowledgeTab({
         page={knowledgePage}
         total={pageTotal(knowledgePageData?.pagination)}
         onPageChange={setKnowledgePage}
-        onDetach={detachKnowledgeBase}
+        onDetach={deleteKnowledgeBase}
         onAdd={() => setIsDialogOpen(true)}
+        onCreate={(data) =>
+          createKnowledgeBase({
+            name: data.name,
+            description: data.description,
+          })
+        }
       />
       <WorkspaceDocumentsSection
         items={documentPageData?.data ?? []}
@@ -108,19 +112,17 @@ export function WorkspaceKnowledgeTab({
         title={t('context.knowledge.add')}
         description={t('context.knowledge.addDescription')}
         isLoading={areCandidatesLoading}
-        items={(knowledgeBaseCandidates?.data ?? []).map((knowledgeBase) => ({
-          id: knowledgeBase.id,
-          name: knowledgeBase.name,
-          description: knowledgeBase.description,
-          meta: t('context.knowledge.documentCount', {
-            count: knowledgeBase.documentCount,
-          }),
-          isAttached: knowledgeBase.isAttached,
-        }))}
-        currentPage={candidatePage}
-        pagination={knowledgeBaseCandidates?.pagination}
-        onPageChange={setCandidatePage}
-        onConfirm={attachKnowledgeBases}
+        items={(personalKnowledgeBases?.data ?? [])
+          .filter((knowledgeBase) => !knowledgeBase.isShared)
+          .map((knowledgeBase) => ({
+            id: knowledgeBase.id,
+            name: knowledgeBase.name,
+            description: knowledgeBase.description,
+            isAttached: false,
+          }))}
+        currentPage={1}
+        onPageChange={() => undefined}
+        onConfirm={copyKnowledgeBases}
       />
     </div>
   );
@@ -134,6 +136,7 @@ function WorkspaceKnowledgeBaseSection({
   onPageChange,
   onDetach,
   onAdd,
+  onCreate,
 }: Readonly<{
   items: WorkspaceKnowledgeBaseResponseDto[];
   isLoading: boolean;
@@ -142,17 +145,29 @@ function WorkspaceKnowledgeBaseSection({
   onPageChange: (page: number) => void;
   onDetach: (id: string) => void;
   onAdd: () => void;
+  onCreate: (data: WorkspaceResourceFormData) => Promise<unknown>;
 }>) {
   const { t } = useTranslation('workspace');
   const addButton = (
-    <Button
-      variant="outline"
-      size="sm"
-      data-testid="workspace-knowledge-add"
-      onClick={onAdd}
-    >
-      <Plus /> {t('context.knowledge.add')}
-    </Button>
+    <div className="flex gap-2">
+      <CreateWorkspaceResourceDialog
+        buttonText={t('context.knowledge.create')}
+        title={t('context.knowledge.create')}
+        description={t('context.knowledge.createDescription')}
+        nameLabel={t('context.knowledge.name')}
+        descriptionLabel={t('context.knowledge.descriptionLabel')}
+        confirmText={t('context.knowledge.create')}
+        onCreate={onCreate}
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        data-testid="workspace-knowledge-add"
+        onClick={onAdd}
+      >
+        <Plus /> {t('context.knowledge.add')}
+      </Button>
+    </div>
   );
 
   return (

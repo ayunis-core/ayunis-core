@@ -17,10 +17,6 @@ export class SkillMapper {
       marketplaceIdentifier: record.marketplaceIdentifier ?? null,
       userId: record.userId,
       workspaceId: record.workspaceId,
-      originSkillId: record.originSkillId,
-      version: record.version,
-      importedOriginVersion: record.importedOriginVersion,
-      dismissedOriginVersion: record.dismissedOriginVersion,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -35,10 +31,6 @@ export class SkillMapper {
     record.marketplaceIdentifier = domain.marketplaceIdentifier;
     record.userId = domain.userId;
     record.workspaceId = domain.workspaceId;
-    record.originSkillId = domain.originSkillId;
-    record.version = domain.version;
-    record.importedOriginVersion = domain.importedOriginVersion;
-    record.dismissedOriginVersion = domain.dismissedOriginVersion;
     return record;
   }
 }

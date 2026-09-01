@@ -12,6 +12,7 @@ export abstract class SkillRepository {
   abstract create(skill: Skill): Promise<Skill>;
   abstract update(skill: Skill): Promise<Skill>;
   abstract delete(skillId: UUID, userId: UUID): Promise<void>;
+  abstract deleteByWorkspace(skillId: UUID, workspaceId: UUID): Promise<void>;
   abstract findOne(id: UUID, userId: UUID): Promise<Skill | null>;
   abstract findAllByOwner(userId: UUID): Promise<Skill[]>;
   abstract findPaginatedAccessible(
@@ -24,6 +25,10 @@ export abstract class SkillRepository {
   abstract findByNameAndOwner(
     name: string,
     userId: UUID,
+  ): Promise<Skill | null>;
+  abstract findByNameAndWorkspace(
+    name: string,
+    workspaceId: UUID,
   ): Promise<Skill | null>;
   abstract activateSkill(skillId: UUID, userId: UUID): Promise<void>;
   abstract deactivateSkill(skillId: UUID, userId: UUID): Promise<void>;

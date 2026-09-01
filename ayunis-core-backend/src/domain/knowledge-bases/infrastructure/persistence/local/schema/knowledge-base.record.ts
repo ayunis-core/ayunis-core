@@ -50,26 +50,6 @@ export class KnowledgeBaseRecord extends BaseRecord {
   @JoinColumn({ name: 'workspaceId' })
   workspace: WorkspaceRecord | null;
 
-  @Column({ type: 'uuid', nullable: true })
-  @Index()
-  originKnowledgeBaseId: UUID | null;
-
-  @ManyToOne(() => KnowledgeBaseRecord, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'originKnowledgeBaseId' })
-  originKnowledgeBase: KnowledgeBaseRecord | null;
-
-  @Column({ type: 'integer', default: 1 })
-  version: number;
-
-  @Column({ type: 'integer', nullable: true })
-  importedOriginVersion: number | null;
-
-  @Column({ type: 'integer', nullable: true })
-  dismissedOriginVersion: number | null;
-
   @OneToMany(() => SourceRecord, (source) => source.knowledgeBase)
   sources: SourceRecord[];
 }

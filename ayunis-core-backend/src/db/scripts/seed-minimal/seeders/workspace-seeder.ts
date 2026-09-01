@@ -262,8 +262,6 @@ export class WorkspaceSeeder extends OrgSeeder {
           shortDescription: origin.shortDescription,
           instructions: origin.instructions,
           marketplaceIdentifier: null,
-          originSkillId: origin.id,
-          importedOriginVersion: origin.version,
         }),
         { entity: 'WorkspaceSkill', name },
       );
@@ -297,8 +295,6 @@ export class WorkspaceSeeder extends OrgSeeder {
           workspaceId,
           name: origin.name,
           description: origin.description,
-          originKnowledgeBaseId: origin.id,
-          importedOriginVersion: origin.version,
         }),
         { entity: 'WorkspaceKnowledgeBase', name },
       );

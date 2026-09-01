@@ -30,11 +30,14 @@ export class CreateKnowledgeBaseUseCase {
       name: command.name,
       description: command.description,
       orgId: command.orgId,
-      userId: command.userId,
+      userId: command.workspaceId ? null : command.userId,
+      workspaceId: command.workspaceId,
     });
 
     const created = await this.knowledgeBaseRepository.save(knowledgeBase);
-    await this.knowledgeBaseRepository.activate(created.id, command.userId);
+    if (!command.workspaceId) {
+      await this.knowledgeBaseRepository.activate(created.id, command.userId);
+    }
     return created;
   }
 }

@@ -49,7 +49,7 @@ export async function createProjectContextFixture(
     },
     { api },
   );
-  const skill = await generatedApi.skillsControllerCreate(
+  const personalSkill = await generatedApi.skillsControllerCreate(
     {
       name: `Bauanträge prüfen ${suffix}`,
       shortDescription: "Prüft Bauanträge gegen lokale Vorgaben",
@@ -59,13 +59,16 @@ export async function createProjectContextFixture(
     },
     { api },
   );
-  const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+  const personalKnowledgeBase =
+    await generatedApi.knowledgeBasesControllerCreate(
     {
       name: `Bauordnung Wissen ${suffix}`,
       description: "Lokale Bauordnung und Stellplatzsatzung für das Projekt",
     },
     { api },
   );
+  let skill: { id: string; name: string } = personalSkill;
+  let knowledgeBase: { id: string; name: string } = personalKnowledgeBase;
   const instruction = `Antworte für ${suffix} mit kurzer Prüfung, Risiko und nächstem Schritt.`;
   const knowledgeDocumentName = `Bauordnung ${suffix}.txt`;
   const workspaceDocumentName = `Stellplatzsatzung ${suffix}.txt`;
@@ -73,21 +76,6 @@ export async function createProjectContextFixture(
   let workspaceDocument: { id: string; name: string } | null = null;
 
   if (options.attach) {
-    await generatedApi.workspaceContextControllerAttachSkill(
-      workspace.id,
-      skill.id,
-      { api },
-    );
-    await generatedApi.workspaceContextControllerAttachKnowledgeBase(
-      workspace.id,
-      knowledgeBase.id,
-      { api },
-    );
-    await generatedApi.workspaceContextControllerUpdateInstruction(
-      workspace.id,
-      { instruction },
-      { api },
-    );
     if (options.includeDocuments && (await permitFirstEmbeddingModel(api))) {
       workspaceDocument = await uploadProjectContextDocuments(api, {
         workspaceId: workspace.id,
@@ -96,6 +84,22 @@ export async function createProjectContextFixture(
         workspaceDocumentName,
       });
     }
+    skill = await generatedApi.workspaceContextControllerCopyPersonalSkill(
+      workspace.id,
+      { skillId: skill.id },
+      { api },
+    );
+    knowledgeBase =
+      await generatedApi.workspaceContextControllerCopyPersonalKnowledgeBase(
+        workspace.id,
+        { knowledgeBaseId: knowledgeBase.id },
+        { api },
+      );
+    await generatedApi.workspaceContextControllerUpdateInstruction(
+      workspace.id,
+      { instruction },
+      { api },
+    );
   }
 
   return {

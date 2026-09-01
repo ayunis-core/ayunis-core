@@ -50,9 +50,22 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
     .getByTestId(`workspace-add-dialog-item-${fixture.skill.id}`)
     .click();
   await page.getByTestId("workspace-add-dialog-confirm").click();
-  await expect(
-    page.getByTestId(`workspace-skill-${fixture.skill.id}`),
-  ).toBeVisible();
+  let copiedSkillId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceSkills =
+        await generatedApi.workspaceContextControllerListSkills(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      copiedSkillId = workspaceSkills.data.find(
+        ({ name }) => name === fixture.skill.name,
+      )?.id;
+      return copiedSkillId;
+    })
+    .toBeTruthy();
+  await expect(page.getByTestId(`workspace-skill-${copiedSkillId}`)).toBeVisible();
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
@@ -64,8 +77,23 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
     .getByTestId(`workspace-add-dialog-item-${fixture.knowledgeBase.id}`)
     .click();
   await page.getByTestId("workspace-add-dialog-confirm").click();
+  let copiedKnowledgeBaseId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceKnowledgeBases =
+        await generatedApi.workspaceContextControllerListKnowledgeBases(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      copiedKnowledgeBaseId = workspaceKnowledgeBases.data.find(
+        ({ name }) => name === fixture.knowledgeBase.name,
+      )?.id;
+      return copiedKnowledgeBaseId;
+    })
+    .toBeTruthy();
   await expect(
-    page.getByTestId(`workspace-knowledge-base-${fixture.knowledgeBase.id}`),
+    page.getByTestId(`workspace-knowledge-base-${copiedKnowledgeBaseId}`),
   ).toBeVisible();
 
   await page.getByTestId("workspace-tab-instructions").click();

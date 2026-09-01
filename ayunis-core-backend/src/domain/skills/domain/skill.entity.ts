@@ -49,10 +49,6 @@ export class Skill {
   public readonly marketplaceIdentifier: string | null;
   public readonly userId: UUID | null;
   public readonly workspaceId: UUID | null;
-  public readonly originSkillId: UUID | null;
-  public readonly version: number;
-  public readonly importedOriginVersion: number | null;
-  public readonly dismissedOriginVersion: number | null;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -67,10 +63,6 @@ export class Skill {
     marketplaceIdentifier?: string | null;
     userId?: UUID | null;
     workspaceId?: UUID | null;
-    originSkillId?: UUID | null;
-    version?: number;
-    importedOriginVersion?: number | null;
-    dismissedOriginVersion?: number | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -88,10 +80,6 @@ export class Skill {
     if ((this.userId === null) === (this.workspaceId === null)) {
       throw new InvalidSkillOwnershipError();
     }
-    this.originSkillId = params.originSkillId ?? null;
-    this.version = params.version ?? 1;
-    this.importedOriginVersion = params.importedOriginVersion ?? null;
-    this.dismissedOriginVersion = params.dismissedOriginVersion ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

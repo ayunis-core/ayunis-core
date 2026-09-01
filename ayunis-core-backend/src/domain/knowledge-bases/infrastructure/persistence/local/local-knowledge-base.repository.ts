@@ -18,7 +18,18 @@ import {
 import { KnowledgeBase } from 'src/domain/knowledge-bases/domain/knowledge-base.entity';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
 import { KnowledgeBaseMapper } from './mappers/knowledge-base.mapper';
-import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import {
+  SourceRecord,
+  TextSourceRecord,
+} from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
+import {
+  FileSourceDetailsRecord,
+  TextSourceDetailsRecord,
+  UrlSourceDetailsRecord,
+} from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
+import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source-content-chunk.record';
+import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
+import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import { SourceMapper } from 'src/domain/sources/infrastructure/persistence/local/mappers/source.mapper';
 import { Paginated } from 'src/common/pagination/paginated.entity';
@@ -258,6 +269,153 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
       'assignSourceToKnowledgeBase',
     );
     await this.sourceRepository.update(sourceId, { knowledgeBaseId });
+  }
+
+  async duplicateDocumentsIntoKnowledgeBase(
+    sourceKnowledgeBaseId: UUID,
+    targetKnowledgeBaseId: UUID,
+  ): Promise<void> {
+    const manager = this.sourceRepository.manager;
+    const sources = await manager.getRepository(TextSourceRecord).find({
+      where: { knowledgeBaseId: sourceKnowledgeBaseId },
+      relations: { textSourceDetails: { contentChunks: true } },
+    });
+    for (const source of sources) {
+      await this.duplicateDocument(manager, source, targetKnowledgeBaseId);
+    }
+  }
+
+  private async duplicateDocument(
+    manager: EntityManager,
+    source: TextSourceRecord,
+    targetKnowledgeBaseId: UUID,
+  ): Promise<void> {
+    const duplicate = manager.getRepository(TextSourceRecord).create({
+      id: randomUUID(),
+      name: source.name,
+      createdBy: source.createdBy,
+      status: source.status,
+      processingError: source.processingError,
+      processingStartedAt: source.processingStartedAt,
+      knowledgeBaseId: targetKnowledgeBaseId,
+      textType: source.textType,
+      fileType: source.fileType,
+      url: source.url,
+      maxDepth: source.maxDepth,
+    });
+    const savedSource = await manager
+      .getRepository(TextSourceRecord)
+      .save(duplicate);
+    const chunkIds = await this.duplicateSourceDetails(
+      manager,
+      source,
+      savedSource,
+    );
+    await this.duplicateIndexedChunks(
+      manager,
+      source.id,
+      savedSource,
+      chunkIds,
+    );
+  }
+
+  private async duplicateSourceDetails(
+    manager: EntityManager,
+    source: TextSourceRecord,
+    duplicate: TextSourceRecord,
+  ): Promise<Map<UUID, UUID>> {
+    const details = source.textSourceDetails;
+    const duplicateDetails = this.createDuplicateDetails(details, duplicate);
+    const savedDetails = await manager
+      .getRepository(TextSourceDetailsRecord)
+      .save(duplicateDetails);
+    const chunkIds = new Map<UUID, UUID>();
+    for (const chunk of details.contentChunks ?? []) {
+      const duplicateChunk = manager
+        .getRepository(SourceContentChunkRecord)
+        .create({
+          id: randomUUID(),
+          content: chunk.content,
+          meta: chunk.meta,
+          source: savedDetails,
+        });
+      const savedChunk = await manager
+        .getRepository(SourceContentChunkRecord)
+        .save(duplicateChunk);
+      chunkIds.set(chunk.id, savedChunk.id);
+    }
+    return chunkIds;
+  }
+
+  private createDuplicateDetails(
+    details: TextSourceDetailsRecord,
+    source: TextSourceRecord,
+  ): TextSourceDetailsRecord {
+    if (details instanceof FileSourceDetailsRecord) {
+      return Object.assign(new FileSourceDetailsRecord(), {
+        id: randomUUID(),
+        source,
+        text: details.text,
+        fileType: details.fileType,
+      });
+    }
+    if (details instanceof UrlSourceDetailsRecord) {
+      return Object.assign(new UrlSourceDetailsRecord(), {
+        id: randomUUID(),
+        source,
+        text: details.text,
+        url: details.url,
+      });
+    }
+    throw new Error(`Unsupported text source type: ${source.textType}`);
+  }
+
+  private async duplicateIndexedChunks(
+    manager: EntityManager,
+    sourceId: UUID,
+    duplicateSource: TextSourceRecord,
+    chunkIds: Map<UUID, UUID>,
+  ): Promise<void> {
+    const parents = await manager.getRepository(ParentChunkRecord).find({
+      where: { relatedDocumentId: sourceId },
+      relations: { children: true },
+    });
+    for (const parent of parents) {
+      const duplicateParent = await manager
+        .getRepository(ParentChunkRecord)
+        .save({
+          id: randomUUID(),
+          relatedDocumentId: duplicateSource.id,
+          source: duplicateSource,
+          relatedChunkId: chunkIds.get(parent.relatedChunkId) ?? randomUUID(),
+          content: parent.content,
+        });
+      await this.duplicateChildChunks(
+        manager,
+        parent.children,
+        duplicateParent,
+      );
+    }
+  }
+
+  private async duplicateChildChunks(
+    manager: EntityManager,
+    children: ChildChunkRecord[],
+    parent: ParentChunkRecord,
+  ): Promise<void> {
+    const repository = manager.getRepository(ChildChunkRecord);
+    await repository.save(
+      children.map((child) =>
+        repository.create({
+          id: randomUUID(),
+          parent,
+          parentId: parent.id,
+          embedding1024: child.embedding1024,
+          embedding1536: child.embedding1536,
+          embedding2560: child.embedding2560,
+        }),
+      ),
+    );
   }
 
   async findSourcesByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<Source[]> {

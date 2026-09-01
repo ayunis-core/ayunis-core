@@ -160,6 +160,8 @@ import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/ht
     SkillActivationService,
     SkillShareAuthorizationStrategy,
     getShareAuthStrategyToken(SharedEntityType.SKILL),
+    CreateSkillUseCase,
+    DeleteSkillUseCase,
     CreateSkillWithUniqueNameUseCase,
     CheckKnowledgeBaseSkillShareAccessUseCase,
     FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,

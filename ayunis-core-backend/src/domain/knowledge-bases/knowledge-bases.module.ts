@@ -29,6 +29,7 @@ import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get
 import { GetKnowledgeBasesByIdsUseCase } from './application/use-cases/get-knowledge-bases-by-ids/get-knowledge-bases-by-ids.use-case';
 import { SetKnowledgeBaseActivationUseCase } from './application/use-cases/set-knowledge-base-activation/set-knowledge-base-activation.use-case';
 import { FindActiveKnowledgeBasesUseCase } from './application/use-cases/find-active-knowledge-bases/find-active-knowledge-bases.use-case';
+import { DuplicateKnowledgeBaseDocumentsUseCase } from './application/use-cases/duplicate-knowledge-base-documents/duplicate-knowledge-base-documents.use-case';
 
 // Presenters
 import { KnowledgeBasesController } from './presenters/http/knowledge-bases.controller';
@@ -61,6 +62,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     GetKnowledgeBasesByIdsUseCase,
     SetKnowledgeBaseActivationUseCase,
     FindActiveKnowledgeBasesUseCase,
+    DuplicateKnowledgeBaseDocumentsUseCase,
     // Presenters
     KnowledgeBaseDtoMapper,
     // Services
@@ -94,6 +96,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     GetKnowledgeBaseDocumentTextUseCase,
     GetKnowledgeBasesByIdsUseCase,
     FindActiveKnowledgeBasesUseCase,
+    DuplicateKnowledgeBaseDocumentsUseCase,
   ],
 })
 export class KnowledgeBasesModule {}
