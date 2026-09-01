@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   ChevronDown,
   ChevronLeft,
@@ -11,7 +12,14 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   JOURNEY,
   type EntryVariant,
-} from '@/pages/chat-context-prototype/model/journey';
+} from '@/widgets/prototype-journey/model/journey';
+import {
+  setJourneyStep,
+  setJourneyVariant,
+  useJourneyControls,
+} from '@/widgets/prototype-journey/model/journey-store';
+
+const PROTOTYPE_PATH = '/prototype/chat-context';
 
 const VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'single', label: 'Icon' },
@@ -19,21 +27,22 @@ const VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'header', label: 'Beschriftet' },
 ];
 
-interface JourneyCardProps {
-  stepIndex: number;
-  variant: EntryVariant;
-  onStepChange: (index: number) => void;
-  onVariantChange: (variant: EntryVariant) => void;
-}
-
-export function JourneyCard({
-  stepIndex,
-  variant,
-  onStepChange,
-  onVariantChange,
-}: Readonly<JourneyCardProps>) {
+export function JourneyCard() {
   const [isOpen, setIsOpen] = useState(true);
+  const { stepIndex, variant } = useJourneyControls();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const step = JOURNEY[stepIndex];
+
+  function onStepChange(index: number) {
+    setJourneyStep(index);
+    if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
+  }
+
+  function onVariantChange(next: EntryVariant) {
+    setJourneyVariant(next);
+    if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
+  }
 
   return (
     <Card className="fixed bottom-4 left-4 z-50 w-80 gap-0 p-3 shadow-lg">

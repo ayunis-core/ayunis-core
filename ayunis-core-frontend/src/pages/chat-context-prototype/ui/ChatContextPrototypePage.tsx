@@ -5,12 +5,11 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import {
   JOURNEY,
-  type EntryVariant,
   type PanelKey,
   type PrototypeState,
-} from '@/pages/chat-context-prototype/model/journey';
+} from '@/widgets/prototype-journey/model/journey';
+import { useJourneyControls } from '@/widgets/prototype-journey/model/journey-store';
 import { EntryControls } from './EntryControls';
-import { JourneyCard } from './JourneyCard';
 import { PrototypeChatInput } from './PrototypeChatInput';
 import { PrototypeChatLayout } from './PrototypeChatLayout';
 import { PrototypeNewChat } from './PrototypeNewChat';
@@ -19,14 +18,14 @@ import { SourceDialog } from './SourceDialog';
 import { PrototypeTranscript } from './PrototypeTranscript';
 
 export function ChatContextPrototypePage() {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [variant, setVariant] = useState<EntryVariant>('single');
+  const { stepIndex, variant } = useJourneyControls();
+  const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
   const [state, setState] = useState<PrototypeState>(JOURNEY[0].state);
 
-  function goToStep(index: number) {
-    setStepIndex(index);
-    setState(JOURNEY[index].state);
+  if (appliedStep !== stepIndex) {
+    setAppliedStep(stepIndex);
+    setState(JOURNEY[stepIndex].state);
   }
 
   function openPanel(panel: PanelKey) {
@@ -60,12 +59,6 @@ export function ChatContextPrototypePage() {
 
   const overlays = (
     <>
-      <JourneyCard
-        stepIndex={stepIndex}
-        variant={variant}
-        onStepChange={goToStep}
-        onVariantChange={setVariant}
-      />
       <SourceDialog
         sourceId={expandedSourceId}
         onClose={() => setExpandedSourceId(null)}

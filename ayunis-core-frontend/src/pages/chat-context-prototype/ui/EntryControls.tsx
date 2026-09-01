@@ -15,7 +15,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import type {
   EntryVariant,
   PanelKey,
-} from '@/pages/chat-context-prototype/model/journey';
+} from '@/widgets/prototype-journey/model/journey';
 
 interface EntryControlsProps {
   variant: EntryVariant;

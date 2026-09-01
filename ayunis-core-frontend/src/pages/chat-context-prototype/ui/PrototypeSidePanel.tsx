@@ -7,7 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
-import type { PanelKey } from '@/pages/chat-context-prototype/model/journey';
+import type { PanelKey } from '@/widgets/prototype-journey/model/journey';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextPanelBody } from './ContextPanelBody';
 import { ResultsPanelBody } from './ResultsPanelBody';
