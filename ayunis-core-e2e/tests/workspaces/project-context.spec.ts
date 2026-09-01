@@ -3,6 +3,7 @@ import { generatedApi } from "../../src/clients/api/generated-api";
 import {
   createProjectContextFixture,
   createProjectThread,
+  permitFirstEmbeddingModel,
 } from "../../src/factories/workspace-context.factory";
 
 function uniqueSuffix(): string {
@@ -50,9 +51,22 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
     .getByTestId(`workspace-add-dialog-item-${fixture.skill.id}`)
     .click();
   await page.getByTestId("workspace-add-dialog-confirm").click();
-  await expect(
-    page.getByTestId(`workspace-skill-${fixture.skill.id}`),
-  ).toBeVisible();
+  let copiedSkillId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceSkills =
+        await generatedApi.workspaceContextControllerListSkills(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      copiedSkillId = workspaceSkills.data.find(
+        ({ name }) => name === fixture.skill.name,
+      )?.id;
+      return copiedSkillId;
+    })
+    .toBeTruthy();
+  await expect(page.getByTestId(`workspace-skill-${copiedSkillId}`)).toBeVisible();
 
   await page.getByTestId("workspace-tab-knowledge").click();
   await expect(page.getByTestId("workspace-knowledge-search")).toHaveCount(0);
@@ -64,8 +78,23 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
     .getByTestId(`workspace-add-dialog-item-${fixture.knowledgeBase.id}`)
     .click();
   await page.getByTestId("workspace-add-dialog-confirm").click();
+  let copiedKnowledgeBaseId: string | undefined;
+  await expect
+    .poll(async () => {
+      const workspaceKnowledgeBases =
+        await generatedApi.workspaceContextControllerListKnowledgeBases(
+          fixture.workspace.id,
+          undefined,
+          { api },
+        );
+      copiedKnowledgeBaseId = workspaceKnowledgeBases.data.find(
+        ({ name }) => name === fixture.knowledgeBase.name,
+      )?.id;
+      return copiedKnowledgeBaseId;
+    })
+    .toBeTruthy();
   await expect(
-    page.getByTestId(`workspace-knowledge-base-${fixture.knowledgeBase.id}`),
+    page.getByTestId(`workspace-knowledge-base-${copiedKnowledgeBaseId}`),
   ).toBeVisible();
 
   await page.getByTestId("workspace-tab-instructions").click();
@@ -91,6 +120,64 @@ test("attaches skills, knowledge bases, and instructions to a project", async ({
       skillCount: 1,
       knowledgeBaseCount: 1,
     });
+});
+
+test("creates an independent workspace knowledge base copy with documents", async ({
+  api,
+}) => {
+  const suffix = uniqueSuffix();
+  const origin = await generatedApi.knowledgeBasesControllerCreate(
+    { name: `Persönliches Wissen ${suffix}` },
+    { api },
+  );
+  const documentName = `Eigenständige Kopie ${suffix}.txt`;
+  await permitFirstEmbeddingModel(api);
+  const upload = await api.post(
+    `/api/knowledge-bases/${origin.id}/documents`,
+    {
+      multipart: {
+        file: {
+          name: documentName,
+          mimeType: "text/plain",
+          buffer: Buffer.from("Dieser Inhalt muss unabhängig kopiert werden."),
+        },
+      },
+    },
+  );
+  expect(upload.ok()).toBe(true);
+  await expect
+    .poll(async () => {
+      const documents =
+        await generatedApi.knowledgeBasesControllerListDocuments(origin.id, {
+          api,
+        });
+      return documents.data[0]?.status;
+    })
+    .toBe("ready");
+  const workspace = await generatedApi.workspacesControllerCreate(
+    { name: `Wissenskopie ${uniqueSuffix()}`, icon: "library" },
+    { api },
+  );
+
+  const duplicate =
+    await generatedApi.workspaceContextControllerCopyPersonalKnowledgeBase(
+      workspace.id,
+      { knowledgeBaseId: origin.id },
+      { api },
+    );
+  await generatedApi.knowledgeBasesControllerDelete(origin.id, { api });
+  const workspaceKnowledgeBases =
+    await generatedApi.workspaceContextControllerListKnowledgeBases(
+      workspace.id,
+      undefined,
+      { api },
+    );
+
+  expect(duplicate.id).not.toBe(origin.id);
+  expect(
+    workspaceKnowledgeBases.data.find(({ id }) => id === duplicate.id)
+      ?.documentCount,
+  ).toBe(1);
 });
 
 test("resets project page state when switching projects", async ({

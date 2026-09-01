@@ -20,7 +20,13 @@ import { AddDocumentToWorkspaceUseCase } from './application/use-cases/add-docum
 import { RemoveDocumentFromWorkspaceUseCase } from './application/use-cases/remove-document-from-workspace/remove-document-from-workspace.use-case';
 import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/update-workspace-instruction/update-workspace-instruction.use-case';
 import { BuildWorkspaceRunContextUseCase } from './application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
+import { CreateWorkspaceSkillUseCase } from './application/use-cases/create-workspace-skill/create-workspace-skill.use-case';
+import { CopyPersonalSkillToWorkspaceUseCase } from './application/use-cases/copy-personal-skill-to-workspace/copy-personal-skill-to-workspace.use-case';
+import { DeleteWorkspaceSkillUseCase } from './application/use-cases/delete-workspace-skill/delete-workspace-skill.use-case';
 import { ListWorkspaceSkillsUseCase } from './application/use-cases/list-workspace-skills/list-workspace-skills.use-case';
+import { CreateWorkspaceKnowledgeBaseUseCase } from './application/use-cases/create-workspace-knowledge-base/create-workspace-knowledge-base.use-case';
+import { CopyPersonalKnowledgeBaseToWorkspaceUseCase } from './application/use-cases/copy-personal-knowledge-base-to-workspace/copy-personal-knowledge-base-to-workspace.use-case';
+import { DeleteWorkspaceKnowledgeBaseUseCase } from './application/use-cases/delete-workspace-knowledge-base/delete-workspace-knowledge-base.use-case';
 import { ListWorkspaceKnowledgeBasesUseCase } from './application/use-cases/list-workspace-knowledge-bases/list-workspace-knowledge-bases.use-case';
 import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-workspace-documents/list-workspace-documents.use-case';
 
@@ -48,6 +54,12 @@ import { ListWorkspaceDocumentsUseCase } from './application/use-cases/list-work
     RemoveDocumentFromWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
     BuildWorkspaceRunContextUseCase,
+    CreateWorkspaceSkillUseCase,
+    CopyPersonalSkillToWorkspaceUseCase,
+    DeleteWorkspaceSkillUseCase,
+    CreateWorkspaceKnowledgeBaseUseCase,
+    CopyPersonalKnowledgeBaseToWorkspaceUseCase,
+    DeleteWorkspaceKnowledgeBaseUseCase,
     ListWorkspaceSkillsUseCase,
     ListWorkspaceKnowledgeBasesUseCase,
     ListWorkspaceDocumentsUseCase,

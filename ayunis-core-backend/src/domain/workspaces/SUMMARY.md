@@ -90,20 +90,26 @@ workspaces/
 
 ## HTTP API
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| POST | `/workspaces` | Create a workspace |
-| GET | `/workspaces` | List by most recently updated |
-| GET | `/workspaces/:id` | Read one |
-| PATCH | `/workspaces/:id` | Update name / description / icon / colour |
-| DELETE | `/workspaces/:id` | Delete the workspace and its chats |
-| GET | `/workspaces/:id/context` | Read the full runtime context |
-| GET | `/workspaces/:id/context/skills` | List workspace-owned skills |
-| GET | `/workspaces/:id/context/knowledge-bases` | List workspace-owned knowledge bases |
-| GET | `/workspaces/:id/context/documents` | List workspace documents |
-| POST | `/workspaces/:id/context/documents` | Upload and attach a document |
-| DELETE | `/workspaces/:id/context/documents/:documentId` | Remove an attached document |
-| PATCH | `/workspaces/:id/context/instruction` | Update the workspace instruction |
+| Method | Route                                                      | Purpose                                                                  |
+| ------ | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
+| POST   | `/workspaces`                                              | Create a workspace                                                       |
+| GET    | `/workspaces`                                              | List by most recently updated                                            |
+| GET    | `/workspaces/:id`                                          | Read one                                                                 |
+| PATCH  | `/workspaces/:id`                                          | Update name / description / icon / colour                                |
+| DELETE | `/workspaces/:id`                                          | Delete the workspace and its chats                                       |
+| GET    | `/workspaces/:id/context`                                  | Read the full runtime context                                            |
+| POST   | `/workspaces/:id/context/skills`                           | Create a workspace-owned skill                                           |
+| GET    | `/workspaces/:id/context/skills`                           | List workspace-owned skills                                              |
+| POST   | `/workspaces/:id/context/skills/copies`                    | Independently copy a personal skill into the workspace                   |
+| DELETE | `/workspaces/:id/context/skills/:skillId`                  | Delete a workspace-owned skill                                           |
+| POST   | `/workspaces/:id/context/knowledge-bases`                  | Create a workspace-owned knowledge base                                  |
+| GET    | `/workspaces/:id/context/knowledge-bases`                  | List workspace-owned knowledge bases                                     |
+| POST   | `/workspaces/:id/context/knowledge-bases/copies`           | Deep-copy a personal knowledge base and its documents into the workspace |
+| DELETE | `/workspaces/:id/context/knowledge-bases/:knowledgeBaseId` | Delete a workspace-owned knowledge base                                  |
+| GET    | `/workspaces/:id/context/documents`                        | List workspace documents                                                 |
+| POST   | `/workspaces/:id/context/documents`                        | Upload and attach a document                                             |
+| DELETE | `/workspaces/:id/context/documents/:documentId`            | Remove an attached document                                              |
+| PATCH  | `/workspaces/:id/context/instruction`                      | Update the workspace instruction                                         |
 
 ## Cross-Module Boundaries
 

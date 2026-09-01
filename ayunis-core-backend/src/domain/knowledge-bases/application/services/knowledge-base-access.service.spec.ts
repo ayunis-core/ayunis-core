@@ -65,6 +65,7 @@ describe('KnowledgeBaseAccessService', () => {
             assignSourceToKnowledgeBase: jest.fn(),
             findSourcesByKnowledgeBaseId: jest.fn(),
             countSourcesByKnowledgeBaseIds: jest.fn(),
+            duplicateDocumentsIntoKnowledgeBase: jest.fn(),
             findSourceByIdAndKnowledgeBaseId: jest.fn(),
           },
         },

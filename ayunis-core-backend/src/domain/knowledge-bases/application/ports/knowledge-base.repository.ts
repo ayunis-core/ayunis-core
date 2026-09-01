@@ -33,6 +33,10 @@ export abstract class KnowledgeBaseRepository {
     sourceId: UUID,
     knowledgeBaseId: UUID,
   ): Promise<void>;
+  abstract duplicateDocumentsIntoKnowledgeBase(
+    originKnowledgeBaseId: UUID,
+    targetKnowledgeBaseId: UUID,
+  ): Promise<void>;
   abstract findSourcesByKnowledgeBaseId(
     knowledgeBaseId: UUID,
   ): Promise<Source[]>;

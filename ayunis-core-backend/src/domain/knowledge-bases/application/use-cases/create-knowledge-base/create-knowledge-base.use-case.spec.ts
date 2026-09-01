@@ -32,6 +32,7 @@ describe('CreateKnowledgeBaseUseCase', () => {
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      duplicateDocumentsIntoKnowledgeBase: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseIds: jest.fn(),
@@ -76,6 +77,26 @@ describe('CreateKnowledgeBaseUseCase', () => {
     expect(result.userId).toBe(userId);
     expect(mockRepository.save).toHaveBeenCalledTimes(1);
     expect(mockRepository.activate).toHaveBeenCalledWith(result.id, userId);
+  });
+
+  it('creates a workspace-owned knowledge base without personal activation', async () => {
+    const workspaceId = '33333333-3333-3333-3333-333333333333' as UUID;
+    const command = new CreateKnowledgeBaseCommand({
+      name: 'Project regulations',
+      description: 'Project-specific regulations.',
+      userId,
+      orgId,
+      workspaceId,
+    });
+    mockRepository.save.mockImplementation(
+      async (knowledgeBase) => knowledgeBase,
+    );
+
+    const result = await useCase.execute(command);
+
+    expect(result.userId).toBeNull();
+    expect(result.workspaceId).toBe(workspaceId);
+    expect(mockRepository.activate).not.toHaveBeenCalled();
   });
 
   it('should create a knowledge base with empty description when not provided', async () => {

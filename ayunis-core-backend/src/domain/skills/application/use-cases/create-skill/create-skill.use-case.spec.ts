@@ -5,11 +5,11 @@ import { Test } from '@nestjs/testing';
 
 import { CreateSkillUseCase } from './create-skill.use-case';
 import { CreateSkillCommand } from './create-skill.command';
-import { SkillRepository } from '../../ports/skill.repository';
+import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { Skill } from 'src/domain/skills/domain/skill.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { UUID } from 'crypto';
-import { DuplicateSkillNameError } from '../../skills.errors';
+import { DuplicateSkillNameError } from 'src/domain/skills/application/skills.errors';
 
 describe('CreateSkillUseCase', () => {
   let useCase: CreateSkillUseCase;
@@ -21,6 +21,7 @@ describe('CreateSkillUseCase', () => {
     const mockSkillRepository = {
       create: jest.fn(),
       findByNameAndOwner: jest.fn(),
+      findByNameAndWorkspace: jest.fn(),
       activateSkill: jest.fn(),
     };
 
@@ -102,6 +103,36 @@ describe('CreateSkillUseCase', () => {
       DuplicateSkillNameError,
     );
     expect(skillRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('creates an independently owned workspace skill', async () => {
+    const workspaceId = '223e4567-e89b-12d3-a456-426614174001' as UUID;
+    const originSkillId = '323e4567-e89b-12d3-a456-426614174002' as UUID;
+    const mcpIntegrationId = '423e4567-e89b-12d3-a456-426614174003' as UUID;
+    const command = new CreateSkillCommand({
+      name: 'Workspace legal research',
+      shortDescription: 'Researches workspace legal topics.',
+      instructions: 'Use the workspace legal sources.',
+      workspaceId,
+      originSkillId,
+      importedOriginVersion: 3,
+      mcpIntegrationIds: [mcpIntegrationId],
+    });
+    skillRepository.findByNameAndWorkspace.mockResolvedValue(null);
+    skillRepository.create.mockImplementation(async (skill) => skill);
+
+    const result = await useCase.execute(command);
+
+    expect(result).toMatchObject({
+      userId: null,
+      workspaceId,
+      originSkillId,
+      importedOriginVersion: 3,
+      mcpIntegrationIds: [mcpIntegrationId],
+      sourceIds: [],
+      knowledgeBaseIds: [],
+    });
+    expect(skillRepository.activateSkill).not.toHaveBeenCalled();
   });
 
   it('should activate the skill when isActive is true in command', async () => {

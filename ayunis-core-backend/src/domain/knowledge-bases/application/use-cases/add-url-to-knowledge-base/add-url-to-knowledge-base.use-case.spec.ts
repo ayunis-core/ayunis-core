@@ -61,6 +61,7 @@ describe('AddUrlToKnowledgeBaseUseCase', () => {
       delete: jest.fn(),
       assignSourceToKnowledgeBase: jest.fn(),
       findSourcesByKnowledgeBaseId: jest.fn(),
+      duplicateDocumentsIntoKnowledgeBase: jest.fn(),
       findSourceByIdAndKnowledgeBaseId: jest.fn(),
       countSourcesByKnowledgeBaseId: jest.fn().mockResolvedValue(0),
       countSourcesByKnowledgeBaseIds: jest.fn(),

@@ -3633,35 +3633,28 @@ export interface WorkspaceContextResponseDto {
   documents: WorkspaceDocumentResponseDto[];
 }
 
-export interface WorkspaceSkillCandidateResponseDto {
-  id: string;
+export interface CreateWorkspaceSkillDto {
   name: string;
   shortDescription: string;
-  isAttached: boolean;
+  instructions: string;
 }
 
-export interface WorkspaceSkillCandidateListResponseDto {
-  data: WorkspaceSkillCandidateResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface WorkspaceKnowledgeBaseCandidateResponseDto {
-  id: string;
-  name: string;
-  /** @nullable */
-  description: string | null;
-  documentCount: number;
-  isAttached: boolean;
-}
-
-export interface WorkspaceKnowledgeBaseCandidateListResponseDto {
-  data: WorkspaceKnowledgeBaseCandidateResponseDto[];
-  pagination: PaginationDto;
+export interface CopyPersonalSkillDto {
+  skillId: string;
 }
 
 export interface WorkspaceSkillListResponseDto {
   data: WorkspaceSkillResponseDto[];
   pagination: PaginationDto;
+}
+
+export interface CreateWorkspaceKnowledgeBaseDto {
+  name: string;
+  description: string;
+}
+
+export interface CopyPersonalKnowledgeBaseDto {
+  knowledgeBaseId: string;
 }
 
 export interface WorkspaceKnowledgeBaseListResponseDto {
@@ -5658,18 +5651,6 @@ export const WorkspacesControllerFindAllSort = {
   createdAt: 'createdAt',
   name: 'name',
 } as const;
-
-export type WorkspaceContextControllerListSkillCandidatesParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
-
-export type WorkspaceContextControllerListKnowledgeBaseCandidatesParams = {
-offset?: number;
-limit?: number;
-search?: string;
-};
 
 export type WorkspaceContextControllerListSkillsParams = {
 offset?: number;
