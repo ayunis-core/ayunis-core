@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useRouterState } from '@tanstack/react-router';
+
 import {
   ChevronDown,
   ChevronLeft,
@@ -14,9 +14,10 @@ import {
   type AvailabilityVariant,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
-import { useJourneyControls } from '@/widgets/prototype-journey/model/use-journey-controls';
-
-const PROTOTYPE_PATH = '/prototype/chat-context';
+import {
+  useJourneyNavigate,
+  useJourneySearch,
+} from '@/widgets/prototype-journey/model/journey-search';
 
 const AVAILABILITY_VARIANTS: {
   value: AvailabilityVariant;
@@ -36,25 +37,23 @@ const VARIANTS: { value: EntryVariant; label: string }[] = [
 export function JourneyCard() {
   const [isOpen, setIsOpen] = useState(true);
   const {
-    stepIndex,
-    variant,
-    availabilityVariant,
-    setStepIndex,
-    setVariant,
-    setAvailabilityVariant,
-  } = useJourneyControls();
-  const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+    step: stepIndex,
+    entry: variant,
+    avail: availabilityVariant,
+  } = useJourneySearch();
+  const go = useJourneyNavigate();
   const step = JOURNEY[stepIndex];
 
   function onStepChange(index: number) {
-    setStepIndex(index);
-    if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
+    go({ step: index });
   }
 
   function onVariantChange(next: EntryVariant) {
-    setVariant(next);
-    if (pathname !== PROTOTYPE_PATH) void navigate({ to: PROTOTYPE_PATH });
+    go({ entry: next });
+  }
+
+  function setAvailabilityVariant(next: AvailabilityVariant) {
+    go({ avail: next });
   }
 
   return (

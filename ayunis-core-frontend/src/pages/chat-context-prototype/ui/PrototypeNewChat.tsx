@@ -5,7 +5,7 @@ import { WorkspacePicker } from '@/pages/new-chat/ui/WorkspacePicker';
 import { useTimeBasedGreeting } from '@/pages/new-chat/model/useTimeBasedGreeting';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { useIsWorkspacesEnabled } from '@/features/feature-toggles';
-import { useJourneyControls } from '@/widgets/prototype-journey';
+import { useJourneySearch } from '@/widgets/prototype-journey';
 import { useAvailability } from '@/pages/chat-context-prototype/model/useAvailability';
 import { PrototypeChatInput } from '@/pages/chat-context-prototype/ui/PrototypeChatInput';
 import { AvailabilityDropdowns } from '@/pages/chat-context-prototype/ui/availability/AvailabilityDropdowns';
@@ -16,7 +16,7 @@ export function PrototypeNewChat() {
   const { t } = useTranslation('chat');
   const greeting = useTimeBasedGreeting();
   const isWorkspacesEnabled = useIsWorkspacesEnabled();
-  const { availabilityVariant } = useJourneyControls();
+  const { avail: availabilityVariant } = useJourneySearch();
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const availability = useAvailability(workspaceId);
   const skillCount = availability.skills.length + availability.projectSkills;

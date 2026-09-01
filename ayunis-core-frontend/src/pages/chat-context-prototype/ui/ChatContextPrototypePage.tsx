@@ -8,7 +8,7 @@ import {
   type PanelKey,
   type PrototypeState,
 } from '@/widgets/prototype-journey/model/journey';
-import { useJourneyControls } from '@/widgets/prototype-journey';
+import { useJourneySearch } from '@/widgets/prototype-journey';
 import { EntryControls } from './EntryControls';
 import { PrototypeChatInput } from './PrototypeChatInput';
 import { PrototypeChatLayout } from './PrototypeChatLayout';
@@ -18,7 +18,7 @@ import { SourceDialog } from './SourceDialog';
 import { PrototypeTranscript } from './PrototypeTranscript';
 
 export function ChatContextPrototypePage() {
-  const { stepIndex, variant } = useJourneyControls();
+  const { step: stepIndex, entry: variant } = useJourneySearch();
   const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
   const [state, setState] = useState<PrototypeState>(JOURNEY[0].state);
