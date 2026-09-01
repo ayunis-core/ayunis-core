@@ -11,14 +11,16 @@ import { SourceContentChunkRecord } from 'src/domain/sources/infrastructure/pers
 import type { TextSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
 import { FileSourceDetailsRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/text-source-details.record';
 import { TextSourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
-import { WorkspaceKnowledgeBaseAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-knowledge-base-assignment.record';
-import { WorkspaceSkillAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-skill-assignment.record';
 import { WorkspaceSourceAssignmentRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace-source-assignment.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
 import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
 import { log } from 'src/db/scripts/utils/seed-log';
 import { OrgSeeder } from './base-seeder';
+import {
+  buildSeedEmbedding,
+  hasDifferentEmbedding,
+} from './workspace-seed-embedding';
 import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
 import type {
   KnowledgeBaseFixture,
@@ -27,6 +29,12 @@ import type {
   SkillFixture,
   WorkspaceFixture,
 } from 'src/db/scripts/seed-minimal/seed-types';
+
+interface WorkspaceResourceFixtures {
+  skills: Map<string, SkillRecord>;
+  knowledgeBases: Map<string, KnowledgeBaseRecord>;
+  knowledgeBaseFixtures: Map<string, KnowledgeBaseFixture>;
+}
 
 /**
  * Seeds the org's workspaces ("Projekte"), owned by the org admin, plus demo
@@ -46,20 +54,21 @@ export class WorkspaceSeeder extends OrgSeeder {
     const orgId = ctx.getOrg(org.key).id;
     const adminId = ctx.getAdmin(org.key).id;
     const skills = await this.seedSkills(adminId, org.skills ?? []);
+    const knowledgeBaseFixtures = org.knowledgeBases ?? [];
     const knowledgeBases = await this.seedKnowledgeBases(
       orgId,
       adminId,
-      org.knowledgeBases ?? [],
+      knowledgeBaseFixtures,
     );
 
     for (const workspace of workspaces) {
-      await this.seedWorkspace(
-        orgId,
-        adminId,
-        workspace,
+      await this.seedWorkspace(orgId, adminId, workspace, {
         skills,
         knowledgeBases,
-      );
+        knowledgeBaseFixtures: new Map(
+          knowledgeBaseFixtures.map((fixture) => [fixture.name, fixture]),
+        ),
+      });
     }
   }
 
@@ -159,17 +168,17 @@ export class WorkspaceSeeder extends OrgSeeder {
     orgId: UUID,
     userId: UUID,
     workspace: WorkspaceFixture,
-    skills: Map<string, SkillRecord>,
-    knowledgeBases: Map<string, KnowledgeBaseRecord>,
+    resources: WorkspaceResourceFixtures,
   ): Promise<void> {
     const record = await this.findOrCreateWorkspace(orgId, userId, workspace);
     await this.syncWorkspaceInstruction(record, workspace.instruction ?? null);
     await this.seedWorkspaceFavorites(userId, record, workspace);
-    await this.seedWorkspaceSkillAssignments(record.id, workspace, skills);
-    await this.seedWorkspaceKnowledgeBaseAssignments(
+    await this.seedWorkspaceSkills(record.id, workspace, resources.skills);
+    await this.seedWorkspaceKnowledgeBases(
       record.id,
       workspace,
-      knowledgeBases,
+      resources.knowledgeBases,
+      resources.knowledgeBaseFixtures,
     );
     await this.seedWorkspaceDocuments(record.id, workspace.documents ?? []);
   }
@@ -235,43 +244,67 @@ export class WorkspaceSeeder extends OrgSeeder {
     );
   }
 
-  private async seedWorkspaceSkillAssignments(
+  private async seedWorkspaceSkills(
     workspaceId: UUID,
     workspace: WorkspaceFixture,
     skills: Map<string, SkillRecord>,
   ): Promise<void> {
     for (const name of workspace.skillNames ?? []) {
-      const skill = this.requireFixtureRecord(skills, name, 'skill');
+      const origin = this.requireFixtureRecord(skills, name, 'skill');
       await this.findOrCreate(
-        this.repo(WorkspaceSkillAssignmentRecord),
-        { workspaceId, skillId: skill.id },
-        () => ({ id: randomUUID(), workspaceId, skillId: skill.id }),
-        { entity: 'WorkspaceSkillAssignment', name },
+        this.repo(SkillRecord),
+        { workspaceId, name },
+        () => ({
+          id: randomUUID(),
+          userId: null,
+          workspaceId,
+          name: origin.name,
+          shortDescription: origin.shortDescription,
+          instructions: origin.instructions,
+          marketplaceIdentifier: null,
+          originSkillId: origin.id,
+          importedOriginVersion: origin.version,
+        }),
+        { entity: 'WorkspaceSkill', name },
       );
     }
   }
 
-  private async seedWorkspaceKnowledgeBaseAssignments(
+  private async seedWorkspaceKnowledgeBases(
     workspaceId: UUID,
     workspace: WorkspaceFixture,
     knowledgeBases: Map<string, KnowledgeBaseRecord>,
+    fixtures: Map<string, KnowledgeBaseFixture>,
   ): Promise<void> {
     for (const name of workspace.knowledgeBaseNames ?? []) {
-      const knowledgeBase = this.requireFixtureRecord(
+      const origin = this.requireFixtureRecord(
         knowledgeBases,
         name,
         'knowledge base',
       );
-      await this.findOrCreate(
-        this.repo(WorkspaceKnowledgeBaseAssignmentRecord),
-        { workspaceId, knowledgeBaseId: knowledgeBase.id },
+      const fixture = this.requireFixtureRecord(
+        fixtures,
+        name,
+        'knowledge base',
+      );
+      const copy = await this.findOrCreate(
+        this.repo(KnowledgeBaseRecord),
+        { workspaceId, name },
         () => ({
           id: randomUUID(),
+          orgId: origin.orgId,
+          userId: null,
           workspaceId,
-          knowledgeBaseId: knowledgeBase.id,
+          name: origin.name,
+          description: origin.description,
+          originKnowledgeBaseId: origin.id,
+          importedOriginVersion: origin.version,
         }),
-        { entity: 'WorkspaceKnowledgeBaseAssignment', name },
+        { entity: 'WorkspaceKnowledgeBase', name },
       );
+      for (const document of fixture.documents) {
+        await this.seedDocument(document, copy.id);
+      }
     }
   }
 
@@ -429,7 +462,7 @@ export class WorkspaceSeeder extends OrgSeeder {
       parent.content = content;
       await this.repo(ParentChunkRecord).save(parent);
     }
-    const embedding = this.buildSeedEmbedding(content);
+    const embedding = buildSeedEmbedding(content);
     const child = await this.findOrCreate(
       this.repo(ChildChunkRecord),
       { parentId: parent.id },
@@ -443,39 +476,10 @@ export class WorkspaceSeeder extends OrgSeeder {
       }),
       { entity: 'ChildChunk', name },
     );
-    if (this.hasDifferentEmbedding(child.embedding1024, embedding)) {
+    if (hasDifferentEmbedding(child.embedding1024, embedding)) {
       child.embedding1024 = embedding;
       await this.repo(ChildChunkRecord).save(child);
     }
-  }
-
-  private hasDifferentEmbedding(
-    current: number[] | null,
-    next: number[],
-  ): boolean {
-    const currentArray = this.parseEmbedding(current);
-    if (currentArray.length !== next.length) return true;
-    return currentArray.some((value, index) => value !== next[index]);
-  }
-
-  private parseEmbedding(current: number[] | null): number[] {
-    if (Array.isArray(current)) return current;
-    const serialized = current as unknown;
-    if (typeof serialized !== 'string') return [];
-    return serialized
-      .replace(/^\[/, '')
-      .replace(/\]$/, '')
-      .split(',')
-      .map((value) => Number(value.trim()));
-  }
-
-  private buildSeedEmbedding(content: string): number[] {
-    const values = Array.from({ length: 1024 }, (_, index) => {
-      const code = content.charCodeAt(index % content.length) || 1;
-      return (code % 97) / 97;
-    });
-    values[0] = 1;
-    return values;
   }
 
   private requireFixtureRecord<T>(
