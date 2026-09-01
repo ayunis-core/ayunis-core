@@ -131,7 +131,7 @@ export class LocalSkillRepository implements SkillRepository {
     const manager = this.getManager();
 
     const existing = await this.skillRepository.findOne({
-      where: { id: skill.id, userId: skill.userId },
+      where: { id: skill.id },
       relations: [...SKILL_RELATIONS],
     });
 

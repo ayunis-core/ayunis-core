@@ -1,4 +1,8 @@
-import { Skill, InvalidSkillNameError } from './skill.entity';
+import {
+  Skill,
+  InvalidSkillNameError,
+  InvalidSkillOwnershipError,
+} from './skill.entity';
 import type { UUID } from 'crypto';
 
 describe('Skill Entity', () => {
@@ -38,7 +42,6 @@ describe('Skill Entity', () => {
       name: 'Workspace procurement review',
       shortDescription: 'Reviews procurement documents.',
       instructions: 'Check the procurement requirements.',
-      userId: mockUserId,
       workspaceId,
       originSkillId,
       version: 4,
@@ -46,11 +49,27 @@ describe('Skill Entity', () => {
       dismissedOriginVersion: 5,
     });
 
+    expect(skill.userId).toBeNull();
     expect(skill.workspaceId).toBe(workspaceId);
     expect(skill.originSkillId).toBe(originSkillId);
     expect(skill.version).toBe(4);
     expect(skill.importedOriginVersion).toBe(3);
     expect(skill.dismissedOriginVersion).toBe(5);
+  });
+
+  it.each([
+    { userId: mockUserId, workspaceId },
+    { userId: null, workspaceId: null },
+  ])('rejects invalid ownership %o', (ownership) => {
+    expect(
+      () =>
+        new Skill({
+          name: 'Invalid ownership',
+          shortDescription: 'Invalid ownership.',
+          instructions: 'Nothing.',
+          ...ownership,
+        }),
+    ).toThrow(InvalidSkillOwnershipError);
   });
 
   it('should create a skill with explicit id when provided', () => {

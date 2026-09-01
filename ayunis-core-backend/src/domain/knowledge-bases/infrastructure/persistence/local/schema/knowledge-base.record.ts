@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   Entity,
   Index,
@@ -14,6 +15,10 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 
 @Entity('knowledge_bases')
+@Check(
+  'CHK_knowledge_bases_exactly_one_owner',
+  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+)
 export class KnowledgeBaseRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 255 })
   name: string;
@@ -29,13 +34,13 @@ export class KnowledgeBaseRecord extends BaseRecord {
   @JoinColumn({ name: 'orgId' })
   org: OrgRecord;
 
-  @Column()
+  @Column({ type: 'uuid', nullable: true })
   @Index()
-  userId: UUID;
+  userId: UUID | null;
 
-  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: UserRecord;
+  user: UserRecord | null;
 
   @Column({ type: 'uuid', nullable: true })
   @Index()

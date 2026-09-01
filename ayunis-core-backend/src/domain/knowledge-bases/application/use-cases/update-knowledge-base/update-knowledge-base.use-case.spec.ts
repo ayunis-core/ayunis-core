@@ -87,43 +87,6 @@ describe('UpdateKnowledgeBaseUseCase', () => {
     expect(result.userId).toBe(userId);
   });
 
-  it('preserves workspace ownership and advances its version', async () => {
-    const workspaceId = '55555555-5555-5555-5555-555555555555' as UUID;
-    const originKnowledgeBaseId =
-      '66666666-6666-6666-6666-666666666666' as UUID;
-    const existing = new KnowledgeBase({
-      id: knowledgeBaseId,
-      name: 'Procurement rules',
-      orgId,
-      userId,
-      workspaceId,
-      originKnowledgeBaseId,
-      version: 3,
-      importedOriginVersion: 2,
-      dismissedOriginVersion: 4,
-    });
-    mockRepository.findById.mockResolvedValue(existing);
-    mockRepository.save.mockImplementation(
-      async (knowledgeBase) => knowledgeBase,
-    );
-
-    const result = await useCase.execute(
-      new UpdateKnowledgeBaseCommand({
-        knowledgeBaseId,
-        userId,
-        description: 'Updated procurement rules.',
-      }),
-    );
-
-    expect(result).toMatchObject({
-      workspaceId,
-      originKnowledgeBaseId,
-      version: 4,
-      importedOriginVersion: 2,
-      dismissedOriginVersion: 4,
-    });
-  });
-
   it('should throw KnowledgeBaseNotFoundError when knowledge base does not exist', async () => {
     mockRepository.findById.mockResolvedValue(null);
 

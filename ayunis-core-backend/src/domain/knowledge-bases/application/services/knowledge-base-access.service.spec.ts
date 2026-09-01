@@ -227,6 +227,28 @@ describe('KnowledgeBaseAccessService', () => {
       );
     });
 
+    it('rejects workspace-owned knowledge bases from personal access', async () => {
+      const workspaceId = '650e8400-e29b-41d4-a716-446655440001' as UUID;
+      const workspaceKnowledgeBase = new KnowledgeBase({
+        id: kbId,
+        name: 'Workspace KB',
+        orgId,
+        userId: null,
+        workspaceId,
+      });
+      knowledgeBaseRepository.findById.mockResolvedValue(
+        workspaceKnowledgeBase,
+      );
+
+      await expect(service.findAccessibleKnowledgeBase(kbId)).rejects.toThrow(
+        KnowledgeBaseNotFoundError,
+      );
+      expect(findShareByEntityUseCase.execute).not.toHaveBeenCalled();
+      expect(
+        checkKnowledgeBaseSkillShareAccessUseCase.execute,
+      ).not.toHaveBeenCalled();
+    });
+
     it('should return KB linked to a skill shared with the user', async () => {
       const kbOfSkillOwner = makeKb(kbId, otherUserId);
       knowledgeBaseRepository.findById.mockResolvedValue(kbOfSkillOwner);
