@@ -39,15 +39,11 @@ export function PrototypeChatInput({
         })),
     [attached, processingIds],
   );
-  const knowledgeBases = attached
-    .filter((item) => item.kind === 'knowledgeBase')
-    .map((item) => ({ id: item.id, name: item.name, documentCount: 0 }));
-
   return (
     <ChatInput
       modelId={undefined}
       sources={sources}
-      knowledgeBases={knowledgeBases}
+      knowledgeBases={[]}
       mcpIntegrations={[]}
       isAnonymous={false}
       isEmbeddingModelEnabled

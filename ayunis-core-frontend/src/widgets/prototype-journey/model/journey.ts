@@ -364,10 +364,10 @@ export const JOURNEY: JourneyStep[] = [
   {
     id: 'presse-ergebnis',
     label: 'Ergebnis entsteht',
-    hint: 'Das Dokument erscheint im Verlauf und öffnet sich rechts im Editor — dort ist es direkt bearbeitbar.',
+    hint: 'Das Dokument öffnet sich rechts im Editor. Im Kontext steht jetzt auch die Wissensdatenbank, in der gesucht wurde.',
     state: {
       ...EMPTY,
-      contextIds: ['skill-pressemitteilung'],
+      contextIds: ['skill-pressemitteilung', 'kb-presse'],
       artifactIds: ['artifact-pressemitteilung'],
       transcriptIds: [
         'msg-presse-frage',

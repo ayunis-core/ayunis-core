@@ -75,6 +75,13 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     detail: 'Aufbau, Tonfall und Freigabehinweise für Pressetexte',
     origin: 'assistant',
   },
+  'kb-presse': {
+    id: 'kb-presse',
+    kind: 'knowledgeBase',
+    name: 'Pressearchiv der Stadt',
+    detail: '312 Dokumente',
+    origin: 'always',
+  },
   'skill-aktenzeichen': {
     id: 'skill-aktenzeichen',
     kind: 'skill',
@@ -144,7 +151,23 @@ export interface WebSourceHit {
 
 export type SourceHit = DocumentSourceHit | WebSourceHit;
 
+export const AVAILABLE_COUNTS = {
+  skills: 12,
+  knowledgeBases: 8,
+};
+
 export const SOURCE_HITS: Record<string, SourceHit> = {
+  'hit-presse-vorlage': {
+    id: 'hit-presse-vorlage',
+    kind: 'document',
+    title: 'Musterpressemitteilung.pdf',
+    location: 'Seite 1',
+    page: 1,
+    pageCount: 3,
+    heading: 'Aufbau einer Pressemitteilung',
+    passage:
+      'Die Kernbotschaft steht im ersten Absatz. Öffnungszeiten, Erreichbarkeit und Barrierefreiheit folgen, der Rückfragehinweis schließt den Text ab.',
+  },
   'hit-satzung': {
     id: 'hit-satzung',
     kind: 'document',
@@ -194,6 +217,7 @@ export const TRANSCRIPT: Record<string, TranscriptEntry> = {
     id: 'msg-presse-antwort',
     kind: 'assistant',
     text: 'Ich habe die Eckdaten aus der Vorlage übernommen und den Text nach dem üblichen Aufbau gegliedert: Kernbotschaft zuerst, dann Öffnungszeiten und Barrierefreiheit, am Ende der Rückfragehinweis.',
+    sourceIds: ['hit-presse-vorlage'],
   },
   'entry-presse-artefakt': {
     id: 'entry-presse-artefakt',

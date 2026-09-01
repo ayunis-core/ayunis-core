@@ -1,5 +1,10 @@
 import { Loader2 } from 'lucide-react';
-import { Empty, EmptyHeader, EmptyTitle } from '@ayunis/ui/components/empty';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -11,6 +16,7 @@ import {
 import { cn } from '@ayunis/ui/lib/cn';
 import { showInfo } from '@/shared/lib/toast';
 import {
+  AVAILABLE_COUNTS,
   CONTEXT_ITEMS,
   type ContextItem,
   type ContextKind,
@@ -36,9 +42,14 @@ export function ContextPanelBody({
   const items = contextIds.map((id) => CONTEXT_ITEMS[id]);
   if (items.length === 0) {
     return (
-      <Empty>
-        <EmptyHeader>
+      <Empty className="gap-2">
+        <EmptyHeader className="gap-2">
           <EmptyTitle>In diesem Chat wurde noch nichts geladen.</EmptyTitle>
+          <EmptyDescription>
+            Ayunis Core kann auf {AVAILABLE_COUNTS.skills} Fähigkeiten und{' '}
+            {AVAILABLE_COUNTS.knowledgeBases} Wissensdatenbanken zugreifen.
+            Verwaltet werden sie in den Reitern.
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
