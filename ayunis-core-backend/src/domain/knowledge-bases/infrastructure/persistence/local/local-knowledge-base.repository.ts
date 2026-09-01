@@ -204,32 +204,27 @@ export class LocalKnowledgeBaseRepository extends KnowledgeBaseRepository {
     sharedKnowledgeBaseIds: UUID[],
     options: KnowledgeBaseListOptions,
   ): SelectQueryBuilder<KnowledgeBaseRecord> {
-    const queryBuilder = this.knowledgeBaseRepository
-      .createQueryBuilder('knowledgeBase')
-      .where(
-        new Brackets((accessQuery) => {
-          accessQuery.where('knowledgeBase.userId = :userId', { userId });
-          if (sharedKnowledgeBaseIds.length > 0) {
-            accessQuery.orWhere(
-              'knowledgeBase.id IN (:...sharedKnowledgeBaseIds)',
-              { sharedKnowledgeBaseIds },
-            );
-          }
-        }),
-      );
+    const queryBuilder =
+      this.knowledgeBaseRepository.createQueryBuilder('knowledgeBase');
 
     if (workspaceId) {
-      queryBuilder.andWhere(
-        `EXISTS (
-          SELECT 1
-          FROM workspace_knowledge_base_assignments assignment
-          WHERE assignment."workspaceId" = :workspaceId
-            AND assignment."knowledgeBaseId" = "knowledgeBase"."id"
-        )`,
-        { workspaceId },
-      );
+      queryBuilder.where('knowledgeBase.workspaceId = :workspaceId', {
+        workspaceId,
+      });
     } else {
-      queryBuilder.andWhere('knowledgeBase.workspaceId IS NULL');
+      queryBuilder
+        .where(
+          new Brackets((accessQuery) => {
+            accessQuery.where('knowledgeBase.userId = :userId', { userId });
+            if (sharedKnowledgeBaseIds.length > 0) {
+              accessQuery.orWhere(
+                'knowledgeBase.id IN (:...sharedKnowledgeBaseIds)',
+                { sharedKnowledgeBaseIds },
+              );
+            }
+          }),
+        )
+        .andWhere('knowledgeBase.workspaceId IS NULL');
     }
 
     if (options.search) {

@@ -196,6 +196,10 @@ describe('LocalSkillRepository', () => {
     expect(result.total).toBe(7);
     expect(result.limit).toBe(2);
     expect(result.offset).toBe(4);
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'skill.workspaceId = :workspaceId',
+      { workspaceId },
+    );
     expect(queryBuilder.skip).toHaveBeenCalledWith(4);
     expect(queryBuilder.take).toHaveBeenCalledWith(2);
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);

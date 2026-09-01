@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkspaceRecord } from './schema/workspace.record';
-import { WorkspaceSkillAssignmentRecord } from './schema/workspace-skill-assignment.record';
-import { WorkspaceKnowledgeBaseAssignmentRecord } from './schema/workspace-knowledge-base-assignment.record';
+import { SkillRecord } from 'src/domain/skills/infrastructure/persistence/local/schema/skill.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { WorkspaceSourceAssignmentRecord } from './schema/workspace-source-assignment.record';
 import { LocalWorkspacesRepository } from './local-workspaces.repository';
 import { WorkspaceMapper } from './mappers/workspace.mapper';
@@ -11,8 +11,8 @@ import { WorkspaceMapper } from './mappers/workspace.mapper';
   imports: [
     TypeOrmModule.forFeature([
       WorkspaceRecord,
-      WorkspaceSkillAssignmentRecord,
-      WorkspaceKnowledgeBaseAssignmentRecord,
+      SkillRecord,
+      KnowledgeBaseRecord,
       WorkspaceSourceAssignmentRecord,
     ]),
   ],

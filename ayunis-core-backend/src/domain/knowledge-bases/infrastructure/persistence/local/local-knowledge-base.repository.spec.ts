@@ -85,10 +85,8 @@ describe('LocalKnowledgeBaseRepository', () => {
     expect(result.offset).toBe(4);
     expect(queryBuilder.skip).toHaveBeenCalledWith(4);
     expect(queryBuilder.take).toHaveBeenCalledWith(2);
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'assignment."knowledgeBaseId" = "knowledgeBase"."id"',
-      ),
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'knowledgeBase.workspaceId = :workspaceId',
       { workspaceId },
     );
     expect(queryBuilder.getManyAndCount).toHaveBeenCalledTimes(1);
