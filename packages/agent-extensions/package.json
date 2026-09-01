@@ -20,6 +20,16 @@
       "types": "./dist/mcp/index.d.ts",
       "import": "./dist/mcp/index.js",
       "require": "./dist/mcp/index.cjs"
+    },
+    "./skills": {
+      "types": "./dist/skills/index.d.ts",
+      "import": "./dist/skills/index.js",
+      "require": "./dist/skills/index.cjs"
+    },
+    "./skills/filesystem": {
+      "types": "./dist/skills/filesystem/index.d.ts",
+      "import": "./dist/skills/filesystem/index.js",
+      "require": "./dist/skills/filesystem/index.cjs"
     }
   },
   "files": [
@@ -36,7 +46,8 @@
     "deps:check": "madge --circular --extensions ts src"
   },
   "dependencies": {
-    "@modelcontextprotocol/client": "^2.0.0"
+    "@modelcontextprotocol/client": "^2.0.0",
+    "yaml": "^2.9.0"
   },
   "peerDependencies": {
     "@ayunis/agent-runtime": "workspace:*"

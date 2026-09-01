@@ -64,6 +64,7 @@ const clientFactory = (...clients: McpClient[]): McpClientFactory => {
 const executionContext = (signal?: AbortSignal): ToolExecutionContext => ({
   context: {} as ToolExecutionContext['context'],
   toolCallId: 'call-1',
+  toolNames: [],
   signal,
   emit: vi.fn(),
   runChild: vi.fn(),
