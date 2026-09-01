@@ -74,10 +74,9 @@ export function AvailabilityHint({
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <div className="flex flex-col gap-3 text-sm">
-          <AvailabilityNote title="Immer dabei">
-            Alle Fähigkeiten und Wissensdatenbanken stehen in jedem Chat bereit.
-            Ayunis Core aktiviert eine Fähigkeit, sobald Ihre Nachricht dazu
-            passt, und durchsucht Wissen bei Bedarf. Sie müssen nichts anhängen.
+          <AvailabilityNote title="Ayunis Core wählt selbst aus">
+            Fähigkeiten werden passend zu Ihrer Nachricht aktiviert, Wissen bei
+            Bedarf durchsucht.
           </AvailabilityNote>
           <Separator />
           <Section

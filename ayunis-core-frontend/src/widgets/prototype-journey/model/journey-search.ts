@@ -16,6 +16,7 @@ export interface JourneySearch {
 const ENTRY_VARIANTS: EntryVariant[] = ['single', 'menu', 'header'];
 const AVAILABILITY_VARIANTS: AvailabilityVariant[] = [
   'row',
+  'split',
   'dropdowns',
   'underInput',
 ];

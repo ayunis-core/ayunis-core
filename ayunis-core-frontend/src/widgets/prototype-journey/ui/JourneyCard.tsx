@@ -24,6 +24,7 @@ const AVAILABILITY_VARIANTS: {
   label: string;
 }[] = [
   { value: 'row', label: 'Zeile' },
+  { value: 'split', label: 'Zwei' },
   { value: 'dropdowns', label: 'Menüs' },
   { value: 'underInput', label: 'Unter Feld' },
 ];

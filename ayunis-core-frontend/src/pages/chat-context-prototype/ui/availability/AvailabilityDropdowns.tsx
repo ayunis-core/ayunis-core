@@ -21,6 +21,7 @@ import {
 
 interface EntryPopoverProps {
   label: string;
+  withChevron: boolean;
   eyebrow: string;
   hint: string;
   entries: AvailabilityEntry[];
@@ -31,6 +32,7 @@ interface EntryPopoverProps {
 
 function EntryPopover({
   label,
+  withChevron,
   eyebrow,
   hint,
   entries,
@@ -45,7 +47,7 @@ function EntryPopover({
         <Button variant="ghost" size="sm" className="text-muted-foreground">
           {icon === 'skill' ? <Sparkles /> : <Database />}
           {label}
-          <ChevronDown />
+          {withChevron && <ChevronDown />}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -110,13 +112,16 @@ export function AvailabilityEntryList({
 export function AvailabilityDropdowns({
   skills,
   knowledgeBases,
+  withChevron = true,
 }: Readonly<{
   skills: AvailabilityEntry[];
   knowledgeBases: AvailabilityEntry[];
+  withChevron?: boolean;
 }>) {
   return (
     <div className="flex items-center gap-1">
       <EntryPopover
+        withChevron={withChevron}
         icon="skill"
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
         eyebrow="Wird automatisch aktiviert"
@@ -126,6 +131,7 @@ export function AvailabilityDropdowns({
         manageLabel="Fähigkeiten verwalten"
       />
       <EntryPopover
+        withChevron={withChevron}
         icon="knowledge"
         label={plural(
           knowledgeBases.length,

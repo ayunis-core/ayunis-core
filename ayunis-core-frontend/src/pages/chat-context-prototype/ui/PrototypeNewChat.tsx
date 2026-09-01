@@ -27,11 +27,15 @@ export function PrototypeNewChat() {
     if (availabilityVariant === 'row') {
       return <AvailabilityHint workspaceId={workspaceId} />;
     }
-    if (availabilityVariant === 'dropdowns') {
+    if (
+      availabilityVariant === 'dropdowns' ||
+      availabilityVariant === 'split'
+    ) {
       return (
         <AvailabilityDropdowns
           skills={availability.skills}
           knowledgeBases={availability.knowledgeBases}
+          withChevron={availabilityVariant === 'dropdowns'}
         />
       );
     }

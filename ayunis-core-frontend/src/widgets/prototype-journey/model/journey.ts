@@ -2,8 +2,7 @@ export type PanelKey = 'context' | 'results';
 
 export type EntryVariant = 'single' | 'menu' | 'header';
 
-export type AvailabilityVariant =
-  'row' | 'dropdowns' | 'banner' | 'above' | 'cabinets' | 'underInput';
+export type AvailabilityVariant = 'row' | 'split' | 'dropdowns' | 'underInput';
 
 export interface PrototypeState {
   view: 'new' | 'chat';
