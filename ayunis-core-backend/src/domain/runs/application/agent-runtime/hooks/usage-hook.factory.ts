@@ -1,15 +1,14 @@
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { InferenceUsageGuard } from '../../services/inference-usage-guard.service';
-import { assistantMessageId } from '../message-id';
+import { assistantMessageId } from 'src/domain/runs/application/agent-runtime/message-id';
+import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
 
 /**
  * Builds the usage-metering hook: after each model call it records billed
  * tokens against the org's fair-use + credit budgets. Cached prompt tokens are
- * folded into billed input exactly as the legacy streaming path does — the
- * provider's `inputTokens` excludes cache-covered tokens, so without this the
- * billed input collapses to the uncached remainder.
+ * folded into billed input because the provider's `inputTokens` excludes
+ * cache-covered tokens.
  */
 @Injectable()
 export class UsageHookFactory {

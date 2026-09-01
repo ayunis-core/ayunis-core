@@ -1,7 +1,7 @@
 Metrics Module
 Exposes Prometheus metrics at `/metrics` with optional basic auth protection.
 
-This module provides application-level Prometheus metrics for monitoring LLM usage, inference performance, message throughput, user activity, and agent-runtime rollout parity. Metrics are recorded by `PrometheusMetricsListener`, which subscribes to domain events emitted by use cases — no domain or IAM code imports from this module directly. Rollout metrics expose `execution_path` with only `legacy` and `agent_runtime`: `ayunis_runs_total`, `ayunis_run_duration_seconds`, inference duration/errors, `ayunis_run_tool_calls_total`, and `ayunis_run_usage_collections_total`. The rollout counters intentionally contain no user, organization, thread, run, or model-ID labels.
+This module provides application-level Prometheus metrics for monitoring LLM usage, inference performance, message throughput, user activity, and agent-runtime health. Metrics are recorded by `PrometheusMetricsListener`, which subscribes to domain events emitted by use cases — no domain or IAM code imports from this module directly. Run metrics retain the bounded `execution_path` label for monitoring continuity: all new runs emit `agent_runtime`, while the `legacy` value remains available for rollout-era series. The affected metrics are `ayunis_runs_total`, `ayunis_run_duration_seconds`, inference duration/errors, `ayunis_run_tool_calls_total`, and `ayunis_run_usage_collections_total`; they contain no user, organization, thread, run, or model-ID labels.
 
 **Key files:**
 

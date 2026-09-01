@@ -1,4 +1,8 @@
-import type { ModelProvider, ProviderChunk } from '@ayunis/inference';
+import type {
+  ModelProvider,
+  ProviderChunk,
+  ProviderRequest,
+} from '@ayunis/inference';
 import {
   StreamInferenceHandler,
   StreamInferenceInput,
@@ -82,18 +86,20 @@ export class MockStreamInferenceHandler extends StreamInferenceHandler {
    * `answer()` so runtime-backed specs stay fast, offline, and key-free.
    */
   resolveProvider(model: Model): ModelProvider {
-    const responseText = `${model.provider}::${model.name}`;
+    const defaultResponseText = `${model.provider}::${model.name}`;
+    let malformedAttemptEmitted = false;
     return {
-      name: responseText,
-      stream: async function* (): AsyncIterable<ProviderChunk> {
-        const deltas = splitIntoDeltas(responseText);
-        for (const [index, textDelta] of deltas.entries()) {
-          await new Promise((r) => setTimeout(r, MOCK_CHUNK_DELAY_MS));
-          yield {
-            textDelta,
-            finishReason: index === deltas.length - 1 ? 'stop' : undefined,
-          };
+      name: defaultResponseText,
+      stream: (request) => {
+        const lastUserText = lastProviderUserText(request);
+        if (lastUserText !== MALFORMED_TOOL_CALL_RETRY_PROMPT) {
+          return providerTextResponse(defaultResponseText);
         }
+        if (!malformedAttemptEmitted) {
+          malformedAttemptEmitted = true;
+          return malformedProviderToolCallResponse();
+        }
+        return providerTextResponse(`recovered::${defaultResponseText}`);
       },
     };
   }
@@ -110,6 +116,45 @@ function firstTextContent(
   return firstContent?.type === MessageContentType.TEXT
     ? (firstContent as TextMessageContent).text
     : '';
+}
+
+function lastProviderUserText(request: ProviderRequest): string {
+  const lastUserMessage = request.messages.findLast(
+    (message) => message.role === 'user',
+  );
+  const text = lastUserMessage?.content.find(
+    (content) => content.type === 'text',
+  );
+  return text?.type === 'text' ? text.text : '';
+}
+
+async function* providerTextResponse(
+  responseText: string,
+): AsyncIterable<ProviderChunk> {
+  const deltas = splitIntoDeltas(responseText);
+  for (const [index, textDelta] of deltas.entries()) {
+    await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+    yield {
+      textDelta,
+      finishReason: index === deltas.length - 1 ? 'stop' : undefined,
+    };
+  }
+}
+
+async function* malformedProviderToolCallResponse(): AsyncIterable<ProviderChunk> {
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield {
+    toolCallDeltas: [
+      {
+        index: 0,
+        id: 'mock-malformed-call',
+        name: 'create_document',
+        argumentsDelta: '{"title":"Unvollständiger Bericht"',
+      },
+    ],
+  };
+  await new Promise((resolve) => setTimeout(resolve, MOCK_CHUNK_DELAY_MS));
+  yield { finishReason: 'stop' };
 }
 
 function textResponse(

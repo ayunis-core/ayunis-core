@@ -5,7 +5,7 @@ export enum FeatureFlag {
   Letterheads = 'letterheadsEnabled',
   Skills = 'skillsEnabled',
   Workspaces = 'workspacesEnabled',
-  AgentRuntime = 'agentRuntimeEnabled',
+  SsoLogin = 'ssoLoginEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -39,11 +39,8 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => ({
     process.env.FEATURE_WORKSPACES_ENABLED,
     false,
   ),
-  // Routes runs through the extracted @ayunis/agent-runtime loop instead of the
-  // legacy in-module loop. Off by default while the runtime path reaches parity
-  // (AYC-148).
-  agentRuntimeEnabled: parseBooleanWithDefault(
-    process.env.FEATURE_AGENT_RUNTIME_ENABLED,
+  ssoLoginEnabled: parseBooleanWithDefault(
+    process.env.FEATURE_SSO_LOGIN_ENABLED,
     false,
   ),
 }));

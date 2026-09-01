@@ -9,6 +9,6 @@ export function useFeatureToggles(): FeatureTogglesResponseDto {
     letterheadsEnabled: data?.letterheadsEnabled ?? false,
     skillsEnabled: data?.skillsEnabled ?? false,
     workspacesEnabled: data?.workspacesEnabled ?? false,
-    agentRuntimeEnabled: data?.agentRuntimeEnabled ?? false,
+    ssoLoginEnabled: data?.ssoLoginEnabled ?? false,
   };
 }

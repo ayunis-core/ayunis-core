@@ -26,8 +26,8 @@ export class FeatureTogglesResponseDto {
   workspacesEnabled: boolean;
 
   @ApiProperty({
-    description: 'Whether runs use the independent agent runtime',
+    description: 'Whether employee-facing SSO login is enabled',
     example: false,
   })
-  agentRuntimeEnabled: boolean;
+  ssoLoginEnabled: boolean;
 }
