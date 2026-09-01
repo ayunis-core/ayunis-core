@@ -14,6 +14,11 @@ import {
   PopoverTrigger,
 } from '@ayunis/ui/components/popover';
 import { Separator } from '@ayunis/ui/components/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
 import { showInfo } from '@/shared/lib/toast';
 import {
   plural,
@@ -24,6 +29,7 @@ interface EntryPopoverProps {
   label: string;
   withChevron: boolean;
   compact: boolean;
+  tooltip: string;
   eyebrow: string;
   hint: string;
   entries: AvailabilityEntry[];
@@ -36,6 +42,7 @@ function EntryPopover({
   label,
   withChevron,
   compact,
+  tooltip,
   eyebrow,
   hint,
   entries,
@@ -44,22 +51,32 @@ function EntryPopover({
   icon,
 }: Readonly<EntryPopoverProps>) {
   if (entries.length === 0) return null;
+  const trigger = (
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(
+        'text-muted-foreground',
+        compact && 'h-7 gap-1.5 px-2 text-xs [&_svg]:size-3.5',
+      )}
+    >
+      {icon === 'skill' ? <Sparkles /> : <Database />}
+      {label}
+      {withChevron && <ChevronDown />}
+    </Button>
+  );
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            'text-muted-foreground',
-            compact && 'h-7 gap-1.5 px-2 text-xs [&_svg]:size-3.5',
-          )}
-        >
-          {icon === 'skill' ? <Sparkles /> : <Database />}
-          {label}
-          {withChevron && <ChevronDown />}
-        </Button>
-      </PopoverTrigger>
+      {compact ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64">{tooltip}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      )}
       <PopoverContent
         align="start"
         className="w-80"
@@ -135,6 +152,7 @@ export function AvailabilityDropdowns({
         withChevron={withChevron}
         compact={compact}
         icon="skill"
+        tooltip="Werden automatisch aktiviert, wenn Ihre Nachricht dazu passt."
         label={plural(skills.length, 'Fähigkeit', 'Fähigkeiten')}
         eyebrow="Wird automatisch aktiviert"
         hint="Sobald Ihre Nachricht dazu passt — ohne Auswahl."
@@ -146,6 +164,7 @@ export function AvailabilityDropdowns({
         withChevron={withChevron}
         compact={compact}
         icon="knowledge"
+        tooltip="Werden bei Bedarf im Hintergrund durchsucht."
         label={plural(
           knowledgeBases.length,
           'Wissensdatenbank',
