@@ -4,7 +4,7 @@ import { Skill } from 'src/domain/skills/domain/skill.entity';
 import {
   SkillResponseDto,
   SkillSourceResponseDto,
-} from '../dto/skill-response.dto';
+} from 'src/domain/skills/presenters/http/dto/skill-response.dto';
 import { Source } from 'src/domain/sources/domain/source.entity';
 import { SkillUserContext } from 'src/domain/skills/application/services/skill-access.service';
 
@@ -24,7 +24,7 @@ export class SkillDtoMapper {
       isActive: context.isActive,
       isShared: context.isShared,
       isPinned: context.isPinned,
-      userId: skill.userId,
+      userId: skill.personalOwnerId,
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
       creatorName: context.isShared ? (creatorName ?? null) : null,
@@ -47,7 +47,7 @@ export class SkillDtoMapper {
           isShared,
           isPinned: pinnedSkillIds.has(skill.id),
         },
-        isShared ? creatorNamesByUserId.get(skill.userId) : null,
+        isShared ? creatorNamesByUserId.get(skill.personalOwnerId) : null,
       );
     });
   }

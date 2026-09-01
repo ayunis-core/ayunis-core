@@ -30,7 +30,6 @@ const SKILL_RELATIONS = [
 
 @Injectable()
 export class LocalSkillRepository implements SkillRepository {
-  // eslint-disable-next-line max-params -- NestJS injects the repository's collaborators.
   constructor(
     @InjectPinoLogger(LocalSkillRepository.name)
     private readonly logger: PinoLogger,
@@ -132,7 +131,7 @@ export class LocalSkillRepository implements SkillRepository {
     const manager = this.getManager();
 
     const existing = await this.skillRepository.findOne({
-      where: { id: skill.id, userId: skill.userId },
+      where: { id: skill.id },
       relations: [...SKILL_RELATIONS],
     });
 

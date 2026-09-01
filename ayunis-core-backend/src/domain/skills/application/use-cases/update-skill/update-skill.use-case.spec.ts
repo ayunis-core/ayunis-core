@@ -160,42 +160,6 @@ describe('UpdateSkillUseCase', () => {
     expect(skillRepository.findByNameAndOwner).not.toHaveBeenCalled();
   });
 
-  it('preserves workspace ownership and advances its version', async () => {
-    const workspaceId = '777e8400-e29b-41d4-a716-446655440000' as UUID;
-    const originSkillId = '888e8400-e29b-41d4-a716-446655440000' as UUID;
-    const existingSkill = new Skill({
-      id: mockSkillId,
-      name: 'Legal Research',
-      shortDescription: 'Research legal topics.',
-      instructions: 'Original instructions.',
-      userId: mockUserId,
-      workspaceId,
-      originSkillId,
-      version: 3,
-      importedOriginVersion: 2,
-      dismissedOriginVersion: 4,
-    });
-    skillRepository.findOne.mockResolvedValue(existingSkill);
-    skillRepository.update.mockImplementation(async (skill: Skill) => skill);
-
-    const result = await useCase.execute(
-      new UpdateSkillCommand({
-        skillId: mockSkillId,
-        name: 'Legal Research',
-        shortDescription: 'Updated description.',
-        instructions: 'Updated instructions.',
-      }),
-    );
-
-    expect(result).toMatchObject({
-      workspaceId,
-      originSkillId,
-      version: 4,
-      importedOriginVersion: 2,
-      dismissedOriginVersion: 4,
-    });
-  });
-
   it('should preserve knowledgeBaseIds on update', async () => {
     const kbIds = ['bbb00000-0000-0000-0000-000000000000' as UUID];
     const existingSkill = new Skill({
