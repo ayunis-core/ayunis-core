@@ -51,6 +51,7 @@ When an access path or tool fails, report the blocker immediately. Do not keep s
 ### 4. Respect Boundaries
 
 - Read the target module's SUMMARY.md before making changes
+- Before adding a backend file, inspect the target layer's existing directories and two closest analogues. Place validation, orchestration, policy, domain invariants, and persistence in their established layer-specific locations; controllers only map validated HTTP input and orchestrate use cases.
 - Respect module boundaries — the `ayunis-core-backend` skill documents how cross-module work is done (application-layer code uses exported use cases from the target module, not ports/adapters; TypeORM schema records may reference records in other modules to declare foreign-key relations — see the `typeorm-migrations` skill)
 - Never edit generated code (e.g., the frontend API client)
 
