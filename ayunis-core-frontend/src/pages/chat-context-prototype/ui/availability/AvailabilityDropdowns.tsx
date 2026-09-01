@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, Database, ExternalLink, Sparkles } from 'lucide-react';
+import { ChevronDown, Database, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Popover,
@@ -40,7 +40,11 @@ function EntryPopover({
           <ChevronDown />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
+      <PopoverContent
+        align="start"
+        className="w-80"
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
         <div className="flex flex-col gap-3">
           <p className="text-xs text-muted-foreground">{hint}</p>
           <Separator />
@@ -48,7 +52,7 @@ function EntryPopover({
           <Separator />
           <Link
             to={manageTo}
-            className="text-xs underline underline-offset-4 text-muted-foreground"
+            className="text-xs text-muted-foreground underline underline-offset-4"
           >
             {manageLabel}
           </Link>
@@ -68,17 +72,14 @@ export function AvailabilityEntryList({
           <button
             type="button"
             onClick={() => showInfo(`Detailseite von „${entry.name}“`)}
-            className="group -mx-2 flex w-[calc(100%+1rem)] items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
+            className="-mx-2 flex w-[calc(100%+1rem)] items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
           >
-            <span className="min-w-0 flex-1 truncate text-sm">
-              {entry.name}
-            </span>
-            <ExternalLink className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            <span className="min-w-0 flex-1 truncate">{entry.name}</span>
           </button>
         </li>
       ))}
       {entries.length > 5 && (
-        <li className="px-0 py-1.5 text-xs text-muted-foreground">
+        <li className="px-0 pt-1.5 text-xs text-muted-foreground">
           und {entries.length - 5} weitere
         </li>
       )}
