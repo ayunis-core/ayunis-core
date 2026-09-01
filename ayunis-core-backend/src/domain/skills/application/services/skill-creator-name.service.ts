@@ -12,19 +12,21 @@ export class SkillCreatorNameService {
     private readonly findUsersByIdsUseCase: FindUsersByIdsUseCase,
   ) {}
 
-  async resolveOne(userId: UUID): Promise<string | null> {
+  async resolveOne(userId: UUID | null): Promise<string | null> {
+    if (userId === null) return null;
     const byId = await this.resolveMany([userId]);
     return byId.get(userId) ?? null;
   }
 
-  async resolveMany(userIds: UUID[]): Promise<Map<UUID, string>> {
+  async resolveMany(userIds: Array<UUID | null>): Promise<Map<UUID, string>> {
     const result = new Map<UUID, string>();
+    const definedUserIds = userIds.filter((id): id is UUID => id !== null);
 
-    if (userIds.length === 0) {
+    if (definedUserIds.length === 0) {
       return result;
     }
 
-    const uniqueIds = Array.from(new Set(userIds));
+    const uniqueIds = Array.from(new Set(definedUserIds));
     this.logger.info({ idCount: uniqueIds.length }, 'resolveMany');
 
     const users = await this.findUsersByIdsUseCase.execute(

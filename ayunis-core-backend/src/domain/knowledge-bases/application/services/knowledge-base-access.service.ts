@@ -224,7 +224,10 @@ export class KnowledgeBaseAccessService {
 
     const isAccessibleViaSkill =
       await this.checkKnowledgeBaseSkillShareAccessUseCase.execute(
-        new CheckKnowledgeBaseSkillShareAccessQuery(id, knowledgeBase.userId),
+        new CheckKnowledgeBaseSkillShareAccessQuery(
+          id,
+          knowledgeBase.personalOwnerId,
+        ),
       );
     if (isAccessibleViaSkill) {
       return knowledgeBase;

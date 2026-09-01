@@ -9,6 +9,13 @@ import { randomUUID } from 'crypto';
 const CONSECUTIVE_SPACES = / {2}/;
 const CONTROL_CHARS = /\p{Cc}/u;
 
+export class InvalidSkillOwnershipError extends Error {
+  constructor() {
+    super('A skill must belong to exactly one user or workspace.');
+    this.name = 'InvalidSkillOwnershipError';
+  }
+}
+
 export class InvalidSkillNameError extends Error {
   constructor(name: string) {
     super(
@@ -40,7 +47,7 @@ export class Skill {
   public readonly mcpIntegrationIds: UUID[];
   public readonly knowledgeBaseIds: UUID[];
   public readonly marketplaceIdentifier: string | null;
-  public readonly userId: UUID;
+  public readonly userId: UUID | null;
   public readonly workspaceId: UUID | null;
   public readonly originSkillId: UUID | null;
   public readonly version: number;
@@ -58,7 +65,7 @@ export class Skill {
     mcpIntegrationIds?: UUID[];
     knowledgeBaseIds?: UUID[];
     marketplaceIdentifier?: string | null;
-    userId: UUID;
+    userId?: UUID | null;
     workspaceId?: UUID | null;
     originSkillId?: UUID | null;
     version?: number;
@@ -76,13 +83,21 @@ export class Skill {
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.knowledgeBaseIds = params.knowledgeBaseIds ?? [];
     this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
-    this.userId = params.userId;
+    this.userId = params.userId ?? null;
     this.workspaceId = params.workspaceId ?? null;
+    if ((this.userId === null) === (this.workspaceId === null)) {
+      throw new InvalidSkillOwnershipError();
+    }
     this.originSkillId = params.originSkillId ?? null;
     this.version = params.version ?? 1;
     this.importedOriginVersion = params.importedOriginVersion ?? null;
     this.dismissedOriginVersion = params.dismissedOriginVersion ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+  }
+
+  get personalOwnerId(): UUID {
+    if (this.userId === null) throw new InvalidSkillOwnershipError();
+    return this.userId;
   }
 }

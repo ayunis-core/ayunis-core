@@ -12,7 +12,6 @@ describe(KnowledgeBaseMapper.name, () => {
       name: 'Workspace procurement rules',
       description: 'Rules used by the procurement project.',
       orgId: randomUUID(),
-      userId: randomUUID(),
       workspaceId,
       originKnowledgeBaseId,
       version: 4,
@@ -23,6 +22,7 @@ describe(KnowledgeBaseMapper.name, () => {
     const record = mapper.toRecord(knowledgeBase);
 
     expect(mapper.toDomain(record)).toMatchObject({
+      userId: null,
       workspaceId,
       originKnowledgeBaseId,
       version: 4,

@@ -89,6 +89,7 @@ export class KnowledgeBaseShareDeletedListener {
     knowledgeBaseId: UUID,
   ): Promise<void> {
     for (const skill of affectedSkills) {
+      if (skill.userId === null) continue;
       const skillShares = await this.sharesRepository.findByEntityIdAndType(
         skill.id,
         SharedEntityType.SKILL,

@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   Entity,
   ManyToOne,
@@ -16,6 +17,10 @@ import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/p
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 
 @Entity({ name: 'skills' })
+@Check(
+  'CHK_skills_exactly_one_owner',
+  '("userId" IS NOT NULL AND "workspaceId" IS NULL) OR ("userId" IS NULL AND "workspaceId" IS NOT NULL)',
+)
 @Index(['name', 'userId'], { unique: true, where: '"workspaceId" IS NULL' })
 @Index(['name', 'workspaceId'], {
   unique: true,
@@ -34,11 +39,11 @@ export class SkillRecord extends BaseRecord {
   @Column({ nullable: true, type: 'varchar', length: 255 })
   marketplaceIdentifier: string | null;
 
-  @Column({ nullable: false })
-  userId: UUID;
+  @Column({ type: 'uuid', nullable: true })
+  userId: UUID | null;
 
-  @ManyToOne(() => UserRecord, { nullable: false, onDelete: 'CASCADE' })
-  user: UserRecord;
+  @ManyToOne(() => UserRecord, { nullable: true, onDelete: 'CASCADE' })
+  user: UserRecord | null;
 
   @Index()
   @Column({ type: 'uuid', nullable: true })

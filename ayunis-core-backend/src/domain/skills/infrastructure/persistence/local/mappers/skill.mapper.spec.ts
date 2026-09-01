@@ -13,7 +13,6 @@ describe(SkillMapper.name, () => {
       name: 'Workspace procurement review',
       shortDescription: 'Reviews procurement documents.',
       instructions: 'Check the procurement requirements.',
-      userId: randomUUID(),
       workspaceId,
       originSkillId,
       version: 4,
@@ -29,6 +28,7 @@ describe(SkillMapper.name, () => {
     record.knowledgeBases = [];
 
     expect(mapper.toDomain(record)).toMatchObject({
+      userId: null,
       workspaceId,
       originSkillId,
       version: 4,
