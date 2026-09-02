@@ -1,4 +1,4 @@
-import { Library } from 'lucide-react';
+import { PanelRight } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Tooltip,
@@ -31,7 +31,7 @@ export function EntryControls({
           className={cn('relative transition-all', highlight && 'text-brand')}
           onClick={() => onOpen('results')}
         >
-          <Library />
+          <PanelRight />
           {resultCount > 0 && (
             <span className="absolute right-1 top-1 size-1.5 rounded-full bg-brand" />
           )}
