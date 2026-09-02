@@ -285,7 +285,7 @@ function ContextBrowser({
 
   return (
     <div className="flex h-full min-h-0 gap-3 px-3 pb-3">
-      <ScrollArea className="h-full w-72 shrink-0">
+      <ScrollArea className="h-full w-72 shrink-0 [&>[data-slot=scroll-area-viewport]>div]:!block">
         <div className="w-full min-w-0 pb-6 pr-3 pt-2">{list}</div>
       </ScrollArea>
       <div
@@ -297,7 +297,7 @@ function ContextBrowser({
         )}
       >
         <ScrollArea className="h-full">
-          <div className={cn(panelFrame === 'divider' ? 'py-2 pl-4' : 'p-4')}>
+          <div className={cn(panelFrame === 'divider' ? 'py-2 pl-5' : 'p-5')}>
             {openDocumentId && (
               <DocumentPreviewPane
                 documentId={openDocumentId}
