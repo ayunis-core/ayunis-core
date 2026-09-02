@@ -8,7 +8,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
+import { ALL_SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
 
 interface SourceGroup {
   key: string;
@@ -21,7 +21,7 @@ interface SourceGroup {
 function groupHits(sourceIds: string[]): SourceGroup[] {
   const groups = new Map<string, SourceGroup & { count: number }>();
   for (const id of sourceIds) {
-    const hit = SOURCE_HITS[id];
+    const hit = ALL_SOURCE_HITS[id];
     const key = hit.kind === 'web' ? hit.siteName : hit.title;
     const existing = groups.get(key);
     if (existing) {

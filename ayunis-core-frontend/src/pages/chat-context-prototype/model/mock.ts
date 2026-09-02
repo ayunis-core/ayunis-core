@@ -1,3 +1,15 @@
+import {
+  RESEARCH_HITS,
+  RESEARCH_HIT_IDS,
+} from '@/pages/chat-context-prototype/model/research-hits';
+import type {
+  DocumentSourceHit,
+  SourceHit,
+  WebSourceHit,
+} from '@/pages/chat-context-prototype/model/source-hit';
+
+export type { DocumentSourceHit, SourceHit, WebSourceHit };
+
 export type ContextOrigin = 'always' | 'user' | 'assistant' | 'project';
 
 export type ContextKind = 'skill' | 'knowledgeBase' | 'file' | 'integration';
@@ -148,29 +160,6 @@ export const ARTIFACTS: Record<string, ArtifactItem> = {
   },
 };
 
-export interface DocumentSourceHit {
-  id: string;
-  kind: 'document';
-  title: string;
-  location: string;
-  page: number;
-  pageCount: number;
-  heading: string;
-  passage: string;
-}
-
-export interface WebSourceHit {
-  id: string;
-  kind: 'web';
-  title: string;
-  siteName: string;
-  url: string;
-  retrievedAt: string;
-  passage: string;
-}
-
-export type SourceHit = DocumentSourceHit | WebSourceHit;
-
 export const AVAILABLE_COUNTS = {
   skills: 12,
   knowledgeBases: 8,
@@ -298,6 +287,11 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
   },
 };
 
+export const ALL_SOURCE_HITS: Record<string, SourceHit> = {
+  ...SOURCE_HITS,
+  ...RESEARCH_HITS,
+};
+
 export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
   'kb-presse': [
     'hit-presse-vorlage',
@@ -374,6 +368,35 @@ export const TRANSCRIPT: Record<string, TranscriptEntry> = {
     kind: 'assistant',
     text: 'Nach der Musterpressemitteilung gibt die Amtsleitung frei, der Rückfragehinweis der Pressestelle bleibt im Text. Ich habe den Hinweis am Ende schon eingesetzt.',
     sourceIds: ['hit-presse-vorlage-2'],
+  },
+  'msg-frage-recherche': {
+    id: 'msg-frage-recherche',
+    kind: 'user',
+    text: 'Wie halten andere Städte das mit Öffnungszeiten und offener Sprechstunde? Und was sagen die Vorgaben zur Barrierefreiheit?',
+  },
+  'msg-antwort-recherche': {
+    id: 'msg-antwort-recherche',
+    kind: 'assistant',
+    text: `Kurz zusammengefasst: die meisten vergleichbaren Städte kombinieren feste Kernzeiten mit einer offenen Sprechstunde, und die Vorgaben zur Barrierefreiheit ergeben sich aus [DIN 18040-1](https://www.din.de/) sowie dem [Barrierefreiheitsstärkungsgesetz](https://www.bfsg-gesetz.de/).
+
+**Öffnungszeiten**
+Münster und Freiburg fahren beide mit einem langen Tag pro Woche, Leipzig ergänzt Termine um eine offene Stunde am Morgen. Der [Vergleich des Difu](https://www.difu.de/) zeigt: Häuser mit offener Sprechstunde bekommen bessere Bewertungen, brauchen aber mehr Personal in der Spitze.
+
+**Barrierefreiheit**
+Stufenloser Zugang, Aufzug und ein Leitsystem in einfacher Sprache sind der Mindeststandard. Für den Umbau gibt es ein [Förderprogramm des Landes](https://www.mhkbd.nrw/) — Anträge müssen vor Beginn der Maßnahme gestellt werden.
+
+Für unseren Fall heißt das: die beschlossenen Zeiten liegen im üblichen Rahmen, eine offene Sprechstunde wäre die naheliegende Ergänzung.`,
+    sourceIds: RESEARCH_HIT_IDS,
+  },
+  'msg-frage-kurz': {
+    id: 'msg-frage-kurz',
+    kind: 'user',
+    text: 'Danke. Kannst du den Betreff für die Mail an die Redaktionen vorschlagen?',
+  },
+  'msg-antwort-kurz': {
+    id: 'msg-antwort-kurz',
+    kind: 'assistant',
+    text: 'Vorschlag: „Neues Bürgerbüro in der Marktstraße öffnet am 15. September". Kurz, mit Ort und Datum — das reicht Redaktionen für die Einordnung.',
   },
   'entry-presse-artefakt': {
     id: 'entry-presse-artefakt',

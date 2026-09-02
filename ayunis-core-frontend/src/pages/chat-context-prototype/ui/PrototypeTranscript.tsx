@@ -2,10 +2,11 @@ import { Globe, Quote, Sparkles } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
 import { DocumentWidgetCard } from '@/pages/chat/ui/chat-widgets/DocumentWidgetCard';
+import { Markdown } from '@/widgets/markdown';
 import {
+  ALL_SOURCE_HITS,
   ARTIFACTS,
   CONTEXT_ITEMS,
-  SOURCE_HITS,
   TRANSCRIPT,
 } from '@/pages/chat-context-prototype/model/mock';
 
@@ -74,7 +75,7 @@ function TranscriptRow({
   if (entry.kind === 'assistant') {
     return (
       <div className="flex flex-col gap-2">
-        <p className="text-sm leading-relaxed">{entry.text}</p>
+        <Markdown>{entry.text}</Markdown>
         {entry.sourceIds && (
           <SourceBadges
             ids={entry.sourceIds}
@@ -122,7 +123,7 @@ function SourceBadges({
                   index > 0 && '-ml-1.5',
                 )}
               >
-                {SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
+                {ALL_SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
               </span>
             ))}
           </span>
@@ -135,7 +136,7 @@ function SourceBadges({
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
       {ids.map((id) => {
-        const hit = SOURCE_HITS[id];
+        const hit = ALL_SOURCE_HITS[id];
         if (hit.kind === 'web') {
           return (
             <a
@@ -143,7 +144,7 @@ function SourceBadges({
               href={hit.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary underline underline-offset-4 hover:no-underline [&_svg]:size-3"
+              className="flex items-center gap-1 text-xs text-primary hover:underline [&_svg]:size-3"
             >
               <Globe />
               {hit.siteName}

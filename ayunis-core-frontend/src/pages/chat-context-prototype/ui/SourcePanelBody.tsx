@@ -1,7 +1,7 @@
 import { ExternalLink, Maximize2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
-  SOURCE_HITS,
+  ALL_SOURCE_HITS,
   type SourceHit,
 } from '@/pages/chat-context-prototype/model/mock';
 
@@ -14,7 +14,7 @@ export function SourcePanelBody({
   sourceId,
   onExpand,
 }: Readonly<SourcePanelBodyProps>) {
-  const hit = SOURCE_HITS[sourceId];
+  const hit = ALL_SOURCE_HITS[sourceId];
   return (
     <div className="flex animate-in flex-col gap-3 fade-in-0 slide-in-from-right-2 duration-200">
       <div className="flex flex-col">
