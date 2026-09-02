@@ -36,7 +36,7 @@ export function SourcePanelBody({
         </Button>
       ) : (
         <Button variant="outline" size="sm" className="w-fit" asChild>
-          <a href={hit.url} target="_blank" rel="noreferrer">
+          <a href={hit.url} target="_blank" rel="noopener noreferrer">
             <ExternalLink />
             Link aufrufen
           </a>

@@ -209,7 +209,6 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
     page: 1,
     pageCount: 2,
     heading: 'Stadtbibliothek eröffnet im Bürgerzentrum',
-    createdBy: 'llm',
     passage:
       'Die Stadtbibliothek zieht in das Bürgerzentrum und öffnet dort ab dem 3. Juni mit erweiterten Zeiten.',
   },

@@ -1,15 +1,5 @@
 import { useState } from 'react';
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  Globe,
-  Loader2,
-  Sparkles,
-  Table2,
-  AudioLines,
-} from 'lucide-react';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,8 +14,6 @@ import { cn } from '@ayunis/ui/lib/cn';
 import type { ContextLayout } from '@/widgets/prototype-journey';
 import {
   ALL_SOURCE_HITS,
-  isAudio,
-  isTabular,
   type SourceHit,
   CONTEXT_ITEMS,
   DOCUMENTS_BY_KNOWLEDGE_BASE,
@@ -33,6 +21,7 @@ import {
   STANDBY_SKILL_IDS,
 } from '@/pages/chat-context-prototype/model/mock';
 import { ContextKindIcon } from '@/pages/chat-context-prototype/ui/context-icons';
+import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 interface ContextPanelBodyProps {
   contextIds: string[];
@@ -303,27 +292,13 @@ function DocumentNode({
       >
         {hit.title}
       </span>
-      {hit.createdBy === 'llm' && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="shrink-0 text-brand [&_svg]:size-3">
-              <Sparkles />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Von Ayunis Core hinzugefügt</TooltipContent>
-        </Tooltip>
-      )}
     </button>
   );
 }
 
 function DocumentNodeIcon({ hit }: Readonly<{ hit: SourceHit }>) {
   if (hit.status === 'processing') return <Loader2 className="animate-spin" />;
-  if (hit.status === 'failed') return <AlertCircle />;
-  if (hit.kind === 'web') return <Globe />;
-  if (isTabular(hit)) return <Table2 />;
-  if (isAudio(hit)) return <AudioLines />;
-  return <FileText />;
+  return <SourceKindIcon hit={hit} />;
 }
 
 function ContextRow({

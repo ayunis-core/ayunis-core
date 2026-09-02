@@ -14,8 +14,6 @@ export type DocumentFileType =
 
 export type DocumentStatus = 'ready' | 'processing' | 'failed';
 
-export type CreatedBy = 'user' | 'llm' | 'system';
-
 export interface DocumentSourceHit {
   id: string;
   kind: 'document';
@@ -28,7 +26,6 @@ export interface DocumentSourceHit {
   fileType?: DocumentFileType;
   status?: DocumentStatus;
   processingError?: string;
-  createdBy?: CreatedBy;
   extractedText?: string;
   columns?: string[];
   rowCount?: number;
@@ -45,7 +42,6 @@ export interface WebSourceHit {
   body?: string[];
   status?: DocumentStatus;
   processingError?: string;
-  createdBy?: CreatedBy;
   crawledFrom?: string;
   crawlDepth?: number;
 }
@@ -55,6 +51,7 @@ export type SourceHit = DocumentSourceHit | WebSourceHit;
 const PAGINATED: DocumentFileType[] = ['pdf', 'docx', 'pptx'];
 const TABULAR: DocumentFileType[] = ['xlsx', 'csv'];
 const AUDIO: DocumentFileType[] = ['mp3', 'm4a', 'wav', 'webm'];
+const PLAIN_TEXT: DocumentFileType[] = ['txt', 'md', 'eml'];
 
 export function isPaginated(hit: DocumentSourceHit): boolean {
   return PAGINATED.includes(hit.fileType ?? 'pdf');
@@ -66,4 +63,8 @@ export function isTabular(hit: DocumentSourceHit): boolean {
 
 export function isAudio(hit: DocumentSourceHit): boolean {
   return AUDIO.includes(hit.fileType ?? 'pdf');
+}
+
+export function isPlainText(hit: DocumentSourceHit): boolean {
+  return PLAIN_TEXT.includes(hit.fileType ?? 'pdf');
 }

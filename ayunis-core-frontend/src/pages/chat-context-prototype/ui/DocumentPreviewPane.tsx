@@ -1,8 +1,8 @@
 import { AlertCircle, Loader2, Maximize2 } from 'lucide-react';
-import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -17,12 +17,11 @@ import {
 import {
   ALL_SOURCE_HITS,
   isPaginated,
+  isPlainText,
   type SourceHit,
 } from '@/pages/chat-context-prototype/model/mock';
-import {
-  DocumentPreviewBody,
-  ExternalLinkButton,
-} from '@/pages/chat-context-prototype/ui/DocumentPreviewBody';
+import { DocumentPreviewBody } from '@/pages/chat-context-prototype/ui/DocumentPreviewBody';
+import { KnowledgeBaseLink } from '@/pages/chat-context-prototype/ui/KnowledgeBaseLink';
 
 interface DocumentPreviewPaneProps {
   documentId: string;
@@ -78,10 +77,9 @@ function subline(hit: SourceHit, isCited: boolean): string {
   } else if (isPaginated(hit)) {
     parts.push(`${hit.pageCount} Seiten`);
     if (isCited) parts.push(`Fundstelle auf ${hit.location}`);
-  } else {
+  } else if (isPlainText(hit)) {
     parts.push(hit.location);
   }
-  if (hit.createdBy === 'llm') parts.push('Von Ayunis Core hinzugefügt');
   return parts.join(' · ');
 }
 
@@ -95,6 +93,7 @@ function PreviewBody({
         icon={<Loader2 className="animate-spin" />}
         title="Wird verarbeitet"
         description="Sobald die Verarbeitung abgeschlossen ist, kann Ayunis Core diese Quelle nutzen."
+        action={<KnowledgeBaseLink hit={hit} />}
       />
     );
   }
@@ -107,13 +106,7 @@ function PreviewBody({
           hit.processingError ??
           'Diese Quelle konnte nicht ausgelesen werden und wird nicht durchsucht.'
         }
-        action={
-          hit.kind === 'web' ? (
-            <ExternalLinkButton url={hit.url} />
-          ) : (
-            <Badge variant="outline">Neu hochladen erforderlich</Badge>
-          )
-        }
+        action={<KnowledgeBaseLink hit={hit} />}
       />
     );
   }
@@ -139,7 +132,7 @@ function StatusState({
           <EmptyTitle>{title}</EmptyTitle>
           <EmptyDescription>{description}</EmptyDescription>
         </EmptyHeader>
-        {action}
+        {action && <EmptyContent>{action}</EmptyContent>}
       </Empty>
     </div>
   );

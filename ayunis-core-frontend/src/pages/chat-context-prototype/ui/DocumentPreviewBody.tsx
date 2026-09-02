@@ -1,106 +1,93 @@
 import { useEffect, useRef } from 'react';
-import { Badge } from '@ayunis/ui/components/badge';
-import { Button } from '@ayunis/ui/components/button';
-import { ExternalLink } from 'lucide-react';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
 import {
   isAudio,
   isPaginated,
-  isTabular,
+  isPlainText,
   type DocumentSourceHit,
   type SourceHit,
-  type WebSourceHit,
 } from '@/pages/chat-context-prototype/model/mock';
+import { KnowledgeBaseLink } from '@/pages/chat-context-prototype/ui/KnowledgeBaseLink';
 import { PageSheet } from '@/pages/chat-context-prototype/ui/PageSheet';
+import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 export function DocumentPreviewBody({
   hit,
   isCited,
 }: Readonly<{ hit: SourceHit; isCited: boolean }>) {
-  if (hit.kind === 'web') return <WebBody hit={hit} />;
-  if (isTabular(hit)) return <TabularBody hit={hit} />;
-  if (!isPaginated(hit)) return <TextBody hit={hit} />;
-  return <PagesBody hit={hit} isCited={isCited} />;
-}
-
-function Sheet({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <div className="flex flex-col gap-3 rounded-sm border bg-white px-6 py-6 shadow-sm">
-      {children}
-    </div>
-  );
-}
-
-function Note({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <span className="text-xs text-muted-foreground">{children}</span>;
-}
-
-function WebBody({ hit }: Readonly<{ hit: WebSourceHit }>) {
-  return (
-    <div className="flex flex-col gap-3 p-5">
-      <Note>{webNote(hit)}</Note>
-      <Sheet>
-        {(hit.body ?? [hit.passage]).map((paragraph, index) => (
-          <p
-            key={paragraph}
-            className={
-              index === 0
-                ? 'text-sm font-medium text-neutral-800'
-                : 'text-sm leading-relaxed text-neutral-700'
-            }
-          >
-            {paragraph}
-          </p>
-        ))}
-      </Sheet>
-      <ExternalLinkButton url={hit.url} />
-    </div>
-  );
-}
-
-function webNote(hit: WebSourceHit): string {
-  if (hit.crawledFrom) {
-    return `Unterseite von ${hit.crawledFrom} — beim Einlesen mitgefunden`;
+  if (hit.kind === 'document' && isPaginated(hit)) {
+    return <PagesBody hit={hit} isCited={isCited} />;
   }
-  if (hit.crawlDepth) {
-    return `Webseite — mit ${hit.crawlDepth} Ebene Unterseiten eingelesen`;
+  if (hit.kind === 'document' && isPlainText(hit)) {
+    return <TextBody hit={hit} />;
   }
-  return 'Webseite — Ayunis Core arbeitet mit dem eingelesenen Text';
+  return <NoPreviewBody hit={hit} />;
 }
 
-function TabularBody({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
+function NoPreviewBody({ hit }: Readonly<{ hit: SourceHit }>) {
   return (
-    <div className="flex flex-col gap-3 p-5">
-      <Note>
-        Tabelle mit {hit.rowCount} Zeilen — Ayunis Core wertet die Werte direkt
-        aus, es gibt keine Seitenansicht
-      </Note>
-      <Sheet>
-        <span className="text-sm font-medium text-neutral-800">Spalten</span>
-        <div className="flex flex-wrap gap-1.5">
-          {(hit.columns ?? []).map((column) => (
-            <Badge key={column} variant="outline">
-              {column}
-            </Badge>
-          ))}
-        </div>
-      </Sheet>
+    <div className="flex h-full items-center justify-center p-5">
+      <Empty>
+        <EmptyMedia variant="icon">
+          <SourceKindIcon hit={hit} />
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyTitle>{kindLabel(hit)}</EmptyTitle>
+          <EmptyDescription>
+            <NoPreviewDescription hit={hit} />
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <KnowledgeBaseLink hit={hit} />
+        </EmptyContent>
+      </Empty>
     </div>
   );
+}
+
+function kindLabel(hit: SourceHit): string {
+  if (hit.kind === 'web') return hit.crawledFrom ? 'Unterseite' : 'Webseite';
+  if (isAudio(hit)) return 'Aufnahme';
+  return 'Tabelle';
+}
+
+function NoPreviewDescription({ hit }: Readonly<{ hit: SourceHit }>) {
+  if (hit.kind === 'web') {
+    return (
+      <a
+        href={hit.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:underline"
+      >
+        {hit.url}
+      </a>
+    );
+  }
+  if (isAudio(hit)) {
+    return <>Ayunis Core arbeitet mit dem Transkript der Aufnahme.</>;
+  }
+  return <>Tabelle mit {hit.rowCount} Zeilen, ausgelesen und durchsuchbar.</>;
 }
 
 function TextBody({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
   return (
     <div className="flex flex-col gap-3 p-5">
-      <Note>
-        {isAudio(hit)
-          ? 'Aufnahme — Ayunis Core arbeitet mit dem Transkript'
-          : 'Keine Seitenansicht — Ayunis Core arbeitet mit dem ausgelesenen Text'}
-      </Note>
-      <Sheet>
+      <span className="text-xs text-muted-foreground">
+        Keine Seitenansicht — Ayunis Core arbeitet mit dem ausgelesenen Text
+      </span>
+      <div className="rounded-sm border bg-white px-6 py-6 shadow-sm">
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
           {hit.extractedText ?? hit.passage}
         </p>
-      </Sheet>
+      </div>
     </div>
   );
 }
@@ -133,16 +120,5 @@ function PagesBody({
         </div>
       ))}
     </div>
-  );
-}
-
-export function ExternalLinkButton({ url }: Readonly<{ url: string }>) {
-  return (
-    <Button variant="outline" size="sm" className="w-fit" asChild>
-      <a href={url} target="_blank" rel="noreferrer">
-        <ExternalLink />
-        Seite aufrufen
-      </a>
-    </Button>
   );
 }

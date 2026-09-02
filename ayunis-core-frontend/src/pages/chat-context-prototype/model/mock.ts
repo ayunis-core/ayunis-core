@@ -15,6 +15,7 @@ export type { DocumentSourceHit, SourceHit, WebSourceHit };
 export {
   isAudio,
   isPaginated,
+  isPlainText,
   isTabular,
 } from '@/pages/chat-context-prototype/model/source-hit';
 
