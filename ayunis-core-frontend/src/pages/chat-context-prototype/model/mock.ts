@@ -9,6 +9,7 @@ export interface ContextItem {
   detail: string;
   origin: ContextOrigin;
   purpose?: string;
+  instructions?: string;
   brings?: string[];
 }
 
@@ -78,6 +79,8 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     origin: 'assistant',
     purpose:
       'Gliedert Pressetexte nach dem Aufbau der Stadtverwaltung: Kernbotschaft zuerst, dann Details, am Ende der Rückfragehinweis. Formuliert in verständlicher Sprache und ohne Werbeton.',
+    instructions:
+      'Aufbau\n1. Kernbotschaft in einem Satz: Was passiert, ab wann, für wen.\n2. Rahmen: Adresse, Öffnungszeiten, Erreichbarkeit.\n3. Barrierefreiheit, wenn ein Gebäude betroffen ist.\n4. Rückfragehinweis der Pressestelle.\n\nSprache\nKurze Sätze, ein Gedanke pro Satz. Fachbegriffe beim ersten Auftreten erklären. Kein Werbeton, keine Superlative.\n\nFreigabe\nVor Veröffentlichung gibt die Amtsleitung frei. Der Rückfragehinweis bleibt immer im Text.',
     brings: [
       'Musterpressemitteilung.pdf',
       'Pressearchiv der Stadt',
@@ -217,6 +220,39 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
     passage:
       'Verwaltungsgebäude sollen stufenlos erreichbar sein; Leitsysteme in einfacher Sprache erleichtern die Orientierung.',
   },
+  'doc-leitfaden': {
+    id: 'doc-leitfaden',
+    kind: 'document',
+    title: 'Leitfaden Pressearbeit.pdf',
+    location: 'Seite 1',
+    page: 1,
+    pageCount: 24,
+    heading: 'Grundsätze der Pressearbeit',
+    passage:
+      'Mitteilungen der Verwaltung sind sachlich, überprüfbar und in verständlicher Sprache zu formulieren.',
+  },
+  'doc-eroeffnung-2024': {
+    id: 'doc-eroeffnung-2024',
+    kind: 'document',
+    title: 'PM Eröffnung Stadtbibliothek 2024.pdf',
+    location: 'Seite 1',
+    page: 1,
+    pageCount: 2,
+    heading: 'Stadtbibliothek eröffnet im Bürgerzentrum',
+    passage:
+      'Die Stadtbibliothek zieht in das Bürgerzentrum und öffnet dort ab dem 3. Juni mit erweiterten Zeiten.',
+  },
+  'doc-sprachleitfaden': {
+    id: 'doc-sprachleitfaden',
+    kind: 'document',
+    title: 'Einfache Sprache — Handreichung.pdf',
+    location: 'Seite 3',
+    page: 3,
+    pageCount: 12,
+    heading: 'Sätze kürzen',
+    passage:
+      'Ein Satz enthält einen Gedanken. Fachbegriffe werden beim ersten Auftreten erklärt.',
+  },
   'hit-presse-vorlage': {
     id: 'hit-presse-vorlage',
     kind: 'document',
@@ -260,6 +296,16 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
     passage:
       'Stellplätze und Garagen sind in allen Baugebieten zulässig, soweit sich aus den Absätzen 2 bis 6 nichts anderes ergibt.',
   },
+};
+
+export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
+  'kb-presse': [
+    'hit-presse-vorlage',
+    'doc-leitfaden',
+    'doc-eroeffnung-2024',
+    'doc-sprachleitfaden',
+    'hit-buergerbuero',
+  ],
 };
 
 export const TRANSCRIPT: Record<string, TranscriptEntry> = {

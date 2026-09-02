@@ -153,7 +153,11 @@ export function ChatContextPrototypePage() {
                       variant={variant}
                       contextCount={state.contextIds.length}
                       resultCount={state.artifactIds.length}
-                      activePanel={state.panel}
+                      activePanel={
+                        (state.openSourceId ?? state.sourceListIds)
+                          ? null
+                          : state.panel
+                      }
                       highlight={state.highlight}
                       onOpen={openPanel}
                     />
@@ -220,6 +224,7 @@ export function ChatContextPrototypePage() {
                   onExpandSource={() => setExpandedSourceId(state.openSourceId)}
                   onBackToContext={goBackInContext}
                   onOpenContextDetail={openContextDetail}
+                  onOpenDocument={setExpandedSourceId}
                   onOpenSourceFromList={(sourceId) =>
                     setState((current) => ({
                       ...current,

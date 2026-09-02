@@ -32,6 +32,7 @@ interface PrototypeSidePanelProps {
   onBackToContext: () => void;
   onOpenContextDetail: (contextId: string) => void;
   onOpenSourceFromList: (sourceId: string) => void;
+  onOpenDocument: (documentId: string) => void;
   onExpandSource: () => void;
   onClose: () => void;
 }
@@ -61,6 +62,7 @@ function resolveDetail({
   openContextId,
   sourceListIds,
   onOpenSourceFromList,
+  onOpenDocument,
   onExpandSource,
 }: Readonly<PrototypeSidePanelProps>): {
   title: string;
@@ -92,7 +94,12 @@ function resolveDetail({
     return {
       title: CONTEXT_ITEMS[openContextId].name,
       canGoBack: true,
-      body: <ContextDetailBody contextId={openContextId} />,
+      body: (
+        <ContextDetailBody
+          contextId={openContextId}
+          onOpenDocument={onOpenDocument}
+        />
+      ),
     };
   }
   return null;
