@@ -150,7 +150,7 @@ export function ChatContextPrototypePage() {
         <div className="relative -mx-4 -mb-4 min-h-0 flex-1">
           <PrototypeChatLayout
             resetKey={stepIndex}
-            panelSize={isWidePanel(state, contextLayout) ? 68 : 38}
+            panelSize={isWidePanel(state, contextLayout) ? 65 : 38}
             chatHeader={
               <ContentAreaHeader
                 breadcrumbs={[
