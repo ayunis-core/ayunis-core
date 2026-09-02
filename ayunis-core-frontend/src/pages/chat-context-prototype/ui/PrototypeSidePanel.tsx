@@ -303,14 +303,10 @@ function ContextBrowser({
           />
         )}
         {!openDocumentId && openContextId && (
-          <ScrollArea className="h-full">
-            <div className={cn(panelFrame === 'divider' ? 'py-4 pl-5' : 'p-5')}>
-              <ContextDetailBody
-                contextId={openContextId}
-                onOpenDocument={onOpenDocument}
-              />
-            </div>
-          </ScrollArea>
+          <ContextDetailBody
+            contextId={openContextId}
+            onOpenDocument={onOpenDocument}
+          />
         )}
         {!selection && (
           <div className="flex h-full items-center justify-center p-5">

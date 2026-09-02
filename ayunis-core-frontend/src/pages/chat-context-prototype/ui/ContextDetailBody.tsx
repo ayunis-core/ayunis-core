@@ -9,12 +9,12 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { Separator } from '@ayunis/ui/components/separator';
+import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { showInfo } from '@/shared/lib/toast';
 import {
+  ALL_SOURCE_HITS,
   CONTEXT_ITEMS,
   DOCUMENTS_BY_KNOWLEDGE_BASE,
-  ALL_SOURCE_HITS,
   type ContextItem,
 } from '@/pages/chat-context-prototype/model/mock';
 
@@ -38,66 +38,105 @@ export function ContextDetailBody({
   const documents = DOCUMENTS_BY_KNOWLEDGE_BASE[contextId] ?? [];
 
   return (
-    <div className="flex animate-in flex-col gap-4 fade-in-0 slide-in-from-right-2 duration-200">
-      <DetailHead item={item} />
-      {item.purpose && (
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {item.purpose}
-        </p>
-      )}
-      {item.instructions && (
-        <>
-          <Separator />
-          <section className="flex flex-col gap-1.5">
-            <h4 className="text-xs font-medium text-muted-foreground">
-              Anweisung
-            </h4>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">
-              {item.instructions}
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 border-b px-5 py-4">
+        <h3 className="truncate text-sm font-medium">{item.name}</h3>
+        <span className="text-xs text-muted-foreground">
+          {KIND_LABELS[item.kind]}
+        </span>
+      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="flex flex-col gap-5 p-5">
+          {item.kind === 'skill' && <SkillSections item={item} />}
+          {item.kind !== 'skill' && item.purpose && (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {item.purpose}
             </p>
-          </section>
-        </>
-      )}
-      {documents.length > 0 && (
-        <>
-          <Separator />
-          <section className="flex flex-col gap-1">
-            <h4 className="text-xs font-medium text-muted-foreground">
-              Inhalt · {documents.length} Dokumente
-            </h4>
-            <ItemGroup>
-              {documents.map((documentId) => (
-                <DocumentRow
-                  key={documentId}
-                  documentId={documentId}
-                  onOpen={onOpenDocument}
-                />
-              ))}
-            </ItemGroup>
-          </section>
-        </>
-      )}
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-fit"
-        onClick={() => showInfo(`Detailseite von „${item.name}“`)}
-      >
-        <ExternalLink />
-        {item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite'}
-      </Button>
+          )}
+          {documents.length > 0 && (
+            <Section title={`Inhalt · ${documents.length} Dokumente`}>
+              <ItemGroup>
+                {documents.map((documentId) => (
+                  <DocumentRow
+                    key={documentId}
+                    documentId={documentId}
+                    onOpen={onOpenDocument}
+                  />
+                ))}
+              </ItemGroup>
+            </Section>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={() => showInfo(`Detailseite von „${item.name}“`)}
+          >
+            <ExternalLink />
+            {item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite'}
+          </Button>
+        </div>
+      </ScrollArea>
     </div>
   );
 }
 
-function DetailHead({ item }: Readonly<{ item: ContextItem }>) {
+function SkillSections({ item }: Readonly<{ item: ContextItem }>) {
   return (
-    <div className="flex min-w-0 flex-col">
-      <h3 className="text-sm font-medium">{item.name}</h3>
-      <span className="text-xs text-muted-foreground">
-        {KIND_LABELS[item.kind]} · {item.detail}
-      </span>
-    </div>
+    <>
+      <Section title="Auslöser">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {item.detail}
+        </p>
+      </Section>
+      {item.purpose && (
+        <Section title="Wirkung">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {item.purpose}
+          </p>
+        </Section>
+      )}
+      {item.instructions && (
+        <Section title="Detaillierte Anweisungen">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+            {item.instructions}
+          </p>
+        </Section>
+      )}
+      <NameList title="Wissensdatenbanken" names={item.attachedKnowledge} />
+      <NameList title="Dateien" names={item.attachedFiles} />
+      <NameList title="Integrationen" names={item.attachedIntegrations} />
+    </>
+  );
+}
+
+function NameList({
+  title,
+  names,
+}: Readonly<{ title: string; names?: string[] }>) {
+  if (!names || names.length === 0) return null;
+  return (
+    <Section title={title}>
+      <ul className="flex flex-col gap-1">
+        {names.map((name) => (
+          <li key={name} className="text-sm">
+            {name}
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: Readonly<{ title: string; children: React.ReactNode }>) {
+  return (
+    <section className="flex flex-col gap-1.5">
+      <h4 className="text-xs font-medium text-muted-foreground">{title}</h4>
+      {children}
+    </section>
   );
 }
 

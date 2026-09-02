@@ -48,7 +48,7 @@ export function DocumentPreviewPane({
             <div
               key={page}
               ref={page === hit.page ? citedRef : undefined}
-              className="overflow-hidden rounded-sm border bg-white shadow-sm"
+              className="scroll-mt-5 overflow-hidden rounded-sm border bg-white shadow-sm"
             >
               <PageSheet hit={hit} page={page} variant="full" />
             </div>

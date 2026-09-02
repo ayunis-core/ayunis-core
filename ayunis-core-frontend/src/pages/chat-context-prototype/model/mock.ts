@@ -25,7 +25,9 @@ export interface ContextItem {
   origin: ContextOrigin;
   purpose?: string;
   instructions?: string;
-  brings?: string[];
+  attachedKnowledge?: string[];
+  attachedFiles?: string[];
+  attachedIntegrations?: string[];
 }
 
 export type ArtifactType = 'document' | 'spreadsheet' | 'diagram';
@@ -96,11 +98,12 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
       'Gliedert Pressetexte nach dem Aufbau der Stadtverwaltung: Kernbotschaft zuerst, dann Details, am Ende der Rückfragehinweis. Formuliert in verständlicher Sprache und ohne Werbeton.',
     instructions:
       'Aufbau\n1. Kernbotschaft in einem Satz: Was passiert, ab wann, für wen.\n2. Rahmen: Adresse, Öffnungszeiten, Erreichbarkeit.\n3. Barrierefreiheit, wenn ein Gebäude betroffen ist.\n4. Rückfragehinweis der Pressestelle.\n\nSprache\nKurze Sätze, ein Gedanke pro Satz. Fachbegriffe beim ersten Auftreten erklären. Kein Werbeton, keine Superlative, keine Bewertungen der eigenen Arbeit.\n\nZahlen und Daten\nDatumsangaben immer ausschreiben, Uhrzeiten im Format 8 bis 16 Uhr. Beträge in Euro mit Tausenderpunkt. Beschlüsse mit Gremium und Sitzungsdatum benennen, damit die Angabe nachprüfbar bleibt.\n\nZuständigkeiten\nFederführung nennen, wenn mehrere Ämter beteiligt sind. Bei Bauvorhaben zusätzlich das Bauamt als Ansprechpartner aufführen. Externe Beteiligte nur mit vorheriger Zustimmung nennen.\n\nBarrierefreiheit\nBei Gebäuden immer angeben: stufenloser Zugang, Aufzug, Leitsystem, barrierefreie Toilette. Fehlt eines davon, wird es offen benannt statt weggelassen.\n\nBilder\nBildunterschrift mit Ort, Anlass und Namen der abgebildeten Personen. Bildrechte im Anhang vermerken.\n\nFreigabe\nVor Veröffentlichung gibt die Amtsleitung frei. Der Rückfragehinweis bleibt immer im Text. Bei Themen mit politischer Wirkung geht der Text zusätzlich an das Büro der Bürgermeisterin.\n\nNach der Veröffentlichung\nDer Text wird im Pressearchiv abgelegt und auf der Website unter Aktuelles verlinkt.',
-    brings: [
+    attachedKnowledge: ['Pressearchiv der Stadt'],
+    attachedFiles: [
       'Musterpressemitteilung.pdf',
-      'Pressearchiv der Stadt',
-      'Freigabehinweise der Pressestelle',
+      'Freigabehinweise der Pressestelle.pdf',
     ],
+    attachedIntegrations: ['Ratsinformationssystem'],
   },
   'skill-aktenzeichen-2': {
     id: 'skill-aktenzeichen-2',
@@ -110,6 +113,9 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     origin: 'always',
     purpose:
       'Prüft Aktenzeichen gegen den Registraturplan und schlägt das passende Zeichen vor, wenn keines angegeben ist.',
+    instructions:
+      'Aktenzeichen immer gegen den Registraturplan prüfen. Ist keines angegeben, das passende vorschlagen und begründen. Bei Unklarheit die Registratur als Ansprechpartner nennen.',
+    attachedFiles: ['Registraturplan 2026.pdf'],
   },
   'skill-amtsdeutsch': {
     id: 'skill-amtsdeutsch',
@@ -119,6 +125,10 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
     origin: 'always',
     purpose:
       'Ersetzt Behördensprache durch kurze Sätze und erklärt Fachbegriffe beim ersten Auftreten.',
+    instructions:
+      'Passivkonstruktionen auflösen. Schachtelsätze in Hauptsätze trennen. Fachbegriffe beim ersten Auftreten in Klammern erklären. Keine Abkürzungen ohne Auflösung.',
+    attachedKnowledge: ['Satzungen und Ortsrecht'],
+    attachedFiles: ['Einfache Sprache — Handreichung.pdf'],
   },
   'skill-protokoll': {
     id: 'skill-protokoll',
