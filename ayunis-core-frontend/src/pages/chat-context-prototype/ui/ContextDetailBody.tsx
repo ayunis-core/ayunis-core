@@ -17,7 +17,6 @@ import {
   ALL_SOURCE_HITS,
   type ContextItem,
 } from '@/pages/chat-context-prototype/model/mock';
-import { ContextKindIcon } from '@/pages/chat-context-prototype/ui/context-icons';
 
 const KIND_LABELS = {
   skill: 'Fähigkeit',
@@ -93,16 +92,11 @@ export function ContextDetailBody({
 
 function DetailHead({ item }: Readonly<{ item: ContextItem }>) {
   return (
-    <div className="flex items-start gap-2.5">
-      <span className="mt-0.5 shrink-0 text-brand [&_svg]:size-4">
-        <ContextKindIcon kind={item.kind} />
+    <div className="flex min-w-0 flex-col">
+      <h3 className="text-sm font-medium">{item.name}</h3>
+      <span className="text-xs text-muted-foreground">
+        {KIND_LABELS[item.kind]} · {item.detail}
       </span>
-      <div className="flex min-w-0 flex-col">
-        <h3 className="text-sm font-medium">{item.name}</h3>
-        <span className="text-xs text-muted-foreground">
-          {KIND_LABELS[item.kind]} · {item.detail}
-        </span>
-      </div>
     </div>
   );
 }

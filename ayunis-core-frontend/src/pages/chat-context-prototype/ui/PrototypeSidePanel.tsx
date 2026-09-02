@@ -115,7 +115,7 @@ function PanelHeader({
 }>) {
   return (
     <div
-      className={`flex h-14 shrink-0 items-center gap-1 ${onBack ? 'px-2' : 'px-4'}`}
+      className={`flex h-14 shrink-0 items-center gap-1 ${onBack ? 'px-2' : 'px-3'}`}
     >
       {onBack && (
         <Button
@@ -159,7 +159,7 @@ function DetailView({
     <>
       <PanelHeader title={title} onBack={onBack} onClose={onClose} />
       <ScrollArea className="min-h-0 flex-1">
-        <div className="px-4 pb-10 pt-2">{children}</div>
+        <div className="px-3 pb-10 pt-1">{children}</div>
       </ScrollArea>
     </>
   );
@@ -205,7 +205,7 @@ function TabsView({
       </PanelHeader>
       <TabsContent value="results" className="min-h-0 flex-1 outline-none">
         <ScrollArea className="h-full">
-          <div className="px-4 pb-10 pt-2">
+          <div className="px-3 pb-10 pt-1">
             {openArtifactId ? (
               <ArtifactPreviewBody onBack={onBackToResults} />
             ) : (
@@ -271,13 +271,13 @@ function ContextBrowser({
   if (!selection && contextLayout !== 'split') {
     return (
       <ScrollArea className="h-full">
-        <div className="px-4 pb-10 pt-2">{list}</div>
+        <div className="px-3 pb-10 pt-1">{list}</div>
       </ScrollArea>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 gap-4 px-4 pb-4">
+    <div className="flex h-full min-h-0 gap-3 px-3 pb-3">
       <ScrollArea className="h-full w-72 shrink-0">
         <div className="pb-6 pr-3 pt-2">{list}</div>
       </ScrollArea>
