@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.35.0](https://github.com/ayunis-core/ayunis-core/compare/v2.34.1...v2.35.0) (2026-09-02)
+
+
+### Features
+
+* **extensions:** add runtime skills extensions (AYC-694) ([#1439](https://github.com/ayunis-core/ayunis-core/issues/1439)) ([c0a555f](https://github.com/ayunis-core/ayunis-core/commit/c0a555f16ae94b8a4b5c606de31754cb028cc870))
+* **orgs:** let super admins rename an organisation (AYC-887) ([#1588](https://github.com/ayunis-core/ayunis-core/issues/1588)) ([9066430](https://github.com/ayunis-core/ayunis-core/commit/90664303666dc47a36fba52b2c63c2cfbbd8b61b))
+
+
+### Bug Fixes
+
+* **academy:** rename KI-Führerschein for AI Act compliance (AYC-833) ([#1528](https://github.com/ayunis-core/ayunis-core/issues/1528)) ([aecb5d3](https://github.com/ayunis-core/ayunis-core/commit/aecb5d32245f7b32ec22ab65624b1f448d64babb))
+* **dev:** terminate the full process tree on ./dev down (AYC-877) ([#1586](https://github.com/ayunis-core/ayunis-core/issues/1586)) ([c6c9717](https://github.com/ayunis-core/ayunis-core/commit/c6c9717a1879dd51284f4d3afc6f42bb8dd727a8))
+
+
+### Documentation
+
+* **workflow:** add proportional validation paths (AYC-000) ([#1567](https://github.com/ayunis-core/ayunis-core/issues/1567)) ([99dd760](https://github.com/ayunis-core/ayunis-core/commit/99dd760b5f8e243a8a6c1430ffd5aa9c37901aa4))
+
 ## [2.34.1](https://github.com/ayunis-core/ayunis-core/compare/v2.34.0...v2.34.1) (2026-09-01)
 
 
