@@ -3,8 +3,6 @@ import { OrgsRepository } from './application/ports/orgs.repository';
 import { LocalOrgsRepository } from './infrastructure/repositories/local/local-orgs.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrgRecord } from './infrastructure/repositories/local/schema/org.record';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { getLoggerToken, PinoLogger } from 'nestjs-pino';
 
 // Import use cases
@@ -17,6 +15,8 @@ import { SuperAdminGetAllOrgsUseCase } from './application/use-cases/super-admin
 import { SuperAdminOrgsController } from './presenters/http/super-admin-orgs.controller';
 import { SuperAdminOrgResponseDtoMapper } from './presenters/http/mappers/super-admin-org-response-dto.mapper';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Module({
   imports: [TypeOrmModule.forFeature([OrgRecord]), PermissionsModule],
@@ -26,14 +26,11 @@ import { PermissionsModule } from 'src/iam/permissions/permissions.module';
       provide: OrgsRepository,
       useFactory: (
         logger: PinoLogger,
-        orgRepository: Repository<OrgRecord>,
+        txHost: TransactionHost<TransactionalAdapterTypeOrm>,
       ) => {
-        return new LocalOrgsRepository(logger, orgRepository);
+        return new LocalOrgsRepository(logger, txHost);
       },
-      inject: [
-        getLoggerToken(LocalOrgsRepository.name),
-        getRepositoryToken(OrgRecord),
-      ],
+      inject: [getLoggerToken(LocalOrgsRepository.name), TransactionHost],
     },
     // Use cases
     FindOrgByIdUseCase,

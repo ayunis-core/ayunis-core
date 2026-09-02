@@ -11,7 +11,10 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 import { RegisterUserUseCase } from './register-user.use-case';
-import { UnexpectedAuthenticationError } from '../../authentication.errors';
+import {
+  InvalidPasswordError,
+  UnexpectedAuthenticationError,
+} from 'src/iam/authentication/application/authentication.errors';
 import { RegisterUserCommand } from './register-user.command';
 import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
 import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
@@ -20,7 +23,6 @@ import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { Org } from 'src/iam/orgs/domain/org.entity';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
-import { InvalidPasswordError } from '../../authentication.errors';
 import type { UUID } from 'crypto';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import { SendConfirmationEmailUseCase } from 'src/iam/users/application/use-cases/send-confirmation-email/send-confirmation-email.use-case';
@@ -34,6 +36,8 @@ describe('RegisterUserUseCase', () => {
   let mockIsValidPasswordUseCase: Partial<IsValidPasswordUseCase>;
   let mockCreateOrgUseCase: Partial<CreateOrgUseCase>;
   let mockFindUserByEmailUseCase: Partial<FindUserByEmailUseCase>;
+  let mockSendConfirmationEmailUseCase: { execute: jest.Mock };
+  let mockConfigService: { get: jest.Mock };
 
   beforeAll(async () => {
     mockCreateAdminUserUseCase = {
@@ -47,6 +51,12 @@ describe('RegisterUserUseCase', () => {
     };
     mockFindUserByEmailUseCase = {
       execute: jest.fn(),
+    };
+    mockSendConfirmationEmailUseCase = {
+      execute: jest.fn(),
+    };
+    mockConfigService = {
+      get: jest.fn().mockReturnValue(false),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,12 +81,12 @@ describe('RegisterUserUseCase', () => {
         },
         {
           provide: SendConfirmationEmailUseCase,
-          useValue: { execute: jest.fn() },
+          useValue: mockSendConfirmationEmailUseCase,
         },
         { provide: CreateTrialUseCase, useValue: { execute: jest.fn() } },
         {
           provide: ConfigService,
-          useValue: { get: jest.fn().mockReturnValue(false) },
+          useValue: mockConfigService,
         },
         {
           provide: getLoggerToken(RegisterUserUseCase.name),
@@ -89,6 +99,7 @@ describe('RegisterUserUseCase', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+    mockConfigService.get.mockReturnValue(false);
   });
 
   it('should be defined', () => {
@@ -209,6 +220,43 @@ describe('RegisterUserUseCase', () => {
 
     await expect(useCase.execute(command)).rejects.toThrow(
       UnexpectedAuthenticationError,
+    );
+  });
+
+  it('completes registration when confirmation email delivery fails', async () => {
+    const command = new RegisterUserCommand({
+      userName: 'test',
+      email: 'test@example.com',
+      password: 'validPassword123',
+      orgName: 'Test Org',
+      hasAcceptedMarketing: false,
+    });
+    const mockOrg = new Org({ id: 'org-id' as UUID, name: 'Test Org' });
+    const mockUser = new User({
+      id: 'user-id' as UUID,
+      email: 'test@example.com',
+      emailVerified: false,
+      passwordHash: 'hashedPassword',
+      role: UserRole.ADMIN,
+      orgId: 'org-id' as UUID,
+      name: 'test',
+      hasAcceptedMarketing: false,
+    });
+
+    mockConfigService.get.mockImplementation(
+      (key: string) => key === 'emails.hasConfig',
+    );
+    jest.spyOn(mockIsValidPasswordUseCase, 'execute').mockResolvedValue(true);
+    jest.spyOn(mockCreateOrgUseCase, 'execute').mockResolvedValue(mockOrg);
+    jest
+      .spyOn(mockCreateAdminUserUseCase, 'execute')
+      .mockResolvedValue(mockUser);
+    mockSendConfirmationEmailUseCase.execute.mockRejectedValue(
+      new Error('SMTP unavailable'),
+    );
+
+    await expect(useCase.execute(command)).resolves.toEqual(
+      expect.objectContaining({ id: mockUser.id }),
     );
   });
 });

@@ -6,8 +6,7 @@ import {
   OrgsFilters,
 } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { OrgRecord } from './schema/org.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -19,17 +18,26 @@ import {
   OrgRetrievalFailedError,
 } from 'src/iam/orgs/application/orgs.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
   constructor(
     @InjectPinoLogger(LocalOrgsRepository.name)
     private readonly logger: PinoLogger,
-    @InjectRepository(OrgRecord)
-    private readonly orgRepository: Repository<OrgRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
     this.logger.info('constructor');
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get orgRepository(): Repository<OrgRecord> {
+    return this.getManager().getRepository(OrgRecord);
   }
 
   async findById(id: UUID): Promise<Org> {

@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { CreateOrgCommand } from './create-org.command';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgCreationFailedError, UnexpectedOrgError } from '../../orgs.errors';
+import {
+  OrgCreationFailedError,
+  UnexpectedOrgError,
+} from 'src/iam/orgs/application/orgs.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { OrgCreatedEvent } from '../../events/org-created.event';
+import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
 import { SeedDefaultRolePermissionsUseCase } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 import { SeedDefaultRolePermissionsCommand } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.command';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @Injectable()
 export class CreateOrgUseCase {
@@ -19,6 +23,7 @@ export class CreateOrgUseCase {
     private readonly eventEmitter: EventEmitter2,
     private readonly seedDefaultRolePermissionsUseCase: SeedDefaultRolePermissionsUseCase,
   ) {}
+  @Transactional()
   @HandleUnexpectedErrors(UnexpectedOrgError)
   async execute(command: CreateOrgCommand): Promise<Org> {
     this.logger.info({ name: command.name }, 'create');
