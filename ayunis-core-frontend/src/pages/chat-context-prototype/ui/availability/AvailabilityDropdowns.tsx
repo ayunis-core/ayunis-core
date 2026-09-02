@@ -13,6 +13,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@ayunis/ui/components/popover';
+import {
+  Item,
+  ItemContent,
+  ItemGroup,
+  ItemTitle,
+} from '@ayunis/ui/components/item';
 import { Separator } from '@ayunis/ui/components/separator';
 import {
   Tooltip,
@@ -115,24 +121,30 @@ export function AvailabilityEntryList({
   entries,
 }: Readonly<{ entries: AvailabilityEntry[] }>) {
   return (
-    <ul className="flex flex-col">
+    <ItemGroup>
       {entries.slice(0, 5).map((entry) => (
-        <li key={entry.id}>
+        <Item
+          key={entry.id}
+          asChild
+          size="sm"
+          className="-mx-2 cursor-pointer px-2 py-1.5 hover:bg-accent"
+        >
           <button
             type="button"
             onClick={() => showInfo(`Detailseite von „${entry.name}“`)}
-            className="-mx-2 flex w-[calc(100%+1rem)] items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent"
           >
-            <span className="min-w-0 flex-1 truncate">{entry.name}</span>
+            <ItemContent>
+              <ItemTitle>{entry.name}</ItemTitle>
+            </ItemContent>
           </button>
-        </li>
+        </Item>
       ))}
       {entries.length > 5 && (
-        <li className="px-0 pt-1.5 text-xs text-muted-foreground">
+        <span className="pt-1.5 text-xs text-muted-foreground">
           und {entries.length - 5} weitere
-        </li>
+        </span>
       )}
-    </ul>
+    </ItemGroup>
   );
 }
 

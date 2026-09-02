@@ -1,4 +1,4 @@
-import { FileText, Globe, Sparkles } from 'lucide-react';
+import { Globe, Quote, Sparkles } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { DocumentWidgetCard } from '@/pages/chat/ui/chat-widgets/DocumentWidgetCard';
 import {
@@ -93,9 +93,9 @@ function SourceBadges({
   return (
     <div className="flex flex-wrap gap-1.5">
       {ids.map((id) => (
-        <Badge key={id} asChild variant="secondary" className="cursor-pointer">
+        <Badge key={id} asChild variant="outline" className="cursor-pointer">
           <button type="button" onClick={() => onOpen(id)}>
-            {SOURCE_HITS[id].kind === 'web' ? <Globe /> : <FileText />}
+            {SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
             {SOURCE_HITS[id].kind === 'web'
               ? SOURCE_HITS[id].siteName
               : SOURCE_HITS[id].title}
@@ -112,7 +112,7 @@ function ActivationNote({
 }: Readonly<{ contextItemId: string; onOpenContext: () => void }>) {
   const item = CONTEXT_ITEMS[contextItemId];
   return (
-    <Badge asChild variant="ghost" className="w-fit cursor-pointer">
+    <Badge asChild variant="ghost" className="w-fit cursor-pointer px-0">
       <button type="button" onClick={onOpenContext}>
         <Sparkles className="text-brand" />
         <span>

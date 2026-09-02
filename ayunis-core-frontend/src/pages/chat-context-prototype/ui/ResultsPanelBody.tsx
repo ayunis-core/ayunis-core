@@ -1,5 +1,17 @@
-import { ChevronRight, FileText, GitBranch, Table } from 'lucide-react';
-import { Empty, EmptyHeader, EmptyTitle } from '@ayunis/ui/components/empty';
+import {
+  ChevronRight,
+  FileStack,
+  FileText,
+  GitBranch,
+  Table,
+} from 'lucide-react';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
 import {
   Item,
   ItemActions,
@@ -25,10 +37,14 @@ export function ResultsPanelBody({
   if (artifactIds.length === 0) {
     return (
       <Empty>
+        <EmptyMedia variant="icon">
+          <FileStack />
+        </EmptyMedia>
         <EmptyHeader>
-          <EmptyTitle>
+          <EmptyTitle>Noch keine Ergebnisse</EmptyTitle>
+          <EmptyDescription>
             Hier sammelt sich, was Ayunis Core in diesem Chat erstellt.
-          </EmptyTitle>
+          </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );

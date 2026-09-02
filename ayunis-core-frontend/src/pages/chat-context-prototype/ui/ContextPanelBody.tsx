@@ -1,8 +1,9 @@
-import { Loader2 } from 'lucide-react';
+import { Library, Loader2 } from 'lucide-react';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from '@ayunis/ui/components/empty';
 import {
@@ -43,9 +44,12 @@ export function ContextPanelBody({
   const items = contextIds.map((id) => CONTEXT_ITEMS[id]);
   if (items.length === 0) {
     return (
-      <Empty className="gap-2">
-        <EmptyHeader className="gap-2">
-          <EmptyTitle>In diesem Chat wurde noch nichts geladen.</EmptyTitle>
+      <Empty>
+        <EmptyMedia variant="icon">
+          <Library />
+        </EmptyMedia>
+        <EmptyHeader>
+          <EmptyTitle>Noch nichts geladen</EmptyTitle>
           <EmptyDescription>
             Ayunis Core kann auf {AVAILABLE_COUNTS.skills} Fähigkeiten und{' '}
             {AVAILABLE_COUNTS.knowledgeBases} Wissensdatenbanken zugreifen.
