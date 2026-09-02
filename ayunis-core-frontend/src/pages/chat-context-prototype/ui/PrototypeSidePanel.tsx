@@ -291,8 +291,8 @@ function ContextBrowser({
       <div
         className={cn(
           'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
-          panelFrame === 'fill' && 'rounded-lg bg-muted/40',
-          panelFrame === 'stroke' && 'rounded-lg border',
+          panelFrame === 'fill' && 'rounded-xl bg-muted/40',
+          panelFrame === 'stroke' && 'rounded-xl border',
           panelFrame === 'divider' && 'border-l',
         )}
       >
