@@ -292,6 +292,21 @@ export const ALL_SOURCE_HITS: Record<string, SourceHit> = {
   ...RESEARCH_HITS,
 };
 
+export const STANDBY_SKILLS = [
+  'Aktenzeichen prüfen',
+  'Amtsdeutsch vereinfachen',
+  'Protokoll zusammenfassen',
+  'Ratsvorlage erstellen',
+  'Stellungnahme entwerfen',
+];
+
+export const STANDBY_KNOWLEDGE = [
+  'Bauleitplanung 2026',
+  'Satzungen und Ortsrecht',
+  'Personalhandbuch',
+  'Sitzungsprotokolle 2019–2026',
+];
+
 export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
   'kb-presse': [
     'hit-presse-vorlage',

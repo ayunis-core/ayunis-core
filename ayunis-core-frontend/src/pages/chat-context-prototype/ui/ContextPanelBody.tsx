@@ -1,4 +1,10 @@
-import { Library, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, Library, Loader2 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@ayunis/ui/components/collapsible';
 import {
   Empty,
   EmptyDescription,
@@ -16,18 +22,39 @@ import {
 } from '@ayunis/ui/components/item';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
-  AVAILABLE_COUNTS,
   CONTEXT_ITEMS,
+  STANDBY_KNOWLEDGE,
+  STANDBY_SKILLS,
   type ContextItem,
   type ContextKind,
 } from '@/pages/chat-context-prototype/model/mock';
 import { ORIGIN_LABELS } from '@/pages/chat-context-prototype/model/origin-groups';
 import { ContextKindIcon } from '@/pages/chat-context-prototype/ui/context-icons';
 
-const GROUPS: { kinds: ContextKind[]; label: string }[] = [
-  { kinds: ['skill'], label: 'Fähigkeiten' },
-  { kinds: ['knowledgeBase', 'file'], label: 'Wissen' },
-  { kinds: ['integration'], label: 'Integrationen' },
+const GROUPS: {
+  kinds: ContextKind[];
+  label: string;
+  standby: string[];
+  standbyKind: ContextKind;
+}[] = [
+  {
+    kinds: ['skill'],
+    label: 'Fähigkeiten',
+    standby: STANDBY_SKILLS,
+    standbyKind: 'skill',
+  },
+  {
+    kinds: ['knowledgeBase', 'file'],
+    label: 'Wissen',
+    standby: STANDBY_KNOWLEDGE,
+    standbyKind: 'knowledgeBase',
+  },
+  {
+    kinds: ['integration'],
+    label: 'Integrationen',
+    standby: [],
+    standbyKind: 'integration',
+  },
 ];
 
 interface ContextPanelBodyProps {
@@ -49,11 +76,10 @@ export function ContextPanelBody({
           <Library />
         </EmptyMedia>
         <EmptyHeader>
-          <EmptyTitle>Noch nichts geladen</EmptyTitle>
+          <EmptyTitle>Noch nichts verwendet</EmptyTitle>
           <EmptyDescription>
-            Ayunis Core kann auf {AVAILABLE_COUNTS.skills} Fähigkeiten und{' '}
-            {AVAILABLE_COUNTS.knowledgeBases} Wissensdatenbanken zugreifen.
-            Verwaltet werden sie in den Reitern.
+            Fähigkeiten und Wissen stehen bereit und erscheinen hier, sobald sie
+            zu einer Antwort beitragen.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -61,20 +87,17 @@ export function ContextPanelBody({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <p className="text-xs text-muted-foreground">In diesem Chat geladen</p>
+    <div className="flex flex-col gap-6">
       {GROUPS.map((group) => {
-        const groupItems = items.filter((item) =>
-          group.kinds.includes(item.kind),
-        );
-        if (groupItems.length === 0) return null;
+        const used = items.filter((item) => group.kinds.includes(item.kind));
+        if (used.length === 0 && group.standby.length === 0) return null;
         return (
           <section key={group.label} className="flex flex-col gap-1">
             <h3 className="text-xs font-medium text-muted-foreground">
               {group.label}
             </h3>
             <ItemGroup>
-              {groupItems.map((item) => (
+              {used.map((item) => (
                 <ContextRow
                   key={item.id}
                   item={item}
@@ -83,10 +106,46 @@ export function ContextPanelBody({
                 />
               ))}
             </ItemGroup>
+            <StandbyList names={group.standby} kind={group.standbyKind} />
           </section>
         );
       })}
     </div>
+  );
+}
+
+function StandbyList({
+  names,
+  kind,
+}: Readonly<{ names: string[]; kind: ContextKind }>) {
+  const [isOpen, setIsOpen] = useState(false);
+  if (names.length === 0) return null;
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+        <ChevronDown
+          className={cn(
+            'size-3.5 transition-transform',
+            isOpen && 'rotate-180',
+          )}
+        />
+        {names.length} weitere stehen bereit
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ItemGroup className="opacity-70">
+          {names.map((name) => (
+            <Item key={name} size="sm" className="px-0 py-1.5">
+              <ItemMedia className="text-muted-foreground [&_svg]:size-4">
+                <ContextKindIcon kind={kind} />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle className="font-normal">{name}</ItemTitle>
+              </ItemContent>
+            </Item>
+          ))}
+        </ItemGroup>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 

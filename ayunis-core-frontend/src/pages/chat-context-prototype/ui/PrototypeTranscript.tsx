@@ -108,11 +108,7 @@ function SourceBadges({
 }>) {
   if (ids.length > 3) {
     return (
-      <Badge
-        asChild
-        variant="outline"
-        className="w-fit cursor-pointer gap-2 pl-1.5"
-      >
+      <Badge asChild variant="outline" className="w-fit cursor-pointer">
         <button type="button" onClick={() => onOpenAll(ids)}>
           <span className="flex items-center">
             {ids.slice(0, 3).map((id, index) => (
