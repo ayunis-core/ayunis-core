@@ -18,6 +18,7 @@ import { SourceDialog } from './SourceDialog';
 import { PrototypeTranscript } from './PrototypeTranscript';
 
 function isWidePanel(state: PrototypeState, contextLayout: string): boolean {
+  if (state.openSourceId ?? state.sourceListIds) return false;
   if (state.openArtifactId ?? state.openDocumentId) return true;
   if (state.panel !== 'context') return false;
   return contextLayout === 'split' || state.openContextId !== null;
