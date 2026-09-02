@@ -22,7 +22,7 @@ const AVAILABILITY_VARIANTS: AvailabilityVariant[] = [
   'dropdowns',
   'underInput',
 ];
-const CONTEXT_LAYOUTS: ContextLayout[] = ['tree', 'drill', 'split'];
+const CONTEXT_LAYOUTS: ContextLayout[] = ['tree', 'flat', 'tabs'];
 
 export function parseJourneySearch(
   search: Record<string, unknown>,

@@ -12,7 +12,6 @@ import type {
   ContextLayout,
   PanelKey,
 } from '@/widgets/prototype-journey/model/journey';
-import { CONTEXT_ITEMS } from '@/pages/chat-context-prototype/model/mock';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
@@ -65,10 +64,8 @@ export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
 
 function resolveDetail({
   openSourceId,
-  openContextId,
   sourceListIds,
   onOpenSourceFromList,
-  onOpenDocument,
   onExpandSource,
 }: Readonly<PrototypeSidePanelProps>): {
   title: string;
@@ -92,18 +89,6 @@ function resolveDetail({
         <SourceListBody
           sourceIds={sourceListIds}
           onOpenHit={onOpenSourceFromList}
-        />
-      ),
-    };
-  }
-  if (openContextId) {
-    return {
-      title: CONTEXT_ITEMS[openContextId].name,
-      canGoBack: true,
-      body: (
-        <ContextDetailBody
-          contextId={openContextId}
-          onOpenDocument={onOpenDocument}
         />
       ),
     };
@@ -160,6 +145,7 @@ function ContextBrowser({
   contextIds,
   processingIds,
   openDocumentId,
+  openContextId,
   contextLayout,
   onOpenContextDetail,
   onOpenDocument,
@@ -170,6 +156,7 @@ function ContextBrowser({
     | 'contextIds'
     | 'processingIds'
     | 'openDocumentId'
+    | 'openContextId'
     | 'contextLayout'
     | 'onOpenContextDetail'
     | 'onOpenDocument'
@@ -181,17 +168,15 @@ function ContextBrowser({
       contextIds={contextIds}
       processingIds={processingIds}
       openDocumentId={openDocumentId}
-      isDrillDown={contextLayout === 'drill'}
+      openContextId={openContextId}
+      contextLayout={contextLayout}
       onOpenDetail={onOpenContextDetail}
       onOpenDocument={onOpenDocument}
     />
   );
 
-  const isTwoColumn =
-    contextLayout === 'split' ||
-    (contextLayout === 'tree' && openDocumentId !== null);
-
-  if (!isTwoColumn) return list;
+  const selection = openDocumentId ?? openContextId;
+  if (!selection) return list;
 
   return (
     <div className="flex gap-5">
@@ -203,9 +188,12 @@ function ContextBrowser({
             onExpand={onExpandSource}
           />
         ) : (
-          <p className="pt-1 text-sm text-muted-foreground">
-            Wählen Sie ein Dokument, um es hier zu lesen.
-          </p>
+          openContextId && (
+            <ContextDetailBody
+              contextId={openContextId}
+              onOpenDocument={onOpenDocument}
+            />
+          )
         )}
       </div>
     </div>
@@ -219,6 +207,7 @@ function TabsView({
   artifactIds,
   openArtifactId,
   openDocumentId,
+  openContextId,
   contextLayout,
   onPanelChange,
   onOpenArtifact,
@@ -274,6 +263,7 @@ function TabsView({
               contextIds={contextIds}
               processingIds={processingIds}
               openDocumentId={openDocumentId}
+              openContextId={openContextId}
               contextLayout={contextLayout}
               onOpenContextDetail={onOpenContextDetail}
               onOpenDocument={onOpenDocument}

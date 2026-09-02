@@ -102,6 +102,51 @@ export const CONTEXT_ITEMS: Record<string, ContextItem> = {
       'Freigabehinweise der Pressestelle',
     ],
   },
+  'skill-aktenzeichen-2': {
+    id: 'skill-aktenzeichen-2',
+    kind: 'skill',
+    name: 'Aktenzeichen prüfen',
+    detail: 'Gleicht Aktenzeichen mit dem Registraturplan ab',
+    origin: 'always',
+    purpose:
+      'Prüft Aktenzeichen gegen den Registraturplan und schlägt das passende Zeichen vor, wenn keines angegeben ist.',
+  },
+  'skill-amtsdeutsch': {
+    id: 'skill-amtsdeutsch',
+    kind: 'skill',
+    name: 'Amtsdeutsch vereinfachen',
+    detail: 'Formuliert Entwürfe in verständlicher Sprache',
+    origin: 'always',
+    purpose:
+      'Ersetzt Behördensprache durch kurze Sätze und erklärt Fachbegriffe beim ersten Auftreten.',
+  },
+  'skill-protokoll': {
+    id: 'skill-protokoll',
+    kind: 'skill',
+    name: 'Protokoll zusammenfassen',
+    detail: 'Fasst Sitzungsprotokolle auf Beschlüsse zusammen',
+    origin: 'always',
+    purpose:
+      'Zieht aus einem Protokoll die Beschlüsse, Zuständigkeiten und Fristen heraus.',
+  },
+  'skill-ratsvorlage-2': {
+    id: 'skill-ratsvorlage-2',
+    kind: 'skill',
+    name: 'Ratsvorlage erstellen',
+    detail: 'Aufbau und Tonfall für Vorlagen an den Rat',
+    origin: 'always',
+    purpose:
+      'Gliedert Vorlagen in Beschlussvorschlag, Sachverhalt und finanzielle Auswirkungen.',
+  },
+  'skill-stellungnahme': {
+    id: 'skill-stellungnahme',
+    kind: 'skill',
+    name: 'Stellungnahme entwerfen',
+    detail: 'Entwürfe für Stellungnahmen an Dritte',
+    origin: 'always',
+    purpose:
+      'Formuliert Stellungnahmen mit Sachstand, Bewertung und Ergebnis in drei Absätzen.',
+  },
   'kb-satzungen': {
     id: 'kb-satzungen',
     kind: 'knowledgeBase',
@@ -198,12 +243,12 @@ export const ALL_SOURCE_HITS: Record<string, SourceHit> = {
   ...RESEARCH_HITS,
 };
 
-export const STANDBY_SKILLS = [
-  'Aktenzeichen prüfen',
-  'Amtsdeutsch vereinfachen',
-  'Protokoll zusammenfassen',
-  'Ratsvorlage erstellen',
-  'Stellungnahme entwerfen',
+export const STANDBY_SKILL_IDS = [
+  'skill-aktenzeichen-2',
+  'skill-amtsdeutsch',
+  'skill-protokoll',
+  'skill-ratsvorlage-2',
+  'skill-stellungnahme',
 ];
 
 export const KNOWLEDGE_BASE_IDS = [

@@ -32,8 +32,8 @@ const AVAILABILITY_VARIANTS: {
 
 const CONTEXT_LAYOUTS: { value: ContextLayout; label: string }[] = [
   { value: 'tree', label: 'Baum' },
-  { value: 'drill', label: 'Ebenen' },
-  { value: 'split', label: 'Zwei Spalten' },
+  { value: 'flat', label: 'Alles offen' },
+  { value: 'tabs', label: 'Unter-Tabs' },
 ];
 
 const VARIANTS: { value: EntryVariant; label: string }[] = [
