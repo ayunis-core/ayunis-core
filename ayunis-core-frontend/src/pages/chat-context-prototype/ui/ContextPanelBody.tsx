@@ -5,11 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
+import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
 import type { ContextLayout } from '@/widgets/prototype-journey';
 import {
@@ -342,12 +338,9 @@ function ContextRow({
         {item.name}
       </span>
       {isUsed && item.kind === 'skill' && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="size-1.5 shrink-0 rounded-full bg-brand" />
-          </TooltipTrigger>
-          <TooltipContent>In dieser Antwort verwendet</TooltipContent>
-        </Tooltip>
+        <Badge variant="secondary" className="shrink-0">
+          Aktiviert
+        </Badge>
       )}
     </button>
   );
