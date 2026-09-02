@@ -17,6 +17,12 @@ import { PrototypeSidePanel } from './PrototypeSidePanel';
 import { SourceDialog } from './SourceDialog';
 import { PrototypeTranscript } from './PrototypeTranscript';
 
+function isWidePanel(state: PrototypeState, contextLayout: string): boolean {
+  if (state.openArtifactId ?? state.openDocumentId) return true;
+  if (state.panel !== 'context') return false;
+  return contextLayout === 'split' || state.openContextId !== null;
+}
+
 export function ChatContextPrototypePage() {
   const {
     step: stepIndex,
@@ -143,7 +149,7 @@ export function ChatContextPrototypePage() {
         <div className="relative min-h-0 flex-1">
           <PrototypeChatLayout
             resetKey={stepIndex}
-            panelSize={(state.openArtifactId ?? state.openDocumentId) ? 62 : 38}
+            panelSize={isWidePanel(state, contextLayout) ? 62 : 38}
             chatHeader={
               <ContentAreaHeader
                 breadcrumbs={[

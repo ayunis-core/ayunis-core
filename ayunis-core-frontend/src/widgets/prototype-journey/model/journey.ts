@@ -2,7 +2,7 @@ export type PanelKey = 'context' | 'results';
 
 export type EntryVariant = 'single' | 'menu' | 'header';
 
-export type ContextLayout = 'tree' | 'flat' | 'tabs';
+export type ContextLayout = 'tree' | 'flat' | 'tabs' | 'split';
 
 export type AvailabilityVariant = 'row' | 'split' | 'dropdowns' | 'underInput';
 

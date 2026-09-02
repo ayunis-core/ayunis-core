@@ -1,6 +1,13 @@
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft, FileText, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@ayunis/ui/components/button';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@ayunis/ui/components/empty';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import {
   Tabs,
@@ -176,24 +183,37 @@ function ContextBrowser({
   );
 
   const selection = openDocumentId ?? openContextId;
-  if (!selection) return list;
+  if (!selection && contextLayout !== 'split') return list;
 
   return (
     <div className="flex gap-5">
-      <div className="w-56 shrink-0">{list}</div>
+      <div className="w-56 shrink-0 border-r pr-5">{list}</div>
       <div className="min-w-0 flex-1">
-        {openDocumentId ? (
+        {openDocumentId && (
           <DocumentPreviewPane
             documentId={openDocumentId}
             onExpand={onExpandSource}
           />
-        ) : (
-          openContextId && (
-            <ContextDetailBody
-              contextId={openContextId}
-              onOpenDocument={onOpenDocument}
-            />
-          )
+        )}
+        {!openDocumentId && openContextId && (
+          <ContextDetailBody
+            contextId={openContextId}
+            onOpenDocument={onOpenDocument}
+          />
+        )}
+        {!selection && (
+          <Empty>
+            <EmptyMedia variant="icon">
+              <FileText />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>Nichts ausgewählt</EmptyTitle>
+              <EmptyDescription>
+                Wählen Sie links eine Fähigkeit oder ein Dokument, um es hier zu
+                lesen.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </div>
     </div>

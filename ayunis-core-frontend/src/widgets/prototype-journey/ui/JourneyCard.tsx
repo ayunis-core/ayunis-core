@@ -34,6 +34,7 @@ const CONTEXT_LAYOUTS: { value: ContextLayout; label: string }[] = [
   { value: 'tree', label: 'Baum' },
   { value: 'flat', label: 'Alles offen' },
   { value: 'tabs', label: 'Unter-Tabs' },
+  { value: 'split', label: 'Vorschau fest' },
 ];
 
 const VARIANTS: { value: EntryVariant; label: string }[] = [
