@@ -1,3 +1,21 @@
+export type DocumentFileType =
+  | 'pdf'
+  | 'docx'
+  | 'pptx'
+  | 'xlsx'
+  | 'csv'
+  | 'md'
+  | 'txt'
+  | 'eml'
+  | 'mp3'
+  | 'm4a'
+  | 'wav'
+  | 'webm';
+
+export type DocumentStatus = 'ready' | 'processing' | 'failed';
+
+export type CreatedBy = 'user' | 'llm' | 'system';
+
 export interface DocumentSourceHit {
   id: string;
   kind: 'document';
@@ -7,6 +25,13 @@ export interface DocumentSourceHit {
   pageCount: number;
   heading: string;
   passage: string;
+  fileType?: DocumentFileType;
+  status?: DocumentStatus;
+  processingError?: string;
+  createdBy?: CreatedBy;
+  extractedText?: string;
+  columns?: string[];
+  rowCount?: number;
 }
 
 export interface WebSourceHit {
@@ -17,6 +42,28 @@ export interface WebSourceHit {
   url: string;
   retrievedAt: string;
   passage: string;
+  body?: string[];
+  status?: DocumentStatus;
+  processingError?: string;
+  createdBy?: CreatedBy;
+  crawledFrom?: string;
+  crawlDepth?: number;
 }
 
 export type SourceHit = DocumentSourceHit | WebSourceHit;
+
+const PAGINATED: DocumentFileType[] = ['pdf', 'docx', 'pptx'];
+const TABULAR: DocumentFileType[] = ['xlsx', 'csv'];
+const AUDIO: DocumentFileType[] = ['mp3', 'm4a', 'wav', 'webm'];
+
+export function isPaginated(hit: DocumentSourceHit): boolean {
+  return PAGINATED.includes(hit.fileType ?? 'pdf');
+}
+
+export function isTabular(hit: DocumentSourceHit): boolean {
+  return TABULAR.includes(hit.fileType ?? 'pdf');
+}
+
+export function isAudio(hit: DocumentSourceHit): boolean {
+  return AUDIO.includes(hit.fileType ?? 'pdf');
+}

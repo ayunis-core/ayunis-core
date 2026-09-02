@@ -12,6 +12,11 @@ import type {
 } from '@/pages/chat-context-prototype/model/source-hit';
 
 export type { DocumentSourceHit, SourceHit, WebSourceHit };
+export {
+  isAudio,
+  isPaginated,
+  isTabular,
+} from '@/pages/chat-context-prototype/model/source-hit';
 
 export type ContextOrigin = 'always' | 'user' | 'assistant' | 'project';
 
@@ -278,13 +283,24 @@ export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
     'doc-eroeffnung-2024',
     'doc-sprachleitfaden',
   ],
-  'kb-bauleitplanung': ['doc-stellplatzsatzung', 'hit-verkehrsplan'],
-  'kb-satzungen': ['doc-stellplatzsatzung', 'doc-gebuehrensatzung'],
-  'kb-personal': ['doc-dienstanweisung'],
+  'kb-bauleitplanung': [
+    'doc-stellplatzsatzung',
+    'hit-verkehrsplan',
+    'doc-lageplan',
+    'doc-verkehrszaehlung-fehler',
+  ],
+  'kb-satzungen': [
+    'doc-stellplatzsatzung',
+    'doc-gebuehrensatzung',
+    'web-ortsrecht',
+    'web-ortsrecht-bauen',
+  ],
+  'kb-personal': ['doc-dienstanweisung', 'doc-stellenplan', 'doc-onboarding'],
   'kb-protokolle': [
     'hit-buergerbuero',
     'hit-oeffnungszeiten',
     'doc-protokoll-ha',
+    'doc-ratssitzung',
   ],
 };
 

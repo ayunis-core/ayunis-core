@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  Globe,
+  Loader2,
+  Sparkles,
+  Table2,
+  AudioLines,
+} from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,6 +24,9 @@ import { cn } from '@ayunis/ui/lib/cn';
 import type { ContextLayout } from '@/widgets/prototype-journey';
 import {
   ALL_SOURCE_HITS,
+  isAudio,
+  isTabular,
+  type SourceHit,
   CONTEXT_ITEMS,
   DOCUMENTS_BY_KNOWLEDGE_BASE,
   KNOWLEDGE_BASE_IDS,
@@ -272,12 +285,45 @@ function DocumentNode({
         isActive && 'bg-accent',
       )}
     >
-      <span className="shrink-0 text-muted-foreground [&_svg]:size-3.5">
-        <FileText />
+      <span
+        className={cn(
+          'shrink-0 [&_svg]:size-3.5',
+          hit.status === 'failed'
+            ? 'text-destructive'
+            : 'text-muted-foreground',
+        )}
+      >
+        <DocumentNodeIcon hit={hit} />
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm">{hit.title}</span>
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-sm',
+          hit.status === 'processing' && 'text-muted-foreground',
+        )}
+      >
+        {hit.title}
+      </span>
+      {hit.createdBy === 'llm' && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="shrink-0 text-brand [&_svg]:size-3">
+              <Sparkles />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Von Ayunis Core hinzugefügt</TooltipContent>
+        </Tooltip>
+      )}
     </button>
   );
+}
+
+function DocumentNodeIcon({ hit }: Readonly<{ hit: SourceHit }>) {
+  if (hit.status === 'processing') return <Loader2 className="animate-spin" />;
+  if (hit.status === 'failed') return <AlertCircle />;
+  if (hit.kind === 'web') return <Globe />;
+  if (isTabular(hit)) return <Table2 />;
+  if (isAudio(hit)) return <AudioLines />;
+  return <FileText />;
 }
 
 function ContextRow({
