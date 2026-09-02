@@ -244,6 +244,7 @@ import type {
   UpdateMonthlyCreditsDto,
   UpdateOnboardingDto,
   UpdateOrgMfaRequirementRequestDto,
+  UpdateOrgRequestDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
@@ -3091,6 +3092,72 @@ export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType
 
 
 
+/**
+ * Update an organization display name. Only accessible to users with the super admin system role.
+ * @summary Rename an organization
+ */
+export const superAdminOrgsControllerUpdateOrg = (
+    id: string,
+    updateOrgRequestDto: UpdateOrgRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOrgRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminOrgsControllerUpdateOrgMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminOrgsControllerUpdateOrg'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, {id: string;data: UpdateOrgRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminOrgsControllerUpdateOrg(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOrgsControllerUpdateOrgMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>>
+    export type SuperAdminOrgsControllerUpdateOrgMutationBody = UpdateOrgRequestDto
+    export type SuperAdminOrgsControllerUpdateOrgMutationError = void
+
+    /**
+ * @summary Rename an organization
+ */
+export const useSuperAdminOrgsControllerUpdateOrg = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>,
+        TError,
+        {id: string;data: UpdateOrgRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminOrgsControllerUpdateOrgMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Get the per-role permission grants for the current user's organization
  */

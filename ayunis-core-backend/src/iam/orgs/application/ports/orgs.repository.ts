@@ -20,6 +20,6 @@ export abstract class OrgsRepository {
     filters?: OrgsFilters,
   ): Promise<Paginated<Org>>;
   abstract create(org: Org): Promise<Org>;
-  abstract update(org: Org): Promise<Org>;
+  abstract updateName(id: UUID, name: string): Promise<Org>;
   abstract delete(id: UUID): Promise<void>;
 }

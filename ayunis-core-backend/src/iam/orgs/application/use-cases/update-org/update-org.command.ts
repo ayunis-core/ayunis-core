@@ -1,5 +1,8 @@
-import type { Org } from 'src/iam/orgs/domain/org.entity';
+import type { UUID } from 'crypto';
 
 export class UpdateOrgCommand {
-  constructor(public readonly org: Org) {}
+  constructor(
+    public readonly orgId: UUID,
+    public readonly name: string,
+  ) {}
 }

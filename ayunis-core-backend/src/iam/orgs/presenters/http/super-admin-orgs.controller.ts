@@ -5,6 +5,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -14,28 +16,32 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { SuperAdminGetAllOrgsUseCase } from '../../application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
+import { SuperAdminGetAllOrgsUseCase } from 'src/iam/orgs/application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.use-case';
 import { SuperAdminOrgResponseDtoMapper } from './mappers/super-admin-org-response-dto.mapper';
 import {
   SuperAdminOrgListResponseDto,
   SuperAdminOrgResponseDto,
 } from './dtos/super-admin-org-response.dto';
 import { UUID } from 'crypto';
-import { FindOrgByIdQuery } from '../../application/use-cases/find-org-by-id/find-org-by-id.query';
-import { FindOrgByIdUseCase } from '../../application/use-cases/find-org-by-id/find-org-by-id.use-case';
-import { CreateOrgUseCase } from '../../application/use-cases/create-org/create-org.use-case';
-import { CreateOrgCommand } from '../../application/use-cases/create-org/create-org.command';
+import { FindOrgByIdQuery } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.query';
+import { FindOrgByIdUseCase } from 'src/iam/orgs/application/use-cases/find-org-by-id/find-org-by-id.use-case';
+import { CreateOrgUseCase } from 'src/iam/orgs/application/use-cases/create-org/create-org.use-case';
+import { CreateOrgCommand } from 'src/iam/orgs/application/use-cases/create-org/create-org.command';
 import { CreateOrgRequestDto } from './dtos/create-org-request.dto';
+import { UpdateOrgUseCase } from 'src/iam/orgs/application/use-cases/update-org/update-org.use-case';
+import { UpdateOrgCommand } from 'src/iam/orgs/application/use-cases/update-org/update-org.command';
+import { UpdateOrgRequestDto } from './dtos/update-org-request.dto';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { SystemRoles } from 'src/iam/authorization/application/decorators/system-roles.decorator';
 import { SuperAdminGetAllOrgsQueryParamsDto } from './dtos/super-admin-get-all-orgs-query-params.dto';
-import { SuperAdminGetAllOrgsQuery } from '../../application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.query';
+import { SuperAdminGetAllOrgsQuery } from 'src/iam/orgs/application/use-cases/super-admin-get-all-orgs/super-admin-get-all-orgs.query';
 
 @ApiTags('Super Admin Orgs')
 @Controller('super-admin/orgs')
@@ -48,6 +54,7 @@ export class SuperAdminOrgsController {
     private readonly superAdminOrgResponseDtoMapper: SuperAdminOrgResponseDtoMapper,
     private readonly findOrgByIdUseCase: FindOrgByIdUseCase,
     private readonly createOrgUseCase: CreateOrgUseCase,
+    private readonly updateOrgUseCase: UpdateOrgUseCase,
   ) {}
 
   @Post()
@@ -154,6 +161,48 @@ export class SuperAdminOrgsController {
   })
   async getOrgById(@Param('id') id: UUID): Promise<SuperAdminOrgResponseDto> {
     const org = await this.findOrgByIdUseCase.execute(new FindOrgByIdQuery(id));
+    return this.superAdminOrgResponseDtoMapper.toDto(org);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Rename an organization',
+    description:
+      'Update an organization display name. Only accessible to users with the super admin system role.',
+  })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    type: String,
+    description: 'The ID of the organization to update.',
+  })
+  @ApiBody({
+    type: UpdateOrgRequestDto,
+    description: 'Organization information',
+  })
+  @ApiOkResponse({
+    description: 'Successfully updated organization for the super admin.',
+    type: SuperAdminOrgResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request format or validation errors.',
+  })
+  @ApiForbiddenResponse({
+    description: 'The requester is not a super admin.',
+  })
+  @ApiNotFoundResponse({
+    description: 'The organization does not exist.',
+  })
+  async updateOrg(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() updateOrgDto: UpdateOrgRequestDto,
+  ): Promise<SuperAdminOrgResponseDto> {
+    this.logger.info({ id, name: updateOrgDto.name }, 'Updating organization');
+
+    const org = await this.updateOrgUseCase.execute(
+      new UpdateOrgCommand(id, updateOrgDto.name),
+    );
     return this.superAdminOrgResponseDtoMapper.toDto(org);
   }
 }

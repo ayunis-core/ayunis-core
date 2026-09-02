@@ -537,6 +537,11 @@ export interface SuperAdminOrgListResponseDto {
   pagination: PaginationDto;
 }
 
+export interface UpdateOrgRequestDto {
+  /** Organization display name */
+  name: string;
+}
+
 export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
 
 

@@ -1439,6 +1439,55 @@
         },
         "summary": "Get an organization by ID",
         "tags": ["Super Admin Orgs"]
+      },
+      "patch": {
+        "description": "Update an organization display name. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_updateOrg",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the organization to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Organization information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated organization for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          },
+          "404": {
+            "description": "The organization does not exist."
+          }
+        },
+        "summary": "Rename an organization",
+        "tags": ["Super Admin Orgs"]
       }
     },
     "/role-permissions": {
@@ -12807,6 +12856,17 @@
           }
         },
         "required": ["data", "pagination"]
+      },
+      "UpdateOrgRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": ["name"]
       },
       "RolePermissionSetDto": {
         "type": "object",
