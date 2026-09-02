@@ -24,7 +24,6 @@ interface EntryControlsProps {
   activePanel: PanelKey | null;
   highlight: PanelKey | null;
   onOpen: (panel: PanelKey) => void;
-  onClose: () => void;
 }
 
 export function EntryControls({
@@ -34,7 +33,6 @@ export function EntryControls({
   activePanel,
   highlight,
   onOpen,
-  onClose,
 }: Readonly<EntryControlsProps>) {
   if (variant === 'header') {
     return (
@@ -67,11 +65,7 @@ export function EntryControls({
       size="icon"
       aria-label="Ergebnisse und Kontext"
       className={cn('relative transition-all', highlight && 'text-brand')}
-      onClick={
-        variant === 'single'
-          ? () => (activePanel ? onClose() : onOpen('results'))
-          : undefined
-      }
+      onClick={variant === 'single' ? () => onOpen('results') : undefined}
     >
       <Library />
       {resultCount > 0 && (

@@ -415,4 +415,27 @@ export const JOURNEY: JourneyStep[] = [
       ],
     },
   },
+  {
+    id: 'presse-verlauf',
+    label: 'Längerer Verlauf',
+    hint: 'Vier Runden, zwei Ergebnisse, Belege an mehreren Antworten — so wirkt es im Alltag.',
+    state: {
+      ...EMPTY,
+      contextIds: ['skill-pressemitteilung', 'kb-presse'],
+      artifactIds: ['artifact-pressemitteilung', 'artifact-oeffnungszeiten'],
+      transcriptIds: [
+        'msg-presse-frage',
+        'entry-presse-aktivierung',
+        'msg-presse-antwort-viele',
+        'entry-presse-artefakt',
+        'msg-frage-tabelle',
+        'msg-antwort-tabelle',
+        'entry-artefakt-tabelle',
+        'msg-frage-barrierefrei',
+        'msg-antwort-barrierefrei',
+        'msg-frage-freigabe',
+        'msg-antwort-freigabe',
+      ],
+    },
+  },
 ];

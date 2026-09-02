@@ -130,6 +130,12 @@ export const ARTIFACTS: Record<string, ArtifactItem> = {
     type: 'document',
     preview: '',
   },
+  'artifact-oeffnungszeiten': {
+    id: 'artifact-oeffnungszeiten',
+    name: 'Öffnungszeiten Aushang',
+    type: 'spreadsheet',
+    preview: '',
+  },
   'artifact-fristen': {
     id: 'artifact-fristen',
     name: 'Fristenübersicht Beteiligung',
@@ -284,6 +290,44 @@ export const TRANSCRIPT: Record<string, TranscriptEntry> = {
       'hit-oeffnungszeiten',
       'hit-barrierefreiheit',
     ],
+  },
+  'msg-frage-tabelle': {
+    id: 'msg-frage-tabelle',
+    kind: 'user',
+    text: 'Kannst du die Öffnungszeiten noch als Tabelle für den Aushang aufbereiten? Din A4, gut lesbar.',
+  },
+  'msg-antwort-tabelle': {
+    id: 'msg-antwort-tabelle',
+    kind: 'assistant',
+    text: 'Ich habe die Zeiten aus dem Beschluss in eine Tabelle übernommen: Wochentag, Uhrzeit und ein Hinweisfeld für den langen Donnerstag. Die Schriftgröße ist für einen Aushang in A4 gewählt.',
+    sourceIds: ['hit-oeffnungszeiten'],
+  },
+  'entry-artefakt-tabelle': {
+    id: 'entry-artefakt-tabelle',
+    kind: 'artifact',
+    artifactId: 'artifact-oeffnungszeiten',
+  },
+  'msg-frage-barrierefrei': {
+    id: 'msg-frage-barrierefrei',
+    kind: 'user',
+    text: 'Ergänze in der Pressemitteilung bitte noch einen Satz zur Barrierefreiheit.',
+  },
+  'msg-antwort-barrierefrei': {
+    id: 'msg-antwort-barrierefrei',
+    kind: 'assistant',
+    text: 'Ergänzt: stufenloser Zugang, Aufzug zwischen den Etagen und ein Leitsystem in einfacher Sprache. Ich habe mich an den Formulierungen des Bundesleitfadens orientiert, damit die Angaben prüfbar bleiben.',
+    sourceIds: ['hit-barrierefreiheit'],
+  },
+  'msg-frage-freigabe': {
+    id: 'msg-frage-freigabe',
+    kind: 'user',
+    text: 'Wer muss den Text vor der Veröffentlichung freigeben?',
+  },
+  'msg-antwort-freigabe': {
+    id: 'msg-antwort-freigabe',
+    kind: 'assistant',
+    text: 'Nach der Musterpressemitteilung gibt die Amtsleitung frei, der Rückfragehinweis der Pressestelle bleibt im Text. Ich habe den Hinweis am Ende schon eingesetzt.',
+    sourceIds: ['hit-presse-vorlage-2'],
   },
   'entry-presse-artefakt': {
     id: 'entry-presse-artefakt',

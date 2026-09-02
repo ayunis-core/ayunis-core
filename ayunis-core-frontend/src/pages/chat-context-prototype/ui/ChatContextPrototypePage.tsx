@@ -29,12 +29,29 @@ export function ChatContextPrototypePage() {
   }
 
   function openPanel(panel: PanelKey) {
-    setState((current) => ({
-      ...current,
-      panel: current.panel === panel ? null : panel,
-      highlight: null,
-      openArtifactId: null,
-    }));
+    setState((current) => {
+      const hasDetail =
+        current.openSourceId !== null ||
+        current.sourceListIds !== null ||
+        current.openContextId !== null ||
+        current.openArtifactId !== null;
+      if (hasDetail) {
+        return {
+          ...current,
+          panel,
+          highlight: null,
+          openArtifactId: null,
+          openSourceId: null,
+          openContextId: null,
+          sourceListIds: null,
+        };
+      }
+      return {
+        ...current,
+        panel: current.panel === panel ? null : panel,
+        highlight: null,
+      };
+    });
   }
 
   function openContextDetail(contextId: string) {
@@ -139,9 +156,6 @@ export function ChatContextPrototypePage() {
                       activePanel={state.panel}
                       highlight={state.highlight}
                       onOpen={openPanel}
-                      onClose={() =>
-                        setState((current) => ({ ...current, panel: null }))
-                      }
                     />
                     <Button
                       variant="ghost"
