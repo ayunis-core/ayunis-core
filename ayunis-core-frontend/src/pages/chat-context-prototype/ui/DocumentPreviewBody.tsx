@@ -53,7 +53,7 @@ function NoPreviewBody({ hit }: Readonly<{ hit: SourceHit }>) {
 }
 
 function kindLabel(hit: SourceHit): string {
-  if (hit.kind === 'web') return hit.crawledFrom ? 'Unterseite' : 'Webseite';
+  if (hit.kind === 'web') return 'Webseite';
   if (isAudio(hit)) return 'Aufnahme';
   return 'Tabelle';
 }
@@ -61,14 +61,21 @@ function kindLabel(hit: SourceHit): string {
 function NoPreviewDescription({ hit }: Readonly<{ hit: SourceHit }>) {
   if (hit.kind === 'web') {
     return (
-      <a
-        href={hit.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary hover:underline"
-      >
-        {hit.url}
-      </a>
+      <>
+        <a
+          href={hit.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          {hit.url}
+        </a>
+        {hit.crawledPages !== undefined && (
+          <span className="mt-1 block">
+            {hit.crawledPages} Seiten eingelesen, inklusive Unterseiten.
+          </span>
+        )}
+      </>
     );
   }
   if (isAudio(hit)) {

@@ -96,6 +96,7 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
     url: 'https://ortsrecht.stadt.de/',
     retrievedAt: 'Abgerufen am 28.08.2026',
     crawlDepth: 1,
+    crawledPages: 14,
     passage:
       'Das Ortsrecht umfasst alle Satzungen, Verordnungen und Gebührenordnungen der Stadt in ihrer geltenden Fassung.',
     body: [
@@ -103,23 +104,6 @@ export const SOURCE_HITS: Record<string, SourceHit> = {
       'Das Ortsrecht umfasst alle Satzungen, Verordnungen und Gebührenordnungen der Stadt in ihrer geltenden Fassung.',
       'Die Sammlung wird vom Rechtsamt geführt und nach jeder Ratssitzung fortgeschrieben. Änderungen treten mit der öffentlichen Bekanntmachung in Kraft.',
       'Gliederung: 1. Allgemeine Verwaltung · 2. Finanzen und Abgaben · 3. Öffentliche Sicherheit · 4. Bauen und Planen · 5. Soziales und Bildung.',
-    ],
-  },
-  'web-ortsrecht-bauen': {
-    id: 'web-ortsrecht-bauen',
-    kind: 'web',
-    title: 'Ortsrecht — Bauen und Planen',
-    siteName: 'ortsrecht.stadt.de',
-    url: 'https://ortsrecht.stadt.de/bauen',
-    retrievedAt: 'Abgerufen am 28.08.2026',
-    crawledFrom: 'ortsrecht.stadt.de',
-    crawlDepth: 1,
-    passage:
-      'Unterseite mit Stellplatzsatzung, Gestaltungssatzung und Sondernutzungsgebühren.',
-    body: [
-      'Ortsrecht — Bauen und Planen',
-      'Unterseite mit Stellplatzsatzung, Gestaltungssatzung und Sondernutzungsgebühren.',
-      'Die Stellplatzsatzung in der Fassung von 2014 wird derzeit überarbeitet. Der Entwurf liegt dem Bauausschuss vor.',
     ],
   },
   'doc-stellenplan': {

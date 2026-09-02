@@ -42,8 +42,8 @@ export interface WebSourceHit {
   body?: string[];
   status?: DocumentStatus;
   processingError?: string;
-  crawledFrom?: string;
   crawlDepth?: number;
+  crawledPages?: number;
 }
 
 export type SourceHit = DocumentSourceHit | WebSourceHit;

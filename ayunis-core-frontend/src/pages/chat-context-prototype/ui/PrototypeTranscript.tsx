@@ -9,6 +9,10 @@ import {
   CONTEXT_ITEMS,
   TRANSCRIPT,
 } from '@/pages/chat-context-prototype/model/mock';
+import {
+  groupSourceHits,
+  type SourceGroup,
+} from '@/pages/chat-context-prototype/model/source-groups';
 import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 interface PrototypeTranscriptProps {
@@ -107,57 +111,76 @@ function SourceBadges({
   onOpen: (sourceId: string) => void;
   onOpenAll: (sourceIds: string[]) => void;
 }>) {
-  if (ids.length > 3) {
+  const groups = groupSourceHits(ids);
+  if (groups.length > 2) {
     return (
-      <Badge asChild variant="outline" className="w-fit cursor-pointer pl-1.5">
-        <button type="button" onClick={() => onOpenAll(ids)}>
-          <span className="flex items-center">
-            {ids.slice(0, 3).map((id, index) => (
-              <span
-                key={id}
-                className={cn(
-                  'flex size-4 items-center justify-center rounded-full border bg-background text-muted-foreground [&_svg]:size-2.5',
-                  index > 0 && '-ml-1.5',
-                )}
-              >
-                <SourceKindIcon hit={ALL_SOURCE_HITS[id]} />
-              </span>
-            ))}
-          </span>
-          {ids.length} Quellen
-        </button>
-      </Badge>
+      <CollapsedSourceBadge groups={groups} onOpen={() => onOpenAll(ids)} />
     );
   }
-
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      {ids.map((id) => {
-        const hit = ALL_SOURCE_HITS[id];
-        if (hit.kind === 'web') {
-          return (
-            <a
-              key={id}
-              href={hit.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-primary hover:underline [&_svg]:size-3"
-            >
-              <Globe />
-              {hit.siteName}
-            </a>
-          );
-        }
-        return (
-          <Badge key={id} asChild variant="outline" className="cursor-pointer">
-            <button type="button" onClick={() => onOpen(id)}>
-              <SourceKindIcon hit={hit} />
-              {hit.title}
-            </button>
-          </Badge>
-        );
-      })}
+      {groups.map((group) => (
+        <NamedSourceBadge
+          key={group.key}
+          hitId={group.firstHitId}
+          onOpen={onOpen}
+        />
+      ))}
     </div>
+  );
+}
+
+function CollapsedSourceBadge({
+  groups,
+  onOpen,
+}: Readonly<{ groups: SourceGroup[]; onOpen: () => void }>) {
+  return (
+    <Badge asChild variant="outline" className="w-fit cursor-pointer pl-1.5">
+      <button type="button" onClick={onOpen}>
+        <span className="flex items-center">
+          {groups.slice(0, 3).map((group, index) => (
+            <span
+              key={group.key}
+              className={cn(
+                'flex size-4 items-center justify-center rounded-full border bg-background text-muted-foreground [&_svg]:size-2.5',
+                index > 0 && '-ml-1.5',
+              )}
+            >
+              <SourceKindIcon hit={ALL_SOURCE_HITS[group.firstHitId]} />
+            </span>
+          ))}
+        </span>
+        {groups.length} Quellen
+      </button>
+    </Badge>
+  );
+}
+
+function NamedSourceBadge({
+  hitId,
+  onOpen,
+}: Readonly<{ hitId: string; onOpen: (sourceId: string) => void }>) {
+  const hit = ALL_SOURCE_HITS[hitId];
+  if (hit.kind === 'web') {
+    return (
+      <a
+        href={hit.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 text-xs text-primary hover:underline [&_svg]:size-3"
+      >
+        <Globe />
+        {hit.siteName}
+      </a>
+    );
+  }
+  return (
+    <Badge asChild variant="outline" className="cursor-pointer">
+      <button type="button" onClick={() => onOpen(hitId)}>
+        <SourceKindIcon hit={hit} />
+        {hit.title}
+      </button>
+    </Badge>
   );
 }
 

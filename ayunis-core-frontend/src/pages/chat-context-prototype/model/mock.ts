@@ -294,7 +294,6 @@ export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
     'doc-stellplatzsatzung',
     'doc-gebuehrensatzung',
     'web-ortsrecht',
-    'web-ortsrecht-bauen',
   ],
   'kb-personal': ['doc-dienstanweisung', 'doc-stellenplan', 'doc-onboarding'],
   'kb-protokolle': [
