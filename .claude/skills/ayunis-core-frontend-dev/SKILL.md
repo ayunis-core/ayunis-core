@@ -17,21 +17,29 @@ Before modifying any layer, read its `SUMMARY.md` in `src/[layer]/SUMMARY.md`. T
 
 ## Validation Sequence
 
+Choose validation breadth using the repository's Proportional Workflow.
+
+For Standard and High-Risk changes:
+
 ```bash
 pnpm run build                 # Must succeed
 pnpm run lint                  # Must pass
 ```
 
-**User-facing change?** The definition of done includes e2e coverage — load
-the `e2e` skill: add/update the journey spec in `ayunis-core-e2e/` and run it
-green before submitting. Add `data-testid`s to touched components in the same
-PR (`<feature>-<element>`, kebab-case) — text selectors are banned because
-the UI is i18n'd.
+For Fast Path changes, run the narrowest relevant test when behavior or test
+code changed, plus any lint/type check applicable to the touched files. Run the
+build when imports, types, dependencies, bundling, or other compile-time
+behavior could be affected.
 
-**Visible UI change?** After the product PR exists, add temporary PR media by
-loading the `pr-media` skill and publishing scenes to `pr-media/pr-<number>`.
-This is required unless the user explicitly says not to add PR media. Do not
-commit media scenes to the product branch.
+**Browser journey or system boundary changed?** Load the `e2e` skill when
+lower-level tests do not sufficiently prove the behavior. Add `data-testid`s
+needed by the journey to touched components in the same PR
+(`<feature>-<element>`, kebab-case) — text selectors are banned because the UI
+is i18n'd.
+
+**Would visual evidence materially help review?** After the product PR exists,
+load the `pr-media` skill and publish the smallest useful scene set to
+`pr-media/pr-<number>`. Do not commit media scenes to the product branch.
 
 ## Architecture (Feature-Sliced Design)
 
@@ -111,13 +119,14 @@ For hooks that back a form (create/update dialogs), load the **frontend-form-pat
 
 ## Verifying in the Browser
 
-Use your harness's browser tooling to check the page renders and the console is clean. A render failure shows the React dev-server error overlay — the element `#webpack-dev-server-client-overlay` must not exist. The frontend URL depends on the dev slot (see `dev-environment`); seeded login credentials are in `seed-database`.
+When the change affects rendered UI or browser behavior, use your harness's browser tooling to check the affected page renders and the console is clean. A render failure shows the React dev-server error overlay — the element `#webpack-dev-server-client-overlay` must not exist. The frontend URL depends on the dev slot (see `dev-environment`); seeded login credentials are in `seed-database`.
 
 ## Completion Checklist
 
-- [ ] `pnpm run build` succeeds
-- [ ] `pnpm run lint` passes
-- [ ] Page renders without console errors
+- [ ] Validation matches the repository's Proportional Workflow
+- [ ] Relevant focused tests pass when behavior or test code changed
+- [ ] Build and package lint pass for Standard and High-Risk changes
+- [ ] Affected page renders without console errors when UI or browser behavior changed
 - [ ] No `any` types introduced
 - [ ] Import rules respected (no upward imports)
 - [ ] UI primitives use public `@ayunis/ui` subpaths

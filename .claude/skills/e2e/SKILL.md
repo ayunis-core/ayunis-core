@@ -1,13 +1,15 @@
 ---
 name: e2e
-description: Write and run Playwright e2e tests in ayunis-core-e2e. MUST be loaded when a user-facing feature is built or changed — the definition of done includes a green e2e spec — and whenever running, writing, or debugging browser tests.
+description: Write and run Playwright e2e tests in ayunis-core-e2e. Use when writing, running, or debugging browser tests; when a browser journey or system boundary changes and lower-level tests do not sufficiently prove it; or when the High-Risk Path affects user-facing behavior. Not automatic for copy, isolated visual-only work, or behavior already proven at a lower layer.
 ---
 
 # E2E Tests — ayunis-core-e2e
 
-Browser tests against the real stack with deterministic LLM mocks. A
-user-facing feature is **done when its e2e spec passes** — no manual browser
-check needed. Architecture and history: `ayunis-core-e2e/PLAN.md`.
+Browser tests against the real stack with deterministic LLM mocks. When the
+Proportional Workflow requires browser coverage, the change is **done when its
+focused e2e spec passes**. Use E2E for journeys and boundaries that lower-level
+tests cannot credibly prove; do not add an E2E test merely because a change is
+visible to a user. Architecture and history: `ayunis-core-e2e/PLAN.md`.
 
 ## Stack setup (once per session)
 
@@ -43,7 +45,7 @@ Non-default slot: `E2E_BASE_URL=http://localhost:30N1 pnpm --filter ...`
 
 Temporary PR-review screenshots/GIFs use `pnpm --filter ayunis-core-e2e run pr-media:capture`. Scene definitions are not committed to product branches; use the `pr-media` skill to put `.pr-media/scenes.ts` on the disposable `pr-media/pr-<n>` branch for the PR.
 
-For visible frontend changes, PR media is part of the post-submit workflow: after the product PR exists, create temporary PR media unless the user explicitly opts out. Include desktop and mobile screenshots of the changed UI, plus a short GIF for changed interactions, dialogs, menus, or flows.
+For visually meaningful frontend changes, use the `pr-media` skill when the result materially helps reviewers evaluate the PR. Include only the viewports and interactions needed to demonstrate the change.
 
 ## Fixtures — import from `src/fixtures/test`, never `@playwright/test`
 
@@ -108,7 +110,7 @@ tests/<domain>/     Product journeys, one journey per spec file
    - Admin mutation with API assertion: `tests/admin/instructions.spec.ts`
 2. Prefer generated endpoint calls behind `src/clients/api/`; do not hardcode backend routes in specs. Compose test data in `src/factories/`, reusable UI journeys in `src/flows/`, and assert behaviour through the UI.
 3. Unique data per test (`Date.now()` suffixes) — tests share the worker org.
-4. Run the spec, then the full suite, then lint + typecheck.
+4. Run the focused spec, lint, and typecheck. Run the full suite when the change affects shared fixtures, flows, clients, or broad behavior; otherwise rely on CI for the full-suite gate.
 
 ## Debugging a failure
 
