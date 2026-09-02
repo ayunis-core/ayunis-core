@@ -1,4 +1,4 @@
-import { ChevronRight, Globe, Quote } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import {
   Item,
   ItemActions,
@@ -9,6 +9,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { ALL_SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
+import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 interface SourceGroup {
   key: string;
@@ -64,7 +65,7 @@ export function SourceListBody({
           >
             <button type="button" onClick={() => onOpenHit(group.firstHitId)}>
               <ItemMedia className="text-muted-foreground [&_svg]:size-4">
-                {group.isWeb ? <Globe /> : <Quote />}
+                <SourceKindIcon hit={ALL_SOURCE_HITS[group.firstHitId]} />
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>{group.title}</ItemTitle>

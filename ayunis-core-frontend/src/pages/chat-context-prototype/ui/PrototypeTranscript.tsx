@@ -1,4 +1,4 @@
-import { Globe, Quote, Sparkles } from 'lucide-react';
+import { Globe, Sparkles } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
 import { DocumentWidgetCard } from '@/pages/chat/ui/chat-widgets/DocumentWidgetCard';
@@ -9,6 +9,7 @@ import {
   CONTEXT_ITEMS,
   TRANSCRIPT,
 } from '@/pages/chat-context-prototype/model/mock';
+import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
 interface PrototypeTranscriptProps {
   transcriptIds: string[];
@@ -108,7 +109,7 @@ function SourceBadges({
 }>) {
   if (ids.length > 3) {
     return (
-      <Badge asChild variant="outline" className="w-fit cursor-pointer">
+      <Badge asChild variant="outline" className="w-fit cursor-pointer pl-1.5">
         <button type="button" onClick={() => onOpenAll(ids)}>
           <span className="flex items-center">
             {ids.slice(0, 3).map((id, index) => (
@@ -119,7 +120,7 @@ function SourceBadges({
                   index > 0 && '-ml-1.5',
                 )}
               >
-                {ALL_SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
+                <SourceKindIcon hit={ALL_SOURCE_HITS[id]} />
               </span>
             ))}
           </span>
@@ -150,7 +151,7 @@ function SourceBadges({
         return (
           <Badge key={id} asChild variant="outline" className="cursor-pointer">
             <button type="button" onClick={() => onOpen(id)}>
-              <Quote />
+              <SourceKindIcon hit={hit} />
               {hit.title}
             </button>
           </Badge>
