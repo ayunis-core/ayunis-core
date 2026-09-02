@@ -7,3 +7,7 @@ export async function createSuperAdminOrg(
 ) {
   return generatedApi.superAdminOrgsControllerCreateOrg({ name }, { api });
 }
+
+export async function getSuperAdminOrg(api: APIRequestContext, orgId: string) {
+  return generatedApi.superAdminOrgsControllerGetOrgById(orgId, { api });
+}
