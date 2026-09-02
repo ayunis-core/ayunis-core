@@ -200,7 +200,11 @@ export function ChatContextPrototypePage() {
             chatContent={
               <PrototypeTranscript
                 transcriptIds={state.transcriptIds}
-                onOpenContext={() => openPanel('context')}
+                onOpenContext={(contextId) =>
+                  contextId
+                    ? openContextDetail(contextId)
+                    : openPanel('context')
+                }
                 onOpenArtifact={openArtifact}
                 onOpenSource={openSource}
                 onOpenSourceList={openSourceList}
@@ -249,7 +253,11 @@ export function ChatContextPrototypePage() {
                       openArtifactId: null,
                     }))
                   }
-                  onExpandSource={() => setExpandedSourceId(state.openSourceId)}
+                  onExpandSource={() =>
+                    setExpandedSourceId(
+                      state.openDocumentId ?? state.openSourceId,
+                    )
+                  }
                   onBackToContext={goBackInContext}
                   onOpenContextDetail={openContextDetail}
                   onOpenDocument={(documentId) =>

@@ -12,7 +12,7 @@ import {
 
 interface PrototypeTranscriptProps {
   transcriptIds: string[];
-  onOpenContext: () => void;
+  onOpenContext: (contextId?: string) => void;
   onOpenArtifact: (artifactId: string) => void;
   onOpenSource: (sourceId: string) => void;
   onOpenSourceList: (sourceIds: string[]) => void;
@@ -57,7 +57,7 @@ function TranscriptRow({
   onOpenSourceList,
 }: Readonly<{
   entryId: string;
-  onOpenContext: () => void;
+  onOpenContext: (contextId?: string) => void;
   onOpenArtifact: (artifactId: string) => void;
   onOpenSource: (sourceId: string) => void;
   onOpenSourceList: (sourceIds: string[]) => void;
@@ -163,11 +163,14 @@ function SourceBadges({
 function ActivationNote({
   contextItemId,
   onOpenContext,
-}: Readonly<{ contextItemId: string; onOpenContext: () => void }>) {
+}: Readonly<{
+  contextItemId: string;
+  onOpenContext: (contextId?: string) => void;
+}>) {
   const item = CONTEXT_ITEMS[contextItemId];
   return (
     <Badge asChild variant="ghost" className="w-fit cursor-pointer px-0">
-      <button type="button" onClick={onOpenContext}>
+      <button type="button" onClick={() => onOpenContext(contextItemId)}>
         <Sparkles className="text-brand" />
         <span>
           Fähigkeit <span className="font-medium">{item.name}</span> aktiviert
