@@ -14,7 +14,7 @@ import { showInfo } from '@/shared/lib/toast';
 import {
   CONTEXT_ITEMS,
   DOCUMENTS_BY_KNOWLEDGE_BASE,
-  SOURCE_HITS,
+  ALL_SOURCE_HITS,
   type ContextItem,
 } from '@/pages/chat-context-prototype/model/mock';
 import { ContextKindIcon } from '@/pages/chat-context-prototype/ui/context-icons';
@@ -111,7 +111,7 @@ function DocumentRow({
   documentId,
   onOpen,
 }: Readonly<{ documentId: string; onOpen: (documentId: string) => void }>) {
-  const hit = SOURCE_HITS[documentId];
+  const hit = ALL_SOURCE_HITS[documentId];
   if (hit.kind !== 'document') return null;
   return (
     <Item

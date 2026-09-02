@@ -13,6 +13,7 @@ import { CONTEXT_ITEMS } from '@/pages/chat-context-prototype/model/mock';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
+import { DocumentPreviewPane } from './DocumentPreviewPane';
 import { ResultsPanelBody } from './ResultsPanelBody';
 import { SourceListBody } from './SourceListBody';
 import { SourcePanelBody } from './SourcePanelBody';
@@ -26,6 +27,7 @@ interface PrototypeSidePanelProps {
   openSourceId: string | null;
   openContextId: string | null;
   sourceListIds: string[] | null;
+  openDocumentId: string | null;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
@@ -156,10 +158,13 @@ function TabsView({
   processingIds,
   artifactIds,
   openArtifactId,
+  openDocumentId,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
   onOpenContextDetail,
+  onOpenDocument,
+  onExpandSource,
   onClose,
 }: Readonly<PrototypeSidePanelProps>) {
   return (
@@ -204,11 +209,33 @@ function TabsView({
             )}
           </TabsContent>
           <TabsContent value="context">
-            <ContextPanelBody
-              contextIds={contextIds}
-              processingIds={processingIds}
-              onOpenDetail={onOpenContextDetail}
-            />
+            {openDocumentId ? (
+              <div className="flex gap-5">
+                <div className="w-56 shrink-0">
+                  <ContextPanelBody
+                    contextIds={contextIds}
+                    processingIds={processingIds}
+                    openDocumentId={openDocumentId}
+                    onOpenDetail={onOpenContextDetail}
+                    onOpenDocument={onOpenDocument}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <DocumentPreviewPane
+                    documentId={openDocumentId}
+                    onExpand={onExpandSource}
+                  />
+                </div>
+              </div>
+            ) : (
+              <ContextPanelBody
+                contextIds={contextIds}
+                processingIds={processingIds}
+                openDocumentId={null}
+                onOpenDetail={onOpenContextDetail}
+                onOpenDocument={onOpenDocument}
+              />
+            )}
           </TabsContent>
         </div>
       </ScrollArea>

@@ -44,6 +44,7 @@ export function ChatContextPrototypePage() {
           openSourceId: null,
           openContextId: null,
           sourceListIds: null,
+          openDocumentId: null,
         };
       }
       return {
@@ -134,7 +135,7 @@ export function ChatContextPrototypePage() {
         <div className="relative min-h-0 flex-1">
           <PrototypeChatLayout
             resetKey={stepIndex}
-            panelSize={state.openArtifactId ? 62 : 38}
+            panelSize={(state.openArtifactId ?? state.openDocumentId) ? 62 : 38}
             chatHeader={
               <ContentAreaHeader
                 breadcrumbs={[
@@ -207,6 +208,7 @@ export function ChatContextPrototypePage() {
                   openSourceId={state.openSourceId}
                   openContextId={state.openContextId}
                   sourceListIds={state.sourceListIds}
+                  openDocumentId={state.openDocumentId}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,
@@ -224,7 +226,13 @@ export function ChatContextPrototypePage() {
                   onExpandSource={() => setExpandedSourceId(state.openSourceId)}
                   onBackToContext={goBackInContext}
                   onOpenContextDetail={openContextDetail}
-                  onOpenDocument={setExpandedSourceId}
+                  onOpenDocument={(documentId) =>
+                    setState((current) => ({
+                      ...current,
+                      openDocumentId: documentId,
+                      openContextId: null,
+                    }))
+                  }
                   onOpenSourceFromList={(sourceId) =>
                     setState((current) => ({
                       ...current,

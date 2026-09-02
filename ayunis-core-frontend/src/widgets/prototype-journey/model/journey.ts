@@ -17,6 +17,7 @@ export interface PrototypeState {
   openSourceId: string | null;
   openContextId: string | null;
   sourceListIds: string[] | null;
+  openDocumentId: string | null;
   highlight: PanelKey | null;
 }
 
@@ -40,6 +41,7 @@ const EMPTY: PrototypeState = {
   openSourceId: null,
   openContextId: null,
   sourceListIds: null,
+  openDocumentId: null,
   highlight: null,
 };
 
