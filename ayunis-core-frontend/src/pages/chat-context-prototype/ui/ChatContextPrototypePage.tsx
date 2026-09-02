@@ -79,6 +79,7 @@ export function ChatContextPrototypePage() {
       openSourceId: null,
       openContextId: null,
       openDocumentId: null,
+      citedDocumentId: null,
       sourceListIds: null,
       ...patch,
     };
@@ -117,6 +118,7 @@ export function ChatContextPrototypePage() {
         return withDetail(current, {
           panel: 'context',
           openDocumentId: sourceId,
+          citedDocumentId: sourceId,
         });
       }
       const next = withDetail(current, {
@@ -139,6 +141,7 @@ export function ChatContextPrototypePage() {
     <>
       <SourceDialog
         sourceId={expandedSourceId}
+        showCitation={expandedSourceId === state.citedDocumentId}
         onClose={() => setExpandedSourceId(null)}
       />
     </>
@@ -237,6 +240,10 @@ export function ChatContextPrototypePage() {
                   openContextId={state.openContextId}
                   sourceListIds={state.sourceListIds}
                   openDocumentId={state.openDocumentId}
+                  isDocumentCited={
+                    state.openDocumentId !== null &&
+                    state.openDocumentId === state.citedDocumentId
+                  }
                   contextLayout={contextLayout}
                   panelFrame={panelFrame}
                   onPanelChange={(panel) =>

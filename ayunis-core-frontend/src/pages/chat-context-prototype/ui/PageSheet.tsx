@@ -14,10 +14,16 @@ interface PageSheetProps {
   hit: DocumentSourceHit;
   page: number;
   variant: 'thumb' | 'full';
+  showCitation?: boolean;
 }
 
-export function PageSheet({ hit, page, variant }: Readonly<PageSheetProps>) {
-  const isSourcePage = page === hit.page;
+export function PageSheet({
+  hit,
+  page,
+  variant,
+  showCitation = true,
+}: Readonly<PageSheetProps>) {
+  const isSourcePage = showCitation && page === hit.page;
   const isThumb = variant === 'thumb';
 
   return (

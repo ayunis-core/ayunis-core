@@ -7,19 +7,21 @@ import { PageSheet } from '@/pages/chat-context-prototype/ui/PageSheet';
 
 interface DocumentPreviewPaneProps {
   documentId: string;
+  isCited: boolean;
   onExpand: () => void;
 }
 
 export function DocumentPreviewPane({
   documentId,
+  isCited,
   onExpand,
 }: Readonly<DocumentPreviewPaneProps>) {
   const hit = ALL_SOURCE_HITS[documentId];
   const citedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    citedRef.current?.scrollIntoView({ block: 'start' });
-  }, [documentId]);
+    if (isCited) citedRef.current?.scrollIntoView({ block: 'start' });
+  }, [documentId, isCited]);
 
   if (hit.kind !== 'document') return null;
   const pages = Array.from({ length: hit.pageCount }, (_, index) => index + 1);
@@ -30,7 +32,8 @@ export function DocumentPreviewPane({
         <div className="flex min-w-0 flex-col">
           <h3 className="truncate text-sm font-medium">{hit.title}</h3>
           <span className="text-xs text-muted-foreground">
-            {hit.pageCount} Seiten · Fundstelle auf {hit.location}
+            {hit.pageCount} Seiten
+            {isCited && ` · Fundstelle auf ${hit.location}`}
           </span>
         </div>
         <Button
@@ -47,10 +50,15 @@ export function DocumentPreviewPane({
           {pages.map((page) => (
             <div
               key={page}
-              ref={page === hit.page ? citedRef : undefined}
+              ref={isCited && page === hit.page ? citedRef : undefined}
               className="scroll-mt-5 overflow-hidden rounded-sm border bg-white shadow-sm"
             >
-              <PageSheet hit={hit} page={page} variant="full" />
+              <PageSheet
+                hit={hit}
+                page={page}
+                variant="full"
+                showCitation={isCited}
+              />
             </div>
           ))}
         </div>

@@ -39,6 +39,7 @@ interface PrototypeSidePanelProps {
   openContextId: string | null;
   sourceListIds: string[] | null;
   openDocumentId: string | null;
+  isDocumentCited: boolean;
   contextLayout: ContextLayout;
   panelFrame: PanelFrame;
   onPanelChange: (panel: PanelKey) => void;
@@ -176,6 +177,7 @@ function TabsView({
   openArtifactId,
   openContextId,
   openDocumentId,
+  isDocumentCited,
   contextLayout,
   panelFrame,
   onPanelChange,
@@ -226,6 +228,7 @@ function TabsView({
           contextIds={contextIds}
           processingIds={processingIds}
           openDocumentId={openDocumentId}
+          isDocumentCited={isDocumentCited}
           openContextId={openContextId}
           contextLayout={contextLayout}
           panelFrame={panelFrame}
@@ -242,6 +245,7 @@ function ContextBrowser({
   contextIds,
   processingIds,
   openDocumentId,
+  isDocumentCited,
   openContextId,
   contextLayout,
   panelFrame,
@@ -254,6 +258,7 @@ function ContextBrowser({
     | 'contextIds'
     | 'processingIds'
     | 'openDocumentId'
+    | 'isDocumentCited'
     | 'openContextId'
     | 'contextLayout'
     | 'panelFrame'
@@ -299,6 +304,7 @@ function ContextBrowser({
         {openDocumentId && (
           <DocumentPreviewPane
             documentId={openDocumentId}
+            isCited={isDocumentCited}
             onExpand={onExpandSource}
           />
         )}

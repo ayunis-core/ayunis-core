@@ -22,6 +22,7 @@ export interface PrototypeState {
   openContextId: string | null;
   sourceListIds: string[] | null;
   openDocumentId: string | null;
+  citedDocumentId: string | null;
   highlight: PanelKey | null;
 }
 
@@ -46,6 +47,7 @@ const EMPTY: PrototypeState = {
   openContextId: null,
   sourceListIds: null,
   openDocumentId: null,
+  citedDocumentId: null,
   highlight: null,
 };
 

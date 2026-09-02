@@ -17,11 +17,13 @@ import { PageSheet } from '@/pages/chat-context-prototype/ui/PageSheet';
 
 interface SourceDialogProps {
   sourceId: string | null;
+  showCitation: boolean;
   onClose: () => void;
 }
 
 export function SourceDialog({
   sourceId,
+  showCitation,
   onClose,
 }: Readonly<SourceDialogProps>) {
   const hit = sourceId ? SOURCE_HITS[sourceId] : null;
@@ -35,13 +37,18 @@ export function SourceDialog({
         className="flex h-[92vh] max-w-[min(1180px,95vw)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(1180px,95vw)]"
         closeLabel="Schließen"
       >
-        {documentHit && <DocumentReader hit={documentHit} />}
+        {documentHit && (
+          <DocumentReader hit={documentHit} showCitation={showCitation} />
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function DocumentReader({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
+function DocumentReader({
+  hit,
+  showCitation,
+}: Readonly<{ hit: DocumentSourceHit; showCitation: boolean }>) {
   const [page, setPage] = useState(hit.page);
   const pages = Array.from({ length: hit.pageCount }, (_, index) => index + 1);
 
@@ -52,7 +59,7 @@ function DocumentReader({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
           {hit.title}
         </DialogTitle>
         <div className="flex shrink-0 items-center gap-1">
-          {page !== hit.page && (
+          {showCitation && page !== hit.page && (
             <Button variant="ghost" size="sm" onClick={() => setPage(hit.page)}>
               <Crosshair />
               Zur Fundstelle
@@ -97,7 +104,12 @@ function DocumentReader({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
                     : 'hover:border-muted-foreground/40',
                 )}
               >
-                <PageSheet hit={hit} page={entry} variant="thumb" />
+                <PageSheet
+                  hit={hit}
+                  page={entry}
+                  variant="thumb"
+                  showCitation={showCitation}
+                />
               </button>
             ))}
           </div>
@@ -105,7 +117,12 @@ function DocumentReader({ hit }: Readonly<{ hit: DocumentSourceHit }>) {
         <ScrollArea className="min-h-0 flex-1 bg-muted/40">
           <div className="mx-auto w-full max-w-[760px] p-8">
             <div className="overflow-hidden rounded-sm shadow-md">
-              <PageSheet hit={hit} page={page} variant="full" />
+              <PageSheet
+                hit={hit}
+                page={page}
+                variant="full"
+                showCitation={showCitation}
+              />
             </div>
           </div>
         </ScrollArea>
