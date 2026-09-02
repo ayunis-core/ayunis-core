@@ -290,42 +290,44 @@ function ContextBrowser({
       </ScrollArea>
       <div
         className={cn(
-          'min-h-0 min-w-0 flex-1 overflow-hidden',
+          'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
           panelFrame === 'fill' && 'rounded-lg bg-muted/40',
           panelFrame === 'stroke' && 'rounded-lg border',
           panelFrame === 'divider' && 'border-l',
         )}
       >
-        <ScrollArea className="h-full">
-          <div className={cn(panelFrame === 'divider' ? 'py-2 pl-5' : 'p-5')}>
-            {openDocumentId && (
-              <DocumentPreviewPane
-                documentId={openDocumentId}
-                onExpand={onExpandSource}
-              />
-            )}
-            {!openDocumentId && openContextId && (
+        {openDocumentId && (
+          <DocumentPreviewPane
+            documentId={openDocumentId}
+            onExpand={onExpandSource}
+          />
+        )}
+        {!openDocumentId && openContextId && (
+          <ScrollArea className="h-full">
+            <div className={cn(panelFrame === 'divider' ? 'py-4 pl-5' : 'p-5')}>
               <ContextDetailBody
                 contextId={openContextId}
                 onOpenDocument={onOpenDocument}
               />
-            )}
-            {!selection && (
-              <Empty>
-                <EmptyMedia variant="icon">
-                  <FileText />
-                </EmptyMedia>
-                <EmptyHeader>
-                  <EmptyTitle>Nichts ausgewählt</EmptyTitle>
-                  <EmptyDescription>
-                    Wählen Sie links eine Fähigkeit oder ein Dokument, um es
-                    hier zu lesen.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            )}
+            </div>
+          </ScrollArea>
+        )}
+        {!selection && (
+          <div className="flex h-full items-center justify-center p-5">
+            <Empty>
+              <EmptyMedia variant="icon">
+                <FileText />
+              </EmptyMedia>
+              <EmptyHeader>
+                <EmptyTitle>Nichts ausgewählt</EmptyTitle>
+                <EmptyDescription>
+                  Wählen Sie links eine Fähigkeit oder ein Dokument, um es hier
+                  zu lesen.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </div>
-        </ScrollArea>
+        )}
       </div>
     </div>
   );

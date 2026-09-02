@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Maximize2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
+import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { ALL_SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
 import { PageSheet } from '@/pages/chat-context-prototype/ui/PageSheet';
 
@@ -24,8 +25,8 @@ export function DocumentPreviewPane({
   const pages = Array.from({ length: hit.pageCount }, (_, index) => index + 1);
 
   return (
-    <div className="flex animate-in flex-col fade-in-0 duration-200">
-      <div className="sticky top-0 z-10 -mx-5 -mt-5 mb-4 flex items-start justify-between gap-2 bg-background/70 px-5 pb-3 pt-5 backdrop-blur-sm">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b px-5 py-4">
         <div className="flex min-w-0 flex-col">
           <h3 className="truncate text-sm font-medium">{hit.title}</h3>
           <span className="text-xs text-muted-foreground">
@@ -41,17 +42,19 @@ export function DocumentPreviewPane({
           <Maximize2 />
         </Button>
       </div>
-      <div className="flex flex-col gap-4">
-        {pages.map((page) => (
-          <div
-            key={page}
-            ref={page === hit.page ? citedRef : undefined}
-            className="overflow-hidden rounded-sm border shadow-sm"
-          >
-            <PageSheet hit={hit} page={page} variant="full" />
-          </div>
-        ))}
-      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="flex flex-col gap-4 p-5">
+          {pages.map((page) => (
+            <div
+              key={page}
+              ref={page === hit.page ? citedRef : undefined}
+              className="overflow-hidden rounded-sm border bg-white shadow-sm"
+            >
+              <PageSheet hit={hit} page={page} variant="full" />
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 }
