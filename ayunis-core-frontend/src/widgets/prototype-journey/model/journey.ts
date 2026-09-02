@@ -16,6 +16,7 @@ export interface PrototypeState {
   openArtifactId: string | null;
   openSourceId: string | null;
   openContextId: string | null;
+  sourceListIds: string[] | null;
   highlight: PanelKey | null;
 }
 
@@ -38,6 +39,7 @@ const EMPTY: PrototypeState = {
   openArtifactId: null,
   openSourceId: null,
   openContextId: null,
+  sourceListIds: null,
   highlight: null,
 };
 
@@ -387,6 +389,30 @@ export const JOURNEY: JourneyStep[] = [
       ],
       panel: 'results',
       openArtifactId: 'artifact-pressemitteilung',
+    },
+  },
+  {
+    id: 'presse-quellen',
+    label: 'Viele Quellen',
+    hint: 'Ab vier Belegen ein Sammel-Badge. Klick öffnet die Quellen, gruppiert nach Dokument statt nach Suchschritt.',
+    state: {
+      ...EMPTY,
+      contextIds: ['skill-pressemitteilung', 'kb-presse'],
+      artifactIds: ['artifact-pressemitteilung'],
+      transcriptIds: [
+        'msg-presse-frage',
+        'entry-presse-aktivierung',
+        'msg-presse-antwort-viele',
+        'entry-presse-artefakt',
+      ],
+      panel: 'context',
+      sourceListIds: [
+        'hit-presse-vorlage',
+        'hit-presse-vorlage-2',
+        'hit-buergerbuero',
+        'hit-oeffnungszeiten',
+        'hit-barrierefreiheit',
+      ],
     },
   },
 ];

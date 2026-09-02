@@ -12,6 +12,7 @@ import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
 import { ResultsPanelBody } from './ResultsPanelBody';
+import { SourceListBody } from './SourceListBody';
 import { SourcePanelBody } from './SourcePanelBody';
 
 interface PrototypeSidePanelProps {
@@ -22,11 +23,13 @@ interface PrototypeSidePanelProps {
   openArtifactId: string | null;
   openSourceId: string | null;
   openContextId: string | null;
+  sourceListIds: string[] | null;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
   onBackToContext: () => void;
   onOpenContextDetail: (contextId: string) => void;
+  onOpenSourceFromList: (sourceId: string) => void;
   onExpandSource: () => void;
   onClose: () => void;
 }
@@ -39,11 +42,13 @@ export function PrototypeSidePanel({
   openArtifactId,
   openSourceId,
   openContextId,
+  sourceListIds,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
   onBackToContext,
   onOpenContextDetail,
+  onOpenSourceFromList,
   onExpandSource,
   onClose,
 }: Readonly<PrototypeSidePanelProps>) {
@@ -97,13 +102,20 @@ export function PrototypeSidePanel({
                   onExpand={onExpandSource}
                 />
               )}
-              {!openSourceId && openContextId && (
+              {!openSourceId && sourceListIds && (
+                <SourceListBody
+                  sourceIds={sourceListIds}
+                  onBack={onBackToContext}
+                  onOpenHit={onOpenSourceFromList}
+                />
+              )}
+              {!openSourceId && !sourceListIds && openContextId && (
                 <ContextDetailBody
                   contextId={openContextId}
                   onBack={onBackToContext}
                 />
               )}
-              {!openSourceId && !openContextId && (
+              {!openSourceId && !sourceListIds && !openContextId && (
                 <ContextPanelBody
                   contextIds={contextIds}
                   processingIds={processingIds}

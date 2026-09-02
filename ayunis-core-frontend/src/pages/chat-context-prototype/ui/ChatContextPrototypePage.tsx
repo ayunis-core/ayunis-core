@@ -46,12 +46,38 @@ export function ChatContextPrototypePage() {
     }));
   }
 
+  function goBackInContext() {
+    setState((current) => {
+      if (current.openSourceId && current.sourceListIds) {
+        return { ...current, openSourceId: null };
+      }
+      return {
+        ...current,
+        openSourceId: null,
+        openContextId: null,
+        sourceListIds: null,
+      };
+    });
+  }
+
+  function openSourceList(sourceIds: string[]) {
+    setState((current) => ({
+      ...current,
+      panel: 'context',
+      sourceListIds: sourceIds,
+      openSourceId: null,
+      openContextId: null,
+      highlight: null,
+    }));
+  }
+
   function openSource(sourceId: string) {
     setState((current) => ({
       ...current,
       panel: 'context',
       openSourceId: sourceId,
       openContextId: null,
+      sourceListIds: null,
       openArtifactId: null,
       highlight: null,
     }));
@@ -134,6 +160,7 @@ export function ChatContextPrototypePage() {
                 onOpenContext={() => openPanel('context')}
                 onOpenArtifact={openArtifact}
                 onOpenSource={openSource}
+                onOpenSourceList={openSourceList}
               />
             }
             chatInput={
@@ -161,6 +188,7 @@ export function ChatContextPrototypePage() {
                   openArtifactId={state.openArtifactId}
                   openSourceId={state.openSourceId}
                   openContextId={state.openContextId}
+                  sourceListIds={state.sourceListIds}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,
@@ -176,14 +204,14 @@ export function ChatContextPrototypePage() {
                     }))
                   }
                   onExpandSource={() => setExpandedSourceId(state.openSourceId)}
-                  onBackToContext={() =>
+                  onBackToContext={goBackInContext}
+                  onOpenContextDetail={openContextDetail}
+                  onOpenSourceFromList={(sourceId) =>
                     setState((current) => ({
                       ...current,
-                      openSourceId: null,
-                      openContextId: null,
+                      openSourceId: sourceId,
                     }))
                   }
-                  onOpenContextDetail={openContextDetail}
                   onClose={() =>
                     setState((current) => ({ ...current, panel: null }))
                   }

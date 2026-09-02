@@ -1,5 +1,6 @@
 import { Globe, Quote, Sparkles } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
+import { cn } from '@ayunis/ui/lib/cn';
 import { DocumentWidgetCard } from '@/pages/chat/ui/chat-widgets/DocumentWidgetCard';
 import {
   ARTIFACTS,
@@ -13,6 +14,7 @@ interface PrototypeTranscriptProps {
   onOpenContext: () => void;
   onOpenArtifact: (artifactId: string) => void;
   onOpenSource: (sourceId: string) => void;
+  onOpenSourceList: (sourceIds: string[]) => void;
 }
 
 export function PrototypeTranscript({
@@ -20,6 +22,7 @@ export function PrototypeTranscript({
   onOpenContext,
   onOpenArtifact,
   onOpenSource,
+  onOpenSourceList,
 }: Readonly<PrototypeTranscriptProps>) {
   if (transcriptIds.length === 0) {
     return (
@@ -38,6 +41,7 @@ export function PrototypeTranscript({
           onOpenContext={onOpenContext}
           onOpenArtifact={onOpenArtifact}
           onOpenSource={onOpenSource}
+          onOpenSourceList={onOpenSourceList}
         />
       ))}
     </div>
@@ -49,11 +53,13 @@ function TranscriptRow({
   onOpenContext,
   onOpenArtifact,
   onOpenSource,
+  onOpenSourceList,
 }: Readonly<{
   entryId: string;
   onOpenContext: () => void;
   onOpenArtifact: (artifactId: string) => void;
   onOpenSource: (sourceId: string) => void;
+  onOpenSourceList: (sourceIds: string[]) => void;
 }>) {
   const entry = TRANSCRIPT[entryId];
   if (entry.kind === 'user') {
@@ -70,7 +76,11 @@ function TranscriptRow({
       <div className="flex flex-col gap-2">
         <p className="text-sm leading-relaxed">{entry.text}</p>
         {entry.sourceIds && (
-          <SourceBadges ids={entry.sourceIds} onOpen={onOpenSource} />
+          <SourceBadges
+            ids={entry.sourceIds}
+            onOpen={onOpenSource}
+            onOpenAll={onOpenSourceList}
+          />
         )}
       </div>
     );
@@ -89,7 +99,39 @@ function TranscriptRow({
 function SourceBadges({
   ids,
   onOpen,
-}: Readonly<{ ids: string[]; onOpen: (sourceId: string) => void }>) {
+  onOpenAll,
+}: Readonly<{
+  ids: string[];
+  onOpen: (sourceId: string) => void;
+  onOpenAll: (sourceIds: string[]) => void;
+}>) {
+  if (ids.length > 3) {
+    return (
+      <Badge
+        asChild
+        variant="outline"
+        className="w-fit cursor-pointer gap-2 pl-1.5"
+      >
+        <button type="button" onClick={() => onOpenAll(ids)}>
+          <span className="flex items-center">
+            {ids.slice(0, 3).map((id, index) => (
+              <span
+                key={id}
+                className={cn(
+                  'flex size-4 items-center justify-center rounded-full border bg-background text-muted-foreground [&_svg]:size-2.5',
+                  index > 0 && '-ml-1.5',
+                )}
+              >
+                {SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
+              </span>
+            ))}
+          </span>
+          {ids.length} Quellen
+        </button>
+      </Badge>
+    );
+  }
+
   return (
     <div className="flex flex-wrap gap-1.5">
       {ids.map((id) => (

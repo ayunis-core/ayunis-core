@@ -168,6 +168,49 @@ export const AVAILABLE_COUNTS = {
 };
 
 export const SOURCE_HITS: Record<string, SourceHit> = {
+  'hit-presse-vorlage-2': {
+    id: 'hit-presse-vorlage-2',
+    kind: 'document',
+    title: 'Musterpressemitteilung.pdf',
+    location: 'Seite 2',
+    page: 2,
+    pageCount: 3,
+    heading: 'Rückfragen und Freigabe',
+    passage:
+      'Jede Pressemitteilung schließt mit dem Rückfragehinweis der Pressestelle. Die Freigabe erfolgt durch die Amtsleitung.',
+  },
+  'hit-buergerbuero': {
+    id: 'hit-buergerbuero',
+    kind: 'document',
+    title: 'Beschluss Bürgerbüro.pdf',
+    location: 'Seite 2',
+    page: 2,
+    pageCount: 6,
+    heading: 'Beschluss des Hauptausschusses',
+    passage:
+      'Der Hauptausschuss beschließt die Einrichtung des Bürgerbüros in der Marktstraße 12 mit Öffnung zum 15. September.',
+  },
+  'hit-oeffnungszeiten': {
+    id: 'hit-oeffnungszeiten',
+    kind: 'document',
+    title: 'Beschluss Bürgerbüro.pdf',
+    location: 'Seite 4',
+    page: 4,
+    pageCount: 6,
+    heading: 'Öffnungszeiten',
+    passage:
+      'Die Öffnungszeiten werden auf montags bis freitags 8 bis 16 Uhr festgelegt, donnerstags bis 18 Uhr.',
+  },
+  'hit-barrierefreiheit': {
+    id: 'hit-barrierefreiheit',
+    kind: 'web',
+    title: 'Barrierefreie Verwaltungsgebäude — Leitfaden',
+    siteName: 'bmi.bund.de',
+    url: 'https://www.bmi.bund.de/',
+    retrievedAt: 'Abgerufen heute',
+    passage:
+      'Verwaltungsgebäude sollen stufenlos erreichbar sein; Leitsysteme in einfacher Sprache erleichtern die Orientierung.',
+  },
   'hit-presse-vorlage': {
     id: 'hit-presse-vorlage',
     kind: 'document',
@@ -229,6 +272,18 @@ export const TRANSCRIPT: Record<string, TranscriptEntry> = {
     kind: 'assistant',
     text: 'Ich habe die Eckdaten aus der Vorlage übernommen und den Text nach dem üblichen Aufbau gegliedert: Kernbotschaft zuerst, dann Öffnungszeiten und Barrierefreiheit, am Ende der Rückfragehinweis.',
     sourceIds: ['hit-presse-vorlage'],
+  },
+  'msg-presse-antwort-viele': {
+    id: 'msg-presse-antwort-viele',
+    kind: 'assistant',
+    text: 'Ich habe Beschluss, Musterpressemitteilung und den Leitfaden zur Barrierefreiheit ausgewertet und die Angaben gegeneinander geprüft. Öffnungszeiten und Adresse stammen aus dem Beschluss, Aufbau und Freigabehinweis aus der Musterpressemitteilung.',
+    sourceIds: [
+      'hit-presse-vorlage',
+      'hit-presse-vorlage-2',
+      'hit-buergerbuero',
+      'hit-oeffnungszeiten',
+      'hit-barrierefreiheit',
+    ],
   },
   'entry-presse-artefakt': {
     id: 'entry-presse-artefakt',
