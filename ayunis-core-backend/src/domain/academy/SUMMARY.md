@@ -73,9 +73,9 @@ null view.
 
 ## Certificate
 
-`GetAcademyCertificateUseCase` renders the German "KI-Führerschein" completion
-certificate as a PDF **on demand** from the `AcademyCompletion` row (404 via
-`AcademyCompletionNotFoundError` when the academy is not completed). Nothing is
+`GetAcademyCertificateUseCase` renders the German "KI-Schulung nach EU AI Act"
+completion certificate as a PDF **on demand** from the `AcademyCompletion` row
+(404 via `AcademyCompletionNotFoundError` when the academy is not completed). Nothing is
 stored: the PDF is derived from the user's current name
 (`FindUserByIdUseCase`) and `completedAt` — a rename changes a re-downloaded
 certificate by design. Rendering goes through `CertificateRendererPort`,

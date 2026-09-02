@@ -8,7 +8,7 @@
   },
   "placeholder": {
     "title": "Ayunis Core Academy freischalten",
-    "description": "Das Academy-Add-on ist für Ihre Organisation noch nicht aktiviert. Erfahren Sie, wie der KI-Führerschein Ihr Team sicher mit Ayunis Core arbeiten lässt.",
+    "description": "Das Academy-Add-on ist für Ihre Organisation noch nicht aktiviert. Erfahren Sie, wie die KI-Schulung nach EU AI Act Ihr Team auf den sicheren Umgang mit Ayunis Core vorbereitet.",
     "cta": "Academy entdecken"
   },
   "detail": {
@@ -66,21 +66,21 @@
     "download": "Zertifikat herunterladen"
   },
   "expiry": {
-    "title_one": "Ihr KI-Führerschein läuft in {{count}} Tag ab",
-    "title_other": "Ihr KI-Führerschein läuft in {{count}} Tagen ab",
-    "description": "Erneuern Sie ihn in der Academy, um den Ayunis Core Chat ohne Unterbrechung weiter zu nutzen.",
-    "urgentDescription": "Erneuern Sie ihn jetzt — nach Ablauf ist der Ayunis Core Chat gesperrt, bis Sie den KI-Führerschein erneut bestehen.",
-    "banner_one": "Ihr KI-Führerschein läuft in {{count}} Tag ab. Danach ist der Chat gesperrt.",
-    "banner_other": "Ihr KI-Führerschein läuft in {{count}} Tagen ab. Danach ist der Chat gesperrt.",
+    "title_one": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tag erneuert werden",
+    "title_other": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tagen erneuert werden",
+    "description": "Erneuern Sie sie in der Academy, um den Ayunis Core Chat ohne Unterbrechung weiter zu nutzen.",
+    "urgentDescription": "Wiederholen Sie die Schulung jetzt — nach Ablauf der Frist ist der Ayunis Core Chat gesperrt, bis Sie die KI-Schulung nach EU AI Act erneut abgeschlossen haben.",
+    "banner_one": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tag erneuert werden. Danach ist der Chat gesperrt.",
+    "banner_other": "Ihre KI-Schulung nach EU AI Act muss in {{count}} Tagen erneuert werden. Danach ist der Chat gesperrt.",
     "later": "Später",
     "action": "Zur Academy"
   },
   "account": {
-    "title": "KI-Führerschein",
+    "title": "KI-Schulung nach EU AI Act",
     "lastPassed": "Zuletzt bestanden:",
     "nextRenewal": "Nächste Erneuerung fällig:",
     "expiredOn": "Abgelaufen am:",
-    "notPassedDescription": "Sie haben den KI-Führerschein noch nicht erworben.",
+    "notPassedDescription": "Sie haben die KI-Schulung nach EU AI Act noch nicht abgeschlossen.",
     "action": "Zur Academy",
     "status": {
       "valid": "Gültig",
@@ -91,7 +91,7 @@
   },
   "gate": {
     "title": "Zertifikat erforderlich",
-    "description": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um ihn freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",
+    "description": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie den Ayunis Core Chat nutzen können. Schließen Sie die Academy ab, um den Chat freizuschalten — Ihre bisherigen Chats bleiben in der Zwischenzeit lesbar.",
     "action": "Zur Academy",
     "emptyTitle": "Noch keine Academy-Inhalte",
     "emptyDescription": "Der Chat ist gesperrt, bis Sie das Zertifikat bestanden haben, aber es wurden noch keine Kapitel veröffentlicht. Bitte wenden Sie sich an Ihre Administration."

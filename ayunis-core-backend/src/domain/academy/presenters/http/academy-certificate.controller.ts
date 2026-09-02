@@ -24,8 +24,8 @@ import {
   CurrentUser,
   UserProperty,
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
-import { GetAcademyCertificateUseCase } from '../../application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
-import { GetAcademyCertificateQuery } from '../../application/use-cases/get-academy-certificate/get-academy-certificate.query';
+import { GetAcademyCertificateUseCase } from 'src/domain/academy/application/use-cases/get-academy-certificate/get-academy-certificate.use-case';
+import { GetAcademyCertificateQuery } from 'src/domain/academy/application/use-cases/get-academy-certificate/get-academy-certificate.query';
 
 @ApiTags('Academy')
 @Controller('academy/certificate')
@@ -44,7 +44,7 @@ export class AcademyCertificateController {
   @ApiOperation({
     summary: 'Download the academy completion certificate',
     description:
-      'Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.',
+      'Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.',
   })
   @ApiResponse({
     status: 200,

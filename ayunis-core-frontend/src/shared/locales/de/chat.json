@@ -245,7 +245,7 @@
         "other": "Personenbezogene Daten"
       }
     },
-    "academyCertificateRequiredError": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
+    "academyCertificateRequiredError": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
   },
   "newChat": {
     "newChat": "Neuer Chat",

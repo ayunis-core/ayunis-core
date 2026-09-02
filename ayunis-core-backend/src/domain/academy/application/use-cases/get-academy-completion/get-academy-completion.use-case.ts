@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { UnexpectedAcademyError } from '../../academy.errors';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { UnexpectedAcademyError } from 'src/domain/academy/application/academy.errors';
 import type { AcademyCompletionView } from 'src/domain/academy/domain/academy-completion-view';
 import { toAcademyCompletionView } from 'src/domain/academy/application/util/academy-completion-view';
 import { GetAcademyCompletionQuery } from './get-academy-completion.query';
 
 /**
- * Whether — and when — a user earned the KI-Führerschein, with the validity
- * period already applied. This is the academy's read surface for consumers that
- * gate on the certificate; they never see the validity period itself.
+ * Whether — and when — a user completed the KI-Schulung nach EU AI Act, with
+ * the validity period already applied. This is the academy's read surface for
+ * consumers that gate on the certificate; they never see the validity period itself.
  */
 @Injectable()
 export class GetAcademyCompletionUseCase {
