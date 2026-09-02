@@ -5,12 +5,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@ayunis/ui/components/tabs';
 import { cn } from '@ayunis/ui/lib/cn';
 import type { ContextLayout } from '@/widgets/prototype-journey';
 import {
@@ -67,30 +61,13 @@ export function ContextPanelBody({
     />
   );
 
-  if (contextLayout === 'tabs') {
-    return (
-      <Tabs defaultValue="knowledge" className="gap-3">
-        <TabsList className="h-7">
-          <TabsTrigger value="knowledge" className="text-xs">
-            Wissen
-          </TabsTrigger>
-          <TabsTrigger value="skills" className="text-xs">
-            Fähigkeiten
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="knowledge">{knowledge}</TabsContent>
-        <TabsContent value="skills">{skills}</TabsContent>
-      </Tabs>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-7">
       <Section label="Fähigkeiten">{skills}</Section>
       <Section label="Wissen">{knowledge}</Section>
       {integrationIds.length > 0 && (
         <Section label="Integrationen">
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-0.5">
             {integrationIds.map((id) => (
               <ContextRow
                 key={id}
@@ -132,7 +109,7 @@ function SkillList({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
   const used = (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-0.5">
       {usedIds.map((id) => (
         <ContextRow
           key={id}
@@ -145,7 +122,7 @@ function SkillList({
     </div>
   );
   const standby = (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-0.5">
       {STANDBY_SKILL_IDS.map((id) => (
         <ContextRow
           key={id}
@@ -160,7 +137,7 @@ function SkillList({
 
   if (isFlat) {
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-0.5">
         {used}
         {standby}
       </div>
@@ -168,10 +145,10 @@ function SkillList({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-0.5">
       {used}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-1 rounded-md px-2 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+        <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
           <ChevronDown
             className={cn(
               'size-3.5 transition-transform',
@@ -202,7 +179,7 @@ function KnowledgeList({
   onOpenDocument: (documentId: string) => void;
 }>) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-0.5">
       {KNOWLEDGE_BASE_IDS.map((id) => (
         <KnowledgeBaseNode
           key={id}
@@ -241,7 +218,7 @@ function KnowledgeBaseNode({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-accent">
+      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
         {isOpen ? (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         ) : (
@@ -256,7 +233,7 @@ function KnowledgeBaseNode({
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mb-1 ml-3 flex flex-col gap-0.5 border-l pl-3">
+        <div className="mb-1 ml-3 mt-0.5 flex flex-col gap-0.5 border-l pl-3">
           {documents.map((documentId) => (
             <DocumentNode
               key={documentId}
@@ -286,7 +263,7 @@ function DocumentNode({
       type="button"
       onClick={() => onOpen(documentId)}
       className={cn(
-        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent',
+        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >
@@ -315,13 +292,13 @@ function ContextRow({
       type="button"
       onClick={() => onOpen(contextId)}
       className={cn(
-        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-accent',
+        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >
       <span
         className={cn(
-          'shrink-0 [&_svg]:size-4',
+          'shrink-0 [&_svg]:size-3.5',
           isUsed && item.kind === 'skill'
             ? 'text-brand'
             : 'text-muted-foreground',

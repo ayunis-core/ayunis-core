@@ -1,5 +1,5 @@
-import { ChevronLeft, FileText, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { ChevronLeft, FileText, X } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Empty,
@@ -51,7 +51,6 @@ interface PrototypeSidePanelProps {
 
 export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
   const detail = resolveDetail(props);
-
   return (
     <aside className="flex h-full min-h-0 animate-in flex-col overflow-hidden bg-background fade-in-0 slide-in-from-right-4 duration-200">
       {detail ? (
@@ -103,6 +102,48 @@ function resolveDetail({
   return null;
 }
 
+function PanelHeader({
+  onClose,
+  onBack,
+  title,
+  children,
+}: Readonly<{
+  onClose: () => void;
+  onBack?: () => void;
+  title?: string;
+  children?: ReactNode;
+}>) {
+  return (
+    <div
+      className={`flex h-14 shrink-0 items-center gap-1 ${onBack ? 'px-2' : 'px-4'}`}
+    >
+      {onBack && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onBack}
+          aria-label="Zurück"
+        >
+          <ChevronLeft />
+        </Button>
+      )}
+      {children ?? (
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {title}
+        </span>
+      )}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={onClose}
+        aria-label="Seitenbereich schließen"
+      >
+        <X />
+      </Button>
+    </div>
+  );
+}
+
 function DetailView({
   title,
   onBack,
@@ -116,35 +157,79 @@ function DetailView({
 }>) {
   return (
     <>
-      <div
-        className={`flex h-14 shrink-0 items-center gap-1 ${onBack ? 'px-2' : 'px-4'}`}
-      >
-        {onBack && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onBack}
-            aria-label="Zurück"
-          >
-            <ChevronLeft />
-          </Button>
-        )}
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {title}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onClose}
-          aria-label="Seitenbereich schließen"
-        >
-          <X />
-        </Button>
-      </div>
+      <PanelHeader title={title} onBack={onBack} onClose={onClose} />
       <ScrollArea className="min-h-0 flex-1">
         <div className="px-4 pb-10 pt-2">{children}</div>
       </ScrollArea>
     </>
+  );
+}
+
+function TabsView({
+  panel,
+  contextIds,
+  processingIds,
+  artifactIds,
+  openArtifactId,
+  openContextId,
+  openDocumentId,
+  contextLayout,
+  onPanelChange,
+  onOpenArtifact,
+  onBackToResults,
+  onOpenContextDetail,
+  onOpenDocument,
+  onExpandSource,
+  onClose,
+}: Readonly<PrototypeSidePanelProps>) {
+  return (
+    <Tabs
+      value={panel}
+      onValueChange={(value) => onPanelChange(value as PanelKey)}
+      className="flex min-h-0 flex-1 flex-col gap-0"
+    >
+      <PanelHeader onClose={onClose}>
+        <TabsList className="mr-auto h-8">
+          <TabsTrigger value="results" className="text-xs">
+            Ergebnisse
+            {artifactIds.length > 0 && (
+              <span className="text-muted-foreground">
+                {artifactIds.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="context" className="text-xs">
+            Kontext
+          </TabsTrigger>
+        </TabsList>
+      </PanelHeader>
+      <TabsContent value="results" className="min-h-0 flex-1 outline-none">
+        <ScrollArea className="h-full">
+          <div className="px-4 pb-10 pt-2">
+            {openArtifactId ? (
+              <ArtifactPreviewBody onBack={onBackToResults} />
+            ) : (
+              <ResultsPanelBody
+                artifactIds={artifactIds}
+                onOpen={onOpenArtifact}
+              />
+            )}
+          </div>
+        </ScrollArea>
+      </TabsContent>
+      <TabsContent value="context" className="min-h-0 flex-1 outline-none">
+        <ContextBrowser
+          contextIds={contextIds}
+          processingIds={processingIds}
+          openDocumentId={openDocumentId}
+          openContextId={openContextId}
+          contextLayout={contextLayout}
+          onOpenContextDetail={onOpenContextDetail}
+          onOpenDocument={onOpenDocument}
+          onExpandSource={onExpandSource}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -183,115 +268,51 @@ function ContextBrowser({
   );
 
   const selection = openDocumentId ?? openContextId;
-  if (!selection && contextLayout !== 'split') return list;
+  if (!selection && contextLayout !== 'split') {
+    return (
+      <ScrollArea className="h-full">
+        <div className="px-4 pb-10 pt-2">{list}</div>
+      </ScrollArea>
+    );
+  }
 
   return (
-    <div className="flex gap-5">
-      <div className="w-56 shrink-0 border-r pr-5">{list}</div>
-      <div className="min-w-0 flex-1">
-        {openDocumentId && (
-          <DocumentPreviewPane
-            documentId={openDocumentId}
-            onExpand={onExpandSource}
-          />
-        )}
-        {!openDocumentId && openContextId && (
-          <ContextDetailBody
-            contextId={openContextId}
-            onOpenDocument={onOpenDocument}
-          />
-        )}
-        {!selection && (
-          <Empty>
-            <EmptyMedia variant="icon">
-              <FileText />
-            </EmptyMedia>
-            <EmptyHeader>
-              <EmptyTitle>Nichts ausgewählt</EmptyTitle>
-              <EmptyDescription>
-                Wählen Sie links eine Fähigkeit oder ein Dokument, um es hier zu
-                lesen.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function TabsView({
-  panel,
-  contextIds,
-  processingIds,
-  artifactIds,
-  openArtifactId,
-  openDocumentId,
-  openContextId,
-  contextLayout,
-  onPanelChange,
-  onOpenArtifact,
-  onBackToResults,
-  onOpenContextDetail,
-  onOpenDocument,
-  onExpandSource,
-  onClose,
-}: Readonly<PrototypeSidePanelProps>) {
-  return (
-    <Tabs
-      value={panel}
-      onValueChange={(value) => onPanelChange(value as PanelKey)}
-      className="flex min-h-0 flex-1 flex-col gap-0"
-    >
-      <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4">
-        <TabsList className="h-8">
-          <TabsTrigger value="results" className="text-xs">
-            Ergebnisse
-            {artifactIds.length > 0 && (
-              <span className="text-muted-foreground">
-                {artifactIds.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="context" className="text-xs">
-            Kontext
-          </TabsTrigger>
-        </TabsList>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onClose}
-          aria-label="Seitenbereich schließen"
-        >
-          <X />
-        </Button>
-      </div>
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="px-4 pb-10 pt-2">
-          <TabsContent value="results">
-            {openArtifactId ? (
-              <ArtifactPreviewBody onBack={onBackToResults} />
-            ) : (
-              <ResultsPanelBody
-                artifactIds={artifactIds}
-                onOpen={onOpenArtifact}
+    <div className="flex h-full min-h-0 gap-2 pb-2 pl-4 pr-2">
+      <ScrollArea className="h-full w-52 shrink-0">
+        <div className="pb-6 pr-2 pt-2">{list}</div>
+      </ScrollArea>
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-lg bg-muted/40">
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            {openDocumentId && (
+              <DocumentPreviewPane
+                documentId={openDocumentId}
+                onExpand={onExpandSource}
               />
             )}
-          </TabsContent>
-          <TabsContent value="context">
-            <ContextBrowser
-              contextIds={contextIds}
-              processingIds={processingIds}
-              openDocumentId={openDocumentId}
-              openContextId={openContextId}
-              contextLayout={contextLayout}
-              onOpenContextDetail={onOpenContextDetail}
-              onOpenDocument={onOpenDocument}
-              onExpandSource={onExpandSource}
-            />
-          </TabsContent>
-        </div>
-      </ScrollArea>
-    </Tabs>
+            {!openDocumentId && openContextId && (
+              <ContextDetailBody
+                contextId={openContextId}
+                onOpenDocument={onOpenDocument}
+              />
+            )}
+            {!selection && (
+              <Empty>
+                <EmptyMedia variant="icon">
+                  <FileText />
+                </EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>Nichts ausgewählt</EmptyTitle>
+                  <EmptyDescription>
+                    Wählen Sie links eine Fähigkeit oder ein Dokument, um es
+                    hier zu lesen.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
   );
 }
