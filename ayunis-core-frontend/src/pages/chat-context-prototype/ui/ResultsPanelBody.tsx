@@ -57,7 +57,7 @@ export function ResultsPanelBody({
           key={id}
           asChild
           size="sm"
-          className="group -mx-2 cursor-pointer px-2 py-2 hover:bg-accent"
+          className="group -mx-2 cursor-pointer px-2 py-2 text-left hover:bg-accent"
         >
           <button type="button" onClick={() => onOpen(id)}>
             <ItemMedia className="text-muted-foreground [&_svg]:size-4">

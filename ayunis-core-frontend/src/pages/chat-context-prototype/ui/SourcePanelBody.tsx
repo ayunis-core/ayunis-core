@@ -1,4 +1,4 @@
-import { ChevronLeft, ExternalLink, Maximize2 } from 'lucide-react';
+import { ExternalLink, Maximize2 } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   SOURCE_HITS,
@@ -7,22 +7,16 @@ import {
 
 interface SourcePanelBodyProps {
   sourceId: string;
-  onBack: () => void;
   onExpand: () => void;
 }
 
 export function SourcePanelBody({
   sourceId,
-  onBack,
   onExpand,
 }: Readonly<SourcePanelBodyProps>) {
   const hit = SOURCE_HITS[sourceId];
   return (
     <div className="flex animate-in flex-col gap-3 fade-in-0 slide-in-from-right-2 duration-200">
-      <Button variant="ghost" size="sm" className="w-fit" onClick={onBack}>
-        <ChevronLeft />
-        Kontext
-      </Button>
       <div className="flex flex-col">
         <h3 className="text-sm font-medium">{hit.title}</h3>
         <span className="text-xs text-muted-foreground">{subline(hit)}</span>

@@ -1,4 +1,4 @@
-import { ChevronLeft, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { showInfo } from '@/shared/lib/toast';
 import { CONTEXT_ITEMS } from '@/pages/chat-context-prototype/model/mock';
@@ -13,20 +13,14 @@ const KIND_LABELS = {
 
 interface ContextDetailBodyProps {
   contextId: string;
-  onBack: () => void;
 }
 
 export function ContextDetailBody({
   contextId,
-  onBack,
 }: Readonly<ContextDetailBodyProps>) {
   const item = CONTEXT_ITEMS[contextId];
   return (
     <div className="flex animate-in flex-col gap-4 fade-in-0 slide-in-from-right-2 duration-200">
-      <Button variant="ghost" size="sm" className="w-fit" onClick={onBack}>
-        <ChevronLeft />
-        Kontext
-      </Button>
       <div className="flex items-start gap-2.5">
         <span className="mt-0.5 shrink-0 text-brand [&_svg]:size-4">
           <ContextKindIcon kind={item.kind} />

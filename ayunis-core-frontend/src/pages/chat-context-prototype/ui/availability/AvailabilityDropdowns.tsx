@@ -127,7 +127,7 @@ export function AvailabilityEntryList({
           key={entry.id}
           asChild
           size="sm"
-          className="-mx-2 cursor-pointer px-2 py-1.5 hover:bg-accent"
+          className="-mx-2 cursor-pointer px-2 py-1.5 text-left hover:bg-accent"
         >
           <button
             type="button"

@@ -104,7 +104,7 @@ function ContextRow({
     <Item
       asChild
       size="sm"
-      className="-mx-2 cursor-pointer px-2 py-2 hover:bg-accent"
+      className="-mx-2 cursor-pointer px-2 py-2 text-left hover:bg-accent"
     >
       <button type="button" onClick={onOpen}>
         <ItemMedia

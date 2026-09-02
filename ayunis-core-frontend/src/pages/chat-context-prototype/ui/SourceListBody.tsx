@@ -1,5 +1,4 @@
-import { ChevronLeft, ChevronRight, Globe, Quote } from 'lucide-react';
-import { Button } from '@ayunis/ui/components/button';
+import { ChevronRight, Globe, Quote } from 'lucide-react';
 import {
   Item,
   ItemActions,
@@ -44,33 +43,24 @@ function groupHits(sourceIds: string[]): SourceGroup[] {
 
 interface SourceListBodyProps {
   sourceIds: string[];
-  onBack: () => void;
   onOpenHit: (sourceId: string) => void;
 }
 
 export function SourceListBody({
   sourceIds,
-  onBack,
   onOpenHit,
 }: Readonly<SourceListBodyProps>) {
   const groups = groupHits(sourceIds);
   return (
     <div className="flex animate-in flex-col gap-3 fade-in-0 slide-in-from-right-2 duration-200">
-      <Button variant="ghost" size="sm" className="w-fit" onClick={onBack}>
-        <ChevronLeft />
-        Kontext
-      </Button>
-      <div className="flex flex-col">
-        <h3 className="text-sm font-medium">Quellen</h3>
-        <span className="text-xs text-muted-foreground">Zu dieser Antwort</span>
-      </div>
+      <span className="text-xs text-muted-foreground">Zu dieser Antwort</span>
       <ItemGroup>
         {groups.map((group) => (
           <Item
             key={group.key}
             asChild
             size="sm"
-            className="group -mx-2 cursor-pointer px-2 py-2 hover:bg-accent"
+            className="group -mx-2 cursor-pointer px-2 py-2 text-left hover:bg-accent"
           >
             <button type="button" onClick={() => onOpenHit(group.firstHitId)}>
               <ItemMedia className="text-muted-foreground [&_svg]:size-4">

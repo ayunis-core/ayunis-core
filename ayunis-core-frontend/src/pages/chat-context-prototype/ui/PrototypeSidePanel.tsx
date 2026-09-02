@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button } from '@ayunis/ui/components/button';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import {
@@ -8,6 +9,7 @@ import {
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
 import type { PanelKey } from '@/widgets/prototype-journey/model/journey';
+import { CONTEXT_ITEMS } from '@/pages/chat-context-prototype/model/mock';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
 import { ContextPanelBody } from './ContextPanelBody';
@@ -34,98 +36,167 @@ interface PrototypeSidePanelProps {
   onClose: () => void;
 }
 
-export function PrototypeSidePanel({
+export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
+  const detail = resolveDetail(props);
+
+  return (
+    <aside className="flex h-full min-h-0 animate-in flex-col overflow-hidden bg-background fade-in-0 slide-in-from-right-4 duration-200">
+      {detail ? (
+        <DetailView
+          title={detail.title}
+          onBack={props.onBackToContext}
+          onClose={props.onClose}
+        >
+          {detail.body}
+        </DetailView>
+      ) : (
+        <TabsView {...props} />
+      )}
+    </aside>
+  );
+}
+
+function resolveDetail({
+  openSourceId,
+  openContextId,
+  sourceListIds,
+  onOpenSourceFromList,
+  onExpandSource,
+}: Readonly<PrototypeSidePanelProps>): {
+  title: string;
+  body: ReactNode;
+} | null {
+  if (openSourceId) {
+    return {
+      title: 'Quelle',
+      body: (
+        <SourcePanelBody sourceId={openSourceId} onExpand={onExpandSource} />
+      ),
+    };
+  }
+  if (sourceListIds) {
+    return {
+      title: 'Quellen',
+      body: (
+        <SourceListBody
+          sourceIds={sourceListIds}
+          onOpenHit={onOpenSourceFromList}
+        />
+      ),
+    };
+  }
+  if (openContextId) {
+    return {
+      title: CONTEXT_ITEMS[openContextId].name,
+      body: <ContextDetailBody contextId={openContextId} />,
+    };
+  }
+  return null;
+}
+
+function DetailView({
+  title,
+  onBack,
+  onClose,
+  children,
+}: Readonly<{
+  title: string;
+  onBack: () => void;
+  onClose: () => void;
+  children: ReactNode;
+}>) {
+  return (
+    <>
+      <div className="flex h-14 shrink-0 items-center gap-1 px-2">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onBack}
+          aria-label="Zurück"
+        >
+          <ChevronLeft />
+        </Button>
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          {title}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Seitenbereich schließen"
+        >
+          <X />
+        </Button>
+      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="px-4 pb-10 pt-2">{children}</div>
+      </ScrollArea>
+    </>
+  );
+}
+
+function TabsView({
   panel,
   contextIds,
   processingIds,
   artifactIds,
   openArtifactId,
-  openSourceId,
-  openContextId,
-  sourceListIds,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
-  onBackToContext,
   onOpenContextDetail,
-  onOpenSourceFromList,
-  onExpandSource,
   onClose,
 }: Readonly<PrototypeSidePanelProps>) {
   return (
-    <aside className="flex h-full min-h-0 animate-in flex-col overflow-hidden bg-background fade-in-0 slide-in-from-right-4 duration-200">
-      <Tabs
-        value={panel}
-        onValueChange={(value) => onPanelChange(value as PanelKey)}
-        className="flex min-h-0 flex-1 flex-col gap-0"
-      >
-        <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4">
-          <TabsList className="h-8">
-            <TabsTrigger value="results" className="text-xs">
-              Ergebnisse
-              {artifactIds.length > 0 && (
-                <span className="text-muted-foreground">
-                  {artifactIds.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="context" className="text-xs">
-              Kontext
-            </TabsTrigger>
-          </TabsList>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onClose}
-            aria-label="Seitenbereich schließen"
-          >
-            <X />
-          </Button>
+    <Tabs
+      value={panel}
+      onValueChange={(value) => onPanelChange(value as PanelKey)}
+      className="flex min-h-0 flex-1 flex-col gap-0"
+    >
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-4">
+        <TabsList className="h-8">
+          <TabsTrigger value="results" className="text-xs">
+            Ergebnisse
+            {artifactIds.length > 0 && (
+              <span className="text-muted-foreground">
+                {artifactIds.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="context" className="text-xs">
+            Kontext
+          </TabsTrigger>
+        </TabsList>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Seitenbereich schließen"
+        >
+          <X />
+        </Button>
+      </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="px-4 pb-10 pt-2">
+          <TabsContent value="results">
+            {openArtifactId ? (
+              <ArtifactPreviewBody onBack={onBackToResults} />
+            ) : (
+              <ResultsPanelBody
+                artifactIds={artifactIds}
+                onOpen={onOpenArtifact}
+              />
+            )}
+          </TabsContent>
+          <TabsContent value="context">
+            <ContextPanelBody
+              contextIds={contextIds}
+              processingIds={processingIds}
+              onOpenDetail={onOpenContextDetail}
+            />
+          </TabsContent>
         </div>
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="px-4 pb-10 pt-2">
-            <TabsContent value="results">
-              {openArtifactId ? (
-                <ArtifactPreviewBody onBack={onBackToResults} />
-              ) : (
-                <ResultsPanelBody
-                  artifactIds={artifactIds}
-                  onOpen={onOpenArtifact}
-                />
-              )}
-            </TabsContent>
-            <TabsContent value="context">
-              {openSourceId && (
-                <SourcePanelBody
-                  sourceId={openSourceId}
-                  onBack={onBackToContext}
-                  onExpand={onExpandSource}
-                />
-              )}
-              {!openSourceId && sourceListIds && (
-                <SourceListBody
-                  sourceIds={sourceListIds}
-                  onBack={onBackToContext}
-                  onOpenHit={onOpenSourceFromList}
-                />
-              )}
-              {!openSourceId && !sourceListIds && openContextId && (
-                <ContextDetailBody
-                  contextId={openContextId}
-                  onBack={onBackToContext}
-                />
-              )}
-              {!openSourceId && !sourceListIds && !openContextId && (
-                <ContextPanelBody
-                  contextIds={contextIds}
-                  processingIds={processingIds}
-                  onOpenDetail={onOpenContextDetail}
-                />
-              )}
-            </TabsContent>
-          </div>
-        </ScrollArea>
-      </Tabs>
-    </aside>
+      </ScrollArea>
+    </Tabs>
   );
 }
