@@ -133,17 +133,32 @@ function SourceBadges({
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {ids.map((id) => (
-        <Badge key={id} asChild variant="outline" className="cursor-pointer">
-          <button type="button" onClick={() => onOpen(id)}>
-            {SOURCE_HITS[id].kind === 'web' ? <Globe /> : <Quote />}
-            {SOURCE_HITS[id].kind === 'web'
-              ? SOURCE_HITS[id].siteName
-              : SOURCE_HITS[id].title}
-          </button>
-        </Badge>
-      ))}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      {ids.map((id) => {
+        const hit = SOURCE_HITS[id];
+        if (hit.kind === 'web') {
+          return (
+            <a
+              key={id}
+              href={hit.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-primary underline underline-offset-4 hover:no-underline [&_svg]:size-3"
+            >
+              <Globe />
+              {hit.siteName}
+            </a>
+          );
+        }
+        return (
+          <Badge key={id} asChild variant="outline" className="cursor-pointer">
+            <button type="button" onClick={() => onOpen(id)}>
+              <Quote />
+              {hit.title}
+            </button>
+          </Badge>
+        );
+      })}
     </div>
   );
 }

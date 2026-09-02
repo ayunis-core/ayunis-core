@@ -44,7 +44,7 @@ export function PrototypeSidePanel(props: Readonly<PrototypeSidePanelProps>) {
       {detail ? (
         <DetailView
           title={detail.title}
-          onBack={props.onBackToContext}
+          onBack={detail.canGoBack ? props.onBackToContext : undefined}
           onClose={props.onClose}
         >
           {detail.body}
@@ -64,11 +64,13 @@ function resolveDetail({
   onExpandSource,
 }: Readonly<PrototypeSidePanelProps>): {
   title: string;
+  canGoBack: boolean;
   body: ReactNode;
 } | null {
   if (openSourceId) {
     return {
       title: 'Quelle',
+      canGoBack: sourceListIds !== null,
       body: (
         <SourcePanelBody sourceId={openSourceId} onExpand={onExpandSource} />
       ),
@@ -77,6 +79,7 @@ function resolveDetail({
   if (sourceListIds) {
     return {
       title: 'Quellen',
+      canGoBack: false,
       body: (
         <SourceListBody
           sourceIds={sourceListIds}
@@ -88,6 +91,7 @@ function resolveDetail({
   if (openContextId) {
     return {
       title: CONTEXT_ITEMS[openContextId].name,
+      canGoBack: true,
       body: <ContextDetailBody contextId={openContextId} />,
     };
   }
@@ -101,21 +105,25 @@ function DetailView({
   children,
 }: Readonly<{
   title: string;
-  onBack: () => void;
+  onBack?: () => void;
   onClose: () => void;
   children: ReactNode;
 }>) {
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center gap-1 px-2">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onBack}
-          aria-label="Zurück"
-        >
-          <ChevronLeft />
-        </Button>
+      <div
+        className={`flex h-14 shrink-0 items-center gap-1 ${onBack ? 'px-2' : 'px-4'}`}
+      >
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onBack}
+            aria-label="Zurück"
+          >
+            <ChevronLeft />
+          </Button>
+        )}
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
           {title}
         </span>
