@@ -21,7 +21,7 @@ export function ChatContextPrototypePage() {
   const { step: stepIndex, entry: variant } = useJourneySearch();
   const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
-  const [state, setState] = useState<PrototypeState>(JOURNEY[0].state);
+  const [state, setState] = useState<PrototypeState>(JOURNEY[stepIndex].state);
 
   if (appliedStep !== stepIndex) {
     setAppliedStep(stepIndex);
@@ -55,13 +55,26 @@ export function ChatContextPrototypePage() {
     });
   }
 
-  function openContextDetail(contextId: string) {
-    setState((current) => ({
+  function withDetail(
+    current: PrototypeState,
+    patch: Partial<PrototypeState>,
+  ): PrototypeState {
+    return {
       ...current,
-      panel: 'context',
-      openContextId: contextId,
+      highlight: null,
+      openArtifactId: null,
       openSourceId: null,
-    }));
+      openContextId: null,
+      openDocumentId: null,
+      sourceListIds: null,
+      ...patch,
+    };
+  }
+
+  function openContextDetail(contextId: string) {
+    setState((current) =>
+      withDetail(current, { panel: 'context', openContextId: contextId }),
+    );
   }
 
   function goBackInContext() {
@@ -79,36 +92,27 @@ export function ChatContextPrototypePage() {
   }
 
   function openSourceList(sourceIds: string[]) {
-    setState((current) => ({
-      ...current,
-      panel: 'context',
-      sourceListIds: sourceIds,
-      openSourceId: null,
-      openContextId: null,
-      highlight: null,
-    }));
+    setState((current) =>
+      withDetail(current, { panel: 'context', sourceListIds: sourceIds }),
+    );
   }
 
   function openSource(sourceId: string) {
-    setState((current) => ({
-      ...current,
-      panel: 'context',
-      openSourceId: sourceId,
-      openContextId: null,
-      sourceListIds: null,
-      openArtifactId: null,
-      highlight: null,
-    }));
+    setState((current) => {
+      const next = withDetail(current, {
+        panel: 'context',
+        openSourceId: sourceId,
+      });
+      return current.sourceListIds
+        ? { ...next, sourceListIds: current.sourceListIds }
+        : next;
+    });
   }
 
   function openArtifact(artifactId: string) {
-    setState((current) => ({
-      ...current,
-      panel: 'results',
-      openArtifactId: artifactId,
-      openSourceId: null,
-      highlight: null,
-    }));
+    setState((current) =>
+      withDetail(current, { panel: 'results', openArtifactId: artifactId }),
+    );
   }
 
   const overlays = (
@@ -227,11 +231,12 @@ export function ChatContextPrototypePage() {
                   onBackToContext={goBackInContext}
                   onOpenContextDetail={openContextDetail}
                   onOpenDocument={(documentId) =>
-                    setState((current) => ({
-                      ...current,
-                      openDocumentId: documentId,
-                      openContextId: null,
-                    }))
+                    setState((current) =>
+                      withDetail(current, {
+                        panel: 'context',
+                        openDocumentId: documentId,
+                      }),
+                    )
                   }
                   onOpenSourceFromList={(sourceId) =>
                     setState((current) => ({
