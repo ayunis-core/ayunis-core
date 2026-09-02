@@ -259,6 +259,8 @@ export const KNOWLEDGE_BASE_IDS = [
   'kb-protokolle',
 ];
 
+export const KNOWLEDGE_BASE_BY_DOCUMENT: Record<string, string> = {};
+
 export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
   'kb-presse': [
     'hit-presse-vorlage',
@@ -269,7 +271,11 @@ export const DOCUMENTS_BY_KNOWLEDGE_BASE: Record<string, string[]> = {
   'kb-bauleitplanung': ['doc-stellplatzsatzung', 'hit-verkehrsplan'],
   'kb-satzungen': ['doc-stellplatzsatzung', 'doc-gebuehrensatzung'],
   'kb-personal': ['doc-dienstanweisung'],
-  'kb-protokolle': ['hit-buergerbuero', 'doc-protokoll-ha'],
+  'kb-protokolle': [
+    'hit-buergerbuero',
+    'hit-oeffnungszeiten',
+    'doc-protokoll-ha',
+  ],
 };
 
 export const TRANSCRIPT: Record<string, TranscriptEntry> = {
@@ -401,3 +407,11 @@ Für unseren Fall heißt das: die beschlossenen Zeiten liegen im üblichen Rahme
     artifactId: 'artifact-vorlage',
   },
 };
+
+for (const [baseId, documentIds] of Object.entries(
+  DOCUMENTS_BY_KNOWLEDGE_BASE,
+)) {
+  for (const documentId of documentIds) {
+    KNOWLEDGE_BASE_BY_DOCUMENT[documentId] ??= baseId;
+  }
+}

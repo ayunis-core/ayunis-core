@@ -9,6 +9,7 @@ import {
   type PrototypeState,
 } from '@/widgets/prototype-journey/model/journey';
 import { useJourneySearch } from '@/widgets/prototype-journey';
+import { ALL_SOURCE_HITS } from '@/pages/chat-context-prototype/model/mock';
 import { EntryControls } from './EntryControls';
 import { PrototypeChatInput } from './PrototypeChatInput';
 import { PrototypeChatLayout } from './PrototypeChatLayout';
@@ -110,7 +111,14 @@ export function ChatContextPrototypePage() {
   }
 
   function openSource(sourceId: string) {
+    const hit = ALL_SOURCE_HITS[sourceId];
     setState((current) => {
+      if (hit.kind === 'document') {
+        return withDetail(current, {
+          panel: 'context',
+          openDocumentId: sourceId,
+        });
+      }
       const next = withDetail(current, {
         panel: 'context',
         openSourceId: sourceId,
@@ -252,12 +260,7 @@ export function ChatContextPrototypePage() {
                       }),
                     )
                   }
-                  onOpenSourceFromList={(sourceId) =>
-                    setState((current) => ({
-                      ...current,
-                      openSourceId: sourceId,
-                    }))
-                  }
+                  onOpenSourceFromList={openSource}
                   onClose={() =>
                     setState((current) => ({ ...current, panel: null }))
                   }
