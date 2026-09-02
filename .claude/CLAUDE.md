@@ -145,6 +145,12 @@ Required:
 
 The workflow level controls local implementation and validation breadth. It does not weaken **A Submitted PR Is Not Complete**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
 
+### 11. Feature Flags Have Two Contracts
+
+Every feature-gated change must define and verify behavior with the flag both enabled and disabled. Identify existing workflows that share routes, controllers, navigation, services, or persisted state with the gated feature; disabling new entry points must not disable shared behavior unless that is explicitly part of the contract.
+
+Flags resolve from `process.env` at boot, so mocking the guard or the config proves wiring, not the disabled-state contract — a second instance started with the flag off is what proves it. Load the `feature-toggles` skill for the two-state verification recipe.
+
 ---
 
 ## Forbidden Actions
