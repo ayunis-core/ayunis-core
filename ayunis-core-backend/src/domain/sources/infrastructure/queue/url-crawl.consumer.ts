@@ -15,7 +15,7 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { UrlCrawlJobData } from '../../application/ports/url-crawl-processing.port';
+import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 
@@ -104,9 +104,20 @@ export class UrlCrawlConsumer extends WorkerHost {
     }
 
     // Reset processingStartedAt on every attempt so the stale-cleanup cron
-    // doesn't race with BullMQ retries on long-running jobs.
+    // doesn't race with BullMQ retries on long-running jobs. Guarded UPDATE,
+    // not save(): save() would re-insert a row deleted since the findById
+    // above.
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      return null;
+    }
+    // saveTextSource persists the whole entity later on, so mirror the
+    // refreshed timestamp here — otherwise that write puts back the value the
+    // source was loaded with (null until the worker picks the job up) and
+    // re-exposes the in-flight crawl to the stale-cleanup cron.
     source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
 
     return source;
   }

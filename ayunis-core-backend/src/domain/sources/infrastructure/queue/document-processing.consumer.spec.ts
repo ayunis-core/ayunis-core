@@ -5,7 +5,9 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import { createMockSourceRepository } from 'src/domain/sources/application/testing/source.fixtures';
 import { FileTooLargeError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
 
@@ -85,15 +87,6 @@ const downloadObjectUseCase = {
 
 const deleteObjectUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
 
-const sourceRepository = {
-  findById: jest.fn(),
-  save: jest.fn().mockImplementation((s: unknown) => Promise.resolve(s)),
-  saveTextSource: jest
-    .fn()
-    .mockImplementation((s: unknown) => Promise.resolve(s)),
-  updateStatusConditionally: jest.fn(),
-};
-
 const helper = {
   index: jest.fn().mockResolvedValue(undefined),
   markFailed: jest.fn().mockResolvedValue(undefined),
@@ -106,9 +99,11 @@ const helper = {
 
 describe('DocumentProcessingConsumer', () => {
   let consumer: DocumentProcessingConsumer;
+  let sourceRepository: jest.Mocked<SourceRepository>;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    sourceRepository = createMockSourceRepository();
 
     consumer = new DocumentProcessingConsumer(
       createPinoLoggerMock(),
@@ -117,7 +112,7 @@ describe('DocumentProcessingConsumer', () => {
       splitTextUseCase as never,
       downloadObjectUseCase as never,
       deleteObjectUseCase as never,
-      sourceRepository as never,
+      sourceRepository,
       helper as never,
     );
   });
@@ -162,6 +157,36 @@ describe('DocumentProcessingConsumer', () => {
     // Completing rather than throwing is what keeps it out of AppSignal.
     await expect(consumer.process(makeJob())).resolves.toBeUndefined();
     expect(helper.markFailed).toHaveBeenCalled();
+    expect(deleteObjectUseCase.execute).toHaveBeenCalled();
+  });
+
+  it('hands the content write a refreshed processingStartedAt', async () => {
+    const loadedAt = new Date('2026-01-01T00:00:00.000Z');
+    const source = makeSource();
+    source.processingStartedAt = loadedAt;
+    sourceRepository.findById.mockResolvedValue(source);
+
+    await consumer.process(makeJob());
+
+    // A stale timestamp written back here would let the cleanup cron reap the
+    // job right after its content landed.
+    const [savedSource] = sourceRepository.saveTextSource.mock.calls[0];
+    expect(savedSource.processingStartedAt?.getTime()).toBeGreaterThan(
+      loadedAt.getTime(),
+    );
+  });
+
+  it('never resurrects a source deleted between load and heartbeat', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    // The guarded UPDATE affects zero rows — the source row is gone.
+    sourceRepository.refreshProcessingHeartbeat.mockResolvedValue(false);
+
+    await consumer.process(makeJob());
+
+    expect(sourceRepository.save).not.toHaveBeenCalled();
+    expect(retrieveFileContentUseCase.execute).not.toHaveBeenCalled();
+    expect(sourceRepository.saveTextSource).not.toHaveBeenCalled();
+    expect(sourceRepository.updateStatusConditionally).not.toHaveBeenCalled();
     expect(deleteObjectUseCase.execute).toHaveBeenCalled();
   });
 
@@ -215,6 +240,10 @@ describe('DocumentProcessingConsumer', () => {
 
     await consumer.process(makeJob());
 
+    expect(sourceRepository.refreshProcessingHeartbeat).toHaveBeenCalledWith(
+      SOURCE_ID,
+    );
+    expect(sourceRepository.save).not.toHaveBeenCalled();
     expect(sourceRepository.saveTextSource).toHaveBeenCalled();
     expect(sourceRepository.updateStatusConditionally).toHaveBeenCalledWith(
       SOURCE_ID,

@@ -16,13 +16,13 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentProcessingJobData } from '../../application/ports/document-processing.port';
-import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
-import { classifyJobFailure } from './bullmq-job.helpers';
+import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
 import {
   cleanupMinioProcessingFile,
   downloadMinioFile,
-} from '../../application/util/minio-processing-file.helpers';
+} from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
+import { classifyJobFailure } from './bullmq-job.helpers';
 
 @Processor(DOCUMENT_PROCESSING_QUEUE, { concurrency: 2 })
 export class DocumentProcessingConsumer extends WorkerHost {
@@ -130,9 +130,20 @@ export class DocumentProcessingConsumer extends WorkerHost {
     }
 
     // Reset processingStartedAt on every attempt so the stale-cleanup
-    // cron doesn't race with BullMQ retries on long-running jobs.
+    // cron doesn't race with BullMQ retries on long-running jobs. Guarded
+    // UPDATE, not save(): save() would re-insert a row deleted since the
+    // findById above.
+    const alive =
+      await this.sourceRepository.refreshProcessingHeartbeat(sourceId);
+    if (!alive) {
+      this.logger.warn({ sourceId }, 'Source deleted mid-load, skipping');
+      await this.cleanupMinioFile(minioPath);
+      return null;
+    }
+    // saveTextSource persists the whole entity later on, so mirror the
+    // refreshed timestamp here — otherwise that write puts the stale value
+    // back and re-exposes the in-flight job to the stale-cleanup cron.
     source.processingStartedAt = new Date();
-    await this.sourceRepository.save(source);
 
     return source;
   }
