@@ -25,8 +25,6 @@ import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { Public } from 'src/common/guards/public.guard';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import {
   clearCookies,
   clearMfaPendingCookie,
@@ -74,7 +72,6 @@ export class SsoLoginController {
   ) {}
 
   @Public()
-  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Post('discover')
   @HttpCode(HttpStatus.OK)
@@ -85,7 +82,6 @@ export class SsoLoginController {
   }
 
   @Public()
-  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('organizations/:orgId/start')
   @Redirect(undefined, HttpStatus.FOUND)
@@ -112,7 +108,6 @@ export class SsoLoginController {
     }
   }
 
-  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Post('link/start')
   @HttpCode(HttpStatus.OK)
@@ -136,7 +131,6 @@ export class SsoLoginController {
   }
 
   @Public()
-  @RequireFeature(FeatureFlag.SsoLogin)
   @RateLimit({ limit: 300, windowMs: 15 * 60 * 1000 })
   @Get('oidc/callback')
   @Redirect(undefined, HttpStatus.FOUND)

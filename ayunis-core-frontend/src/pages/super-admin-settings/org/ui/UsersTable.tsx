@@ -24,6 +24,7 @@ import CreateUserDialog from './CreateUserDialog';
 import SuperAdminUsersSearch from './SuperAdminUsersSearch';
 import SuperAdminUsersPagination from './SuperAdminUsersPagination';
 import { SuperAdminUserActions } from '@/widgets/super-admin-user-actions';
+import { UserLockStatus } from '@/widgets/user-lock-status';
 
 interface UsersTableProps {
   users: UserResponseDto[];
@@ -86,6 +87,7 @@ export default function UsersTable({
                   <TableHead>{t('table.createdAt')}</TableHead>
                   <TableHead>{t('table.email')}</TableHead>
                   <TableHead>{t('table.role')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
                   </TableHead>
@@ -93,12 +95,24 @@ export default function UsersTable({
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableRow
+                    key={user.id}
+                    data-testid="super-admin-user-row"
+                    data-user-id={user.id}
+                  >
+                    <TableCell
+                      className="font-medium"
+                      data-testid={`super-admin-user-id-${user.id}`}
+                    >
+                      {user.name}
+                    </TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell className="capitalize">
                       {roleLabels[user.role]}
+                    </TableCell>
+                    <TableCell>
+                      <UserLockStatus isLocked={user.isLocked} />
                     </TableCell>
                     <TableCell className="w-[100px]">
                       <SuperAdminUserActions

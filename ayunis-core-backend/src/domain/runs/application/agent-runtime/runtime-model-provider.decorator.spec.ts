@@ -465,7 +465,7 @@ describe('RuntimeModelProviderDecorator', () => {
     await expect(iterator.next()).resolves.toMatchObject({ done: true });
 
     expect(calls).toBe(2);
-    // One completion event per model call, like the legacy path.
+    // Each provider attempt emits its own completion event.
     expect(emitAsync).toHaveBeenCalledTimes(2);
     jest.useRealTimers();
   });

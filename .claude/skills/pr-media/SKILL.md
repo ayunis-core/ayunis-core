@@ -1,13 +1,13 @@
 ---
 name: pr-media
-description: Create temporary PR-specific screenshots and short GIF demos without committing scene code to the product branch. Use when the user asks for PR screenshots/videos/demos/media, and after visible frontend changes unless explicitly opted out.
+description: Create temporary PR-specific screenshots and short GIF demos without committing scene code to the product branch. Use when the user requests PR media or when a visually meaningful frontend change materially benefits from visual review. It is not automatic for every frontend diff.
 ---
 
 # PR Media
 
 PR media scenes are temporary review aids. Never commit scene definitions to the product PR. Store them on the disposable `pr-media/pr-<number>` branch; the App Integration workflow deletes that branch when the PR closes.
 
-For visible frontend changes, PR media is required after the product PR is created or updated unless the user explicitly says not to add PR media. Minimum coverage is a desktop screenshot and a mobile screenshot of the changed UI. Add a short GIF when the change affects an interaction, dialog, menu, transition, or multi-step flow.
+Use the Proportional Workflow to decide whether PR media adds meaningful review evidence. When it does, capture only the affected viewports and states: use desktop and mobile when responsive behavior is relevant, and add a short GIF when motion or interaction cannot be judged from a static screenshot. Do not create media as ceremony for changes the diff and focused tests already make clear.
 
 ## Workflow
 
@@ -55,7 +55,7 @@ Guidelines:
 - Keep scene and demo names kebab-case (`^[a-z0-9]+(?:-[a-z0-9]+)*$`); CI rejects unsafe names before publishing. Output is `scene-name--viewport.png` and `scene-name--demo-name--viewport.gif`.
 - Use `getByTestId` / `getByRole`; avoid text selectors where possible because the UI is localized.
 - Prefer short, deterministic interactions. No `waitForTimeout`; wait on locators or assertions.
-- Include only scenes the reviewer asked for.
+- Include only the scenes needed to demonstrate the changed UI; do not capture unrelated pages or states.
 
 ## Verify
 

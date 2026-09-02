@@ -3,9 +3,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { UUID } from 'crypto';
 
-/**
- * Error codes specific to the Models domain
- */
 export enum ModelErrorCode {
   MODEL_NOT_FOUND = 'MODEL_NOT_FOUND',
   NO_PERMITTED_EMBEDDING_MODEL = 'NO_PERMITTED_EMBEDDING_MODEL',
@@ -37,11 +34,12 @@ export enum ModelErrorCode {
   DUPLICATE_TEAM_PERMITTED_MODEL = 'DUPLICATE_TEAM_PERMITTED_MODEL',
   TEAM_NOT_FOUND_IN_ORG = 'TEAM_NOT_FOUND_IN_ORG',
   MODEL_NOT_RESTRICTABLE_FOR_TEAM = 'MODEL_NOT_RESTRICTABLE_FOR_TEAM',
+  MODEL_NOT_CONFIGURED = 'MODEL_NOT_CONFIGURED',
+  MODEL_ARCHIVED = 'MODEL_ARCHIVED',
+  MULTIPLE_TEAM_IMAGE_GENERATION_MODELS_NOT_ALLOWED = 'MULTIPLE_TEAM_IMAGE_GENERATION_MODELS_NOT_ALLOWED',
+  EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT = 'EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT',
 }
 
-/**
- * Base model error that all model-specific errors should extend
- */
 export abstract class ModelError extends ApplicationError {
   constructor(
     message: string,
@@ -95,9 +93,6 @@ export class DefaultModelNotFoundError extends ModelError {
   }
 }
 
-/**
- * Errors thrown when a permitted model is not found
- */
 export class PermittedModelNotFoundError extends ModelError {
   constructor(id: UUID, metadata?: ErrorMetadata) {
     super(
@@ -197,13 +192,7 @@ export class InferenceMalformedToolCallError extends ModelError {
   }
 }
 
-/**
- * The model hit its output-token budget while a tool call was still being
- * emitted (finishReason 'length'), so the call's arguments cannot be
- * trusted or executed (AYC-669). Distinct code so these group apart from
- * other inference failures in AppSignal and the run pipeline can retry the
- * attempt when nothing durable has streamed yet.
- */
+/** Distinct token-limit classification enables safe pre-output tool-call retries (AYC-669). */
 export class InferenceTokenLimitError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -215,12 +204,7 @@ export class InferenceTokenLimitError extends ModelError {
   }
 }
 
-/**
- * Client-side cancellation of a streaming inference (aborted fetch or
- * disconnected SSE consumer). Expected behavior, not a provider failure —
- * status 499 ("client closed request") keeps it below the error filter's
- * 5xx reporting threshold so it never opens an AppSignal incident.
- */
+/** Status 499 keeps expected client cancellations out of AppSignal incidents. */
 export class InferenceAbortedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -380,7 +364,6 @@ export class ModelStillPermittedError extends ModelError {
     );
   }
 }
-
 export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -391,7 +374,6 @@ export class MultipleEmbeddingModelsNotAllowedError extends ModelError {
     );
   }
 }
-
 export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
   constructor(metadata?: ErrorMetadata) {
     super(
@@ -402,7 +384,6 @@ export class MultipleImageGenerationModelsNotAllowedError extends ModelError {
     );
   }
 }
-
 export class ImageGenerationModelProviderNotSupportedError extends ModelError {
   constructor(provider: ModelProvider, metadata?: ErrorMetadata) {
     super(
@@ -413,11 +394,6 @@ export class ImageGenerationModelProviderNotSupportedError extends ModelError {
     );
   }
 }
-
-/**
- * Error thrown when a team-scoped permitted model already exists for the
- * given team + model combination.
- */
 export class DuplicateTeamPermittedModelError extends ModelError {
   constructor(teamId: UUID, modelId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -428,7 +404,26 @@ export class DuplicateTeamPermittedModelError extends ModelError {
     );
   }
 }
-
+export class MultipleTeamImageGenerationModelsNotAllowedError extends ModelError {
+  constructor(teamId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Team '${teamId}' can only be granted one image-generation model`,
+      ModelErrorCode.MULTIPLE_TEAM_IMAGE_GENERATION_MODELS_NOT_ALLOWED,
+      409,
+      metadata,
+    );
+  }
+}
+export class EffectiveImageGenerationModelConflictError extends ModelError {
+  constructor(orgId: UUID, modelIds: UUID[], metadata?: ErrorMetadata) {
+    super(
+      `Enabled teams in organization '${orgId}' grant conflicting image-generation models`,
+      ModelErrorCode.EFFECTIVE_IMAGE_GENERATION_MODEL_CONFLICT,
+      409,
+      { ...metadata, orgId, modelIds },
+    );
+  }
+}
 export class TeamNotFoundInOrgError extends ModelError {
   constructor(teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -439,7 +434,6 @@ export class TeamNotFoundInOrgError extends ModelError {
     );
   }
 }
-
 export class PermittedModelNotInTeamError extends ModelError {
   constructor(permittedModelId: UUID, teamId: UUID, metadata?: ErrorMetadata) {
     super(
@@ -450,7 +444,6 @@ export class PermittedModelNotInTeamError extends ModelError {
     );
   }
 }
-
 export class ImageGenerationFailedError extends ModelError {
   constructor(reason: string, metadata?: ErrorMetadata) {
     super(
@@ -473,17 +466,33 @@ export class NotALanguageModelError extends ModelError {
   }
 }
 
-/**
- * Error thrown when a model type cannot be restricted at the team level.
- * Only language and image-generation models are restrictable; embedding
- * models are intentionally excluded so document processing stays available
- * to every team.
- */
 export class ModelNotRestrictableForTeamError extends ModelError {
   constructor(modelId: UUID, metadata?: ErrorMetadata) {
     super(
       `Model '${modelId}' cannot be restricted at the team level`,
       ModelErrorCode.MODEL_NOT_RESTRICTABLE_FOR_TEAM,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class ModelNotConfiguredError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' does not have configured provider credentials`,
+      ModelErrorCode.MODEL_NOT_CONFIGURED,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class ModelArchivedError extends ModelError {
+  constructor(modelId: UUID, metadata?: ErrorMetadata) {
+    super(
+      `Model '${modelId}' is archived`,
+      ModelErrorCode.MODEL_ARCHIVED,
       400,
       metadata,
     );

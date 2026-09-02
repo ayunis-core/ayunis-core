@@ -11,6 +11,7 @@ import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { TeamRecord } from 'src/iam/teams/infrastructure/repositories/local/schema/team.record';
+import { ApiKeyRecord } from 'src/iam/api-keys/infrastructure/repositories/local/schema/api-key.record';
 import { CreditLimitScope } from 'src/iam/credit-limits/domain/value-objects/credit-limit-scope.enum';
 
 const decimalTransformer = {
@@ -19,10 +20,9 @@ const decimalTransformer = {
 };
 
 /**
- * A monthly credit allowance for a single user or a team, persisted via
- * single-table inheritance: the `scope` discriminator selects the subtype, each
- * of which owns its own target FK. Instantiating the correct subtype guarantees
- * exactly one target is set.
+ * A monthly credit allowance persisted via single-table inheritance: the
+ * `scope` discriminator selects the principal subtype, each of which owns its
+ * own target FK.
  */
 @Entity('credit_limits')
 @TableInheritance({ column: { type: 'varchar', name: 'scope' } })
@@ -69,4 +69,17 @@ export class TeamCreditLimitRecord extends CreditLimitRecord {
 
   @ManyToOne(() => TeamRecord, { nullable: true, onDelete: 'CASCADE' })
   team: TeamRecord | null;
+}
+
+@ChildEntity(CreditLimitScope.API_KEY)
+@Index(['orgId', 'apiKeyId'], {
+  unique: true,
+  where: '"apiKeyId" IS NOT NULL',
+})
+export class ApiKeyCreditLimitRecord extends CreditLimitRecord {
+  @Column({ nullable: true })
+  apiKeyId: UUID | null;
+
+  @ManyToOne(() => ApiKeyRecord, { nullable: true, onDelete: 'CASCADE' })
+  apiKey: ApiKeyRecord | null;
 }

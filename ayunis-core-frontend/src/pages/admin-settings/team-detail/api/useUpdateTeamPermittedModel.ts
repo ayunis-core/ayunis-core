@@ -1,11 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  useTeamPermittedModelsControllerUpdateTeamPermittedModel,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+  useTeamPermittedModelsControllerUpdateTeamPermittedModel,
+  type PermittedLanguageModelResponseDto,
+} from '@/shared/api';
+import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
 
 interface UpdateTeamPermittedModelParams {
   permittedModelId: string;
@@ -37,14 +39,23 @@ export function useUpdateTeamPermittedModel(teamId: string) {
         );
         return { previous };
       },
-      onError: (_error, _vars, context) => {
+      onError: (error, _variables, context) => {
         if (context?.previous) {
           queryClient.setQueryData(listQueryKey, context.previous);
         }
-        showError(t('teamDetail.models.updateError'));
+        try {
+          const { code } = extractErrorData(error);
+          const errorKey =
+            code === 'MODEL_NOT_FOUND'
+              ? 'teamDetail.models.updateModelNotFound'
+              : 'teamDetail.models.updateError';
+          showError(t(errorKey));
+        } catch {
+          showError(t('teamDetail.models.updateError'));
+        }
       },
-      onSettled: () => {
-        void queryClient.invalidateQueries({ queryKey: listQueryKey });
+      onSettled: async () => {
+        await invalidateTeamModelAccessQueries(queryClient, teamId);
       },
     },
   });

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SuperAdminUserResponseDto } from '../dtos/super-admin-user-response.dto';
+import { SuperAdminUserResponseDto } from 'src/iam/users/presenters/http/dtos/super-admin-user-response.dto';
 import { UserResponseDtoMapper } from './user-response-dto.mapper';
 import { User } from 'src/iam/users/domain/user.entity';
 
@@ -9,7 +9,7 @@ export class SuperAdminUserResponseDtoMapper {
 
   toDto(user: User): SuperAdminUserResponseDto {
     return {
-      ...this.userResponseDtoMapper.toDto(user),
+      ...this.userResponseDtoMapper.toDto(user, true),
       systemRole: user.systemRole,
     };
   }

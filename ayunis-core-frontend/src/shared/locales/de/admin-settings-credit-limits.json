@@ -1,9 +1,9 @@
 {
   "creditLimits": {
     "menu": {
-      "set": "Guthaben-Limit festlegen",
-      "edit": "Guthaben-Limit bearbeiten",
-      "remove": "Guthaben-Limit entfernen"
+      "set": "Credit-Limit festlegen",
+      "edit": "Credit-Limit bearbeiten",
+      "remove": "Credit-Limit entfernen"
     },
     "teamCard": {
       "title": "Guthaben-Limit",
@@ -11,7 +11,7 @@
       "none": "Kein Guthaben-Limit gesetzt — es gilt nur das Organisationsbudget."
     },
     "column": {
-      "header": "Guthaben-Limit",
+      "header": "Credit-Limit",
       "value": "{{used}} / {{limit}}",
       "none": "Kein Limit"
     },

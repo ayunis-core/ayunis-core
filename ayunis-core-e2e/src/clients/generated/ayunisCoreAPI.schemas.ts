@@ -21,8 +21,6 @@ export interface FeatureTogglesResponseDto {
   skillsEnabled: boolean;
   /** Whether the workspaces feature is enabled */
   workspacesEnabled: boolean;
-  /** Whether runs use the independent agent runtime */
-  agentRuntimeEnabled: boolean;
   /** Whether employee-facing SSO login is enabled */
   ssoLoginEnabled: boolean;
 }
@@ -56,6 +54,8 @@ export interface UserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
 }
@@ -220,6 +220,8 @@ export interface SuperAdminUserListItemResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
   /** Name of the organization the user belongs to */
@@ -274,6 +276,8 @@ export interface SuperAdminUserResponseDto {
    * @nullable
    */
   department?: string | null;
+  /** Whether the account is locked after failed login attempts */
+  isLocked?: boolean;
   /** Date when the user was created */
   createdAt: string;
   /** System-level role of the user */
@@ -531,6 +535,11 @@ export interface SuperAdminOrgListResponseDto {
   data: SuperAdminOrgResponseDto[];
   /** Pagination metadata */
   pagination: PaginationDto;
+}
+
+export interface UpdateOrgRequestDto {
+  /** Organization display name */
+  name: string;
 }
 
 export type RolePermissionSetDtoRole = typeof RolePermissionSetDtoRole[keyof typeof RolePermissionSetDtoRole];
@@ -2508,12 +2517,16 @@ export const PiiCategory = {
 } as const;
 
 export interface PiiMaskResponseDto {
+  /** Unique id of the mask dictionary entry */
+  id: string;
   /** The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}} */
   token: string;
   /** The original value the token stands in for */
   value: string;
   /** PII category of the masked value */
   category: PiiCategory;
+  /** Whether the user manually unmasked this entry for the thread; the token still resolves in stored messages, but the value is no longer masked going forward */
+  unmasked: boolean;
 }
 
 export interface McpIntegrationSummaryResponseDto {
@@ -4624,6 +4637,15 @@ export interface TeamCreditLimitItemDto {
   creditsUsed: number;
 }
 
+export interface ApiKeyCreditLimitItemDto {
+  apiKeyId: string;
+  name: string;
+  /** Configured monthly credit limit */
+  monthlyCredits: number;
+  /** Credits consumed in the current calendar month */
+  creditsUsed: number;
+}
+
 export interface SetCreditLimitDto {
   /**
    * The monthly credit allowance. 0 freezes the target entirely; remove the limit to make the target unlimited within the org budget.
@@ -4642,6 +4664,76 @@ export interface TeamCreditLimitResponseDto {
   id: string;
   monthlyCredits: number;
   teamId: string;
+}
+
+export interface ApiKeyCreditLimitResponseDto {
+  id: string;
+  monthlyCredits: number;
+  apiKeyId: string;
+}
+
+export interface CreateApiKeyDto {
+  /**
+   * Human-readable name for the API key
+   * @maxLength 100
+   */
+  name: string;
+  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
+  expiresAt?: string;
+}
+
+export interface ApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+   * @nullable
+   */
+  revokedAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+}
+
+export interface CreateApiKeyResponseDto {
+  /** Unique identifier of the API key */
+  id: string;
+  /** Human-readable name for the API key */
+  name: string;
+  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
+  prefixPreview: string;
+  /**
+   * Expiration date of the API key, or null if it never expires
+   * @nullable
+   */
+  expiresAt: string | null;
+  /**
+   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
+   * @nullable
+   */
+  revokedAt: string | null;
+  /**
+   * ID of the user who created the key. May be null if that user has been deleted.
+   * @nullable
+   */
+  createdByUserId: string | null;
+  /** When the key was created */
+  createdAt: string;
+  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
+  secret: string;
 }
 
 export interface UserSystemPromptResponseDto {
@@ -5176,70 +5268,6 @@ export interface IpAllowlistResponseDto {
 export interface UpdateIpAllowlistRequestDto {
   /** List of CIDR ranges to allow (e.g. "192.168.1.0/24") */
   cidrs: string[];
-}
-
-export interface CreateApiKeyDto {
-  /**
-   * Human-readable name for the API key
-   * @maxLength 100
-   */
-  name: string;
-  /** Optional expiration date for the API key (ISO 8601). If omitted, the key never expires. */
-  expiresAt?: string;
-}
-
-export interface ApiKeyResponseDto {
-  /** Unique identifier of the API key */
-  id: string;
-  /** Human-readable name for the API key */
-  name: string;
-  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
-  prefixPreview: string;
-  /**
-   * Expiration date of the API key, or null if it never expires
-   * @nullable
-   */
-  expiresAt: string | null;
-  /**
-   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
-   * @nullable
-   */
-  revokedAt: string | null;
-  /**
-   * ID of the user who created the key. May be null if that user has been deleted.
-   * @nullable
-   */
-  createdByUserId: string | null;
-  /** When the key was created */
-  createdAt: string;
-}
-
-export interface CreateApiKeyResponseDto {
-  /** Unique identifier of the API key */
-  id: string;
-  /** Human-readable name for the API key */
-  name: string;
-  /** Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time. */
-  prefixPreview: string;
-  /**
-   * Expiration date of the API key, or null if it never expires
-   * @nullable
-   */
-  expiresAt: string | null;
-  /**
-   * Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.
-   * @nullable
-   */
-  revokedAt: string | null;
-  /**
-   * ID of the user who created the key. May be null if that user has been deleted.
-   * @nullable
-   */
-  createdByUserId: string | null;
-  /** When the key was created */
-  createdAt: string;
-  /** The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later. */
-  secret: string;
 }
 
 /**

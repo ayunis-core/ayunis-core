@@ -3,6 +3,7 @@ import { plainToInstance, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
+  Matches,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -70,6 +71,16 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   PASSWORD_HASH_ROUNDS?: number;
+  @IsOptional()
+  @Matches(/^[1-9]\d*$/, {
+    message: '$property must be a positive decimal integer',
+  })
+  AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS?: string;
+  @IsOptional()
+  @Matches(/^[1-9]\d*$/, {
+    message: '$property must be a positive decimal integer',
+  })
+  AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES?: string;
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -181,7 +192,6 @@ export class EnvironmentVariables {
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_LETTERHEADS_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SKILLS_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_WORKSPACES_ENABLED?: string;
-  @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_AGENT_RUNTIME_ENABLED?: string;
   @IsOptional() @IsIn(BOOLEAN_STRINGS) FEATURE_SSO_LOGIN_ENABLED?: string;
 
   // Retention

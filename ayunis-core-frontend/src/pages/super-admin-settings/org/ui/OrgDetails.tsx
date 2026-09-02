@@ -14,6 +14,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { useTranslation } from 'react-i18next';
+import OrgNameItem from '@/pages/super-admin-settings/org/ui/OrgNameItem';
 
 interface OrgDetailsProps {
   org: SuperAdminOrgResponseDto;
@@ -29,12 +30,7 @@ export default function OrgDetails({ org }: Readonly<OrgDetailsProps>) {
       </CardHeader>
       <CardContent>
         <ItemGroup>
-          <Item>
-            <ItemContent>
-              <ItemTitle>{t('orgDetails.name')}</ItemTitle>
-              <ItemDescription>{org.name}</ItemDescription>
-            </ItemContent>
-          </Item>
+          <OrgNameItem org={org} />
           <ItemSeparator />
           <Item>
             <ItemContent>

@@ -15,7 +15,7 @@ import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import ProviderFaultNotice from './ProviderFaultNotice';
-import type { Thread, Message } from '@/pages/chat/model/openapi';
+import type { Thread } from '@/pages/chat/model/openapi';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
@@ -24,14 +24,10 @@ import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import type {
-  PiiMaskResponseDto,
-  RunMasksResponseDto,
-  RunMessageResponseDtoMessage,
-  RunSessionResponseDto,
-  RunThreadResponseDto,
-} from '@/shared/api';
+import type { RunSessionResponseDto, RunThreadResponseDto } from '@/shared/api';
 import { PiiMaskProvider } from '@/widgets/markdown';
+import type { PiiMaskEntry } from '@/widgets/markdown';
+import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
@@ -52,7 +48,8 @@ import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAtt
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
 import { useDownloadSource } from '@/pages/chat/api/useDownloadSource';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
-import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';
+import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { ArtifactSidePanel } from './ArtifactSidePanel';
 import { WorkspaceContextSidePanel } from './WorkspaceContextSidePanel';
 import { useWorkspaceContextPanel } from '@/pages/chat/hooks/useWorkspaceContextPanel';
@@ -86,9 +83,7 @@ export default function ChatPage({
     staleTime: 0,
     // eslint-disable-next-line sonarjs/function-return-type -- React Query's refetchInterval expects number | false
     refetchInterval: (query) => {
-      // Pause polling while streaming so a poll started before stream end
-      // can't land in the cache afterwards and shorten the displayed text
-      // via the thread reconciliation pass.
+      // Polling during streaming can replace local output with stale persisted text.
       if (isStreaming) return false;
       const data = query.state.data;
       if (!data) return false;
@@ -115,25 +110,16 @@ export default function ChatPage({
     null,
   );
 
-  const [threadTitle, setThreadTitle] = useState<string | undefined>(
-    thread.title,
-  );
-  const [messages, setMessages] = useState<Message[]>(thread.messages);
-  const [piiMasks, setPiiMasks] = useState<PiiMaskResponseDto[]>(
-    thread.piiMasks,
-  );
-
-  // Reconcile local message/title state whenever the thread reference changes
-  // (navigating to another thread, or a refetch returning fresh server data).
-  // Done during render rather than in an effect to avoid the extra commit pass
-  // flagged by react-hooks/set-state-in-effect.
-  const [reconciledThread, setReconciledThread] = useState(thread);
-  if (thread !== reconciledThread) {
-    setReconciledThread(thread);
-    setMessages(reconcileMessages(messages, reconciledThread, thread));
-    setThreadTitle(thread.title);
-    setPiiMasks(thread.piiMasks);
-  }
+  const {
+    messages,
+    setMessages,
+    piiMasks,
+    setPiiMasks,
+    threadTitle,
+    setThreadTitle,
+    handleMessage,
+    handleMasks,
+  } = useChatThreadState(thread, isStreaming);
 
   useEffect(() => {
     lastSubmissionRef.current = null;
@@ -196,26 +182,25 @@ export default function ChatPage({
   });
   const { downloadSource } = useDownloadSource(thread);
 
-  const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
-    setPendingSubmission(null);
-    setMessages((prev) => {
-      const exists = prev.some((m) => m.id === message.id);
-      if (exists) return prev.map((m) => (m.id === message.id ? message : m));
-      return [...prev, message];
-    });
-  }, []);
+  const { unmaskPiiMask } = useUnmaskPiiMask({
+    threadId: thread.id,
+    onSuccess: (masks) =>
+      setPiiMasks((current) => mergePiiMasks(current, masks)),
+  });
 
-  const handleMasks = useCallback((data: RunMasksResponseDto) => {
-    // Events carry the thread's full dictionary — replace-by-token merge is
-    // idempotent and keeps any entries from earlier events.
-    setPiiMasks((prev) => {
-      const byToken = new Map(prev.map((mask) => [mask.token, mask]));
-      for (const mask of data.masks) {
-        byToken.set(mask.token, mask);
-      }
-      return [...byToken.values()];
-    });
-  }, []);
+  const handleUnmaskRequest = useCallback(
+    (entry: PiiMaskEntry) => {
+      confirm({
+        title: t('chat.piiMask.unmaskTitle', { value: entry.value }),
+        description: t('chat.piiMask.unmaskDescription'),
+        confirmText: t('chat.piiMask.unmaskConfirm'),
+        cancelText: t('chat.piiMask.unmaskCancel'),
+        variant: 'destructive',
+        onConfirm: () => unmaskPiiMask(entry.id),
+      });
+    },
+    [confirm, t, unmaskPiiMask],
+  );
 
   const handleFileUpload = (files: File[]) =>
     files.forEach((file) => createFileSource({ file }));
@@ -245,12 +230,15 @@ export default function ChatPage({
         queryKey: getThreadsControllerFindAllQueryKey(),
       });
     },
-    [queryClient],
+    [queryClient, setThreadTitle],
   );
 
   const { sendTextMessage, abort } = useMessageSend({
     threadId: thread.id,
-    onMessageEvent: (data) => handleMessage(data.message),
+    onMessageEvent: (data) => {
+      setPendingSubmission(null);
+      handleMessage(data.message);
+    },
     onErrorEvent: handleError,
     onSessionEvent: handleSession,
     onThreadEvent: handleThread,
@@ -480,7 +468,7 @@ export default function ChatPage({
   }
   return (
     <AppLayout>
-      <PiiMaskProvider masks={piiMasks}>
+      <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
         <ChatInterfaceLayout
           chatHeader={chatHeader}
           chatContent={chatContent}

@@ -37,6 +37,8 @@ import type {
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
+  ApiKeyCreditLimitItemDto,
+  ApiKeyCreditLimitResponseDto,
   ApiKeyResponseDto,
   AppAlertResponseDto,
   ArtifactListResponseDto,
@@ -149,6 +151,7 @@ import type {
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
+  PiiMaskResponseDto,
   PiiWhitelistResponseDto,
   PredefinedConfigResponseDto,
   PriceResponseDto,
@@ -241,6 +244,7 @@ import type {
   UpdateMonthlyCreditsDto,
   UpdateOnboardingDto,
   UpdateOrgMfaRequirementRequestDto,
+  UpdateOrgRequestDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
@@ -1589,6 +1593,68 @@ export const useSuperAdminUsersControllerDeleteUser = <TError = void,
     }
     
 /**
+ * @summary Unlock a user in any organization
+ */
+export const superAdminUsersControllerUnlockUser = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/super-admin/users/${userId}/unlock`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminUsersControllerUnlockUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['superAdminUsersControllerUnlockUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  superAdminUsersControllerUnlockUser(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminUsersControllerUnlockUserMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>>
+    
+    export type SuperAdminUsersControllerUnlockUserMutationError = void
+
+    /**
+ * @summary Unlock a user in any organization
+ */
+export const useSuperAdminUsersControllerUnlockUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminUsersControllerUnlockUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminUsersControllerUnlockUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
  * @summary Trigger password reset for a user
  */
@@ -2128,6 +2194,68 @@ export const useSuperAdminManagementControllerDemoteFromSuperAdmin = <TError = v
       > => {
 
       const mutationOptions = getSuperAdminManagementControllerDemoteFromSuperAdminMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Unlock a user in the current organization
+ */
+export const adminUserAccountLockControllerUnlock = (
+    userId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/users/${userId}/unlock`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getAdminUserAccountLockControllerUnlockMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['adminUserAccountLockControllerUnlock'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  adminUserAccountLockControllerUnlock(userId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUserAccountLockControllerUnlockMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>>
+    
+    export type AdminUserAccountLockControllerUnlockMutationError = void
+
+    /**
+ * @summary Unlock a user in the current organization
+ */
+export const useAdminUserAccountLockControllerUnlock = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>, TError,{userId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUserAccountLockControllerUnlock>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminUserAccountLockControllerUnlockMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -2964,6 +3092,72 @@ export function useSuperAdminOrgsControllerGetOrgById<TData = Awaited<ReturnType
 
 
 
+/**
+ * Update an organization display name. Only accessible to users with the super admin system role.
+ * @summary Rename an organization
+ */
+export const superAdminOrgsControllerUpdateOrg = (
+    id: string,
+    updateOrgRequestDto: UpdateOrgRequestDto,
+ ) => {
+      
+      
+      return customAxiosInstance<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOrgRequestDto
+    },
+      );
+    }
+  
+
+
+export const getSuperAdminOrgsControllerUpdateOrgMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext> => {
+
+const mutationKey = ['superAdminOrgsControllerUpdateOrg'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, {id: string;data: UpdateOrgRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  superAdminOrgsControllerUpdateOrg(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOrgsControllerUpdateOrgMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>>
+    export type SuperAdminOrgsControllerUpdateOrgMutationBody = UpdateOrgRequestDto
+    export type SuperAdminOrgsControllerUpdateOrgMutationError = void
+
+    /**
+ * @summary Rename an organization
+ */
+export const useSuperAdminOrgsControllerUpdateOrg = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>, TError,{id: string;data: UpdateOrgRequestDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOrgsControllerUpdateOrg>>,
+        TError,
+        {id: string;data: UpdateOrgRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSuperAdminOrgsControllerUpdateOrgMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Get the per-role permission grants for the current user's organization
  */
@@ -8601,6 +8795,70 @@ export const useThreadsControllerUpdateTitle = <TError = void,
       > => {
 
       const mutationOptions = getThreadsControllerUpdateTitleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread
+ */
+export const threadsControllerUnmaskPiiMask = (
+    id: string,
+    maskId: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<PiiMaskResponseDto[]>(
+      {url: `/threads/${id}/pii-masks/${maskId}/unmask`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getThreadsControllerUnmaskPiiMaskMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext> => {
+
+const mutationKey = ['threadsControllerUnmaskPiiMask'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, {id: string;maskId: string}> = (props) => {
+          const {id,maskId} = props ?? {};
+
+          return  threadsControllerUnmaskPiiMask(id,maskId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadsControllerUnmaskPiiMaskMutationResult = NonNullable<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>>
+    
+    export type ThreadsControllerUnmaskPiiMaskMutationError = void
+
+    /**
+ * @summary Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread
+ */
+export const useThreadsControllerUnmaskPiiMask = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>, TError,{id: string;maskId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadsControllerUnmaskPiiMask>>,
+        TError,
+        {id: string;maskId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getThreadsControllerUnmaskPiiMaskMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -19032,6 +19290,99 @@ export function useCreditLimitsControllerGetTeamLimits<TData = Awaited<ReturnTyp
 
 
 /**
+ * @summary List configured API key credit limits with current consumption
+ */
+export const creditLimitsControllerGetApiKeyLimits = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ApiKeyCreditLimitItemDto[]>(
+      {url: `/credit-limits/api-keys`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getCreditLimitsControllerGetApiKeyLimitsQueryKey = () => {
+    return [
+    `/credit-limits/api-keys`
+    ] as const;
+    }
+
+    
+export const getCreditLimitsControllerGetApiKeyLimitsQueryOptions = <TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCreditLimitsControllerGetApiKeyLimitsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>> = ({ signal }) => creditLimitsControllerGetApiKeyLimits(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CreditLimitsControllerGetApiKeyLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>>
+export type CreditLimitsControllerGetApiKeyLimitsQueryError = unknown
+
+
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>,
+          TError,
+          Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List configured API key credit limits with current consumption
+ */
+
+export function useCreditLimitsControllerGetApiKeyLimits<TData = Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof creditLimitsControllerGetApiKeyLimits>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCreditLimitsControllerGetApiKeyLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
  * @summary Set a monthly credit limit for a user
  */
 export const creditLimitsControllerSetUserLimit = (
@@ -19281,6 +19632,353 @@ export const useCreditLimitsControllerRemoveTeamLimit = <TError = unknown,
       > => {
 
       const mutationOptions = getCreditLimitsControllerRemoveTeamLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set a monthly credit limit for an API key
+ */
+export const creditLimitsControllerSetApiKeyLimit = (
+    apiKeyId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ ) => {
+      
+      
+      return customAxiosInstance<ApiKeyCreditLimitResponseDto>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerSetApiKeyLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,{apiKeyId: string;data: SetCreditLimitDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,{apiKeyId: string;data: SetCreditLimitDto}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerSetApiKeyLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, {apiKeyId: string;data: SetCreditLimitDto}> = (props) => {
+          const {apiKeyId,data} = props ?? {};
+
+          return  creditLimitsControllerSetApiKeyLimit(apiKeyId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerSetApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>>
+    export type CreditLimitsControllerSetApiKeyLimitMutationBody = SetCreditLimitDto
+    export type CreditLimitsControllerSetApiKeyLimitMutationError = unknown
+
+    /**
+ * @summary Set a monthly credit limit for an API key
+ */
+export const useCreditLimitsControllerSetApiKeyLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>, TError,{apiKeyId: string;data: SetCreditLimitDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerSetApiKeyLimit>>,
+        TError,
+        {apiKeyId: string;data: SetCreditLimitDto},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerSetApiKeyLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove an API key credit limit
+ */
+export const creditLimitsControllerRemoveApiKeyLimit = (
+    apiKeyId: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getCreditLimitsControllerRemoveApiKeyLimitMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,{apiKeyId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,{apiKeyId: string}, TContext> => {
+
+const mutationKey = ['creditLimitsControllerRemoveApiKeyLimit'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, {apiKeyId: string}> = (props) => {
+          const {apiKeyId} = props ?? {};
+
+          return  creditLimitsControllerRemoveApiKeyLimit(apiKeyId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreditLimitsControllerRemoveApiKeyLimitMutationResult = NonNullable<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>>
+    
+    export type CreditLimitsControllerRemoveApiKeyLimitMutationError = unknown
+
+    /**
+ * @summary Remove an API key credit limit
+ */
+export const useCreditLimitsControllerRemoveApiKeyLimit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>, TError,{apiKeyId: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creditLimitsControllerRemoveApiKeyLimit>>,
+        TError,
+        {apiKeyId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreditLimitsControllerRemoveApiKeyLimitMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List API keys for the current organization
+ */
+export const apiKeysControllerListApiKeys = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<ApiKeyResponseDto[]>(
+      {url: `/api-keys`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getApiKeysControllerListApiKeysQueryKey = () => {
+    return [
+    `/api-keys`
+    ] as const;
+    }
+
+    
+export const getApiKeysControllerListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getApiKeysControllerListApiKeysQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>> = ({ signal }) => apiKeysControllerListApiKeys(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ApiKeysControllerListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>>
+export type ApiKeysControllerListApiKeysQueryError = void
+
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
+          TError,
+          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List API keys for the current organization
+ */
+
+export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getApiKeysControllerListApiKeysQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const apiKeysControllerCreateApiKey = (
+    createApiKeyDto: CreateApiKeyDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxiosInstance<CreateApiKeyResponseDto>(
+      {url: `/api-keys`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createApiKeyDto, signal
+    },
+      );
+    }
+  
+
+
+export const getApiKeysControllerCreateApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext> => {
+
+const mutationKey = ['apiKeysControllerCreateApiKey'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, {data: CreateApiKeyDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  apiKeysControllerCreateApiKey(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerCreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>>
+    export type ApiKeysControllerCreateApiKeyMutationBody = CreateApiKeyDto
+    export type ApiKeysControllerCreateApiKeyMutationError = void
+
+    /**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+export const useApiKeysControllerCreateApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>,
+        TError,
+        {data: CreateApiKeyDto},
+        TContext
+      > => {
+
+      const mutationOptions = getApiKeysControllerCreateApiKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Revoke an API key
+ */
+export const apiKeysControllerRevokeApiKey = (
+    id: string,
+ ) => {
+      
+      
+      return customAxiosInstance<void>(
+      {url: `/api-keys/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getApiKeysControllerRevokeApiKeyMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['apiKeysControllerRevokeApiKey'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  apiKeysControllerRevokeApiKey(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApiKeysControllerRevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>>
+    
+    export type ApiKeysControllerRevokeApiKeyMutationError = void
+
+    /**
+ * @summary Revoke an API key
+ */
+export const useApiKeysControllerRevokeApiKey = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -20461,7 +21159,7 @@ export function useAcademyQuizControllerGetProgress<TData = Awaited<ReturnType<t
 
 
 /**
- * Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.
+ * Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.
  * @summary Download the academy completion certificate
  */
 export const academyCertificateControllerGetCertificate = (
@@ -22837,226 +23535,6 @@ export const useIpAllowlistControllerRemove = <TError = unknown,
       > => {
 
       const mutationOptions = getIpAllowlistControllerRemoveMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary List API keys for the current organization
- */
-export const apiKeysControllerListApiKeys = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<ApiKeyResponseDto[]>(
-      {url: `/api-keys`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getApiKeysControllerListApiKeysQueryKey = () => {
-    return [
-    `/api-keys`
-    ] as const;
-    }
-
-    
-export const getApiKeysControllerListApiKeysQueryOptions = <TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getApiKeysControllerListApiKeysQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>> = ({ signal }) => apiKeysControllerListApiKeys(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ApiKeysControllerListApiKeysQueryResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>>
-export type ApiKeysControllerListApiKeysQueryError = void
-
-
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>,
-          TError,
-          Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List API keys for the current organization
- */
-
-export function useApiKeysControllerListApiKeys<TData = Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof apiKeysControllerListApiKeys>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getApiKeysControllerListApiKeysQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-export const apiKeysControllerCreateApiKey = (
-    createApiKeyDto: CreateApiKeyDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return customAxiosInstance<CreateApiKeyResponseDto>(
-      {url: `/api-keys`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApiKeyDto, signal
-    },
-      );
-    }
-  
-
-
-export const getApiKeysControllerCreateApiKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext> => {
-
-const mutationKey = ['apiKeysControllerCreateApiKey'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, {data: CreateApiKeyDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  apiKeysControllerCreateApiKey(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ApiKeysControllerCreateApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>>
-    export type ApiKeysControllerCreateApiKeyMutationBody = CreateApiKeyDto
-    export type ApiKeysControllerCreateApiKeyMutationError = void
-
-    /**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-export const useApiKeysControllerCreateApiKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>, TError,{data: CreateApiKeyDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof apiKeysControllerCreateApiKey>>,
-        TError,
-        {data: CreateApiKeyDto},
-        TContext
-      > => {
-
-      const mutationOptions = getApiKeysControllerCreateApiKeyMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Revoke an API key
- */
-export const apiKeysControllerRevokeApiKey = (
-    id: string,
- ) => {
-      
-      
-      return customAxiosInstance<void>(
-      {url: `/api-keys/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getApiKeysControllerRevokeApiKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['apiKeysControllerRevokeApiKey'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  apiKeysControllerRevokeApiKey(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ApiKeysControllerRevokeApiKeyMutationResult = NonNullable<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>>
-    
-    export type ApiKeysControllerRevokeApiKeyMutationError = void
-
-    /**
- * @summary Revoke an API key
- */
-export const useApiKeysControllerRevokeApiKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof apiKeysControllerRevokeApiKey>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getApiKeysControllerRevokeApiKeyMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -7,20 +7,19 @@ description: Backend development with NestJS, TypeORM, and hexagonal architectur
 
 ## Red-Green TDD Workflow
 
-Every change follows red-green TDD. Do NOT write production code without a failing test first.
+Behavior and logic changes, including bug fixes, follow red-green TDD. Do NOT write production code for changed behavior without a failing test first. For a behavior-preserving refactor, identify and run the focused existing tests before editing, then keep them green; do not invent a new failing test when no behavior should change.
 
 ### Cycle
 
 1. **Red** — Write a test that captures the desired behavior. Run it. It MUST fail.
    - If the test passes immediately, it's not testing anything new — delete it or rethink.
 2. **Green** — Write the minimum production code to make the test pass. Nothing more.
-3. **Refactor** — Clean up while keeping tests green. Run the full validation sequence.
+3. **Refactor** — Clean up while keeping tests green. Run the validation required by the repository's Proportional Workflow.
 4. **Repeat** — Next behavior, next test.
 
 ```bash
 # During each cycle:
 pnpm run test -- --testPathPatterns=<module>  # Run focused tests (red → green)
-pnpm exec eslint <touched-files> && pnpm exec tsc --noEmit && pnpm run test  # Full validation (refactor step)
 ```
 
 > The Jest flag is `--testPathPatterns` (plural). The singular `--testPathPattern` was removed and now errors out: `Option testPathPattern was replaced by --testPathPatterns`.
@@ -58,15 +57,29 @@ it("should work", async () => {
 
 ## Validation Sequence
 
+Choose validation breadth using the repository's Proportional Workflow.
+
+Fast Path:
+
+```bash
+pnpm exec eslint <touched-files>              # Lint without rewriting unrelated files
+```
+
+Run `pnpm run test -- --testPathPatterns=<module>` when behavior or test code changed. Also run `pnpm exec tsc --noEmit` when types, imports, dependency injection, or other compile-time behavior could be affected.
+
+Standard Path:
+
 ```bash
 pnpm exec eslint <touched-files>     # Lint without rewriting unrelated files
 pnpm exec tsc --noEmit               # 0 type errors
-pnpm run test                        # All tests pass
+pnpm run test -- --testPathPatterns=<module>  # Affected module suites pass
 ```
+
+High-Risk changes and changes to shared test infrastructure or broad behavior also run `pnpm run test` for the full suite.
 
 > ⚠ **`pnpm run lint` is wired with `--fix`** in `ayunis-core-backend/package.json` — running it as a verification step will auto-rewrite unrelated files (migrations, fixtures, entities) and leave them in the working tree. Prefer `pnpm exec eslint <paths>` for verification. If you do run `pnpm run lint`, immediately check `git status --short` and `git restore` any files outside your change set.
 
-For an architecture cross-check before declaring done (catches the no-cross-module-port-imports / no-domain-imports-presenters rules that the pre-commit hook enforces), also run dep-cruiser:
+When module boundaries or imports change, run dep-cruiser as an architecture cross-check (it catches the no-cross-module-port-imports / no-domain-imports-presenters rules that the pre-commit hook enforces):
 
 ```bash
 pnpm exec depcruise src        # or whatever the project's depcheck script is
@@ -169,9 +182,8 @@ When creating or modifying repositories, finders, QueryBuilder code, or database
 ## Completion Checklist
 
 - [ ] `pnpm exec eslint <touched-files>` passes (avoid `pnpm run lint` — it's wired with `--fix`)
-- [ ] `pnpm exec tsc --noEmit` shows 0 errors
-- [ ] `pnpm run test` all pass
-- [ ] `pnpm exec depcruise src` reports no new violations (catches cross-module port/presenter imports the pre-commit hook will reject)
+- [ ] Focused regression or module tests pass when behavior or test code changed
+- [ ] Type-check, full suite, and dep-cruiser run when required by the Proportional Workflow and affected failure modes
 - [ ] `git status --short` shows only files you intended to change
 - [ ] No `any` types introduced
 - [ ] DTOs have validation decorators

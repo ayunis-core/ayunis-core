@@ -5,7 +5,6 @@ import { MessagesModule } from 'src/domain/messages/messages.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { RunsController } from './presenters/http/runs.controller';
 import { ExecuteRunUseCase } from './application/use-cases/execute-run/execute-run.use-case';
-import { ExecuteRunViaRuntimeUseCase } from './application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
 import { ExecuteRunAndSetTitleUseCase } from './application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message/send-message.use-case';
 import { RunEventResponseMapper } from './presenters/http/mappers/run-event-response.mapper';
@@ -26,13 +25,13 @@ import { ArtifactToolAssemblerService } from './application/services/artifact-to
 import { McpToolAssemblerService } from './application/services/mcp-tool-assembler.service';
 import { ToolResultCollectorService } from './application/services/tool-result-collector.service';
 import { MessageCleanupService } from './application/services/message-cleanup.service';
-import { StreamingInferenceService } from './application/services/streaming-inference.service';
-import { NonStreamingInferenceService } from './application/services/non-streaming-inference.service';
+import { ApiKeyCreditLimitGuardService } from './application/services/api-key-credit-limit-guard.service';
 import { CreditBudgetGuardService } from './application/services/credit-budget-guard.service';
 import { CreditLimitGuardService } from './application/services/credit-limit-guard.service';
-import { InferenceOrchestratorService } from './application/services/inference-orchestrator.service';
 import { InferenceUsageGuard } from './application/services/inference-usage-guard.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
+import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
+import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
 
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
@@ -77,7 +76,6 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
   controllers: [RunsController],
   providers: [
     ExecuteRunUseCase,
-    ExecuteRunViaRuntimeUseCase,
     BackendToolAdapter,
     PersistenceHookFactory,
     UsageHookFactory,
@@ -98,13 +96,13 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
     McpToolAssemblerService,
     ToolResultCollectorService,
     MessageCleanupService,
-    StreamingInferenceService,
-    NonStreamingInferenceService,
     CreditBudgetGuardService,
     CreditLimitGuardService,
-    InferenceOrchestratorService,
+    ApiKeyCreditLimitGuardService,
     InferenceUsageGuard,
     RunTelemetryService,
+    EffectiveRunModelResolverService,
+    UnmaskedTermsService,
   ],
   exports: [
     ExecuteRunUseCase,

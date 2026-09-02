@@ -223,6 +223,14 @@
     "inputDisclaimer": "Eingaben werden nicht für Training verwendet. KI kann Fehler machen—Antworten prüfen.",
     "piiMask": {
       "tooltip": "{{category}} — vor dem Senden an das KI-Modell anonymisiert",
+      "tooltipClickable": "{{category}} — vor dem Senden an das KI-Modell anonymisiert. Klicken, um die Maskierung aufzuheben.",
+      "unmaskTitle": "Maskierung von \"{{value}}\" aufheben?",
+      "unmaskDescription": "Der Begriff wird in diesem Chat ab jetzt in seiner ursprünglichen Form an das KI-Modell gesendet, auch im bisherigen Gesprächsverlauf. Diese Aktion kann nicht rückgängig gemacht werden und ändert nicht die Anonymisierungseinstellungen Ihrer Organisation.",
+      "unmaskConfirm": "Maskierung aufheben",
+      "unmaskCancel": "Abbrechen",
+      "unmaskSuccess": "Maskierung für diesen Chat aufgehoben",
+      "unmaskNotFound": "Der Begriff wurde in diesem Chat nicht gefunden",
+      "unmaskError": "Maskierung konnte nicht aufgehoben werden",
       "categories": {
         "person_name": "Personenname",
         "organization": "Organisation",
@@ -237,7 +245,7 @@
         "other": "Personenbezogene Daten"
       }
     },
-    "academyCertificateRequiredError": "Ihre Organisation setzt den KI-Führerschein voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
+    "academyCertificateRequiredError": "Ihre Organisation setzt den Abschluss der KI-Schulung nach EU AI Act voraus, bevor Sie Nachrichten senden können. Schließen Sie die Academy ab, um den Chat freizuschalten."
   },
   "newChat": {
     "newChat": "Neuer Chat",

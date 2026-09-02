@@ -9,9 +9,10 @@ import { GetPiiWhitelistUseCase } from 'src/domain/anonymization-settings/applic
 import { GetPiiWhitelistQuery } from 'src/domain/anonymization-settings/application/use-cases/get-pii-whitelist/get-pii-whitelist.query';
 import { GetGlobalPiiWhitelistUseCase } from 'src/domain/anonymization-settings/application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { toWhitelistEntry } from 'src/domain/anonymization-settings/domain/global-word-whitelist-entry';
-import { ThreadPiiMaskRepository } from '../../ports/thread-pii-mask.repository';
+import { ThreadPiiMaskRepository } from 'src/domain/thread-pii-masks/application/ports/thread-pii-mask.repository';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import { UnexpectedThreadPiiMasksError } from '../../thread-pii-masks.errors';
+import { toUnmaskedWhitelistEntry } from 'src/domain/thread-pii-masks/domain/unmasked-mask-whitelist';
+import { UnexpectedThreadPiiMasksError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
 import type { AnonymizeTextForThreadCommand } from './anonymize-text-for-thread.command';
 
 export interface ThreadAnonymizationResult extends AnonymizationResult {
@@ -48,13 +49,18 @@ export class AnonymizeTextForThreadUseCase {
         new GetPiiWhitelistQuery(command.orgId),
       );
       const globalWords = await this.getGlobalPiiWhitelistUseCase.execute();
+      const existing = await this.repository.findByThreadId(command.threadId);
       const whitelist = [
         ...entries.map(
           (entry) => new PiiWhitelistEntry(entry.category, entry.pattern),
         ),
         ...globalWords.map(toWhitelistEntry),
+        // Manually unmasked values are exempt for this thread; their rows stay
+        // in `existing` so index numbering and historical tokens remain stable.
+        ...existing
+          .filter((mask) => mask.unmasked)
+          .map(toUnmaskedWhitelistEntry),
       ];
-      const existing = await this.repository.findByThreadId(command.threadId);
 
       const result = await this.anonymizeTextUseCase.execute(
         new AnonymizeTextCommand(

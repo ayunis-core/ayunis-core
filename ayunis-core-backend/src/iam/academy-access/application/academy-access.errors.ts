@@ -24,7 +24,7 @@ export abstract class AcademyAccessError extends ApplicationError {
 export class AcademyCertificateRequiredError extends AcademyAccessError {
   constructor(metadata?: ErrorMetadata) {
     super(
-      'Using Ayunis Core chat requires a valid KI-Führerschein certificate.',
+      'Using Ayunis Core chat requires a valid certificate for the KI-Schulung nach EU AI Act.',
       AcademyAccessErrorCode.ACADEMY_CERTIFICATE_REQUIRED,
       403,
       metadata,

@@ -75,6 +75,9 @@ import { LocalUserCountsRepository } from 'src/iam/users/infrastructure/reposito
 import { CountUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/count-users-by-org-id/count-users-by-org-id.use-case';
 import { FindUsersByEmailsUseCase } from 'src/iam/users/application/use-cases/find-users-by-emails/find-users-by-emails.use-case';
 import { UserCreatedEventPublisher } from 'src/iam/users/application/services/user-created-event-publisher.service';
+import { AuthorizeUserLoginUseCase } from 'src/iam/users/application/use-cases/authorize-user-login/authorize-user-login.use-case';
+import { UnlockUserAccountUseCase } from 'src/iam/users/application/use-cases/unlock-user-account/unlock-user-account.use-case';
+import { AdminUserAccountLockController } from 'src/iam/users/presenters/http/admin-user-account-lock.controller';
 
 @Module({
   imports: [
@@ -96,6 +99,7 @@ import { UserCreatedEventPublisher } from 'src/iam/users/application/services/us
     SuperAdminUserListController,
     SuperAdminUserExportsController,
     SuperAdminManagementController,
+    AdminUserAccountLockController,
   ],
   providers: [
     {
@@ -161,6 +165,8 @@ import { UserCreatedEventPublisher } from 'src/iam/users/application/services/us
     DemoteFromSuperAdminUseCase,
     ExportUsersUseCase,
     SuperAdminFindAllUsersUseCase,
+    AuthorizeUserLoginUseCase,
+    UnlockUserAccountUseCase,
     // Services
     EmailConfirmationJwtService,
     // Mappers
@@ -187,6 +193,7 @@ import { UserCreatedEventPublisher } from 'src/iam/users/application/services/us
     FindAllUserIdsByOrgIdUseCase,
     FindAllUserSummariesByOrgIdUseCase,
     GetOrgAdminsUseCase,
+    AuthorizeUserLoginUseCase,
     UsersRepository, // Export repository for seeding
   ],
 })

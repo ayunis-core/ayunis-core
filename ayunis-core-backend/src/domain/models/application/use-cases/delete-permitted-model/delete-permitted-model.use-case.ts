@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedModelDeletionFailedError,
   CannotDeleteDefaultModelError,
   CannotDeleteLastModelError,
   UnexpectedModelError,
-} from '../../models.errors';
+} from 'src/domain/models/application/models.errors';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { ReplaceModelWithUserDefaultCommand } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.command';
-import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
-import { DeleteUserDefaultModelsByModelIdCommand } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
-import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
-import { GetPermittedModelsQuery } from '../get-permitted-models/get-permitted-models.query';
+import { DeleteUserDefaultModelsByModelIdUseCase } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
+import { DeleteUserDefaultModelsByModelIdCommand } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
+import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
+import { GetPermittedModelsQuery } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.query';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -171,12 +171,6 @@ export class DeletePermittedModelUseCase {
       }),
     );
 
-    // Cascade: remove team-scoped permitted models referencing the same catalog model
-    await this.permittedModelsRepository.deleteTeamScopedByOrgAndModelId(
-      orgId,
-      model.model.id,
-    );
-
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId: orgId,
@@ -222,12 +216,6 @@ export class DeletePermittedModelUseCase {
     orgId: UUID,
     model: PermittedImageGenerationModel,
   ): Promise<void> {
-    // Cascade: remove team-scoped permitted models referencing the same catalog model
-    await this.permittedModelsRepository.deleteTeamScopedByOrgAndModelId(
-      orgId,
-      model.model.id,
-    );
-
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId,

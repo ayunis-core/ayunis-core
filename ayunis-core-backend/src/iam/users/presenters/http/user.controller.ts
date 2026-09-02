@@ -26,40 +26,43 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { UserProperty } from 'src/iam/authentication/application/decorators/current-user.decorator';
+import type { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { UUID } from 'crypto';
-import { FindUsersByOrgIdUseCase } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
-import { FindUsersByOrgIdQuery } from '../../application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
-import { DeleteUserUseCase } from '../../application/use-cases/delete-user/delete-user.use-case';
-import { DeleteUserCommand } from '../../application/use-cases/delete-user/delete-user.command';
-import { UpdateUserRoleUseCase } from '../../application/use-cases/update-user-role/update-user-role.use-case';
-import { UpdateUserRoleCommand } from '../../application/use-cases/update-user-role/update-user-role.command';
-import { UpdateUserNameUseCase } from '../../application/use-cases/update-user-name/update-user-name.use-case';
-import { UpdateUserNameCommand } from '../../application/use-cases/update-user-name/update-user-name.command';
-import { UpdatePasswordUseCase } from '../../application/use-cases/update-password/update-password.use-case';
-import { UpdatePasswordCommand } from '../../application/use-cases/update-password/update-password.command';
-import { ConfirmEmailUseCase } from '../../application/use-cases/confirm-email/confirm-email.use-case';
-import { ConfirmEmailCommand } from '../../application/use-cases/confirm-email/confirm-email.command';
-import { ResendEmailConfirmationUseCase } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
-import { ResendEmailConfirmationCommand } from '../../application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
-import { UserResponseDtoMapper } from './mappers/user-response-dto.mapper';
+import { FindUsersByOrgIdUseCase } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.use-case';
+import { FindUsersByOrgIdQuery } from 'src/iam/users/application/use-cases/find-users-by-org-id/find-users-by-org-id.query';
+import { DeleteUserUseCase } from 'src/iam/users/application/use-cases/delete-user/delete-user.use-case';
+import { DeleteUserCommand } from 'src/iam/users/application/use-cases/delete-user/delete-user.command';
+import { UpdateUserRoleUseCase } from 'src/iam/users/application/use-cases/update-user-role/update-user-role.use-case';
+import { UpdateUserRoleCommand } from 'src/iam/users/application/use-cases/update-user-role/update-user-role.command';
+import { UpdateUserNameUseCase } from 'src/iam/users/application/use-cases/update-user-name/update-user-name.use-case';
+import { UpdateUserNameCommand } from 'src/iam/users/application/use-cases/update-user-name/update-user-name.command';
+import { UpdatePasswordUseCase } from 'src/iam/users/application/use-cases/update-password/update-password.use-case';
+import { UpdatePasswordCommand } from 'src/iam/users/application/use-cases/update-password/update-password.command';
+import { ConfirmEmailUseCase } from 'src/iam/users/application/use-cases/confirm-email/confirm-email.use-case';
+import { ConfirmEmailCommand } from 'src/iam/users/application/use-cases/confirm-email/confirm-email.command';
+import { ResendEmailConfirmationUseCase } from 'src/iam/users/application/use-cases/resend-email-confirmation/resend-email-confirmation.use-case';
+import { ResendEmailConfirmationCommand } from 'src/iam/users/application/use-cases/resend-email-confirmation/resend-email-confirmation.command';
+import { UserResponseDtoMapper } from 'src/iam/users/presenters/http/mappers/user-response-dto.mapper';
 import {
   UserResponseDto,
   PaginatedUsersListResponseDto,
-} from './dtos/user-response.dto';
-import { GetUsersQueryParamsDto } from './dtos/get-users-query-params.dto';
-import { UpdateUserRoleDto } from './dtos/update-user-role.dto';
-import { UpdateUserNameDto } from './dtos/update-user-name.dto';
-import { UpdatePasswordDto } from './dtos/update-password.dto';
-import { ConfirmEmailDto } from './dtos/confirm-email.dto';
-import { ResendEmailConfirmationDto } from './dtos/resend-email-confirmation.dto';
+} from 'src/iam/users/presenters/http/dtos/user-response.dto';
+import { GetUsersQueryParamsDto } from 'src/iam/users/presenters/http/dtos/get-users-query-params.dto';
+import { UpdateUserRoleDto } from 'src/iam/users/presenters/http/dtos/update-user-role.dto';
+import { UpdateUserNameDto } from 'src/iam/users/presenters/http/dtos/update-user-name.dto';
+import { UpdatePasswordDto } from 'src/iam/users/presenters/http/dtos/update-password.dto';
+import { ConfirmEmailDto } from 'src/iam/users/presenters/http/dtos/confirm-email.dto';
+import { ResendEmailConfirmationDto } from 'src/iam/users/presenters/http/dtos/resend-email-confirmation.dto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { UserRole } from '../../domain/value-objects/role.object';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { Public } from 'src/common/guards/public.guard';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 
 @ApiTags('Users')
 @Controller('users')
 export class UserController {
+  // eslint-disable-next-line max-params -- NestJS injects these explicit collaborators.
   constructor(
     @InjectPinoLogger(UserController.name)
     private readonly logger: PinoLogger,
@@ -111,6 +114,7 @@ export class UserController {
   })
   async getUsersInOrganization(
     @CurrentUser(UserProperty.ORG_ID) orgId: UUID,
+    @CurrentUser(UserProperty.FULL_USER) currentUser: ActiveUser,
     @Query() queryParams: GetUsersQueryParamsDto,
   ): Promise<PaginatedUsersListResponseDto> {
     this.logUsersQuery(orgId, queryParams);
@@ -119,7 +123,10 @@ export class UserController {
       this.buildFindUsersQuery(orgId, queryParams),
     );
 
-    return this.userResponseDtoMapper.toPaginatedDto(users);
+    const includeLockStatus =
+      currentUser.role === UserRole.ADMIN ||
+      currentUser.systemRole === SystemRole.SUPER_ADMIN;
+    return this.userResponseDtoMapper.toPaginatedDto(users, includeLockStatus);
   }
 
   private logUsersQuery(

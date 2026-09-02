@@ -16,11 +16,48 @@ ayunis-core/
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
-├── packages/ui/              # Shared React design-system primitives
+├── packages/inference/        # Provider-agnostic inference contracts
+├── packages/agent-runtime/    # Bare agent loop and hook contracts
+├── packages/agent-extensions/ # Composable capabilities and resource lifetime
+├── packages/ui/               # Shared React design-system primitives
 ├── ARCHITECTURE.md            # This file
 ├── AGENTS.md                  # AI coding agent guidelines
 └── docker-compose.yml         # Local dev infrastructure
 ```
+
+---
+
+## Agent package layering
+
+The reusable agent packages form a one-way stack:
+
+```text
+@ayunis/inference
+        ↑
+@ayunis/agent-runtime
+        ↑
+@ayunis/agent-extensions
+        ↑
+future @ayunis/agent-harness
+```
+
+- [`@ayunis/inference`](packages/inference) defines provider-agnostic messages,
+  model requests, and streaming contracts.
+- [`@ayunis/agent-runtime`](packages/agent-runtime/README.md) is the bare agent
+  loop. Hooks are its only extension mechanism; the package has no resource
+  initialization or opinionated agent assembly.
+- [`@ayunis/agent-extensions`](packages/agent-extensions/README.md) resolves
+  named, composable manifests of tools, instructions, and hooks and owns their
+  optional cross-run resource lifetime. Static manifests merge into `RunInput`
+  before the runtime starts, while extension hooks remain ordinary runtime
+  hooks.
+- A future `@ayunis/agent-harness` may provide opinionated assemblies and
+  defaults on top of the lower layers and accept additional runtime extensions.
+
+Runtime extensions are not **Agent Plugins**. Agent Plugins v1 is a portable
+filesystem package standard centered on `plugin.json`, Agent Skills, and
+`mcp.json`. A future loader may adapt that format into runtime extensions, but
+none of these packages implements the Agent Plugins standard.
 
 ---
 
@@ -64,9 +101,9 @@ ayunis-core/
 | [orgs](ayunis-core-backend/src/iam/orgs/SUMMARY.md) | Tenants | Multi-tenant organization management |
 | [subscriptions](ayunis-core-backend/src/iam/subscriptions/SUMMARY.md) | Billing | Package and subscription management |
 | [addons](ayunis-core-backend/src/iam/addons/SUMMARY.md) | Add-ons | Per-org add-on activation managed by super admins |
-| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md) | Access Gate | Per-org KI-Führerschein certificate requirement for the chat surface |
+| [academy-access](ayunis-core-backend/src/iam/academy-access/SUMMARY.md) | Access Gate | Per-org KI-Schulung nach EU AI Act certificate requirement for the chat surface |
 | [quotas](ayunis-core-backend/src/iam/quotas/SUMMARY.md) | Limits | Usage quota enforcement |
-| [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user and per-team monthly credit allowances |
+| [credit-limits](ayunis-core-backend/src/iam/credit-limits/SUMMARY.md) | Limits | Per-user, per-team, and per-API-key monthly credit allowances |
 | [budget-alerts](ayunis-core-backend/src/iam/budget-alerts/SUMMARY.md) | Alerts | Budget-warning and budget-exhausted emails when credit budgets cross usage thresholds |
 | [teams](ayunis-core-backend/src/iam/teams/SUMMARY.md) | Groups | Team-based access control |
 | [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md) | Onboarding | User invitation flows |

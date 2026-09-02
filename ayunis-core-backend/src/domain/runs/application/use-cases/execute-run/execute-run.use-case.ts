@@ -1,16 +1,39 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
+import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { Message } from 'src/domain/messages/domain/message.entity';
-import type { AssistantMessage } from 'src/domain/messages/domain/messages/assistant-message.entity';
+import { ApplicationError } from 'src/common/errors/base.error';
+import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
+import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { ContextService } from 'src/common/context/services/context.service';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { Message } from 'src/domain/messages/domain/message.entity';
+import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
+import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
+import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
+import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
 import { AddMessageCommand } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message.command';
-import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { CreateUserMessageUseCase } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.use-case';
 import { CreateUserMessageCommand } from 'src/domain/messages/application/use-cases/create-user-message/create-user-message.command';
 import { CreateToolResultMessageUseCase } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.use-case';
 import { CreateToolResultMessageCommand } from 'src/domain/messages/application/use-cases/create-tool-result-message/create-tool-result-message.command';
-import { ToolFailureBreaker } from '@ayunis/agent-runtime';
-import type { ToolResultOutcome } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { ResolveModelProviderUseCase } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.use-case';
+import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
+import {
+  RunUserInput,
+  RunToolResultInput,
+} from 'src/domain/runs/domain/run-input.entity';
+import type { RunInput } from 'src/domain/runs/domain/run-input.entity';
+import {
+  RunPiiMasksUpdate,
+  type RunStreamItem,
+} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import {
   RunAnonymizationUnavailableError,
   RunExecutionFailedError,
@@ -20,166 +43,147 @@ import {
   RunToolRepeatedlyFailingError,
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
-import {
-  RunUserInput,
-  RunToolResultInput,
-} from 'src/domain/runs/domain/run-input.entity';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { AnonymizationInputTooLongError } from 'src/common/anonymization/application/anonymization.errors';
-import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
-import { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
-import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
-import { AddMessageToThreadUseCase } from 'src/domain/threads/application/use-cases/add-message-to-thread/add-message-to-thread.use-case';
-import { UUID } from 'crypto';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { ContextService } from 'src/common/context/services/context.service';
-import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
-import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
-import {
-  RunPiiMasksUpdate,
-  RunStreamItem,
-} from 'src/domain/runs/domain/run-pii-masks-update.entity';
 import { InferenceUsageGuard } from 'src/domain/runs/application/services/inference-usage-guard.service';
-import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { ToolAssemblyService } from 'src/domain/runs/application/services/tool-assembly.service';
-import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
-import { InferenceOrchestratorService } from 'src/domain/runs/application/services/inference-orchestrator.service';
-import type { RunParams } from './run-params.interface';
-import { ConfigService } from '@nestjs/config';
-import { ExecuteRunViaRuntimeUseCase } from 'src/domain/runs/application/use-cases/execute-run-via-runtime/execute-run-via-runtime.use-case';
+import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
+import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
+import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
+import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
+import { PersistenceHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/persistence-hook.factory';
+import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/usage-hook.factory';
+import { ToolUsageHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/tool-usage-hook.factory';
+import { SkillActivationHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/skill-activation-hook.factory';
+import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
+import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
+import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { RuntimeModelProviderDecorator } from 'src/domain/runs/application/agent-runtime/runtime-model-provider.decorator';
+import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { appendSkillActivatedNote } from 'src/domain/runs/application/helpers/append-skill-activated-note';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
-import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
+import type { ExecuteRunCommand } from 'src/domain/runs/application/use-cases/execute-run/execute-run.command';
+import type { PreparedRun, PreparedTools } from './execute-run.types';
+import { MAX_CONTEXT_TOKENS } from 'src/domain/runs/application/context-budget.constants';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
-import { parseRunInput } from 'src/domain/runs/application/helpers/parse-run-input';
+
+const MAX_ITERATIONS = 50;
+
+interface SeededInput {
+  message: Message;
+  masks: ThreadPiiMask[] | null;
+}
+
+interface PreparedToolResultInput {
+  input: RunToolResultInput;
+  masks: ThreadPiiMask[] | null;
+}
 
 @Injectable()
 export class ExecuteRunUseCase {
+  // eslint-disable-next-line max-params
   constructor(
-    private readonly createUserMessageUseCase: CreateUserMessageUseCase,
-    private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
-    private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
     private readonly contextService: ContextService,
-    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
+    private readonly findThreadUseCase: FindThreadUseCase,
+    private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
     private readonly inferenceUsageGuard: InferenceUsageGuard,
     private readonly toolAssemblyService: ToolAssemblyService,
-    private readonly toolResultCollectorService: ToolResultCollectorService,
-    private readonly messageCleanupService: MessageCleanupService,
-    private readonly inferenceOrchestratorService: InferenceOrchestratorService,
+    private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
-    private readonly configService: ConfigService,
-    private readonly executeRunViaRuntimeUseCase: ExecuteRunViaRuntimeUseCase,
+    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
+    private readonly createUserMessageUseCase: CreateUserMessageUseCase,
+    private readonly createToolResultMessageUseCase: CreateToolResultMessageUseCase,
+    private readonly addMessageToThreadUseCase: AddMessageToThreadUseCase,
+    private readonly runtimeHistoryMaterializer: RuntimeHistoryMaterializer,
+    private readonly resolveModelProviderUseCase: ResolveModelProviderUseCase,
+    private readonly runtimeModelProviderDecorator: RuntimeModelProviderDecorator,
+    private readonly messageCleanupService: MessageCleanupService,
+    private readonly persistenceHookFactory: PersistenceHookFactory,
+    private readonly usageHookFactory: UsageHookFactory,
+    private readonly skillActivationHookFactory: SkillActivationHookFactory,
     private readonly runTelemetryService: RunTelemetryService,
+    private readonly toolResultCollectorService: ToolResultCollectorService,
+    private readonly unmaskedTermsService: UnmaskedTermsService,
+    private readonly toolUsageHookFactory: ToolUsageHookFactory,
+    private readonly contextBudgetHookFactory: ContextBudgetHookFactory,
     private readonly buildWorkspaceRunContextUseCase: BuildWorkspaceRunContextUseCase,
     @InjectPinoLogger(ExecuteRunUseCase.name)
     private readonly logger: PinoLogger,
+    @InjectPinoLogger('RunEventStreamAdapter')
+    private readonly runEventStreamLogger: PinoLogger,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRunError)
   async execute(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome | void, void>> {
-    this.logger.info(
-      {
-        threadId: command.threadId,
-        streaming: command.streaming,
-        inputType: command.input.constructor.name,
-      },
-      'executeRun',
-    );
-    const useAgentRuntime = this.configService.get<boolean>(
-      'features.agentRuntimeEnabled',
-    );
-    const executionPath = useAgentRuntime ? 'agent_runtime' : 'legacy';
-    return this.runTelemetryService.track(executionPath, () =>
-      useAgentRuntime
-        ? this.executeRunViaRuntimeUseCase.execute(command)
-        : this.executeLegacy(command),
+    this.logger.info({ threadId: command.threadId }, 'executeRun');
+    return this.runTelemetryService.track('agent_runtime', () =>
+      this.createRunStream(command),
     );
   }
 
-  private async executeLegacy(
+  // Telemetry must observe the classified error, not the raw dependency failure.
+  @HandleUnexpectedErrors(UnexpectedRunError)
+  private async createRunStream(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
-    try {
-      const prepared = await this.prepareRun(command);
-      return this.orchestrateRun({
-        thread: prepared.thread,
-        tools: prepared.tools,
-        model: prepared.model.model,
-        input: command.input as RunUserInput | RunToolResultInput,
-        instructions: prepared.instructions,
-        streaming: command.streaming,
-        orgId: prepared.orgId,
-        isAnonymous: prepared.isAnonymous,
-        activeSkills: prepared.activeSkills,
-        workspaceContext: prepared.workspaceContext,
-        skillId:
-          command.input instanceof RunUserInput
-            ? command.input.skillId
-            : undefined,
-      });
-    } catch (error) {
-      if (error instanceof ApplicationError) throw error;
-      throw new RunExecutionFailedError('Unknown error in execute run', {
-        error: error as Error,
-      });
-    }
+    const prepared = await this.prepareRun(command);
+    return this.streamRun(prepared, command.input, command.signal);
   }
 
-  private async prepareRun(command: ExecuteRunCommand): Promise<{
-    userId: UUID;
-    orgId: UUID;
-    thread: Thread;
-    model: PermittedLanguageModel;
-    isAnonymous: boolean;
-    tools: RunParams['tools'];
-    instructions?: string;
-    activeSkills: RunParams['activeSkills'];
-    workspaceContext?: WorkspaceRunContext;
-  }> {
+  private async prepareRun(command: ExecuteRunCommand): Promise<PreparedRun> {
     const userId = this.contextService.get('userId');
     const orgId = this.contextService.get('orgId');
     if (!userId || !orgId) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedAccessError();
     }
     this.runTelemetryService.recordAttempt(userId, orgId);
 
-    const { thread } = await this.findThreadUseCase.execute(
+    const found = await this.findThreadUseCase.execute(
       new FindThreadQuery(command.threadId),
     );
-    const model = this.pickModel(thread);
-
-    await this.inferenceUsageGuard.preflight({ userId, orgId }, model.model);
-
-    const isAnonymous = thread.isAnonymous || model.anonymousOnly;
-    const workspaceContext = await this.buildWorkspaceContext(thread);
+    const storedPermit = found.thread.model;
+    if (!storedPermit) {
+      throw new RunNoModelFoundError({ threadId: found.thread.id });
+    }
+    const permittedModel = await this.effectiveRunModelResolver.resolve({
+      storedPermit,
+      userId,
+      orgId,
+    });
+    const model = permittedModel.model;
+    await this.inferenceUsageGuard.preflight({ userId, orgId }, model);
+    const anonymous = found.thread.isAnonymous || permittedModel.anonymousOnly;
     const activeSkills = await this.toolAssemblyService.findActiveSkills();
+    const workspaceContext = await this.buildWorkspaceContext(found.thread);
+    const activated = await this.activateSkillIfRequested(
+      command,
+      found.thread,
+      workspaceContext,
+    );
     const { tools, instructions } =
       await this.toolAssemblyService.buildRunContext(
-        thread,
+        activated.thread,
         activeSkills,
-        model.model.canUseTools,
-        isAnonymous,
+        model.canUseTools,
+        anonymous,
         workspaceContext,
       );
 
     return {
-      userId,
-      orgId,
-      thread,
+      thread: activated.thread,
       model,
-      isAnonymous,
-      tools,
-      instructions,
+      orgId,
+      userId,
+      isAnonymous: anonymous,
+      instructions: appendSkillActivatedNote(instructions, activated.skillName),
+      ...this.prepareTools(tools),
       activeSkills,
-      workspaceContext,
+      skillInstructions: activated.skillInstructions,
+      activatedSkillName: activated.skillName,
     };
   }
 
@@ -192,302 +196,235 @@ export class ExecuteRunUseCase {
     );
   }
 
-  private pickModel(thread: Thread): PermittedLanguageModel {
-    if (thread.model) {
-      return thread.model;
-    }
-    throw new RunNoModelFoundError({
-      threadId: thread.id,
-      userId: thread.userId,
-    });
+  private prepareTools(backendTools: BackendTool[]): PreparedTools {
+    return {
+      tools: this.backendToolAdapter.toRuntimeTools(backendTools),
+      backendTools,
+      toolIntegrations: new RuntimeToolIntegrationRegistry(backendTools),
+    };
   }
 
-  private async *orchestrateRun(
-    params: RunParams,
+  private async activateSkillIfRequested(
+    command: ExecuteRunCommand,
+    thread: Thread,
+    workspaceContext?: WorkspaceRunContext,
+  ): Promise<{
+    thread: Thread;
+    skillInstructions?: string;
+    skillName?: string;
+  }> {
+    const input = command.input;
+    if (!(input instanceof RunUserInput) || !input.skillId) {
+      return { thread };
+    }
+    if (workspaceContext?.skills.some((skill) => skill.id === input.skillId)) {
+      throw new RunInvalidInputError(
+        'Project skills are already active in this workspace',
+      );
+    }
+    const activation = await this.skillActivationService.activateOnThread(
+      input.skillId,
+      thread,
+    );
+    const refreshed = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
+    return {
+      thread: refreshed.thread,
+      skillInstructions: activation.instructions,
+      skillName: activation.skillName,
+    };
+  }
+
+  private async *streamRun(
+    prepared: PreparedRun,
+    input: RunInput,
+    signal?: AbortSignal,
   ): AsyncGenerator<RunStreamItem, RunExecutionOutcome, void> {
-    this.logger.info({ threadId: params.thread.id }, 'orchestrateRun');
-    const iterations = 50;
-    const breaker = new ToolFailureBreaker();
-    let succeeded = false;
-    let preserveTranscript = false;
+    let cleanupRequired = true;
     try {
-      for (let i = 0; i < iterations; i++) {
-        const assistantMessage = yield* this.runIteration(
-          params,
-          breaker,
-          i === 0,
-        );
-        if (!assistantMessage) {
-          succeeded = true;
-          return 'aborted';
-        }
-        if (this.shouldExitAfterResponse(assistantMessage, params)) {
-          const persisted = yield* this.processToolResults(
-            params,
-            null,
-            breaker,
-            assistantMessage,
-          );
-          succeeded = true;
-          return persisted ? 'completed' : 'aborted';
-        }
+      const seeded = await this.seedInput(prepared, input);
+      if (seeded === null) {
+        cleanupRequired = false;
+        return 'aborted';
       }
-      throw new RunMaxIterationsReachedError(iterations);
+      // Masks first, so the client can resolve {{pii:…}} tokens in the message.
+      if (seeded.masks) {
+        yield new RunPiiMasksUpdate(seeded.masks);
+      }
+      yield seeded.message;
+      const outcome = yield* adaptRunEventsToStream(
+        await this.startRun(prepared, signal),
+        prepared.thread.id,
+        this.runEventStreamLogger,
+        prepared.toolIntegrations,
+      );
+      cleanupRequired = outcome === 'aborted';
+      return outcome;
     } catch (error) {
-      preserveTranscript = error instanceof RunToolRepeatedlyFailingError;
+      // Both errors leave a complete, already-streamed tool transcript;
+      // rolling it back would re-arm the turn's pending tool calls.
+      if (
+        error instanceof RunMaxIterationsReachedError ||
+        error instanceof RunToolRepeatedlyFailingError
+      ) {
+        cleanupRequired = false;
+      }
       if (error instanceof ApplicationError) throw error;
-      this.logger.error({ err: error as Error }, 'Run execution failed');
+      this.logger.error({ err: error as Error }, 'Runtime run failed');
       throw new RunExecutionFailedError(
         error instanceof Error ? error.message : 'Unknown error',
         { originalError: error as Error },
       );
     } finally {
-      if (!succeeded && !preserveTranscript) {
+      if (cleanupRequired) {
         await this.messageCleanupService.cleanupTrailingNonAssistantMessages(
-          params.thread.id,
+          prepared.thread.id,
         );
       }
     }
   }
-  private shouldExitAfterResponse(
-    message: AssistantMessage,
-    params: RunParams,
-  ): boolean {
-    return this.toolResultCollectorService.exitLoopAfterAgentResponse(
-      message,
-      params.tools,
+
+  private async seedInput(
+    prepared: PreparedRun,
+    input: RunInput,
+  ): Promise<SeededInput | null> {
+    if (input instanceof RunUserInput) {
+      return this.persistUserMessage(prepared, input);
+    }
+    if (input instanceof RunToolResultInput) {
+      return this.persistToolResultSeed(prepared, input);
+    }
+    throw new RunInvalidInputError('Invalid run input');
+  }
+
+  private async startRun(prepared: PreparedRun, signal?: AbortSignal) {
+    const historyMessages = await this.unmaskedTermsService.revealUnmaskedTerms(
+      prepared.thread.messages,
+      prepared.thread.id,
+      prepared.isAnonymous,
     );
-  }
-  private async *runIteration(
-    params: RunParams,
-    breaker: ToolFailureBreaker,
-    firstIteration: boolean,
-  ): AsyncGenerator<RunStreamItem, AssistantMessage | null, void> {
-    const { userInput, toolResultInput } = parseRunInput(params.input);
-    if (!firstIteration || toolResultInput) {
-      const persisted = yield* this.processToolResults(
-        params,
-        toolResultInput,
-        breaker,
-      );
-      if (!persisted) return null;
-    }
-    if (firstIteration) {
-      yield* this.handleFirstIteration(params, userInput);
-    }
-    return yield* this.inferenceOrchestratorService.runInference(params);
-  }
-
-  private async *handleFirstIteration(
-    params: RunParams,
-    userInput: RunUserInput | null,
-  ): AsyncGenerator<RunStreamItem, void, void> {
-    if (params.skillId) {
-      await this.activateSkillOnThread(params);
-    }
-    if (userInput) {
-      const { message, piiMasks } = await this.processUserMessage(
-        params,
-        userInput,
-      );
-      // Masks first, so the client can resolve tokens in the message below.
-      if (piiMasks) {
-        yield new RunPiiMasksUpdate(piiMasks);
-      }
-      yield message;
-    }
-  }
-
-  private async *processToolResults(
-    params: RunParams,
-    toolResultInput: RunToolResultInput | null,
-    breaker: ToolFailureBreaker,
-    message?: AssistantMessage,
-  ): AsyncGenerator<RunStreamItem, boolean, void> {
-    const {
-      contents: toolResultMessageContent,
-      outcomes,
-      piiMasks,
-    } = await this.toolResultCollectorService.collectToolResults({
-      thread: params.thread,
-      tools: params.tools,
-      input: toolResultInput,
-      orgId: params.orgId,
-      isAnonymous: params.isAnonymous,
-      executionPath: 'legacy',
-      message,
+    const messages = await this.runtimeHistoryMaterializer.materialize({
+      messages: historyMessages,
+      orgId: prepared.orgId,
+      tools: prepared.backendTools,
+      maxTokens: MAX_CONTEXT_TOKENS,
     });
-
-    if (toolResultMessageContent.length === 0) return true;
-
-    const toolResultMessage = await this.createToolResultMessageUseCase.execute(
-      new CreateToolResultMessageCommand(
-        params.thread.id,
-        toolResultMessageContent,
-      ),
+    const provider = await this.resolveModelProviderUseCase.execute(
+      new ResolveModelProviderQuery(prepared.model),
     );
-    if (toolResultMessage === null) return false;
-    this.addMessageToThreadUseCase.execute(
-      new AddMessageCommand(params.thread, toolResultMessage),
+    const guardedProvider = this.runtimeModelProviderDecorator.decorate(
+      provider,
+      {
+        userId: prepared.userId,
+        orgId: prepared.orgId,
+        model: prepared.model,
+        toolIntegrations: prepared.toolIntegrations,
+      },
     );
-    // Masks first, so the client can resolve tokens in the message below.
-    if (piiMasks) {
-      yield new RunPiiMasksUpdate(piiMasks);
-    }
-    yield toolResultMessage;
-
-    this.assertToolFailuresNotRepeating(breaker, outcomes);
-
-    const skillWasActivated = toolResultMessageContent.some(
-      (content) => content.toolName === (ToolType.ACTIVATE_SKILL as string),
-    );
-    if (skillWasActivated) {
-      await this.refreshRunContext(params);
-    }
-    return true;
+    const context = RunContext.create({
+      orgId: prepared.orgId,
+      userId: prepared.userId,
+      threadId: prepared.thread.id,
+      isAnonymous: prepared.isAnonymous,
+    });
+    return run({
+      instructions: prepared.instructions,
+      model: guardedProvider,
+      messages,
+      tools: prepared.tools,
+      ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
+      hooks: this.buildHooks(prepared),
+      context,
+      maxIterations: MAX_ITERATIONS,
+      ...(signal ? { signal } : {}),
+    });
   }
 
-  private assertToolFailuresNotRepeating(
-    breaker: ToolFailureBreaker,
-    outcomes: ToolResultOutcome[],
-  ): void {
-    const tripped = breaker.record(
-      outcomes.map((outcome) => ({
-        toolName: outcome.toolName,
-        result: outcome.result,
-        isError: !outcome.succeeded,
-      })),
-    );
-    if (!tripped) return;
-    throw new RunToolRepeatedlyFailingError(
-      tripped.toolName,
-      tripped.failureCount,
-    );
+  private buildHooks(prepared: PreparedRun): Hook[] {
+    return [
+      this.usageHookFactory.create({ model: prepared.model }),
+      this.persistenceHookFactory.create({
+        thread: prepared.thread,
+        integrations: prepared.toolIntegrations,
+      }),
+      this.toolUsageHookFactory.create({
+        userId: prepared.userId,
+        orgId: prepared.orgId,
+        integrations: prepared.toolIntegrations,
+      }),
+      this.skillActivationHookFactory.create({
+        threadId: prepared.thread.id,
+        activeSkills: prepared.activeSkills,
+        canUseTools: prepared.model.canUseTools,
+        isAnonymous: prepared.isAnonymous,
+        integrations: prepared.toolIntegrations,
+        activatedSkillName: prepared.activatedSkillName,
+      }),
+      this.contextBudgetHookFactory.create({
+        maxTokens: MAX_CONTEXT_TOKENS,
+      }),
+    ];
   }
 
-  private async activateSkillOnThread(params: RunParams): Promise<void> {
-    if (!params.skillId) return;
-    if (
-      params.workspaceContext?.skills.some(
-        (skill) => skill.id === params.skillId,
-      )
-    ) {
-      throw new RunInvalidInputError(
-        'Project skills are already active in this workspace',
-      );
-    }
-
-    const { instructions, skillName } =
-      await this.skillActivationService.activateOnThread(
-        params.skillId,
-        params.thread,
-      );
-
-    params.activatedSkillName = skillName;
-    await this.refreshRunContext(params);
-    params.skillInstructions = instructions;
-  }
-
-  private async refreshRunContext(params: RunParams): Promise<void> {
-    const { thread: refreshedThread } = await this.findThreadUseCase.execute(
-      new FindThreadQuery(params.thread.id),
-    );
-    params.thread = refreshedThread;
-    params.workspaceContext = await this.buildWorkspaceContext(refreshedThread);
-    const refreshed = await this.toolAssemblyService.buildRunContext(
-      refreshedThread,
-      params.activeSkills,
-      params.model.canUseTools,
-      params.isAnonymous,
-      params.workspaceContext,
-    );
-    params.tools = refreshed.tools;
-    params.instructions = refreshed.instructions;
-
-    if (params.activatedSkillName) {
-      params.instructions = appendSkillActivatedNote(
-        params.instructions,
-        params.activatedSkillName,
-      );
-    }
-  }
-
-  private async processUserMessage(
-    params: RunParams,
-    userInput: RunUserInput,
-  ): Promise<{ message: Message; piiMasks: ThreadPiiMask[] | null }> {
-    const hasText = userInput.text && userInput.text.trim().length > 0;
-    const hasImages = userInput.pendingImages.length > 0;
-    const hasSkillInstructions =
-      !!params.skillInstructions && params.skillInstructions.trim().length > 0;
-
+  private async persistUserMessage(
+    prepared: PreparedRun,
+    input: RunUserInput,
+  ): Promise<SeededInput> {
+    const hasText = !!input.text && input.text.trim().length > 0;
+    const hasImages = input.pendingImages.length > 0;
+    const hasSkillInstructions = !!prepared.skillInstructions?.trim();
     if (!hasText && !hasImages && !hasSkillInstructions) {
       throw new RunInvalidInputError(
-        'Message must contain at least one content item (non-empty text or at least one image)',
+        'Message must contain non-empty text, at least one image, or skill instructions',
       );
     }
-    if (hasImages && !params.model.canVision) {
+    if (hasImages && !prepared.model.canVision) {
       throw new RunInvalidInputError(
-        'The selected model does not support image inputs. Please use a vision-capable model or remove images from your message.',
+        'The selected model does not support image inputs',
       );
     }
-
-    let messageText = userInput.text;
-    let piiMasks: ThreadPiiMask[] | null = null;
-    if (hasText && params.isAnonymous) {
-      const anonymized = await this.anonymizeText(
-        userInput.text,
-        params.orgId,
-        params.thread.id,
-      );
-      messageText = anonymized.anonymizedText;
-      piiMasks = anonymized.masks;
+    let text = input.text;
+    let masks: ThreadPiiMask[] | null = null;
+    if (hasText && prepared.isAnonymous) {
+      const anonymized = await this.anonymizeUserText(prepared, input.text);
+      text = anonymized.anonymizedText;
+      masks = anonymized.masks;
     }
-
-    const newUserMessage = await this.createUserMessageUseCase.execute(
+    const message = await this.createUserMessageUseCase.execute(
       new CreateUserMessageCommand(
-        params.thread.id,
-        messageText,
-        userInput.pendingImages,
-        params.skillInstructions,
+        prepared.thread.id,
+        text,
+        input.pendingImages,
+        prepared.skillInstructions,
       ),
     );
     this.addMessageToThreadUseCase.execute(
-      new AddMessageCommand(params.thread, newUserMessage),
+      new AddMessageCommand(prepared.thread, message),
     );
-    return { message: newUserMessage, piiMasks };
+    return { message, masks };
   }
 
-  private async anonymizeText(
+  private async anonymizeUserText(
+    prepared: PreparedRun,
     text: string,
-    orgId: UUID,
-    threadId: UUID,
   ): Promise<{ anonymizedText: string; masks: ThreadPiiMask[] }> {
     try {
       const result = await this.anonymizeTextForThreadUseCase.execute(
-        new AnonymizeTextForThreadCommand(text, orgId, threadId),
+        new AnonymizeTextForThreadCommand(
+          text,
+          prepared.orgId,
+          prepared.thread.id,
+        ),
       );
-      if (result.replacements.length > 0) {
-        this.logger.info(
-          {
-            originalLength: text.length,
-            anonymizedLength: result.anonymizedText.length,
-            replacementsCount: result.replacements.length,
-          },
-          'Anonymized text',
-        );
-      }
       return { anonymizedText: result.anonymizedText, masks: result.masks };
     } catch (error) {
-      if (error instanceof AnonymizationInputTooLongError) {
+      if (
+        error instanceof AnonymizationInputTooLongError ||
+        error instanceof ProviderUnavailableError
+      ) {
         throw error;
       }
-      this.logger.error(
-        {
-          err: error as Error,
-        },
-        'Anonymization service unavailable',
-      );
       throw new RunAnonymizationUnavailableError(
         {
           originalError:
@@ -496,5 +433,67 @@ export class ExecuteRunUseCase {
         error,
       );
     }
+  }
+
+  private async persistToolResultSeed(
+    prepared: PreparedRun,
+    input: RunToolResultInput,
+  ): Promise<SeededInput | null> {
+    const safeInput = await this.prepareToolResultInput(prepared, input);
+    const { contents, piiMasks } =
+      await this.toolResultCollectorService.collectToolResults({
+        thread: prepared.thread,
+        tools: prepared.backendTools,
+        input: safeInput.input,
+        orgId: prepared.orgId,
+        isAnonymous: prepared.isAnonymous,
+        executionPath: 'agent_runtime',
+      });
+    if (contents.length === 0) {
+      throw new RunInvalidInputError(
+        'No pending tool call to attach this result to',
+      );
+    }
+    const message = await this.createToolResultMessageUseCase.execute(
+      new CreateToolResultMessageCommand(prepared.thread.id, contents),
+    );
+    if (message === null) return null;
+    this.addMessageToThreadUseCase.execute(
+      new AddMessageCommand(prepared.thread, message),
+    );
+    return { message, masks: piiMasks ?? safeInput.masks };
+  }
+
+  private async prepareToolResultInput(
+    prepared: PreparedRun,
+    input: RunToolResultInput,
+  ): Promise<PreparedToolResultInput> {
+    const pending = prepared.thread
+      .getLastMessage()
+      ?.content.find(
+        (content): content is ToolUseMessageContent =>
+          content instanceof ToolUseMessageContent &&
+          content.id === input.toolId,
+      );
+    if (!pending) {
+      throw new RunInvalidInputError(
+        'No pending tool call to attach this result to',
+      );
+    }
+    if (!prepared.isAnonymous) {
+      return {
+        input: new RunToolResultInput(pending.id, pending.name, input.result),
+        masks: null,
+      };
+    }
+    const anonymized = await this.anonymizeUserText(prepared, input.result);
+    return {
+      input: new RunToolResultInput(
+        pending.id,
+        pending.name,
+        anonymized.anonymizedText,
+      ),
+      masks: anonymized.masks,
+    };
   }
 }

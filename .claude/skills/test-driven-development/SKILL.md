@@ -33,7 +33,7 @@ When a bug is reported, **don't start by trying to fix it**. Start by writing a 
 2. The failing test confirms the bug exists and that you understand it.
 3. Implement the fix.
 4. The test now passes — fix proven, regression guarded.
-5. Run the full suite. No new failures.
+5. Run the additional validation required by the repository's Proportional Workflow and the applicable surface-specific skill.
 
 If you can't write a failing test for the bug, you don't understand the bug yet. Stop and figure it out before touching the code.
 
@@ -167,7 +167,7 @@ it('validates titles correctly', () => {
 After implementation:
 
 - [ ] Every new behavior has a corresponding test
-- [ ] All tests pass — and the test runner's output proves it
+- [ ] All tests required by the Proportional Workflow pass — and the test runner's output proves it
 - [ ] Bug fixes include a reproduction test that failed before the fix
 - [ ] Test names describe behavior, not implementation
 - [ ] No skipped or disabled tests

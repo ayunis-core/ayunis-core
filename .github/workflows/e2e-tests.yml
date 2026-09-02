@@ -217,7 +217,6 @@ jobs:
           MOCK_INFERENCE=true
           FEATURE_SKILLS_ENABLED=true
           FEATURE_WORKSPACES_ENABLED=true
-          FEATURE_SSO_LOGIN_ENABLED=true
 
           # Database
           POSTGRES_HOST=localhost
@@ -239,6 +238,11 @@ jobs:
           # Deterministic model availability. MOCK_INFERENCE handles requests,
           # but the app still hides providers without configured credentials.
           AWS_BEDROCK_REGION=eu-central-1
+          AZURE_OPENAI_API_KEY=e2e-ci-dummy
+
+          # Deterministic Mistral OCR contract server
+          MISTRAL_API_KEY=e2e-ci-mistral-key
+          MISTRAL_OCR_SERVER_URL=http://127.0.0.1:3199
 
           # MinIO
           MINIO_ENDPOINT=localhost
@@ -263,6 +267,12 @@ jobs:
           MCP_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           EOF
+
+      - name: Start Mistral OCR contract server
+        run: |
+          nohup node ayunis-core-e2e/src/servers/mistral-ocr-mock.mjs > mistral-ocr-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3199/health; do sleep 1; done' \
+            || { cat mistral-ocr-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend
@@ -299,26 +309,6 @@ jobs:
         env:
           E2E_BASE_URL: http://localhost:3000
           E2E_API_URL: http://localhost:3000
-          E2E_MAIL_URL: http://localhost:1080
-
-      - name: Start backend with SSO login disabled
-        working-directory: ayunis-core-backend
-        run: |
-          FEATURE_SSO_LOGIN_ENABLED=false \
-            PORT=3001 \
-            FRONTEND_BASEURL=http://localhost:3001 \
-            CORS_ALLOWED_ORIGINS=http://localhost:3001 \
-            nohup node dist/src/main > backend-sso-disabled.log 2>&1 &
-          timeout 60 bash -c 'until curl -sf http://localhost:3001/api/health; do sleep 2; done' \
-            || { cat backend-sso-disabled.log; exit 1; }
-
-      - name: Test logout lifecycle with SSO login disabled
-        run: >-
-          pnpm --filter ayunis-core-e2e exec playwright test
-          --project=sso-disabled
-        env:
-          E2E_BASE_URL: http://localhost:3001
-          E2E_API_URL: http://localhost:3001
           E2E_MAIL_URL: http://localhost:1080
 
       # -- Temporary PR media ------------------------------------------------
@@ -415,7 +405,6 @@ jobs:
           name: backend-log
           path: |
             ayunis-core-backend/backend.log
-            ayunis-core-backend/backend-sso-disabled.log
           retention-days: 7
 
   publish-pr-media:
@@ -521,7 +510,12 @@ jobs:
               done
             done
             out+="</details>"
-            $printed_any && printf '%s\n' "$out"
+            # Must not return the false status of an empty section: under
+            # `set -e` that aborts the assignment below, so a scene set
+            # covering only one viewport never reaches the comment upsert.
+            if $printed_any; then
+              printf '%s\n' "$out"
+            fi
           }
 
           body+="$(section 'Desktop (1280px)' 'desktop' ' open')

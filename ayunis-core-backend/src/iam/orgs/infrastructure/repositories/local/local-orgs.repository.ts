@@ -6,8 +6,7 @@ import {
   OrgsFilters,
 } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { OrgRecord } from './schema/org.record';
 import { OrgMapper } from './mappers/org.mapper';
 import { UUID } from 'crypto';
@@ -19,17 +18,26 @@ import {
   OrgRetrievalFailedError,
 } from 'src/iam/orgs/application/orgs.errors';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 
 @Injectable()
 export class LocalOrgsRepository extends OrgsRepository {
   constructor(
     @InjectPinoLogger(LocalOrgsRepository.name)
     private readonly logger: PinoLogger,
-    @InjectRepository(OrgRecord)
-    private readonly orgRepository: Repository<OrgRecord>,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {
     super();
     this.logger.info('constructor');
+  }
+
+  private getManager(): EntityManager {
+    return this.txHost.tx;
+  }
+
+  private get orgRepository(): Repository<OrgRecord> {
+    return this.getManager().getRepository(OrgRecord);
   }
 
   async findById(id: UUID): Promise<Org> {
@@ -166,37 +174,39 @@ export class LocalOrgsRepository extends OrgsRepository {
     }
   }
 
-  async update(org: Org): Promise<Org> {
-    this.logger.info({ id: org.id, name: org.name }, 'update');
+  async updateName(id: UUID, name: string): Promise<Org> {
+    this.logger.info({ id, name }, 'updateName');
 
     try {
-      // Verify org exists
-      const existingOrg = await this.orgRepository.findOne({
-        where: { id: org.id },
-      });
+      // Targeted UPDATE ... RETURNING instead of save(): the org record's
+      // `users` relation cascades, so persisting a mapped OrgRecord loaded
+      // without its users would rewrite org membership.
+      const result = await this.orgRepository
+        .createQueryBuilder()
+        .update(OrgRecord)
+        .set({ name })
+        .where('id = :id', { id })
+        .returning('*')
+        .execute();
 
-      if (!existingOrg) {
+      const updatedRecord = (result.raw as OrgRecord[]).at(0);
+      if (!updatedRecord) {
         this.logger.warn(
-          {
-            id: org.id,
-          },
+          { id },
           'Attempted to update non-existent organization',
         );
-        throw new OrgNotFoundError(org.id);
+        throw new OrgNotFoundError(id);
       }
-
-      const orgEntity = OrgMapper.toEntity(org);
-      const savedOrgEntity = await this.orgRepository.save(orgEntity);
 
       this.logger.debug(
         {
-          id: savedOrgEntity.id,
-          name: savedOrgEntity.name,
+          id: updatedRecord.id,
+          name: updatedRecord.name,
         },
         'Organization updated successfully',
       );
 
-      return OrgMapper.toDomain(savedOrgEntity);
+      return OrgMapper.toDomain(updatedRecord);
     } catch (error) {
       if (error instanceof OrgNotFoundError) {
         // Already logged and correctly typed, just rethrow
@@ -207,13 +217,13 @@ export class LocalOrgsRepository extends OrgsRepository {
       this.logger.error(
         {
           err,
-          id: org.id,
-          name: org.name,
+          id,
+          name,
         },
         'Error updating organization',
       );
 
-      throw new OrgUpdateFailedError(org.id, err.message);
+      throw new OrgUpdateFailedError(id, err.message);
     }
   }
 

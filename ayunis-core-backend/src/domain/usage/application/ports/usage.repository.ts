@@ -1,12 +1,12 @@
 import type { UUID } from 'crypto';
-import type { Usage } from '../../domain/usage.entity';
+import type { Usage } from 'src/domain/usage/domain/usage.entity';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import type { Paginated } from 'src/common/pagination';
-import { UsageStats } from '../../domain/usage-stats.entity';
-import { ProviderUsage } from '../../domain/provider-usage.entity';
-import { TimeSeriesPoint } from '../../domain/time-series-point.entity';
-import { ModelDistribution } from '../../domain/model-distribution.entity';
-import { UserUsageItem } from '../../domain/user-usage-item.entity';
+import { UsageStats } from 'src/domain/usage/domain/usage-stats.entity';
+import { ProviderUsage } from 'src/domain/usage/domain/provider-usage.entity';
+import { TimeSeriesPoint } from 'src/domain/usage/domain/time-series-point.entity';
+import { ModelDistribution } from 'src/domain/usage/domain/model-distribution.entity';
+import { UserUsageItem } from 'src/domain/usage/domain/user-usage-item.entity';
 export {
   UsageStats,
   ProviderUsage,
@@ -100,6 +100,18 @@ export abstract class UsageRepository {
   abstract getMonthlyCreditUsagePerUser(
     organizationId: UUID,
     userIds: UUID[],
+    monthStart: Date,
+  ): Promise<Map<UUID, number>>;
+
+  abstract getTotalMonthlyCreditUsageForApiKey(
+    organizationId: UUID,
+    apiKeyId: UUID,
+    monthStart: Date,
+  ): Promise<number>;
+
+  abstract getMonthlyCreditUsagePerApiKey(
+    organizationId: UUID,
+    apiKeyIds: UUID[],
     monthStart: Date,
   ): Promise<Map<UUID, number>>;
 }

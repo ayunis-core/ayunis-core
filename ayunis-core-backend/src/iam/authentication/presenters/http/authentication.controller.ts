@@ -71,7 +71,9 @@ export class AuthenticationController {
   ) {}
 
   @Public()
-  @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 }) // 10 login attempts per 15 minutes
+  // Must stay above DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS so the per-account
+  // lockout fires before this per-IP limit masks it with a 429.
+  @RateLimit({ limit: 20, windowMs: 15 * 60 * 1000 })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)

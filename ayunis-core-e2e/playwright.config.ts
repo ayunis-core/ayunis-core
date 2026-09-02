@@ -40,15 +40,8 @@ export default defineConfig({
       name: 'chromium',
       testIgnore: [
         /tests\/setup\//,
-        /tests\/auth\/sso-disabled-logout\.spec\.ts/,
         /pr-media\//,
       ],
-      dependencies: setupDependencies,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'sso-disabled',
-      testMatch: /tests\/auth\/sso-disabled-logout\.spec\.ts/,
       dependencies: setupDependencies,
       use: { ...devices['Desktop Chrome'] },
     },

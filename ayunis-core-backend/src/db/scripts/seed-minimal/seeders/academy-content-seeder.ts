@@ -4,14 +4,14 @@ import { AcademyChapterRecord } from 'src/domain/academy/infrastructure/persiste
 import { AcademyCourseModuleRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-course-module.record';
 import { AcademyQuizQuestionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-quiz-question.record';
 import { GlobalSeeder } from './base-seeder';
-import type { SeedState } from '../seed-state';
-import type { AcademyChapterFixture } from '../seed-types';
+import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
+import type { AcademyChapterFixture } from 'src/db/scripts/seed-minimal/seed-types';
 
 /**
  * Academy chapters, their modules and their quizzes. Platform-wide content, so
  * it seeds once rather than per org — without it nobody can actually earn the
- * KI-Führerschein locally, which is the one part of the flow that seeded
- * completion rows cannot stand in for.
+ * KI-Schulung nach EU AI Act locally, which is the one part of the flow that
+ * seeded completion rows cannot stand in for.
  */
 export class AcademyContentSeeder extends GlobalSeeder {
   async seed(ctx: SeedState): Promise<void> {

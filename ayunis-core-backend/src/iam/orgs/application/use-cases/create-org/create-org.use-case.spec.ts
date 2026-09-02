@@ -3,12 +3,27 @@ import { getLoggerToken } from 'nestjs-pino';
 import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (
+      _target: object,
+      _propertyName: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) =>
+      descriptor,
+}));
+
 import { CreateOrgUseCase } from './create-org.use-case';
 import { CreateOrgCommand } from './create-org.command';
-import { OrgsRepository } from '../../ports/orgs.repository';
+import { OrgsRepository } from 'src/iam/orgs/application/ports/orgs.repository';
 import { Org } from 'src/iam/orgs/domain/org.entity';
-import { OrgCreationFailedError, UnexpectedOrgError } from '../../orgs.errors';
-import { OrgCreatedEvent } from '../../events/org-created.event';
+import {
+  OrgCreationFailedError,
+  UnexpectedOrgError,
+} from 'src/iam/orgs/application/orgs.errors';
+import { OrgCreatedEvent } from 'src/iam/orgs/application/events/org-created.event';
 import { SeedDefaultRolePermissionsUseCase } from 'src/iam/permissions/application/use-cases/seed-default-role-permissions/seed-default-role-permissions.use-case';
 import type { UUID } from 'crypto';
 

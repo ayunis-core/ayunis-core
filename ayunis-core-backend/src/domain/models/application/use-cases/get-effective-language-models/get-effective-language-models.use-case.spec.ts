@@ -1,121 +1,90 @@
-import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { getLoggerToken } from 'nestjs-pino';
-import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { GetEffectiveLanguageModelsUseCase } from './get-effective-language-models.use-case';
-import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
-import { Team } from 'src/iam/teams/domain/team.entity';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { LanguageModel } from 'src/domain/models/domain/models/language.model';
-import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
-import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
+import type { UUID } from 'crypto';
+import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
+import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import type { UUID } from 'crypto';
+import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
+import { GetEffectiveLanguageModelsUseCase } from './get-effective-language-models.use-case';
 
-describe('GetEffectiveLanguageModelsUseCase', () => {
-  let useCase: GetEffectiveLanguageModelsUseCase;
-  let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
-  let findTeamsByUserIdUseCase: jest.Mocked<FindTeamsByUserIdUseCase>;
-  let contextService: jest.Mocked<ContextService>;
-
+describe(GetEffectiveLanguageModelsUseCase.name, () => {
   const userId = '11111111-1111-1111-1111-111111111111' as UUID;
   const orgId = '22222222-2222-2222-2222-222222222222' as UUID;
   const teamAId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' as UUID;
   const teamBId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' as UUID;
+  let useCase: GetEffectiveLanguageModelsUseCase;
+  let repository: jest.Mocked<PermittedModelsRepository>;
+  let scopeResolver: jest.Mocked<EffectiveModelScopeResolverService>;
+  let contextService: jest.Mocked<ContextService>;
 
-  function makeLanguageModel(name: string, id?: UUID): LanguageModel {
-    return new LanguageModel({
-      id: id ?? `${name}-0000-0000-0000-000000000000`,
-      name,
-      displayName: name,
-      provider: ModelProvider.OPENAI,
-      canStream: true,
-      isReasoning: false,
-      isArchived: false,
-      canUseTools: true,
-      canVision: false,
-    });
-  }
-
-  function makePermittedLanguageModel(
-    model: LanguageModel,
-    scope: PermittedModelScope = PermittedModelScope.ORG,
-    scopeId: UUID | null = null,
-  ): PermittedLanguageModel {
-    return new PermittedLanguageModel({
-      model,
+  const permit = (
+    name: string,
+    catalogModelId: UUID,
+    teamId?: UUID,
+    anonymousOnly = false,
+  ): PermittedLanguageModel =>
+    new PermittedLanguageModel({
+      model: new LanguageModel({
+        id: catalogModelId,
+        name,
+        displayName: name,
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+      }),
       orgId,
-      scope,
-      scopeId,
+      scope: teamId ? PermittedModelScope.TEAM : PermittedModelScope.ORG,
+      scopeId: teamId ?? null,
+      anonymousOnly,
     });
-  }
-
-  function makeTeam(
-    id: UUID,
-    teamOrgId: UUID,
-    modelOverrideEnabled: boolean,
-  ): Team {
-    return new Team({
-      id,
-      name: `team-${id}`,
-      orgId: teamOrgId,
-      modelOverrideEnabled,
-    });
-  }
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       providers: [
+        GetEffectiveLanguageModelsUseCase,
         {
           provide: getLoggerToken(GetEffectiveLanguageModelsUseCase.name),
           useValue: createPinoLoggerMock(),
         },
-        GetEffectiveLanguageModelsUseCase,
         {
           provide: PermittedModelsRepository,
           useValue: {
             findManyLanguage: jest.fn(),
-            findManyLanguageByTeam: jest.fn(),
+            findManyLanguageByTeams: jest.fn(),
           },
         },
         {
-          provide: FindTeamsByUserIdUseCase,
-          useValue: {
-            execute: jest.fn(),
-          },
+          provide: EffectiveModelScopeResolverService,
+          useValue: { resolve: jest.fn() },
         },
-        {
-          provide: ContextService,
-          useValue: {
-            get: jest.fn(),
-          },
-        },
+        { provide: ContextService, useValue: { get: jest.fn() } },
       ],
     }).compile();
 
     useCase = module.get(GetEffectiveLanguageModelsUseCase);
-    permittedModelsRepository = module.get(PermittedModelsRepository);
-    findTeamsByUserIdUseCase = module.get(FindTeamsByUserIdUseCase);
+    repository = module.get(PermittedModelsRepository);
+    scopeResolver = module.get(EffectiveModelScopeResolverService);
     contextService = module.get(ContextService);
-
-    // Default: user belongs to the org
     contextService.get.mockImplementation((key) => {
-      if (key === 'userId') return userId;
       if (key === 'orgId') return orgId;
       if (key === 'systemRole') return SystemRole.CUSTOMER;
       return undefined;
     });
   });
 
-  it('should throw UnauthorizedAccessError when user does not belong to org', async () => {
-    const otherOrgId = '99999999-9999-9999-9999-999999999999' as UUID;
+  it('rejects another organization for a customer principal', async () => {
     contextService.get.mockImplementation((key) => {
-      if (key === 'userId') return userId;
-      if (key === 'orgId') return otherOrgId;
+      if (key === 'orgId') return '99999999-9999-9999-9999-999999999999';
       if (key === 'systemRole') return SystemRole.CUSTOMER;
       return undefined;
     });
@@ -125,212 +94,86 @@ describe('GetEffectiveLanguageModelsUseCase', () => {
     ).rejects.toThrow(UnauthorizedAccessError);
   });
 
-  it('should allow super admin to access any org', async () => {
-    const otherOrgId = '99999999-9999-9999-9999-999999999999' as UUID;
-    contextService.get.mockImplementation((key) => {
-      if (key === 'userId') return userId;
-      if (key === 'orgId') return otherOrgId;
-      if (key === 'systemRole') return SystemRole.SUPER_ADMIN;
-      return undefined;
+  it('uses organization grants when no enabled override exists', async () => {
+    const orgModels = [
+      permit('Municipal Assistant', '10000000-0000-0000-0000-000000000001'),
+    ];
+    scopeResolver.resolve.mockResolvedValue({ orgId, overrideTeamIds: [] });
+    repository.findManyLanguage.mockResolvedValue(orgModels);
+
+    await expect(
+      useCase.execute(new GetEffectiveLanguageModelsQuery(orgId, userId)),
+    ).resolves.toEqual({ models: orgModels, overrideTeamIds: [] });
+    expect(repository.findManyLanguageByTeams).not.toHaveBeenCalled();
+  });
+
+  it('preserves an empty effective set for enabled teams without grants', async () => {
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId],
     });
+    repository.findManyLanguageByTeams.mockResolvedValue([]);
 
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([]);
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toEqual(orgModels);
-    expect(result.overrideTeamIds).toEqual([]);
+    await expect(
+      useCase.execute(new GetEffectiveLanguageModelsQuery(orgId, userId)),
+    ).resolves.toEqual({ models: [], overrideTeamIds: [teamAId] });
+    expect(repository.findManyLanguage).not.toHaveBeenCalled();
   });
 
-  it('should return org models when user has no teams', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([]);
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toEqual(orgModels);
-    expect(result.overrideTeamIds).toEqual([]);
-    expect(permittedModelsRepository.findManyLanguage).toHaveBeenCalledWith(
+  it('unions team grants by catalog model ID with one bulk query', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    const uniqueCatalogId = '10000000-0000-0000-0000-000000000002' as UUID;
+    const teamGrants = [
+      permit('Municipal Assistant', sharedCatalogId, teamAId),
+      permit('Municipal Assistant', sharedCatalogId, teamBId),
+      permit('Document Helper', uniqueCatalogId, teamBId),
+    ];
+    scopeResolver.resolve.mockResolvedValue({
       orgId,
-    );
-    expect(
-      permittedModelsRepository.findManyLanguageByTeam,
-    ).not.toHaveBeenCalled();
-  });
-
-  it('should return org models when user is only in non-override teams', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([
-      makeTeam(teamAId, orgId, false),
-      makeTeam(teamBId, orgId, false),
-    ]);
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue(teamGrants);
 
     const result = await useCase.execute(
       new GetEffectiveLanguageModelsQuery(orgId, userId),
     );
 
-    expect(result.models).toEqual(orgModels);
-    expect(result.overrideTeamIds).toEqual([]);
-    expect(permittedModelsRepository.findManyLanguage).toHaveBeenCalledWith(
+    expect(result.models.map((model) => model.model.id)).toEqual([
+      sharedCatalogId,
+      uniqueCatalogId,
+    ]);
+    expect(repository.findManyLanguageByTeams).toHaveBeenCalledTimes(1);
+    expect(repository.findManyLanguageByTeams).toHaveBeenCalledWith(
+      [teamAId, teamBId],
       orgId,
     );
   });
 
-  it('should return team models when user is in one override team', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const teamModels = [
-      makePermittedLanguageModel(gpt4, PermittedModelScope.TEAM, teamAId),
-    ];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([
-      makeTeam(teamAId, orgId, true),
-    ]);
-    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue(
-      teamModels,
-    );
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toEqual(teamModels);
-    expect(result.overrideTeamIds).toEqual([teamAId]);
-    expect(
-      permittedModelsRepository.findManyLanguageByTeam,
-    ).toHaveBeenCalledWith(teamAId, orgId);
-    expect(permittedModelsRepository.findManyLanguage).not.toHaveBeenCalled();
-  });
-
-  it('should return union of models from two override teams', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const claude = makeLanguageModel('claude-3-sonnet');
-    const mistral = makeLanguageModel('mistral-large');
-
-    const teamAModels = [
-      makePermittedLanguageModel(gpt4, PermittedModelScope.TEAM, teamAId),
-      makePermittedLanguageModel(claude, PermittedModelScope.TEAM, teamAId),
-    ];
-    const teamBModels = [
-      makePermittedLanguageModel(claude, PermittedModelScope.TEAM, teamBId),
-      makePermittedLanguageModel(mistral, PermittedModelScope.TEAM, teamBId),
-    ];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([
-      makeTeam(teamAId, orgId, true),
-      makeTeam(teamBId, orgId, true),
-    ]);
-    permittedModelsRepository.findManyLanguageByTeam
-      .mockResolvedValueOnce(teamAModels)
-      .mockResolvedValueOnce(teamBModels);
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toHaveLength(3);
-    const modelNames = result.models.map((m) => m.model.name);
-    expect(modelNames).toContain('gpt-4');
-    expect(modelNames).toContain('claude-3-sonnet');
-    expect(modelNames).toContain('mistral-large');
-    expect(result.overrideTeamIds).toEqual([teamAId, teamBId]);
-  });
-
-  it('should use only override team models when user is in both override and non-override teams', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const teamModels = [
-      makePermittedLanguageModel(gpt4, PermittedModelScope.TEAM, teamAId),
-    ];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([
-      makeTeam(teamAId, orgId, true),
-      makeTeam(teamBId, orgId, false),
-    ]);
-    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue(
-      teamModels,
-    );
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toEqual(teamModels);
-    expect(result.overrideTeamIds).toEqual([teamAId]);
-    expect(
-      permittedModelsRepository.findManyLanguageByTeam,
-    ).toHaveBeenCalledWith(teamAId, orgId);
-    expect(
-      permittedModelsRepository.findManyLanguageByTeam,
-    ).not.toHaveBeenCalledWith(teamBId, orgId);
-    expect(permittedModelsRepository.findManyLanguage).not.toHaveBeenCalled();
-  });
-
-  it('should fall back to org models when override teams have zero configured models', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
-
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([
-      makeTeam(teamAId, orgId, true),
-    ]);
-    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue([]);
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
-
-    const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, userId),
-    );
-
-    expect(result.models).toEqual(orgModels);
-    expect(result.overrideTeamIds).toEqual([]);
-    expect(
-      permittedModelsRepository.findManyLanguageByTeam,
-    ).toHaveBeenCalledWith(teamAId, orgId);
-    expect(permittedModelsRepository.findManyLanguage).toHaveBeenCalledWith(
+  it('enforces anonymous mode when any matching team grant requires it', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    scopeResolver.resolve.mockResolvedValue({
       orgId,
-    );
-  });
-
-  it('should return org models with empty overrideTeamIds when no userId provided', async () => {
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
-
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([
+      permit('Municipal Assistant', sharedCatalogId, teamAId, false),
+      permit('Municipal Assistant', sharedCatalogId, teamBId, true),
+    ]);
 
     const result = await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId),
+      new GetEffectiveLanguageModelsQuery(orgId, userId),
     );
 
-    expect(result.models).toEqual(orgModels);
-    expect(result.overrideTeamIds).toEqual([]);
-    expect(findTeamsByUserIdUseCase.execute).not.toHaveBeenCalled();
+    expect(result.models).toHaveLength(1);
+    expect(result.models[0]?.anonymousOnly).toBe(true);
   });
 
-  it('should use explicit userId for team membership lookup', async () => {
-    const otherUserId = '33333333-3333-3333-3333-333333333333' as UUID;
-    const gpt4 = makeLanguageModel('gpt-4');
-    const orgModels = [makePermittedLanguageModel(gpt4)];
+  it('resolves organization scope without a user ID', async () => {
+    scopeResolver.resolve.mockResolvedValue({ orgId, overrideTeamIds: [] });
+    repository.findManyLanguage.mockResolvedValue([]);
 
-    findTeamsByUserIdUseCase.execute.mockResolvedValue([]);
-    permittedModelsRepository.findManyLanguage.mockResolvedValue(orgModels);
+    await useCase.execute(new GetEffectiveLanguageModelsQuery(orgId));
 
-    await useCase.execute(
-      new GetEffectiveLanguageModelsQuery(orgId, otherUserId),
-    );
-
-    expect(findTeamsByUserIdUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: otherUserId }),
-    );
+    expect(scopeResolver.resolve).toHaveBeenCalledWith(orgId, undefined);
   });
 });

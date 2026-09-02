@@ -1,7 +1,7 @@
 {
   "requirement": {
-    "title": "AI certificate requirement",
-    "description": "Decide whether members of your organization need to pass the AI certificate (KI-Führerschein) in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
+    "title": "EU AI Act training requirement",
+    "description": "Decide whether members of your organization need to complete the EU AI Act training in the Academy before they can use Ayunis Core chat. Reading existing chats is never blocked.",
     "saved": "Certificate requirement updated",
     "error": "Could not update the certificate requirement",
     "errorUnexpected": "Something went wrong while saving. Please try again.",

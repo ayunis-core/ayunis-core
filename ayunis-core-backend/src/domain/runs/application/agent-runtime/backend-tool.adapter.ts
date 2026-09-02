@@ -42,8 +42,8 @@ interface ToolExecutionOutcome {
  * maps acknowledge without side effects, and externally handled widgets omit
  * `execute` so the current run terminates after their tool phase.
  *
- * In anonymous threads, PII-returning tool output is redacted at production and
- * the mask dictionary streamed via the run's `emit`, matching the legacy loop.
+ * In anonymous threads, PII-returning tool output is redacted before the mask
+ * dictionary and result are streamed to the client.
  */
 @Injectable()
 export class BackendToolAdapter {

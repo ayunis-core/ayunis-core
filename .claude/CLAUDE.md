@@ -27,13 +27,13 @@ ayunis-core/
 
 ### 1. Validation-First
 
-Do NOT trust your own assessment of code correctness. Verify through observable behavior — lint, type-check, tests, and runtime. See the development skills below for specific validation sequences.
+Do NOT trust your own assessment of code correctness. Verify through observable behavior using the smallest set of checks that covers the change's credible failure modes. See **Proportional Workflow** below for the required depth and the development skills for surface-specific patterns.
 
 ### 2. Evidence Before Diagnosis
 
 Principle 1 governs code you wrote. This one governs everything you *assert*: root causes, config values, provider behavior, "this is already fixed", "this should work".
 
-- **Reproduce before diagnosing.** A "likely root cause" derived from reading code and config is not an answer. Run the stack, trigger the failure, then explain it. Passing unit tests are not a substitute for one live request against the actual configured environment.
+- **Reproduce before diagnosing.** A "likely root cause" derived from reading code and config is not an answer. Reproduce the failure at the smallest layer where it is observable, then explain it. For runtime, configuration, or integration failures, passing unit tests are not a substitute for one live request against the actual configured environment.
 - **Never recommend a config value you haven't verified.** An example value found in the repo (an API version, endpoint, model id) is not "the fix". Check it against current provider documentation and the deployed environment, or label it explicitly as unverified.
 - **Name the environment.** Staging and production run different config and different model deployments. State which environment/app your evidence came from before drawing a conclusion; evidence from the wrong environment invalidates the whole analysis.
 - **Report only failure modes the evidence supports.** Do not append extra suspected bugs or "regressions" inferred from general model knowledge to an incident report. If you have a hypothesis, label it as one to check — an unsupported claim presented alongside real findings costs more trust than it buys.
@@ -43,14 +43,15 @@ When an access path or tool fails, report the blocker immediately. Do not keep s
 
 ### 3. Incremental Progress
 
-- Make one change at a time
-- Validate after each change
-- Commit after each validated change
-- Never batch multiple logical changes
+- Make one logical change at a time
+- Validate each logical change in proportion to its risk
+- Commit after each validated logical change
+- Never batch unrelated changes; do not create ceremonial commits for intermediate steps of one coherent change
 
 ### 4. Respect Boundaries
 
 - Read the target module's SUMMARY.md before making changes
+- Before adding a backend file, inspect the target layer's existing directories and two closest analogues. Place validation, orchestration, policy, domain invariants, and persistence in their established layer-specific locations; controllers only map validated HTTP input and orchestrate use cases.
 - Respect module boundaries — the `ayunis-core-backend` skill documents how cross-module work is done (application-layer code uses exported use cases from the target module, not ports/adapters; TypeORM schema records may reference records in other modules to declare foreign-key relations — see the `typeorm-migrations` skill)
 - Never edit generated code (e.g., the frontend API client)
 
@@ -87,6 +88,62 @@ Any change that affects sharing, permissions, visibility, organization scope, te
 - Treat the scenario as incomplete until the focused E2E test passes in CI. Record the exact command and environment when reporting verification.
 
 For access-control regressions, the test must preserve the causal order: verify the denied state first, apply the share or permission change second, and verify the allowed state last. This prevents a test from passing because the resource was visible for an unrelated reason.
+
+### 10. Proportional Workflow
+
+Validation-first does not mean running every available check for every change. Use the lightest workflow that produces credible evidence for the change's actual failure modes. Classify by blast radius, reversibility, and observability — not by diff size, estimated effort, or urgency. A five-line authorization fix is high-risk; a larger isolated copy-and-layout change may use the Fast Path.
+
+If a change matches more than one level, use the highest. If it is unclear whether an ordinary low-risk change qualifies for the Fast Path, use the Standard Path. If uncertainty involves security, data integrity, infrastructure, reversibility, or the boundary between Standard and High-Risk, use the High-Risk Path.
+
+#### Fast Path
+
+Use only when all of these are true:
+
+- The change is isolated and easy to reverse.
+- It does not alter a public contract, persistent data, security boundary, or cross-module interaction.
+- Its behavior can be demonstrated with a focused check at one layer.
+- It does not touch authentication, authorization, sharing, tenant boundaries, migrations, infrastructure, secrets, billing, or external-provider configuration.
+
+Typical examples are documentation, copy, static styling, test-only maintenance, behavior-preserving refactors, and narrow bug fixes with one understood failure mode.
+
+Required:
+
+1. For a behavior bug, first reproduce it with the smallest practical failing test.
+2. Run a focused test when behavior or test code changed, plus any lint or type check applicable to the changed files.
+3. Render and inspect a visible UI change when automated checks cannot prove its result.
+4. Inspect the final diff for unintended changes.
+
+The Fast Path does **not automatically require** starting the full stack, broad package or repository suites, E2E coverage when a lower layer proves the behavior, PR media that adds no review value, or separate commits for mechanical steps within the same logical change. Run any of these when it is the only credible way to test a failure mode.
+
+#### Standard Path
+
+This is the default for ordinary features and behavior changes, including work that spans components or layers.
+
+Required:
+
+1. Define the observable acceptance criteria; reproduce bugs before fixing them.
+2. Use test-driven development for changed logic or behavior.
+3. Run the relevant unit or integration tests.
+4. Run lint and type-check or build for each affected package.
+5. Add E2E coverage when a browser journey or system boundary changes and lower-level tests do not sufficiently prove it.
+6. Capture PR media when it materially helps a reviewer evaluate a visible change.
+7. Exercise the real runtime when the reported failure or changed behavior only exists there.
+
+#### High-Risk Path
+
+Use for authentication, authorization, sharing, tenant isolation, migrations or data transformations, destructive or difficult-to-reverse data operations, public API/schema contracts, security-sensitive input or secret handling, billing, infrastructure/CI/deployment changes, external-provider configuration, cross-module persistence, concurrency-sensitive background work, and production incidents.
+
+Required:
+
+- Follow all applicable specialized skills and their safety checks.
+- Validate configuration and integration behavior against the actual named environment.
+- Exercise affected behavior end-to-end when it has a user-facing or system-boundary path.
+- Run the full relevant validation suite, including distinct-principal tests for access control.
+- Report the exact environment and commands used as evidence.
+
+#### Pull Requests
+
+The workflow level controls local implementation and validation breadth. It does not weaken **A Submitted PR Is Not Complete**: once a PR is created or updated, CI and Cursor Bugbot must still be clean on the latest submitted revision.
 
 ---
 
@@ -136,7 +193,7 @@ The following rules are enforced by ESLint, pre-commit hooks, and CI. Violations
 
 ## Development Skills
 
-For detailed development workflows, patterns, and validation checklists, load the appropriate skill. Skills are listed with descriptions in the system prompt — pick the one that matches the task.
+Load the implementation skills for the files and surfaces being changed. Load validation workflow skills such as `e2e`, `pr-media`, or `qa` when required by the classification above, by a credible failure mode, or by the user's explicit request. Surface-specific safety rules remain mandatory; the proportional workflow controls the breadth of otherwise generic validation checklists.
 
 ---
 

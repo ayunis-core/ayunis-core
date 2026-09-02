@@ -24,6 +24,9 @@ describe(CreateFederatedUserUseCase.name, () => {
         findAllSummariesByOrgId: jest.fn(),
         create: jest.fn().mockImplementation(async (user) => user),
         update: jest.fn(),
+        registerFailedLoginAttempt: jest.fn(),
+        resetFailedLoginAttempts: jest.fn(),
+        clearLoginLock: jest.fn(),
         delete: jest.fn(),
         isValidPassword: jest.fn(),
       };

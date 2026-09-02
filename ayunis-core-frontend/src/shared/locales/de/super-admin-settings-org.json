@@ -15,6 +15,7 @@
     "roleAdmin": "Administrator",
     "roleUser": "Benutzer",
     "roleManager": "Manager",
+    "status": "Status",
     "actions": "Aktionen",
     "sendPasswordReset": "Passwort-Reset senden",
     "openOrganization": "Organisation öffnen",
@@ -421,7 +422,24 @@
   },
   "orgDetails": {
     "name": "Name",
-    "id": "ID"
+    "id": "ID",
+    "rename": {
+      "edit": "Umbenennen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "success": "Organisation umbenannt",
+      "error": "Organisation konnte nicht umbenannt werden",
+      "errorNotFound": "Diese Organisation existiert nicht mehr",
+      "errorRejected": "Die Organisation konnte nicht umbenannt werden. Bitte prüfen Sie den Namen."
+    },
+    "validation": {
+      "name": {
+        "isNotEmpty": "Name ist erforderlich",
+        "isString": "Name muss ein Text sein",
+        "invalid": "Ungültiger Name"
+      },
+      "invalid": "Ungültige Eingabe"
+    }
   },
   "trial": {
     "title": "Trial-Informationen",

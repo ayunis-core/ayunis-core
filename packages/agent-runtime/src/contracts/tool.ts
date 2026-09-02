@@ -13,6 +13,8 @@ export interface ToolExecutionContext {
   /** The run's context bag (host data: tenancy, identity, per-run state). */
   readonly context: RunContext;
   readonly toolCallId: string;
+  /** Names in the effective tool set at the start of this execution. */
+  readonly toolNames: readonly string[];
   readonly signal?: AbortSignal;
   /** Emits a `custom` RunEvent into the run's event stream. */
   emit(event: CustomEventInput): void;

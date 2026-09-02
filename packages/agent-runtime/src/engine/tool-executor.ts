@@ -222,6 +222,7 @@ const buildToolContext = (
   return {
     context: state.context,
     toolCallId,
+    toolNames: state.tools.map(({ name }) => name),
     signal: state.signal,
     emit: (event) => state.emits.push(event),
     runChild: state.runChild,

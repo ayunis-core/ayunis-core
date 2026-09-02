@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import { CreateAdminUserUseCase } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.use-case';
-import { CreateAdminUserCommand } from '../../../../users/application/use-cases/create-admin-user/create-admin-user.command';
-import { IsValidPasswordUseCase } from '../../../../users/application/use-cases/is-valid-password/is-valid-password.use-case';
-import { IsValidPasswordQuery } from '../../../../users/application/use-cases/is-valid-password/is-valid-password.query';
-import { CreateOrgUseCase } from '../../../../orgs/application/use-cases/create-org/create-org.use-case';
-import { CreateOrgCommand } from '../../../../orgs/application/use-cases/create-org/create-org.command';
+import { CreateAdminUserUseCase } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.use-case';
+import { CreateAdminUserCommand } from 'src/iam/users/application/use-cases/create-admin-user/create-admin-user.command';
+import { IsValidPasswordUseCase } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.use-case';
+import { IsValidPasswordQuery } from 'src/iam/users/application/use-cases/is-valid-password/is-valid-password.query';
+import { CreateOrgUseCase } from 'src/iam/orgs/application/use-cases/create-org/create-org.use-case';
+import { CreateOrgCommand } from 'src/iam/orgs/application/use-cases/create-org/create-org.command';
 import { RegisterUserCommand } from './register-user.command';
-import { ActiveUser } from '../../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import {
   InvalidPasswordError,
   RegistrationDisabledError,
   UnexpectedAuthenticationError,
-} from '../../authentication.errors';
-import { ApplicationError } from '../../../../../common/errors/base.error';
+} from 'src/iam/authentication/application/authentication.errors';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { CreateLegalAcceptanceUseCase } from 'src/iam/legal-acceptances/application/use-cases/create-legal-acceptance/create-legal-acceptance.use-case';
 import {
   CreatePrivacyPolicyAcceptanceCommand,
@@ -46,14 +46,21 @@ export class RegisterUserUseCase {
     private readonly configService: ConfigService,
   ) {}
 
-  @Transactional()
   async execute(command: RegisterUserCommand): Promise<ActiveUser> {
     this.logger.info(
       { email: command.email, org: { name: command.orgName } },
       'register',
     );
     try {
-      return await this.register(command);
+      const { user, shouldConfirmEmail } = await this.register(command);
+      if (shouldConfirmEmail) {
+        await this.trySendConfirmationEmail(user);
+      }
+      this.logger.debug(
+        { userId: user.id },
+        'Registration successful, logging in user',
+      );
+      return this.toActiveUser(user);
     } catch (error: unknown) {
       if (error instanceof ApplicationError) throw error;
       this.logger.error(
@@ -64,7 +71,10 @@ export class RegisterUserUseCase {
     }
   }
 
-  private async register(command: RegisterUserCommand): Promise<ActiveUser> {
+  @Transactional()
+  private async register(
+    command: RegisterUserCommand,
+  ): Promise<{ user: User; shouldConfirmEmail: boolean }> {
     await this.assertRegistrationAllowed(command);
     const orgId = await this.createOrganizationWithTrial(command.orgName);
     const shouldConfirmEmail =
@@ -75,16 +85,7 @@ export class RegisterUserUseCase {
       !!shouldConfirmEmail,
     );
     await this.createLegalAcceptances(user.id, orgId);
-    if (shouldConfirmEmail) {
-      await this.sendConfirmationEmailUseCase.execute(
-        new SendConfirmationEmailCommand(user),
-      );
-    }
-    this.logger.debug(
-      { userId: user.id },
-      'Registration successful, logging in user',
-    );
-    return this.toActiveUser(user);
+    return { user, shouldConfirmEmail: !!shouldConfirmEmail };
   }
 
   private async assertRegistrationAllowed(
@@ -156,6 +157,19 @@ export class RegisterUserUseCase {
     await this.createLegalAcceptanceUseCase.execute(
       new CreatePrivacyPolicyAcceptanceCommand({ userId, orgId }),
     );
+  }
+
+  private async trySendConfirmationEmail(user: User): Promise<void> {
+    try {
+      await this.sendConfirmationEmailUseCase.execute(
+        new SendConfirmationEmailCommand(user),
+      );
+    } catch (error: unknown) {
+      this.logger.error(
+        { err: error as Error, userId: user.id },
+        'Failed to send confirmation email after registration',
+      );
+    }
   }
 
   private toActiveUser(user: User): ActiveUser {

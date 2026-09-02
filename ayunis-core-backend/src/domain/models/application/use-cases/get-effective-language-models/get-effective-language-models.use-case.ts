@@ -1,143 +1,88 @@
 import { Injectable } from '@nestjs/common';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { UUID } from 'crypto';
-import { ApplicationError } from 'src/common/errors/base.error';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
-import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
-import { UnexpectedModelError } from '../../models.errors';
-import { FindTeamsByUserIdUseCase } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.use-case';
-import { FindTeamsByUserIdQuery } from 'src/iam/teams/application/use-cases/find-teams-by-user-id/find-teams-by-user-id.query';
-import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
+import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
+import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import type { EffectiveLanguageModelsResult } from './effective-language-models-result';
+import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
 
 @Injectable()
 export class GetEffectiveLanguageModelsUseCase {
   constructor(
     @InjectPinoLogger(GetEffectiveLanguageModelsUseCase.name)
     private readonly logger: PinoLogger,
-
     private readonly permittedModelsRepository: PermittedModelsRepository,
-    private readonly findTeamsByUserIdUseCase: FindTeamsByUserIdUseCase,
+    private readonly scopeResolver: EffectiveModelScopeResolverService,
     private readonly contextService: ContextService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpectedModelError)
   async execute(
     query: GetEffectiveLanguageModelsQuery,
   ): Promise<EffectiveLanguageModelsResult> {
     this.logger.info(
-      {
-        userId: query.userId,
-        orgId: query.orgId,
-      },
+      { userId: query.userId, orgId: query.orgId },
       'Resolving effective language models',
     );
+    this.validateOrgAccess(query.orgId);
 
-    try {
-      this.validateOrgAccess(query.orgId);
-
-      if (!query.userId) {
-        return this.buildOrgFallback(query.orgId);
-      }
-
-      return this.resolveForUser(query.userId, query.orgId);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        {
-          userId: query.userId,
-          orgId: query.orgId,
-          err: error instanceof Error ? error : new Error('Unknown error'),
-        },
-        'Error resolving effective language models',
-      );
-      throw new UnexpectedModelError(error as Error);
+    const scope = await this.scopeResolver.resolve(query.orgId, query.userId);
+    if (scope.overrideTeamIds.length === 0) {
+      return {
+        models: await this.permittedModelsRepository.findManyLanguage(
+          query.orgId,
+        ),
+        overrideTeamIds: [],
+      };
     }
+
+    const teamGrants =
+      await this.permittedModelsRepository.findManyLanguageByTeams(
+        scope.overrideTeamIds,
+        query.orgId,
+      );
+    return {
+      models: this.mergeTeamGrants(teamGrants),
+      overrideTeamIds: scope.overrideTeamIds,
+    };
   }
 
   private validateOrgAccess(queryOrgId: UUID): void {
     const orgId = this.contextService.get('orgId');
     const systemRole = this.contextService.get('systemRole');
-    const isSuperAdmin = systemRole === SystemRole.SUPER_ADMIN;
-    const isFromOrg = orgId === queryOrgId;
-    if (!isFromOrg && !isSuperAdmin) {
+    if (orgId !== queryOrgId && systemRole !== SystemRole.SUPER_ADMIN) {
       throw new UnauthorizedAccessError();
     }
   }
 
-  private async resolveForUser(
-    userId: UUID,
-    orgId: UUID,
-  ): Promise<EffectiveLanguageModelsResult> {
-    const allTeams = await this.findTeamsByUserIdUseCase.execute(
-      new FindTeamsByUserIdQuery(userId),
+  private mergeTeamGrants(
+    models: PermittedLanguageModel[],
+  ): PermittedLanguageModel[] {
+    const byCatalogModelId = new Map<UUID, PermittedLanguageModel>();
+    const grantsByPolicy = [...models].sort((a, b) =>
+      this.compareGrantPriority(a, b),
     );
-    const orgTeams = allTeams.filter((team) => team.orgId === orgId);
-    const overrideTeams = orgTeams.filter((team) => team.modelOverrideEnabled);
-    const overrideTeamIds = overrideTeams.map((t) => t.id);
-
-    if (overrideTeams.length === 0) {
-      this.logger.debug(
-        {
-          userId,
-          orgId,
-        },
-        'No override teams found, returning org-level models',
-      );
-      return this.buildOrgFallback(orgId);
-    }
-
-    const merged = await this.mergeTeamModels(overrideTeamIds, orgId);
-
-    if (merged.length === 0) {
-      this.logger.debug(
-        { userId, orgId },
-        'Override teams have no configured models, falling back to org-level models',
-      );
-      return this.buildOrgFallback(orgId);
-    }
-
-    return { models: merged, overrideTeamIds };
-  }
-
-  private async buildOrgFallback(
-    orgId: UUID,
-  ): Promise<EffectiveLanguageModelsResult> {
-    const models = await this.permittedModelsRepository.findManyLanguage(orgId);
-    return { models, overrideTeamIds: [] };
-  }
-
-  private async mergeTeamModels(
-    teamIds: UUID[],
-    orgId: UUID,
-  ): Promise<PermittedLanguageModel[]> {
-    const teamModelArrays = await Promise.all(
-      teamIds.map((teamId) =>
-        this.permittedModelsRepository.findManyLanguageByTeam(teamId, orgId),
-      ),
-    );
-
-    const modelsByModelId = new Map<UUID, PermittedLanguageModel>();
-    for (const teamModels of teamModelArrays) {
-      for (const model of teamModels) {
-        if (!modelsByModelId.has(model.model.id)) {
-          modelsByModelId.set(model.model.id, model);
-        }
+    for (const grant of grantsByPolicy) {
+      if (!byCatalogModelId.has(grant.model.id)) {
+        byCatalogModelId.set(grant.model.id, grant);
       }
     }
+    return [...byCatalogModelId.values()];
+  }
 
-    this.logger.debug(
-      {
-        teamIds,
-        modelCount: modelsByModelId.size,
-      },
-      'Merged team models',
-    );
-
-    return Array.from(modelsByModelId.values());
+  private compareGrantPriority(
+    a: PermittedLanguageModel,
+    b: PermittedLanguageModel,
+  ): number {
+    const catalogOrder = a.model.id.localeCompare(b.model.id);
+    if (catalogOrder !== 0) return catalogOrder;
+    if (a.anonymousOnly !== b.anonymousOnly) return a.anonymousOnly ? -1 : 1;
+    return a.id.localeCompare(b.id);
   }
 }

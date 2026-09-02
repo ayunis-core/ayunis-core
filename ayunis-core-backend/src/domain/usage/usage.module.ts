@@ -8,6 +8,8 @@ import { GetUsageStatsUseCase } from './application/use-cases/get-usage-stats/ge
 import { GetMonthlyCreditUsageUseCase } from './application/use-cases/get-monthly-credit-usage/get-monthly-credit-usage.use-case';
 import { GetMonthlyCreditUsageForUserUseCase } from './application/use-cases/get-monthly-credit-usage-for-user/get-monthly-credit-usage-for-user.use-case';
 import { GetMonthlyCreditUsageForUsersUseCase } from './application/use-cases/get-monthly-credit-usage-for-users/get-monthly-credit-usage-for-users.use-case';
+import { GetMonthlyCreditUsageForApiKeyUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-key/get-monthly-credit-usage-for-api-key.use-case';
+import { GetMonthlyCreditUsageForApiKeysUseCase } from './application/use-cases/get-monthly-credit-usage-for-api-keys/get-monthly-credit-usage-for-api-keys.use-case';
 import { GetMonthlyCreditUsageForTeamUseCase } from './application/use-cases/get-monthly-credit-usage-for-team/get-monthly-credit-usage-for-team.use-case';
 import { GetCreditUsageUseCase } from './application/use-cases/get-credit-usage/get-credit-usage.use-case';
 import { UsageController } from './presenters/http/usage.controller';
@@ -21,9 +23,9 @@ import { ModelDistributionResponseDtoMapper } from './presenters/http/mappers/mo
 import { UserUsageResponseDtoMapper } from './presenters/http/mappers/user-usage-response-dto.mapper';
 import { UsageResponseMapper } from './presenters/http/mappers/usage-response.mapper';
 import { UsageUseCasesFacade } from './presenters/http/usage-use-cases.facade';
-import { PlatformConfigModule } from '../../iam/platform-config/platform-config.module';
-import { SubscriptionsModule } from '../../iam/subscriptions/subscriptions.module';
-import { TeamsModule } from '../../iam/teams/teams.module';
+import { PlatformConfigModule } from 'src/iam/platform-config/platform-config.module';
+import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
+import { TeamsModule } from 'src/iam/teams/teams.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { TeamsModule } from '../../iam/teams/teams.module';
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,
     GetMonthlyCreditUsageForUsersUseCase,
+    GetMonthlyCreditUsageForApiKeyUseCase,
+    GetMonthlyCreditUsageForApiKeysUseCase,
     GetMonthlyCreditUsageForTeamUseCase,
     GetCreditUsageUseCase,
 
@@ -71,6 +75,8 @@ import { TeamsModule } from '../../iam/teams/teams.module';
     GetMonthlyCreditUsageUseCase,
     GetMonthlyCreditUsageForUserUseCase,
     GetMonthlyCreditUsageForUsersUseCase,
+    GetMonthlyCreditUsageForApiKeyUseCase,
+    GetMonthlyCreditUsageForApiKeysUseCase,
     GetMonthlyCreditUsageForTeamUseCase,
     GetCreditUsageUseCase,
   ],

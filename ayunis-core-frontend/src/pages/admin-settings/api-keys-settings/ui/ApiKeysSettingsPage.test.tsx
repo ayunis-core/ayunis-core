@@ -10,7 +10,7 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-vi.mock('../../admin-settings-layout', () => ({
+vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
   default: ({
     children,
     action,
@@ -54,7 +54,13 @@ const subscription = (
 
 describe('ApiKeysSettingsPage', () => {
   it('enables creation without a hint on a usage-based subscription', () => {
-    render(<ApiKeysSettingsPage apiKeys={[]} subscription={subscription()} />);
+    render(
+      <ApiKeysSettingsPage
+        apiKeys={[]}
+        creditLimits={[]}
+        subscription={subscription()}
+      />,
+    );
 
     const createButton = screen.getByRole('button', {
       name: 'apiKeys.page.add',
@@ -69,6 +75,7 @@ describe('ApiKeysSettingsPage', () => {
     render(
       <ApiKeysSettingsPage
         apiKeys={[]}
+        creditLimits={[]}
         subscription={subscription({ subscriptionType: 'SEAT_BASED' })}
       />,
     );
@@ -86,6 +93,7 @@ describe('ApiKeysSettingsPage', () => {
     render(
       <ApiKeysSettingsPage
         apiKeys={[]}
+        creditLimits={[]}
         subscription={subscription({ subscriptionType: null })}
       />,
     );

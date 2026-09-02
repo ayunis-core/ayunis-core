@@ -18,6 +18,8 @@ import type {
   AddUrlToKnowledgeBaseDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
+  ApiKeyCreditLimitItemDto,
+  ApiKeyCreditLimitResponseDto,
   ApiKeyResponseDto,
   AppAlertResponseDto,
   ArtifactListResponseDto,
@@ -129,6 +131,7 @@ import type {
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
   PermittedLanguageModelResponseDtoNullable,
+  PiiMaskResponseDto,
   PiiWhitelistResponseDto,
   PredefinedConfigResponseDto,
   PriceResponseDto,
@@ -221,6 +224,7 @@ import type {
   UpdateMonthlyCreditsDto,
   UpdateOnboardingDto,
   UpdateOrgMfaRequirementRequestDto,
+  UpdateOrgRequestDto,
   UpdatePasswordDto,
   UpdatePermittedModelDto,
   UpdatePiiWhitelistRequestDto,
@@ -524,6 +528,18 @@ const superAdminUsersControllerDeleteUser = (
     }
   
 /**
+ * @summary Unlock a user in any organization
+ */
+const superAdminUsersControllerUnlockUser = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/super-admin/users/${userId}/unlock`, method: 'PATCH'
+    },
+      options);
+    }
+  
+/**
  * Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.
  * @summary Trigger password reset for a user
  */
@@ -617,6 +633,18 @@ const superAdminManagementControllerDemoteFromSuperAdmin = (
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
       {url: `/super-admin/super-admins/${userId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+/**
+ * @summary Unlock a user in the current organization
+ */
+const adminUserAccountLockControllerUnlock = (
+    userId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/users/${userId}/unlock`, method: 'PATCH'
     },
       options);
     }
@@ -770,6 +798,22 @@ const superAdminOrgsControllerGetOrgById = (
  options?: SecondParameter<typeof playwrightApiClient<SuperAdminOrgResponseDto>>,) => {
       return playwrightApiClient<SuperAdminOrgResponseDto>(
       {url: `/super-admin/orgs/${id}`, method: 'GET'
+    },
+      options);
+    }
+  
+/**
+ * Update an organization display name. Only accessible to users with the super admin system role.
+ * @summary Rename an organization
+ */
+const superAdminOrgsControllerUpdateOrg = (
+    id: string,
+    updateOrgRequestDto: UpdateOrgRequestDto,
+ options?: SecondParameter<typeof playwrightApiClient<SuperAdminOrgResponseDto>>,) => {
+      return playwrightApiClient<SuperAdminOrgResponseDto>(
+      {url: `/super-admin/orgs/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateOrgRequestDto
     },
       options);
     }
@@ -1779,6 +1823,19 @@ const threadsControllerUpdateTitle = (
       {url: `/threads/${id}/title`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateThreadTitleDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread
+ */
+const threadsControllerUnmaskPiiMask = (
+    id: string,
+    maskId: string,
+ options?: SecondParameter<typeof playwrightApiClient<PiiMaskResponseDto[]>>,) => {
+      return playwrightApiClient<PiiMaskResponseDto[]>(
+      {url: `/threads/${id}/pii-masks/${maskId}/unmask`, method: 'POST'
     },
       options);
     }
@@ -3555,6 +3612,18 @@ const creditLimitsControllerGetTeamLimits = (
     }
   
 /**
+ * @summary List configured API key credit limits with current consumption
+ */
+const creditLimitsControllerGetApiKeyLimits = (
+    
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitItemDto[]>>,) => {
+      return playwrightApiClient<ApiKeyCreditLimitItemDto[]>(
+      {url: `/credit-limits/api-keys`, method: 'GET'
+    },
+      options);
+    }
+  
+/**
  * @summary Set a monthly credit limit for a user
  */
 const creditLimitsControllerSetUserLimit = (
@@ -3604,6 +3673,71 @@ const creditLimitsControllerRemoveTeamLimit = (
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
       {url: `/credit-limits/teams/${teamId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+/**
+ * @summary Set a monthly credit limit for an API key
+ */
+const creditLimitsControllerSetApiKeyLimit = (
+    apiKeyId: string,
+    setCreditLimitDto: SetCreditLimitDto,
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyCreditLimitResponseDto>>,) => {
+      return playwrightApiClient<ApiKeyCreditLimitResponseDto>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setCreditLimitDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Remove an API key credit limit
+ */
+const creditLimitsControllerRemoveApiKeyLimit = (
+    apiKeyId: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/credit-limits/api-keys/${apiKeyId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+/**
+ * @summary List API keys for the current organization
+ */
+const apiKeysControllerListApiKeys = (
+    
+ options?: SecondParameter<typeof playwrightApiClient<ApiKeyResponseDto[]>>,) => {
+      return playwrightApiClient<ApiKeyResponseDto[]>(
+      {url: `/api-keys`, method: 'GET'
+    },
+      options);
+    }
+  
+/**
+ * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
+ */
+const apiKeysControllerCreateApiKey = (
+    createApiKeyDto: CreateApiKeyDto,
+ options?: SecondParameter<typeof playwrightApiClient<CreateApiKeyResponseDto>>,) => {
+      return playwrightApiClient<CreateApiKeyResponseDto>(
+      {url: `/api-keys`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createApiKeyDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Revoke an API key
+ */
+const apiKeysControllerRevokeApiKey = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/api-keys/${id}`, method: 'DELETE'
     },
       options);
     }
@@ -3815,7 +3949,7 @@ const academyQuizControllerGetProgress = (
     }
   
 /**
- * Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.
+ * Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.
  * @summary Download the academy completion certificate
  */
 const academyCertificateControllerGetCertificate = (
@@ -4264,44 +4398,6 @@ const ipAllowlistControllerRemove = (
     }
   
 /**
- * @summary List API keys for the current organization
- */
-const apiKeysControllerListApiKeys = (
-    
- options?: SecondParameter<typeof playwrightApiClient<ApiKeyResponseDto[]>>,) => {
-      return playwrightApiClient<ApiKeyResponseDto[]>(
-      {url: `/api-keys`, method: 'GET'
-    },
-      options);
-    }
-  
-/**
- * @summary Create a new API key. The full plaintext secret is returned ONLY in this response.
- */
-const apiKeysControllerCreateApiKey = (
-    createApiKeyDto: CreateApiKeyDto,
- options?: SecondParameter<typeof playwrightApiClient<CreateApiKeyResponseDto>>,) => {
-      return playwrightApiClient<CreateApiKeyResponseDto>(
-      {url: `/api-keys`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createApiKeyDto
-    },
-      options);
-    }
-  
-/**
- * @summary Revoke an API key
- */
-const apiKeysControllerRevokeApiKey = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/api-keys/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-  
-/**
  * @summary Whether the current user may use Ayunis Core chat, and why not
  */
 const academyAccessControllerGetStatus = (
@@ -4594,7 +4690,7 @@ const logoutControllerLogout = (
       options);
     }
   
-return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerListTeamMembers,teamsControllerAddTeamMember,teamsControllerBulkAddTeamMembers,teamsControllerRemoveTeamMember,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerRemoveSource,threadSourcesControllerDownloadSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerResolve,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerToggleActive,skillsControllerTogglePinned,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerListSkillCandidates,workspaceContextControllerListKnowledgeBaseCandidates,workspaceContextControllerListSkills,workspaceContextControllerListKnowledgeBases,workspaceContextControllerListDocuments,workspaceContextControllerAddDocument,workspaceContextControllerAttachSkill,workspaceContextControllerDetachSkill,workspaceContextControllerAttachKnowledgeBase,workspaceContextControllerDetachKnowledgeBase,workspaceContextControllerRemoveDocument,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,appAlertControllerGetAppAlert,runsControllerSendMessage,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,creditLimitsControllerGetUserLimits,creditLimitsControllerGetTeamLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,academyChaptersControllerGetChapters,academyQuizControllerGetChapterQuiz,academyQuizControllerSubmitChapterQuiz,academyQuizControllerGetProgress,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,superAdminAcademyQuizQuestionsControllerCreateQuizQuestion,superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion,superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerRevokeApiKey,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,logoutControllerLogout}};
+return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerListTeamMembers,teamsControllerAddTeamMember,teamsControllerBulkAddTeamMembers,teamsControllerRemoveTeamMember,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerRemoveSource,threadSourcesControllerDownloadSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerResolve,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerToggleActive,skillsControllerTogglePinned,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspaceContextControllerFindContext,workspaceContextControllerListSkillCandidates,workspaceContextControllerListKnowledgeBaseCandidates,workspaceContextControllerListSkills,workspaceContextControllerListKnowledgeBases,workspaceContextControllerListDocuments,workspaceContextControllerAddDocument,workspaceContextControllerAttachSkill,workspaceContextControllerDetachSkill,workspaceContextControllerAttachKnowledgeBase,workspaceContextControllerDetachKnowledgeBase,workspaceContextControllerRemoveDocument,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,appAlertControllerGetAppAlert,runsControllerSendMessage,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,creditLimitsControllerGetUserLimits,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerRevokeApiKey,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,chatSettingsControllerGeneratePersonalizedSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,academyChaptersControllerGetChapters,academyQuizControllerGetChapterQuiz,academyQuizControllerSubmitChapterQuiz,academyQuizControllerGetProgress,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,superAdminAcademyQuizQuestionsControllerCreateQuizQuestion,superAdminAcademyQuizQuestionsControllerUpdateQuizQuestion,superAdminAcademyQuizQuestionsControllerDeleteQuizQuestion,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,logoutControllerLogout}};
 export type AppControllerIsCloudResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerIsCloud']>>>
 export type AppControllerHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerHealth']>>>
 export type AppControllerFeatureTogglesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerFeatureToggles']>>>
@@ -4612,6 +4708,7 @@ export type UserPasswordResetControllerResetPasswordResult = NonNullable<Awaited
 export type UserPasswordResetControllerValidateResetTokenResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['userPasswordResetControllerValidateResetToken']>>>
 export type SuperAdminUsersControllerGetUsersByOrgIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerGetUsersByOrgId']>>>
 export type SuperAdminUsersControllerDeleteUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerDeleteUser']>>>
+export type SuperAdminUsersControllerUnlockUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerUnlockUser']>>>
 export type SuperAdminUsersControllerTriggerPasswordResetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerTriggerPasswordReset']>>>
 export type SuperAdminUsersControllerCreateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUsersControllerCreateUser']>>>
 export type SuperAdminUserListControllerGetAllUsersResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminUserListControllerGetAllUsers']>>>
@@ -4619,6 +4716,7 @@ export type SuperAdminUserExportsControllerExportUsersResult = NonNullable<Await
 export type SuperAdminManagementControllerListSuperAdminsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerListSuperAdmins']>>>
 export type SuperAdminManagementControllerPromoteToSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerPromoteToSuperAdmin']>>>
 export type SuperAdminManagementControllerDemoteFromSuperAdminResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminManagementControllerDemoteFromSuperAdmin']>>>
+export type AdminUserAccountLockControllerUnlockResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['adminUserAccountLockControllerUnlock']>>>
 export type InvitesControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreate']>>>
 export type InvitesControllerGetInvitesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerGetInvites']>>>
 export type InvitesControllerCreateBulkResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['invitesControllerCreateBulk']>>>
@@ -4630,6 +4728,7 @@ export type InvitesControllerDeleteInviteResult = NonNullable<Awaited<ReturnType
 export type SuperAdminOrgsControllerCreateOrgResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerCreateOrg']>>>
 export type SuperAdminOrgsControllerGetAllOrgsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerGetAllOrgs']>>>
 export type SuperAdminOrgsControllerGetOrgByIdResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerGetOrgById']>>>
+export type SuperAdminOrgsControllerUpdateOrgResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminOrgsControllerUpdateOrg']>>>
 export type RolePermissionsControllerGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerGet']>>>
 export type RolePermissionsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['rolePermissionsControllerUpdate']>>>
 export type MyPermissionsControllerGetMineResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['myPermissionsControllerGetMine']>>>
@@ -4703,6 +4802,7 @@ export type ThreadsControllerFindAllResult = NonNullable<Awaited<ReturnType<Retu
 export type ThreadsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerFindOne']>>>
 export type ThreadsControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerDelete']>>>
 export type ThreadsControllerUpdateTitleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerUpdateTitle']>>>
+export type ThreadsControllerUnmaskPiiMaskResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerUnmaskPiiMask']>>>
 export type ThreadsControllerAssignWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadsControllerAssignWorkspace']>>>
 export type ThreadSourcesControllerGetThreadSourcesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadSourcesControllerGetThreadSources']>>>
 export type ThreadSourcesControllerAddFileSourceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['threadSourcesControllerAddFileSource']>>>
@@ -4836,10 +4936,16 @@ export type SuperAdminTrialsControllerGetTrialByOrgIdResult = NonNullable<Awaite
 export type SuperAdminTrialsControllerUpdateTrialResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminTrialsControllerUpdateTrial']>>>
 export type CreditLimitsControllerGetUserLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetUserLimits']>>>
 export type CreditLimitsControllerGetTeamLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetTeamLimits']>>>
+export type CreditLimitsControllerGetApiKeyLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerGetApiKeyLimits']>>>
 export type CreditLimitsControllerSetUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetUserLimit']>>>
 export type CreditLimitsControllerRemoveUserLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveUserLimit']>>>
 export type CreditLimitsControllerSetTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetTeamLimit']>>>
 export type CreditLimitsControllerRemoveTeamLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveTeamLimit']>>>
+export type CreditLimitsControllerSetApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerSetApiKeyLimit']>>>
+export type CreditLimitsControllerRemoveApiKeyLimitResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['creditLimitsControllerRemoveApiKeyLimit']>>>
+export type ApiKeysControllerListApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerListApiKeys']>>>
+export type ApiKeysControllerCreateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerCreateApiKey']>>>
+export type ApiKeysControllerRevokeApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerRevokeApiKey']>>>
 export type ChatSettingsControllerGetSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerGetSystemPrompt']>>>
 export type ChatSettingsControllerUpsertSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerUpsertSystemPrompt']>>>
 export type ChatSettingsControllerDeleteSystemPromptResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['chatSettingsControllerDeleteSystemPrompt']>>>
@@ -4888,9 +4994,6 @@ export type OnboardingControllerMarkWelcomeVideoSeenResult = NonNullable<Awaited
 export type IpAllowlistControllerGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['ipAllowlistControllerGet']>>>
 export type IpAllowlistControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['ipAllowlistControllerUpdate']>>>
 export type IpAllowlistControllerRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['ipAllowlistControllerRemove']>>>
-export type ApiKeysControllerListApiKeysResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerListApiKeys']>>>
-export type ApiKeysControllerCreateApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerCreateApiKey']>>>
-export type ApiKeysControllerRevokeApiKeyResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['apiKeysControllerRevokeApiKey']>>>
 export type AcademyAccessControllerGetStatusResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['academyAccessControllerGetStatus']>>>
 export type AcademyAccessControllerGetOrgSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['academyAccessControllerGetOrgSettings']>>>
 export type AcademyAccessControllerUpsertOrgSettingsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['academyAccessControllerUpsertOrgSettings']>>>

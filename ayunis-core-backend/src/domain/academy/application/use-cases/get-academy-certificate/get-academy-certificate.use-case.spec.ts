@@ -5,8 +5,8 @@ import { createPinoLoggerMock } from 'src/common/testing/pino-logger.mock';
 import { randomUUID } from 'crypto';
 import { GetAcademyCertificateUseCase } from './get-academy-certificate.use-case';
 import { GetAcademyCertificateQuery } from './get-academy-certificate.query';
-import { AcademyCompletionRepository } from '../../ports/academy-completion.repository';
-import { CertificateRendererPort } from '../../ports/certificate-renderer.port';
+import { AcademyCompletionRepository } from 'src/domain/academy/application/ports/academy-completion.repository';
+import { CertificateRendererPort } from 'src/domain/academy/application/ports/certificate-renderer.port';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { User } from 'src/iam/users/domain/user.entity';
@@ -14,7 +14,7 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   AcademyCompletionNotFoundError,
   UnexpectedAcademyError,
-} from '../../academy.errors';
+} from 'src/domain/academy/application/academy.errors';
 
 describe('GetAcademyCertificateUseCase', () => {
   let useCase: GetAcademyCertificateUseCase;
@@ -98,7 +98,9 @@ describe('GetAcademyCertificateUseCase', () => {
       dateLine: '15. Juli 2026, München',
     });
     expect(result.buffer.toString()).toBe('%PDF-fake');
-    expect(result.fileName).toBe('Ayunis-Core-KI-Fuehrerschein-Zertifikat.pdf');
+    expect(result.fileName).toBe(
+      'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf',
+    );
     expect(result.mimeType).toBe('application/pdf');
   });
 

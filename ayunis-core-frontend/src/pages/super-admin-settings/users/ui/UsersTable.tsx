@@ -21,6 +21,7 @@ import type {
 } from '@/shared/api';
 import { UsersPagination } from './UsersPagination';
 import { UsersSearch } from './UsersSearch';
+import { UserLockStatus } from '@/widgets/user-lock-status';
 
 interface UsersTableProps {
   users: SuperAdminUserListItemResponseDto[];
@@ -70,6 +71,7 @@ export function UsersTable({
                   <TableHead>{t('table.name')}</TableHead>
                   <TableHead>{t('table.email')}</TableHead>
                   <TableHead>{t('table.organization')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
                   <TableHead className="w-[100px]">
                     {t('table.actions')}
                   </TableHead>
@@ -77,10 +79,22 @@ export function UsersTable({
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id} data-testid="super-admin-user-row">
-                    <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableRow
+                    key={user.id}
+                    data-testid="super-admin-user-row"
+                    data-user-id={user.id}
+                  >
+                    <TableCell
+                      className="font-medium"
+                      data-testid={`super-admin-user-id-${user.id}`}
+                    >
+                      {user.name}
+                    </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.orgName}</TableCell>
+                    <TableCell>
+                      <UserLockStatus isLocked={user.isLocked} />
+                    </TableCell>
                     <TableCell className="w-[100px]">
                       <SuperAdminUserActions user={user} />
                     </TableCell>

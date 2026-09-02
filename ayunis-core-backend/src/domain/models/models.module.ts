@@ -56,7 +56,7 @@ import { DeleteModelUseCase } from './application/use-cases/delete-model/delete-
 import { ModelProviderInfoRegistry } from './application/registry/model-provider-info.registry';
 import { GetModelProviderInfoUseCase } from './application/use-cases/get-model-provider-info/get-model-provider-info.use-case';
 import { ModelProviderInfoResponseDtoMapper } from './presenters/http/mappers/model-provider-info-response-dto.mapper';
-import { ThreadsModule } from '../threads/threads.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { DeleteUserDefaultModelsByModelIdUseCase } from './application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { ClearDefaultsByCatalogModelIdUseCase } from './application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
@@ -69,7 +69,7 @@ import { GetPermittedLanguageModelUseCase } from './application/use-cases/get-pe
 import { GetPermittedEmbeddingModelUseCase } from './application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedImageGenerationModelUseCase } from './application/use-cases/get-permitted-image-generation-model/get-permitted-image-generation-model.use-case';
 import { UsersModule } from 'src/iam/users/users.module';
-import { SourcesModule } from '../sources/sources.module';
+import { SourcesModule } from 'src/domain/sources/sources.module';
 import { IsEmbeddingModelEnabledUseCase } from './application/use-cases/is-embedding-model-enabled/is-embedding-model-enabled.use-case';
 import { AyunisOllamaStreamInferenceHandler } from './infrastructure/stream-inference/ayunis-ollama.stream-inference';
 import { AyunisOllamaInferenceHandler } from './infrastructure/inference/ayunis-ollama.inference';
@@ -101,9 +101,11 @@ import { SetTeamDefaultModelUseCase } from './application/use-cases/set-team-def
 import { TeamPermittedModelsController } from './presenters/http/team-permitted-models.controller';
 import { TeamPermittedModelValidator } from './application/services/team-permitted-model-validator.service';
 import { ModelPolicyService } from './application/services/model-policy.service';
-import { StorageModule } from '../storage/storage.module';
-import { MessagesModule } from '../messages/messages.module';
-import { UsageReferencesModule } from '../usage/usage-references.module';
+import { ModelConfigurationService } from './application/services/model-configuration.service';
+import { EffectiveModelScopeResolverService } from './application/services/effective-model-scope-resolver.service';
+import { StorageModule } from 'src/domain/storage/storage.module';
+import { MessagesModule } from 'src/domain/messages/messages.module';
+import { UsageReferencesModule } from 'src/domain/usage/usage-references.module';
 
 @Module({
   imports: [
@@ -167,6 +169,8 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     MockImageGenerationHandler,
     {
       provide: StreamInferenceHandlerRegistry,
+      // Registry factories mirror Nest's explicit injection list.
+      // eslint-disable-next-line max-params
       useFactory: (
         anthropicHandler: AnthropicStreamInferenceHandler,
         openaiHandler: OpenAIStreamInferenceHandler,
@@ -223,6 +227,8 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     },
     {
       provide: InferenceHandlerRegistry,
+      // Registry factories mirror Nest's explicit injection list.
+      // eslint-disable-next-line max-params
       useFactory: (
         mistralHandler: MistralInferenceHandler,
         openaiHandler: OpenAIInferenceHandler,
@@ -299,6 +305,8 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     },
     // Services
     ModelPolicyService,
+    ModelConfigurationService,
+    EffectiveModelScopeResolverService,
     TeamPermittedModelValidator,
     // Use Cases
     GetEffectiveLanguageModelsUseCase,
@@ -363,6 +371,7 @@ import { UsageReferencesModule } from '../usage/usage-references.module';
     IsModelPermittedUseCase,
     GetDefaultModelUseCase,
     GetEffectiveLanguageModelsUseCase,
+    EffectiveModelScopeResolverService,
     // Use Cases
     GetInferenceUseCase,
     GenerateImageUseCase,

@@ -651,6 +651,38 @@
         "tags": ["Super Admin Users"]
       }
     },
+    "/super-admin/users/{userId}/unlock": {
+      "patch": {
+        "operationId": "SuperAdminUsersController_unlockUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User account unlocked"
+          },
+          "401": {
+            "description": "Requester is not authenticated"
+          },
+          "403": {
+            "description": "Requester is not a super admin"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Unlock a user in any organization",
+        "tags": ["Super Admin Users"]
+      }
+    },
     "/super-admin/users/{userId}/trigger-password-reset": {
       "post": {
         "description": "Send a password reset email to the specified user and return the reset URL. This endpoint is only accessible to super admins.",
@@ -939,6 +971,38 @@
         },
         "summary": "Remove super admin status from a user",
         "tags": ["Super Admin Management"]
+      }
+    },
+    "/users/{userId}/unlock": {
+      "patch": {
+        "operationId": "AdminUserAccountLockController_unlock",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User account unlocked"
+          },
+          "401": {
+            "description": "Requester is not authenticated"
+          },
+          "403": {
+            "description": "Requester is not an admin in the target organization"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        },
+        "summary": "Unlock a user in the current organization",
+        "tags": ["Users"]
       }
     },
     "/invites": {
@@ -1374,6 +1438,55 @@
           }
         },
         "summary": "Get an organization by ID",
+        "tags": ["Super Admin Orgs"]
+      },
+      "patch": {
+        "description": "Update an organization display name. Only accessible to users with the super admin system role.",
+        "operationId": "SuperAdminOrgsController_updateOrg",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the organization to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Organization information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated organization for the super admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminOrgResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request format or validation errors."
+          },
+          "403": {
+            "description": "The requester is not a super admin."
+          },
+          "404": {
+            "description": "The organization does not exist."
+          }
+        },
+        "summary": "Rename an organization",
         "tags": ["Super Admin Orgs"]
       }
     },
@@ -4245,6 +4358,53 @@
           }
         },
         "summary": "Update a thread title",
+        "tags": ["threads"]
+      }
+    },
+    "/threads/{id}/pii-masks/{maskId}/unmask": {
+      "post": {
+        "operationId": "ThreadsController_unmaskPiiMask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "maskId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the mask dictionary entry to unmask",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The full updated PII mask dictionary of the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PiiMaskResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Thread or mask not found"
+          }
+        },
+        "summary": "Permanently unmask one PII mask dictionary entry of a thread; the value is revealed to the model and no longer masked in this thread",
         "tags": ["threads"]
       }
     },
@@ -9310,6 +9470,29 @@
         "tags": ["credit-limits"]
       }
     },
+    "/credit-limits/api-keys": {
+      "get": {
+        "operationId": "CreditLimitsController_getApiKeyLimits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyCreditLimitItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List configured API key credit limits with current consumption",
+        "tags": ["credit-limits"]
+      }
+    },
     "/credit-limits/users/{userId}": {
       "put": {
         "operationId": "CreditLimitsController_setUserLimit",
@@ -9426,6 +9609,162 @@
         },
         "summary": "Remove a team credit limit (back to unlimited)",
         "tags": ["credit-limits"]
+      }
+    },
+    "/credit-limits/api-keys/{apiKeyId}": {
+      "put": {
+        "operationId": "CreditLimitsController_setApiKeyLimit",
+        "parameters": [
+          {
+            "name": "apiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCreditLimitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreditLimitResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set a monthly credit limit for an API key",
+        "tags": ["credit-limits"]
+      },
+      "delete": {
+        "operationId": "CreditLimitsController_removeApiKeyLimit",
+        "parameters": [
+          {
+            "name": "apiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove an API key credit limit",
+        "tags": ["credit-limits"]
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "operationId": "ApiKeysController_listApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to view API keys"
+          }
+        },
+        "summary": "List API keys for the current organization",
+        "tags": ["api-keys"]
+      },
+      "post": {
+        "operationId": "ApiKeysController_createApiKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to create API keys"
+          }
+        },
+        "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
+        "tags": ["api-keys"]
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "operationId": "ApiKeysController_revokeApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "API key successfully revoked"
+          },
+          "401": {
+            "description": "User is not authenticated"
+          },
+          "403": {
+            "description": "User is not authorized to revoke this API key"
+          },
+          "404": {
+            "description": "API key not found"
+          }
+        },
+        "summary": "Revoke an API key",
+        "tags": ["api-keys"]
       }
     },
     "/chat-settings/system-prompt": {
@@ -9865,7 +10204,7 @@
     },
     "/academy/certificate": {
       "get": {
-        "description": "Render the KI-Führerschein certificate PDF for the current user. Available once the whole academy has been completed.",
+        "description": "Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.",
         "operationId": "AcademyCertificateController_getCertificate",
         "parameters": [],
         "responses": {
@@ -11010,103 +11349,6 @@
         "tags": ["ip-allowlist"]
       }
     },
-    "/api-keys": {
-      "get": {
-        "operationId": "ApiKeysController_listApiKeys",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved API keys",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ApiKeyResponseDto"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to view API keys"
-          }
-        },
-        "summary": "List API keys for the current organization",
-        "tags": ["api-keys"]
-      },
-      "post": {
-        "operationId": "ApiKeysController_createApiKey",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateApiKeyDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateApiKeyResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input"
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to create API keys"
-          }
-        },
-        "summary": "Create a new API key. The full plaintext secret is returned ONLY in this response.",
-        "tags": ["api-keys"]
-      }
-    },
-    "/api-keys/{id}": {
-      "delete": {
-        "operationId": "ApiKeysController_revokeApiKey",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "API key successfully revoked"
-          },
-          "401": {
-            "description": "User is not authenticated"
-          },
-          "403": {
-            "description": "User is not authorized to revoke this API key"
-          },
-          "404": {
-            "description": "API key not found"
-          }
-        },
-        "summary": "Revoke an API key",
-        "tags": ["api-keys"]
-      }
-    },
     "/academy-access/status": {
       "get": {
         "operationId": "AcademyAccessController_getStatus",
@@ -11794,11 +12036,6 @@
             "description": "Whether the workspaces feature is enabled",
             "example": false
           },
-          "agentRuntimeEnabled": {
-            "type": "boolean",
-            "description": "Whether runs use the independent agent runtime",
-            "example": false
-          },
           "ssoLoginEnabled": {
             "type": "boolean",
             "description": "Whether employee-facing SSO login is enabled",
@@ -11810,7 +12047,6 @@
           "letterheadsEnabled",
           "skillsEnabled",
           "workspacesEnabled",
-          "agentRuntimeEnabled",
           "ssoLoginEnabled"
         ]
       },
@@ -11850,6 +12086,11 @@
             "description": "Department the user belongs to",
             "example": "hauptamt",
             "nullable": true
+          },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
           },
           "createdAt": {
             "format": "date-time",
@@ -12104,6 +12345,11 @@
             "example": "hauptamt",
             "nullable": true
           },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string",
@@ -12183,6 +12429,11 @@
             "description": "Department the user belongs to",
             "example": "hauptamt",
             "nullable": true
+          },
+          "isLocked": {
+            "type": "boolean",
+            "description": "Whether the account is locked after failed login attempts",
+            "example": false
           },
           "createdAt": {
             "format": "date-time",
@@ -12605,6 +12856,17 @@
           }
         },
         "required": ["data", "pagination"]
+      },
+      "UpdateOrgRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization display name",
+            "example": "Acme Corporation"
+          }
+        },
+        "required": ["name"]
       },
       "RolePermissionSetDto": {
         "type": "object",
@@ -15213,6 +15475,12 @@
       "PiiMaskResponseDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique id of the mask dictionary entry",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
           "token": {
             "type": "string",
             "description": "The placeholder token as it appears in message text, e.g. {{pii:PERSON_NAME_1}}",
@@ -15231,9 +15499,14 @@
                 "$ref": "#/components/schemas/PiiCategory"
               }
             ]
+          },
+          "unmasked": {
+            "type": "boolean",
+            "description": "Whether the user manually unmasked this entry for the thread; the token still resolves in stored messages, but the value is no longer masked going forward",
+            "example": false
           }
         },
-        "required": ["token", "value", "category"]
+        "required": ["id", "token", "value", "category", "unmasked"]
       },
       "McpIntegrationSummaryResponseDto": {
         "type": "object",
@@ -18831,6 +19104,30 @@
         },
         "required": ["teamId", "name", "monthlyCredits", "creditsUsed"]
       },
+      "ApiKeyCreditLimitItemDto": {
+        "type": "object",
+        "properties": {
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          },
+          "name": {
+            "type": "string",
+            "example": "Finance export"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "description": "Configured monthly credit limit",
+            "example": 5000
+          },
+          "creditsUsed": {
+            "type": "number",
+            "description": "Credits consumed in the current calendar month",
+            "example": 1240
+          }
+        },
+        "required": ["apiKeyId", "name", "monthlyCredits", "creditsUsed"]
+      },
       "SetCreditLimitDto": {
         "type": "object",
         "properties": {
@@ -18878,6 +19175,162 @@
           }
         },
         "required": ["id", "monthlyCredits", "teamId"]
+      },
+      "ApiKeyCreditLimitResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "monthlyCredits": {
+            "type": "number",
+            "example": 5000
+          },
+          "apiKeyId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440003"
+          }
+        },
+        "required": ["id", "monthlyCredits", "apiKeyId"]
+      },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot",
+            "maxLength": 100
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": ["name"]
+      },
+      "ApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt"
+        ]
+      },
+      "CreateApiKeyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the API key",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the API key",
+            "example": "CI bot"
+          },
+          "prefixPreview": {
+            "type": "string",
+            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
+            "example": "ayk_live_abc123def456..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiration date of the API key, or null if it never expires",
+            "example": "2026-12-31T23:59:59.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
+            "example": "2026-05-01T10:00:00.000Z",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ID of the user who created the key. May be null if that user has been deleted.",
+            "example": "550e8400-e29b-41d4-a716-446655440001",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the key was created",
+            "example": "2026-04-27T10:30:00.000Z",
+            "format": "date-time"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
+            "example": "ayk_live_abc123def456ghi789..."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefixPreview",
+          "expiresAt",
+          "revokedAt",
+          "createdByUserId",
+          "createdAt",
+          "secret"
+        ]
       },
       "UserSystemPromptResponseDto": {
         "type": "object",
@@ -19921,144 +20374,6 @@
           }
         },
         "required": ["cidrs"]
-      },
-      "CreateApiKeyDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot",
-            "maxLength": 100
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Optional expiration date for the API key (ISO 8601). If omitted, the key never expires.",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": ["name"]
-      },
-      "ApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt"
-        ]
-      },
-      "CreateApiKeyResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the API key",
-            "example": "550e8400-e29b-41d4-a716-446655440000",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the API key",
-            "example": "CI bot"
-          },
-          "prefixPreview": {
-            "type": "string",
-            "description": "Public preview of the API key — the literal prefix plus the first characters of the secret. The full secret is shown only once at creation time.",
-            "example": "ayk_live_abc123def456..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiration date of the API key, or null if it never expires",
-            "example": "2026-12-31T23:59:59.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "description": "Revocation timestamp, or null if the key is still active. Revoked keys remain in the list as an audit trail.",
-            "example": "2026-05-01T10:00:00.000Z",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUserId": {
-            "type": "string",
-            "description": "ID of the user who created the key. May be null if that user has been deleted.",
-            "example": "550e8400-e29b-41d4-a716-446655440001",
-            "format": "uuid",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the key was created",
-            "example": "2026-04-27T10:30:00.000Z",
-            "format": "date-time"
-          },
-          "secret": {
-            "type": "string",
-            "description": "The full plaintext API key. This is the only response that will ever contain it — store it securely and immediately. It cannot be retrieved later.",
-            "example": "ayk_live_abc123def456ghi789..."
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "prefixPreview",
-          "expiresAt",
-          "revokedAt",
-          "createdByUserId",
-          "createdAt",
-          "secret"
-        ]
       },
       "AcademyAccessMode": {
         "type": "string",

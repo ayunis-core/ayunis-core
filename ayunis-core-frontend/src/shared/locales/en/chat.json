@@ -223,6 +223,14 @@
     "inputDisclaimer": "Input not used for training. AI can make mistakes—verify answers.",
     "piiMask": {
       "tooltip": "{{category}} — anonymized before being sent to the AI model",
+      "tooltipClickable": "{{category}} — anonymized before being sent to the AI model. Click to unmask.",
+      "unmaskTitle": "Unmask \"{{value}}\"?",
+      "unmaskDescription": "The term will be sent to the AI model in its original form from now on in this chat, including in the previous conversation. This action cannot be undone and does not change your organization's anonymization settings.",
+      "unmaskConfirm": "Unmask",
+      "unmaskCancel": "Cancel",
+      "unmaskSuccess": "Term unmasked for this chat",
+      "unmaskNotFound": "This term could not be found in this chat",
+      "unmaskError": "Failed to unmask the term",
       "categories": {
         "person_name": "Person name",
         "organization": "Organization",

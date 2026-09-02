@@ -181,6 +181,22 @@
       "ollama": "Self-hosted via Ollama."
     }
   },
+  "accountLock": {
+    "status": {
+      "active": "Active",
+      "locked": "Locked"
+    },
+    "unlock": {
+      "menuItem": "Unlock account",
+      "confirmTitle": "Unlock account?",
+      "confirmDescription": "Allow {{name}} to sign in again and clear their unsuccessful login attempts?",
+      "confirmText": "Unlock",
+      "cancelText": "Cancel",
+      "success": "Account unlocked successfully.",
+      "notFound": "User not found.",
+      "error": "Could not unlock the account."
+    }
+  },
   "mfa": {
     "enroll": {
       "scanInstruction": "Scan the QR code with your authenticator app (e.g. Google Authenticator), then enter the 6-digit code to confirm.",

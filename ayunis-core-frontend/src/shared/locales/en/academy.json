@@ -8,7 +8,7 @@
   },
   "placeholder": {
     "title": "Unlock the Ayunis Core Academy",
-    "description": "The Academy add-on isn't active for your organization yet. Learn how the AI driver's license helps your team work confidently with Ayunis Core.",
+    "description": "The Academy add-on isn't active for your organization yet. Learn how the EU AI Act training helps your team work confidently with Ayunis Core.",
     "cta": "Discover the Academy"
   },
   "detail": {
@@ -76,7 +76,7 @@
     "action": "Go to the academy"
   },
   "account": {
-    "title": "AI certificate (KI-Führerschein)",
+    "title": "EU AI Act training",
     "lastPassed": "Last passed:",
     "nextRenewal": "Next renewal due:",
     "expiredOn": "Expired on:",
@@ -91,7 +91,7 @@
   },
   "gate": {
     "title": "Certificate required",
-    "description": "Your organization requires the AI certificate (KI-Führerschein) before you can use Ayunis Core chat. Complete the academy to unlock it — your existing chats stay readable in the meantime.",
+    "description": "Your organization requires you to complete the EU AI Act training before you can use Ayunis Core chat. Complete the Academy to unlock chat — your existing chats stay readable in the meantime.",
     "action": "Go to the academy",
     "emptyTitle": "No academy content yet",
     "emptyDescription": "Chat is locked until you pass the certificate, but no chapters have been published yet. Please contact your administrator."

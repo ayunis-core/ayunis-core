@@ -32,6 +32,21 @@ Cross-module communication uses **exported use cases**, not ports/adapters. When
 
 Before modifying any module, read its `SUMMARY.md`. See [ARCHITECTURE.md](../../ARCHITECTURE.md) for the complete module index.
 
+## Place Responsibilities Before Writing Code
+
+Before adding a backend file, inventory the target module's existing directories and inspect the two closest analogues. Follow the module's established vocabulary and placement; do not create a file directly under a layer root such as `application/` when its role belongs in an existing subdirectory.
+
+Assign each responsibility to one layer before implementation:
+
+- **Presenter DTOs** validate transport input completely, including conditional requirements and exact confirmation values.
+- **Controllers** translate validated HTTP input, invoke use cases, and translate results. They do not repeat DTO validation, make business decisions, or query repositories.
+- **Application models** hold data and behavior shared across commands or use cases without becoming domain state. Put them under `application/models/`.
+- **Application services/use cases** coordinate policy decisions and cross-module calls. Prefer a service when multiple entry points enforce the same policy.
+- **Domain objects** own business invariants intrinsic to persisted domain state.
+- **Infrastructure records and mappers** mirror persistence; they do not decide application policy.
+
+Before finalizing the design, check for the same policy or entity lookup in adjacent controllers and use cases. Consolidate duplicated decisions at the narrowest shared application boundary and avoid loading the same entity twice in one request path.
+
 ## ConfigService access — match the `registerAs` namespace
 
 Backend config is loaded via `registerAs('<namespace>', () => ({...}))` factories. **The lookup key must be prefixed with the namespace**, or `ConfigService.get(...)` returns `undefined` and the call site silently uses a missing value (e.g. `apiKey: undefined` → 401 at runtime, not at boot).
@@ -106,9 +121,9 @@ pnpm test <path-or-pattern>    # a subset
 
 **Those failures are an artifact of the wrong invocation, not a real regression.** Do not report them as "pre-existing failures on main" or hang caveats on a PR summary because of them — re-run with `pnpm test` and they pass. A suite that fails under `pnpm test` is a genuine signal worth investigating.
 
-## Health Check
+## Runtime Health Check
 
-After changes, verify the service responds:
+When runtime validation is required by the repository's Proportional Workflow, verify the service responds before exercising the changed behavior:
 
 ```bash
 curl http://localhost:PORT/api/health

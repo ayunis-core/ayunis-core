@@ -18,7 +18,7 @@ export default function NewChatPageNoModelError() {
     <NewChatPageLayout
       header={<ContentAreaHeader breadcrumbs={[{ label: 'New Chat' }]} />}
     >
-      <Card className="text-center">
+      <Card className="text-center" data-testid="new-chat-no-model">
         <CardHeader>
           <CardTitle>{t('newChat.noModelTitle')}</CardTitle>
         </CardHeader>

@@ -106,30 +106,6 @@ describe('ToolResultCollectorService', () => {
     expect(executeTool).not.toHaveBeenCalled();
   });
 
-  it('continues the legacy loop after a chart call', () => {
-    const chart = new BarChartTool();
-    const message = {
-      content: [toolUse('chart-1', chart.name, chartParams())],
-    } as AssistantMessage;
-
-    expect(service.exitLoopAfterAgentResponse(message, [chart])).toBe(false);
-  });
-
-  it('terminates the legacy loop after a valid external widget call', () => {
-    const email = new SendEmailTool();
-    const message = {
-      content: [
-        toolUse('email-1', email.name, {
-          subject: 'Budget review',
-          body: 'Please review the attached budget proposal.',
-          to: 'budget@example.org',
-        }),
-      ],
-    } as AssistantMessage;
-
-    expect(service.exitLoopAfterAgentResponse(message, [email])).toBe(true);
-  });
-
   it('executes a backend tool once and exposes its result', async () => {
     const backendTool = new BackendTestTool('municipal_search');
     const thread = threadWith(toolUse('search-1', backendTool.name));
@@ -210,32 +186,10 @@ describe('ToolResultCollectorService', () => {
       end: '2026-01-31T15:30:00Z',
     });
     const thread = threadWith(call);
-    const message = { content: [call] } as AssistantMessage;
 
     const result = await collect(service, thread, [calendar]);
 
-    expect(result.outcomes[0]).toMatchObject({ succeeded: false });
     expect(result.contents[0].result).toMatch(/'start' must be a valid/);
-    expect(service.exitLoopAfterAgentResponse(message, [calendar])).toBe(false);
-  });
-
-  it('keeps a mixed terminal and invalid chart batch retryable', () => {
-    const email = new SendEmailTool();
-    const chart = new BarChartTool();
-    const message = {
-      content: [
-        toolUse('email-1', email.name, {
-          subject: 'Budget review',
-          body: 'Please review the budget.',
-          to: 'budget@example.org',
-        }),
-        toolUse('chart-1', chart.name, { chartTitle: 'Incomplete' }),
-      ],
-    } as AssistantMessage;
-
-    expect(service.exitLoopAfterAgentResponse(message, [email, chart])).toBe(
-      false,
-    );
   });
 
   it('accepts an explicit client result without revalidating historical input', async () => {
@@ -263,7 +217,13 @@ describe('ToolResultCollectorService', () => {
     });
     const thread = threadWith(toolUse('lookup-1', backendTool.name));
 
-    const result = await collect(service, thread, [backendTool], null, true);
+    const result = await collect(
+      service,
+      thread,
+      [backendTool],
+      undefined,
+      true,
+    );
 
     expect(result.contents[0].result).toBe('{{pii:PERSON_1}}');
     expect(result.piiMasks).toHaveLength(1);
@@ -279,7 +239,13 @@ describe('ToolResultCollectorService', () => {
     });
     const thread = threadWith(toolUse('lookup-1', backendTool.name));
 
-    const result = await collect(service, thread, [backendTool], null, true);
+    const result = await collect(
+      service,
+      thread,
+      [backendTool],
+      undefined,
+      true,
+    );
     const command = anonymize.mock.calls[0][0] as AnonymizeTextForThreadCommand;
 
     expect(command.text).toBe(retainedResult);
@@ -288,7 +254,7 @@ describe('ToolResultCollectorService', () => {
     );
   });
 
-  it('records a successful legacy tool outcome', async () => {
+  it('records a successful agent-runtime tool outcome', async () => {
     const backendTool = new BackendTestTool('municipal_search');
     const thread = threadWith(toolUse('search-1', backendTool.name));
 
@@ -296,7 +262,7 @@ describe('ToolResultCollectorService', () => {
 
     expect(emitAsync).toHaveBeenCalledWith(
       RunToolCompletedEvent.EVENT_NAME,
-      new RunToolCompletedEvent('legacy', 'success'),
+      new RunToolCompletedEvent('agent_runtime', 'success'),
     );
   });
 
@@ -305,7 +271,7 @@ describe('ToolResultCollectorService', () => {
     const thread = threadWith(toolUse('search-1', backendTool.name));
     executeTool.mockRejectedValue(new Error('Municipal search unavailable'));
 
-    await collect(service, thread, [backendTool], null, false, 'agent_runtime');
+    await collect(service, thread, [backendTool]);
 
     expect(emitAsync).toHaveBeenCalledWith(
       RunToolCompletedEvent.EVENT_NAME,
@@ -334,9 +300,13 @@ async function collect(
   service: ToolResultCollectorService,
   thread: Thread,
   tools: Tool[],
-  input: RunToolResultInput | null = null,
+  input: RunToolResultInput = new RunToolResultInput(
+    'client-result',
+    'external_widget',
+    'Client-provided result',
+  ),
   isAnonymous = false,
-  executionPath: RunExecutionPath = 'legacy',
+  executionPath: RunExecutionPath = 'agent_runtime',
 ) {
   return service.collectToolResults({
     thread,

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { academyCertificateControllerGetCertificate } from '@/shared/api';
 import { showError } from '@/shared/lib/toast';
 
-const CERTIFICATE_FILE_NAME = 'Ayunis-Core-KI-Fuehrerschein-Zertifikat.pdf';
+const CERTIFICATE_FILE_NAME =
+  'Ayunis-Core-KI-Schulung-nach-EU-AI-Act-Zertifikat.pdf';
 
 export function useDownloadCertificate() {
   const { t } = useTranslation('academy');

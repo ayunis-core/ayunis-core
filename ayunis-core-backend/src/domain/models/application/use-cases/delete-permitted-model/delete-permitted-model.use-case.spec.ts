@@ -12,7 +12,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeletePermittedModelUseCase } from './delete-permitted-model.use-case';
 import { DeletePermittedModelCommand } from './delete-permitted-model.command';
-import { PermittedModelsRepository } from '../../ports/permitted-models.repository';
+import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
   PermittedEmbeddingModel,
   PermittedImageGenerationModel,
@@ -27,8 +27,8 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import { DeleteUserDefaultModelsByModelIdUseCase } from '../delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
-import { GetPermittedModelsUseCase } from '../get-permitted-models/get-permitted-models.use-case';
+import { DeleteUserDefaultModelsByModelIdUseCase } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
+import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
 import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
@@ -87,7 +87,6 @@ describe('DeletePermittedModelUseCase', () => {
             findOne: jest.fn(),
             findAll: jest.fn(),
             delete: jest.fn(),
-            deleteTeamScopedByOrgAndModelId: jest.fn(),
           },
         },
         {
@@ -183,8 +182,8 @@ describe('DeletePermittedModelUseCase', () => {
     );
   });
 
-  describe('cascade delete team-scoped models', () => {
-    it('should delete team-scoped permitted models when deleting an org-scoped language model', async () => {
+  describe('independent team-scoped grants', () => {
+    it('preserves matching team grants when deleting an org-scoped language grant', async () => {
       const orgPermittedModel = new PermittedLanguageModel({
         id: mockPermittedModelId,
         model: mockLanguageModel,
@@ -206,7 +205,6 @@ describe('DeletePermittedModelUseCase', () => {
         orgPermittedModel,
         anotherOrgModel,
       ]);
-      permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mockResolvedValue();
       permittedModelsRepository.delete.mockResolvedValue();
 
       const command = new DeletePermittedModelCommand({
@@ -215,10 +213,6 @@ describe('DeletePermittedModelUseCase', () => {
       });
 
       await useCase.execute(command);
-
-      expect(
-        permittedModelsRepository.deleteTeamScopedByOrgAndModelId,
-      ).toHaveBeenCalledWith(mockOrgId, mockCatalogModelId);
 
       expect(permittedModelsRepository.delete).toHaveBeenCalledWith({
         id: mockPermittedModelId,
@@ -248,53 +242,9 @@ describe('DeletePermittedModelUseCase', () => {
       );
 
       expect(permittedModelsRepository.delete).not.toHaveBeenCalled();
-      expect(
-        permittedModelsRepository.deleteTeamScopedByOrgAndModelId,
-      ).not.toHaveBeenCalled();
     });
 
-    it('should call team cascade before deleting the org model', async () => {
-      const orgPermittedModel = new PermittedLanguageModel({
-        id: mockPermittedModelId,
-        model: mockLanguageModel,
-        orgId: mockOrgId,
-        isDefault: false,
-        scope: PermittedModelScope.ORG,
-      });
-
-      const anotherOrgModel = new PermittedLanguageModel({
-        id: mockModelId,
-        model: mockLanguageModel2,
-        orgId: mockOrgId,
-        isDefault: false,
-        scope: PermittedModelScope.ORG,
-      });
-
-      permittedModelsRepository.findOne.mockResolvedValue(orgPermittedModel);
-      getPermittedModelsUseCase.execute.mockResolvedValue([
-        orgPermittedModel,
-        anotherOrgModel,
-      ]);
-      permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mockResolvedValue();
-      permittedModelsRepository.delete.mockResolvedValue();
-
-      const command = new DeletePermittedModelCommand({
-        orgId: mockOrgId,
-        permittedModelId: mockPermittedModelId,
-      });
-
-      await useCase.execute(command);
-
-      // Verify cascade happens before the org model is deleted
-      const cascadeCall =
-        permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mock
-          .invocationCallOrder[0];
-      const deleteCall =
-        permittedModelsRepository.delete.mock.invocationCallOrder[0];
-      expect(cascadeCall).toBeLessThan(deleteCall);
-    });
-
-    it('should delete team-scoped permitted models when deleting an org-scoped image-generation model', async () => {
+    it('preserves matching team grants when deleting an org-scoped image-generation grant', async () => {
       const mockImageModel = new ImageGenerationModel({
         id: mockCatalogModelId,
         name: 'dall-e-3',
@@ -313,7 +263,6 @@ describe('DeletePermittedModelUseCase', () => {
       permittedModelsRepository.findOne.mockResolvedValue(
         orgPermittedImageModel,
       );
-      permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mockResolvedValue();
       permittedModelsRepository.delete.mockResolvedValue();
 
       const command = new DeletePermittedModelCommand({
@@ -323,17 +272,10 @@ describe('DeletePermittedModelUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(
-        permittedModelsRepository.deleteTeamScopedByOrgAndModelId,
-      ).toHaveBeenCalledWith(mockOrgId, mockCatalogModelId);
-
-      // Verify cascade happens before the org model is deleted
-      const cascadeCall =
-        permittedModelsRepository.deleteTeamScopedByOrgAndModelId.mock
-          .invocationCallOrder[0];
-      const deleteCall =
-        permittedModelsRepository.delete.mock.invocationCallOrder[0];
-      expect(cascadeCall).toBeLessThan(deleteCall);
+      expect(permittedModelsRepository.delete).toHaveBeenCalledWith({
+        id: mockPermittedModelId,
+        orgId: mockOrgId,
+      });
     });
   });
 });

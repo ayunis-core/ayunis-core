@@ -93,7 +93,9 @@ fi
 cat >/dev/null
 EOF
 
-cat > "$TEST_DIR/bin/pkill" <<'EOF'
+# The termination walk enumerates descendants of the pidfile pid, so clearing
+# the marker here stands in for the surviving leaf process dying.
+cat > "$TEST_DIR/bin/pgrep" <<'EOF'
 #!/usr/bin/env bash
 if [[ -n "${FAKE_SURVIVING_LISTENER:-}" && "$*" == *"-P 999998"* ]]; then
   rm -f "$FAKE_SURVIVING_LISTENER"
@@ -105,7 +107,7 @@ chmod +x \
   "$TEST_DIR/bin/docker" \
   "$TEST_DIR/bin/curl" \
   "$TEST_DIR/bin/lsof" \
-  "$TEST_DIR/bin/pkill" \
+  "$TEST_DIR/bin/pgrep" \
   "$TEST_DIR/bin/xargs"
 
 failures=0
@@ -388,15 +390,66 @@ if [[ "$output" != *"Backend:   stopped  port 3970 occupied by unmanaged PID 999
   failures=$((failures + 1))
 fi
 
-PATH="$TEST_DIR/bin:$PATH" \
-  FAKE_LISTENER_PID=999997 \
-  FAKE_LISTENER_PORT=3970 \
-  FAKE_XARGS_CALLS="$TEST_DIR/xargs-calls" \
-  "$DOWN_DIR/dev" down >/dev/null 2>&1
+set +e
+output="$(
+  PATH="$TEST_DIR/bin:$PATH" \
+    FAKE_LISTENER_PID=999997 \
+    FAKE_LISTENER_PORT=3970 \
+    FAKE_XARGS_CALLS="$TEST_DIR/xargs-calls" \
+    "$DOWN_DIR/dev" down 2>&1
+)"
+status=$?
+set -e
 
 if [[ -s "$TEST_DIR/xargs-calls" ]]; then
   printf 'Expected dev down not to kill an unmanaged listener on the slot port.\n' >&2
   failures=$((failures + 1))
+fi
+
+if [[ $status -eq 0 || "$output" != *"Backend port 3970 (PID 999997)"* ]]; then
+  printf 'Expected dev down to fail loudly while a slot port is still held.\n%s\n' "$output" >&2
+  failures=$((failures + 1))
+fi
+
+# A real process chain: `dev down` must reach the grandchild, which is where the
+# port-owning node process actually sits. Only docker and lsof are faked here so
+# the kill runs against real pgrep/ps/kill.
+TREE_DIR="$TEST_DIR/tree"
+mkdir -p "$TREE_DIR/.dev/slot-97" "$TREE_DIR/bin"
+cp "$REPO_DIR/dev" "$TREE_DIR/dev"
+chmod +x "$TREE_DIR/dev"
+printf '97\n' > "$TREE_DIR/.dev/slot"
+cp "$TEST_DIR/bin/docker" "$TREE_DIR/bin/docker"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$TREE_DIR/bin/lsof"
+chmod +x "$TREE_DIR/bin/lsof"
+
+# The trailing `:` in each layer stops bash from exec-collapsing the level away.
+bash -c 'bash -c "sleep 300; :" ; :' &
+tree_root=$!
+disown "$tree_root" 2>/dev/null || true
+printf '%s\n' "$tree_root" > "$TREE_DIR/.dev/slot-97/backend.pid"
+
+tree_leaf=""
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  tree_middle="$(pgrep -P "$tree_root" 2>/dev/null | head -n 1 || true)"
+  if [[ -n "$tree_middle" ]]; then
+    tree_leaf="$(pgrep -P "$tree_middle" 2>/dev/null | head -n 1 || true)"
+    [[ -n "$tree_leaf" ]] && break
+  fi
+  sleep 0.2
+done
+
+if [[ -z "$tree_leaf" ]]; then
+  printf 'Test setup failed: could not build a three-level process chain.\n' >&2
+  failures=$((failures + 1))
+else
+  PATH="$TREE_DIR/bin:$PATH" "$TREE_DIR/dev" down >/dev/null 2>&1 || true
+  if kill -0 "$tree_leaf" 2>/dev/null; then
+    printf 'Expected dev down to terminate the grandchild holding the port (PID %s survived).\n' \
+      "$tree_leaf" >&2
+    failures=$((failures + 1))
+    kill -9 "$tree_leaf" 2>/dev/null || true
+  fi
 fi
 
 set +e

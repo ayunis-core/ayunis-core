@@ -5,6 +5,9 @@ export enum AuthProvider {
   CLOUD = 'cloud',
 }
 
+export const DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS = 10;
+export const DEFAULT_ACCOUNT_LOCKOUT_WINDOW_MINUTES = 15;
+
 function jwtConfig(secret: string) {
   return {
     secret,
@@ -77,6 +80,16 @@ export const authenticationConfig = registerAs('auth', () => {
       passwordHashRounds: parseInt(
         process.env.PASSWORD_HASH_ROUNDS || '10',
         10,
+      ),
+    },
+    accountLockout: {
+      maxAttempts: Number(
+        process.env.AUTH_ACCOUNT_LOCKOUT_MAX_ATTEMPTS ||
+          String(DEFAULT_ACCOUNT_LOCKOUT_MAX_ATTEMPTS),
+      ),
+      windowMinutes: Number(
+        process.env.AUTH_ACCOUNT_LOCKOUT_WINDOW_MINUTES ||
+          String(DEFAULT_ACCOUNT_LOCKOUT_WINDOW_MINUTES),
       ),
     },
     session: {
