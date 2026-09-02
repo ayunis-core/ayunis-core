@@ -13,6 +13,7 @@ import {
   JOURNEY,
   type AvailabilityVariant,
   type ContextLayout,
+  type PanelFrame,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
 import {
@@ -36,6 +37,12 @@ const CONTEXT_LAYOUTS: { value: ContextLayout; label: string }[] = [
   { value: 'split', label: 'Vorschau fest' },
 ];
 
+const PANEL_FRAMES: { value: PanelFrame; label: string }[] = [
+  { value: 'fill', label: 'Fläche' },
+  { value: 'stroke', label: 'Rahmen' },
+  { value: 'divider', label: 'Linie' },
+];
+
 const VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'single', label: 'Icon' },
   { value: 'menu', label: 'Menü' },
@@ -49,6 +56,7 @@ export function JourneyCard() {
     entry: variant,
     avail: availabilityVariant,
     layout,
+    frame,
   } = useJourneySearch();
   const go = useJourneyNavigate();
   const step = JOURNEY[stepIndex];
@@ -142,6 +150,20 @@ export function JourneyCard() {
                 </Button>
               ))}
           </VariantRow>
+          {step.id !== 'startseite' && step.id !== 'presse-frage' && (
+            <VariantRow stepId={step.id}>
+              {PANEL_FRAMES.map((entry) => (
+                <Button
+                  key={entry.value}
+                  variant={frame === entry.value ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => go({ frame: entry.value })}
+                >
+                  {entry.label}
+                </Button>
+              ))}
+            </VariantRow>
+          )}
         </>
       )}
     </Card>

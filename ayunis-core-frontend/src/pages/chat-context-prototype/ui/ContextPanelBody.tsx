@@ -67,12 +67,12 @@ export function ContextPanelBody({
   );
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex min-w-0 flex-col gap-7">
       <Section label="Fähigkeiten">{skills}</Section>
       <Section label="Wissen">{knowledge}</Section>
       {integrationIds.length > 0 && (
         <Section label="Integrationen">
-          <div className="flex flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col gap-0.5">
             {integrationIds.map((id) => (
               <ContextRow
                 key={id}
@@ -94,7 +94,7 @@ function Section({
   children,
 }: Readonly<{ label: string; children: React.ReactNode }>) {
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex min-w-0 flex-col gap-2">
       <h3 className="text-xs font-medium text-muted-foreground">{label}</h3>
       {children}
     </section>
@@ -114,7 +114,7 @@ function SkillList({
 }>) {
   const [isOpen, setIsOpen] = useState(false);
   const used = (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {usedIds.map((id) => (
         <ContextRow
           key={id}
@@ -127,7 +127,7 @@ function SkillList({
     </div>
   );
   const standby = (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {STANDBY_SKILL_IDS.map((id) => (
         <ContextRow
           key={id}
@@ -142,7 +142,7 @@ function SkillList({
 
   if (isFlat) {
     return (
-      <div className="flex flex-col gap-0.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
         {used}
         {standby}
       </div>
@@ -150,7 +150,7 @@ function SkillList({
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {used}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
@@ -184,7 +184,7 @@ function KnowledgeList({
   onOpenDocument: (documentId: string) => void;
 }>) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {KNOWLEDGE_BASE_IDS.map((id) => (
         <KnowledgeBaseNode
           key={id}
@@ -223,7 +223,7 @@ function KnowledgeBaseNode({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
+      <CollapsibleTrigger className="flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
         {isOpen ? (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         ) : (
@@ -238,7 +238,7 @@ function KnowledgeBaseNode({
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mb-1 ml-3 mt-0.5 flex flex-col gap-0.5 border-l pl-3">
+        <div className="mb-1 ml-3 mt-0.5 flex min-w-0 flex-col gap-0.5 overflow-hidden border-l pl-3">
           {documents.map((documentId) => (
             <DocumentNode
               key={documentId}
@@ -268,7 +268,7 @@ function DocumentNode({
       type="button"
       onClick={() => onOpen(documentId)}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >
@@ -297,7 +297,7 @@ function ContextRow({
       type="button"
       onClick={() => onOpen(contextId)}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >

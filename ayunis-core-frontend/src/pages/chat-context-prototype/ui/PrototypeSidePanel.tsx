@@ -15,8 +15,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
+import { cn } from '@ayunis/ui/lib/cn';
 import type {
   ContextLayout,
+  PanelFrame,
   PanelKey,
 } from '@/widgets/prototype-journey/model/journey';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
@@ -38,6 +40,7 @@ interface PrototypeSidePanelProps {
   sourceListIds: string[] | null;
   openDocumentId: string | null;
   contextLayout: ContextLayout;
+  panelFrame: PanelFrame;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
@@ -174,6 +177,7 @@ function TabsView({
   openContextId,
   openDocumentId,
   contextLayout,
+  panelFrame,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
@@ -224,6 +228,7 @@ function TabsView({
           openDocumentId={openDocumentId}
           openContextId={openContextId}
           contextLayout={contextLayout}
+          panelFrame={panelFrame}
           onOpenContextDetail={onOpenContextDetail}
           onOpenDocument={onOpenDocument}
           onExpandSource={onExpandSource}
@@ -239,6 +244,7 @@ function ContextBrowser({
   openDocumentId,
   openContextId,
   contextLayout,
+  panelFrame,
   onOpenContextDetail,
   onOpenDocument,
   onExpandSource,
@@ -250,6 +256,7 @@ function ContextBrowser({
     | 'openDocumentId'
     | 'openContextId'
     | 'contextLayout'
+    | 'panelFrame'
     | 'onOpenContextDetail'
     | 'onOpenDocument'
     | 'onExpandSource'
@@ -279,11 +286,18 @@ function ContextBrowser({
   return (
     <div className="flex h-full min-h-0 gap-3 px-3 pb-3">
       <ScrollArea className="h-full w-72 shrink-0">
-        <div className="pb-6 pr-3 pt-2">{list}</div>
+        <div className="w-full min-w-0 pb-6 pr-3 pt-2">{list}</div>
       </ScrollArea>
-      <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-lg bg-muted/40">
+      <div
+        className={cn(
+          'min-h-0 min-w-0 flex-1 overflow-hidden',
+          panelFrame === 'fill' && 'rounded-lg bg-muted/40',
+          panelFrame === 'stroke' && 'rounded-lg border',
+          panelFrame === 'divider' && 'border-l',
+        )}
+      >
         <ScrollArea className="h-full">
-          <div className="p-4">
+          <div className={cn(panelFrame === 'divider' ? 'py-2 pl-4' : 'p-4')}>
             {openDocumentId && (
               <DocumentPreviewPane
                 documentId={openDocumentId}

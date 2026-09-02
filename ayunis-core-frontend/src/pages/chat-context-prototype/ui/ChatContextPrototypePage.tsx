@@ -29,6 +29,7 @@ export function ChatContextPrototypePage() {
     step: stepIndex,
     entry: variant,
     layout: contextLayout,
+    frame: panelFrame,
   } = useJourneySearch();
   const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
@@ -225,6 +226,7 @@ export function ChatContextPrototypePage() {
                   sourceListIds={state.sourceListIds}
                   openDocumentId={state.openDocumentId}
                   contextLayout={contextLayout}
+                  panelFrame={panelFrame}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,

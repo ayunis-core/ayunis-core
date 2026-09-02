@@ -4,6 +4,8 @@ export type EntryVariant = 'single' | 'menu' | 'header';
 
 export type ContextLayout = 'tree' | 'flat' | 'split';
 
+export type PanelFrame = 'fill' | 'stroke' | 'divider';
+
 export type AvailabilityVariant = 'row' | 'split' | 'dropdowns' | 'underInput';
 
 export interface PrototypeState {
