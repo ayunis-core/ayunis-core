@@ -5,6 +5,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
 import { cn } from '@ayunis/ui/lib/cn';
 import type { ContextLayout } from '@/widgets/prototype-journey';
 import {
@@ -148,7 +153,7 @@ function SkillList({
     <div className="flex flex-col gap-0.5">
       {used}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+        <CollapsibleTrigger className="flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
           <ChevronDown
             className={cn(
               'size-3.5 transition-transform',
@@ -218,7 +223,7 @@ function KnowledgeBaseNode({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
+      <CollapsibleTrigger className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent">
         {isOpen ? (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         ) : (
@@ -263,7 +268,7 @@ function DocumentNode({
       type="button"
       onClick={() => onOpen(documentId)}
       className={cn(
-        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >
@@ -292,7 +297,7 @@ function ContextRow({
       type="button"
       onClick={() => onOpen(contextId)}
       className={cn(
-        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >
@@ -309,15 +314,18 @@ function ContextRow({
       <span
         className={cn(
           'min-w-0 flex-1 truncate text-sm',
-          !isUsed && 'text-muted-foreground',
+          isUsed ? 'font-medium' : 'text-muted-foreground',
         )}
       >
         {item.name}
       </span>
       {isUsed && item.kind === 'skill' && (
-        <span className="shrink-0 text-xs text-muted-foreground">
-          Verwendet
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="size-1.5 shrink-0 rounded-full bg-brand" />
+          </TooltipTrigger>
+          <TooltipContent>In dieser Antwort verwendet</TooltipContent>
+        </Tooltip>
       )}
     </button>
   );

@@ -279,7 +279,7 @@ function ContextBrowser({
   return (
     <div className="flex h-full min-h-0 gap-4 pb-2 pl-4 pr-2">
       <ScrollArea className="h-full w-64 shrink-0">
-        <div className="pb-6 pr-1 pt-2">{list}</div>
+        <div className="px-2 pb-6 pt-2">{list}</div>
       </ScrollArea>
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-lg bg-muted/40">
         <ScrollArea className="h-full">
