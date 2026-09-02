@@ -14,7 +14,6 @@ import {
   type AvailabilityVariant,
   type ContextLayout,
   type PanelFrame,
-  type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
 import {
   useJourneyNavigate,
@@ -43,17 +42,10 @@ const PANEL_FRAMES: { value: PanelFrame; label: string }[] = [
   { value: 'divider', label: 'Linie' },
 ];
 
-const ENTRY_VARIANTS: { value: EntryVariant; label: string }[] = [
-  { value: 'single', label: 'Icon' },
-  { value: 'menu', label: 'Menü' },
-  { value: 'header', label: 'Beschriftet' },
-];
-
 export function JourneyCard() {
   const [isOpen, setIsOpen] = useState(true);
   const {
     step: stepIndex,
-    entry: variant,
     avail: availabilityVariant,
     layout,
     frame,
@@ -122,13 +114,6 @@ export function JourneyCard() {
             </VariantRow>
           ) : (
             <>
-              <VariantRow>
-                <VariantButtons
-                  options={ENTRY_VARIANTS}
-                  active={variant}
-                  onSelect={(value) => go({ entry: value })}
-                />
-              </VariantRow>
               <VariantRow>
                 <VariantButtons
                   options={CONTEXT_LAYOUTS}

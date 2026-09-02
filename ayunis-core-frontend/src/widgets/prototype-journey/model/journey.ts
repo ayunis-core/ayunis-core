@@ -1,7 +1,5 @@
 export type PanelKey = 'context' | 'results';
 
-export type EntryVariant = 'single' | 'menu' | 'header';
-
 export type ContextLayout = 'tree' | 'flat' | 'split';
 
 export type PanelFrame = 'fill' | 'stroke' | 'divider';

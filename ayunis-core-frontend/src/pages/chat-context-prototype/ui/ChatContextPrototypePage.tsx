@@ -28,7 +28,6 @@ function isWidePanel(state: PrototypeState, contextLayout: string): boolean {
 export function ChatContextPrototypePage() {
   const {
     step: stepIndex,
-    entry: variant,
     layout: contextLayout,
     frame: panelFrame,
   } = useJourneySearch();
@@ -178,8 +177,6 @@ export function ChatContextPrototypePage() {
                 action={
                   <div className="flex items-center gap-1">
                     <EntryControls
-                      variant={variant}
-                      contextCount={state.contextIds.length}
                       resultCount={state.artifactIds.length}
                       activePanel={
                         (state.openSourceId ?? state.sourceListIds)

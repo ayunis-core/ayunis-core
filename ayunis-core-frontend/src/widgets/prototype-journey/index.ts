@@ -10,7 +10,6 @@ export {
   type AvailabilityVariant,
   type ContextLayout,
   type PanelFrame,
-  type EntryVariant,
   type PanelKey,
   type PrototypeState,
 } from './model/journey';
