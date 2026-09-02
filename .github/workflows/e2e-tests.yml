@@ -510,7 +510,12 @@ jobs:
               done
             done
             out+="</details>"
-            $printed_any && printf '%s\n' "$out"
+            # Must not return the false status of an empty section: under
+            # `set -e` that aborts the assignment below, so a scene set
+            # covering only one viewport never reaches the comment upsert.
+            if $printed_any; then
+              printf '%s\n' "$out"
+            fi
           }
 
           body+="$(section 'Desktop (1280px)' 'desktop' ' open')
