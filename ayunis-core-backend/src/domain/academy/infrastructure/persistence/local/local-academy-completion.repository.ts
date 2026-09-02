@@ -17,14 +17,16 @@ import { AcademyMapper } from './mappers/academy.mapper';
 const MAX_BATCH_SIZE = 500;
 
 @Injectable()
-export class LocalAcademyCompletionRepository implements AcademyCompletionRepository {
+export class LocalAcademyCompletionRepository extends AcademyCompletionRepository {
   constructor(
     @InjectPinoLogger(LocalAcademyCompletionRepository.name)
     private readonly logger: PinoLogger,
     @InjectRepository(AcademyCompletionRecord)
     private readonly repository: Repository<AcademyCompletionRecord>,
     private readonly mapper: AcademyMapper,
-  ) {}
+  ) {
+    super();
+  }
 
   async findByUser(userId: UUID): Promise<AcademyCompletion | null> {
     this.logger.debug({ userId }, 'findByUser');
@@ -58,7 +60,21 @@ export class LocalAcademyCompletionRepository implements AcademyCompletionReposi
   async upsert(completion: AcademyCompletion): Promise<AcademyCompletion> {
     this.logger.info({ userId: completion.userId }, 'upsert');
     const record = this.mapper.completionToRecord(completion);
-    const saved = await this.repository.save(record);
+    const result = await this.repository
+      .createQueryBuilder()
+      .insert()
+      .into(AcademyCompletionRecord)
+      .values(record)
+      .orUpdate(['completedAt'], ['userId'])
+      .returning('*')
+      .execute();
+    const rows: unknown = result.raw;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error('Completion upsert returned no row');
+    }
+    const saved = this.repository.create(
+      rows[0] as Partial<AcademyCompletionRecord>,
+    );
     return this.mapper.completionToDomain(saved);
   }
 }

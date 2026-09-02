@@ -34,20 +34,6 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
     return records.map((record) => this.mapper.chapterToDomain(record));
   }
 
-  async findAllWithQuizContent(): Promise<AcademyChapter[]> {
-    this.logger.info('findAllWithQuizContent');
-    const records = await this.repository.find({
-      relations: { courseModules: true, quizQuestions: true },
-      order: {
-        position: 'ASC',
-        createdAt: 'ASC',
-        courseModules: { position: 'ASC', createdAt: 'ASC' },
-        quizQuestions: { position: 'ASC', createdAt: 'ASC' },
-      },
-    });
-    return records.map((record) => this.mapper.chapterToDomain(record));
-  }
-
   async findOne(id: UUID): Promise<AcademyChapter | null> {
     this.logger.info({ id }, 'findOne');
     const record = await this.repository.findOne({
@@ -62,15 +48,6 @@ export class LocalAcademyChapterRepository implements AcademyChapterRepository {
   async findAllIds(): Promise<UUID[]> {
     this.logger.info('findAllIds');
     const records = await this.repository.find({ select: { id: true } });
-    return records.map((record) => record.id);
-  }
-
-  async findQuizEnabledIds(): Promise<UUID[]> {
-    this.logger.info('findQuizEnabledIds');
-    const records = await this.repository.find({
-      where: { quizEnabled: true },
-      select: { id: true },
-    });
     return records.map((record) => record.id);
   }
 

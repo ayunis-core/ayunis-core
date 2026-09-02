@@ -245,7 +245,7 @@
         "other": "Personal data"
       }
     },
-    "academyCertificateRequiredError": "Your organization requires the AI certificate before you can send messages. Complete the academy to unlock chat."
+    "academyCertificateRequiredError": "Your organization requires completion of the EU AI Act training before you can send messages. Complete the Academy to unlock chat."
   },
   "newChat": {
     "newChat": "New Chat",

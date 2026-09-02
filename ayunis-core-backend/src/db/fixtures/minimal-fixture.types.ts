@@ -84,7 +84,7 @@ export interface MemberFixture {
 
 /**
  * Offsets are relative to seed time rather than absolute dates, so a fixture
- * seeded once keeps hitting the same certificate state months later.
+ * seeded once keeps hitting the same completion state months later.
  */
 export interface AcademyCompletionFixture {
   email: string;
@@ -154,17 +154,6 @@ export interface OrgFixture {
   workspaces?: readonly WorkspaceFixture[];
 }
 
-export interface QuizAnswerOptionFixture {
-  text: string;
-  isCorrect: boolean;
-}
-
-export interface QuizQuestionFixture {
-  text: string;
-  position: number;
-  options: readonly QuizAnswerOptionFixture[];
-}
-
 export interface CourseModuleFixture {
   title: string;
   description: string;
@@ -176,10 +165,7 @@ export interface AcademyChapterFixture {
   title: string;
   description: string;
   position: number;
-  quizEnabled: boolean;
-  passThreshold: number;
   modules: readonly CourseModuleFixture[];
-  quiz: readonly QuizQuestionFixture[];
 }
 
 export interface PermittedModelFixture {

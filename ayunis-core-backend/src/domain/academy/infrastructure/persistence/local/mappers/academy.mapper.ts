@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { AcademyChapter } from 'src/domain/academy/domain/academy-chapter.entity';
-import { AcademyChapterProgress } from 'src/domain/academy/domain/academy-chapter-progress.entity';
+import { AcademyChapterConfirmation } from 'src/domain/academy/domain/academy-chapter-confirmation.entity';
 import { AcademyCompletion } from 'src/domain/academy/domain/academy-completion.entity';
 import { AcademyCourseModule } from 'src/domain/academy/domain/academy-course-module.entity';
-import { AcademyQuizQuestion } from 'src/domain/academy/domain/academy-quiz-question.entity';
-import { AcademyChapterRecord } from '../schema/academy-chapter.record';
-import { AcademyChapterProgressRecord } from '../schema/academy-chapter-progress.record';
-import { AcademyCompletionRecord } from '../schema/academy-completion.record';
-import { AcademyCourseModuleRecord } from '../schema/academy-course-module.record';
-import { AcademyQuizQuestionRecord } from '../schema/academy-quiz-question.record';
+import { AcademyChapterRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter.record';
+import { AcademyChapterConfirmationRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-chapter-confirmation.record';
+import { AcademyCompletionRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-completion.record';
+import { AcademyCourseModuleRecord } from 'src/domain/academy/infrastructure/persistence/local/schema/academy-course-module.record';
 
 @Injectable()
 export class AcademyMapper {
@@ -18,13 +16,8 @@ export class AcademyMapper {
       title: record.title,
       description: record.description,
       position: record.position,
-      quizEnabled: record.quizEnabled,
-      passThreshold: record.passThreshold,
       courseModules: record.courseModules?.map((courseModule) =>
         this.courseModuleToDomain(courseModule),
-      ),
-      quizQuestions: record.quizQuestions?.map((quizQuestion) =>
-        this.quizQuestionToDomain(quizQuestion),
       ),
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -37,8 +30,6 @@ export class AcademyMapper {
     record.title = domain.title;
     record.description = domain.description;
     record.position = domain.position;
-    record.quizEnabled = domain.quizEnabled;
-    record.passThreshold = domain.passThreshold;
     return record;
   }
 
@@ -66,53 +57,25 @@ export class AcademyMapper {
     return record;
   }
 
-  quizQuestionToDomain(record: AcademyQuizQuestionRecord): AcademyQuizQuestion {
-    return new AcademyQuizQuestion({
-      id: record.id,
-      chapterId: record.chapterId,
-      text: record.text,
-      options: record.options,
-      position: record.position,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    });
-  }
-
-  quizQuestionToRecord(domain: AcademyQuizQuestion): AcademyQuizQuestionRecord {
-    const record = new AcademyQuizQuestionRecord();
-    record.id = domain.id;
-    record.chapterId = domain.chapterId;
-    record.text = domain.text;
-    record.options = domain.options;
-    record.position = domain.position;
-    return record;
-  }
-
-  chapterProgressToDomain(
-    record: AcademyChapterProgressRecord,
-  ): AcademyChapterProgress {
-    return new AcademyChapterProgress({
+  chapterConfirmationToDomain(
+    record: AcademyChapterConfirmationRecord,
+  ): AcademyChapterConfirmation {
+    return new AcademyChapterConfirmation({
       id: record.id,
       userId: record.userId,
       chapterId: record.chapterId,
-      passedAt: record.passedAt,
-      lastScore: record.lastScore,
-      lastAttemptAt: record.lastAttemptAt,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
+      confirmedAt: record.confirmedAt,
     });
   }
 
-  chapterProgressToRecord(
-    domain: AcademyChapterProgress,
-  ): AcademyChapterProgressRecord {
-    const record = new AcademyChapterProgressRecord();
+  chapterConfirmationToRecord(
+    domain: AcademyChapterConfirmation,
+  ): AcademyChapterConfirmationRecord {
+    const record = new AcademyChapterConfirmationRecord();
     record.id = domain.id;
     record.userId = domain.userId;
     record.chapterId = domain.chapterId;
-    record.passedAt = domain.passedAt;
-    record.lastScore = domain.lastScore;
-    record.lastAttemptAt = domain.lastAttemptAt;
+    record.confirmedAt = domain.confirmedAt;
     return record;
   }
 

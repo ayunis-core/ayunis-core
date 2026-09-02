@@ -1,14 +1,18 @@
 import { buildCertificateHtml } from './certificate-template';
 
 describe('buildCertificateHtml', () => {
-  it('names the completed course KI-Schulung nach EU AI Act', () => {
+  it('renders a participation confirmation without exam terminology', () => {
     const html = buildCertificateHtml({
       userName: 'Käthe Müller',
       dateLine: '15. Juli 2026, München',
     });
 
+    expect(html).toContain('TEILNAHMEBEST&Auml;TIGUNG');
     expect(html).toContain(
-      'die <strong>Ayunis Core KI-Schulung nach EU AI Act</strong> erfolgreich',
+      'an der <strong>Ayunis Core KI-Schulung nach EU AI Act</strong>',
     );
+    expect(html).toContain('erfolgreich teilgenommen hat');
+    expect(html).not.toContain('Pr&uuml;fung');
+    expect(html).not.toContain('ZERTIFIKAT');
   });
 });

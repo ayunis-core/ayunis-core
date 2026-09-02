@@ -119,12 +119,12 @@ const CERTIFICATE_HTML = `<!DOCTYPE html>
 <body>
 <div class="page">
   <img class="wordmark" src="${AYUNIS_CORE_WORDMARK_DATA_URI}" alt="">
-  <div class="title">ZERTIFIKAT</div>
+  <div class="title">TEILNAHMEBEST&Auml;TIGUNG</div>
   <div class="intro">Hiermit wird best&auml;tigt, dass</div>
   <div class="name">{{userName}}</div>
   <div class="body-text">
-    die <strong>Ayunis Core KI-Schulung nach EU AI Act</strong> erfolgreich
-    abgeschlossen und die abschlie&szlig;ende Pr&uuml;fung bestanden hat.
+    an der <strong>Ayunis Core KI-Schulung nach EU AI Act</strong>
+    erfolgreich teilgenommen hat.
   </div>
   <img class="mark" src="${AYC_MARK_DATA_URI}" alt="">
   <img class="signature" src="${SIGNATURE_DATA_URI}" alt="">

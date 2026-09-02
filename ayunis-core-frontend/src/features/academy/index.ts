@@ -1,6 +1,6 @@
 export { isAcademyAddonActive } from './isAcademyAddonActive';
 export { useIsAcademyAddonActive } from './useIsAcademyAddonActive';
-export { useDownloadCertificate } from './useDownloadCertificate';
+export { useDownloadParticipationConfirmation } from './useDownloadParticipationConfirmation';
 export { useAcademyAccessStatus } from './useAcademyAccessStatus';
 export { useAcademyProgress } from './useAcademyProgress';
 export { resolveCertificateExpiryNotice } from './lib/resolve-certificate-expiry-notice';

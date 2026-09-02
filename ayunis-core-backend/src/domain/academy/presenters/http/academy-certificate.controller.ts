@@ -42,13 +42,13 @@ export class AcademyCertificateController {
   // Each download renders a PDF in headless Chromium — keep bursts cheap
   @RateLimit({ limit: 10, windowMs: 15 * 60 * 1000 })
   @ApiOperation({
-    summary: 'Download the academy completion certificate',
+    summary: 'Download the academy participation confirmation',
     description:
-      'Render the KI-Schulung nach EU AI Act certificate PDF for the current user. Available once the whole academy has been completed.',
+      'Render the KI-Schulung nach EU AI Act participation confirmation PDF for the current user. Available once the whole academy has been completed.',
   })
   @ApiResponse({
     status: 200,
-    description: 'The certificate PDF',
+    description: 'The participation confirmation PDF',
     content: {
       'application/octet-stream': {
         schema: { type: 'string', format: 'binary' },
@@ -64,7 +64,7 @@ export class AcademyCertificateController {
     @CurrentUser(UserProperty.ID) userId: UUID,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    this.logger.info('Getting academy certificate');
+    this.logger.info('Getting academy participation confirmation');
     const certificate = await this.getAcademyCertificateUseCase.execute(
       new GetAcademyCertificateQuery({ userId }),
     );
