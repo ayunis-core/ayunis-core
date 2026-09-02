@@ -18,6 +18,8 @@ import { KnowledgeBaseLink } from '@/pages/chat-context-prototype/ui/KnowledgeBa
 import { PageSheet } from '@/pages/chat-context-prototype/ui/PageSheet';
 import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
+const LAYOUT_SETTLE_MS = 600;
+
 export function DocumentPreviewBody({
   hit,
   isCited,
@@ -107,7 +109,17 @@ function PagesBody({
   const pages = Array.from({ length: hit.pageCount }, (_, index) => index + 1);
 
   useEffect(() => {
-    if (isCited) citedRef.current?.scrollIntoView({ block: 'start' });
+    const target = citedRef.current;
+    if (!isCited || !target) return;
+    const scroll = () => target.scrollIntoView({ block: 'start' });
+    scroll();
+    const observer = new ResizeObserver(scroll);
+    observer.observe(target);
+    const stop = setTimeout(() => observer.disconnect(), LAYOUT_SETTLE_MS);
+    return () => {
+      clearTimeout(stop);
+      observer.disconnect();
+    };
   }, [hit.id, isCited]);
 
   return (

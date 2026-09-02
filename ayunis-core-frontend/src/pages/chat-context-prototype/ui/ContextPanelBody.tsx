@@ -20,6 +20,7 @@ import {
   KNOWLEDGE_BASE_IDS,
   STANDBY_SKILL_IDS,
 } from '@/pages/chat-context-prototype/model/mock';
+import { groupSourceHits } from '@/pages/chat-context-prototype/model/source-groups';
 import { ContextKindIcon } from '@/pages/chat-context-prototype/ui/context-icons';
 import { SourceKindIcon } from '@/pages/chat-context-prototype/ui/SourceKindIcon';
 
@@ -218,9 +219,9 @@ function KnowledgeBaseNode({
   onOpenDocument: (documentId: string) => void;
 }>) {
   const base = CONTEXT_ITEMS[knowledgeBaseId];
-  const documents = DOCUMENTS_BY_KNOWLEDGE_BASE[knowledgeBaseId] ?? [];
+  const groups = groupSourceHits(DOCUMENTS_BY_KNOWLEDGE_BASE[knowledgeBaseId]);
   const [isOpen, setIsOpen] = useState(
-    documents.includes(openDocumentId ?? ''),
+    groups.some((group) => group.hitIds.includes(openDocumentId ?? '')),
   );
 
   return (
@@ -236,16 +237,16 @@ function KnowledgeBaseNode({
         </span>
         <span className="min-w-0 flex-1 truncate text-sm">{base.name}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
-          {documents.length}
+          {groups.length}
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mb-1 ml-3 mt-0.5 flex min-w-0 flex-col gap-0.5 overflow-hidden border-l pl-3">
-          {documents.map((documentId) => (
+          {groups.map((group) => (
             <DocumentNode
-              key={documentId}
-              documentId={documentId}
-              isActive={documentId === openDocumentId}
+              key={group.key}
+              documentId={group.firstHitId}
+              isActive={group.hitIds.includes(openDocumentId ?? '')}
               onOpen={onOpenDocument}
             />
           ))}
