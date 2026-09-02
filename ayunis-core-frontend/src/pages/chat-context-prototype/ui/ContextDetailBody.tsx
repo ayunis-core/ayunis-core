@@ -10,6 +10,11 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
 import { showInfo } from '@/shared/lib/toast';
 import {
   ALL_SOURCE_HITS,
@@ -29,21 +34,25 @@ export function ContextDetailBody({
 }: Readonly<ContextDetailBodyProps>) {
   const item = CONTEXT_ITEMS[contextId];
   const documents = DOCUMENTS_BY_KNOWLEDGE_BASE[contextId] ?? [];
+  const label = item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite';
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-5 py-4">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-5 py-3">
         <h3 className="min-w-0 truncate text-sm font-medium">{item.name}</h3>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={
-            item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite'
-          }
-          onClick={() => showInfo(`Detailseite von „${item.name}“`)}
-        >
-          <ExternalLink />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={label}
+              onClick={() => showInfo(`Detailseite von „${item.name}“`)}
+            >
+              <ExternalLink />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-5 p-5">
