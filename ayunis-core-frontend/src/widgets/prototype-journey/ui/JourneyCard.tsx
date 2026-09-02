@@ -43,7 +43,7 @@ const PANEL_FRAMES: { value: PanelFrame; label: string }[] = [
   { value: 'divider', label: 'Linie' },
 ];
 
-const VARIANTS: { value: EntryVariant; label: string }[] = [
+const ENTRY_VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'single', label: 'Icon' },
   { value: 'menu', label: 'Menü' },
   { value: 'header', label: 'Beschriftet' },
@@ -112,57 +112,38 @@ export function JourneyCard() {
               </Button>
             </div>
           </div>
-          <VariantRow stepId={step.id}>
-            {step.id === 'startseite' &&
-              AVAILABILITY_VARIANTS.map((entry) => (
-                <Button
-                  key={entry.value}
-                  variant={
-                    availabilityVariant === entry.value ? 'secondary' : 'ghost'
-                  }
-                  size="sm"
-                  onClick={() => go({ avail: entry.value })}
-                >
-                  {entry.label}
-                </Button>
-              ))}
-            {step.id === 'presse-frage' &&
-              VARIANTS.map((entry) => (
-                <Button
-                  key={entry.value}
-                  variant={variant === entry.value ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => go({ entry: entry.value })}
-                >
-                  {entry.label}
-                </Button>
-              ))}
-            {step.id !== 'startseite' &&
-              step.id !== 'presse-frage' &&
-              CONTEXT_LAYOUTS.map((entry) => (
-                <Button
-                  key={entry.value}
-                  variant={layout === entry.value ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => go({ layout: entry.value })}
-                >
-                  {entry.label}
-                </Button>
-              ))}
-          </VariantRow>
-          {step.id !== 'startseite' && step.id !== 'presse-frage' && (
-            <VariantRow stepId={step.id}>
-              {PANEL_FRAMES.map((entry) => (
-                <Button
-                  key={entry.value}
-                  variant={frame === entry.value ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => go({ frame: entry.value })}
-                >
-                  {entry.label}
-                </Button>
-              ))}
+          {step.id === 'startseite' ? (
+            <VariantRow>
+              <VariantButtons
+                options={AVAILABILITY_VARIANTS}
+                active={availabilityVariant}
+                onSelect={(value) => go({ avail: value })}
+              />
             </VariantRow>
+          ) : (
+            <>
+              <VariantRow>
+                <VariantButtons
+                  options={ENTRY_VARIANTS}
+                  active={variant}
+                  onSelect={(value) => go({ entry: value })}
+                />
+              </VariantRow>
+              <VariantRow>
+                <VariantButtons
+                  options={CONTEXT_LAYOUTS}
+                  active={layout}
+                  onSelect={(value) => go({ layout: value })}
+                />
+              </VariantRow>
+              <VariantRow>
+                <VariantButtons
+                  options={PANEL_FRAMES}
+                  active={frame}
+                  onSelect={(value) => go({ frame: value })}
+                />
+              </VariantRow>
+            </>
           )}
         </>
       )}
@@ -170,12 +151,31 @@ export function JourneyCard() {
   );
 }
 
-function VariantRow({
-  children,
-}: Readonly<{ stepId: string; children: ReactNode }>) {
+function VariantRow({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1">{children}</div>
   );
+}
+
+function VariantButtons<T extends string>({
+  options,
+  active,
+  onSelect,
+}: Readonly<{
+  options: { value: T; label: string }[];
+  active: T;
+  onSelect: (value: T) => void;
+}>) {
+  return options.map((option) => (
+    <Button
+      key={option.value}
+      variant={active === option.value ? 'secondary' : 'ghost'}
+      size="sm"
+      onClick={() => onSelect(option.value)}
+    >
+      {option.label}
+    </Button>
+  ));
 }
 
 function StepDots({

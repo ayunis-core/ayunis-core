@@ -346,17 +346,6 @@ const ARCHIVED_STEPS: JourneyStep[] = [
       panel: 'context',
     },
   },
-];
-
-export const ARCHIVE = ARCHIVED_STEPS;
-
-export const JOURNEY: JourneyStep[] = [
-  {
-    id: 'startseite',
-    label: 'Startseite',
-    hint: 'Vor der ersten Nachricht: Womit kann Ayunis Core überhaupt arbeiten? Varianten unten umschaltbar.',
-    state: { ...EMPTY, view: 'new' },
-  },
   {
     id: 'presse-frage',
     label: 'Frage stellen',
@@ -423,10 +412,21 @@ export const JOURNEY: JourneyStep[] = [
       ],
     },
   },
+];
+
+export const ARCHIVE = ARCHIVED_STEPS;
+
+export const JOURNEY: JourneyStep[] = [
+  {
+    id: 'startseite',
+    label: 'Startseite',
+    hint: 'Vor der ersten Nachricht: Womit kann Ayunis Core überhaupt arbeiten? Varianten unten umschaltbar.',
+    state: { ...EMPTY, view: 'new' },
+  },
   {
     id: 'presse-verlauf',
-    label: 'Längerer Verlauf',
-    hint: 'Vier Runden, zwei Ergebnisse, Belege an mehreren Antworten — so wirkt es im Alltag.',
+    label: 'Langer Verlauf',
+    hint: 'Alles zusammen: Belege an mehreren Antworten, zwei Ergebnisse, alle Quellenarten im Kontext. Varianten unten umschaltbar.',
     state: {
       ...EMPTY,
       contextIds: ['skill-pressemitteilung', 'kb-presse'],
