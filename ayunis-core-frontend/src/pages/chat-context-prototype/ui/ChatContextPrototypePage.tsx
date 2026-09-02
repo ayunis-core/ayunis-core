@@ -146,7 +146,7 @@ export function ChatContextPrototypePage() {
   return (
     <AppLayout>
       <div className="flex h-full min-h-0 flex-col">
-        <div className="relative min-h-0 flex-1">
+        <div className="relative -mx-4 -mb-4 min-h-0 flex-1">
           <PrototypeChatLayout
             resetKey={stepIndex}
             panelSize={isWidePanel(state, contextLayout) ? 68 : 38}

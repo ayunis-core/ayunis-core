@@ -57,7 +57,7 @@ export function PrototypeChatLayout({
       className="absolute inset-0"
     >
       <Panel defaultSize={sidePanel ? 100 - panelSize : 100} minSize={30}>
-        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl pb-4">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-t-xl">
           <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
             <div
               className="content-scroll-viewport min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden"
@@ -65,7 +65,9 @@ export function PrototypeChatLayout({
               onScroll={onScroll}
             >
               <div className="content-scroll-header-offset" aria-hidden />
-              <div className="mx-auto w-full max-w-[800px]">{chatContent}</div>
+              <div className="mx-auto w-full max-w-[800px] px-2">
+                {chatContent}
+              </div>
             </div>
             <div
               className="content-scroll-header"
@@ -74,7 +76,7 @@ export function PrototypeChatLayout({
               {chatHeader}
             </div>
           </div>
-          <div className="sticky bottom-0 z-10 mx-auto w-full max-w-[800px] flex-shrink-0 bg-background">
+          <div className="sticky bottom-0 z-10 mx-auto w-full max-w-[800px] flex-shrink-0 bg-background px-6 pb-4">
             {chatInput}
           </div>
         </div>
