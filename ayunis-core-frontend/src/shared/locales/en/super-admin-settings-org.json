@@ -422,7 +422,24 @@
   },
   "orgDetails": {
     "name": "Name",
-    "id": "ID"
+    "id": "ID",
+    "rename": {
+      "edit": "Rename",
+      "save": "Save",
+      "cancel": "Cancel",
+      "success": "Organization renamed",
+      "error": "Failed to rename organization",
+      "errorNotFound": "This organization no longer exists",
+      "errorRejected": "The organization could not be renamed. Please check the name."
+    },
+    "validation": {
+      "name": {
+        "isNotEmpty": "Name is required",
+        "isString": "Name must be text",
+        "invalid": "Invalid name"
+      },
+      "invalid": "Invalid input"
+    }
   },
   "trial": {
     "title": "Trial Information",
