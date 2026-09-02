@@ -18,13 +18,6 @@ import {
   type ContextItem,
 } from '@/pages/chat-context-prototype/model/mock';
 
-const KIND_LABELS = {
-  skill: 'Fähigkeit',
-  knowledgeBase: 'Wissensdatenbank',
-  file: 'Datei',
-  integration: 'Integration',
-};
-
 interface ContextDetailBodyProps {
   contextId: string;
   onOpenDocument: (documentId: string) => void;
@@ -39,11 +32,18 @@ export function ContextDetailBody({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b px-5 py-4">
-        <h3 className="truncate text-sm font-medium">{item.name}</h3>
-        <span className="text-xs text-muted-foreground">
-          {KIND_LABELS[item.kind]}
-        </span>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b px-5 py-4">
+        <h3 className="min-w-0 truncate text-sm font-medium">{item.name}</h3>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={
+            item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite'
+          }
+          onClick={() => showInfo(`Detailseite von „${item.name}“`)}
+        >
+          <ExternalLink />
+        </Button>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-5 p-5">
@@ -66,15 +66,6 @@ export function ContextDetailBody({
               </ItemGroup>
             </Section>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-fit"
-            onClick={() => showInfo(`Detailseite von „${item.name}“`)}
-          >
-            <ExternalLink />
-            {item.kind === 'skill' ? 'Zur Fähigkeit' : 'Zur Detailseite'}
-          </Button>
         </div>
       </ScrollArea>
     </div>
@@ -85,17 +76,8 @@ function SkillSections({ item }: Readonly<{ item: ContextItem }>) {
   return (
     <>
       <Section title="Auslöser">
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {item.detail}
-        </p>
+        <p className="text-sm leading-relaxed">{item.detail}</p>
       </Section>
-      {item.purpose && (
-        <Section title="Wirkung">
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            {item.purpose}
-          </p>
-        </Section>
-      )}
       {item.instructions && (
         <Section title="Detaillierte Anweisungen">
           <p className="whitespace-pre-wrap text-sm leading-relaxed">
