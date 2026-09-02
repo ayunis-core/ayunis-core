@@ -2,6 +2,7 @@ import { login, markWelcomeVideoSeen } from '../../src/clients/api/auth.client';
 import {
   createSuperAdminOrg,
   getSuperAdminOrg,
+  submitSuperAdminOrgRename,
 } from '../../src/clients/api/super-admin-orgs.client';
 import { test, expect } from '../../src/fixtures/test';
 
@@ -41,6 +42,12 @@ test('renames an organization from the org detail page', async ({
   });
 
   await expect(page.getByTestId('org-name-value')).toHaveText(renamedName);
+  await expect(getSuperAdminOrg(publicApi, org.id)).resolves.toMatchObject({
+    name: renamedName,
+  });
+
+  const blankRename = await submitSuperAdminOrgRename(publicApi, org.id, '   ');
+  expect(blankRename.status()).toBe(400);
   await expect(getSuperAdminOrg(publicApi, org.id)).resolves.toMatchObject({
     name: renamedName,
   });
