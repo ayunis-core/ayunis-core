@@ -18,7 +18,11 @@ import { SourceDialog } from './SourceDialog';
 import { PrototypeTranscript } from './PrototypeTranscript';
 
 export function ChatContextPrototypePage() {
-  const { step: stepIndex, entry: variant } = useJourneySearch();
+  const {
+    step: stepIndex,
+    entry: variant,
+    layout: contextLayout,
+  } = useJourneySearch();
   const [appliedStep, setAppliedStep] = useState(stepIndex);
   const [expandedSourceId, setExpandedSourceId] = useState<string | null>(null);
   const [state, setState] = useState<PrototypeState>(JOURNEY[stepIndex].state);
@@ -213,6 +217,7 @@ export function ChatContextPrototypePage() {
                   openContextId={state.openContextId}
                   sourceListIds={state.sourceListIds}
                   openDocumentId={state.openDocumentId}
+                  contextLayout={contextLayout}
                   onPanelChange={(panel) =>
                     setState((current) => ({
                       ...current,

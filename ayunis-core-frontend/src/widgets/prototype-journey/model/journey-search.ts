@@ -2,6 +2,7 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   JOURNEY,
   type AvailabilityVariant,
+  type ContextLayout,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
 
@@ -11,6 +12,7 @@ export interface JourneySearch {
   step: number;
   entry: EntryVariant;
   avail: AvailabilityVariant;
+  layout: ContextLayout;
 }
 
 const ENTRY_VARIANTS: EntryVariant[] = ['single', 'menu', 'header'];
@@ -20,6 +22,7 @@ const AVAILABILITY_VARIANTS: AvailabilityVariant[] = [
   'dropdowns',
   'underInput',
 ];
+const CONTEXT_LAYOUTS: ContextLayout[] = ['tree', 'drill', 'split'];
 
 export function parseJourneySearch(
   search: Record<string, unknown>,
@@ -27,11 +30,13 @@ export function parseJourneySearch(
   const step = Number(search.step);
   const entry = String(search.entry) as EntryVariant;
   const avail = String(search.avail) as AvailabilityVariant;
+  const layout = String(search.layout) as ContextLayout;
   return {
     step:
       Number.isInteger(step) && step >= 0 && step < JOURNEY.length ? step : 0,
     entry: ENTRY_VARIANTS.includes(entry) ? entry : 'single',
     avail: AVAILABILITY_VARIANTS.includes(avail) ? avail : 'row',
+    layout: CONTEXT_LAYOUTS.includes(layout) ? layout : 'tree',
   };
 }
 

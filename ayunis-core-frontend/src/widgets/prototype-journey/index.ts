@@ -8,6 +8,7 @@ export {
 export {
   JOURNEY,
   type AvailabilityVariant,
+  type ContextLayout,
   type EntryVariant,
   type PanelKey,
   type PrototypeState,

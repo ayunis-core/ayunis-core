@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import {
   ChevronDown,
@@ -12,6 +12,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   JOURNEY,
   type AvailabilityVariant,
+  type ContextLayout,
   type EntryVariant,
 } from '@/widgets/prototype-journey/model/journey';
 import {
@@ -29,6 +30,12 @@ const AVAILABILITY_VARIANTS: {
   { value: 'underInput', label: 'Unter Feld' },
 ];
 
+const CONTEXT_LAYOUTS: { value: ContextLayout; label: string }[] = [
+  { value: 'tree', label: 'Baum' },
+  { value: 'drill', label: 'Ebenen' },
+  { value: 'split', label: 'Zwei Spalten' },
+];
+
 const VARIANTS: { value: EntryVariant; label: string }[] = [
   { value: 'single', label: 'Icon' },
   { value: 'menu', label: 'Menü' },
@@ -41,20 +48,13 @@ export function JourneyCard() {
     step: stepIndex,
     entry: variant,
     avail: availabilityVariant,
+    layout,
   } = useJourneySearch();
   const go = useJourneyNavigate();
   const step = JOURNEY[stepIndex];
 
   function onStepChange(index: number) {
     go({ step: index });
-  }
-
-  function onVariantChange(next: EntryVariant) {
-    go({ entry: next });
-  }
-
-  function setAvailabilityVariant(next: AvailabilityVariant) {
-    go({ avail: next });
   }
 
   return (
@@ -104,38 +104,55 @@ export function JourneyCard() {
               </Button>
             </div>
           </div>
-          {step.id === 'startseite' ? (
-            <div className="mt-2 flex flex-wrap items-center gap-1">
-              {AVAILABILITY_VARIANTS.map((entry) => (
+          <VariantRow stepId={step.id}>
+            {step.id === 'startseite' &&
+              AVAILABILITY_VARIANTS.map((entry) => (
                 <Button
                   key={entry.value}
                   variant={
                     availabilityVariant === entry.value ? 'secondary' : 'ghost'
                   }
                   size="sm"
-                  onClick={() => setAvailabilityVariant(entry.value)}
+                  onClick={() => go({ avail: entry.value })}
                 >
                   {entry.label}
                 </Button>
               ))}
-            </div>
-          ) : (
-            <div className="mt-2 flex items-center gap-1">
-              {VARIANTS.map((entry) => (
+            {step.id === 'presse-frage' &&
+              VARIANTS.map((entry) => (
                 <Button
                   key={entry.value}
                   variant={variant === entry.value ? 'secondary' : 'ghost'}
                   size="sm"
-                  onClick={() => onVariantChange(entry.value)}
+                  onClick={() => go({ entry: entry.value })}
                 >
                   {entry.label}
                 </Button>
               ))}
-            </div>
-          )}
+            {step.id !== 'startseite' &&
+              step.id !== 'presse-frage' &&
+              CONTEXT_LAYOUTS.map((entry) => (
+                <Button
+                  key={entry.value}
+                  variant={layout === entry.value ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => go({ layout: entry.value })}
+                >
+                  {entry.label}
+                </Button>
+              ))}
+          </VariantRow>
         </>
       )}
     </Card>
+  );
+}
+
+function VariantRow({
+  children,
+}: Readonly<{ stepId: string; children: ReactNode }>) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1">{children}</div>
   );
 }
 

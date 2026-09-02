@@ -29,6 +29,7 @@ interface ContextPanelBodyProps {
   contextIds: string[];
   processingIds: string[];
   openDocumentId: string | null;
+  isDrillDown: boolean;
   onOpenDetail: (contextId: string) => void;
   onOpenDocument: (documentId: string) => void;
 }
@@ -37,6 +38,7 @@ export function ContextPanelBody({
   contextIds,
   processingIds,
   openDocumentId,
+  isDrillDown,
   onOpenDetail,
   onOpenDocument,
 }: Readonly<ContextPanelBodyProps>) {
@@ -46,8 +48,8 @@ export function ContextPanelBody({
   const integrations = items.filter((item) => item.kind === 'integration');
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-1">
+    <div className="flex flex-col gap-7">
+      <section className="flex flex-col gap-2">
         <SectionLabel>Fähigkeiten</SectionLabel>
         <ItemGroup>
           {usedSkills.map((item) => (
@@ -62,17 +64,25 @@ export function ContextPanelBody({
         <StandbySkills names={STANDBY_SKILLS} />
       </section>
 
-      <section className="flex flex-col gap-1">
+      <section className="flex flex-col gap-2">
         <SectionLabel>Wissen</SectionLabel>
         <div className="flex flex-col">
-          {KNOWLEDGE_BASE_IDS.map((id) => (
-            <KnowledgeBaseNode
-              key={id}
-              knowledgeBaseId={id}
-              openDocumentId={openDocumentId}
-              onOpenDocument={onOpenDocument}
-            />
-          ))}
+          {KNOWLEDGE_BASE_IDS.map((id) =>
+            isDrillDown ? (
+              <KnowledgeBaseLink
+                key={id}
+                knowledgeBaseId={id}
+                onOpen={onOpenDetail}
+              />
+            ) : (
+              <KnowledgeBaseNode
+                key={id}
+                knowledgeBaseId={id}
+                openDocumentId={openDocumentId}
+                onOpenDocument={onOpenDocument}
+              />
+            ),
+          )}
         </div>
         {chatFiles.length > 0 && (
           <ItemGroup>
@@ -89,7 +99,7 @@ export function ContextPanelBody({
       </section>
 
       {integrations.length > 0 && (
-        <section className="flex flex-col gap-1">
+        <section className="flex flex-col gap-2">
           <SectionLabel>Integrationen</SectionLabel>
           <ItemGroup>
             {integrations.map((item) => (
@@ -130,7 +140,7 @@ function KnowledgeBaseNode({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent">
+      <CollapsibleTrigger className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-accent">
         {isOpen ? (
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
         ) : (
@@ -145,7 +155,7 @@ function KnowledgeBaseNode({
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="ml-3 flex flex-col border-l pl-3">
+        <div className="ml-3 flex flex-col gap-0.5 border-l pl-3 pb-1">
           {documents.map((documentId) => (
             <DocumentNode
               key={documentId}
@@ -157,6 +167,33 @@ function KnowledgeBaseNode({
         </div>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+function KnowledgeBaseLink({
+  knowledgeBaseId,
+  onOpen,
+}: Readonly<{
+  knowledgeBaseId: string;
+  onOpen: (contextId: string) => void;
+}>) {
+  const base = CONTEXT_ITEMS[knowledgeBaseId];
+  const documents = DOCUMENTS_BY_KNOWLEDGE_BASE[knowledgeBaseId] ?? [];
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(knowledgeBaseId)}
+      className="-mx-2 flex items-center gap-2.5 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-accent"
+    >
+      <span className="shrink-0 text-muted-foreground [&_svg]:size-4">
+        <ContextKindIcon kind="knowledgeBase" />
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm">{base.name}</span>
+      <span className="shrink-0 text-xs text-muted-foreground">
+        {documents.length}
+      </span>
+      <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+    </button>
   );
 }
 
@@ -175,7 +212,7 @@ function DocumentNode({
       type="button"
       onClick={() => onOpen(documentId)}
       className={cn(
-        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+        '-mx-2 flex items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent',
         isActive && 'bg-accent',
       )}
     >

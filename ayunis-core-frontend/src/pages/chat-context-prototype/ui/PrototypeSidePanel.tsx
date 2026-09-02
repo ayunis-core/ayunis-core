@@ -8,7 +8,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
-import type { PanelKey } from '@/widgets/prototype-journey/model/journey';
+import type {
+  ContextLayout,
+  PanelKey,
+} from '@/widgets/prototype-journey/model/journey';
 import { CONTEXT_ITEMS } from '@/pages/chat-context-prototype/model/mock';
 import { ArtifactPreviewBody } from './ArtifactPreviewBody';
 import { ContextDetailBody } from './ContextDetailBody';
@@ -28,6 +31,7 @@ interface PrototypeSidePanelProps {
   openContextId: string | null;
   sourceListIds: string[] | null;
   openDocumentId: string | null;
+  contextLayout: ContextLayout;
   onPanelChange: (panel: PanelKey) => void;
   onOpenArtifact: (artifactId: string) => void;
   onBackToResults: () => void;
@@ -152,6 +156,62 @@ function DetailView({
   );
 }
 
+function ContextBrowser({
+  contextIds,
+  processingIds,
+  openDocumentId,
+  contextLayout,
+  onOpenContextDetail,
+  onOpenDocument,
+  onExpandSource,
+}: Readonly<
+  Pick<
+    PrototypeSidePanelProps,
+    | 'contextIds'
+    | 'processingIds'
+    | 'openDocumentId'
+    | 'contextLayout'
+    | 'onOpenContextDetail'
+    | 'onOpenDocument'
+    | 'onExpandSource'
+  >
+>) {
+  const list = (
+    <ContextPanelBody
+      contextIds={contextIds}
+      processingIds={processingIds}
+      openDocumentId={openDocumentId}
+      isDrillDown={contextLayout === 'drill'}
+      onOpenDetail={onOpenContextDetail}
+      onOpenDocument={onOpenDocument}
+    />
+  );
+
+  const isTwoColumn =
+    contextLayout === 'split' ||
+    (contextLayout === 'tree' && openDocumentId !== null);
+
+  if (!isTwoColumn) return list;
+
+  return (
+    <div className="flex gap-5">
+      <div className="w-56 shrink-0">{list}</div>
+      <div className="min-w-0 flex-1">
+        {openDocumentId ? (
+          <DocumentPreviewPane
+            documentId={openDocumentId}
+            onExpand={onExpandSource}
+          />
+        ) : (
+          <p className="pt-1 text-sm text-muted-foreground">
+            Wählen Sie ein Dokument, um es hier zu lesen.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TabsView({
   panel,
   contextIds,
@@ -159,6 +219,7 @@ function TabsView({
   artifactIds,
   openArtifactId,
   openDocumentId,
+  contextLayout,
   onPanelChange,
   onOpenArtifact,
   onBackToResults,
@@ -209,33 +270,15 @@ function TabsView({
             )}
           </TabsContent>
           <TabsContent value="context">
-            {openDocumentId ? (
-              <div className="flex gap-5">
-                <div className="w-56 shrink-0">
-                  <ContextPanelBody
-                    contextIds={contextIds}
-                    processingIds={processingIds}
-                    openDocumentId={openDocumentId}
-                    onOpenDetail={onOpenContextDetail}
-                    onOpenDocument={onOpenDocument}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <DocumentPreviewPane
-                    documentId={openDocumentId}
-                    onExpand={onExpandSource}
-                  />
-                </div>
-              </div>
-            ) : (
-              <ContextPanelBody
-                contextIds={contextIds}
-                processingIds={processingIds}
-                openDocumentId={null}
-                onOpenDetail={onOpenContextDetail}
-                onOpenDocument={onOpenDocument}
-              />
-            )}
+            <ContextBrowser
+              contextIds={contextIds}
+              processingIds={processingIds}
+              openDocumentId={openDocumentId}
+              contextLayout={contextLayout}
+              onOpenContextDetail={onOpenContextDetail}
+              onOpenDocument={onOpenDocument}
+              onExpandSource={onExpandSource}
+            />
           </TabsContent>
         </div>
       </ScrollArea>
